@@ -1,0 +1,140 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
+    id 'com.google.dagger.hilt.android'
+    id "com.google.devtools.ksp"
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.20'
+    id 'com.google.gms.google-services'
+}
+
+// Version
+def versionMajor = 1
+def versionMinor = 0
+def versionPatch = 0
+def versionBuild = 0
+
+android {
+    namespace 'com.flixclusive'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.flixclusive"
+        minSdk 21
+        targetSdk 33
+        versionCode versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
+        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary true
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.addJavaSourceFoldersToModel(
+                new File(buildDir, "generated/ksp/${variant.name}/kotlin")
+        )
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_18
+        targetCompatibility JavaVersion.VERSION_18
+    }
+    kotlinOptions {
+        jvmTarget = '18'
+    }
+    buildFeatures {
+        compose true
+        buildConfig true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.4.6'
+    }
+    packagingOptions {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+}
+
+dependencies {
+    implementation platform('androidx.compose:compose-bom:2022.10.00')
+    androidTestImplementation platform('androidx.compose:compose-bom:2022.10.00')
+    def exoPlayerVersion = "1.0.2"
+    def room_version = "2.5.1"
+
+    def composeBom = platform('androidx.compose:compose-bom:2023.05.01')
+    implementation composeBom
+    androidTestImplementation composeBom
+
+    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
+    implementation 'androidx.activity:activity-compose:1.7.2'
+    implementation "androidx.compose.animation:animation-graphics"
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.foundation:foundation'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation('org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1')
+
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:32.1.1')
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.google.firebase:firebase-config-ktx'
+
+    // Exoplayer
+    implementation "androidx.media3:media3-session:$exoPlayerVersion"
+    implementation "androidx.media3:media3-exoplayer:$exoPlayerVersion"
+    implementation "androidx.media3:media3-exoplayer-hls:$exoPlayerVersion"
+    implementation "androidx.media3:media3-ui:$exoPlayerVersion"
+    implementation "androidx.media3:media3-cast:$exoPlayerVersion"
+
+    // ConstraintLayout
+    implementation "androidx.constraintlayout:constraintlayout-compose:1.0.1"
+
+    // Room
+    implementation "androidx.room:room-runtime:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+
+
+    // Retrofit2
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
+
+    // Gson
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // Coil
+    implementation('io.coil-kt:coil-compose:2.4.0')
+
+    // Hilt
+    implementation('com.google.dagger:hilt-android:2.46.1')
+    kapt 'com.google.dagger:hilt-android-compiler:2.46.1'
+    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
+
+    // Compose Destinations by raamcosta
+    implementation 'io.github.raamcosta.compose-destinations:animations-core:1.9.42-beta'
+    ksp 'io.github.raamcosta.compose-destinations:ksp:1.9.42-beta'
+
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+}

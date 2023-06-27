@@ -1,0 +1,152 @@
+<resources>
+    <string name="app_name">Flixclusive</string>
+
+    <!--  Navigation Items  -->
+    <string name="home">Home</string>
+    <string name="home_content">Home Content</string>
+    <string name="search">Search</string>
+    <string name="search_initial">Search Initial</string>
+    <string name="search_expanded">Search Expanded</string>
+    <string name="watchlist">Watchlist</string>
+    <string name="watchlisted">Added</string>
+    <string name="recently_watched">Recently Watched</string>
+
+    <string name="motto">Welcome to Flixclusive — exclusive entertainment awaits</string>
+
+    <!--  Filter Types  -->
+    <string name="content_type">Content Type</string>
+    <string name="all">All</string>
+    <string name="movies">Movies</string>
+    <string name="tv_shows">TV Shows</string>
+
+    <!--  Sample Items  -->
+    <string name="sample_title">True Detective</string>
+    <string name="sample_year">2023</string>
+    <string name="sample_genres">Thriller,Crime,Drama</string>
+    <string name="sample_duration">1hr 35min | March 20, 2023</string>
+    <string name="sample_poster">https://www.themoviedb.org/t/p/w154/z2nfRxZCGFgAnVhb9pZO87TyTX5.jpg</string>
+    <string name="sample_rating">7.8</string>
+    <string name="sample_subtitle_language">English (Default)</string>
+    <string name="sample_video_quality">1080p</string>
+
+    <!--  Labels  -->
+    <string name="genres">Genres</string>
+    <string name="popular">Popular</string>
+    <string name="browse_networks">Top Providers</string>
+    <string name="browse_genres">Browse Genres</string>
+    <string name="film_filter">Film Type</string>
+    <string name="search_suggestion">Try Searching \"Iron Man\"…</string>
+    <string name="top_movies_recently">Top Movies Recently</string>
+    <string name="top_tv_shows_recently">Top TV Shows Recently</string>
+    <string name="popular_movies">Popular Movies</string>
+    <string name="popular_tv_shows">Popular TV Shows</string>
+    <string name="continue_watching">Continue Watching</string>
+    <string name="more_details">More Details</string>
+    <string name="see_all">See all</string>
+    <string name="trending">Trending Picks</string>
+    <string name="next_episode">Next episode</string>
+    <string name="recommended">Recommended</string>
+    <string name="subtitles">Subtitles</string>
+    <string name="quality">Quality</string>
+    <string name="watch">Watch</string>
+    <string name="watch_again">Watch Again</string>
+    <string name="remove">Remove</string>
+    <string name="retry">Retry</string>
+    <string name="episodes">Episodes</string>
+    <string name="more_like_this">More Like This</string>
+    <string name="play">Play</string>
+    <string name="not_now_label">Not now</string>
+    <string name="update_label">Update</string>
+    <string name="unlock_label">Unlock</string>
+    <string name="close_label">Close</string>
+    <string name="splash_error_header">Something went wrong!</string>
+    <string name="new_update_message">New versions are meant to fix, update or add major or minor features in the app. All details regarding the new update is included in the download page.</string>
+    <string name="new_update_header">There\'s a new update!</string>
+    <string name="splash_error_message">An error occurred while initializing the app.</string>
+
+    <!--  Genres Label  -->
+    <string name="action_label">Action Packed</string>
+    <string name="adventure_label">Adventurous Escapades</string>
+    <string name="animation_label">Animated Delights</string>
+    <string name="comedy_label">Comedy Central</string>
+    <string name="crime_label">Lawbreakers\' Lair</string>
+    <string name="documentary_label">Reality Unveiled</string>
+    <string name="drama_label">Drama Unleashed</string>
+    <string name="family_label">Family Funtastic</string>
+    <string name="fantasy_label">Fantasyland</string>
+    <string name="history_label">Historical Hype</string>
+    <string name="horror_label">HorrorVille</string>
+    <string name="music_label">Musical Mayhem</string>
+    <string name="mystery_label">Mysterious Enigmas</string>
+    <string name="romance_label">Love in the Air</string>
+    <string name="science_fiction_label">Sci-Fi Spectacle</string>
+    <string name="tv_movie_label">TV Movies For You</string>
+    <string name="thriller_label">Nerve-Wracking Suspense</string>
+    <string name="war_label">Battlefront Chronicles</string>
+    <string name="western_label">Wild West Wonders</string>
+
+    <!--  Content Descriptions  -->
+    <string name="duration">Duration</string>
+    <string name="rating">Rating</string>
+    <string name="rating_icon">Rating Icon</string>
+    <string name="add_to_watchlist_button">Add to watchlist button</string>
+    <string name="added_to_watchlist_button">Added to watchlist button</string>
+    <string name="play_button">Play button</string>
+    <string name="filter_button">Filter button</string>
+    <string name="clear_text_button">Clear text button</string>
+    <string name="search_item_content_description">An image of a search item</string>
+    <string name="navigate_up">Navigate up</string>
+    <string name="film_item_content_description">"A poster image of a film item"</string>
+    <string name="poster_content_description">A poster of %%s</string>
+    <string name="unlock_content_description">An icon for unlocking the player</string>
+    <string name="navigate_to_film">Go see details of film button</string>
+    <string name="replay_button">Replay button</string>
+    <string name="pause_button">Pause button</string>
+    <string name="backward_button_content_description">Backward button for 5 seconds</string>
+    <string name="forward_button_content_description">Forward button for 10 seconds</string>
+
+    <!--  Activity Tags  -->
+    <string name="title_activity_player">PlayerActivity</string>
+    <string name="title_activity_splash">SplashActivity</string>
+
+    <!--  Player Strings/Messages  -->
+    <string name="subtitle_snackbar_message">Subtitle set to %%s</string>
+    <string name="quality_snackbar_message">Quality set to %%s</string>
+
+
+    <!--  Error State Messages  -->
+    <string name="error_on_search">Error while searching</string>
+    <string name="pagination_error_message">Error while fetching items</string>
+    <string name="error_film_message">Error while fetching data!</string>
+    <string name="error_on_initialization">Error while initializing data!</string>
+
+    <!--  Video Data Dialog State Messages  -->
+    <string name="video_data_dialog_state_error">Could not initialize video player!</string>
+    <string name="video_data_dialog_state_unavailable">I\'m sorry, this is not yet watchable.</string>
+    <string name="video_data_dialog_state_fetching">Fetching video data…</string>
+    <string name="video_data_dialog_state_extracting">Extracting video data…</string>
+    <string name="video_data_dialog_state_success">Starting player…</string>
+
+    <!--  Internet State Messages  -->
+    <string name="offline_message">You\'re offline</string>
+    <string name="online_message">Back online</string>
+
+    <!--  Watch Providers  -->
+    <string name="netflix">Hot on Netflix</string>
+    <string name="hbo">Popular on HBO</string>
+    <string name="amazon">Picks from Amazon</string>
+    <string name="disney_plus">Disney+ Picks</string>
+    <string name="apple_tv">Top Apple TV Picks</string>
+    <string name="marvel_studios">Marvel\'s MultiVerse</string>
+    <string name="sony_pictures">From Sony Pictures</string>
+    <string name="pixar">Pixar Magic</string>
+    <string name="walt_disney_pictures">Disney Classics</string>
+    <string name="warner_brothers_pictures">Warner Bros. Blockbusters</string>
+    <string name="paramount_pictures">Paramount Prestige</string>
+    <string name="dc_entertainment">DC Entertainment Picks</string>
+    <string name="dreamworks_pictures">Dreamworks Delights</string>
+    <string name="columbia_pictures">Columbia Pictures Showcase</string>
+    <string name="amc">Best on AMC Channel</string>
+    <string name="the_cw">Popular on CW Channel</string>
+
+</resources>

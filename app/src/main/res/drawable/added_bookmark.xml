@@ -1,0 +1,13 @@
+<vector android:height="34dp"
+    android:viewportHeight="24"
+    android:viewportWidth="24"
+    android:width="34dp"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <path
+        android:fillColor="#70000000"
+        android:pathData="M17 4 7 4c-1.1 0-1.99 0.9-1.99 2L5 22l7-3 7 3L19 6c0-1.1-0.9-2-2-2z" />
+    <path
+        android:name="bookmarkSurface"
+        android:fillColor="?attr/colorOnPrimary"
+        android:pathData="M17 3 7 3c-1.1 0-1.99 0.9-1.99 2L5 21l7-3 7 3L19 5c0-1.1-0.9-2-2-2z" />
+</vector>
