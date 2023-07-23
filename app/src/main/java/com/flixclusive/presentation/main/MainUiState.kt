@@ -6,6 +6,7 @@ import com.flixclusive.presentation.common.VideoDataDialogState
 
 data class MainUiState(
     val longClickedFilm: Film? = null,
+    val preferredServer: String? = null,
     val isShowingUpdateDialog: Boolean = false,
     val isShowingBottomNavigationBar: Boolean = true,
     val isShowingBottomSheetCard: Boolean = false,

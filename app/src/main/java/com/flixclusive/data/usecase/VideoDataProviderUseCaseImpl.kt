@@ -10,6 +10,7 @@ import com.flixclusive.domain.model.tmdb.TvShow
 import com.flixclusive.domain.repository.ConsumetRepository
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.domain.usecase.VideoDataProviderUseCase
+import com.flixclusive.domain.utils.ConsumetUtils.initializeSubtitles
 import com.flixclusive.presentation.common.Formatter
 import com.flixclusive.presentation.common.Functions
 import com.flixclusive.presentation.common.VideoDataDialogState
@@ -24,6 +25,7 @@ class VideoDataProviderUseCaseImpl @Inject constructor(
     override fun invoke(
         film: Film,
         watchHistoryItem: WatchHistoryItem?,
+        server: String?,
         consumetId: String?,
         episode: TMDBEpisode?,
         onSuccess: (VideoData, TMDBEpisode?) -> Unit
@@ -84,16 +86,16 @@ class VideoDataProviderUseCaseImpl @Inject constructor(
 
         emit(VideoDataDialogState.EXTRACTING)
         val titleToUse = Formatter.formatPlayerTitle(film, episodeToUse)
-
+        val serverToUse = server ?: consumetRepository.consumetDefaultVideoServer
         val videoData = when (film.filmType) {
             FilmType.MOVIE -> consumetRepository.getMovieStreamingLinks(
                 consumetId = mediaId,
-                server = consumetRepository.consumetDefaultVideoServer
+                server = serverToUse
             )
             FilmType.TV_SHOW -> consumetRepository.getTvShowStreamingLinks(
                 consumetId = mediaId,
                 episode = episodeToUse!!,
-                server = consumetRepository.consumetDefaultVideoServer
+                server = serverToUse
             )
         }
 
@@ -103,12 +105,19 @@ class VideoDataProviderUseCaseImpl @Inject constructor(
             is Resource.Success -> {
                 val data = videoData.data
                 if (data != null) {
+                    val servers = consumetRepository.getAvailableServers(
+                        mediaId = mediaId, episodeId = data.episodeId!!
+                    )
+
+                    if(servers is Resource.Failure)
+                        return@flow emit(VideoDataDialogState.ERROR)
+
                     emit(VideoDataDialogState.SUCCESS)
                     onSuccess(
                         data.copy(
                             title = titleToUse,
-                            mediaId = mediaId
-                        ),
+                            servers = servers.data ?: emptyList()
+                        ).initializeSubtitles(),
                         episodeToUse
                     )
                 } else {

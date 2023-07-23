@@ -115,7 +115,7 @@ fun HomeScreenContent(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            if(uiState.headerItem != null) {
+            if(uiState.headerItem != null && !uiState.hasErrors) {
                 item {
                     HomeHeader(
                         modifier = Modifier

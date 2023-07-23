@@ -5,4 +5,5 @@ data class SplashScreenUiState(
     val isNeedingAnUpdate: Boolean = false,
     val updateUrl: String = "",
     val isError: Boolean = false,
+    val isMaintenance: Boolean = false,
 )

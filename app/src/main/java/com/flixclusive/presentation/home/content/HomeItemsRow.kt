@@ -37,56 +37,59 @@ fun HomeItemsRow(
 ) {
     val context = LocalContext.current
 
-    Column(
-        modifier = modifier
-    ) {
-        Row(
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .padding(bottom = 5.dp)
-                .graphicsLayer {
-                    shape = RoundedCornerShape(10)
-                    clip = true
-                }
-                .clickable(enabled = flag != null) {
-                    flag?.let {
-                        onSeeAllClick(it, label.asString(context))
-                    }
-                }
+    if(dataListProvider()?.isNotEmpty() == true) {
+        Column(
+            modifier = modifier
         ) {
-            Text(
-                text = label.asString(),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .weight(1F)
-                    .padding(start = LABEL_START_PADDING)
-            )
-
-            if(flag != null) {
+                    .padding(bottom = 5.dp)
+                    .graphicsLayer {
+                        shape = RoundedCornerShape(10)
+                        clip = true
+                    }
+                    .clickable(enabled = flag != null) {
+                        flag?.let {
+                            onSeeAllClick(it, label.asString(context))
+                        }
+                    }
+            ) {
                 Text(
-                    text = UiText.StringResource(R.string.see_all).asString(),
-                    style = MaterialTheme.typography.labelMedium,
+                    text = label.asString(),
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
-                        .padding(end = LABEL_START_PADDING)
-                        .clickable { onSeeAllClick(flag, label.asString(context)) }
+                        .weight(1F)
+                        .padding(start = LABEL_START_PADDING)
                 )
-            }
-        }
 
-        LazyRow {
-            items(dataListProvider() ?: listOf(), key = { it.id }) { film ->
-                FilmCard(
-                    modifier = Modifier
-                        .width(135.dp),
-                    film = film,
-                    onClick = onFilmClick,
-                    onLongClick = { onFilmLongClick(film) }
-                )
+                if(flag != null) {
+                    Text(
+                        text = UiText.StringResource(R.string.see_all).asString(),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(end = LABEL_START_PADDING)
+                            .clickable { onSeeAllClick(flag, label.asString(context)) }
+                    )
+                }
+            }
+
+            LazyRow {
+                items(dataListProvider()!!, key = { it.id }) { film ->
+                    FilmCard(
+                        modifier = Modifier
+                            .width(135.dp),
+                        shouldShowTitle = false,
+                        film = film,
+                        onClick = onFilmClick,
+                        onLongClick = { onFilmLongClick(film) }
+                    )
+                }
             }
         }
     }

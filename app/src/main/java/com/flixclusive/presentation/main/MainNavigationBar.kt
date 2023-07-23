@@ -1,6 +1,11 @@
 package com.flixclusive.presentation.main
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -23,7 +28,7 @@ import com.ramcosta.composedestinations.spec.Direction
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 import com.ramcosta.composedestinations.spec.Route
 
-val NAVIGATION_BAR_HEIGHT = 100.dp
+val NAVIGATION_BAR_HEIGHT = 60.dp
 
 @Composable
 fun MainNavigationBar(
@@ -31,51 +36,58 @@ fun MainNavigationBar(
     onNavigate: (Direction) -> Unit,
     onButtonClickTwice: (NavGraphSpec) -> Unit
 ) {
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp,
+    Box(
         modifier = Modifier
-            .height(NAVIGATION_BAR_HEIGHT)
-            .drawBehind {
-                val strokeWidth = 2F
-                val x = size.width - strokeWidth
-
-                drawLine(
-                    color = Color.LightGray,
-                    start = Offset(0F, 0F),
-                    end = Offset(x, 0F),
-                    strokeWidth = strokeWidth
-                )
-            }
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
-        MainDestination.values().forEach {
-            val icon = remember(currentScreen) {
-                if(currentScreen == it.direction) {
-                    it.iconSelected
-                } else it.iconUnselected
-            }
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.surface,
+            windowInsets = WindowInsets(0.dp),
+            tonalElevation = 0.dp,
+            modifier = Modifier
+                .height(NAVIGATION_BAR_HEIGHT)
+                .drawBehind {
+                    val strokeWidth = 2F
+                    val x = size.width - strokeWidth
 
-            NavigationBarItem(
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.White,
-                    indicatorColor = MaterialTheme.colorScheme.surface
-                ),
-                selected = currentScreen == it.direction,
-                onClick = {
-                    if(it.direction == currentScreen) {
-                        onButtonClickTwice(it.navGraph)
-                        return@NavigationBarItem
-                    }
-
-                    onNavigate(it.direction)
-                },
-                icon = {
-                    Icon(
-                        painter = icon.asPainterResource(),
-                        contentDescription = stringResource(it.label)
+                    drawLine(
+                        color = Color.LightGray,
+                        start = Offset(0F, 0F),
+                        end = Offset(x, 0F),
+                        strokeWidth = strokeWidth
                     )
                 }
-            )
+        ) {
+            MainDestination.values().forEach {
+                val icon = remember(currentScreen) {
+                    if(currentScreen == it.direction) {
+                        it.iconSelected
+                    } else it.iconUnselected
+                }
+
+                NavigationBarItem(
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color.White,
+                        indicatorColor = MaterialTheme.colorScheme.surface
+                    ),
+                    selected = currentScreen == it.direction,
+                    onClick = {
+                        if(it.direction == currentScreen) {
+                            onButtonClickTwice(it.navGraph)
+                            return@NavigationBarItem
+                        }
+
+                        onNavigate(it.direction)
+                    },
+                    icon = {
+                        Icon(
+                            painter = icon.asPainterResource(),
+                            contentDescription = stringResource(it.label)
+                        )
+                    }
+                )
+            }
         }
     }
 }

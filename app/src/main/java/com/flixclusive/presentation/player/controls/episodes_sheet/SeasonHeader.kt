@@ -40,9 +40,8 @@ fun SeasonHeader(
     Row(
         modifier = modifier
             .background(Color.White.copy(0.1F), RoundedCornerShape(10))
-            .clickable {
-                if (!shouldShowBackIcon)
-                    onClick()
+            .clickable(enabled = !shouldShowBackIcon) {
+                onClick()
             },
         verticalAlignment = Alignment.CenterVertically
     ) {

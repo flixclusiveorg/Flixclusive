@@ -46,6 +46,7 @@
     <string name="trending">Trending Picks</string>
     <string name="next_episode">Next episode</string>
     <string name="recommended">Recommended</string>
+    <string name="servers">Servers</string>
     <string name="subtitles">Subtitles</string>
     <string name="quality">Quality</string>
     <string name="watch">Watch</string>
@@ -59,10 +60,14 @@
     <string name="update_label">Update</string>
     <string name="unlock_label">Unlock</string>
     <string name="close_label">Close</string>
-    <string name="splash_error_header">Something went wrong!</string>
     <string name="new_update_message">New versions are meant to fix, update or add major or minor features in the app. All details regarding the new update is included in the download page.</string>
     <string name="new_update_header">There\'s a new update!</string>
+
+    <!--  Error messages  -->
+    <string name="splash_error_header">Something went wrong!</string>
+    <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
     <string name="splash_error_message">An error occurred while initializing the app.</string>
+    <string name="splash_maintenance_message">Sorry for the inconvenience. We\'re performing a quick update. Be back soon!</string>
 
     <!--  Genres Label  -->
     <string name="action_label">Action Packed</string>
@@ -112,6 +117,7 @@
     <!--  Player Strings/Messages  -->
     <string name="subtitle_snackbar_message">Subtitle set to %%s</string>
     <string name="quality_snackbar_message">Quality set to %%s</string>
+    <string name="server_snackbar_message">Server set to %%s</string>
 
 
     <!--  Error State Messages  -->

@@ -14,6 +14,7 @@ const val CONSUMET_DEFAULT_WATCH_PROVIDER = "consumet_default_watch_provider"
 const val CONSUMET_DEFAULT_VIDEO_SERVER = "consumet_default_video_server"
 const val FLIXCLUSIVE_LATEST_VERSION = "flixclusive_latest_version"
 const val FLIXCLUSIVE_UPDATE_URL = "flixclusive_update_url"
+const val FLIXCLUSIVE_IS_MAINTENANCE = "flixclusive_is_maintenance"
 
 interface ConfigurationProvider {
     val remoteStatus: StateFlow<RemoteConfigStatus>
@@ -24,6 +25,7 @@ interface ConfigurationProvider {
     val consumetDefaultVideoServer: String
     val flixclusiveUpdateUrl: String
     val flixclusiveLatestVersion: Long
+    val isMaintenance: Boolean
 
     fun initialize()
 }

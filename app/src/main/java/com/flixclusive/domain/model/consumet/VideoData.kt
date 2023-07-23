@@ -5,10 +5,12 @@ import java.io.Serializable
 
 data class VideoData(
     val title: String? = null,
-    val mediaId: String = "",
+    val mediaId: String? = null,
+    val episodeId: String? = null,
     val headers: Headers = Headers(),
     val sources: List<Source> = emptyList(),
-    val subtitles: List<Subtitle> = emptyList()
+    val subtitles: List<Subtitle> = emptyList(),
+    val servers: List<VideoDataServer>? = null
 ) : Serializable
 
 data class Headers(

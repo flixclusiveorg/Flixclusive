@@ -2,6 +2,7 @@ package com.flixclusive.presentation.main
 
 
 import android.annotation.SuppressLint
+import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
@@ -55,7 +56,7 @@ import kotlinx.coroutines.launch
 )
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainApp() {
+fun MainActivity.MainApp() {
     val context = LocalContext.current
     val viewModel: MainSharedViewModel = hiltViewModel()
 
@@ -93,7 +94,6 @@ fun MainApp() {
                 videoData = videoData,
                 watchHistoryItem = longClickedFilmWatchHistoryItem ?: film?.toWatchHistoryItem(),
                 seasonCount = seasonCount,
-                seasonNumberSelected = uiState.episodeToPlay?.season,
                 episodeSelected = uiState.episodeToPlay,
             )
 
@@ -182,6 +182,7 @@ fun MainApp() {
     }
 
     if (uiState.videoDataDialogState != VideoDataDialogState.IDLE) {
+        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         VideoPlayerDialog(
             videoDataDialogState = uiState.videoDataDialogState,
             onConsumeDialog = {
@@ -189,6 +190,8 @@ fun MainApp() {
                 viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
             }
         )
+    } else {
+        window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     fullScreenImageToShow?.let { imagePath ->

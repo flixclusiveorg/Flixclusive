@@ -43,7 +43,6 @@ fun MoreEpisodesSheet(
     modifier: Modifier = Modifier,
     seasonData: Resource<Season>,
     availableSeasons: Int,
-    currentSeasonSelected: Int,
     currentEpisodeSelected: TMDBEpisode,
     watchHistoryItem: WatchHistoryItem?,
     onSeasonChange: (Int) -> Unit,
@@ -53,7 +52,7 @@ fun MoreEpisodesSheet(
     var hasInitializedScrollToItem by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
-    var selectedSeason by remember { mutableStateOf(currentSeasonSelected) }
+    var selectedSeason by remember { mutableStateOf(currentEpisodeSelected.season) }
     var shouldOpenSeasonsDropdown by remember { mutableStateOf(false) }
     var episodeDetailsToShow: TMDBEpisode? by remember { mutableStateOf(null) }
     val isLongClickedEpisodeCurrentlyBeingWatched = remember(episodeDetailsToShow) {
@@ -124,8 +123,8 @@ fun MoreEpisodesSheet(
                                             Color.Black,
                                             Color.Transparent
                                         ),
-                                        startX = 200F,
-                                        endX = 800F
+                                        startX = size.width.times(0.2F),
+                                        endX = size.width.times(0.8F)
                                     )
                                 )
                             }

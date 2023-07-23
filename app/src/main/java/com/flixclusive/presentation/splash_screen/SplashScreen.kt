@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -120,8 +121,16 @@ fun SplashScreen(
         )
     }
 
-    if(uiState.isError) {
-        ErrorRemoteConfigDialog(
+    if(uiState.isError || uiState.isMaintenance) {
+        val (title, description) = if(uiState.isMaintenance) {
+            Pair(stringResource(R.string.splash_maintenance_header), stringResource(R.string.splash_maintenance_message))
+        } else {
+            Pair(stringResource(R.string.splash_error_header), stringResource(R.string.splash_error_message))
+        }
+
+        ErrorDialog(
+            title = title,
+            description = description,
             onDismiss = onExitApplication
         )
     }

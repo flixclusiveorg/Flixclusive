@@ -2,6 +2,7 @@ package com.flixclusive.domain.repository
 
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.model.consumet.VideoData
+import com.flixclusive.domain.model.consumet.VideoDataServer
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 
@@ -19,4 +20,6 @@ interface ConsumetRepository {
         server: String
     ): Resource<VideoData?>
     suspend fun getConsumetFilmMediaId(film: Film?): String?
+
+    suspend fun getAvailableServers(mediaId: String, episodeId: String): Resource<List<VideoDataServer>>
 }

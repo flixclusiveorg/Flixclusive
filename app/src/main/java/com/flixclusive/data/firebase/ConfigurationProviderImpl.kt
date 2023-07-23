@@ -5,6 +5,7 @@ import com.flixclusive.domain.firebase.CONSUMET_API_HOST
 import com.flixclusive.domain.firebase.CONSUMET_DEFAULT_VIDEO_SERVER
 import com.flixclusive.domain.firebase.CONSUMET_DEFAULT_WATCH_PROVIDER
 import com.flixclusive.domain.firebase.ConfigurationProvider
+import com.flixclusive.domain.firebase.FLIXCLUSIVE_IS_MAINTENANCE
 import com.flixclusive.domain.firebase.FLIXCLUSIVE_LATEST_VERSION
 import com.flixclusive.domain.firebase.FLIXCLUSIVE_UPDATE_URL
 import com.flixclusive.domain.firebase.RemoteConfigStatus
@@ -24,6 +25,8 @@ class ConfigurationProviderImpl @Inject constructor(
     override val remoteStatus: StateFlow<RemoteConfigStatus>
         get() = _remoteStatus.asStateFlow()
 
+    override val isMaintenance: Boolean
+        get() = remoteConfig.getBoolean(FLIXCLUSIVE_IS_MAINTENANCE)
     override val tmdbApiKey: String
         get() = remoteConfig.getString(TMDB_API_KEY)
     override val consumetApiHost: String

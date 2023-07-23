@@ -11,6 +11,7 @@ interface VideoDataProviderUseCase {
     operator fun invoke(
         film: Film,
         watchHistoryItem: WatchHistoryItem?,
+        server: String?,
         consumetId: String? = null,
         episode: TMDBEpisode? = null,
         onSuccess: (VideoData, TMDBEpisode?) -> Unit
