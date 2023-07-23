@@ -10,7 +10,7 @@ plugins {
 
 // Version
 def versionMajor = 1
-def versionMinor = 0
+def versionMinor = 1
 def versionPatch = 0
 def versionBuild = 0
 
@@ -70,13 +70,14 @@ android {
 dependencies {
     implementation platform('androidx.compose:compose-bom:2022.10.00')
     androidTestImplementation platform('androidx.compose:compose-bom:2022.10.00')
-    def exoPlayerVersion = "1.0.2"
-    def room_version = "2.5.1"
+    def exoPlayerVersion = "1.1.0"
+    def room_version = "2.5.2"
 
     def composeBom = platform('androidx.compose:compose-bom:2023.05.01')
     implementation composeBom
     androidTestImplementation composeBom
 
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
@@ -101,6 +102,8 @@ dependencies {
     implementation "androidx.media3:media3-exoplayer-hls:$exoPlayerVersion"
     implementation "androidx.media3:media3-ui:$exoPlayerVersion"
     implementation "androidx.media3:media3-cast:$exoPlayerVersion"
+    implementation "androidx.media3:media3-common:$exoPlayerVersion"
+
 
     // ConstraintLayout
     implementation "androidx.constraintlayout:constraintlayout-compose:1.0.1"

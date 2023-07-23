@@ -29,7 +29,9 @@ import com.flixclusive.ui.theme.colorOnMediumEmphasis
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ErrorRemoteConfigDialog(
+fun ErrorDialog(
+    title: String,
+    description: String,
     onDismiss: () -> Unit
 ) {
     val dialogColor = MaterialTheme.colorScheme.surface
@@ -57,7 +59,7 @@ fun ErrorRemoteConfigDialog(
                     .padding(10.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.splash_error_header),
+                    text = title,
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
@@ -66,7 +68,7 @@ fun ErrorRemoteConfigDialog(
                 )
 
                 Text(
-                    text = stringResource(R.string.splash_error_message),
+                    text = description,
                     style = MaterialTheme.typography.bodySmall,
                     color = colorOnMediumEmphasis(Color.White),
                     textAlign = TextAlign.Center,

@@ -18,8 +18,6 @@ class SplashScreenViewModel @Inject constructor(
 ) : ViewModel() {
     private val _state = MutableStateFlow(SplashScreenUiState())
     val state = _state.asStateFlow()
-
-
     init {
         viewModelScope.launch {
             configurationProvider.remoteStatus.collect { status ->
@@ -27,6 +25,9 @@ class SplashScreenViewModel @Inject constructor(
                     when(status) {
                         RemoteConfigStatus.LOADING -> it
                         RemoteConfigStatus.SUCCESS -> {
+                            if(configurationProvider.isMaintenance)
+                                return@update it.copy(isMaintenance = true)
+
                             val isNeedingAnUpdate = if(configurationProvider.flixclusiveLatestVersion != -1L) {
                                 configurationProvider.flixclusiveLatestVersion > BuildConfig.VERSION_CODE.toLong()
                             } else false

@@ -1,7 +1,6 @@
 package com.flixclusive.presentation.home.content
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -38,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -51,7 +53,6 @@ import com.flixclusive.presentation.common.ImageRequestCreator.buildImageUrl
 import com.flixclusive.presentation.common.UiText
 import com.flixclusive.presentation.main.LABEL_START_PADDING
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeContinueWatchingRow(
     modifier: Modifier = Modifier,
@@ -171,16 +172,17 @@ fun HomeContinueWatchingItem(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black
-                            ),
-                            startY = 0F,
-                            endY = 500F
+                    .drawBehind {
+                        drawRect(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color.Black
+                                ),
+                                endY = size.height.times(0.9F)
+                            )
                         )
-                    )
+                    }
             ) {
                 val itemLabel = remember(watchHistoryItem) {
                     if(isTvShow) {
@@ -221,10 +223,14 @@ fun HomeContinueWatchingItem(
                     text = itemLabel,
                     style = MaterialTheme.typography.labelLarge,
                     color = Color.White,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
+                        .fillMaxWidth()
                         .padding(
                             start = 8.dp,
+                            end = 8.dp,
                             bottom = 8.dp,
                         )
                 )

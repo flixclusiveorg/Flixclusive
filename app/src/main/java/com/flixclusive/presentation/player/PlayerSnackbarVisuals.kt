@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 enum class PlayerSnackbarMessageType {
     Quality,
     Subtitle,
+    Server,
     Episode
 }
 
@@ -69,7 +70,7 @@ fun PlayerSnackbarVisuals(
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(messageData) {
         delay(200)
         isVisible = true
 

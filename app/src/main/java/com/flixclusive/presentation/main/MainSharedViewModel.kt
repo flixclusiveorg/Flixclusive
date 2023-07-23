@@ -14,6 +14,7 @@ import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.Movie
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.model.tmdb.TvShow
+import com.flixclusive.domain.preferences.VideoDataServerPreferences
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.domain.repository.WatchHistoryRepository
 import com.flixclusive.domain.repository.WatchlistRepository
@@ -39,6 +40,7 @@ class MainSharedViewModel @Inject constructor(
     private val watchHistoryRepository: WatchHistoryRepository,
     private val tmdbRepository: TMDBRepository,
     private val videoDataProvider: VideoDataProviderUseCase,
+    private val videoDataServerPreferences: VideoDataServerPreferences,
     networkConnectivityObserver: NetworkConnectivityObserver,
 ) : ViewModel() {
     private var onFilmLongClickJob: Job? = null
@@ -65,6 +67,16 @@ class MainSharedViewModel @Inject constructor(
 
     private val _longClickedFilmWatchHistoryItem = MutableStateFlow<WatchHistoryItem?>(null)
     val longClickedFilmWatchHistoryItem = _longClickedFilmWatchHistoryItem.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            videoDataServerPreferences.getPreferredServer.collectLatest { preferredServer ->
+                _uiState.update {
+                    it.copy(preferredServer = preferredServer)
+                }
+            }
+        }
+    }
 
     fun onBottomNavigationBarVisibilityChange(newVisibilityValue: Boolean) {
         _uiState.update { it.copy(isShowingBottomNavigationBar = newVisibilityValue) }
@@ -156,48 +168,51 @@ class MainSharedViewModel @Inject constructor(
             return
 
         onPlayClickJob = viewModelScope.launch {
-            updateVideoDataDialogState(VideoDataDialogState.FETCHING)
+            try {
+                updateVideoDataDialogState(VideoDataDialogState.FETCHING)
 
-            val film = filmToWatch ?: _uiState.value.longClickedFilm!!
+                val film = filmToWatch ?: _uiState.value.longClickedFilm!!
 
-            val filmToShow = when {
-                film.filmType == FilmType.MOVIE && film !is Movie -> {
-                    val response = tmdbRepository.getMovie(film.id)
+                val filmToShow = when {
+                    film.filmType == FilmType.MOVIE && film !is Movie -> {
+                        val response = tmdbRepository.getMovie(film.id)
 
-                    if(response !is Resource.Success) {
-                        updateVideoDataDialogState(VideoDataDialogState.ERROR)
-                        return@launch
+                        if(response !is Resource.Success) {
+                            updateVideoDataDialogState(VideoDataDialogState.ERROR)
+                            return@launch
+                        }
+
+                        response.data!!
                     }
+                    film.filmType == FilmType.TV_SHOW && film !is TvShow -> {
+                        val response = tmdbRepository.getTvShow(film.id)
 
-                    response.data!!
-                }
-                film.filmType == FilmType.TV_SHOW && film !is TvShow -> {
-                    val response = tmdbRepository.getTvShow(film.id)
+                        if(response !is Resource.Success) {
+                            updateVideoDataDialogState(VideoDataDialogState.ERROR)
+                            return@launch
+                        }
 
-                    if(response !is Resource.Success) {
-                        updateVideoDataDialogState(VideoDataDialogState.ERROR)
-                        return@launch
+                        response.data!!
                     }
-
-                    response.data!!
+                    else -> film
                 }
-                else -> film
-            }
 
-            _uiState.update { it.copy(longClickedFilm = filmToShow) }
-            _longClickedFilmWatchHistoryItem.update {
-                watchHistoryRepository.getWatchHistoryItemById(film.id)
-            }
-
-            videoDataProvider(
-                film = filmToShow,
-                watchHistoryItem = _longClickedFilmWatchHistoryItem.value,
-                episode = episode,
-                onSuccess = { videoDataDialogState, episodeToPlay ->
-                    _videoData.update { videoDataDialogState }
-                    _uiState.update { it.copy(episodeToPlay = episodeToPlay) }
+                _uiState.update { it.copy(longClickedFilm = filmToShow) }
+                _longClickedFilmWatchHistoryItem.update {
+                    watchHistoryRepository.getWatchHistoryItemById(film.id)
                 }
-            ).collectLatest(::updateVideoDataDialogState)
+
+                videoDataProvider(
+                    film = filmToShow,
+                    watchHistoryItem = _longClickedFilmWatchHistoryItem.value,
+                    episode = episode,
+                    server = _uiState.value.preferredServer,
+                    onSuccess = { videoDataDialogState, episodeToPlay ->
+                        _videoData.update { videoDataDialogState }
+                        _uiState.update { it.copy(episodeToPlay = episodeToPlay) }
+                    }
+                ).collectLatest(::updateVideoDataDialogState)
+            } catch (_: Exception) {}
         }
     }
     
@@ -217,6 +232,7 @@ class MainSharedViewModel @Inject constructor(
 
     fun onConsumePlayerDialog() {
         updateVideoDataDialogState(VideoDataDialogState.IDLE)
+        onPlayClickJob?.cancel() // Cancel job
         _videoData.update { null }
         _longClickedFilmWatchHistoryItem.update { null }
         _uiState.update { it.copy(episodeToPlay = null) }

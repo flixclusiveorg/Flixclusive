@@ -16,23 +16,26 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.di.DefaultDispatcher
 import com.flixclusive.domain.common.Resource
-import com.flixclusive.domain.model.consumet.Subtitle
 import com.flixclusive.domain.model.consumet.VideoData
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.Season
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
+import com.flixclusive.domain.preferences.VideoDataServerPreferences
 import com.flixclusive.domain.usecase.SeasonProviderUseCase
 import com.flixclusive.domain.usecase.VideoDataProviderUseCase
 import com.flixclusive.domain.usecase.WatchHistoryItemManagerUseCase
+import com.flixclusive.domain.utils.ConsumetUtils.getDefaultSubtitleIndex
 import com.flixclusive.presentation.common.VideoDataDialogState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,9 +46,10 @@ import javax.inject.Inject
 class PlayerViewModel @Inject constructor(
     @DefaultDispatcher val defaultDispatcher: CoroutineDispatcher,
     private val videoDataProvider: VideoDataProviderUseCase,
+    private val videoDataServerPreferences: VideoDataServerPreferences,
     private val seasonProvider: SeasonProviderUseCase,
     private val watchHistoryItemManager: WatchHistoryItemManagerUseCase,
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val snackbarQueue = mutableStateListOf<PlayerSnackbarMessage>()
 
@@ -55,24 +59,26 @@ class PlayerViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
-    private val _videoData =
-        MutableStateFlow(savedStateHandle.get<VideoData>(VIDEO_DATA) ?: VideoData())
-    val videoData: StateFlow<VideoData> = _videoData.asStateFlow()
-
-    var watchHistoryItem =
-        savedStateHandle.get<WatchHistoryItem>(WATCH_HISTORY_ITEM) ?: WatchHistoryItem()
+    val videoData = savedStateHandle.getStateFlow(VIDEO_DATA, VideoData())
+    var watchHistoryItem = savedStateHandle.get<WatchHistoryItem>(WATCH_HISTORY_ITEM) ?: WatchHistoryItem()
 
     // Only valid if video data is a tv show
-    val seasonCount = savedStateHandle.get<Int?>(key = SEASON_COUNT)
-    val currentSelectedEpisode = savedStateHandle.get<TMDBEpisode?>(key = EPISODE_SELECTED)
-    val currentSelectedSeasonNumber = savedStateHandle.get<Int?>(key = SEASON_NUMBER_SELECTED)
-
+    val seasonCount = savedStateHandle.get<Int?>(SEASON_COUNT)
+    val currentSelectedEpisode = savedStateHandle.getStateFlow<TMDBEpisode?>(EPISODE_SELECTED, null)
     private val _season = MutableStateFlow<Resource<Season>?>(null)
     val season = _season.asStateFlow()
 
+    private val preferredServer = videoDataServerPreferences.getPreferredServer
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
     private var videoTrackGroup: TrackGroup? = null
     private val qualityTrackGroups = mutableListOf<Int>()
-    val availableQualities = mutableListOf<String>()
+    val availableQualities = mutableStateListOf<String>()
+    val availableSubtitles = mutableStateListOf<SubtitleConfiguration>()
 
     private var onSeasonChangeJob: Job? = null
     private var onShowSnackbarJob: Job? = null
@@ -80,17 +86,31 @@ class PlayerViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            if (currentSelectedSeasonNumber != null) {
-                if(currentSelectedSeasonNumber != seasonCount) {
-                    fetchSeasonFromProvider(seasonCount!!)
-                }
+            preferredServer.collectLatest { preferredServerName ->
+                val selectedServerIndex = videoData.value.servers?.indexOfFirst { server ->
+                    server.serverName == preferredServerName
+                } ?: -1
 
-                onSeasonChange(currentSelectedSeasonNumber)
+                if(selectedServerIndex == -1)
+                    return@collectLatest
+
+                updateServerSelected(server = selectedServerIndex)
             }
         }
 
-        getLastWatchTime()
-        initializeSubtitles()
+        viewModelScope.launch {
+            if (currentSelectedEpisode.value != null) {
+                if(currentSelectedEpisode.value!!.season != seasonCount) {
+                    fetchSeasonFromProvider(seasonCount!!)
+                }
+
+                onSeasonChange(currentSelectedEpisode.value!!.season)
+            }
+        }
+
+        startExtractingSubtitles()
+        updateSubtitle(videoData.value.getDefaultSubtitleIndex())
+        getLastWatchTime(currentSelectedEpisode.value)
     }
 
     fun updatePlayerState(
@@ -124,15 +144,15 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    private fun getLastWatchTime() {
+    private fun getLastWatchTime(episodeToWatch: TMDBEpisode?) {
         if(watchHistoryItem.episodesWatched.isEmpty())
             return
 
         val isTvShow = watchHistoryItem.seasons != null
         val currentTimeToUse = if (isTvShow) {
             val episodeToUse = watchHistoryItem.episodesWatched.find {
-                it.seasonNumber == currentSelectedSeasonNumber!!
-                    && it.episodeNumber == currentSelectedEpisode!!.episode
+                it.seasonNumber == episodeToWatch?.season
+                    && it.episodeNumber == episodeToWatch?.episode
             }
 
             if(episodeToUse?.isFinished == true) 0L
@@ -149,58 +169,31 @@ class PlayerViewModel @Inject constructor(
     }
 
     /**
-     * Extracts the subtitle configurations from the video data.
+     * Observes the latest video data and
+     * extracts the subtitle configurations of it.
      *
-     * @return The list of subtitle configurations.
      */
-    fun extractSubtitles(): List<SubtitleConfiguration> {
-        val list = mutableListOf<SubtitleConfiguration>()
+    private fun startExtractingSubtitles() {
+        viewModelScope.launch {
+            videoData.collectLatest {
+                availableSubtitles.clear()
+                it.subtitles.forEach { subtitle ->
+                    val mimeType = when (subtitle.url.split(".").last()) {
+                        "vtt" -> TEXT_VTT
+                        else -> null
+                    }
 
-        _videoData.value.subtitles.forEach { subtitle ->
-            val mimeType = when (subtitle.url.split(".").last()) {
-                "vtt" -> TEXT_VTT
-                else -> null
+                    val subtitleConfiguration = SubtitleConfiguration
+                        .Builder(subtitle.url.toUri())
+                        .setMimeType(mimeType)
+                        .setLanguage(subtitle.lang.lowercase())
+                        .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+                        .build()
+
+                    availableSubtitles.add(subtitleConfiguration)
+                }
             }
-
-            val subtitleConfiguration = SubtitleConfiguration
-                .Builder(subtitle.url.toUri())
-                .setMimeType(mimeType)
-                .setLanguage(subtitle.lang.lowercase())
-                .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
-                .build()
-
-            list.add(subtitleConfiguration)
         }
-
-        return list
-    }
-
-    /**
-     * Initializes the subtitles by adding an "Off" option and updating the video data with the new subtitles.
-     * If the list of subtitles available contains the default language (English), it initializes the next that specific subtitle.
-     */
-    private fun initializeSubtitles() {
-        val newSubtitles = listOf(
-            Subtitle(
-                url = "",
-                lang = "Off"
-            )
-        ) + videoData.value.subtitles
-
-        _videoData.update {
-            it.copy(subtitles = newSubtitles)
-        }
-
-        val subtitleIndex = when(
-            val index = videoData.value.subtitles.indexOfFirst {
-                it.lang.contains("english", ignoreCase = true)
-            }
-        ) {
-            -1 -> 0
-            else -> index
-        }
-
-        updateSubtitle(subtitleIndex)
     }
 
     /**
@@ -222,7 +215,7 @@ class PlayerViewModel @Inject constructor(
                 }
             }
 
-            val isAutoQualityAvailable = _videoData.value.sources.find {
+            val isAutoQualityAvailable = videoData.value.sources.find {
                 it.quality.contains(
                     "auto",
                     ignoreCase = true
@@ -297,44 +290,60 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
+    fun onVideoServerChange(serverIndex: Int) {
+        viewModelScope.launch {
+            val selectedServer = videoData.value.servers!![serverIndex].serverName
+            videoDataServerPreferences.savePreferredServer(serverName = selectedServer)
+
+            videoDataProvider(
+                film = watchHistoryItem.film,
+                consumetId = videoData.value.mediaId,
+                server = selectedServer,
+                watchHistoryItem = watchHistoryItem,
+                episode = currentSelectedEpisode.value,
+                onSuccess = { newData, _ ->
+                    videoTrackGroup = null
+                    qualityTrackGroups.clear()
+                    availableQualities.clear()
+                    _uiState.update { it.copy(selectedQuality = 0) }
+
+                    savedStateHandle[VIDEO_DATA] = newData
+                }
+            ).collectLatest {}
+        }
+    }
+
     /**
      * Callback function triggered when an episode is clicked.
      *
-     * @param nextEpisode The next episode to be played, or null if not available.
+     * @param episodeToWatch The next episode to be played, or null if not available.
      */
-    suspend fun onEpisodeClick(nextEpisode: TMDBEpisode? = null): TMDBEpisode? {
-        var episode = nextEpisode
-
+    suspend fun onEpisodeClick(episodeToWatch: TMDBEpisode? = null) {
+        var episode = episodeToWatch
         if(episode == null) {
-            episode = currentSelectedEpisode!!.getNextEpisode()
+            episode = currentSelectedEpisode.value!!.getNextEpisode()
         }
 
-        updateIsPlayingState(isPlaying = false)
         withContext(defaultDispatcher) {
             videoDataProvider(
                 film = watchHistoryItem.film,
-                consumetId = _videoData.value.mediaId,
+                consumetId = videoData.value.mediaId,
+                server = preferredServer.value,
                 watchHistoryItem = watchHistoryItem,
                 episode = episode,
-                onSuccess = { newData, newEpisode ->
-                    _videoData.update {
-                        newData.copy(
-                            mediaId = it.mediaId,
-                            title = replaceVideoTitle(
-                                oldTitle = it.title!!,
-                                episode = newEpisode!!
-                            )
-                        )
-                    }
+                onSuccess = { newData, episode ->
+                    _uiState.update { PlayerUiState(selectedServer = it.selectedServer) }
+                    updateSubtitle(newData.getDefaultSubtitleIndex())
+                    getLastWatchTime(episode)
+
+                    savedStateHandle[VIDEO_DATA] = newData
+                    savedStateHandle[EPISODE_SELECTED] = episode
+
                 }
             ).collectLatest { state ->
                 _dialogState.update { state }
             }
         }
-
-        return if(_dialogState.value != VideoDataDialogState.SUCCESS)
-            null
-        else episode
     }
 
     private suspend fun TMDBEpisode.getNextEpisode(): TMDBEpisode {
@@ -360,7 +369,7 @@ class PlayerViewModel @Inject constructor(
             } ?: throw NullPointerException("Episode cannot be null!")
         } else if(seasonToUse.seasonNumber + 1 <= seasonCount!!) {
             seasonToUse = withContext(defaultDispatcher) {
-                fetchSeasonFromProvider(seasonNumber = currentSelectedSeasonNumber!! + 1)
+                fetchSeasonFromProvider(seasonNumber = currentSelectedEpisode.value!!.season + 1)
             }
 
             nextEpisode = seasonToUse!!.episodes[0]
@@ -386,21 +395,6 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    private fun replaceVideoTitle(
-        oldTitle: String,
-        episode: TMDBEpisode
-    ): String {
-        val seasonNumber = episode.season
-        val episodeNumber = episode.episode
-        val episodeTitle = episode.title
-
-        val newTitle = oldTitle.replace(Regex("""(\[S)\d+(-E)\d+(]:)(.*)""")) {
-            "${it.groupValues[1]}$seasonNumber${it.groupValues[2]}$episodeNumber${it.groupValues[3]} $episodeTitle"
-        }
-
-        return newTitle
-    }
-
     /**
      * Resets the player dialog state to idle.
      */
@@ -417,6 +411,12 @@ class PlayerViewModel @Inject constructor(
     private fun updateVideoQuality(quality: Int) {
         _uiState.update {
             it.copy(selectedQuality = quality)
+        }
+    }
+
+    private fun updateServerSelected(server: Int) {
+        _uiState.update {
+            it.copy(selectedServer = server)
         }
     }
 
@@ -438,12 +438,17 @@ class PlayerViewModel @Inject constructor(
     fun updateWatchHistory() {
         viewModelScope.launch {
             val currentTime = _uiState.value.currentTime
+            val minute = 60000
+
+            if(currentTime <= minute)
+                return@launch
+
             val totalDuration = _uiState.value.totalDuration
             watchHistoryItem = watchHistoryItemManager.updateWatchHistoryItem(
                 watchHistoryItem = watchHistoryItem,
                 currentTime = currentTime,
                 totalDuration = totalDuration,
-                currentSelectedEpisode = currentSelectedEpisode
+                currentSelectedEpisode = currentSelectedEpisode.value
             )
         }
     }
@@ -481,16 +486,16 @@ class PlayerViewModel @Inject constructor(
             }
 
             when(type) {
-                PlayerSnackbarMessageType.Quality, PlayerSnackbarMessageType.Subtitle -> {
-                    snackbarQueue.removeAt(itemIndexInQueue)
-                    delay(700)
-                    snackbarQueue.add(PlayerSnackbarMessage(message, type))
-                }
                 PlayerSnackbarMessageType.Episode -> {
                     val itemInQueue = snackbarQueue[itemIndexInQueue]
                     snackbarQueue[itemIndexInQueue] = itemInQueue.copy(
                         message = message
                     )
+                }
+                else -> {
+                    snackbarQueue.removeAt(itemIndexInQueue)
+                    delay(700)
+                    snackbarQueue.add(PlayerSnackbarMessage(message, type))
                 }
             }
         }

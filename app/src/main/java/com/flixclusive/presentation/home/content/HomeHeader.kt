@@ -124,8 +124,7 @@ fun HomeHeader(
                                 Color.Transparent,
                                 backgroundColor
                             ),
-                            startY = 0F,
-                            endY = 1160F
+                            endY = size.height.times(0.9F)
                         )
                     )
                 },
@@ -189,8 +188,7 @@ fun HomeHeader(
                 FlowRow(
                     modifier = Modifier.padding(top = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    maxItemsInEachRow = 4
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     film.genres.forEach {
                         OutlinedButton(

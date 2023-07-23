@@ -1,4 +1,4 @@
-package com.flixclusive.data.utils
+package com.flixclusive.domain.utils
 
 import com.flixclusive.data.dto.tmdb.tv.TvShowSeasonsPreview
 import com.flixclusive.domain.model.tmdb.TMDBSearchItem

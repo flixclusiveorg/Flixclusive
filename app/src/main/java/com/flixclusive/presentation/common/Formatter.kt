@@ -9,7 +9,6 @@ import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.GENRES_LIST
 import com.flixclusive.domain.model.tmdb.Genre
-import com.flixclusive.domain.model.tmdb.Movie
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -28,7 +27,7 @@ object Formatter {
         val hoursText = if (hours > 0) "${hours}h " else ""
         val minutesText = if (minutes > 0) "${minutes}m" else ""
 
-        return hoursText + minutesText
+        return (hoursText + minutesText).trim()
     }
 
     fun formatDate(dateString: String?): String {
@@ -133,7 +132,11 @@ object Formatter {
         episode: TMDBEpisode? = null
     ): String {
         return when(film.filmType) {
-            FilmType.MOVIE -> String.format(FILM_MOVIE_TITLE_FORMAT, film.title, (film as Movie).releaseDate.split("-")[0])
+            FilmType.MOVIE -> {
+                val yearRegex = Regex("\\d{4}")
+                val year = yearRegex.find(film.dateReleased)?.value
+                String.format(FILM_MOVIE_TITLE_FORMAT, film.title, year)
+            }
             FilmType.TV_SHOW -> String.format(FILM_TV_SHOW_TITLE_FORMAT, film.title, episode!!.season, episode.episode, episode.title)
         }
     }

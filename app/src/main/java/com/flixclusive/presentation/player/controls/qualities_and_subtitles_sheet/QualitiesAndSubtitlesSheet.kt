@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.flixclusive.R
 import com.flixclusive.domain.model.consumet.Subtitle
+import com.flixclusive.domain.model.consumet.VideoDataServer
 import com.flixclusive.presentation.common.composables.applyDropShadow
 import com.flixclusive.presentation.common.composables.fadingEdge
 
@@ -40,10 +41,13 @@ fun QualitiesAndSubtitlesSheet(
     modifier: Modifier = Modifier,
     subtitles: List<Subtitle>,
     qualities: List<String>,
+    servers: List<VideoDataServer>,
+    selectedServer: Int,
     selectedSubtitle: Int,
     selectedQuality: Int,
     onSubtitleChange: (Int, String) -> Unit,
     onVideoQualityChange: (Int, String) -> Unit,
+    onVideoServerChange: (Int, String) -> Unit,
     onDismissSheet: () -> Unit,
 ) {
     val listBottomFade =
@@ -92,7 +96,7 @@ fun QualitiesAndSubtitlesSheet(
                                             Color.Black
                                         ),
                                         startX = 0F,
-                                        endX = 600F
+                                        endX = size.width.times(0.4F)
                                     )
                                 )
                             }
@@ -114,9 +118,34 @@ fun QualitiesAndSubtitlesSheet(
 
                         item {
                             Text(
-                                text = stringResource(R.string.quality),
+                                text = stringResource(R.string.servers),
                                 style = MaterialTheme.typography.labelLarge.applyDropShadow(),
                                 modifier = Modifier.padding(start = 20.dp),
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+
+                        itemsIndexed(
+                            items = servers,
+                            key = { _, server -> server.serverName }
+                        ) { i, _ ->
+                            SheetItem(
+                                name = "Server ${i + 1}",
+                                index = i,
+                                selectedIndex = selectedServer,
+                                onClick = { newSelectedIndex, newSelectedItem ->
+                                    onVideoServerChange(newSelectedIndex, newSelectedItem)
+                                    onDismissSheet()
+                                }
+                            )
+                        }
+
+                        item {
+                            Text(
+                                text = stringResource(R.string.quality),
+                                style = MaterialTheme.typography.labelLarge.applyDropShadow(),
+                                modifier = Modifier.padding(start = 20.dp, top = 20.dp),
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
@@ -126,12 +155,12 @@ fun QualitiesAndSubtitlesSheet(
                             items = qualities,
                             key = { _, quality -> quality }
                         ) { i, quality ->
-                            SheetQualityItem(
-                                quality = quality,
+                            SheetItem(
+                                name = quality,
                                 index = i,
-                                selectedQuality = selectedQuality,
-                                onQualityChange = { newSelectedIndex, newSelectedQuality ->
-                                    onVideoQualityChange(newSelectedIndex, newSelectedQuality)
+                                selectedIndex = selectedQuality,
+                                onClick = { newSelectedIndex, newSelectedItem ->
+                                    onVideoQualityChange(newSelectedIndex, newSelectedItem)
                                     onDismissSheet()
                                 }
                             )
@@ -151,12 +180,12 @@ fun QualitiesAndSubtitlesSheet(
                             items = subtitles,
                             key = { _, subtitle -> subtitle }
                         ) { i, subtitle ->
-                            SheetSubtitleItem(
-                                subtitle = subtitle,
+                            SheetItem(
+                                name = subtitle.lang,
                                 index = i,
-                                selectedSubtitle = selectedSubtitle,
-                                onSubtitleChange = { newSelectedIndex, newSelectedSubtitle ->
-                                    onSubtitleChange(newSelectedIndex, newSelectedSubtitle)
+                                selectedIndex = selectedSubtitle,
+                                onClick = { newSelectedIndex, newSelectedItem ->
+                                    onSubtitleChange(newSelectedIndex, newSelectedItem)
                                     onDismissSheet()
                                 }
                             )

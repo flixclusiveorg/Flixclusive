@@ -8,8 +8,8 @@ import com.flixclusive.data.dto.tmdb.common.toList
 import com.flixclusive.data.dto.tmdb.toMovie
 import com.flixclusive.data.dto.tmdb.toTvShow
 import com.flixclusive.data.dto.tmdb.tv.toSeason
-import com.flixclusive.data.utils.TMDBUtils.filterOutUnreleasedRecommendations
-import com.flixclusive.data.utils.TMDBUtils.filterOutZeroSeasons
+import com.flixclusive.domain.utils.TMDBUtils.filterOutUnreleasedRecommendations
+import com.flixclusive.domain.utils.TMDBUtils.filterOutZeroSeasons
 import com.flixclusive.di.IoDispatcher
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.firebase.ConfigurationProvider

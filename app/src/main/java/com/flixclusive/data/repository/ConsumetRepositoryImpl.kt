@@ -2,18 +2,18 @@ package com.flixclusive.data.repository
 
 import android.util.Log
 import com.flixclusive.common.Constants.FLIXCLUSIVE_LOG_TAG
-import com.flixclusive.common.Constants.UNAVAILABLE_SERVER_CODE
 import com.flixclusive.data.api.ConsumetApiService
-import com.flixclusive.data.utils.ConsumetUtils.getConsumetEpisodeId
 import com.flixclusive.di.IoDispatcher
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.firebase.ConfigurationProvider
 import com.flixclusive.domain.model.consumet.VideoData
+import com.flixclusive.domain.model.consumet.VideoDataServer
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.FilmType.Companion.toFilmType
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.model.tmdb.TvShow
 import com.flixclusive.domain.repository.ConsumetRepository
+import com.flixclusive.domain.utils.ConsumetUtils.getConsumetEpisodeId
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -36,37 +36,36 @@ class ConsumetRepositoryImpl @Inject constructor(
         return withContext(ioDispatcher) {
             try {
                 val episodeId = consumetId.split("-").last()
-                val response = consumetApiService.getStreamingLinks(
-                    episodeId = episodeId,
-                    mediaId = consumetId,
-                    server = server,
-                    provider = consumetDefaultWatchProvider
-                )
-
-                Resource.Success(response)
-            } catch (e: HttpException) {
-                if(e.code() != UNAVAILABLE_SERVER_CODE || server != consumetDefaultVideoServer) {
-                    Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
-                    return@withContext Resource.Failure(e.message ?: "Unknown error occurred")
-                }
-
-                val episodeId = consumetId.split("-").last()
                 val availableServers = consumetApiService.getAvailableServers(
                     episodeId = episodeId,
                     mediaId = consumetId,
                     provider = consumetDefaultWatchProvider
                 )
+                var index = availableServers.indexOfFirst { it.serverName == server }
 
-                var result: Resource<VideoData?> = Resource.Failure("Movie not watchable yet!")
-                var index = 0
-                while (result !is Resource.Success && index < availableServers.size) {
-                    val newServer = availableServers[index++].name
-                    result = getMovieStreamingLinks(
-                        consumetId = consumetId,
-                        server = newServer
-                    )
+                for (retries in availableServers.indices) {
+                    try {
+                        if (index >= availableServers.size || index == -1) {
+                            // Reset the index if it exceeds the available servers list
+                            index = 0
+                        }
+
+                        val response = consumetApiService.getStreamingLinks(
+                            episodeId = episodeId,
+                            mediaId = consumetId,
+                            server = availableServers[index].serverName,
+                            provider = consumetDefaultWatchProvider
+                        )
+
+                        return@withContext Resource.Success(
+                            response.copy(episodeId = episodeId, mediaId = consumetId)
+                        )
+                    } catch (e: HttpException) {
+                        index++
+                    }
                 }
-                result
+
+                Resource.Failure("No servers are available!")
             } catch (e: Exception) {
                 Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
@@ -80,55 +79,47 @@ class ConsumetRepositoryImpl @Inject constructor(
         server: String
     ): Resource<VideoData?> {
         return withContext(ioDispatcher) {
-            val episodeId = try {
+            try {
                 val tvShowInfo = consumetApiService.getTvShow(
                     id = consumetId,
                     provider = consumetDefaultWatchProvider
                 )
-                getConsumetEpisodeId(
+
+                val episodeId = getConsumetEpisodeId(
                     episode = episode,
                     listOfEpisode = tvShowInfo.episodes
                 ) ?: return@withContext Resource.Success(null)
-            } catch (e: Exception) {
-                val errorMessage = "Could not get episode info from Consumet API"
-                val episodeIdNotFoundException = IllegalStateException(errorMessage)
-                
-                Log.e(FLIXCLUSIVE_LOG_TAG, episodeIdNotFoundException.stackTraceToString())
-                return@withContext Resource.Failure(episodeIdNotFoundException.message ?: errorMessage)
-            }
-            
-            try {
-                val response = consumetApiService.getStreamingLinks(
-                    episodeId = episodeId,
-                    mediaId = consumetId,
-                    server = server,
-                    provider = consumetDefaultWatchProvider
-                )
-
-                Resource.Success(response)
-            } catch (e: HttpException) {
-                if(e.code() != UNAVAILABLE_SERVER_CODE || server != consumetDefaultVideoServer) {
-                    Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
-                    return@withContext Resource.Failure(e.message ?: "Unknown error occurred")
-                }
 
                 val availableServers = consumetApiService.getAvailableServers(
                     episodeId = episodeId,
                     mediaId = consumetId,
                     provider = consumetDefaultWatchProvider
                 )
-                
-                var result: Resource<VideoData?> = Resource.Failure("Episode not watchable yet!")
-                var index = 0
-                while (result !is Resource.Success && index < availableServers.size) {
-                    val newServer = availableServers[index++].name
-                    result = getTvShowStreamingLinks(
-                        consumetId = consumetId,
-                        episode = episode,
-                        server = newServer
-                    )
+                var index = availableServers.indexOfFirst { it.serverName == server }
+
+                for (retries in availableServers.indices) {
+                    try {
+                        if (index >= availableServers.size || index == -1) {
+                            // Reset the index if it exceeds the available servers list
+                            index = 0
+                        }
+
+                        val response = consumetApiService.getStreamingLinks(
+                            episodeId = episodeId,
+                            mediaId = consumetId,
+                            server = availableServers[index].serverName,
+                            provider = consumetDefaultWatchProvider
+                        )
+
+                        return@withContext Resource.Success(
+                            response.copy(episodeId = episodeId, mediaId = consumetId)
+                        )
+                    } catch (e: HttpException) {
+                        index++
+                    }
                 }
-                result
+
+                Resource.Failure("No servers are available!")
             } catch (e: Exception) {
                 Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
@@ -201,6 +192,25 @@ class ConsumetRepositoryImpl @Inject constructor(
             } catch (e: Exception) {
                 Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
                 null
+            }
+        }
+    }
+
+    override suspend fun getAvailableServers(
+        mediaId: String,
+        episodeId: String,
+    ): Resource<List<VideoDataServer>> {
+        return withContext(ioDispatcher) {
+            try {
+                val result = consumetApiService.getAvailableServers(
+                    episodeId = episodeId,
+                    mediaId = mediaId,
+                    provider = consumetDefaultWatchProvider
+                )
+                Resource.Success(result)
+            } catch (e: Exception) {
+                Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
+                Resource.Failure(e.message ?: "Unknown failure obtaining servers!")
             }
         }
     }

@@ -49,10 +49,12 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.R
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.model.consumet.Subtitle
+import com.flixclusive.domain.model.consumet.VideoDataServer
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.Season
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.presentation.common.UiText
+import com.flixclusive.presentation.common.VideoDataDialogState
 import com.flixclusive.presentation.player.PlayerSnackbarMessageType
 import com.flixclusive.presentation.player.controls.episodes_sheet.MoreEpisodesSheet
 import com.flixclusive.presentation.player.controls.qualities_and_subtitles_sheet.QualitiesAndSubtitlesSheet
@@ -66,13 +68,14 @@ private const val SEEK_ANIMATION_DELAY = 450L
 @Composable
 fun PlayerControls(
     watchHistoryItem: WatchHistoryItem?,
+    dialogState: VideoDataDialogState,
     seasonDataProvider: () -> Resource<Season>?,
     availableSeasons: Int?,
-    currentSeasonSelected: Int?,
     currentEpisodeSelected: TMDBEpisode?,
     isLastEpisode: Boolean,
     subtitlesProvider: () -> List<Subtitle>,
     videoQualitiesProvider: () -> List<String>,
+    videoServersProvider: () -> List<VideoDataServer>,
     shouldShowControls: () -> Boolean,
     showControls: (Boolean) -> Unit,
     onBack: () -> Unit,
@@ -87,6 +90,7 @@ fun PlayerControls(
     playbackState: () -> Int,
     selectedSubtitleProvider: () -> Int,
     selectedVideoQualityProvider: () -> Int,
+    selectedVideoServerProvider: () -> Int,
     onSeekChanged: (timeMs: Float) -> Unit,
     onSeekBack: () -> Unit,
     onSeekForward: () -> Unit,
@@ -94,6 +98,7 @@ fun PlayerControls(
     onSeasonChange: (Int) -> Unit,
     onSubtitleChange: (Int) -> Unit,
     onVideoQualityChange: (Int) -> Unit,
+    onVideoServerChange: (Int) -> Unit,
     onEpisodeClick: (TMDBEpisode?) -> Unit,
 ) {
     val context = LocalContext.current
@@ -102,6 +107,7 @@ fun PlayerControls(
 
     val subtitles = remember(subtitlesProvider()) { subtitlesProvider() }
     val videoQualities = remember(videoQualitiesProvider()) { videoQualitiesProvider() }
+    val videoServers = remember(videoServersProvider()) { videoServersProvider() }
 
     val isVisible = remember(shouldShowControls()) { shouldShowControls() }
 
@@ -121,6 +127,7 @@ fun PlayerControls(
 
     val selectedSubtitle = remember(selectedSubtitleProvider()) { selectedSubtitleProvider() }
     val selectedVideoQuality = remember(selectedVideoQualityProvider()) { selectedVideoQualityProvider() }
+    val selectedVideoServer = remember(selectedVideoServerProvider()) { selectedVideoServerProvider() }
 
     val topFadeEdge = remember { Brush.verticalGradient(0F to Color.Black, 0.9F to Color.Transparent) }
     val bottomFadeEdge = remember { Brush.verticalGradient(0F to Color.Transparent, 0.9F to Color.Black) }
@@ -154,9 +161,10 @@ fun PlayerControls(
         isVisible,
         shouldOpenQualitiesAndSubtitles,
         shouldOpenEpisodesSheet,
-        controlsVisibilityTimeout
+        controlsVisibilityTimeout,
+        dialogState
     ) {
-        if(shouldOpenQualitiesAndSubtitles || shouldOpenEpisodesSheet) {
+        if(shouldOpenQualitiesAndSubtitles || shouldOpenEpisodesSheet || dialogState != VideoDataDialogState.IDLE) {
             return@LaunchedEffect
         }
 
@@ -460,7 +468,6 @@ fun PlayerControls(
         MoreEpisodesSheet(
             seasonData = seasonData!!,
             availableSeasons = availableSeasons!!,
-            currentSeasonSelected = currentSeasonSelected!!,
             currentEpisodeSelected = currentEpisodeSelected!!,
             watchHistoryItem = watchHistoryItem,
             onEpisodeClick = {
@@ -489,8 +496,10 @@ fun PlayerControls(
         QualitiesAndSubtitlesSheet(
             subtitles = subtitles,
             qualities = videoQualities,
+            servers = videoServers,
             selectedSubtitle = selectedSubtitle,
             selectedQuality = selectedVideoQuality,
+            selectedServer = selectedVideoServer,
             onSubtitleChange = { i, message ->
                 onSubtitleChange(i)
 
@@ -501,11 +510,24 @@ fun PlayerControls(
                 onVideoQualityChange(i)
 
                 val qualityMessageFormat = UiText.StringResource(R.string.quality_snackbar_message).asString(context)
-                onSnackbarToggle(String.format(qualityMessageFormat, message), PlayerSnackbarMessageType.Quality)
+                onSnackbarToggle(
+                    String.format(qualityMessageFormat, message),
+                    PlayerSnackbarMessageType.Quality
+                )
+            },
+            onVideoServerChange = { i, message ->
+                onVideoServerChange(i)
+
+                val qualityMessageFormat = UiText.StringResource(R.string.server_snackbar_message).asString(context)
+                onSnackbarToggle(
+                    String.format(qualityMessageFormat, message),
+                    PlayerSnackbarMessageType.Server
+                )
             },
             onDismissSheet = {
                 shouldOpenQualitiesAndSubtitles = false
                 resetPlayerControlVisibility()
+                showControls(true)
             }
         )
     }

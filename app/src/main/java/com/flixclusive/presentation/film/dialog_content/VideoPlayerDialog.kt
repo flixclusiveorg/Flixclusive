@@ -16,13 +16,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.flixclusive.R
 import com.flixclusive.presentation.common.VideoDataDialogState
 import com.flixclusive.presentation.common.composables.GradientCircularProgressIndicator
@@ -32,10 +30,6 @@ fun VideoPlayerDialog(
     videoDataDialogState: VideoDataDialogState,
     onConsumeDialog: () -> Unit,
 ) {
-    val dismissible = remember(videoDataDialogState) {
-        videoDataDialogState == VideoDataDialogState.ERROR || videoDataDialogState == VideoDataDialogState.UNAVAILABLE
-    }
-
     LaunchedEffect(key1 = videoDataDialogState) {
         if (videoDataDialogState == VideoDataDialogState.SUCCESS) {
             onConsumeDialog()
@@ -43,11 +37,7 @@ fun VideoPlayerDialog(
     }
 
     Dialog(
-        onDismissRequest = onConsumeDialog,
-        properties = DialogProperties(
-            dismissOnClickOutside = dismissible,
-            dismissOnBackPress = dismissible
-        )
+        onDismissRequest = onConsumeDialog
     ) {
         Surface(
             modifier = Modifier

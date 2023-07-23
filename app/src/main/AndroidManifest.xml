@@ -28,6 +28,7 @@
             android:exported="false"
             android:label="@string/title_activity_player"
             android:resizeableActivity="true"
+            android:launchMode="singleTop"
             android:supportsPictureInPicture="true"
             android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.Flixclusive" />

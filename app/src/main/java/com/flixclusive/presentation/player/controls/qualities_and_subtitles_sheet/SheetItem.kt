@@ -18,23 +18,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.flixclusive.domain.model.consumet.Subtitle
 import com.flixclusive.presentation.common.composables.applyDropShadow
 
-
 @Composable
-fun SheetSubtitleItem(
-    subtitle: Subtitle,
+fun SheetItem(
+    name: String,
     index: Int,
-    selectedSubtitle: Int,
-    onSubtitleChange: (Int, String) -> Unit,
+    selectedIndex: Int,
+    onClick: (Int, String) -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp)
-            .clickable(enabled = index != selectedSubtitle) {
-                onSubtitleChange(index, subtitle.lang)
+            .clickable(enabled = index != selectedIndex) {
+                onClick(index, name)
             },
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -44,17 +42,17 @@ fun SheetSubtitleItem(
                 .fillMaxWidth(),
             contentAlignment = Alignment.CenterStart
         ) {
-            val isSelected = selectedSubtitle == index
+            val isSelected = selectedIndex == index
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Rounded.Check,
-                    contentDescription = "Check indicator for selected subtitle/caption",
+                    contentDescription = "Check indicator for selected video server",
                     modifier = Modifier.padding(start = 25.dp)
                 )
             }
 
             Text(
-                text = subtitle.lang,
+                text = name,
                 style = MaterialTheme.typography.labelLarge.applyDropShadow(),
                 modifier = Modifier.padding(start = 60.dp),
                 fontWeight = if (!isSelected) FontWeight.Light else FontWeight.Medium,

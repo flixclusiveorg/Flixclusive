@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.util.Rational
+import android.util.TypedValue.COMPLEX_UNIT_PX
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -54,6 +55,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_ENDED
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -61,10 +63,10 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
-import com.flixclusive.domain.model.consumet.Source
 import com.flixclusive.domain.model.consumet.VideoData
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
+import com.flixclusive.domain.utils.ConsumetUtils.getAutoSourceUrl
 import com.flixclusive.presentation.common.Functions.isThereLessThan10SecondsLeftToWatch
 import com.flixclusive.presentation.common.VideoDataDialogState
 import com.flixclusive.presentation.film.dialog_content.VideoPlayerDialog
@@ -80,7 +82,6 @@ const val PLAYER_SEEK_BACK_INCREMENT = 5000L
 const val PLAYER_SEEK_FORWARD_INCREMENT = 10000L
 const val WATCH_HISTORY_ITEM = "watch_history_item"
 const val SEASON_COUNT = "season_count"
-const val SEASON_NUMBER_SELECTED = "season_selected"
 const val EPISODE_SELECTED = "episode_selected"
 const val VIDEO_DATA = "video_data"
 
@@ -91,17 +92,19 @@ class PlayerActivity : ComponentActivity() {
     companion object {
         fun Context.startPlayer(
             videoData: VideoData?,
-            watchHistoryItem: WatchHistoryItem?,
+            watchHistoryItem: WatchHistoryItem? = null,
             seasonCount: Int? = null,
-            seasonNumberSelected: Int? = null,
             episodeSelected: TMDBEpisode? = null,
         ) {
             val intent = Intent(this, PlayerActivity::class.java).apply {
                 putExtra(VIDEO_DATA, videoData)
-                putExtra(WATCH_HISTORY_ITEM, watchHistoryItem)
-                putExtra(SEASON_COUNT, seasonCount)
-                putExtra(SEASON_NUMBER_SELECTED, seasonNumberSelected)
-                putExtra(EPISODE_SELECTED, episodeSelected)
+
+                if(watchHistoryItem != null)
+                    putExtra(WATCH_HISTORY_ITEM, watchHistoryItem)
+                if(seasonCount != null)
+                    putExtra(SEASON_COUNT, seasonCount)
+                if(episodeSelected != null)
+                    putExtra(EPISODE_SELECTED, episodeSelected)
             }
             this.startActivity(intent)
         }
@@ -136,43 +139,60 @@ class PlayerActivity : ComponentActivity() {
                     val context = LocalContext.current
                     val scope = rememberCoroutineScope()
 
+                    var onEpisodeClickJob: Job? by remember { mutableStateOf(null) }
+                    var playerTimeUpdaterJob: Job? by remember { mutableStateOf(null) }
+
                     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                     val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
                     val seasonData by viewModel.season.collectAsStateWithLifecycle()
                     val videoData by viewModel.videoData.collectAsStateWithLifecycle()
+                    val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
-                    var onEpisodeClickJob: Job? by remember { mutableStateOf(null) }
+                    var autoAdaptiveSource by remember { mutableStateOf(videoData.getAutoSourceUrl()) }
+                    val availableQualities = remember(viewModel.availableQualities.size) { viewModel.availableQualities }
+                    val subtitlesList = remember(videoData.subtitles.first().url) { viewModel.availableSubtitles }
 
-                    val autoAdaptiveSource = remember {
-                        videoData.sources.let { sources ->
-                            sources.find { it.quality.contains("auto", ignoreCase = true) } ?: sources[0]
-                        }
-                    }
                     var mediaSession: MediaSession? by remember {
                         mutableStateOf(
                             initializePlayer(
                                 autoAdaptiveSource,
                                 videoData.title,
-                                viewModel.extractSubtitles(),
+                                subtitlesList,
                                 uiState.currentTime,
                                 uiState.playWhenReady
                             )
                         )
                     }
 
-                    val availableQualities = remember(viewModel.availableQualities) { viewModel.availableQualities }
+                    // Re-prepare the player if video data has changed
+                    LaunchedEffect(videoData.headers.referer) {
+                        val currentAutoAdaptiveSource = videoData.getAutoSourceUrl()
+                        val isNew = !currentAutoAdaptiveSource.equals(autoAdaptiveSource, ignoreCase = true)
+
+                        if(isNew) {
+                            autoAdaptiveSource = currentAutoAdaptiveSource
+                            mediaSession?.player?.rePrepare(
+                                autoAdaptiveSource,
+                                videoData,
+                                subtitlesList,
+                                uiState.currentTime,
+                                uiState.playWhenReady
+                            )
+                        }
+                    }
+
                     var shouldShowControls by remember { mutableStateOf(true) }
                     val snackbarBottomPadding by animateDpAsState(
                         targetValue = if(shouldShowControls) 100.dp else 0.dp
                     )
 
-                    val isLastEpisode = remember {
+                    val isLastEpisode = remember(currentSelectedEpisode) {
                         val watchHistoryItem = viewModel.watchHistoryItem
 
                         val lastSeason = watchHistoryItem.seasons
                         val lastEpisode = watchHistoryItem.episodes[lastSeason]
 
-                        viewModel.currentSelectedEpisode?.season == lastSeason && viewModel.currentSelectedEpisode?.episode == lastEpisode
+                        currentSelectedEpisode?.season == lastSeason && currentSelectedEpisode?.episode == lastEpisode
                     }
 
                     fun initializePlayer(playerListener: Player.Listener) {
@@ -184,14 +204,13 @@ class PlayerActivity : ComponentActivity() {
                         mediaSession = initializePlayer(
                             autoAdaptiveSource,
                             videoData.title,
-                            viewModel.extractSubtitles(),
+                            subtitlesList,
                             uiState.currentTime,
                             uiState.playWhenReady
                         )
 
                         mediaSession?.player?.addListener(playerListener)
                     }
-
                     fun releasePlayer() {
                         mediaSession?.run {
                             viewModel.onActivityStop(
@@ -206,25 +225,12 @@ class PlayerActivity : ComponentActivity() {
                             mediaSession = null
                         }
                     }
-
                     fun onEpisodeClick(episode: TMDBEpisode? = null) {
                         if(onEpisodeClickJob?.isActive == true)
                             return
 
                         onEpisodeClickJob = scope.launch {
-                            val episodeToWatch = viewModel.onEpisodeClick(episode)
-
-                            if(episodeToWatch != null) {
-                                releasePlayer()
-                                startPlayer(
-                                    videoData = videoData,
-                                    watchHistoryItem = viewModel.watchHistoryItem,
-                                    seasonCount = viewModel.seasonCount,
-                                    seasonNumberSelected = episodeToWatch.season,
-                                    episodeSelected = episodeToWatch,
-                                )
-                                finish()
-                            }
+                            viewModel.onEpisodeClick(episodeToWatch = episode)
                         }
                     }
 
@@ -240,11 +246,16 @@ class PlayerActivity : ComponentActivity() {
                     )
                     RequestAudioFocus(
                         isPlaying = uiState.isPlaying,
+                        playbackState = uiState.playbackState,
                         onRequestGranted = {
-                            mediaSession?.player?.play()
-                            viewModel.updateIsPlayingState(true)
-                            scope.launch {
-                                while (true) {
+                            if(playerTimeUpdaterJob?.isActive == true)
+                                return@RequestAudioFocus
+
+                            playerTimeUpdaterJob = scope.launch {
+                                mediaSession?.player?.play()
+                                viewModel.updateIsPlayingState(true)
+
+                                while (mediaSession?.player?.isPlaying == true) {
                                     viewModel.updateCurrentTime(mediaSession?.player?.currentPosition)
                                     delay(1.seconds / 30)
                                 }
@@ -292,10 +303,15 @@ class PlayerActivity : ComponentActivity() {
                         val isTvShow = viewModel.seasonCount != null
 
                         if(isPlayerInitialized && isThereLessThan10SecondsLeft && !isLastEpisode && isTvShow) {
-                            val secondsLeft =  (uiState.totalDuration - uiState.currentTime) / 1000
+                            val secondsLeft = (uiState.totalDuration - uiState.currentTime) / 1000
 
-                            if(secondsLeft == 0L)
+                            if(secondsLeft <= 0L) {
+                                viewModel.showSnackbar(
+                                    message = "Loading next episode...",
+                                    type = PlayerSnackbarMessageType.Episode
+                                )
                                 return@LaunchedEffect
+                            }
 
                             viewModel.showSnackbar(
                                 message = "Next episode on $secondsLeft...",
@@ -319,23 +335,28 @@ class PlayerActivity : ComponentActivity() {
                             factory = {
                                 PlayerView(context).apply {
                                     useController = false
-
                                     init()
                                 }
                             },
                             update = {
-                                it.player = mediaSession?.player
+                                it.run {
+                                    player = mediaSession?.player
+                                    if (SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode) {
+                                        init(isInPictureInPictureMode = true)
+                                    }
+                                }
                             }
                         )
 
                         PlayerControls(
                             watchHistoryItem = viewModel.watchHistoryItem,
+                            dialogState = dialogState,
                             seasonDataProvider = { seasonData },
                             availableSeasons = viewModel.seasonCount,
-                            currentSeasonSelected = viewModel.currentSelectedSeasonNumber,
-                            currentEpisodeSelected = viewModel.currentSelectedEpisode,
+                            currentEpisodeSelected = currentSelectedEpisode,
                             isLastEpisode = isLastEpisode,
                             subtitlesProvider = { videoData.subtitles },
+                            videoServersProvider = { videoData.servers!! },
                             videoQualitiesProvider = { availableQualities },
                             shouldShowControls = {
                                 if (SDK_INT >= Build.VERSION_CODES.N) {
@@ -377,6 +398,7 @@ class PlayerActivity : ComponentActivity() {
                             playbackState = { uiState.playbackState },
                             selectedSubtitleProvider = { uiState.selectedSubtitle },
                             selectedVideoQualityProvider = { uiState.selectedQuality },
+                            selectedVideoServerProvider = { uiState.selectedServer },
                             onSeekChanged = { timeMs: Float ->
                                 mediaSession?.player?.seekTo(timeMs.toLong())
                             },
@@ -407,6 +429,9 @@ class PlayerActivity : ComponentActivity() {
                                             trackParameters = trackSelectionParameters
                                         ) ?: return@run
                                 }
+                            },
+                            onVideoServerChange = {
+                                viewModel.onVideoServerChange(serverIndex = it)
                             },
                             onEpisodeClick = { onEpisodeClick(it) }
                         )
@@ -516,57 +541,63 @@ class PlayerActivity : ComponentActivity() {
     @Composable
     private fun RequestAudioFocus(
         isPlaying: Boolean,
+        playbackState: Int,
         onRequestGranted: () -> Unit
     ) {
         val keepScreenOnFlag = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 
         LaunchedEffect(isPlaying) {
-            val result = if (SDK_INT >= Build.VERSION_CODES.O && isPlaying) {
-                val playbackAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
-                    .build()
+            if(isPlaying) {
+                val result = if (SDK_INT >= Build.VERSION_CODES.O) {
+                    val playbackAttributes = AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
+                        .build()
 
-                val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                    .setAudioAttributes(playbackAttributes)
-                    .setAcceptsDelayedFocusGain(true)
-                    .setOnAudioFocusChangeListener(afChangeListener)
-                    .build()
+                    val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                        .setAudioAttributes(playbackAttributes)
+                        .setAcceptsDelayedFocusGain(true)
+                        .setOnAudioFocusChangeListener(afChangeListener)
+                        .build()
 
-                audioManager.requestAudioFocus(focusRequest)
-            } else if(isPlaying) {
-                audioManager.requestAudioFocus(
-                    afChangeListener,
-                    AudioManager.STREAM_MUSIC,
-                    AudioManager.AUDIOFOCUS_GAIN
-                )
-            }
-            else {
-                window?.clearFlags(keepScreenOnFlag)
-                return@LaunchedEffect
-            }
-
-            window?.addFlags(keepScreenOnFlag)
-            synchronized(focusLock) {
-                playbackNowAuthorized = when(result) {
-                    AudioManager.AUDIOFOCUS_REQUEST_FAILED -> false
-                    AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
-                        onRequestGranted()
-                        shouldPlay = true
-                        true
-                    }
-                    AudioManager.AUDIOFOCUS_REQUEST_DELAYED  -> {
-                        playbackDelayed = true
-                        false
-                    }
-                    else -> false
+                    audioManager.requestAudioFocus(focusRequest)
+                } else {
+                    audioManager.requestAudioFocus(
+                        afChangeListener,
+                        AudioManager.STREAM_MUSIC,
+                        AudioManager.AUDIOFOCUS_GAIN
+                    )
                 }
+
+                synchronized(focusLock) {
+                    playbackNowAuthorized = when(result) {
+                        AudioManager.AUDIOFOCUS_REQUEST_FAILED -> false
+                        AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
+                            onRequestGranted()
+                            shouldPlay = true
+                            true
+                        }
+                        AudioManager.AUDIOFOCUS_REQUEST_DELAYED  -> {
+                            playbackDelayed = true
+                            false
+                        }
+                        else -> false
+                    }
+                }
+            }
+        }
+
+        LaunchedEffect(isPlaying, playbackState) {
+            if(isPlaying || playbackState == STATE_BUFFERING) {
+                window?.addFlags(keepScreenOnFlag)
+            } else {
+                window?.clearFlags(keepScreenOnFlag)
             }
         }
     }
     
     private fun initializePlayer(
-        quality: Source,
+        url: String,
         title: String?,
         subtitles: List<SubtitleConfiguration>,
         playbackPosition: Long,
@@ -595,7 +626,7 @@ class PlayerActivity : ComponentActivity() {
                 player.setMediaItem(
                     MediaItem.Builder()
                         .apply {
-                            setUri(quality.url)
+                            setUri(url)
                             setMediaMetadata(
                                 MediaMetadata.Builder()
                                     .setDisplayTitle(title)
@@ -612,7 +643,32 @@ class PlayerActivity : ComponentActivity() {
             }
     }
 
-    private fun PlayerView.init(marginBottomInPx: Int = 200) {
+    private fun Player.rePrepare(
+        autoAdaptiveSource: String,
+        videoData: VideoData,
+        subtitles: List<SubtitleConfiguration>,
+        startPositionMs: Long = 0L,
+        playWhenReady: Boolean = true
+    ) {
+        setMediaItem(
+            MediaItem.Builder()
+                .apply {
+                    setUri(autoAdaptiveSource)
+                    setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setDisplayTitle(videoData.title)
+                            .build()
+                    )
+                    setSubtitleConfigurations(subtitles)
+                }
+                .build(),
+            startPositionMs
+        )
+        prepare()
+        this.playWhenReady = playWhenReady
+    }
+
+    private fun PlayerView.init(isInPictureInPictureMode: Boolean = false) {
         layoutParams = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
@@ -620,7 +676,12 @@ class PlayerActivity : ComponentActivity() {
 
         // Add margin on subtitle view
         // Convert PX to DP for an adaptive margin
-        val marginBottomInDp = (marginBottomInPx / resources.displayMetrics.density).toInt()
+        val subtitleMarginBottom = when(isInPictureInPictureMode) {
+            true -> 100
+            false -> 200
+        }
+
+        val marginBottomInDp = (subtitleMarginBottom / resources.displayMetrics.density).toInt()
         val layoutParams = subtitleView?.layoutParams as ViewGroup.MarginLayoutParams
         layoutParams.setMargins(
             layoutParams.leftMargin,
@@ -640,5 +701,9 @@ class PlayerActivity : ComponentActivity() {
             Typeface.DEFAULT_BOLD
         )
         subtitleView?.setStyle(style)
+        if(isInPictureInPictureMode) {
+            subtitleView?.setApplyEmbeddedFontSizes(false)
+            subtitleView?.setFixedTextSize(COMPLEX_UNIT_PX, 16F)
+        }
     }
 }

@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -121,10 +121,9 @@ fun BottomControls(
                 text = videoTimeReversed.formatMinSec(isInHours),
                 color = Color.White,
                 style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.widthIn(
-                    min = 50.dp,
-                    max = 100.dp
-                ).padding(start = 5.dp)
+                modifier = Modifier
+                    .width(if(isInHours) 65.dp else 110.dp)
+                    .padding(start = 5.dp)
             )
         }
 

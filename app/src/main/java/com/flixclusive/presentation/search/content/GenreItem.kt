@@ -1,6 +1,5 @@
 package com.flixclusive.presentation.search.content
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -67,16 +66,18 @@ fun GenreItem(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black
-                            ),
-                            startY = 0F,
-                            endY = 300F
+                    .drawBehind {
+                        drawRect(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color.Black
+                                ),
+                                startY = 0F,
+                                endY = size.height.times(0.8F)
+                            )
                         )
-                    ),
+                    },
                 contentAlignment = Alignment.BottomStart
             ) {
                 Text(

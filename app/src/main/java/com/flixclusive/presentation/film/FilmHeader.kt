@@ -94,7 +94,7 @@ fun FilmHeader(
                                 backgroundColor
                             ),
                             startY = 0F,
-                            endY = 1100F
+                            endY = size.height.times(0.9F)
                         )
                     )
                 }
@@ -162,8 +162,7 @@ fun FilmHeader(
                 }
 
                 FlowRow(
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    maxItemsInEachRow = 4
+                    modifier = Modifier.padding(vertical = 4.dp)
                 ) {
                     film.genres.forEach {
                         OutlinedButton(
