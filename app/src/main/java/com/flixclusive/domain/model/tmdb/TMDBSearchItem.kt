@@ -1,7 +1,6 @@
 package com.flixclusive.domain.model.tmdb
 
-import com.flixclusive.presentation.common.Formatter.formatDate
-import com.flixclusive.presentation.common.Formatter.formatGenreIds
+import com.flixclusive.presentation.utils.FormatterUtils.formatDate
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
@@ -25,6 +24,7 @@ sealed class TMDBSearchItem : Film {
         val video: Boolean = false,
         @SerializedName("vote_average") override val rating: Double = 0.0,
         override val logoImage: String? = null,
+        override val genres: List<Genre> = listOf(Genre(-1, "Movie"))
     ) : TMDBSearchItem() {
         override val filmType: FilmType
             get() = FilmType.MOVIE
@@ -32,8 +32,6 @@ sealed class TMDBSearchItem : Film {
             get() = formatDate(releaseDate)
         override val runtime: String
             get() = "0"
-        override val genres: List<Genre>
-            get() = formatGenreIds(genreIds) + Genre(-1, "Movie")
         override val recommendedTitles: List<Recommendation>
             get() = emptyList()
     }
@@ -55,6 +53,7 @@ sealed class TMDBSearchItem : Film {
         @SerializedName("name") override val title: String = "",
         @SerializedName("original_name") val originalName: String = "",
         override val logoImage: String? = null,
+        override val genres: List<Genre> = listOf(Genre(-1, "Movie"))
     ) : TMDBSearchItem() {
         override val filmType: FilmType
             get() = FilmType.TV_SHOW
@@ -62,8 +61,6 @@ sealed class TMDBSearchItem : Film {
             get() = formatDate(firstAirDate)
         override val runtime: String
             get() = "0"
-        override val genres: List<Genre>
-            get() = formatGenreIds(genreIds) + Genre(-1, "TV Show")
         override val recommendedTitles: List<Recommendation>
             get() = emptyList()
     }

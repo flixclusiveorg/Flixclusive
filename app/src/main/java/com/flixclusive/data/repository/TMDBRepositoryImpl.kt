@@ -1,29 +1,31 @@
 package com.flixclusive.data.repository
 
-import android.util.Log
-import com.flixclusive.common.Constants.FLIXCLUSIVE_LOG_TAG
+import com.flixclusive.common.Constants.TMDB_API_BASE_URL
+import com.flixclusive.common.LoggerUtils.errorLog
 import com.flixclusive.data.api.TMDBApiService
 import com.flixclusive.data.dto.tmdb.common.TMDBImagesResponseDto
-import com.flixclusive.data.dto.tmdb.common.toList
 import com.flixclusive.data.dto.tmdb.toMovie
 import com.flixclusive.data.dto.tmdb.toTvShow
 import com.flixclusive.data.dto.tmdb.tv.toSeason
-import com.flixclusive.domain.utils.TMDBUtils.filterOutUnreleasedRecommendations
-import com.flixclusive.domain.utils.TMDBUtils.filterOutZeroSeasons
 import com.flixclusive.di.IoDispatcher
 import com.flixclusive.domain.common.Resource
-import com.flixclusive.domain.firebase.ConfigurationProvider
+import com.flixclusive.domain.config.ConfigurationProvider
 import com.flixclusive.domain.model.tmdb.Genre
 import com.flixclusive.domain.model.tmdb.Movie
 import com.flixclusive.domain.model.tmdb.Season
+import com.flixclusive.domain.model.tmdb.TMDBCollection
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.model.tmdb.TMDBPageResponse
 import com.flixclusive.domain.model.tmdb.TMDBSearchItem
 import com.flixclusive.domain.model.tmdb.TvShow
 import com.flixclusive.domain.repository.SortOptions
 import com.flixclusive.domain.repository.TMDBRepository
+import com.flixclusive.domain.utils.TMDBUtils.filterOutUnreleasedRecommendations
+import com.flixclusive.domain.utils.TMDBUtils.filterOutZeroSeasons
+import com.flixclusive.presentation.utils.FormatterUtils.formatGenreIds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import javax.inject.Inject
 
 class TMDBRepositoryImpl @Inject constructor(
@@ -32,7 +34,7 @@ class TMDBRepositoryImpl @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : TMDBRepository  {
     override val tmdbApiKey: String
-        get() = configurationProvider.tmdbApiKey
+        get() = configurationProvider.appConfig!!.tmdbApiKey
 
     override suspend fun getTrending(
         mediaType: String,
@@ -49,8 +51,14 @@ class TMDBRepositoryImpl @Inject constructor(
                 )
 
                 Resource.Success(response)
-            } catch (e: Exception) {
-                Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
+            }
+            catch (e: HttpException) {
+                errorLog("Http Error (${e.code()}): ${e.response()}")
+                errorLog(e.stackTraceToString())
+                Resource.Failure(e.message ?: "Unknown error occurred")
+            }
+            catch (e: Exception) {
+                errorLog(e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
             }
         }
@@ -82,24 +90,14 @@ class TMDBRepositoryImpl @Inject constructor(
                 )
 
                 Resource.Success(response)
-            } catch (e: Exception) {
-                Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
+            }
+            catch (e: HttpException) {
+                errorLog("Http Error (${e.code()}): ${e.response()}")
+                errorLog(e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
             }
-        }
-    }
-
-    override suspend fun getGenres(mediaType: String): Resource<List<Genre>> {
-        return withContext(ioDispatcher) {
-            try {
-                val result = tmdbApiService.getGenres(
-                    mediaType = mediaType,
-                    apiKey = tmdbApiKey,
-                )
-
-                Resource.Success(result.toList())
-            } catch (e: Exception) {
-                Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
+            catch (e: Exception) {
+                errorLog(e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
             }
         }
@@ -124,8 +122,14 @@ class TMDBRepositoryImpl @Inject constructor(
                 )
 
                 Resource.Success(response)
-            } catch (e: Exception) {
-                Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
+            }
+            catch (e: HttpException) {
+                errorLog("Http Error (${e.code()}): ${e.response()}")
+                errorLog(e.stackTraceToString())
+                Resource.Failure(e.message ?: "Unknown error occurred")
+            }
+            catch (e: Exception) {
+                errorLog(e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
             }
         }
@@ -144,8 +148,14 @@ class TMDBRepositoryImpl @Inject constructor(
                 )
 
                 Resource.Success(response)
-            } catch (e: Exception) {
-                Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
+            }
+            catch (e: HttpException) {
+                errorLog("Http Error (${e.code()}): ${e.response()}")
+                errorLog(e.stackTraceToString())
+                Resource.Failure(e.message ?: "Unknown error occurred")
+            }
+            catch (e: Exception) {
+                errorLog(e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
             }
         }
@@ -158,17 +168,50 @@ class TMDBRepositoryImpl @Inject constructor(
                     id = id, apiKey = tmdbApiKey
                 )
 
+                val collection: TMDBCollection? = if(movie.belongsToCollection != null) {
+                    val collection = getCollection(id = movie.belongsToCollection.id)
+
+                    if(collection !is Resource.Success)
+                        throw Exception("Error fetching collection of ${movie.title} [${movie.id}]")
+
+                    collection.data
+                } else null
+
                 val filteredRecommendations = filterOutUnreleasedRecommendations(movie.recommendations.results)
+                val newGenres = formatGenreIds(
+                    genreIds = movie.genres.map { it.id },
+                    genresList = configurationProvider
+                        .searchCategoriesConfig!!.genres.map {
+                            Genre(
+                                id = it.id,
+                                name = it.name,
+                                mediaType = it.mediaType
+                            )
+                        }
+                )
+
                 Resource.Success(
                     movie.copy(
                         recommendations = movie.recommendations.copy(
                             results = filteredRecommendations
-                        )
+                        ),
+                        genres = newGenres
                     )
                     .toMovie()
+                    .copy(
+                        collection = collection?.copy(
+                            films = filterOutUnreleasedRecommendations(collection.films)
+                        )
+                    )
                 )
-            } catch (e: Exception) {
-                Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
+            }
+            catch (e: HttpException) {
+                errorLog("Http Error (${e.code()}): ${e.response()}")
+                errorLog(e.stackTraceToString())
+                Resource.Failure(e.message ?: "Unknown error occurred")
+            }
+            catch (e: Exception) {
+                errorLog(e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
             }
         }
@@ -183,17 +226,36 @@ class TMDBRepositoryImpl @Inject constructor(
 
                 val filteredRecommendations = filterOutUnreleasedRecommendations(tvShow.recommendations.results)
                 val filteredSeasons = filterOutZeroSeasons(tvShow.seasons)
+                val newGenres = formatGenreIds(
+                    genreIds = tvShow.genres.map { it.id },
+                    genresList = configurationProvider
+                        .searchCategoriesConfig!!.genres.map {
+                            Genre(
+                                id = it.id,
+                                name = it.name,
+                                mediaType = it.mediaType
+                            )
+                        }
+                )
+
                 Resource.Success(
                     tvShow.copy(
                         seasons = filteredSeasons,
                         numberOfSeasons = filteredSeasons.size,
                         recommendations = tvShow.recommendations.copy(
                             results = filteredRecommendations
-                        )
+                        ),
+                        genres = newGenres
                     ).toTvShow()
                 )
-            } catch (e: Exception) {
-                Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
+            }
+            catch (e: HttpException) {
+                errorLog("Http Error (${e.code()}): ${e.response()}")
+                errorLog(e.stackTraceToString())
+                Resource.Failure(e.message ?: "Unknown error occurred")
+            }
+            catch (e: Exception) {
+                errorLog(e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
             }
         }
@@ -210,8 +272,14 @@ class TMDBRepositoryImpl @Inject constructor(
                     season
                         .toSeason()
                 )
-            } catch (e: Exception) {
-                Log.e(FLIXCLUSIVE_LOG_TAG, e.stackTraceToString())
+            }
+            catch (e: HttpException) {
+                errorLog("Http Error (${e.code()}): ${e.response()}")
+                errorLog(e.stackTraceToString())
+                Resource.Failure(e.message ?: "Unknown error occurred")
+            }
+            catch (e: Exception) {
+                errorLog(e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
             }
         }
@@ -231,6 +299,49 @@ class TMDBRepositoryImpl @Inject constructor(
             season.data!!.episodes.find {
                 it.season == seasonNumber
                     && it.episode == episodeNumber
+            }
+        }
+    }
+
+    override suspend fun getCollection(id: Int): Resource<TMDBCollection> {
+        return withContext(ioDispatcher) {
+            try {
+                val response = tmdbApiService.getCollection(
+                    id = id, apiKey = tmdbApiKey
+                )
+
+                Resource.Success(response)
+            }
+            catch (e: HttpException) {
+                errorLog("Http Error (${e.code()}): ${e.response()}")
+                errorLog(e.stackTraceToString())
+                Resource.Failure(e.message ?: "Unknown error occurred")
+            }
+            catch (e: Exception) {
+                errorLog(e.stackTraceToString())
+                Resource.Failure(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+
+    override suspend fun paginateConfigItems(
+        url: String,
+        page: Int,
+    ): Resource<TMDBPageResponse<TMDBSearchItem>> {
+        return withContext(ioDispatcher) {
+            val fullUrl = "$TMDB_API_BASE_URL$url&page=$page&api_key=$tmdbApiKey"
+
+            try {
+                Resource.Success(tmdbApiService.get(fullUrl))
+            }
+            catch (e: HttpException) {
+                errorLog("Http Error (${e.code()}) on URL[$fullUrl]: ${e.response()}")
+                errorLog(e.stackTraceToString())
+                Resource.Failure(e.message ?: "Unknown error occurred")
+            }
+            catch (e: Exception) {
+                errorLog(e.stackTraceToString())
+                Resource.Failure(e.message ?: "Unknown error occurred")
             }
         }
     }

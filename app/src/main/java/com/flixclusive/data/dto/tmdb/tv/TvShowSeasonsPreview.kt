@@ -1,7 +1,7 @@
 package com.flixclusive.data.dto.tmdb.tv
 
 import com.flixclusive.domain.model.tmdb.Season
-import com.flixclusive.presentation.common.Functions.isDateInFuture
+import com.flixclusive.domain.utils.TMDBUtils.isDateInFuture
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 

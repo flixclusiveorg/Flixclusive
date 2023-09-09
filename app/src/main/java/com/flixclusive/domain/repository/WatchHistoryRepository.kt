@@ -4,19 +4,15 @@ import com.flixclusive.domain.model.entities.WatchHistoryItem
 import kotlinx.coroutines.flow.Flow
 
 interface WatchHistoryRepository {
-    suspend fun getLatestItem(): WatchHistoryItem?
+    fun getAllItemsInFlow(ownerId: Int = 1): Flow<List<WatchHistoryItem>>
 
-    suspend fun getAllItems(): List<WatchHistoryItem>
+    suspend fun getWatchHistoryItemById(itemId: Int, ownerId: Int = 1): WatchHistoryItem?
 
-    fun getAllItemsInFlow(): Flow<List<WatchHistoryItem>>
+    fun getWatchHistoryItemByIdInFlow(itemId: Int, ownerId: Int = 1): Flow<WatchHistoryItem?>
 
-    suspend fun getWatchHistoryItemById(itemId: Int): WatchHistoryItem?
-
-    fun getWatchHistoryItemByIdInFlow(itemId: Int): Flow<WatchHistoryItem?>
-
-    suspend fun getRandomWatchHistoryItems(count: Int): List<WatchHistoryItem>
+    suspend fun getRandomWatchHistoryItems(ownerId: Int = 1, count: Int): List<WatchHistoryItem>
 
     suspend fun insert(item: WatchHistoryItem)
 
-    suspend fun deleteById(itemId: Int)
+    suspend fun deleteById(itemId: Int, ownerId: Int = 1)
 }

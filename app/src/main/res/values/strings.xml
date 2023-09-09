@@ -10,6 +10,9 @@
     <string name="watchlist">Watchlist</string>
     <string name="watchlisted">Added</string>
     <string name="recently_watched">Recently Watched</string>
+    <string name="settings">Settings</string>
+    <string name="preferences">Preferences</string>
+    <string name="about">About Flixclusive</string>
 
     <string name="motto">Welcome to Flixclusive — exclusive entertainment awaits</string>
 
@@ -21,6 +24,7 @@
 
     <!--  Sample Items  -->
     <string name="sample_title">True Detective</string>
+    <string name="sample_collection">Detective Books Collection</string>
     <string name="sample_year">2023</string>
     <string name="sample_genres">Thriller,Crime,Drama</string>
     <string name="sample_duration">1hr 35min | March 20, 2023</string>
@@ -28,12 +32,14 @@
     <string name="sample_rating">7.8</string>
     <string name="sample_subtitle_language">English (Default)</string>
     <string name="sample_video_quality">1080p</string>
+    <string name="sample_subtitle_text">ROSE: I\'m flying!</string>
 
     <!--  Labels  -->
     <string name="genres">Genres</string>
     <string name="popular">Popular</string>
-    <string name="browse_networks">Top Providers</string>
-    <string name="browse_genres">Browse Genres</string>
+    <string name="browse_tv_networks">Top TV Networks</string>
+    <string name="browse_movie_companies">Top Movie Companies</string>
+    <string name="browse_categories">Browse Categories</string>
     <string name="film_filter">Film Type</string>
     <string name="search_suggestion">Try Searching \"Iron Man\"…</string>
     <string name="top_movies_recently">Top Movies Recently</string>
@@ -46,8 +52,8 @@
     <string name="trending">Trending Picks</string>
     <string name="next_episode">Next episode</string>
     <string name="recommended">Recommended</string>
-    <string name="servers">Servers</string>
-    <string name="subtitles">Subtitles</string>
+    <string name="server">Server</string>
+    <string name="subtitle">Subtitle</string>
     <string name="quality">Quality</string>
     <string name="watch">Watch</string>
     <string name="watch_again">Watch Again</string>
@@ -56,39 +62,31 @@
     <string name="episodes">Episodes</string>
     <string name="more_like_this">More Like This</string>
     <string name="play">Play</string>
+    <string name="quality_and_subtitles">Quality and Subtitles</string>
+    <string name="lock">Lock</string>
     <string name="not_now_label">Not now</string>
     <string name="update_label">Update</string>
     <string name="unlock_label">Unlock</string>
     <string name="close_label">Close</string>
+    <string name="other_films_message">Other films you might like!</string>
     <string name="new_update_message">New versions are meant to fix, update or add major or minor features in the app. All details regarding the new update is included in the download page.</string>
     <string name="new_update_header">There\'s a new update!</string>
+    <string name="add_to_watchlist">Add to Watchlist</string>
+    <string name="playback_speed">Playback Speed</string>
+    <string name="share_the_app">Share the App!</string>
+
+    <!--  Settings Items  -->
+    <string name="subtitles_size">Subtitle Size</string>
+    <string name="subtitles_font_style">Subtitle Font Style</string>
+    <string name="subtitles_color">Subtitle Color</string>
+    <string name="subtitles_background_color">Subtitle Background Color</string>
+    <string name="subtitles_edge_type">Subtitle Edge Type</string>
 
     <!--  Error messages  -->
     <string name="splash_error_header">Something went wrong!</string>
     <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
     <string name="splash_error_message">An error occurred while initializing the app.</string>
     <string name="splash_maintenance_message">Sorry for the inconvenience. We\'re performing a quick update. Be back soon!</string>
-
-    <!--  Genres Label  -->
-    <string name="action_label">Action Packed</string>
-    <string name="adventure_label">Adventurous Escapades</string>
-    <string name="animation_label">Animated Delights</string>
-    <string name="comedy_label">Comedy Central</string>
-    <string name="crime_label">Lawbreakers\' Lair</string>
-    <string name="documentary_label">Reality Unveiled</string>
-    <string name="drama_label">Drama Unleashed</string>
-    <string name="family_label">Family Funtastic</string>
-    <string name="fantasy_label">Fantasyland</string>
-    <string name="history_label">Historical Hype</string>
-    <string name="horror_label">HorrorVille</string>
-    <string name="music_label">Musical Mayhem</string>
-    <string name="mystery_label">Mysterious Enigmas</string>
-    <string name="romance_label">Love in the Air</string>
-    <string name="science_fiction_label">Sci-Fi Spectacle</string>
-    <string name="tv_movie_label">TV Movies For You</string>
-    <string name="thriller_label">Nerve-Wracking Suspense</string>
-    <string name="war_label">Battlefront Chronicles</string>
-    <string name="western_label">Wild West Wonders</string>
 
     <!--  Content Descriptions  -->
     <string name="duration">Duration</string>
@@ -109,6 +107,8 @@
     <string name="pause_button">Pause button</string>
     <string name="backward_button_content_description">Backward button for 5 seconds</string>
     <string name="forward_button_content_description">Forward button for 10 seconds</string>
+    <string name="playback_plus_button_content_description">Playback plus button</string>
+    <string name="playback_minus_button_content_description">Playback minus button</string>
 
     <!--  Activity Tags  -->
     <string name="title_activity_player">PlayerActivity</string>
@@ -117,6 +117,7 @@
     <!--  Player Strings/Messages  -->
     <string name="subtitle_snackbar_message">Subtitle set to %%s</string>
     <string name="quality_snackbar_message">Quality set to %%s</string>
+    <string name="playback_speed_snackbar_message">Playback speed set to %%s</string>
     <string name="server_snackbar_message">Server set to %%s</string>
 
 
@@ -127,11 +128,17 @@
     <string name="error_on_initialization">Error while initializing data!</string>
 
     <!--  Video Data Dialog State Messages  -->
-    <string name="video_data_dialog_state_error">Could not initialize video player!</string>
-    <string name="video_data_dialog_state_unavailable">I\'m sorry, this is not yet watchable.</string>
+    <string name="video_data_dialog_state_error_default">Could not initialize video player!</string>
+    <string name="video_data_dialog_state_unavailable_default">I\'m sorry, this is not yet watchable</string>
     <string name="video_data_dialog_state_fetching">Fetching video data…</string>
     <string name="video_data_dialog_state_extracting">Extracting video data…</string>
     <string name="video_data_dialog_state_success">Starting player…</string>
+    <string name="failed_to_extract">Failed to extract, try again</string>
+    <string name="connection_timeout">Connection timeout</string>
+    <string name="connection_failed">Connection failure</string>
+    <string name="decryption_error">Decryption of data failed, try again</string>
+    <string name="unavailable_episode">Episode is not yet available</string>
+    <string name="film_data_fetch_failed">Failed to fetch film data</string>
 
     <!--  Internet State Messages  -->
     <string name="offline_message">You\'re offline</string>

@@ -38,7 +38,7 @@ class PaginatedSearchItemsDeserializer : JsonDeserializer<TMDBPageResponse<TMDBS
             results.add(result)
         }
 
-        // Create and return a new TMDBPageResponse object with the page, results, total pages, and total results counts
+        // Create and return a new TMDBPageResponse object with the currentPage, results, total pages, and total results counts
         return TMDBPageResponse(
             page = page,
             results = results,

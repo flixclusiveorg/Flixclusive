@@ -1,27 +1,25 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
-    id 'com.google.dagger.hilt.android'
+    id 'dagger.hilt.android.plugin'
     id "com.google.devtools.ksp"
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.20'
-    id 'com.google.gms.google-services'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.0'
 }
 
 // Version
 def versionMajor = 1
-def versionMinor = 1
+def versionMinor = 2
 def versionPatch = 0
 def versionBuild = 0
 
 android {
     namespace 'com.flixclusive'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.flixclusive"
         minSdk 21
-        targetSdk 33
+        targetSdk 34
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
         versionName "${versionMajor}.${versionMinor}.${versionPatch}"
 
@@ -40,9 +38,9 @@ android {
         }
     }
 
-    applicationVariants.all { variant ->
+    applicationVariants.configureEach { variant ->
         variant.addJavaSourceFoldersToModel(
-                new File(buildDir, "generated/ksp/${variant.name}/kotlin")
+            new File(buildDir, "generated/ksp/${variant.name}/kotlin")
         )
     }
 
@@ -50,94 +48,146 @@ android {
         sourceCompatibility JavaVersion.VERSION_18
         targetCompatibility JavaVersion.VERSION_18
     }
+
     kotlinOptions {
         jvmTarget = '18'
+        freeCompilerArgs += "-opt-in=androidx.tv.material3.ExperimentalTvMaterial3Api"
+        freeCompilerArgs += "-opt-in=androidx.tv.foundation.ExperimentalTvFoundationApi"
     }
     buildFeatures {
         compose true
         buildConfig true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.4.6'
+        kotlinCompilerExtensionVersion '1.5.0'
     }
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+        }
+    }
+}
+
+ksp {
+    arg(new RoomSchemaArgProvider(new File(projectDir, "schemas")))
 }
 
 dependencies {
-    implementation platform('androidx.compose:compose-bom:2022.10.00')
-    androidTestImplementation platform('androidx.compose:compose-bom:2022.10.00')
-    def exoPlayerVersion = "1.1.0"
-    def room_version = "2.5.2"
+    def tvCompose = '1.0.0-alpha09'
+    def composeUi = "1.6.0-alpha01"
+    def googleMaterial = "1.9.0"
+    def material3 = "1.1.1"
+    def media3 = "1.1.1"
+    def splashScreen = "1.0.1"
+    def hilt = "2.48"
+    def hiltNavigation = "1.0.0"
+    def retrofit2 = "2.9.0"
+    def composeDestination = "1.9.42-beta"
+    def lifecycleRuntime = "2.6.2"
+    def room = "2.5.2"
+    def dataStore = "1.0.0"
+    def coreKtx = "1.12.0"
+    def serialization = "1.5.1"
+    def activityCompose = "1.7.2"
+    def constraintLayout = "1.0.1"
+    def gson = "2.10.1"
+    def coil = "2.4.0"
+    def jUnit = "5.10.0"
+    def mockitoVersion = "5.4.0"
 
-    def composeBom = platform('androidx.compose:compose-bom:2023.05.01')
-    implementation composeBom
-    androidTestImplementation composeBom
+    implementation project(path: ':flixclusive_provider')
 
-    implementation "androidx.datastore:datastore-preferences:1.0.0"
-    implementation 'androidx.core:core-ktx:1.10.1'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
-    implementation 'androidx.activity:activity-compose:1.7.2'
-    implementation "androidx.compose.animation:animation-graphics"
-    implementation 'androidx.compose.ui:ui'
-    implementation 'androidx.compose.ui:ui-graphics'
-    implementation 'androidx.compose.ui:ui-tooling-preview'
-    implementation 'androidx.compose.material3:material3'
-    implementation 'androidx.compose.foundation:foundation'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation('org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1')
+    // Datastore
+    implementation "androidx.datastore:datastore-preferences:$dataStore"
 
-    // Firebase
-    implementation platform('com.google.firebase:firebase-bom:32.1.1')
-    implementation 'com.google.firebase:firebase-analytics-ktx'
-    implementation 'com.google.firebase:firebase-config-ktx'
+    // Core KTX
+    implementation "androidx.core:core-ktx:$coreKtx"
+
+    // Serialization
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$serialization"
+
+    // Lifecycle
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleRuntime"
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:$lifecycleRuntime"
+
+    implementation "androidx.activity:activity-compose:$activityCompose"
+    implementation "androidx.compose.ui:ui:$composeUi"
+    implementation "androidx.compose.ui:ui-graphics:$composeUi"
+    implementation "androidx.compose.animation:animation-graphics:$composeUi"
+    implementation "androidx.compose.ui:ui-tooling-preview:$composeUi"
+    implementation "androidx.compose.foundation:foundation:$composeUi"
+    implementation "com.google.android.material:material:$googleMaterial"
+
+    // Compose for Mobile
+    implementation "androidx.compose.material3:material3:$material3"
+
+    // Compose for TV dependencies
+    implementation "androidx.tv:tv-foundation:$tvCompose"
+    implementation "androidx.tv:tv-material:$tvCompose"
 
     // Exoplayer
-    implementation "androidx.media3:media3-session:$exoPlayerVersion"
-    implementation "androidx.media3:media3-exoplayer:$exoPlayerVersion"
-    implementation "androidx.media3:media3-exoplayer-hls:$exoPlayerVersion"
-    implementation "androidx.media3:media3-ui:$exoPlayerVersion"
-    implementation "androidx.media3:media3-cast:$exoPlayerVersion"
-    implementation "androidx.media3:media3-common:$exoPlayerVersion"
-
+    implementation "androidx.media3:media3-session:$media3"
+    implementation "androidx.media3:media3-exoplayer:$media3"
+    implementation "androidx.media3:media3-exoplayer-hls:$media3"
+    implementation "androidx.media3:media3-ui:$media3"
+    implementation "androidx.media3:media3-ui-leanback:$media3"
+    implementation "androidx.media3:media3-cast:$media3"
+    implementation "androidx.media3:media3-common:$media3"
 
     // ConstraintLayout
-    implementation "androidx.constraintlayout:constraintlayout-compose:1.0.1"
+    implementation "androidx.constraintlayout:constraintlayout-compose:$constraintLayout"
 
     // Room
-    implementation "androidx.room:room-runtime:$room_version"
-    ksp "androidx.room:room-compiler:$room_version"
-    implementation "androidx.room:room-ktx:$room_version"
-
+    implementation "androidx.room:room-runtime:$room"
+    ksp "androidx.room:room-compiler:$room"
+    implementation "androidx.room:room-ktx:$room"
 
     // Retrofit2
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
+    implementation "com.squareup.retrofit2:retrofit:$retrofit2"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit2"
+    implementation "com.squareup.retrofit2:converter-scalars:$retrofit2"
 
     // Gson
-    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation "com.google.code.gson:gson:$gson"
 
     // Coil
-    implementation('io.coil-kt:coil-compose:2.4.0')
+    implementation "io.coil-kt:coil-compose:$coil"
 
     // Hilt
-    implementation('com.google.dagger:hilt-android:2.46.1')
-    kapt 'com.google.dagger:hilt-android-compiler:2.46.1'
-    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
+    implementation "com.google.dagger:hilt-android:$hilt"
+    ksp "com.google.dagger:hilt-android-compiler:$hilt"
+    implementation "androidx.hilt:hilt-navigation-compose:$hiltNavigation"
 
     // Compose Destinations by raamcosta
-    implementation 'io.github.raamcosta.compose-destinations:animations-core:1.9.42-beta'
-    ksp 'io.github.raamcosta.compose-destinations:ksp:1.9.42-beta'
+    implementation "io.github.raamcosta.compose-destinations:animations-core:$composeDestination"
+    ksp "io.github.raamcosta.compose-destinations:ksp:$composeDestination"
 
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
-    debugImplementation 'androidx.compose.ui:ui-tooling'
-    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+    // SplashScreen
+    implementation("androidx.core:core-splashscreen:$splashScreen")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:$jUnit")
+    testImplementation("org.mockito:mockito-core:$mockitoVersion")
+    testImplementation project(path: ':flixclusive_provider')
+}
+
+class RoomSchemaArgProvider implements CommandLineArgumentProvider {
+
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    File schemaDir
+
+    RoomSchemaArgProvider(File schemaDir) {
+        this.schemaDir = schemaDir
+    }
+
+    @Override
+    Iterable<String> asArguments() {
+        return ["room.schemaLocation=${schemaDir.path}".toString()]
+    }
 }

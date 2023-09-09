@@ -1,11 +1,12 @@
 package com.flixclusive.data.repository
 
-import com.flixclusive.data.database.watchlist.WatchlistDao
+import com.flixclusive.data.database.dao.WatchlistDao
 import com.flixclusive.di.IoDispatcher
 import com.flixclusive.domain.model.entities.WatchlistItem
 import com.flixclusive.domain.repository.WatchlistRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -21,19 +22,19 @@ class WatchlistRepositoryImpl @Inject constructor(
         watchlistDao.delete(item)
     }
 
-    override suspend fun removeById(itemId: Int) = withContext(ioDispatcher) {
-        watchlistDao.deleteById(itemId = itemId)
+    override suspend fun removeById(itemId: Int, ownerId: Int) = withContext(ioDispatcher) {
+        watchlistDao.deleteById(itemId, ownerId)
     }
 
-    override suspend fun getWatchlistItemById(filmId: Int): WatchlistItem? = withContext(ioDispatcher) {
-        watchlistDao.getWatchlistItemById(filmId)
+    override suspend fun getWatchlistItemById(filmId: Int, ownerId: Int): WatchlistItem? = withContext(ioDispatcher) {
+        watchlistDao.getWatchlistItemById(filmId, ownerId)
     }
 
-    override suspend fun getAllItems(): List<WatchlistItem> = withContext(ioDispatcher) {
-        watchlistDao.getAllItems()
+    override suspend fun getAllItems(ownerId: Int): List<WatchlistItem> = withContext(ioDispatcher) {
+        watchlistDao.getAllItems(ownerId)
+            ?.watchlist ?: emptyList()
     }
 
-    override fun getAllItemsInFlow(): Flow<List<WatchlistItem>> {
-        return watchlistDao.getAllItemsInFlow()
-    }
+    override fun getAllItemsInFlow(ownerId: Int): Flow<List<WatchlistItem>> = watchlistDao.getAllItemsInFlow(ownerId)
+        .map { it?.watchlist ?: emptyList() }
 }

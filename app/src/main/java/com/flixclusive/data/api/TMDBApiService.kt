@@ -1,16 +1,17 @@
 package com.flixclusive.data.api
 
 import android.os.Build
-import com.flixclusive.data.dto.tmdb.common.TMDBGenresDto
-import com.flixclusive.data.dto.tmdb.common.TMDBImagesResponseDto
 import com.flixclusive.data.dto.tmdb.TMDBMovieDto
-import com.flixclusive.domain.model.tmdb.TMDBPageResponse
 import com.flixclusive.data.dto.tmdb.TMDBTvShowDto
+import com.flixclusive.data.dto.tmdb.common.TMDBImagesResponseDto
 import com.flixclusive.data.dto.tmdb.tv.TMDBSeasonDto
+import com.flixclusive.domain.model.tmdb.TMDBCollection
+import com.flixclusive.domain.model.tmdb.TMDBPageResponse
 import com.flixclusive.domain.model.tmdb.TMDBSearchItem
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Url
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -66,6 +67,7 @@ interface TMDBApiService {
         @Query("with_companies") companies: String = "",
         @Query("with_networks") networks: String = "",
         @Query("watch_region") watchRegion: String = "US",
+        @Query("without_genres") withoutGenres: String = "10763", // news genre
         @Query("release_date.lte") releasedDate: String = when(Build.VERSION.SDK_INT) {
             Build.VERSION_CODES.O -> LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             else -> SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -73,12 +75,9 @@ interface TMDBApiService {
         @Query("with_original_language") withOriginalLanguage: String = "en",
     ): TMDBPageResponse<TMDBSearchItem>
 
-    @GET("genre/{media_type}/list")
-    suspend fun getGenres(
-        @Path("media_type") mediaType: String, // movie, tv
-        @Query("api_key") apiKey: String,
-        @Query("language") language: String = "en-US"
-    ): TMDBGenresDto
+
+    @GET
+    suspend fun get(@Url url: String): TMDBPageResponse<TMDBSearchItem>
 
     @GET("search/{media_type}")
     suspend fun search(
@@ -99,4 +98,10 @@ interface TMDBApiService {
         @Query("api_key") apiKey: String,
         @Query("include_image_language") includeImageLanguage: String = "en"
     ): TMDBImagesResponseDto
+
+    @GET("collection/{id}")
+    suspend fun getCollection(
+        @Path("id") id: Int,
+        @Query("api_key") apiKey: String,
+    ): TMDBCollection
 }

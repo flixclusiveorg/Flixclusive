@@ -1,5 +1,4 @@
 <resources>
-
     <style name="Theme.Flixclusive" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/md_theme_dark_primary</item>
         <item name="colorOnPrimary">@color/md_theme_dark_onPrimary</item>
@@ -31,5 +30,15 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@color/md_theme_dark_surface</item>
         <item name="android:windowBackground">@color/md_theme_dark_surface</item>
+        <item name="windowSplashScreenAnimationDuration">0</item>
+    </style>
+
+    <style name="Theme.FlixclusiveTV" parent="Theme.Material3.Dark.NoActionBar" />
+
+    <style name="Theme.FlixclusiveTV.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/transparent_image</item>
+        <item name="postSplashScreenTheme">@style/Theme.FlixclusiveTV</item>
+        <item name="windowSplashScreenAnimationDuration">0</item>
     </style>
 </resources>

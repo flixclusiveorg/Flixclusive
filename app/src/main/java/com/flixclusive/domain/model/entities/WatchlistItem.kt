@@ -9,6 +9,7 @@ import com.flixclusive.domain.model.tmdb.toFilmInstance
 @Entity(tableName = "watchlist")
 data class WatchlistItem(
     @PrimaryKey val id: Int = 0,
+    val ownerId: Int = 1,
     val film: FilmImpl = FilmImpl()
 )
 

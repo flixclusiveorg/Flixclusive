@@ -1,18 +1,19 @@
 package com.flixclusive.di
 
-import com.flixclusive.data.api.ConsumetApiService
 import com.flixclusive.data.api.TMDBApiService
-import com.flixclusive.data.database.watch_history.WatchHistoryDatabase
-import com.flixclusive.data.database.watchlist.WatchlistDatabase
-import com.flixclusive.data.repository.ConsumetRepositoryImpl
+import com.flixclusive.data.database.AppDatabase
+import com.flixclusive.data.repository.FilmSourcesRepositoryImpl
 import com.flixclusive.data.repository.TMDBRepositoryImpl
+import com.flixclusive.data.repository.UserRepositoryImpl
 import com.flixclusive.data.repository.WatchHistoryRepositoryImpl
 import com.flixclusive.data.repository.WatchlistRepositoryImpl
-import com.flixclusive.domain.firebase.ConfigurationProvider
-import com.flixclusive.domain.repository.ConsumetRepository
+import com.flixclusive.domain.config.ConfigurationProvider
+import com.flixclusive.domain.repository.FilmSourcesRepository
 import com.flixclusive.domain.repository.TMDBRepository
+import com.flixclusive.domain.repository.UserRepository
 import com.flixclusive.domain.repository.WatchHistoryRepository
 import com.flixclusive.domain.repository.WatchlistRepository
+import com.flixclusive_provider.interfaces.FilmSourcesProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,17 +39,15 @@ object AppModule {
         )
     }
 
-    // provide ConsumetRepository
+    // provide FilmsSourcesRepository
     @Provides
     @Singleton
-    fun provideConsumetRepository(
-        consumetApiService: ConsumetApiService,
-        configurationProvider: ConfigurationProvider,
+    fun provideFilmSourcesRepository(
+        filmSourcesProvider: FilmSourcesProvider,
         @IoDispatcher ioDispatcher: CoroutineDispatcher
-    ): ConsumetRepository {
-        return ConsumetRepositoryImpl(
-            consumetApiService = consumetApiService,
-            configurationProvider = configurationProvider,
+    ): FilmSourcesRepository {
+        return FilmSourcesRepositoryImpl(
+            provider = filmSourcesProvider,
             ioDispatcher = ioDispatcher
         )
     }
@@ -57,19 +56,29 @@ object AppModule {
     @Provides
     @Singleton
     fun provideWatchlistRepository(
-        watchlistDatabase: WatchlistDatabase,
+        appDatabase: AppDatabase,
         @IoDispatcher ioDispatcher: CoroutineDispatcher
     ): WatchlistRepository {
-        return WatchlistRepositoryImpl(watchlistDatabase.watchlistDao(), ioDispatcher)
+        return WatchlistRepositoryImpl(appDatabase.watchlistDao(), ioDispatcher)
     }
 
     // provide WatchHistoryRepository
     @Provides
     @Singleton
     fun provideWatchHistoryRepository(
-        watchHistoryDatabase: WatchHistoryDatabase,
+        appDatabase: AppDatabase,
         @IoDispatcher ioDispatcher: CoroutineDispatcher
     ): WatchHistoryRepository {
-        return WatchHistoryRepositoryImpl(watchHistoryDatabase.watchHistoryDao(), ioDispatcher)
+        return WatchHistoryRepositoryImpl(appDatabase.watchHistoryDao(), ioDispatcher)
+    }
+
+    // provide UserRepository
+    @Provides
+    @Singleton
+    fun provideUserRepository(
+        appDatabase: AppDatabase,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher
+    ): UserRepository {
+        return UserRepositoryImpl(appDatabase.userDao(), ioDispatcher)
     }
 }
