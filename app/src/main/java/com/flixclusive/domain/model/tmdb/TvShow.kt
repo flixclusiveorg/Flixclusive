@@ -1,6 +1,6 @@
 package com.flixclusive.domain.model.tmdb
 
-import com.flixclusive.presentation.common.Formatter
+import com.flixclusive.presentation.utils.FormatterUtils
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,9 +13,9 @@ data class TvShow(
     val type: String = "TV Series",
     override val rating: Double = 0.0,
     val releaseDate: String = "",
-    val lastAirDate: String = "",
+    val lastAirDate: String? = null,
     val description: String? = null,
-    val genresList: List<Genre> = emptyList(),
+    override val genres: List<Genre> = emptyList(),
     val duration: Int? = null,
     val totalEpisodes: Int = 0,
     val totalSeasons: Int = 0,
@@ -30,16 +30,16 @@ data class TvShow(
         get() = image
 
     override val dateReleased: String
-        get() = Formatter.formatAirDates(
+        get() = FormatterUtils.formatAirDates(
             releaseDate,
-            lastAirDate,
+            lastAirDate ?: "",
             inProduction
         )
 
     override val runtime: String
         get() {
             var runtimeString = when {
-                duration != null -> "${Formatter.formatMinutes(duration)} | $totalSeasons Season"
+                duration != null -> "${FormatterUtils.formatMinutes(duration)} | $totalSeasons Season"
                 else -> "$totalSeasons Season"
             }
 
@@ -51,9 +51,6 @@ data class TvShow(
 
     override val overview: String?
         get() = description
-
-    override val genres: List<Genre>
-        get() = genresList.map { it.copy(mediaType = filmType.type) }
 
     override val backdropImage: String?
         get() = cover

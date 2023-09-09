@@ -1,10 +1,10 @@
 package com.flixclusive.domain.usecase
 
-import com.flixclusive.domain.model.consumet.VideoData
+import com.flixclusive_provider.models.common.VideoData
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
-import com.flixclusive.presentation.common.VideoDataDialogState
+import com.flixclusive.domain.model.VideoDataDialogState
 import kotlinx.coroutines.flow.Flow
 
 interface VideoDataProviderUseCase {
@@ -12,7 +12,7 @@ interface VideoDataProviderUseCase {
         film: Film,
         watchHistoryItem: WatchHistoryItem?,
         server: String?,
-        consumetId: String? = null,
+        mediaId: String? = null,
         episode: TMDBEpisode? = null,
         onSuccess: (VideoData, TMDBEpisode?) -> Unit
     ): Flow<VideoDataDialogState>

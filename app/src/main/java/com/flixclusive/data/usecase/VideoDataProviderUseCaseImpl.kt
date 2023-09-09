@@ -1,44 +1,42 @@
 package com.flixclusive.data.usecase
 
+import com.flixclusive.R
 import com.flixclusive.domain.common.Resource
-import com.flixclusive.domain.model.consumet.VideoData
+import com.flixclusive.domain.model.VideoDataDialogState
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.Film
-import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.model.tmdb.TvShow
-import com.flixclusive.domain.repository.ConsumetRepository
+import com.flixclusive.domain.repository.FilmSourcesRepository
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.domain.usecase.VideoDataProviderUseCase
-import com.flixclusive.domain.utils.ConsumetUtils.initializeSubtitles
-import com.flixclusive.presentation.common.Formatter
-import com.flixclusive.presentation.common.Functions
-import com.flixclusive.presentation.common.VideoDataDialogState
+import com.flixclusive.domain.utils.FilmProviderUtils.initializeSubtitles
+import com.flixclusive.domain.utils.WatchHistoryUtils.getNextEpisodeToWatch
+import com.flixclusive.presentation.utils.FormatterUtils
+import com.flixclusive_provider.models.common.MediaServer
+import com.flixclusive_provider.models.common.VideoData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class VideoDataProviderUseCaseImpl @Inject constructor(
-    private val consumetRepository: ConsumetRepository,
-    private val tmdbRepository: TMDBRepository,
+    private val filmSourcesRepository: FilmSourcesRepository,
+    private val tmdbRepository: TMDBRepository
 ) : VideoDataProviderUseCase {
     override fun invoke(
         film: Film,
         watchHistoryItem: WatchHistoryItem?,
         server: String?,
-        consumetId: String?,
+        mediaId: String?,
         episode: TMDBEpisode?,
         onSuccess: (VideoData, TMDBEpisode?) -> Unit
     ): Flow<VideoDataDialogState> = flow {
-        emit(VideoDataDialogState.FETCHING)
+        emit(VideoDataDialogState.Fetching)
 
-        val mediaId: String? = consumetId ?: consumetRepository.getConsumetFilmMediaId(film)
+        val id = mediaId ?: filmSourcesRepository.getMediaId(film)
 
-        if (mediaId == null) {
-            emit(VideoDataDialogState.ERROR)
-            return@flow
-        } else if (mediaId.isEmpty()) {
-            emit(VideoDataDialogState.UNAVAILABLE)
+        if (id.isNullOrEmpty()) {
+            emit(VideoDataDialogState.Unavailable())
             return@flow
         }
 
@@ -46,28 +44,21 @@ class VideoDataProviderUseCaseImpl @Inject constructor(
             watchHistoryItem == null || watchHistoryItem.episodesWatched.isEmpty()
 
         var episodeToUse: TMDBEpisode? = episode
-        if(episodeToUse == null && film is TvShow){
+        if(episodeToUse == null && film is TvShow) {
             val seasonNumber: Int
             val episodeNumber: Int
 
             if (isNewlyWatchShow) {
-                seasonNumber = if (film.totalSeasons > 0) 1 else {
-                    emit(VideoDataDialogState.ERROR)
-                    return@flow
+                if (film.totalSeasons == 0 || film.totalEpisodes == 0) {
+                    return@flow emit(VideoDataDialogState.Unavailable())
                 }
-                episodeNumber = if (film.totalEpisodes > 0) 1 else {
-                    emit(VideoDataDialogState.UNAVAILABLE)
-                    return@flow
-                }
+
+                seasonNumber = 1
+                episodeNumber = 1
             } else {
-                val lastEpisodeWatched = Functions.getNextEpisodeToWatch(watchHistoryItem!!)
+                val lastEpisodeWatched = getNextEpisodeToWatch(watchHistoryItem!!)
                 seasonNumber = lastEpisodeWatched.first ?: 1
                 episodeNumber = lastEpisodeWatched.second ?: 1
-            }
-
-            if(seasonNumber == 0 || episodeNumber == 0) {
-                emit(VideoDataDialogState.ERROR)
-                return@flow
             }
 
             val episodeFromApiService = tmdbRepository.getEpisode(
@@ -77,51 +68,45 @@ class VideoDataProviderUseCaseImpl @Inject constructor(
             )
 
             if (episodeFromApiService == null) {
-                emit(VideoDataDialogState.UNAVAILABLE)
+                emit(VideoDataDialogState.Unavailable(R.string.unavailable_episode))
                 return@flow
             }
 
             episodeToUse = episodeFromApiService
         }
 
-        emit(VideoDataDialogState.EXTRACTING)
-        val titleToUse = Formatter.formatPlayerTitle(film, episodeToUse)
-        val serverToUse = server ?: consumetRepository.consumetDefaultVideoServer
-        val videoData = when (film.filmType) {
-            FilmType.MOVIE -> consumetRepository.getMovieStreamingLinks(
-                consumetId = mediaId,
-                server = serverToUse
-            )
-            FilmType.TV_SHOW -> consumetRepository.getTvShowStreamingLinks(
-                consumetId = mediaId,
-                episode = episodeToUse!!,
-                server = serverToUse
-            )
-        }
+        emit(VideoDataDialogState.Extracting)
+        val titleToUse = FormatterUtils.formatPlayerTitle(film, episodeToUse)
+        val serverToUse = server ?: MediaServer.values().first().serverName
+        val episodeId = filmSourcesRepository.getEpisodeId(
+            mediaId = id,
+            filmType = film.filmType,
+            episode = episodeToUse?.episode,
+            season = episodeToUse?.season
+        ) ?: return@flow emit(VideoDataDialogState.Unavailable(R.string.unavailable_episode))
+
+        val videoData = filmSourcesRepository.getStreamingLinks(
+            mediaId = id,
+            episodeId = episodeId,
+            server = serverToUse
+        )
 
         when (videoData) {
-            is Resource.Failure -> emit(VideoDataDialogState.ERROR)
+            is Resource.Failure -> {
+                emit(VideoDataDialogState.Error(videoData.error))
+            }
             Resource.Loading -> Unit
             is Resource.Success -> {
                 val data = videoData.data
                 if (data != null) {
-                    val servers = consumetRepository.getAvailableServers(
-                        mediaId = mediaId, episodeId = data.episodeId!!
-                    )
-
-                    if(servers is Resource.Failure)
-                        return@flow emit(VideoDataDialogState.ERROR)
-
-                    emit(VideoDataDialogState.SUCCESS)
+                    emit(VideoDataDialogState.Success)
                     onSuccess(
-                        data.copy(
-                            title = titleToUse,
-                            servers = servers.data ?: emptyList()
-                        ).initializeSubtitles(),
+                        data.copy(title = titleToUse)
+                            .initializeSubtitles(),
                         episodeToUse
                     )
                 } else {
-                    emit(VideoDataDialogState.UNAVAILABLE)
+                    emit(VideoDataDialogState.Unavailable())
                 }
             }
         }

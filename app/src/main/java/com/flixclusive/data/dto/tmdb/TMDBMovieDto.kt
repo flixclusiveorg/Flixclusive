@@ -2,7 +2,7 @@ package com.flixclusive.data.dto.tmdb
 
 import com.flixclusive.domain.model.tmdb.Movie
 import com.flixclusive.domain.model.tmdb.TMDBSearchItem
-import com.flixclusive.data.dto.tmdb.common.Collection
+import com.flixclusive.data.dto.tmdb.common.BelongsToCollection
 import com.flixclusive.domain.model.tmdb.Genre
 import com.flixclusive.data.dto.tmdb.common.ProductionCompany
 import com.flixclusive.data.dto.tmdb.common.ProductionCountry
@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
 data class TMDBMovieDto(
     val adult: Boolean,
     @SerializedName("backdrop_path") val backdropPath: String?,
-    @SerializedName("belongs_to_collection") val belongsToCollection: Collection?,
+    @SerializedName("belongs_to_collection") val belongsToCollection: BelongsToCollection?,
     val budget: Int,
     val genres: List<Genre>,
     val homepage: String?,
@@ -62,8 +62,8 @@ fun TMDBMovieDto.toMovie(): Movie {
         rating = voteAverage,
         releaseDate = releaseDate,
         description = overview,
-        genresList = genres,
         duration = runtime,
+        genres = genres,
         recommendations = recommendations.results.map { it.toRecommendation() }
     )
 }

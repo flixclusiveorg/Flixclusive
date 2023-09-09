@@ -1,0 +1,177 @@
+package com.flixclusive.presentation.mobile.screens.search.content
+
+import androidx.compose.runtime.mutableStateListOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.flixclusive.di.IoDispatcher
+import com.flixclusive.domain.common.Resource
+import com.flixclusive.domain.config.ConfigurationProvider
+import com.flixclusive.domain.model.config.SearchCategoryItem
+import com.flixclusive.domain.repository.TMDBRepository
+import com.flixclusive.presentation.common.NetworkConnectivityObserver
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import kotlin.math.max
+import kotlin.random.Random.Default.nextInt
+
+@HiltViewModel
+class SearchInitialContentViewModel @Inject constructor(
+    private val tmdbRepository: TMDBRepository,
+    val configurationProvider: ConfigurationProvider,
+    networkConnectivityObserver: NetworkConnectivityObserver,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+) : ViewModel() {
+    private val _state = MutableStateFlow(SearchInitialContentUiState(isLoading = true))
+    val state = _state.asStateFlow()
+
+    private var initializeJob: Job? = null
+
+    private val connectionObserver = networkConnectivityObserver
+        .connectivityState
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = true
+        )
+    private var isInitialized = false
+
+    val genres = mutableStateListOf<SearchCategoryItem>()
+    val filmTypes = mutableStateListOf<SearchCategoryItem>()
+    val networks = configurationProvider.searchCategoriesConfig!!.networks.shuffled()
+    val companies = configurationProvider.searchCategoriesConfig!!.companies.shuffled()
+    private val usedPosterPaths = mutableMapOf<String, Boolean>()
+
+    init {
+        viewModelScope.launch {
+            connectionObserver.collect { isConnected ->
+                if (isConnected && _state.value.hasErrors || !isInitialized) {
+                    initialize()
+                }
+            }
+        }
+    }
+
+    fun initialize() {
+        if (initializeJob?.isActive == true)
+            return
+
+        _state.update { SearchInitialContentUiState(isLoading = true) }
+
+        filmTypes.clear()
+        genres.clear()
+
+        genres.addAll(configurationProvider.searchCategoriesConfig!!.genres)
+        filmTypes.addAll(configurationProvider.searchCategoriesConfig!!.type)
+
+        initializeJob = viewModelScope.launch(ioDispatcher) {
+            // Items that need thumbnails =====
+            getGenresThumbnails()
+            getFilmTypeThumbnails()
+            // ============================ END
+            isInitialized = true
+
+            _state.update { it.copy(isLoading = false) }
+        }
+    }
+
+    private suspend fun getGenresThumbnails() {
+        val randomPage = max(1, nextInt(1, 3000) % 5)
+
+        configurationProvider
+            .searchCategoriesConfig!!
+            .genres
+            .forEachIndexed { i, genre ->
+                when (
+                    val result = tmdbRepository.paginateConfigItems(
+                        url = genre.query, page = randomPage
+                    )
+                ) {
+                    is Resource.Failure -> {
+                        _state.update {
+                            it.copy(
+                                hasErrors = true,
+                                isLoading = false
+                            )
+                        }
+                        return
+                    }
+                    is Resource.Success -> {
+                        result.data?.let { data ->
+                            var imageToUse: String? = null
+
+                            if(data.results.isEmpty())
+                                return getGenresThumbnails()
+
+                            while (
+                                usedPosterPaths[imageToUse] != null
+                                || imageToUse == null
+                            ) {
+                                imageToUse = data.results.random().backdropImage
+                            }
+
+                            usedPosterPaths[imageToUse] = true
+                            genres[i] = genres[i].copy(
+                                posterPath = imageToUse
+                            )
+                        }
+                    }
+
+                    else -> Unit
+                }
+            }
+    }
+
+    private suspend fun getFilmTypeThumbnails() {
+        val randomPage = max(1, nextInt(1, 3000) % 5)
+
+        configurationProvider
+            .searchCategoriesConfig!!
+            .type
+            .forEachIndexed { i, type ->
+                when (
+                    val result = tmdbRepository.paginateConfigItems(
+                        url = type.query, page = randomPage
+                    )
+                ) {
+                    is Resource.Failure -> {
+                        _state.update {
+                            it.copy(
+                                hasErrors = true,
+                                isLoading = false
+                            )
+                        }
+                        return
+                    }
+                    is Resource.Success -> {
+                        result.data?.let { data ->
+                            var imageToUse: String? = null
+
+                            if(data.results.isEmpty())
+                                return getFilmTypeThumbnails()
+
+                            while (
+                                usedPosterPaths[imageToUse] != null
+                                || imageToUse == null
+                            ) {
+                                imageToUse = data.results.random().backdropImage
+                            }
+
+                            usedPosterPaths[imageToUse] = true
+                            filmTypes[i] = filmTypes[i].copy(
+                                posterPath = imageToUse
+                            )
+                        }
+                    }
+                    else -> Unit
+                }
+            }
+    }
+}

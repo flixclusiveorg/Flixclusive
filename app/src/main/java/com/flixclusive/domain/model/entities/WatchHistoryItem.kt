@@ -12,6 +12,7 @@ import java.util.Date
 @Entity(tableName = "watch_history")
 data class WatchHistoryItem(
     @PrimaryKey val id: Int = 0,
+    val ownerId: Int = 1,
     val seasons: Int? = null,
     val episodes: Map<Int, Int> = emptyMap(),
     val episodesWatched: List<EpisodeWatched> = emptyList(),

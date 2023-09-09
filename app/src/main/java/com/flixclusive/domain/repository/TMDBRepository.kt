@@ -5,6 +5,7 @@ import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.model.tmdb.Genre
 import com.flixclusive.domain.model.tmdb.Movie
 import com.flixclusive.domain.model.tmdb.Season
+import com.flixclusive.domain.model.tmdb.TMDBCollection
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.model.tmdb.TMDBPageResponse
 import com.flixclusive.domain.model.tmdb.TMDBSearchItem
@@ -46,10 +47,6 @@ interface TMDBRepository {
         sortBy: SortOptions = SortOptions.RATED
     ): Resource<TMDBPageResponse<TMDBSearchItem>>
 
-    suspend fun getGenres(
-        mediaType: String
-    ): Resource<List<Genre>>
-
     suspend fun search(
         mediaType: String,
         query: String,
@@ -66,4 +63,12 @@ interface TMDBRepository {
         seasonNumber: Int,
         episodeNumber: Int,
     ): TMDBEpisode?
+
+    suspend fun getCollection(id: Int): Resource<TMDBCollection>
+
+    /**
+    * A GET request function for custom queries from
+    * the HomeCategoriesConfig item
+    */
+    suspend fun paginateConfigItems(url: String, page: Int): Resource<TMDBPageResponse<TMDBSearchItem>>
 }

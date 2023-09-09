@@ -6,7 +6,7 @@ import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.repository.WatchHistoryRepository
 import com.flixclusive.domain.usecase.WatchHistoryItemManagerUseCase
-import com.flixclusive.presentation.common.Functions
+import com.flixclusive.domain.utils.WatchHistoryUtils.isFinishedWatching
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.util.Date
@@ -63,7 +63,7 @@ class WatchHistoryItemManagerUseCaseImpl @Inject constructor(
                 updatedEpisodesWatchedList[episodeWatchedIndex] = episode.copy(
                     watchTime = currentTime,
                     durationTime = totalDuration,
-                    isFinished = Functions.isFinishedWatching(
+                    isFinished = isFinishedWatching(
                         currentTime,
                         totalDuration
                     )
@@ -76,7 +76,7 @@ class WatchHistoryItemManagerUseCaseImpl @Inject constructor(
                     seasonNumber = currentSelectedEpisode.season,
                     watchTime = currentTime,
                     durationTime = totalDuration,
-                    isFinished = Functions.isFinishedWatching(
+                    isFinished = isFinishedWatching(
                         currentTime,
                         totalDuration
                     )
@@ -103,7 +103,7 @@ class WatchHistoryItemManagerUseCaseImpl @Inject constructor(
                 episodeId = watchHistoryItem.id,
                 watchTime = currentTime,
                 durationTime = totalDuration,
-                isFinished = Functions.isFinishedWatching(
+                isFinished = isFinishedWatching(
                     currentTime,
                     totalDuration
                 )

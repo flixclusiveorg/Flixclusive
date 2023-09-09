@@ -1,7 +1,7 @@
 package com.flixclusive.domain.model.tmdb
 
-import com.flixclusive.presentation.common.Formatter.formatDate
-import com.flixclusive.presentation.common.Formatter.formatMinutes
+import com.flixclusive.presentation.utils.FormatterUtils.formatDate
+import com.flixclusive.presentation.utils.FormatterUtils.formatMinutes
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -15,9 +15,10 @@ data class Movie(
     override val rating: Double = 0.0,
     val releaseDate: String = "",
     val description: String? = null,
-    val genresList: List<Genre> = emptyList(),
+    override val genres: List<Genre> = emptyList(),
     val duration: Int? = null,
-    val recommendations: List<Recommendation> = emptyList()
+    val recommendations: List<Recommendation> = emptyList(),
+    val collection: TMDBCollection? = null
 ) : Film, java.io.Serializable {
     override val filmType: FilmType
         get() = FilmType.MOVIE
@@ -33,9 +34,6 @@ data class Movie(
 
     override val overview: String?
         get() = description
-
-    override val genres: List<Genre>
-        get() = genresList.map { it.copy(mediaType = filmType.type) }
 
     override val backdropImage: String?
         get() = cover

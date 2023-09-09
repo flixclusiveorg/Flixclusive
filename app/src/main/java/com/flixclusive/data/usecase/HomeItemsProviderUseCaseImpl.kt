@@ -1,49 +1,58 @@
 package com.flixclusive.data.usecase
 
-import com.flixclusive.R
 import com.flixclusive.domain.common.Resource
+import com.flixclusive.domain.config.ConfigurationProvider
+import com.flixclusive.domain.model.config.HomeCategoryItem
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.FilmType
-import com.flixclusive.domain.model.tmdb.GENRES_LIST
 import com.flixclusive.domain.model.tmdb.Genre
+import com.flixclusive.domain.model.tmdb.TMDBPageResponse
 import com.flixclusive.domain.model.tmdb.TMDBSearchItem
-import com.flixclusive.domain.model.tmdb.WatchProvider
-import com.flixclusive.domain.repository.SortOptions
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.domain.repository.WatchHistoryRepository
-import com.flixclusive.domain.usecase.HomeItemConfig
 import com.flixclusive.domain.usecase.HomeItemsProviderUseCase
-import com.flixclusive.domain.usecase.POPULAR_MOVIE_FLAG
-import com.flixclusive.domain.usecase.POPULAR_TV_FLAG
-import com.flixclusive.domain.usecase.TOP_MOVIE_FLAG
-import com.flixclusive.domain.usecase.TOP_TV_FLAG
-import com.flixclusive.domain.usecase.TRENDING_FLAG
-import com.flixclusive.presentation.common.UiText
-import com.flixclusive.presentation.common.toTitleCase
+import com.flixclusive.presentation.utils.FormatterUtils.formatGenreIds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.lang.Integer.max
 import javax.inject.Inject
+import kotlin.random.Random
 import kotlin.random.Random.Default.nextInt
 
 class HomeItemsProviderUseCaseImpl @Inject constructor(
     private val tmdbRepository: TMDBRepository,
-    private val watchHistoryRepository: WatchHistoryRepository
+    private val watchHistoryRepository: WatchHistoryRepository,
+    private val configurationProvider: ConfigurationProvider,
 ) : HomeItemsProviderUseCase {
+    override suspend fun getFocusedItem(film: Film): Film? {
+        val response: Resource<Film> = when (film.filmType) {
+            FilmType.MOVIE -> tmdbRepository.getMovie(film.id)
+            FilmType.TV_SHOW -> tmdbRepository.getTvShow(film.id)
+        }
+
+        if (response is Resource.Failure)
+            return null
+
+        return response.data
+    }
+
     override suspend fun getHeaderItem(): Film? {
         var headerItemToUse: TMDBSearchItem? = null
 
-        val page = nextInt(1, 3)
+        val page = nextInt(1, 3000)
+        val itemConfig =
+            if (page % 2 == 0) configurationProvider.homeCategoriesConfig!!.movie.random() else configurationProvider.homeCategoriesConfig!!.tv.random()
 
-        val listOfMediaTypes = listOf("movie", "tv")
-        val mediaTypeToUse = listOfMediaTypes[nextInt(0, 2)]
-        val response = tmdbRepository.discoverFilms(
-            mediaType = mediaTypeToUse,
-            page = page,
-            sortBy = SortOptions.POPULARITY
+        val response = tmdbRepository.paginateConfigItems(
+            url = itemConfig.query,
+            page = max(1, page % 5)
         )
-        if(response is Resource.Failure)
+        if (response is Resource.Failure)
             return null
+
+        if(response.data?.results?.isEmpty() == true)
+            return getHeaderItem()
 
         response.data?.results?.size?.let {
             headerItemToUse = response.data.results.random()
@@ -51,21 +60,60 @@ class HomeItemsProviderUseCaseImpl @Inject constructor(
 
         headerItemToUse?.let { item ->
             val imageResponse = tmdbRepository.getImages(
-                mediaType = mediaTypeToUse,
+                mediaType = if (page % 2 == 0) FilmType.MOVIE.type else FilmType.TV_SHOW.type,
                 id = item.id
             )
-            if(imageResponse is Resource.Failure)
+
+            if (imageResponse is Resource.Failure)
                 return null
 
             imageResponse.data?.logos?.let { logos ->
-                if(logos.isEmpty()) {
+                if (logos.isEmpty()) {
                     return getHeaderItem()
                 }
 
-                headerItemToUse = when(item) {
-                    is TMDBSearchItem.MovieTMDBSearchItem -> item.copy(logoImage = logos[0].filePath.replace("svg", "png"))
-                    is TMDBSearchItem.TvShowTMDBSearchItem -> item.copy(logoImage = logos[0].filePath.replace("svg", "png"))
-                    is TMDBSearchItem.PersonTMDBSearchItem -> throw IllegalStateException("Item should not be a person!")
+                val logoToUse = logos[0].filePath.replace("svg", "png")
+
+                headerItemToUse = when (item) {
+                    is TMDBSearchItem.MovieTMDBSearchItem -> {
+                        val newGenres = formatGenreIds(
+                            genreIds = item.genreIds,
+                            genresList = configurationProvider
+                                .searchCategoriesConfig!!.genres.map {
+                                    Genre(
+                                        id = it.id,
+                                        name = it.name,
+                                        mediaType = it.mediaType
+                                    )
+                                }
+                        ) + item.genres
+
+                        item.copy(
+                            logoImage = logoToUse,
+                            genres = newGenres
+                        )
+                    }
+
+                    is TMDBSearchItem.TvShowTMDBSearchItem -> {
+                        val newGenres = formatGenreIds(
+                            genreIds = item.genreIds,
+                            genresList = configurationProvider
+                                .searchCategoriesConfig!!.genres.map {
+                                    Genre(
+                                        id = it.id,
+                                        name = it.name,
+                                        mediaType = FilmType.TV_SHOW.type
+                                    )
+                                }
+                        ) + item.genres
+
+                        item.copy(
+                            logoImage = logoToUse,
+                            genres = newGenres
+                        )
+                    }
+
+                    else -> throw IllegalStateException("Item is not parsable to a film!")
                 }
             }
         }
@@ -73,174 +121,82 @@ class HomeItemsProviderUseCaseImpl @Inject constructor(
         return headerItemToUse
     }
 
-    override fun getMainRowItems(): Flow<HomeItemConfig?> = flow {
-        val errorResult = null
+    override fun getHomeRecommendations(): Flow<HomeCategoryItem?> = flow {
+        val usedCategories = mutableListOf<String>()
 
-        val trendingAll = tmdbRepository.getTrending(page = 1)
-        if (trendingAll is Resource.Failure)
-            return@flow emit(errorResult)
+        val config = configurationProvider.homeCategoriesConfig!!
 
-        emit(
-            HomeItemConfig(
-                flag = TRENDING_FLAG,
-                label = UiText.StringResource(R.string.trending),
-                data = trendingAll.data!!.results
-            )
-        )
+        val combinedMovieAndTvShowConfig = config.tv + config.movie
+        val combinedConfig = config.all + combinedMovieAndTvShowConfig
 
-        val topMovies = tmdbRepository.getTrending(
-            mediaType = FilmType.MOVIE.type,
-            page = 1
-        )
-        if (topMovies is Resource.Failure)
-            return@flow emit(errorResult)
+        var countOfItemsToFetch = nextInt(15, 25)
+        var i = 0
+        while (i < countOfItemsToFetch) {
+            val shouldEmitRequiredCategories = nextInt(0, 1000) % nextInt(2, 3) == 0
 
-        emit(
-            HomeItemConfig(
-                flag = TOP_MOVIE_FLAG,
-                label = UiText.StringResource(R.string.top_movies_recently),
-                data = topMovies.data!!.results
-            )
-        )
+            val item = if (shouldEmitRequiredCategories) {
+                val requiredRecommendation = combinedConfig.find {
+                    !usedCategories.contains(it.name) && it.required
+                }
 
-        val topTvShows = tmdbRepository.getTrending(
-            mediaType = FilmType.TV_SHOW.type,
-            page = 1
-        )
-        if (topTvShows is Resource.Failure)
-            return@flow emit(errorResult)
+                if (requiredRecommendation != null) {
+                    countOfItemsToFetch++
+                    requiredRecommendation
+                } else combinedMovieAndTvShowConfig.random()
+            } else combinedMovieAndTvShowConfig.random()
 
-        emit(
-            HomeItemConfig(
-                flag = TOP_TV_FLAG,
-                label = UiText.StringResource(R.string.top_tv_shows_recently),
-                data = topTvShows.data!!.results
-            )
-        )
+            if (usedCategories.contains(item.name))
+                continue
 
-        val popularMovies = tmdbRepository.discoverFilms(
-            mediaType = FilmType.MOVIE.type,
-            page = 1
-        )
-        if (popularMovies is Resource.Failure)
-            return@flow emit(errorResult)
-
-        emit(
-            HomeItemConfig(
-                flag = POPULAR_MOVIE_FLAG,
-                label = UiText.StringResource(R.string.popular_movies),
-                data = popularMovies.data!!.results
-            )
-        )
-
-        val popularTvShows = tmdbRepository.discoverFilms(
-            mediaType = FilmType.TV_SHOW.type,
-            page = 1
-        )
-        if (popularTvShows is Resource.Failure)
-            return@flow emit(errorResult)
-
-        emit(
-            HomeItemConfig(
-                flag = POPULAR_TV_FLAG,
-                label = UiText.StringResource(R.string.popular_tv_shows),
-                data = popularTvShows.data!!.results
-            )
-        )
-    }
-
-    override fun getWatchProvidersRowItems(count: Int): Flow<HomeItemConfig?> = flow {
-        check(count > 0) { "Item count must be greater than 0" }
-
-        // Get random network/company items
-        val providersFound = mutableListOf<WatchProvider>()
-        for (i in 0 until count) {
-            val randomProvider = WatchProvider.values().random()
-
-            val providerId = randomProvider.id
-            val providerStringId = randomProvider.labelId
-
-            val isProviderAlreadyAdded = providersFound.find { it.labelId == providerStringId } != null
-            if(isProviderAlreadyAdded)
-                break
-
-            providersFound.add(randomProvider)
-            val result = when(randomProvider.isCompany) {
-                true -> tmdbRepository.discoverFilms(
-                    mediaType = FilmType.MOVIE.type,
-                    page = 1,
-                    withCompanies = listOf(randomProvider.id),
-                    sortBy = SortOptions.POPULARITY
-                )
-                false -> tmdbRepository.discoverFilms(
-                    mediaType = FilmType.TV_SHOW.type,
-                    page = 1,
-                    withNetworks = listOf(randomProvider.id),
-                    sortBy = SortOptions.POPULARITY
-                )
-            }
-            if(result is Resource.Failure)
-                return@flow emit(null)
-
-            emit(
-                HomeItemConfig(
-                    flag = providerId.toString(),
-                    label = UiText.StringResource(providerStringId),
-                    data = result.data!!.results
-                )
-            )
+            emit(item)
+            usedCategories.add(item.name)
+            i++
+            humanizer()
         }
     }
 
-    override fun getGenreRowItems(count: Int): Flow<HomeItemConfig?> = flow {
-        check(count > 0) { "Item count must be greater than 0" }
-
-        // Get random genre items
-        val genresFound = mutableListOf<Genre>()
-        for (i in 0 until count) {
-            val randomGenre = GENRES_LIST.random()
-
-            val isGenreAlreadyAdded = genresFound.find { it.name.equals(randomGenre.name, true) } != null
-            if(isGenreAlreadyAdded)
-                break
-
-            genresFound.add(randomGenre)
-            val genreTitle = randomGenre.name.toTitleCase()
-
-            val result = tmdbRepository.discoverFilms(
-                mediaType = FilmType.MOVIE.type,
-                page = 1,
-                withGenres = listOf(randomGenre),
-                sortBy = SortOptions.POPULARITY
+    override suspend fun getHomeItems(
+        query: String,
+        page: Int,
+        onFailure: () -> Unit,
+        onSuccess: (data: TMDBPageResponse<TMDBSearchItem>) -> Unit,
+    ) {
+        when (
+            val result = tmdbRepository.paginateConfigItems(
+                url = query,
+                page = page
             )
-            if(result is Resource.Failure)
-                return@flow emit(null)
-
-            emit(
-                HomeItemConfig(
-                    flag = genreTitle,
-                    label = UiText.StringResource(randomGenre.labelId!!),
-                    data = result.data!!.results
-                )
-            )
+        ) {
+            is Resource.Failure -> onFailure()
+            Resource.Loading -> Unit
+            is Resource.Success -> onSuccess(result.data!!)
         }
     }
 
-    override fun getBasedOnRowItems(count: Int): Flow<HomeItemConfig?> = flow {
+    override fun getUserRecommendations(userId: Int, count: Int): Flow<HomeCategoryItem?> = flow {
         check(count > 0) { "Item count must be greater than 0" }
 
-        val randomWatchedFilms = watchHistoryRepository.getRandomWatchHistoryItems(count)
-        if(randomWatchedFilms.isNotEmpty()) {
+        val randomWatchedFilms =
+            watchHistoryRepository.getRandomWatchHistoryItems(ownerId = userId, count = count)
+        if (randomWatchedFilms.isNotEmpty()) {
             randomWatchedFilms.forEach { item ->
-                emit(
-                    HomeItemConfig(
-                        flag = null,
-                        label = UiText.StringValue("If you liked \"${item.film.title}\""),
-                        data = item.film.recommendedTitles
+                if (item.film.recommendedTitles.size >= 10) {
+                    emit(
+                        HomeCategoryItem(
+                            name = "If you liked ${item.film.title}",
+                            mediaType = item.film.filmType.type,
+                            required = false,
+                            canPaginate = true,
+                            query = "${item.film.filmType.type}/${item.id}/recommendations?language=en-US"
+                        )
                     )
-                )
-                delay(800L) // Delay on re-iteration to have a humanized home items list
+                    humanizer()
+                }
             }
         }
+    }
+
+    private suspend fun humanizer() {
+        delay(Random.nextLong(0, 30))
     }
 }
