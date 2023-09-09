@@ -58,16 +58,16 @@
 #-keep class com.google.gson.stream.** { *; }
 
 # Application classes that will be serialized/deserialized over Gson
--keep class com.flixclusive.domain.model.config.** { <fields>; }
--keep class com.flixclusive.domain.model.entities.** { <fields>; }
--keep class com.flixclusive.domain.model.tmdb.** { <fields>; }
--keep class com.flixclusive.data.dto.tmdb.** { <fields>; }
--keep class com.flixclusive.data.dto.tmdb.tv.** { <fields>; }
--keep class com.flixclusive.data.dto.tmdb.common.** { <fields>; }
+-keep class com.flixclusive.domain.model.config.** { *; }
+-keep class com.flixclusive.domain.model.entities.** { *; }
+-keep class com.flixclusive.domain.model.tmdb.** { *; }
+-keep class com.flixclusive.data.dto.tmdb.** { *; }
+-keep class com.flixclusive.data.dto.tmdb.tv.** { *; }
+-keep class com.flixclusive.data.dto.tmdb.common.** { *; }
 
--keep class com.flixclusive_provider.models.common.** { <fields>; }
--keep class com.flixclusive_provider.models.extractors.vidcloud.** { <fields>; }
--keep class com.flixclusive_provider.models.providers.flixhq.** { <fields>; }
+-keep class com.flixclusive_provider.models.common.** { *; }
+-keep class com.flixclusive_provider.models.extractors.vidcloud.** { *; }
+-keep class com.flixclusive_provider.models.providers.flixhq.** { *; }
 
 # Prevent proguard from stripping interface information from TypeAdapter, TypeAdapterFactory,
 # JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)
@@ -78,13 +78,8 @@
 
 # Prevent R8 from leaving Data object members always null
 -keepclassmembers,allowobfuscation class * {
-    @com.google.gson.annotations.SerializedName <fields>;
+    @com.google.gson.annotations.SerializedName *;
 }
-
-
--keep class com.google.gson.reflect.TypeToken
--keep class * extends com.google.gson.reflect.TypeToken
--keep public class * implements java.lang.reflect.Type
 
 
 # Retain generic signatures of TypeToken and its subclasses with R8 version 3.0 and higher.
@@ -92,3 +87,4 @@
 -keep,allowobfuscation,allowshrinking class * extends com.google.gson.reflect.TypeToken
 
 ##---------------End: proguard configuration for Gson ----------##
+

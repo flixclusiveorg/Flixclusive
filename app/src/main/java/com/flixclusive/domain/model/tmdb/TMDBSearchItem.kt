@@ -53,7 +53,7 @@ sealed class TMDBSearchItem : Film {
         @SerializedName("name") override val title: String = "",
         @SerializedName("original_name") val originalName: String = "",
         override val logoImage: String? = null,
-        override val genres: List<Genre> = listOf(Genre(-1, "Movie"))
+        override val genres: List<Genre> = listOf(Genre(-1, "TV Show"))
     ) : TMDBSearchItem() {
         override val filmType: FilmType
             get() = FilmType.TV_SHOW
