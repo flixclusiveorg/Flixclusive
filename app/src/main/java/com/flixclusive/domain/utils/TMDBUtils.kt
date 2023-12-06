@@ -30,17 +30,23 @@ object TMDBUtils {
         if(dateString == null || dateString == "No release date" || dateString.isEmpty())
             return true
 
+        val format = if(dateString.contains(",")) {
+            "MMMM d, yyyy"
+        } else if(dateString.contains("-")) {
+            "yyyy-MM-dd"
+        } else ""
+
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val date = try {
                 LocalDate.parse(dateString)
             } catch (e: DateTimeParseException) {
-                val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
+                val formatter = DateTimeFormatter.ofPattern(format, Locale.ENGLISH)
                 LocalDate.parse(dateString, formatter)
             }
 
             date.isAfter(LocalDate.now())
         } else {
-            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            val formatter = SimpleDateFormat(format, Locale.US)
             val currentDate = Calendar.getInstance().time
             val date = formatter.parse(dateString)
             date?.after(currentDate) ?: false

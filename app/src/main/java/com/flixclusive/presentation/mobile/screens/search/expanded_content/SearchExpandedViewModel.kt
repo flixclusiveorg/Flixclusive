@@ -9,18 +9,30 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.model.tmdb.TMDBSearchItem
+import com.flixclusive.domain.preferences.AppSettingsManager
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.presentation.common.PagingState
 import com.flixclusive.presentation.mobile.screens.search.common.SearchFilter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SearchExpandedViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
+    appSettingsManager: AppSettingsManager
 ) : ViewModel() {
+    val appSettings = appSettingsManager.appSettings
+        .data
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = appSettingsManager.localAppSettings
+        )
+
     val searchResults = mutableStateListOf<TMDBSearchItem>()
 
     private var searchingJob: Job? = null

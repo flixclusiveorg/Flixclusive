@@ -8,4 +8,5 @@ object Constants {
     const val FINISH_THRESHOLD = 95.0
     const val FILM_TV_SHOW_TITLE_FORMAT = "S%d E%d: %s"
     const val APP_DATABASE = "app_database"
+    const val GITHUB_REPOSITORY = "https://github.com/rhenwinch/Flixclusive/releases/latest"
 }

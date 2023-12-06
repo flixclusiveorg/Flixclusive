@@ -1,6 +1,4 @@
 <resources>
-    <string name="app_name">Flixclusive</string>
-
     <!--  Navigation Items  -->
     <string name="home">Home</string>
     <string name="home_content">Home Content</string>
@@ -11,6 +9,7 @@
     <string name="watchlisted">Added</string>
     <string name="recently_watched">Recently Watched</string>
     <string name="settings">Settings</string>
+    <string name="providers">Providers</string>
     <string name="preferences">Preferences</string>
     <string name="about">About Flixclusive</string>
 
@@ -53,6 +52,8 @@
     <string name="next_episode">Next episode</string>
     <string name="recommended">Recommended</string>
     <string name="server">Server</string>
+    <string name="source">Source Provider</string>
+    <string name="audio">Audio</string>
     <string name="subtitle">Subtitle</string>
     <string name="quality">Quality</string>
     <string name="watch">Watch</string>
@@ -62,31 +63,54 @@
     <string name="episodes">Episodes</string>
     <string name="more_like_this">More Like This</string>
     <string name="play">Play</string>
-    <string name="quality_and_subtitles">Quality and Subtitles</string>
+    <string name="audio_and_display">Audio &amp; Display</string>
     <string name="lock">Lock</string>
     <string name="not_now_label">Not now</string>
     <string name="update_label">Update</string>
     <string name="unlock_label">Unlock</string>
     <string name="close_label">Close</string>
+    <string name="restart">Restart</string>
+    <string name="exit_label">Exit</string>
+    <string name="allow">Allow</string>
     <string name="other_films_message">Other films you might like!</string>
     <string name="new_update_message">New versions are meant to fix, update or add major or minor features in the app. All details regarding the new update is included in the download page.</string>
     <string name="new_update_header">There\'s a new update!</string>
     <string name="add_to_watchlist">Add to Watchlist</string>
+    <string name="remove_from_watchlist">Remove from Watchlist</string>
     <string name="playback_speed">Playback Speed</string>
+    <string name="resize_mode">Resize Mode</string>
     <string name="share_the_app">Share the App!</string>
+    <string name="download_in_progress">Downloading</string>
+    <string name="download_completed">Download Completed</string>
+    <string name="install">Install</string>
+    <string name="updating">Updating!</string>
+    <string name="cancel">Cancel</string>
+    <string name="description_placeholder">No description.</string>
+    <string name="default_update_info_message">No additional update information provided.</string>
+    <string name="update_info">Update information</string>
+    <string name="check_for_updates">Check for updates</string>
+    <string name="checking_for_updates">Checking for updates…</string>
+    <string name="failed_checking_for_updates">Failed to check for updates</string>
+    <string name="up_to_date">Version is up to date!</string>
+    <string name="not_working">Not working</string>
 
     <!--  Settings Items  -->
+    <string name="subtitles_language">Subtitle Language</string>
     <string name="subtitles_size">Subtitle Size</string>
     <string name="subtitles_font_style">Subtitle Font Style</string>
     <string name="subtitles_color">Subtitle Color</string>
     <string name="subtitles_background_color">Subtitle Background Color</string>
     <string name="subtitles_edge_type">Subtitle Edge Type</string>
+    <string name="film_card_titles">Film Card Title</string>
 
     <!--  Error messages  -->
-    <string name="splash_error_header">Something went wrong!</string>
+    <string name="splash_notice_permissions_header">Allow Permissions</string>
     <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
-    <string name="splash_error_message">An error occurred while initializing the app.</string>
+    <string name="splash_default_error_message">An error occurred while initializing the app.</string>
     <string name="splash_maintenance_message">Sorry for the inconvenience. We\'re performing a quick update. Be back soon!</string>
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="error_crash_title">Oops!</string>
+    <string name="default_error_message">No additional error information provided.</string>
 
     <!--  Content Descriptions  -->
     <string name="duration">Duration</string>
@@ -99,7 +123,7 @@
     <string name="clear_text_button">Clear text button</string>
     <string name="search_item_content_description">An image of a search item</string>
     <string name="navigate_up">Navigate up</string>
-    <string name="film_item_content_description">"A poster image of a film item"</string>
+    <string name="film_item_content_description">A film backdrop, picture or poster.</string>
     <string name="poster_content_description">A poster of %%s</string>
     <string name="unlock_content_description">An icon for unlocking the player</string>
     <string name="navigate_to_film">Go see details of film button</string>
@@ -109,16 +133,22 @@
     <string name="forward_button_content_description">Forward button for 10 seconds</string>
     <string name="playback_plus_button_content_description">Playback plus button</string>
     <string name="playback_minus_button_content_description">Playback minus button</string>
+    <string name="overview_collapse">Show less of the film\'s description</string>
+    <string name="overview_expand">Expand all of the film\'s description</string>
 
     <!--  Activity Tags  -->
     <string name="title_activity_player">PlayerActivity</string>
-    <string name="title_activity_splash">SplashActivity</string>
+    <string name="title_activity_mobile_splash">SplashMobileActivity</string>
+    <string name="title_activity_mobile_crash">CrashActivity</string>
+    <string name="title_activity_mobile_update">UpdateMobileActivity</string>
 
     <!--  Player Strings/Messages  -->
+    <string name="audio_snackbar_message">Audio set to %%s</string>
     <string name="subtitle_snackbar_message">Subtitle set to %%s</string>
     <string name="quality_snackbar_message">Quality set to %%s</string>
     <string name="playback_speed_snackbar_message">Playback speed set to %%s</string>
     <string name="server_snackbar_message">Server set to %%s</string>
+    <string name="source_snackbar_message">Source set to %%s</string>
 
 
     <!--  Error State Messages  -->
@@ -126,6 +156,8 @@
     <string name="pagination_error_message">Error while fetching items</string>
     <string name="error_film_message">Error while fetching data!</string>
     <string name="error_on_initialization">Error while initializing data!</string>
+    <string name="error_downloading_update">Error updating the app</string>
+    <string name="copy_stack_trace_message">You could open a github issue and paste this stack trace.</string>
 
     <!--  Video Data Dialog State Messages  -->
     <string name="video_data_dialog_state_error_default">Could not initialize video player!</string>
@@ -133,12 +165,15 @@
     <string name="video_data_dialog_state_fetching">Fetching video data…</string>
     <string name="video_data_dialog_state_extracting">Extracting video data…</string>
     <string name="video_data_dialog_state_success">Starting player…</string>
-    <string name="failed_to_extract">Failed to extract, try again</string>
+    <string name="failed_to_extract">Failed to extract, try again later</string>
     <string name="connection_timeout">Connection timeout</string>
     <string name="connection_failed">Connection failure</string>
-    <string name="decryption_error">Decryption of data failed, try again</string>
+    <string name="decryption_error">Decryption of data failed, try again later</string>
     <string name="unavailable_episode">Episode is not yet available</string>
+    <string name="no_available_sources">No available source providers!</string>
     <string name="film_data_fetch_failed">Failed to fetch film data</string>
+    <string name="error_finding_episode_id_from_meta">An unknown error occurred while obtaining episode data from meta api</string>
+    <string name="error_finding_episode_id_from_source_provider">An unknown error occurred while obtaining episode data from video data api</string>
 
     <!--  Internet State Messages  -->
     <string name="offline_message">You\'re offline</string>

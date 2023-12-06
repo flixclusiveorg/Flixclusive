@@ -1,5 +1,6 @@
 package com.flixclusive.domain.preferences
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.Typeface
 import androidx.compose.material3.MaterialTheme
@@ -10,7 +11,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.datastore.core.Serializer
 import androidx.media3.ui.CaptionStyleCompat
-import com.flixclusive_provider.models.common.MediaServer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -56,6 +56,8 @@ enum class CaptionStylePreference(val typeface: Typeface) {
     }
 }
 
+@Suppress("EnumEntryName")
+@SuppressLint("UnsafeOptInUsageError")
 enum class CaptionEdgeTypePreference(val type: Int, val color: Int = Color.BLACK) {
     Drop_Shadow(CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW),
     Outline(CaptionStyleCompat.EDGE_TYPE_OUTLINE);
@@ -63,8 +65,11 @@ enum class CaptionEdgeTypePreference(val type: Int, val color: Int = Color.BLACK
 
 @Serializable
 data class AppSettings(
-    val preferredServer: String = MediaServer.UpCloud.serverName,
+    //val preferredServer: String = MediaServer.UpCloud.serverName,
+    val preferredQuality: String = DEFAULT_QUALITY,
     val isSubtitleEnabled: Boolean = true,
+    val isShowingFilmCardTitle: Boolean = false,
+    val subtitleLanguage: String = "en",
     val subtitleColor: Int = Color.WHITE,
     val subtitleSize: CaptionSizePreference = CaptionSizePreference.Medium,
     val subtitleFontStyle: CaptionStylePreference = CaptionStylePreference.Bold,
@@ -72,6 +77,11 @@ data class AppSettings(
     val subtitleEdgeType: CaptionEdgeTypePreference = CaptionEdgeTypePreference.Drop_Shadow,
 ) {
     companion object {
+        const val DEFAULT_QUALITY = "Auto"
+        val possibleAvailableQualities = listOf(
+            "Auto", "1080p", "720p", "480p", "360p"
+        )
+
         fun parseFrom(input: InputStream): AppSettings {
             return Json.decodeFromString(
                 deserializer = serializer(),

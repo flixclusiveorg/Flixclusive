@@ -12,10 +12,10 @@ import androidx.navigation.NavBackStackEntry
 import com.flixclusive.presentation.appDestination
 import com.flixclusive.presentation.destinations.HomeMobileScreenDestination
 import com.flixclusive.presentation.destinations.PreferencesMobileScreenDestination
-import com.ramcosta.composedestinations.spec.DestinationStyleAnimated
+import com.ramcosta.composedestinations.spec.DestinationStyle
 
 @OptIn(ExperimentalAnimationApi::class)
-object SearchMobileScreenTransition : DestinationStyleAnimated {
+object SearchMobileScreenTransition : DestinationStyle.Animated {
     override fun AnimatedContentTransitionScope<NavBackStackEntry>.enterTransition(): EnterTransition? {
         return when(initialState.appDestination()) {
             HomeMobileScreenDestination -> slideInHorizontally { 1000 } + fadeIn()

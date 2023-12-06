@@ -31,20 +31,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.R
 import com.flixclusive.domain.model.tmdb.Film
-import com.flixclusive.domain.utils.WatchHistoryUtils.filterWatchedFilms
 import com.flixclusive.presentation.common.FadeInAndOutScreenTransition
 import com.flixclusive.presentation.common.viewmodels.home.HomeContentScreenViewModel
 import com.flixclusive.presentation.destinations.HomeFilmScreenDestination
 import com.flixclusive.presentation.destinations.HomeGenreScreenDestination
+import com.flixclusive.presentation.destinations.HomeSeeAllScreenDestination
 import com.flixclusive.presentation.mobile.common.composables.ErrorScreenWithButton
 import com.flixclusive.presentation.mobile.common.composables.film.FilmCardPlaceholder
 import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
-import com.flixclusive.presentation.mobile.main.MainSharedViewModel
+import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
 import com.flixclusive.presentation.mobile.screens.home.HomeNavGraph
 import com.flixclusive.presentation.utils.ModifierUtils.placeholderEffect
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.flixclusive.presentation.destinations.HomeSeeAllScreenDestination
 import kotlinx.coroutines.launch
 
 @HomeNavGraph(start = true)
@@ -54,13 +53,14 @@ import kotlinx.coroutines.launch
 @UnstableApi
 @Composable
 fun HomeScreenContent(
-    mainSharedViewModel: MainSharedViewModel,
+    mainMobileSharedViewModel: MainMobileSharedViewModel,
     navigator: DestinationsNavigator
 ) {
     val viewModel: HomeContentScreenViewModel = hiltViewModel()
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
+    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val watchHistoryItems by viewModel.continueWatchingList.collectAsStateWithLifecycle(emptyList())
 
@@ -70,11 +70,6 @@ fun HomeScreenContent(
         }
     }
     val isLoading = remember(uiState.isLoading, uiState.hasErrors) { uiState.isLoading && !uiState.hasErrors }
-    val recentlyWatchedList = remember(watchHistoryItems) {
-        watchHistoryItems
-            .filterNot(::filterWatchedFilms)
-            .take(10)
-    }
 
     val navigateToFilm = { film: Film ->
         navigator.navigate(
@@ -125,15 +120,16 @@ fun HomeScreenContent(
                             }
                         },
                         onFilmClick = navigateToFilm,
-                        onFilmLongClick = mainSharedViewModel::onFilmLongClick
+                        onFilmLongClick = mainMobileSharedViewModel::onFilmLongClick
                     )
                 }
 
                 item {
                     HomeContinueWatchingRow(
-                        dataListProvider = { recentlyWatchedList },
-                        onFilmClick = mainSharedViewModel::onPlayClick,
-                        onSeeMoreClick = mainSharedViewModel::onFilmLongClick,
+                        dataListProvider = { watchHistoryItems },
+                        onFilmClick = mainMobileSharedViewModel::onPlayClick,
+                        showCardTitle = appSettings.isShowingFilmCardTitle,
+                        onSeeMoreClick = mainMobileSharedViewModel::onFilmLongClick,
                     )
                 }
 
@@ -148,9 +144,10 @@ fun HomeScreenContent(
                         paginationState = viewModel.homeRowItemsPagingState[i],
                         films = viewModel.homeRowItems[i],
                         onFilmClick = navigateToFilm,
-                        onFilmLongClick = mainSharedViewModel::onFilmLongClick,
+                        showCardTitle = appSettings.isShowingFilmCardTitle,
+                        onFilmLongClick = mainMobileSharedViewModel::onFilmLongClick,
                         paginate = { query, page ->
-                            viewModel.onPaginate(
+                            viewModel.onPaginateFilms(
                                 query = query,
                                 page = page,
                                 index = i

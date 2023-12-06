@@ -7,6 +7,7 @@ import com.flixclusive.data.dto.tmdb.common.TMDBImagesResponseDto
 import com.flixclusive.data.dto.tmdb.toMovie
 import com.flixclusive.data.dto.tmdb.toTvShow
 import com.flixclusive.data.dto.tmdb.tv.toSeason
+import com.flixclusive.data.utils.catchInternetRelatedException
 import com.flixclusive.di.IoDispatcher
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.config.ConfigurationProvider
@@ -32,14 +33,14 @@ class TMDBRepositoryImpl @Inject constructor(
     private val tmdbApiService: TMDBApiService,
     private val configurationProvider: ConfigurationProvider,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : TMDBRepository  {
+) : TMDBRepository {
     override val tmdbApiKey: String
         get() = configurationProvider.appConfig!!.tmdbApiKey
 
     override suspend fun getTrending(
         mediaType: String,
         timeWindow: String,
-        page: Int
+        page: Int,
     ): Resource<TMDBPageResponse<TMDBSearchItem>> {
         return withContext(ioDispatcher) {
             try {
@@ -51,15 +52,8 @@ class TMDBRepositoryImpl @Inject constructor(
                 )
 
                 Resource.Success(response)
-            }
-            catch (e: HttpException) {
-                errorLog("Http Error (${e.code()}): ${e.response()}")
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
-            }
-            catch (e: Exception) {
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
+            } catch (e: Exception) {
+                e.catchInternetRelatedException()
             }
         }
     }
@@ -70,11 +64,11 @@ class TMDBRepositoryImpl @Inject constructor(
         withNetworks: List<Int>?,
         withCompanies: List<Int>?,
         withGenres: List<Genre>?,
-        sortBy: SortOptions
+        sortBy: SortOptions,
     ): Resource<TMDBPageResponse<TMDBSearchItem>> {
         return withContext(ioDispatcher) {
             try {
-                val sortOption = when(sortBy) {
+                val sortOption = when (sortBy) {
                     SortOptions.POPULARITY -> "popularity.desc"
                     SortOptions.RATED -> "vote_average.desc"
                 }
@@ -90,15 +84,8 @@ class TMDBRepositoryImpl @Inject constructor(
                 )
 
                 Resource.Success(response)
-            }
-            catch (e: HttpException) {
-                errorLog("Http Error (${e.code()}): ${e.response()}")
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
-            }
-            catch (e: Exception) {
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
+            } catch (e: Exception) {
+                e.catchInternetRelatedException()
             }
         }
     }
@@ -110,7 +97,7 @@ class TMDBRepositoryImpl @Inject constructor(
     ): Resource<TMDBPageResponse<TMDBSearchItem>> {
         return withContext(ioDispatcher) {
             try {
-                if(query.isEmpty()) {
+                if (query.isEmpty()) {
                     Resource.Failure("Search query should not be empty!")
                 }
 
@@ -122,15 +109,8 @@ class TMDBRepositoryImpl @Inject constructor(
                 )
 
                 Resource.Success(response)
-            }
-            catch (e: HttpException) {
-                errorLog("Http Error (${e.code()}): ${e.response()}")
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
-            }
-            catch (e: Exception) {
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
+            } catch (e: Exception) {
+                e.catchInternetRelatedException()
             }
         }
     }
@@ -148,15 +128,8 @@ class TMDBRepositoryImpl @Inject constructor(
                 )
 
                 Resource.Success(response)
-            }
-            catch (e: HttpException) {
-                errorLog("Http Error (${e.code()}): ${e.response()}")
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
-            }
-            catch (e: Exception) {
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
+            } catch (e: Exception) {
+                e.catchInternetRelatedException()
             }
         }
     }
@@ -168,16 +141,17 @@ class TMDBRepositoryImpl @Inject constructor(
                     id = id, apiKey = tmdbApiKey
                 )
 
-                val collection: TMDBCollection? = if(movie.belongsToCollection != null) {
+                val collection: TMDBCollection? = if (movie.belongsToCollection != null) {
                     val collection = getCollection(id = movie.belongsToCollection.id)
 
-                    if(collection !is Resource.Success)
+                    if (collection !is Resource.Success)
                         throw Exception("Error fetching collection of ${movie.title} [${movie.id}]")
 
                     collection.data
                 } else null
 
-                val filteredRecommendations = filterOutUnreleasedRecommendations(movie.recommendations.results)
+                val filteredRecommendations =
+                    filterOutUnreleasedRecommendations(movie.recommendations.results)
                 val newGenres = formatGenreIds(
                     genreIds = movie.genres.map { it.id },
                     genresList = configurationProvider
@@ -197,22 +171,15 @@ class TMDBRepositoryImpl @Inject constructor(
                         ),
                         genres = newGenres
                     )
-                    .toMovie()
-                    .copy(
-                        collection = collection?.copy(
-                            films = filterOutUnreleasedRecommendations(collection.films)
+                        .toMovie()
+                        .copy(
+                            collection = collection?.copy(
+                                films = filterOutUnreleasedRecommendations(collection.films)
+                            )
                         )
-                    )
                 )
-            }
-            catch (e: HttpException) {
-                errorLog("Http Error (${e.code()}): ${e.response()}")
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
-            }
-            catch (e: Exception) {
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
+            } catch (e: Exception) {
+                e.catchInternetRelatedException()
             }
         }
     }
@@ -224,7 +191,8 @@ class TMDBRepositoryImpl @Inject constructor(
                     id = id, apiKey = tmdbApiKey
                 )
 
-                val filteredRecommendations = filterOutUnreleasedRecommendations(tvShow.recommendations.results)
+                val filteredRecommendations =
+                    filterOutUnreleasedRecommendations(tvShow.recommendations.results)
                 val filteredSeasons = filterOutZeroSeasons(tvShow.seasons)
                 val newGenres = formatGenreIds(
                     genreIds = tvShow.genres.map { it.id },
@@ -248,15 +216,8 @@ class TMDBRepositoryImpl @Inject constructor(
                         genres = newGenres
                     ).toTvShow()
                 )
-            }
-            catch (e: HttpException) {
-                errorLog("Http Error (${e.code()}): ${e.response()}")
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
-            }
-            catch (e: Exception) {
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
+            } catch (e: Exception) {
+                e.catchInternetRelatedException()
             }
         }
     }
@@ -269,18 +230,10 @@ class TMDBRepositoryImpl @Inject constructor(
                 )
 
                 Resource.Success(
-                    season
-                        .toSeason()
+                    season.toSeason()
                 )
-            }
-            catch (e: HttpException) {
-                errorLog("Http Error (${e.code()}): ${e.response()}")
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
-            }
-            catch (e: Exception) {
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
+            } catch (e: Exception) {
+                e.catchInternetRelatedException()
             }
         }
     }
@@ -288,18 +241,19 @@ class TMDBRepositoryImpl @Inject constructor(
     override suspend fun getEpisode(
         id: Int,
         seasonNumber: Int,
-        episodeNumber: Int
-    ): TMDBEpisode? {
+        episodeNumber: Int,
+    ): Resource<TMDBEpisode?> {
         return withContext(ioDispatcher) {
             val season = getSeason(id, seasonNumber)
 
-            if (season !is Resource.Success)
-                return@withContext null
+            if (season is Resource.Failure)
+                return@withContext Resource.Failure(season.error)
 
-            season.data!!.episodes.find {
+            val episodeId = season.data!!.episodes.find {
                 it.season == seasonNumber
-                    && it.episode == episodeNumber
+                        && it.episode == episodeNumber
             }
+            Resource.Success(episodeId)
         }
     }
 
@@ -311,15 +265,8 @@ class TMDBRepositoryImpl @Inject constructor(
                 )
 
                 Resource.Success(response)
-            }
-            catch (e: HttpException) {
-                errorLog("Http Error (${e.code()}): ${e.response()}")
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
-            }
-            catch (e: Exception) {
-                errorLog(e.stackTraceToString())
-                Resource.Failure(e.message ?: "Unknown error occurred")
+            } catch (e: Exception) {
+                e.catchInternetRelatedException()
             }
         }
     }
@@ -333,13 +280,11 @@ class TMDBRepositoryImpl @Inject constructor(
 
             try {
                 Resource.Success(tmdbApiService.get(fullUrl))
-            }
-            catch (e: HttpException) {
+            } catch (e: HttpException) {
                 errorLog("Http Error (${e.code()}) on URL[$fullUrl]: ${e.response()}")
                 errorLog(e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 errorLog(e.stackTraceToString())
                 Resource.Failure(e.message ?: "Unknown error occurred")
             }

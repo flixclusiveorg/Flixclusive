@@ -3,10 +3,14 @@ package com.flixclusive.presentation.common
 import androidx.media3.common.Player.STATE_IDLE
 
 data class PlayerUiState(
+    val selectedAudio: Int = 0,
     val selectedQuality: Int = 0,
     val selectedSubtitle: Int = 0,
     val selectedServer: Int = 0,
+    val selectedSource: String? = null,
     val selectedPlaybackSpeedIndex: Int = 0,
+    val selectedResizeMode: Int = 0,
+    val lastOpenedPanel: Int = 0,
     val isPlaying: Boolean = false,
     val playWhenReady: Boolean = true,
     val totalDuration: Long = 0L,

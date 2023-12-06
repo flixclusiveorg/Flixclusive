@@ -97,7 +97,7 @@ fun FilmScreenPlaceholder(
                         .fillMaxWidth()
                         .padding(top = 14.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.Center,
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                     maxItemsInEachRow = 3
                 ) {
                     repeat(3) {

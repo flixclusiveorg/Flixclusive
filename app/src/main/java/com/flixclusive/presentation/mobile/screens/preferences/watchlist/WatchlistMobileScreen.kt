@@ -19,7 +19,7 @@ import com.flixclusive.R
 import com.flixclusive.presentation.common.FadeInAndOutScreenTransition
 import com.flixclusive.presentation.destinations.PreferencesFilmMobileScreenDestination
 import com.flixclusive.presentation.mobile.common.composables.FilmsGridScreen
-import com.flixclusive.presentation.mobile.main.MainSharedViewModel
+import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
 import com.flixclusive.presentation.mobile.screens.preferences.PreferencesNavGraph
 import com.flixclusive.presentation.mobile.screens.preferences.common.TopBarWithNavigationIcon
 import com.ramcosta.composedestinations.annotation.Destination
@@ -32,9 +32,10 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun WatchlistMobileScreen(
     navigator: DestinationsNavigator,
-    mainSharedViewModel: MainSharedViewModel,
+    mainMobileSharedViewModel: MainMobileSharedViewModel,
 ) {
     val viewModel: WatchlistViewModel = hiltViewModel()
+    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
     val watchHistoryItems by viewModel.items.collectAsStateWithLifecycle()
     val items = remember(watchHistoryItems) {
         watchHistoryItems
@@ -74,6 +75,7 @@ fun WatchlistMobileScreen(
                 modifier = Modifier.fillMaxSize(),
                 screenTitle = stringResource(R.string.watchlist),
                 films = items,
+                isShowingFilmCardTitle = appSettings.isShowingFilmCardTitle,
                 onFilmClick = {
                     navigator.navigate(
                         PreferencesFilmMobileScreenDestination(
@@ -83,7 +85,7 @@ fun WatchlistMobileScreen(
                     )
                 },
                 onNavigationIconClick = navigator::navigateUp,
-                onFilmLongClick = mainSharedViewModel::onFilmLongClick,
+                onFilmLongClick = mainMobileSharedViewModel::onFilmLongClick,
             )
         }
     }

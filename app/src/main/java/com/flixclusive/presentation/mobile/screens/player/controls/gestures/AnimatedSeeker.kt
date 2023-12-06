@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.presentation.mobile.screens.player.controls.SEEK_ANIMATION_DELAY
+import com.flixclusive.presentation.utils.PlayerUiUtils.LocalPlayer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -56,7 +57,7 @@ fun AnimatedSeeker(
                 interactionSource,
                 rememberRipple(bounded = false, radius = screenWidth.dp.div(2F))
             )
-            .pointerInput(Unit) {
+            .pointerInput(LocalPlayer.current) {
                 detectTapGestures(
                     onTap = {
                         showControls(!isVisible)

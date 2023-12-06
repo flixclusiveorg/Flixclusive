@@ -1,6 +1,11 @@
 package com.flixclusive.presentation.mobile.screens.player.controls.episodes_sheet
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -27,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -37,11 +41,12 @@ import com.flixclusive.domain.model.tmdb.Season
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.presentation.mobile.common.composables.ErrorScreenWithButton
 import com.flixclusive.presentation.mobile.screens.player.controls.common.SheetItem
-import com.flixclusive.presentation.utils.ModifierUtils.fadingEdge
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalAnimationApi::class
+)
 @Composable
-fun MoreEpisodesSheet(
+fun AnimatedVisibilityScope.MoreEpisodesSheet(
     modifier: Modifier = Modifier,
     seasonData: Resource<Season>,
     availableSeasons: Int,
@@ -63,7 +68,6 @@ fun MoreEpisodesSheet(
 
         currentEpisodeSelected.season == episodeDetailsToShow!!.season && episodeDetailsToShow!!.episode == currentEpisodeSelected.episode
     }
-    val listBottomFade = Brush.verticalGradient(0.8f to Color.Red, 0.9f to Color.Transparent)
 
     ScrollToItem(
         seasonData = seasonData,
@@ -102,6 +106,23 @@ fun MoreEpisodesSheet(
             ) { onDismissSheet() },
         contentAlignment = Alignment.CenterStart
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.horizontalGradient(
+                        0F to Color.Transparent,
+                        0.85F to Color.Black,
+                        startX = Float.POSITIVE_INFINITY,
+                        endX = 0F
+                    )
+                )
+                .animateEnterExit(
+                    fadeIn(),
+                    fadeOut()
+                )
+        )
+
         SwipeToDismiss(
             state = dismissState,
             background = {},
@@ -115,26 +136,8 @@ fun MoreEpisodesSheet(
                             interactionSource = remember { MutableInteractionSource() }
                         ) { /*Do nothing*/ }
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .drawBehind {
-                                drawRect(
-                                    Brush.horizontalGradient(
-                                        colors = listOf(
-                                            Color.Black,
-                                            Color.Transparent
-                                        ),
-                                        startX = size.width.times(0.2F),
-                                        endX = size.width.times(0.8F)
-                                    )
-                                )
-                            }
-                    )
-
                     LazyColumn(
                         modifier = Modifier
-                            .fadingEdge(listBottomFade)
                             .fillMaxHeight(),
                         state = listState
                     ) {

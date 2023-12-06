@@ -5,8 +5,10 @@ import androidx.datastore.core.DataStore
 import com.flixclusive.appSettingsDataStore
 import com.flixclusive.data.api.GithubConfigService
 import com.flixclusive.data.config.ConfigurationProviderImpl
+import com.flixclusive.data.preferences.AppSettingsManagerImpl
 import com.flixclusive.domain.config.ConfigurationProvider
 import com.flixclusive.domain.preferences.AppSettings
+import com.flixclusive.domain.preferences.AppSettingsManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,6 +29,16 @@ object AppSettingsModule {
     ): DataStore<AppSettings> =
         context.appSettingsDataStore
 
+
+    @Provides
+    @Singleton
+    fun providesAppSettingsManagerProvider(
+        appSettings: DataStore<AppSettings>,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher
+    ): AppSettingsManager = AppSettingsManagerImpl(
+        appSettings = appSettings,
+        ioScope = CoroutineScope(ioDispatcher)
+    )
 
     @Provides
     @Singleton

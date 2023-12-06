@@ -7,6 +7,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.Genre
 import com.flixclusive.presentation.common.PagingState
@@ -25,6 +26,7 @@ fun GenreScreen(
     onNavigationIconClick: () -> Unit,
 ) {
     val viewModel: GenreViewModel = hiltViewModel()
+    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
     val listState = rememberLazyGridState()
 
     val shouldStartPaginate by remember {
@@ -41,6 +43,7 @@ fun GenreScreen(
     FilmsGridScreen(
         listState =  listState,
         pagingState = viewModel.pagingState,
+        isShowingFilmCardTitle = appSettings.isShowingFilmCardTitle,
         currentFilter = if(viewModel.filmTypeCouldBeBoth) viewModel.currentFilterSelected else null,
         screenTitle = genre.name,
         films = viewModel.films,

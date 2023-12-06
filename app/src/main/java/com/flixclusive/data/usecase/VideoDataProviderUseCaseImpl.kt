@@ -1,6 +1,7 @@
 package com.flixclusive.data.usecase
 
 import com.flixclusive.R
+import com.flixclusive.common.UiText
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.model.VideoDataDialogState
 import com.flixclusive.domain.model.entities.WatchHistoryItem
@@ -11,102 +12,143 @@ import com.flixclusive.domain.repository.FilmSourcesRepository
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.domain.usecase.VideoDataProviderUseCase
 import com.flixclusive.domain.utils.FilmProviderUtils.initializeSubtitles
-import com.flixclusive.domain.utils.WatchHistoryUtils.getNextEpisodeToWatch
+import com.flixclusive.domain.utils.WatchHistoryUtils
 import com.flixclusive.presentation.utils.FormatterUtils
-import com.flixclusive_provider.models.common.MediaServer
-import com.flixclusive_provider.models.common.VideoData
+import com.flixclusive.providers.models.common.VideoData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class VideoDataProviderUseCaseImpl @Inject constructor(
     private val filmSourcesRepository: FilmSourcesRepository,
-    private val tmdbRepository: TMDBRepository
+    private val tmdbRepository: TMDBRepository,
 ) : VideoDataProviderUseCase {
+    override val providers: List<String>
+        get() = filmSourcesRepository.providers.map { it.source.name }
+
     override fun invoke(
         film: Film,
         watchHistoryItem: WatchHistoryItem?,
         server: String?,
+        source: String?,
         mediaId: String?,
         episode: TMDBEpisode?,
-        onSuccess: (VideoData, TMDBEpisode?) -> Unit
+        onSuccess: (VideoData, TMDBEpisode?) -> Unit,
+        onError: (() -> Unit)?,
     ): Flow<VideoDataDialogState> = flow {
-        emit(VideoDataDialogState.Fetching)
+        val isThereNoAvailableSources = filmSourcesRepository.providers.size == filmSourcesRepository.providers.filter { it.isIgnored }.size
 
-        val id = mediaId ?: filmSourcesRepository.getMediaId(film)
-
-        if (id.isNullOrEmpty()) {
-            emit(VideoDataDialogState.Unavailable())
-            return@flow
+        if(isThereNoAvailableSources) {
+            onError?.invoke()
+            return@flow emit(VideoDataDialogState.Unavailable(R.string.no_available_sources))
         }
 
-        val isNewlyWatchShow =
-            watchHistoryItem == null || watchHistoryItem.episodesWatched.isEmpty()
+        for(i in filmSourcesRepository.providers.indices) {
+            val provider = filmSourcesRepository.providers[i]
 
-        var episodeToUse: TMDBEpisode? = episode
-        if(episodeToUse == null && film is TvShow) {
-            val seasonNumber: Int
-            val episodeNumber: Int
+            val isSourceProvided = source != null && provider.source.name != source
+            if(isSourceProvided || provider.isIgnored)
+                continue
 
-            if (isNewlyWatchShow) {
-                if (film.totalSeasons == 0 || film.totalEpisodes == 0) {
-                    return@flow emit(VideoDataDialogState.Unavailable())
-                }
+            emit(VideoDataDialogState.Fetching("Fetching from ${provider.source.name}..."))
 
-                seasonNumber = 1
-                episodeNumber = 1
-            } else {
-                val lastEpisodeWatched = getNextEpisodeToWatch(watchHistoryItem!!)
-                seasonNumber = lastEpisodeWatched.first ?: 1
-                episodeNumber = lastEpisodeWatched.second ?: 1
-            }
+            val canStopLooping = i == filmSourcesRepository.providers.lastIndex || source != null
 
-            val episodeFromApiService = tmdbRepository.getEpisode(
-                id = film.id,
-                seasonNumber = seasonNumber,
-                episodeNumber = episodeNumber
+            val id = mediaId ?: filmSourcesRepository.getMediaId(
+                film = film,
+                providerIndex = i
             )
 
-            if (episodeFromApiService == null) {
-                emit(VideoDataDialogState.Unavailable(R.string.unavailable_episode))
-                return@flow
+            if (id.isNullOrEmpty() && canStopLooping) {
+                onError?.invoke()
+                return@flow emit(VideoDataDialogState.Unavailable())
+            } else if(id.isNullOrEmpty()) {
+                continue
             }
 
-            episodeToUse = episodeFromApiService
-        }
+            val isNewlyWatchShow =
+                watchHistoryItem == null || watchHistoryItem.episodesWatched.isEmpty()
 
-        emit(VideoDataDialogState.Extracting)
-        val titleToUse = FormatterUtils.formatPlayerTitle(film, episodeToUse)
-        val serverToUse = server ?: MediaServer.values().first().serverName
-        val episodeId = filmSourcesRepository.getEpisodeId(
-            mediaId = id,
-            filmType = film.filmType,
-            episode = episodeToUse?.episode,
-            season = episodeToUse?.season
-        ) ?: return@flow emit(VideoDataDialogState.Unavailable(R.string.unavailable_episode))
+            var episodeToUse: TMDBEpisode? = episode
+            if (episodeToUse == null && film is TvShow) {
+                val seasonNumber: Int
+                val episodeNumber: Int
 
-        val videoData = filmSourcesRepository.getStreamingLinks(
-            mediaId = id,
-            episodeId = episodeId,
-            server = serverToUse
-        )
+                if (isNewlyWatchShow) {
+                    if ((film.totalSeasons == 0 || film.totalEpisodes == 0) && canStopLooping) {
+                        onError?.invoke()
+                        return@flow emit(VideoDataDialogState.Unavailable())
+                    }
 
-        when (videoData) {
-            is Resource.Failure -> {
-                emit(VideoDataDialogState.Error(videoData.error))
-            }
-            Resource.Loading -> Unit
-            is Resource.Success -> {
-                val data = videoData.data
-                if (data != null) {
-                    emit(VideoDataDialogState.Success)
-                    onSuccess(
-                        data.copy(title = titleToUse)
-                            .initializeSubtitles(),
-                        episodeToUse
-                    )
+                    seasonNumber = 1
+                    episodeNumber = 1
                 } else {
-                    emit(VideoDataDialogState.Unavailable())
+                    val lastEpisodeWatched =
+                        WatchHistoryUtils.getNextEpisodeToWatch(watchHistoryItem!!)
+                    seasonNumber = lastEpisodeWatched.first ?: 1
+                    episodeNumber = lastEpisodeWatched.second ?: 1
+                }
+
+                val episodeFromApiService = tmdbRepository.getEpisode(
+                    id = film.id,
+                    seasonNumber = seasonNumber,
+                    episodeNumber = episodeNumber
+                )
+
+                if (episodeFromApiService is Resource.Failure) {
+                    if (canStopLooping) {
+                        val errorMessage = episodeFromApiService.error
+                            ?: UiText.StringResource(R.string.error_finding_episode_id_from_meta)
+
+                        onError?.invoke()
+                        return@flow emit(VideoDataDialogState.Error(errorMessage))
+                    }
+
+                    continue
+                } else if (episodeFromApiService is Resource.Success && episodeFromApiService.data == null) {
+                    if(canStopLooping) {
+                        onError?.invoke()
+                        return@flow emit(VideoDataDialogState.Unavailable(R.string.unavailable_episode))
+                    }
+
+                    continue
+                }
+
+                episodeToUse = episodeFromApiService.data
+            }
+
+            emit(VideoDataDialogState.Extracting("Extracting from ${provider.source.name}..."))
+            val titleToUse = FormatterUtils.formatPlayerTitle(film, episodeToUse)
+
+            val videoData = filmSourcesRepository.getSourceLinks(
+                mediaId = id,
+                server = server,
+                season = episodeToUse?.season,
+                episode = episodeToUse?.episode,
+                providerIndex = i
+            )
+
+            when (videoData) {
+                is Resource.Failure -> {
+                    if(canStopLooping) {
+                        onError?.invoke()
+                        return@flow emit(VideoDataDialogState.Error(videoData.error))
+                    }
+                }
+                Resource.Loading -> Unit
+                is Resource.Success -> {
+                    val data = videoData.data
+                    if (data != null) {
+                        onSuccess(
+                            data.copy(title = titleToUse)
+                                .initializeSubtitles(),
+                            episodeToUse
+                        )
+                        return@flow emit(VideoDataDialogState.Success)
+                    } else if(canStopLooping) {
+                        onError?.invoke()
+                        return@flow emit(VideoDataDialogState.Unavailable())
+                    }
                 }
             }
         }

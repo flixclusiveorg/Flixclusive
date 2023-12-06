@@ -10,9 +10,11 @@ sealed class Resource<out T>(
     val isLoading: Boolean = false,
 ) {
     class Success<T>(data: T) : Resource<T>(data = data, isLoading = false)
-    class Failure(error: UiText) : Resource<Nothing>(error = error, isLoading = false) {
+    class Failure(error: UiText?) : Resource<Nothing>(error = error, isLoading = false) {
         constructor(@StringRes errorId: Int) : this(UiText.StringResource(errorId))
-        constructor(error: String) : this(UiText.StringValue(error))
+        constructor(error: String?) : this(
+            if(error.isNullOrEmpty()) null else UiText.StringValue(error)
+        )
     }
 
     object Loading : Resource<Nothing>(isLoading = true)

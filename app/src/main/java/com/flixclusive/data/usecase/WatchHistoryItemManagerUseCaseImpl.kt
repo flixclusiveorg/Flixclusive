@@ -41,6 +41,13 @@ class WatchHistoryItemManagerUseCaseImpl @Inject constructor(
         totalDuration: Long,
         currentSelectedEpisode: TMDBEpisode?,
     ): WatchHistoryItem {
+        val currentTime = currentTime
+        val minute = 60000
+        val isLessThanAMinute = currentTime <= minute
+
+        if(isLessThanAMinute)
+            return watchHistoryItem
+        
         val newWatchHistoryItem: WatchHistoryItem
         val isTvShow = when (currentSelectedEpisode) {
             null -> false

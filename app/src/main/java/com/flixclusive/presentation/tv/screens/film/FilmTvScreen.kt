@@ -41,6 +41,7 @@ import androidx.tv.foundation.PivotOffsets
 import androidx.tv.foundation.lazy.list.TvLazyColumn
 import coil.compose.AsyncImage
 import com.flixclusive.R
+import com.flixclusive.common.UiText
 import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.Movie
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
@@ -52,12 +53,11 @@ import com.flixclusive.presentation.destinations.FilmTvScreenDestination
 import com.flixclusive.presentation.tv.common.FilmTvOverview
 import com.flixclusive.presentation.tv.common.TvRootNavGraph
 import com.flixclusive.presentation.tv.main.InitialDrawerWidth
-import com.flixclusive.presentation.tv.screens.film.player.FilmTvPlayerScreen
+import com.flixclusive.presentation.tv.screens.player.FilmTvPlayerScreen
 import com.flixclusive.presentation.tv.utils.ComposeTvUtils.NonFocusableSpacer
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.drawScrimOnBackground
 import com.flixclusive.presentation.utils.ImageRequestCreator.buildImageUrl
 import com.flixclusive.presentation.utils.ModifierUtils.fadingEdge
-import com.flixclusive.common.UiText
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
@@ -81,7 +81,7 @@ fun FilmTvScreen(navigator: DestinationsNavigator) {
     var anItemHasBeenClicked by remember { mutableStateOf(false) }
 
     var isOverviewShowing by remember { mutableStateOf(true) }
-    var isPlayerStarting by remember { mutableStateOf(false) }
+    var isPlayerRunning by remember { mutableStateOf(false) }
     var isEpisodesPanelOpen by remember { mutableStateOf(false) }
     val shouldNotFocusOnEpisodeButton = remember { mutableStateOf(true) }
 
@@ -90,18 +90,18 @@ fun FilmTvScreen(navigator: DestinationsNavigator) {
     var otherFilmsHasFocus by remember { mutableStateOf(false) }
 
     val delayPlayerAnimation = 1000
-    val contentTransform = remember(isPlayerStarting) {
+    val contentTransform = remember(isPlayerRunning) {
         ContentTransform(
             targetContentEnter = fadeIn() + slideInVertically(),
             initialContentExit = slideOutVertically(
                 animationSpec = tween(
-                    delayMillis = if(isPlayerStarting) delayPlayerAnimation else 0,
-                    durationMillis = if(isPlayerStarting) delayPlayerAnimation else 300
+                    delayMillis = if(isPlayerRunning) delayPlayerAnimation else 0,
+                    durationMillis = if(isPlayerRunning) delayPlayerAnimation else 300
                 )
             ) + fadeOut(
                 animationSpec = tween(
-                    delayMillis = if(isPlayerStarting) delayPlayerAnimation else 0,
-                    durationMillis = if(isPlayerStarting) delayPlayerAnimation else 300
+                    delayMillis = if(isPlayerRunning) delayPlayerAnimation else 0,
+                    durationMillis = if(isPlayerRunning) delayPlayerAnimation else 300
                 )
             ),
         )
@@ -128,21 +128,11 @@ fun FilmTvScreen(navigator: DestinationsNavigator) {
         }
     }
 
-    val onBack = {
-        when {
-            isPlayerStarting -> {
-                isOverviewShowing = true
-                isPlayerStarting = false
-            }
-            else -> navigator.popBackStack()
-        }
+    BackHandler(enabled = !isPlayerRunning) {
+        navigator.popBackStack()
     }
 
-    BackHandler {
-        onBack()
-    }
-
-    LaunchedEffect(isPlayerStarting) {
+    LaunchedEffect(isPlayerRunning) {
         anItemHasBeenClicked = false
     }
 
@@ -170,8 +160,8 @@ fun FilmTvScreen(navigator: DestinationsNavigator) {
                     targetContentEnter = fadeIn(),
                     initialContentExit = fadeOut(
                         animationSpec = tween(
-                            delayMillis = if(isPlayerStarting) 800 else 0,
-                            durationMillis = if(isPlayerStarting) 800 else 300
+                            delayMillis = if(isPlayerRunning) 800 else 0,
+                            durationMillis = if(isPlayerRunning) 800 else 300
                         )
                     )
                 )
@@ -233,14 +223,15 @@ fun FilmTvScreen(navigator: DestinationsNavigator) {
 
                         FilmTvButtons(
                             watchHistoryItem = watchHistoryItem,
+                            isInWatchlist = uiState.isFilmInWatchlist,
                             isTvShow = film!!.filmType == FilmType.TV_SHOW,
                             shouldFocusOnPlayButton = !anItemHasBeenClicked && uiState.lastFocusedItem == null,
                             shouldFocusOnEpisodesButton = shouldNotFocusOnEpisodeButton,
                             onPlay = {
-                                isPlayerStarting = true
+                                isPlayerRunning = true
                                 isOverviewShowing = false
                             },
-                            onWatchlistClick = {},
+                            onWatchlistClick = viewModel::onWatchlistButtonClick,
                             onSeeMoreEpisodes = {
                                 isEpisodesPanelOpen = true
                                 isOverviewShowing = false
@@ -332,6 +323,7 @@ fun FilmTvScreen(navigator: DestinationsNavigator) {
 
         if(film is TvShow) {
             FilmTvEpisodesPanel(
+                isPlayerRunning = isPlayerRunning,
                 isVisible = isEpisodesPanelOpen,
                 film = film as TvShow,
                 currentSelectedSeasonNumber = viewModel.selectedSeasonNumber,
@@ -343,7 +335,7 @@ fun FilmTvScreen(navigator: DestinationsNavigator) {
                 },
                 onEpisodeClick = {
                     episodeToWatch = it
-                    isPlayerStarting = true
+                    isPlayerRunning = true
                 },
                 onHidePanel = {
                     shouldNotFocusOnEpisodeButton.value = false
@@ -367,10 +359,13 @@ fun FilmTvScreen(navigator: DestinationsNavigator) {
             item?.let {
                 FilmTvPlayerScreen(
                     film = it,
-                    isPlayerStarting = isPlayerStarting,
+                    isPlayerStarting = isPlayerRunning,
                     episode = episodeToWatch,
                     onBack = {
-                        onBack()
+                        isPlayerRunning = false
+
+                        if(!isEpisodesPanelOpen)
+                            isOverviewShowing = true
                     }
                 )
             }

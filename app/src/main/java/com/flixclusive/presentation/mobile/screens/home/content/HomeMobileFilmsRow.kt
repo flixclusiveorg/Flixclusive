@@ -45,6 +45,7 @@ fun HomeMobileFilmsRow(
     modifier: Modifier = Modifier,
     categoryItem: HomeCategoryItem,
     paginationState: PaginationStateInfo,
+    showCardTitle: Boolean,
     films: List<Film>,
     onFilmClick: (Film) -> Unit,
     onFilmLongClick: (Film) -> Unit,
@@ -71,7 +72,7 @@ fun HomeMobileFilmsRow(
     if(films.isNotEmpty() || paginationState.canPaginate) {
         Column(
             modifier = modifier
-                .padding(vertical = 8.dp)
+                .padding(vertical = if(showCardTitle) 3.dp else 8.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -125,6 +126,7 @@ fun HomeMobileFilmsRow(
                     FilmCard(
                         modifier = Modifier
                             .width(135.dp),
+                        shouldShowTitle = showCardTitle,
                         film = film,
                         onClick = onFilmClick,
                         onLongClick = { onFilmLongClick(film) }

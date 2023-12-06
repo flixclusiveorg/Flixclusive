@@ -5,7 +5,7 @@ import com.flixclusive.presentation.destinations.PreferencesFilmMobileScreenDest
 import com.flixclusive.presentation.mobile.common.composables.genre.GenreScreen
 import com.flixclusive.presentation.mobile.common.composables.genre.GenreScreenNavArgs
 import com.flixclusive.presentation.mobile.common.transitions.CommonScreenTransition
-import com.flixclusive.presentation.mobile.main.MainSharedViewModel
+import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
 import com.flixclusive.presentation.mobile.screens.preferences.PreferencesNavGraph
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -18,12 +18,12 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun PreferencesGenreMobileScreen(
     navigator: DestinationsNavigator,
-    mainSharedViewModel: MainSharedViewModel,
+    mainMobileSharedViewModel: MainMobileSharedViewModel,
     genreArgs: GenreScreenNavArgs
 ) {
     GenreScreen(
         genre = genreArgs.genre,
-        onFilmLongClick = mainSharedViewModel::onFilmLongClick,
+        onFilmLongClick = mainMobileSharedViewModel::onFilmLongClick,
         onFilmClick = { clickedFilm ->
             navigator.navigate(
                 PreferencesFilmMobileScreenDestination(

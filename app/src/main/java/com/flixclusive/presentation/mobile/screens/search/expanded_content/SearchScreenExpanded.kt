@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -55,6 +54,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import com.flixclusive.R
 import com.flixclusive.presentation.appDestination
@@ -67,19 +67,18 @@ import com.flixclusive.presentation.mobile.common.composables.SMALL_ERROR
 import com.flixclusive.presentation.mobile.common.composables.film.FilmCard
 import com.flixclusive.presentation.mobile.common.composables.film.FilmCardPlaceholder
 import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
-import com.flixclusive.presentation.mobile.main.MainSharedViewModel
+import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
 import com.flixclusive.presentation.mobile.screens.search.SearchNavGraph
 import com.flixclusive.presentation.mobile.screens.search.common.SearchFilter
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
 import com.flixclusive.presentation.utils.LazyListUtils.shouldPaginate
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.ramcosta.composedestinations.spec.DestinationStyleAnimated
+import com.ramcosta.composedestinations.spec.DestinationStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalAnimationApi::class)
-object SearchScreenExpandedTransition : DestinationStyleAnimated {
+object SearchScreenExpandedTransition : DestinationStyle.Animated {
     override fun AnimatedContentTransitionScope<NavBackStackEntry>.enterTransition(): EnterTransition? {
         return when(initialState.appDestination()) {
             SearchScreenContentDestination -> null
@@ -97,11 +96,13 @@ object SearchScreenExpandedTransition : DestinationStyleAnimated {
 @Composable
 fun SearchScreenExpanded(
     navigator: DestinationsNavigator,
-    mainSharedViewModel: MainSharedViewModel
+    mainMobileSharedViewModel: MainMobileSharedViewModel
 ) {
     val viewModel: SearchExpandedViewModel = hiltViewModel()
     val scope = rememberCoroutineScope()
     val listState = rememberLazyGridState()
+
+    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
 
     val errorHeight = remember(viewModel.searchResults) {
         if(viewModel.searchResults.isEmpty()) {
@@ -143,15 +144,15 @@ fun SearchScreenExpanded(
         }
     ) { innerPadding ->
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(108.dp),
+            columns = GridCells.Adaptive(110.dp),
             state = listState,
             modifier = Modifier
                 .padding(innerPadding)
                 .graphicsLayer {
-                    val topCornerPercentage = 5
+                    val topCorner = 4.dp
                     shape = RoundedCornerShape(
-                        topEndPercent = topCornerPercentage,
-                        topStartPercent = topCornerPercentage
+                        topEnd = topCorner,
+                        topStart = topCorner
                     )
                     clip = true
                 }
@@ -166,6 +167,7 @@ fun SearchScreenExpanded(
                     modifier = Modifier
                         .fillMaxSize(),
                     film = film,
+                    shouldShowTitle = appSettings.isShowingFilmCardTitle,
                     onClick = { clickedFilm ->
                         navigator.navigate(
                             SearchFilmScreenDestination(
@@ -174,7 +176,7 @@ fun SearchScreenExpanded(
                             onlyIfResumed = true
                         )
                     },
-                    onLongClick = mainSharedViewModel::onFilmLongClick
+                    onLongClick = mainMobileSharedViewModel::onFilmLongClick
                 )
             }
 
@@ -182,7 +184,8 @@ fun SearchScreenExpanded(
                 items(20) {
                     FilmCardPlaceholder(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxSize(),
+                        shouldShowTitle = appSettings.isShowingFilmCardTitle
                     )
                 }
             }
@@ -317,7 +320,10 @@ fun SearchBarExpanded(
                     exit = scaleOut(),
                 ) {
                     IconButton(
-                        onClick = { onQueryChange("") }
+                        onClick = {
+                            textFieldValue = "".createTextFieldValue()
+                            onQueryChange("")
+                        }
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.close_square),

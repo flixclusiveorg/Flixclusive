@@ -25,13 +25,15 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
+import androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
+import androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import com.flixclusive.domain.preferences.AppSettings
 import com.flixclusive.domain.preferences.CaptionSizePreference.Companion.getDp
 import com.flixclusive.presentation.mobile.screens.player.PLAYER_SEEK_BACK_INCREMENT
 import com.flixclusive.presentation.mobile.screens.player.PLAYER_SEEK_FORWARD_INCREMENT
-import com.flixclusive_provider.models.common.VideoData
+import com.flixclusive.providers.models.common.VideoData
 
 
 object PlayerUiUtils {
@@ -49,10 +51,12 @@ object PlayerUiUtils {
     @UnstableApi
     fun PlayerView.init(
         appSettings: AppSettings,
+        areControlsVisible: Boolean,
+        resizeMode: Int,
         isInPictureInPictureMode: Boolean = false,
         isInTv: Boolean = false,
-        areControlsVisible: Boolean,
     ) {
+        this.resizeMode = resizeMode
         layoutParams = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
@@ -64,10 +68,12 @@ object PlayerUiUtils {
             isInPictureInPictureMode -> 70
             isInTv -> 210
             else -> 200
-        }
+        } + (if(resizeMode == RESIZE_MODE_ZOOM) 300 else 0)
 
         if(areControlsVisible && !isInTv) {
             subtitleMarginBottom += 360
+        } else if(areControlsVisible) {
+            subtitleMarginBottom += 180
         }
 
         val marginBottomInDp = (subtitleMarginBottom / resources.displayMetrics.density).toInt()
@@ -112,12 +118,7 @@ object PlayerUiUtils {
         playOnReadyState: Boolean,
     ): MediaSession {
         val trackSelector = DefaultTrackSelector(this)
-        val parameters = trackSelector
-            .buildUponParameters()
-            .setPreferredAudioLanguage(null)
-            .build()
 
-        trackSelector.parameters = parameters
         val player = ExoPlayer.Builder(this)
             .apply {
                 setSeekBackIncrementMs(PLAYER_SEEK_BACK_INCREMENT)
@@ -187,6 +188,7 @@ object PlayerUiUtils {
         modifier: Modifier = Modifier,
         isInPipModeProvider: () -> Boolean = { false },
         isInTv: Boolean = false,
+        resizeMode: Int = RESIZE_MODE_FIT,
         appSettings: AppSettings,
         areControlsVisible: Boolean,
         playWhenReady: Boolean,
@@ -218,6 +220,7 @@ object PlayerUiUtils {
                             appSettings = appSettings,
                             isInTv = isInTv,
                             isInPictureInPictureMode = isInPipMode,
+                            resizeMode = resizeMode,
                             areControlsVisible = areControlsVisible
                         )
                     }
@@ -227,6 +230,7 @@ object PlayerUiUtils {
                         appSettings = appSettings,
                         isInPictureInPictureMode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPipMode,
                         isInTv = isInTv,
+                        resizeMode = resizeMode,
                         areControlsVisible = areControlsVisible
                     )
 

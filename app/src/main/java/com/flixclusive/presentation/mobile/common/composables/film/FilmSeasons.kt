@@ -35,6 +35,7 @@ import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
 
 @Composable
 fun FilmSeasons(
+    modifier: Modifier = Modifier,
     seasons: List<Season>,
     selectedSeasonProvider: () -> Int,
     onSeasonChange: (Int) -> Unit,
@@ -51,6 +52,7 @@ fun FilmSeasons(
     }
 
     SeasonDropdownMenu(
+        modifier = modifier,
         seasons = seasons,
         dropdownIconProvider = { dropdownIcon },
         isDropdownExpandedProvider = { isDropdownExpanded },
@@ -66,6 +68,7 @@ fun FilmSeasons(
 
 @Composable
 fun SeasonDropdownMenu(
+    modifier: Modifier = Modifier,
     seasons: List<Season>,
     dropdownIconProvider: () -> Int,
     isDropdownExpandedProvider: () -> Boolean,
@@ -77,7 +80,7 @@ fun SeasonDropdownMenu(
 
     Box(
         contentAlignment = Alignment.CenterStart,
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = LABEL_START_PADDING)
             .sizeIn(
                 minWidth = 112.dp,

@@ -1,10 +1,11 @@
 package com.flixclusive.presentation.common.viewmodels.film
 
-import com.flixclusive.presentation.common.viewmodels.home.FocusPosition
+import com.flixclusive.common.UiText
+import com.flixclusive.presentation.tv.utils.ModifierTvUtils
 
 data class FilmUiState(
     val isLoading: Boolean = true,
-    val hasErrors: Boolean = false,
+    val errorMessage: UiText? = null,
     val isFilmInWatchlist: Boolean = false,
-    val lastFocusedItem: FocusPosition? = null
+    val lastFocusedItem: ModifierTvUtils.FocusPosition? = null
 )

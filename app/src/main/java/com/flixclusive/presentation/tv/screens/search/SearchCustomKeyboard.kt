@@ -36,7 +36,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.R
 import com.flixclusive.presentation.tv.utils.ComposeTvUtils.colorOnMediumEmphasisTv
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.focusOnInitialVisibility
-import com.flixclusive.presentation.tv.utils.ModifierTvUtils.ifElse
+import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 
 val KeyboardCellSize = 35.dp
 

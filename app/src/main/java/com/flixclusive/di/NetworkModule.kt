@@ -9,9 +9,7 @@ import com.flixclusive.domain.common.PaginatedSearchItemsDeserializer
 import com.flixclusive.domain.common.SearchItemDeserializer
 import com.flixclusive.domain.model.tmdb.TMDBPageResponse
 import com.flixclusive.domain.model.tmdb.TMDBSearchItem
-import com.flixclusive.presentation.common.NetworkConnectivityObserver
-import com.flixclusive_provider.interfaces.FilmSourcesProvider
-import com.flixclusive_provider.providers.flixhq.FlixHQ
+import com.flixclusive.service.network.NetworkConnectivityObserver
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
@@ -29,8 +27,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTMDBApiService(): TMDBApiService {
-        val okHttpClient = OkHttpClient()
+    fun provideOkHttpClient() = OkHttpClient()
+
+    @Provides
+    @Singleton
+    fun provideTMDBApiService(
+        client: OkHttpClient
+    ): TMDBApiService {
         val tmdbPageResponse = TMDBPageResponse<TMDBSearchItem>()
 
         val gson = GsonBuilder()
@@ -41,7 +44,7 @@ object NetworkModule {
         return Retrofit.Builder()
             .baseUrl(TMDB_API_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create(gson))
-            .client(okHttpClient)
+            .client(client)
             .build()
             .create(TMDBApiService::class.java)
     }
@@ -55,15 +58,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideGithubConfigService(): GithubConfigService =
+    fun provideGithubConfigService(
+        client: OkHttpClient
+    ): GithubConfigService =
         Retrofit.Builder()
             .baseUrl(GITHUB_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
-            .client(OkHttpClient())
+            .client(client)
             .build()
             .create(GithubConfigService::class.java)
-
-    @Provides
-    @Singleton
-    fun provideFlixHQProvider(): FilmSourcesProvider = FlixHQ(OkHttpClient())
 }

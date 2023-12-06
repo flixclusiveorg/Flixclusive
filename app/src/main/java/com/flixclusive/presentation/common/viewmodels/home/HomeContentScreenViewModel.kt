@@ -1,6 +1,9 @@
 package com.flixclusive.presentation.common.viewmodels.home
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -9,12 +12,15 @@ import com.flixclusive.common.LoggerUtils.errorLog
 import com.flixclusive.di.IoDispatcher
 import com.flixclusive.domain.model.config.HomeCategoryItem
 import com.flixclusive.domain.model.tmdb.Film
+import com.flixclusive.domain.preferences.AppSettingsManager
 import com.flixclusive.domain.repository.WatchHistoryRepository
 import com.flixclusive.domain.usecase.HomeItemsProviderUseCase
-import com.flixclusive.presentation.common.NetworkConnectivityObserver
+import com.flixclusive.domain.utils.WatchHistoryUtils.filterWatchedFilms
 import com.flixclusive.presentation.common.PagingState
 import com.flixclusive.presentation.navArgs
 import com.flixclusive.presentation.tv.common.DefaultTvNavArgs
+import com.flixclusive.presentation.tv.utils.ModifierTvUtils
+import com.flixclusive.service.network.NetworkConnectivityObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -27,7 +33,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -48,9 +53,22 @@ class HomeContentScreenViewModel @Inject constructor(
     networkConnectivityObserver: NetworkConnectivityObserver,
     private val homeItemsProvider: HomeItemsProviderUseCase,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    appSettingsManager: AppSettingsManager
 ) : ViewModel() {
+    val appSettings = appSettingsManager.appSettings
+        .data
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = appSettingsManager.localAppSettings
+        )
+
     private val isOnTvScreen = savedStateHandle.navArgs<DefaultTvNavArgs>().isOnTvScreen
+
+
+    var itemsSize by mutableIntStateOf(0) // For TV
+        private set
 
     val homeCategories = mutableStateListOf<HomeCategoryItem>()
     val homeRowItems = mutableStateListOf<SnapshotStateList<Film>>()
@@ -72,11 +90,15 @@ class HomeContentScreenViewModel @Inject constructor(
 
     val continueWatchingList = watchHistoryRepository
         .getAllItemsInFlow()
-        .shareIn(
+        .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            replay = 1
+            initialValue = emptyList()
         )
+        .onEach { items ->
+            items.filterNot(::filterWatchedFilms)
+                .take(10)
+        }
 
     init {
         viewModelScope.launch {
@@ -154,6 +176,13 @@ class HomeContentScreenViewModel @Inject constructor(
                     )
                 )
                 homeRowItemsPaginationJobs.add(null)
+
+                // Initialize list
+                onPaginateFilms(
+                    query = item.query,
+                    page = 1,
+                    index = homeCategories.lastIndex
+                )
             }.onCompletion { e ->
                 if(e == null) {
                     _uiState.update { it.copy(isLoading = false) }
@@ -167,11 +196,15 @@ class HomeContentScreenViewModel @Inject constructor(
 
     fun onLastItemFocusChange(row: Int, column: Int) {
         _uiState.update {
-            it.copy(lastFocusedItem = FocusPosition(row, column))
+            it.copy(lastFocusedItem = ModifierTvUtils.FocusPosition(row, column))
         }
     }
 
-    fun onPaginate(query: String, page: Int, index: Int) {
+    fun onPaginateCategories() {
+        itemsSize += homeCategories.size
+    }
+
+    fun onPaginateFilms(query: String, page: Int, index: Int) {
         if(homeRowItemsPaginationJobs[index]?.isActive == true)
             return
 

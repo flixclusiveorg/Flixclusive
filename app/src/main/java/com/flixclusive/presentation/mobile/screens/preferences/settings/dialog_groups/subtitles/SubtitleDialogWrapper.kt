@@ -6,11 +6,13 @@ import com.flixclusive.presentation.mobile.screens.preferences.settings.KEY_SUBT
 import com.flixclusive.presentation.mobile.screens.preferences.settings.KEY_SUBTITLE_COLOR_DIALOG
 import com.flixclusive.presentation.mobile.screens.preferences.settings.KEY_SUBTITLE_EDGE_TYPE_DIALOG
 import com.flixclusive.presentation.mobile.screens.preferences.settings.KEY_SUBTITLE_FONT_STYLE_DIALOG
+import com.flixclusive.presentation.mobile.screens.preferences.settings.KEY_SUBTITLE_LANGUAGE_DIALOG
 import com.flixclusive.presentation.mobile.screens.preferences.settings.KEY_SUBTITLE_SIZE_DIALOG
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.dialog.SubtitleDialogEdgeType
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.dialog.SubtitleDialogFontBackgroundColor
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.dialog.SubtitleDialogFontColor
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.dialog.SubtitleDialogFontStyle
+import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.dialog.SubtitleDialogLanguages
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.dialog.SubtitleDialogSize
 
 @Composable
@@ -29,6 +31,17 @@ fun SubtitleDialogWrapper(
                 },
                 onDismissRequest = {
                     onDismissDialog(KEY_SUBTITLE_SIZE_DIALOG)
+                }
+            )
+        }
+        openedDialogMap[KEY_SUBTITLE_LANGUAGE_DIALOG] == true -> {
+            SubtitleDialogLanguages(
+                appSettings = appSettings,
+                onChange = {
+                    onChange(appSettings.copy(subtitleLanguage = it.language))
+                },
+                onDismissRequest = {
+                    onDismissDialog(KEY_SUBTITLE_LANGUAGE_DIALOG)
                 }
             )
         }

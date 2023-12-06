@@ -13,11 +13,14 @@ import com.flixclusive.domain.model.config.CategoryItem
 import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.FilmType.Companion.toFilmType
 import com.flixclusive.domain.model.tmdb.TMDBSearchItem
+import com.flixclusive.domain.preferences.AppSettingsManager
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.presentation.common.PagingState
 import com.flixclusive.presentation.navArgs
 import com.flixclusive.presentation.utils.FormatterUtils.getTypeFromQuery
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -25,8 +28,17 @@ import javax.inject.Inject
 @HiltViewModel
 class SeeAllViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    appSettingsManager: AppSettingsManager,
 ) : ViewModel() {
+    val appSettings = appSettingsManager.appSettings
+        .data
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = appSettingsManager.localAppSettings
+        )
+
     private val args = savedStateHandle.navArgs<SeeAllScreenNavArgs>()
     val itemConfig: CategoryItem = args.item
     val films = mutableStateListOf<TMDBSearchItem>()

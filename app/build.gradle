@@ -8,9 +8,10 @@ plugins {
 
 // Version
 def versionMajor = 1
-def versionMinor = 2
-def versionPatch = 1
+def versionMinor = 3
+def versionPatch = 0
 def versionBuild = 0
+def applicationName = "Flixclusive"
 
 android {
     namespace 'com.flixclusive'
@@ -35,6 +36,14 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
+
+            resValue "string", "app_name", applicationName
+        }
+
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-DEBUG"
+            resValue "string", "app_name", applicationName + " Debug"
         }
     }
 
@@ -67,41 +76,40 @@ android {
         }
     }
 
-    testOptions {
-        unitTests.all {
-            useJUnitPlatform()
-        }
-    }
-}
-
-ksp {
-    arg(new RoomSchemaArgProvider(new File(projectDir, "schemas")))
 }
 
 dependencies {
     def tvCompose = '1.0.0-alpha09'
-    def composeUi = "1.6.0-alpha01"
+    def composeUi = '1.6.0-alpha04'
     def googleMaterial = "1.9.0"
-    def material3 = "1.1.1"
+    def material3 = "1.1.2"
     def media3 = "1.1.1"
     def splashScreen = "1.0.1"
     def hilt = "2.48"
-    def hiltNavigation = "1.0.0"
+    def hiltNavigation = "1.1.0"
     def retrofit2 = "2.9.0"
-    def composeDestination = "1.9.42-beta"
+    def composeDestination = '1.9.53'
     def lifecycleRuntime = "2.6.2"
-    def room = "2.5.2"
+    def room = "2.6.0"
     def dataStore = "1.0.0"
     def coreKtx = "1.12.0"
-    def serialization = "1.5.1"
-    def activityCompose = "1.7.2"
+    def serialization = '1.6.0'
+    def activityCompose = "1.8.0"
     def constraintLayout = "1.0.1"
     def gson = "2.10.1"
     def coil = "2.4.0"
-    def jUnit = "5.10.0"
-    def mockitoVersion = "5.4.0"
+    def jUnit4 = "4.13.2"
+    def mock = '1.13.8'
+    def coroutinesTest = '1.7.3'
+    def androidXTestCore = "1.5.0"
+    def androidXTestRunner = "1.5.2"
+    def androidXTestRules = "1.5.0"
+    def accompanistPermission = "0.32.0"
 
-    implementation project(path: ':flixclusive_provider')
+    implementation(project(path: ":providers"))
+
+    // Permission
+    implementation "com.google.accompanist:accompanist-permissions:$accompanistPermission"
 
     // Datastore
     implementation "androidx.datastore:datastore-preferences:$dataStore"
@@ -120,6 +128,7 @@ dependencies {
     implementation "androidx.compose.ui:ui:$composeUi"
     implementation "androidx.compose.ui:ui-graphics:$composeUi"
     implementation "androidx.compose.animation:animation-graphics:$composeUi"
+    debugImplementation "androidx.compose.ui:ui-tooling:$composeUi"
     implementation "androidx.compose.ui:ui-tooling-preview:$composeUi"
     implementation "androidx.compose.foundation:foundation:$composeUi"
     implementation "com.google.android.material:material:$googleMaterial"
@@ -171,9 +180,23 @@ dependencies {
     // SplashScreen
     implementation("androidx.core:core-splashscreen:$splashScreen")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:$jUnit")
-    testImplementation("org.mockito:mockito-core:$mockitoVersion")
-    testImplementation project(path: ':flixclusive_provider')
+    // Jsoup - for testing only
+    implementation "org.jsoup:jsoup:1.16.1"
+
+    androidTestImplementation "androidx.test:core:$androidXTestCore"
+    androidTestImplementation "androidx.test:core-ktx:$androidXTestCore"
+    androidTestImplementation "androidx.test:runner:$androidXTestRunner"
+    androidTestImplementation "androidx.test:rules:$androidXTestRules"
+    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$composeUi"
+
+    testImplementation "junit:junit:$jUnit4"
+    testImplementation "io.mockk:mockk:$mock"
+    testImplementation project(path: ':providers')
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesTest"
+}
+
+ksp {
+    arg(new RoomSchemaArgProvider(new File(projectDir, "schemas")))
 }
 
 class RoomSchemaArgProvider implements CommandLineArgumentProvider {

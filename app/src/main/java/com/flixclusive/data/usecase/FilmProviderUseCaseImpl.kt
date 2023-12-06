@@ -1,5 +1,6 @@
 package com.flixclusive.data.usecase
 
+import com.flixclusive.common.UiText
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.FilmType
@@ -13,7 +14,7 @@ class FilmProviderUseCaseImpl @Inject constructor(
     override suspend fun invoke(
         id: Int,
         type: FilmType,
-        onError: () -> Unit,
+        onError: (error: UiText?) -> Unit,
         onSuccess: (Film?) -> Unit,
     ) {
         val result: Resource<Film> = when (type) {
@@ -22,7 +23,7 @@ class FilmProviderUseCaseImpl @Inject constructor(
         }
 
         when (result) {
-            is Resource.Failure -> onError()
+            is Resource.Failure -> onError(result.error)
             Resource.Loading -> Unit
             is Resource.Success -> onSuccess(result.data)
         }

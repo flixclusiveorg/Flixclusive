@@ -46,6 +46,13 @@ data class TvShow(
             if(totalSeasons > 1)
                 runtimeString += "s"
 
+            if(totalEpisodes > 0) {
+                runtimeString += " | $totalEpisodes Episodes"
+
+                if(totalEpisodes > 1)
+                    runtimeString += "s"
+            }
+
             return runtimeString
         }
 

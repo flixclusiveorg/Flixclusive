@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -15,6 +16,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -25,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -47,18 +52,20 @@ import com.flixclusive.presentation.tv.utils.ComposeTvUtils.colorOnMediumEmphasi
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.createInitialFocusRestorerModifiers
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.drawAnimatedBorder
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.focusOnInitialVisibility
-import com.flixclusive.presentation.tv.utils.ModifierTvUtils.ifElse
+import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 import com.flixclusive.presentation.utils.FormatterUtils
+import com.flixclusive.presentation.utils.IconResource
 
 @Composable
 fun FilmTvButtons(
     watchHistoryItem: WatchHistoryItem?,
+    isInWatchlist: Boolean,
     isTvShow: Boolean,
     shouldFocusOnPlayButton: Boolean,
     shouldFocusOnEpisodesButton: MutableState<Boolean>,
     onPlay: () -> Unit,
     onWatchlistClick: () -> Unit,
-    onSeeMoreEpisodes: () -> Unit = {},
+    onSeeMoreEpisodes: () -> Unit,
 ) {
     val buttonShape: Shape = MaterialTheme.shapes.extraSmall
     val focusRestorerModifiers = createInitialFocusRestorerModifiers()
@@ -75,12 +82,12 @@ fun FilmTvButtons(
             modifier = focusRestorerModifiers.childModifier
                 .ifElse(
                     condition = shouldFocusOnPlayButton,
-                    ifTrueModifier = Modifier.focusOnInitialVisibility(remember { mutableStateOf(false) })
+                    ifTrueModifier = Modifier.focusOnInitialVisibility()
                 )
         )
 
         if (isTvShow) {
-            EpisodesAndMoreButton(
+            EpisodesButton(
                 shape = buttonShape,
                 onClick = onSeeMoreEpisodes,
                 modifier = Modifier.focusOnInitialVisibility(isVisible = shouldFocusOnEpisodesButton)
@@ -88,6 +95,7 @@ fun FilmTvButtons(
         }
 
         WatchlistButton(
+            isInWatchlist = isInWatchlist,
             shape = buttonShape,
             onClick = onWatchlistClick
         )
@@ -105,6 +113,11 @@ private fun PlayButton(
     val playButtonLabel = remember(watchHistoryItem) {
         FormatterUtils.formatPlayButtonLabel(watchHistoryItem)
     }
+
+    val buttonSizeAsFloatState by animateFloatAsState(
+        targetValue = if(isButtonFocused) 1.1F else 1F,
+        label = ""
+    )
 
     val transition = rememberInfiniteTransition(label = "")
     val translateAnimation = transition.animateFloat(
@@ -144,6 +157,7 @@ private fun PlayButton(
             focusedContainerColor = Color.Transparent
         ),
         modifier = modifier
+            .scale(buttonSizeAsFloatState)
             .ifElse(
                 condition = !isButtonFocused,
                 ifTrueModifier = Modifier.drawAnimatedBorder(
@@ -152,7 +166,8 @@ private fun PlayButton(
                     brush = Brush.sweepGradient(animatedGradientColors),
                     durationMillis = 15000
                 ),
-                ifFalseModifier = Modifier.clip(shape)
+                ifFalseModifier = Modifier
+                    .clip(shape)
             )
             .drawBehind {
                 if (isButtonFocused) {
@@ -188,7 +203,7 @@ private fun PlayButton(
 }
 
 @Composable
-private fun EpisodesAndMoreButton(
+private fun EpisodesButton(
     modifier: Modifier = Modifier,
     shape: Shape,
     onClick: () -> Unit,
@@ -239,6 +254,7 @@ private fun EpisodesAndMoreButton(
 
 @Composable
 private fun WatchlistButton(
+    isInWatchlist: Boolean,
     shape: Shape,
     onClick: () -> Unit,
 ) {
@@ -253,6 +269,24 @@ private fun WatchlistButton(
         ),
         shape = shape
     )
+
+    val (icon, labelId) = remember(isInWatchlist, isButtonFocused) {
+        return@remember when {
+            isInWatchlist && isButtonFocused -> Pair(
+                IconResource.fromImageVector(Icons.Rounded.Close),
+                R.string.remove_from_watchlist
+            )
+            isInWatchlist -> Pair(
+                IconResource.fromImageVector(Icons.Rounded.Check),
+                R.string.remove_from_watchlist
+            )
+            !isInWatchlist -> Pair(
+                IconResource.fromDrawableResource(R.drawable.round_add_24),
+                R.string.add_to_watchlist
+            )
+            else -> throw IllegalStateException("Invalid state for watchlist button.")
+        }
+    }
 
     OutlinedButton(
         onClick = onClick,
@@ -274,7 +308,7 @@ private fun WatchlistButton(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.round_add_24),
+                painter = icon.asPainterResource(),
                 contentDescription = null,
                 modifier = Modifier
                     .size(16.dp)
@@ -286,7 +320,7 @@ private fun WatchlistButton(
                 exit = slideOutHorizontally() + fadeOut()
             ) {
                 Text(
-                    text = stringResource(id = R.string.add_to_watchlist),
+                    text = stringResource(id = labelId),
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold

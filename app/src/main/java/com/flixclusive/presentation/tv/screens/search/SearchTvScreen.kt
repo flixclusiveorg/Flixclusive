@@ -31,10 +31,10 @@ import androidx.tv.material3.Text
 import com.flixclusive.R
 import com.flixclusive.presentation.common.PagingState
 import com.flixclusive.presentation.destinations.FilmTvScreenDestination
-import com.flixclusive.presentation.tv.common.FilmRowItem
+import com.flixclusive.presentation.tv.common.FilmCardTv
 import com.flixclusive.presentation.tv.common.TvRootNavGraph
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.createInitialFocusRestorerModifiers
-import com.flixclusive.presentation.tv.utils.ModifierTvUtils.ifElse
+import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 import com.flixclusive.presentation.utils.LazyListUtils.shouldPaginate
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -131,7 +131,7 @@ fun SearchTvScreen(navigator: DestinationsNavigator) {
                     items = viewModel.searchResults,
                     key = { i, film -> film.id * i }
                 ) { i, film ->
-                    FilmRowItem(
+                    FilmCardTv(
                         modifier = Modifier
                             .ifElse(
                                 condition = i == 0,

@@ -13,7 +13,7 @@ import com.flixclusive.presentation.destinations.SearchFilmScreenDestination
 import com.flixclusive.presentation.destinations.SearchScreenContentDestination
 import com.flixclusive.presentation.destinations.SearchScreenExpandedDestination
 import com.flixclusive.presentation.mobile.common.MobileRootNavGraph
-import com.flixclusive.presentation.mobile.main.MainSharedViewModel
+import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
 import com.flixclusive.presentation.mobile.main.OnDoubleNavBarItemClickObserver
 import com.flixclusive.presentation.mobile.main.OnSeeMoreDetailsClickObserver
 import com.flixclusive.presentation.utils.ComposeUtils.navigateSingleTopTo
@@ -36,7 +36,7 @@ annotation class SearchNavGraph(
 )
 @Composable
 fun SearchMobileScreen(
-    mainSharedViewModel: MainSharedViewModel,
+    mainMobileSharedViewModel: MainMobileSharedViewModel,
 ) {
     val engine = rememberAnimatedNavHostEngine()
     val navController = engine.rememberNavController()
@@ -46,11 +46,11 @@ fun SearchMobileScreen(
     val currentScreen: Destination = navController.appCurrentDestinationAsState().value
         ?: startDestination
 
-    val navGraphThatNeedsToGoToRoot by rememberUpdatedState(newValue = mainSharedViewModel.navGraphThatNeedsToGoToRoot)
-    val mainUiState by mainSharedViewModel.uiState.collectAsStateWithLifecycle()
+    val navGraphThatNeedsToGoToRoot by rememberUpdatedState(newValue = mainMobileSharedViewModel.navGraphThatNeedsToGoToRoot)
+    val mainUiState by mainMobileSharedViewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(currentScreen) {
-        mainSharedViewModel.onBottomNavigationBarVisibilityChange(
+        mainMobileSharedViewModel.onBottomNavigationBarVisibilityChange(
             newVisibilityValue = currentScreen != SearchScreenExpandedDestination
         )
     }
@@ -63,8 +63,8 @@ fun SearchMobileScreen(
             navController.navigate(
                 SearchFilmScreenDestination(mainUiState.longClickedFilm!!)
             )
-            mainSharedViewModel.onBottomSheetClose()
-            mainSharedViewModel.onSeeMoreClick(shouldSeeMore = false)
+            mainMobileSharedViewModel.onBottomSheetClose()
+            mainMobileSharedViewModel.onSeeMoreClick(shouldSeeMore = false)
         }
     )
 
@@ -76,7 +76,7 @@ fun SearchMobileScreen(
         navigate = {
             navController.navigateSingleTopTo(startDestination, NavGraphs.mobileRoot)
         },
-        consume = mainSharedViewModel::onNavBarItemClickTwice
+        consume = mainMobileSharedViewModel::onNavBarItemClickTwice
     )
 
     DestinationsNavHost(
@@ -85,7 +85,7 @@ fun SearchMobileScreen(
         navGraph = navGraph,
         startRoute = startDestination,
         dependenciesContainerBuilder = {
-            dependency(mainSharedViewModel)
+            dependency(mainMobileSharedViewModel)
         }
     )
 }

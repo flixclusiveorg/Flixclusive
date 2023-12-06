@@ -4,8 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -24,31 +22,27 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.flixclusive.R
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
+import com.flixclusive.presentation.mobile.common.composables.film.FilmCover
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
-import com.flixclusive.presentation.utils.ComposeUtils.applyDropShadow
-import com.flixclusive.presentation.utils.ImageRequestCreator.buildImageUrl
 
 
 fun LazyListScope.sheetEpisodeDetails(
     episode: TMDBEpisode,
     isEpisodeCurrentlyBeingWatched: Boolean,
     watchHistoryItem: WatchHistoryItem?,
-    onEpisodeClick: (TMDBEpisode) -> Unit
+    onEpisodeClick: (TMDBEpisode) -> Unit,
 ) {
     item {
         val episodeProgress by remember(watchHistoryItem) {
-            if(watchHistoryItem == null)
+            if (watchHistoryItem == null)
                 return@remember mutableStateOf(null)
 
             val episodeProgress = watchHistoryItem
@@ -58,7 +52,7 @@ fun LazyListScope.sheetEpisodeDetails(
                 }
 
             mutableStateOf(
-                if(episodeProgress == null || episodeProgress.durationTime == 0L)
+                if (episodeProgress == null || episodeProgress.durationTime == 0L)
                     null
                 else
                     episodeProgress.watchTime.toFloat() / episodeProgress.durationTime.toFloat()
@@ -82,19 +76,14 @@ fun LazyListScope.sheetEpisodeDetails(
                         onEpisodeClick(episode)
                     }
             ) {
-                AsyncImage(
-                    model = LocalContext.current.buildImageUrl(
-                        imagePath = episode.image,
-                        imageSize = "w533_and_h300_bestv2"
-                    ),
+                FilmCover.Backdrop(
+                    imagePath = episode.image,
+                    imageSize = "w533_and_h300_bestv2",
                     contentDescription = "An image of episode ${episode.episode}: ${episode.title}",
-                    placeholder = painterResource(R.drawable.movie_placeholder),
-                    error = painterResource(id = R.drawable.movie_placeholder),
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                if(!isEpisodeCurrentlyBeingWatched) {
+                if (!isEpisodeCurrentlyBeingWatched) {
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
@@ -113,20 +102,22 @@ fun LazyListScope.sheetEpisodeDetails(
                 }
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(space = 3.dp)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(space = 3.dp)
             ) {
                 Text(
-                    text = "S${episode.season} E${episode.episode}:",
-                    style = MaterialTheme.typography.labelMedium.applyDropShadow(),
+                    text = "Season ${episode.season} - Episode ${episode.episode}",
+                    style = MaterialTheme.typography.labelMedium,
+                    textAlign = TextAlign.Center,
                     fontWeight = FontWeight.SemiBold
                 )
 
                 Text(
                     text = "\"${episode.title}\"",
-                    style = MaterialTheme.typography.labelMedium.applyDropShadow(),
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Light,
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -150,13 +141,14 @@ fun LazyListScope.sheetEpisodeDetails(
     item {
         Box(
             modifier = Modifier.fillMaxWidth()
+                .padding(top = 25.dp)
         ) {
             Text(
                 text = episode.description,
-                style = MaterialTheme.typography.labelMedium.applyDropShadow(),
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Light,
                 textAlign = TextAlign.Justify,
-                color = colorOnMediumEmphasisMobile(),
+                color = colorOnMediumEmphasisMobile(emphasis = 0.8F),
                 modifier = Modifier.align(Alignment.CenterStart)
             )
         }

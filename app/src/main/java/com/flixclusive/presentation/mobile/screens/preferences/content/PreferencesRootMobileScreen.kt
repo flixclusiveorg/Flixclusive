@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.flixclusive.R
+import com.flixclusive.common.Constants.GITHUB_REPOSITORY
 import com.flixclusive.presentation.common.FadeInAndOutScreenTransition
 import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
 import com.flixclusive.presentation.mobile.screens.preferences.PreferencesNavGraph
@@ -177,7 +178,7 @@ private fun PreferencesRootHeader() {
             iconId = R.drawable.round_content_copy_24,
             contentDescription = "Copy Button",
             onClick =  {
-                clipboardManager.setText(AnnotatedString("URL_TEST"))
+                clipboardManager.setText(AnnotatedString(GITHUB_REPOSITORY))
             }
         )
 
@@ -187,8 +188,7 @@ private fun PreferencesRootHeader() {
             onClick =  {
                 val type = "text/plain"
                 val subject = "Flixclusive App Link"
-                val extraText = "Watch all latest exclusive films at:\n\n" +
-                        "https://github.com/rhenwinch/Flixclusive/releases/latest"
+                val extraText = "Watch all latest exclusive films at:\n\n$GITHUB_REPOSITORY"
                 val shareWith = "ShareWith"
 
                 val intent = Intent(Intent.ACTION_SEND)
