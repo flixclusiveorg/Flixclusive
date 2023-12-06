@@ -6,13 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -35,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.R
 import com.flixclusive.common.UiText
+import com.flixclusive.domain.model.config.CategoryItem
 import com.flixclusive.domain.model.tmdb.Genre
 import com.flixclusive.presentation.common.FadeInAndOutScreenTransition
 import com.flixclusive.presentation.destinations.SearchGenreScreenDestination
@@ -45,7 +44,6 @@ import com.flixclusive.presentation.mobile.common.composables.LARGE_ERROR
 import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
 import com.flixclusive.presentation.mobile.screens.search.SearchNavGraph
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
-import com.flixclusive.presentation.utils.ModifierUtils.placeholderEffect
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
@@ -60,8 +58,17 @@ fun SearchScreenContent(
     val viewModel: SearchInitialContentViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    val onItemClick = { item: CategoryItem ->
+        navigator.navigate(
+            SearchSeeAllScreenDestination(
+                item = item
+            ),
+            onlyIfResumed = true
+        )
+    }
+
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 190.dp),
+        columns = GridCells.Adaptive(minSize = 180.dp),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             SearchBarHeader(
@@ -76,41 +83,19 @@ fun SearchScreenContent(
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             SearchItemRow(
-                modifier = Modifier
-                    .height(88.dp)
-                    .width(190.dp)
-                    .padding(10.dp),
-                rowTitle = UiText.StringResource(R.string.browse_tv_networks),
                 list = viewModel.networks,
                 showItemNames = false,
-                onClick = {
-                    navigator.navigate(
-                        SearchSeeAllScreenDestination(
-                            item = it
-                        ),
-                        onlyIfResumed = true
-                    )
-                }
+                rowTitle = UiText.StringResource(R.string.browse_tv_networks),
+                onClick = onItemClick
             )
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             SearchItemRow(
-                modifier = Modifier
-                    .height(88.dp)
-                    .width(190.dp)
-                    .padding(10.dp),
-                rowTitle = UiText.StringResource(R.string.browse_movie_companies),
                 list = viewModel.companies,
                 showItemNames = false,
-                onClick = {
-                    navigator.navigate(
-                        SearchSeeAllScreenDestination(
-                            item = it
-                        ),
-                        onlyIfResumed = true
-                    )
-                }
+                rowTitle = UiText.StringResource(R.string.browse_movie_companies),
+                onClick = onItemClick
             )
         }
 
@@ -125,67 +110,12 @@ fun SearchScreenContent(
             )
         }
 
-        items(viewModel.filmTypes, key = { it.name }) {
-            SearchItemCard(
-                modifier = Modifier
-                    .height(130.dp)
-                    .width(190.dp)
-                    .padding(10.dp),
-                posterPath = it.posterPath,
-                label = it.name,
-                onClick = {
-                    navigator.navigate(
-                        SearchSeeAllScreenDestination(
-                            item = it
-                        ),
-                        onlyIfResumed = true
-                    )
-                }
-            )
-        }
-
-        items(viewModel.genres, key = { it.id }) {
-            SearchItemCard(
-                modifier = Modifier
-                    .height(130.dp)
-                    .width(190.dp)
-                    .padding(10.dp),
-                posterPath = it.posterPath,
-                label = it.name,
-                onClick = {
-                    navigator.navigate(
-                        direction = SearchGenreScreenDestination(
-                            genre = Genre(
-                                id = it.id,
-                                name = it.name,
-                                posterPath = it.posterPath,
-                                mediaType = it.mediaType
-                            )
-                        ),
-                        onlyIfResumed = true
-                    )
-                }
-            )
-        }
-
-        if(state.isLoading && viewModel.genres.isEmpty()) {
-            item {
-                Spacer(
-                    modifier = Modifier
-                        .height(31.dp)
-                        .width(150.dp)
-                        .padding(horizontal = LABEL_START_PADDING)
-                        .padding(top = LABEL_START_PADDING)
-                        .placeholderEffect()
-                )
-            }
-
+        if(state.isLoading && viewModel.genres.isEmpty() && !state.hasErrors) {
             items(20) {
                 SearchItemCardPlaceholderWithText()
             }
         }
-
-        if(state.hasErrors) {
+        else if(state.hasErrors) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 ErrorScreenWithButton(
                     modifier = Modifier
@@ -193,6 +123,35 @@ fun SearchScreenContent(
                     shouldShowError = true,
                     error = stringResource(id = R.string.error_on_initialization),
                     onRetry = viewModel::initialize
+                )
+            }
+        }
+        else {
+            items(viewModel.filmTypes, key = { it.name }) {
+                SearchItemCard(
+                    posterPath = it.posterPath,
+                    label = it.name,
+                    onClick = { onItemClick(it) }
+                )
+            }
+
+            items(viewModel.genres, key = { it.id }) {
+                SearchItemCard(
+                    posterPath = it.posterPath,
+                    label = it.name,
+                    onClick = {
+                        navigator.navigate(
+                            direction = SearchGenreScreenDestination(
+                                genre = Genre(
+                                    id = it.id,
+                                    name = it.name,
+                                    posterPath = it.posterPath,
+                                    mediaType = it.mediaType
+                                )
+                            ),
+                            onlyIfResumed = true
+                        )
+                    }
                 )
             }
         }

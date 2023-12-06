@@ -37,8 +37,8 @@ import com.flixclusive.presentation.NavGraphs
 import com.flixclusive.presentation.appCurrentDestinationAsState
 import com.flixclusive.presentation.destinations.Destination
 import com.flixclusive.presentation.destinations.HomeMobileScreenDestination
-import com.flixclusive.presentation.mobile.common.composables.film.bottom_sheet_content.FilmBottomSheetPreview
-import com.flixclusive.presentation.mobile.common.composables.film.dialog_content.VideoPlayerDialog
+import com.flixclusive.presentation.mobile.common.composables.film.FilmBottomSheetPreview
+import com.flixclusive.presentation.mobile.common.composables.film.VideoPlayerDialog
 import com.flixclusive.presentation.mobile.screens.player.PlayerActivity.Companion.startPlayer
 import com.flixclusive.presentation.startAppDestination
 import com.flixclusive.presentation.utils.ComposeUtils.navigateSingleTopTo
@@ -59,7 +59,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainActivity.MainApp() {
     val context = LocalContext.current
-    val viewModel: MainSharedViewModel = hiltViewModel()
+    val viewModel: MainMobileSharedViewModel = hiltViewModel()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isConnectedAtNetwork by viewModel.isConnectedAtNetwork.collectAsStateWithLifecycle(
@@ -198,7 +198,7 @@ fun MainActivity.MainApp() {
     }
 
     fullScreenImageToShow?.let { imagePath ->
-        FullScreenImageDialog(
+        FilmCoverPreview(
             imagePath = imagePath,
             onDismiss = {
                 fullScreenImageToShow = null

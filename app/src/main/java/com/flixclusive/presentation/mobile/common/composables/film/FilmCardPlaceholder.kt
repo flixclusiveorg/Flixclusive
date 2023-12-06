@@ -22,7 +22,6 @@ fun FilmCardPlaceholder(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .padding(horizontal = 3.dp)
     ) {
         Spacer(
             modifier = Modifier

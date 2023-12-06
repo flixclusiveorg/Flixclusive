@@ -7,18 +7,21 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
+import com.flixclusive.R
+import com.flixclusive.common.UiText
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.model.entities.toWatchlistItem
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.Season
+import com.flixclusive.domain.preferences.AppSettingsManager
 import com.flixclusive.domain.repository.WatchHistoryRepository
 import com.flixclusive.domain.usecase.FilmProviderUseCase
 import com.flixclusive.domain.usecase.SeasonProviderUseCase
 import com.flixclusive.domain.usecase.WatchHistoryItemManagerUseCase
 import com.flixclusive.domain.usecase.WatchlistItemManagerUseCase
-import com.flixclusive.presentation.common.viewmodels.home.FocusPosition
 import com.flixclusive.presentation.navArgs
+import com.flixclusive.presentation.tv.utils.ModifierTvUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,8 +40,17 @@ class FilmScreenViewModel @Inject constructor(
     private val filmProvider: FilmProviderUseCase,
     private val watchHistoryItemManager: WatchHistoryItemManagerUseCase,
     private val watchlistItemManager: WatchlistItemManagerUseCase,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    appSettingsManager: AppSettingsManager
 ) : ViewModel() {
+    val appSettings = appSettingsManager.appSettings
+        .data
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = appSettingsManager.localAppSettings
+        )
+
     private val filmArgs = savedStateHandle.navArgs<FilmScreenNavArgs>()
     private val filmId: Int = filmArgs.film.id
     val filmType: FilmType = filmArgs.film.filmType
@@ -81,11 +93,11 @@ class FilmScreenViewModel @Inject constructor(
             filmProvider(
                 id = filmId,
                 type = filmType,
-                onError = {
+                onError = { error ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            hasErrors = true
+                            errorMessage = error ?: UiText.StringResource(R.string.error_film_message)
                         )
                     }
                 },
@@ -93,7 +105,7 @@ class FilmScreenViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            hasErrors = false
+                            errorMessage = null
                         )
                     }
 
@@ -161,7 +173,7 @@ class FilmScreenViewModel @Inject constructor(
 
     fun onLastItemFocusChange(row: Int, column: Int) {
         _uiState.update {
-            it.copy(lastFocusedItem = FocusPosition(row, column))
+            it.copy(lastFocusedItem = ModifierTvUtils.FocusPosition(row, column))
         }
     }
 }

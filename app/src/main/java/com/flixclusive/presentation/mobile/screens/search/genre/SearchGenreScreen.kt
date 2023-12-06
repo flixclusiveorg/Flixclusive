@@ -3,7 +3,7 @@ package com.flixclusive.presentation.mobile.screens.search.genre
 import androidx.compose.runtime.Composable
 import com.flixclusive.presentation.destinations.SearchFilmScreenDestination
 import com.flixclusive.presentation.mobile.common.transitions.CommonScreenTransition
-import com.flixclusive.presentation.mobile.main.MainSharedViewModel
+import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
 import com.flixclusive.presentation.mobile.common.composables.genre.GenreScreen
 import com.flixclusive.presentation.mobile.common.composables.genre.GenreScreenNavArgs
 import com.flixclusive.presentation.mobile.screens.search.SearchNavGraph
@@ -18,12 +18,12 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun SearchGenreScreen(
     navigator: DestinationsNavigator,
-    mainSharedViewModel: MainSharedViewModel,
+    mainMobileSharedViewModel: MainMobileSharedViewModel,
     genreArgs: GenreScreenNavArgs
 ) {
     GenreScreen(
         genre = genreArgs.genre,
-        onFilmLongClick = mainSharedViewModel::onFilmLongClick,
+        onFilmLongClick = mainMobileSharedViewModel::onFilmLongClick,
         onFilmClick = { clickedFilm ->
             navigator.navigate(
                 SearchFilmScreenDestination(

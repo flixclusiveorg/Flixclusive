@@ -33,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.flixclusive.R
 import com.flixclusive.domain.model.entities.WatchHistoryItem
@@ -44,6 +45,7 @@ import com.flixclusive.presentation.utils.ModifierUtils.placeholderEffect
 
 @Composable
 fun FilmEpisode(
+    modifier: Modifier = Modifier,
     episode: TMDBEpisode,
     watchHistoryItem: WatchHistoryItem?,
     onEpisodeClick: (TMDBEpisode) -> Unit
@@ -70,7 +72,7 @@ fun FilmEpisode(
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .height(130.dp)
             .padding(horizontal = 10.dp)
             .graphicsLayer {
@@ -150,7 +152,9 @@ fun FilmEpisode(
 
                     Text(
                         text = episode.title,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 13.sp
+                        ),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier

@@ -11,15 +11,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.R
+import com.flixclusive.appSettingsDataStore
 import com.flixclusive.presentation.common.FadeInAndOutScreenTransition
 import com.flixclusive.presentation.destinations.PreferencesFilmMobileScreenDestination
 import com.flixclusive.presentation.mobile.common.composables.FilmsGridScreen
-import com.flixclusive.presentation.mobile.main.MainSharedViewModel
+import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
 import com.flixclusive.presentation.mobile.screens.preferences.PreferencesNavGraph
 import com.flixclusive.presentation.mobile.screens.preferences.common.TopBarWithNavigationIcon
 import com.ramcosta.composedestinations.annotation.Destination
@@ -32,9 +34,10 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun RecentlyWatchedMobileScreen(
     navigator: DestinationsNavigator,
-    mainSharedViewModel: MainSharedViewModel
+    mainMobileSharedViewModel: MainMobileSharedViewModel
 ) {
     val viewModel = hiltViewModel<RecentlyWatchedViewModel>()
+    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
     val watchHistoryItems by viewModel.items.collectAsStateWithLifecycle()
     val items = remember(watchHistoryItems) {
         watchHistoryItems
@@ -76,6 +79,7 @@ fun RecentlyWatchedMobileScreen(
                 modifier = Modifier.fillMaxSize(),
                 screenTitle = stringResource(R.string.recently_watched),
                 films = items,
+                isShowingFilmCardTitle = appSettings.isShowingFilmCardTitle,
                 onFilmClick = {
                     navigator.navigate(
                         PreferencesFilmMobileScreenDestination(
@@ -85,7 +89,7 @@ fun RecentlyWatchedMobileScreen(
                     )
                 },
                 onNavigationIconClick = navigator::navigateUp,
-                onFilmLongClick = mainSharedViewModel::onFilmLongClick,
+                onFilmLongClick = mainMobileSharedViewModel::onFilmLongClick,
             )
         }
     }

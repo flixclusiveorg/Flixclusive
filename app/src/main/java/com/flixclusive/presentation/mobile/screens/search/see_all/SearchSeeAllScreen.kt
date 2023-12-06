@@ -5,7 +5,7 @@ import com.flixclusive.presentation.common.viewmodels.see_all.SeeAllScreenNavArg
 import com.flixclusive.presentation.destinations.SearchFilmScreenDestination
 import com.flixclusive.presentation.mobile.common.composables.see_all.SeeAllMobileScreen
 import com.flixclusive.presentation.mobile.common.transitions.CommonScreenTransition
-import com.flixclusive.presentation.mobile.main.MainSharedViewModel
+import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
 import com.flixclusive.presentation.mobile.screens.search.SearchNavGraph
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -18,10 +18,10 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun SearchSeeAllScreen(
     navigator: DestinationsNavigator,
-    mainSharedViewModel: MainSharedViewModel
+    mainMobileSharedViewModel: MainMobileSharedViewModel
 ) {
     SeeAllMobileScreen(
-        onFilmLongClick = mainSharedViewModel::onFilmLongClick,
+        onFilmLongClick = mainMobileSharedViewModel::onFilmLongClick,
         onNavigationIconClick = navigator::navigateUp,
         onFilmClick = {
             navigator.navigate(

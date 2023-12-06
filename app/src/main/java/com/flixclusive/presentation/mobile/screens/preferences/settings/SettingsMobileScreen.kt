@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,8 +48,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.R
+import com.flixclusive.domain.preferences.AppSettings
 import com.flixclusive.domain.preferences.CaptionEdgeTypePreference
 import com.flixclusive.domain.preferences.CaptionStylePreference
+import com.flixclusive.presentation.common.FadeInAndOutScreenTransition
 import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
 import com.flixclusive.presentation.mobile.screens.preferences.PreferencesNavGraph
 import com.flixclusive.presentation.mobile.screens.preferences.common.TopBarWithNavigationIcon
@@ -62,12 +65,15 @@ import com.flixclusive.presentation.utils.LazyListUtils.isAtTop
 import com.flixclusive.presentation.utils.LazyListUtils.isScrollingUp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import java.util.Locale
 
 private const val DEFAULT_TEXT_PREVIEW = "Abc"
 private val settingItemShape = RoundedCornerShape(20.dp)
 
 @PreferencesNavGraph
-@Destination
+@Destination(
+    style = FadeInAndOutScreenTransition::class
+)
 @Composable
 fun SettingsMobileScreen(
     navigator: DestinationsNavigator,
@@ -76,12 +82,27 @@ fun SettingsMobileScreen(
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
 
     val toggleSubtitlesLabel = stringResource(R.string.subtitle)
+    val toggleFilmCardTitleLabel = stringResource(R.string.film_card_titles)
 
-    val toggleSubtitles = { newValue: Boolean ->
-        viewModel.onChangeSettings(
-            appSettings.copy(isSubtitleEnabled = newValue)
-        )
+    val toggleSwitch = { newValue: AppSettings ->
+        viewModel.onChangeSettings(newValue)
     }
+
+    val currentGeneralSettings = listOf(
+        SettingsItem(
+            title = toggleFilmCardTitleLabel,
+            description = "Show titles on film cards",
+            previewContent = {
+                Switch(
+                    checked = appSettings.isShowingFilmCardTitle,
+                    onCheckedChange = {
+                        toggleSwitch(appSettings.copy(isShowingFilmCardTitle = it))
+                    },
+                    modifier = Modifier.scale(0.7F)
+                )
+            },
+        ),
+    )
 
     val currentSubtitlesSettings = listOf(
         SettingsItem(
@@ -90,10 +111,18 @@ fun SettingsMobileScreen(
             previewContent = {
                 Switch(
                     checked = appSettings.isSubtitleEnabled,
-                    onCheckedChange = toggleSubtitles,
+                    onCheckedChange = {
+                        toggleSwitch(appSettings.copy(isShowingFilmCardTitle = it))
+                    },
                     modifier = Modifier.scale(0.7F)
                 )
             }
+        ),
+        SettingsItem(
+            title = stringResource(R.string.subtitles_language),
+            description = Locale(appSettings.subtitleLanguage).displayLanguage,
+            enabled = appSettings.isSubtitleEnabled,
+            dialogKey = KEY_SUBTITLE_LANGUAGE_DIALOG,
         ),
         SettingsItem(
             title = stringResource(R.string.subtitles_size),
@@ -109,11 +138,22 @@ fun SettingsMobileScreen(
             previewContent = {
                 Text(
                     text = DEFAULT_TEXT_PREVIEW,
-                    style = when(appSettings.subtitleFontStyle) {
-                        CaptionStylePreference.Normal -> MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Normal)
-                        CaptionStylePreference.Bold -> MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-                        CaptionStylePreference.Italic -> MaterialTheme.typography.labelLarge.copy(fontStyle = FontStyle.Italic)
-                        CaptionStylePreference.Monospace -> MaterialTheme.typography.labelLarge.copy(fontFamily = FontFamily.Monospace)
+                    style = when (appSettings.subtitleFontStyle) {
+                        CaptionStylePreference.Normal -> MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Normal
+                        )
+
+                        CaptionStylePreference.Bold -> MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        CaptionStylePreference.Italic -> MaterialTheme.typography.labelLarge.copy(
+                            fontStyle = FontStyle.Italic
+                        )
+
+                        CaptionStylePreference.Monospace -> MaterialTheme.typography.labelLarge.copy(
+                            fontFamily = FontFamily.Monospace
+                        )
                     }
                 )
             }
@@ -125,7 +165,7 @@ fun SettingsMobileScreen(
             dialogKey = KEY_SUBTITLE_COLOR_DIALOG,
             previewContent = {
                 BoxWithColor(
-                    if(appSettings.isSubtitleEnabled) appSettings.subtitleColor
+                    if (appSettings.isSubtitleEnabled) appSettings.subtitleColor
                     else Color.Gray.toArgb()
                 )
             }
@@ -137,7 +177,7 @@ fun SettingsMobileScreen(
             dialogKey = KEY_SUBTITLE_BACKGROUND_COLOR_DIALOG,
             previewContent = {
                 BoxWithColor(
-                    if(appSettings.isSubtitleEnabled) appSettings.subtitleBackgroundColor
+                    if (appSettings.isSubtitleEnabled) appSettings.subtitleBackgroundColor
                     else Color.Gray.toArgb()
                 )
             }
@@ -162,6 +202,7 @@ fun SettingsMobileScreen(
                             )
                         )
                     }
+
                     CaptionEdgeTypePreference.Outline -> {
                         BorderedText(
                             text = DEFAULT_TEXT_PREVIEW,
@@ -178,9 +219,9 @@ fun SettingsMobileScreen(
 
     val currentVideoPlayerSettings = listOf(
         SettingsItem(
-            title = stringResource(R.string.server),
-            description = appSettings.preferredServer,
-            dialogKey = KEY_VIDEO_PLAYER_SERVER_DIALOG
+            title = stringResource(R.string.quality),
+            description = appSettings.preferredQuality,
+            dialogKey = KEY_VIDEO_PLAYER_QUALITY_DIALOG,
         ),
     )
 
@@ -216,6 +257,15 @@ fun SettingsMobileScreen(
         ) {
             item {
                 SettingsGroup(
+                    items = currentGeneralSettings,
+                    onItemClick = {
+                        toggleSwitch(appSettings.copy(isShowingFilmCardTitle = !appSettings.isShowingFilmCardTitle))
+                    }
+                )
+            }
+
+            item {
+                SettingsGroup(
                     items = currentVideoPlayerSettings,
                     onItemClick = { item ->
                         viewModel.toggleDialog(item.dialogKey!!)
@@ -227,10 +277,10 @@ fun SettingsMobileScreen(
                 SettingsGroup(
                     items = currentSubtitlesSettings,
                     onItemClick = { item ->
-                        if (item.title == toggleSubtitlesLabel) {
-                            toggleSubtitles(!appSettings.isSubtitleEnabled)
+                        if (item.dialogKey != null) {
+                            viewModel.toggleDialog(item.dialogKey)
                         } else {
-                            viewModel.toggleDialog(item.dialogKey!!)
+                            toggleSwitch(appSettings.copy(isShowingFilmCardTitle = !appSettings.isSubtitleEnabled))
                         }
                     }
                 )
@@ -247,6 +297,10 @@ fun SettingsMobileScreen(
                         shape = settingItemShape
                     )
                 }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(25.dp))
             }
         }
     }
@@ -270,7 +324,7 @@ fun SettingsMobileScreen(
 @Composable
 private fun SettingsGroup(
     items: List<SettingsItem>,
-    onItemClick: (SettingsItem) -> Unit,
+    onItemClick: (SettingsItem) -> Unit = {},
 ) {
     Surface(
         tonalElevation = 3.dp,

@@ -13,12 +13,12 @@ import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.domain.repository.UserRepository
 import com.flixclusive.domain.repository.WatchHistoryRepository
 import com.flixclusive.domain.repository.WatchlistRepository
-import com.flixclusive_provider.interfaces.FilmSourcesProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
+import okhttp3.OkHttpClient
 import javax.inject.Singleton
 
 @Module
@@ -43,11 +43,13 @@ object AppModule {
     @Provides
     @Singleton
     fun provideFilmSourcesRepository(
-        filmSourcesProvider: FilmSourcesProvider,
+        client: OkHttpClient,
+        tmdbRepository: TMDBRepository,
         @IoDispatcher ioDispatcher: CoroutineDispatcher
     ): FilmSourcesRepository {
         return FilmSourcesRepositoryImpl(
-            provider = filmSourcesProvider,
+            client = client,
+            tmdbRepository = tmdbRepository,
             ioDispatcher = ioDispatcher
         )
     }

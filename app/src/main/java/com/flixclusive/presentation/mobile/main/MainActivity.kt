@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
-import com.flixclusive.presentation.mobile.splash_screen.SplashActivity
+import com.flixclusive.presentation.mobile.screens.splash_screen.SplashMobileActivity
 import com.flixclusive.presentation.mobile.theme.FlixclusiveMobileTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
@@ -27,44 +27,52 @@ val ITEMS_START_PADDING = 12.dp
 @UnstableApi
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val mainViewModel: MainActivityViewModel by viewModels()
+    private val mainViewModel: MainMobileActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        val intentLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            when (result.resultCode) {
-                RESULT_OK -> {
-                    mainViewModel.onConfigSuccess()
+        val intentLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                when (result.resultCode) {
+                    RESULT_OK -> {
+                        mainViewModel.onConfigSuccess()
+                    }
+
+                    RESULT_CANCELED -> {
+                        finishAndRemoveTask()
+                    }
+
+                    else -> throw IllegalStateException("Invalid result returned by Splash Activity")
                 }
-                RESULT_CANCELED -> {
-                    finishAndRemoveTask()
-                }
-                else -> throw IllegalStateException("Invalid result returned by Splash Activity")
             }
-        }
 
         lifecycleScope.launch {
             mainViewModel.isConfigInitialized
                 .combine(mainViewModel.isSplashActivityLaunched) { isConfigInitialized, isSplashActivityLaunched ->
-                if(isConfigInitialized) {
-                    setContent {
-                        FlixclusiveMobileTheme {
-                            // A surface container using the 'background' color from the theme
-                            Surface(
-                                modifier = Modifier.fillMaxSize(),
-                                color = MaterialTheme.colorScheme.background
-                            ) {
-                                MainApp()
+                    if (isConfigInitialized) {
+                        setContent {
+                            FlixclusiveMobileTheme {
+                                // A surface container using the 'background' color from the theme
+                                Surface(
+                                    modifier = Modifier.fillMaxSize(),
+                                    color = MaterialTheme.colorScheme.background
+                                ) {
+                                    MainApp()
+                                }
                             }
                         }
+                    } else if (!isSplashActivityLaunched) {
+                        intentLauncher.launch(
+                            Intent(
+                                this@MainActivity,
+                                SplashMobileActivity::class.java
+                            )
+                        )
+                        mainViewModel.onSplashActivityLaunch()
                     }
-                } else if(!isSplashActivityLaunched) {
-                    intentLauncher.launch(Intent(this@MainActivity, SplashActivity::class.java))
-                    mainViewModel.onSplashActivityLaunch()
-                }
-            }.collect()
+                }.collect()
         }
     }
 }

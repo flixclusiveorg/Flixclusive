@@ -1,14 +1,13 @@
 package com.flixclusive.presentation.mobile.screens.home.content
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,31 +27,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import androidx.compose.ui.unit.sp
 import com.flixclusive.R
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.utils.WatchHistoryUtils.getNextEpisodeToWatch
+import com.flixclusive.presentation.mobile.common.composables.film.FilmCover
 import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
+import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
 import com.flixclusive.presentation.utils.FormatterUtils.formatMinutes
-import com.flixclusive.presentation.utils.ImageRequestCreator.buildImageUrl
 
 @Composable
 fun HomeContinueWatchingRow(
     modifier: Modifier = Modifier,
+    showCardTitle: Boolean,
     dataListProvider: () -> List<WatchHistoryItem>,
     onFilmClick: (Film) -> Unit,
     onSeeMoreClick: (Film) -> Unit,
@@ -79,9 +78,10 @@ fun HomeContinueWatchingRow(
                         film.id * i
                     }
                 ) { _, item ->
-                    HomeContinueWatchingItem(
+                    ContinueWatchingCard(
                         modifier = Modifier
                             .width(135.dp),
+                        showCardTitle = showCardTitle,
                         watchHistoryItem = item,
                         onClick = onFilmClick,
                         onSeeMoreClick = { onSeeMoreClick(item.film) }
@@ -94,14 +94,14 @@ fun HomeContinueWatchingRow(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HomeContinueWatchingItem(
+private fun ContinueWatchingCard(
     watchHistoryItem: WatchHistoryItem,
+    showCardTitle: Boolean,
     onClick: (Film) -> Unit,
     onSeeMoreClick: (Film) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
-    val context = LocalContext.current
     val film = watchHistoryItem.film
 
     val isTvShow = watchHistoryItem.seasons != null
@@ -120,108 +120,114 @@ fun HomeContinueWatchingItem(
         mutableFloatStateOf(percentage)
     }
 
-    val posterImage = context.buildImageUrl(
-        imagePath = film.posterImage,
-        imageSize = "w220_and_h330_face"
-    )
+    val itemLabel = remember(watchHistoryItem) {
+        if(isTvShow) {
+            val nextEpisodeWatched = getNextEpisodeToWatch(watchHistoryItem)
+            val season = nextEpisodeWatched.first
+            val episode = nextEpisodeWatched.second
+
+            val lastEpisodeIsNotSameWithNextEpisodeToWatch = lastWatchedEpisode.episodeNumber != episode
+
+            if(lastEpisodeIsNotSameWithNextEpisodeToWatch)
+                progress = 0F
+
+            "S${season} E${episode}"
+        } else {
+            val watchTime = watchHistoryItem.episodesWatched.last().watchTime
+            val watchTimeInSeconds = (watchTime / 1000).toInt()
+            val watchTimeInMinutes = watchTimeInSeconds / 60
+
+            formatMinutes(totalMinutes = watchTimeInMinutes)
+        }
+    }
 
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .padding(horizontal = 3.dp)
-            .combinedClickable(
-                onClick = { onClick(film) },
-                onLongClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onSeeMoreClick(film)
-                }
-            )
+            .padding(3.dp)
     ) {
         Box(
             modifier = Modifier
-                .height(200.dp)
-                .padding(3.dp)
-                .graphicsLayer {
-                    shape = RoundedCornerShape(5)
-                    clip = true
-                }
+                .clip(
+                    RoundedCornerShape(
+                        bottomStart = 4.dp,
+                        bottomEnd = 4.dp
+                    )
+                )
+                .combinedClickable(
+                    onClick = { onClick(film) },
+                    onLongClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onSeeMoreClick(film)
+                    }
+                )
         ) {
-            AsyncImage(
-                model = posterImage,
-                placeholder = painterResource(R.drawable.movie_placeholder),
-                error = painterResource(R.drawable.movie_placeholder),
-                contentDescription = stringResource(R.string.film_item_content_description),
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
+            FilmCover.Poster(
+                imagePath = film.posterImage,
+                imageSize = "w220_and_h330_face"
             )
+
 
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .drawBehind {
-                        drawRect(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.Black
-                                ),
-                                endY = size.height.times(0.9F)
+                    .align(Alignment.Center)
+                    .border(
+                        width = 1.dp,
+                        color = Color.White,
+                        shape = CircleShape
+                    )
+                    .background(
+                        color = colorOnMediumEmphasisMobile(color = Color.Black),
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.play),
+                    contentDescription = "A play button icon",
+                    modifier = Modifier
+                        .size(50.dp),
+                    tint = Color.White
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0F to Color.Transparent,
+                            0.6F to Color.Transparent,
+                            0.95F to colorOnMediumEmphasisMobile(
+                                MaterialTheme.colorScheme.surface,
+                                0.8F
                             )
                         )
-                    }
-            ) {
-                val itemLabel = remember(watchHistoryItem) {
-                    if(isTvShow) {
-                        val nextEpisodeWatched = getNextEpisodeToWatch(watchHistoryItem)
-                        val season = nextEpisodeWatched.first
-                        val episode = nextEpisodeWatched.second
-
-                        val lastEpisodeIsNotSameWithNextEpisodeToWatch = lastWatchedEpisode.episodeNumber != episode
-
-                        if(lastEpisodeIsNotSameWithNextEpisodeToWatch)
-                            progress = 0F
-
-                        "S${season} E${episode}"
-                    } else {
-                        val watchTime = watchHistoryItem.episodesWatched.last().watchTime
-                        val watchTimeInSeconds = (watchTime / 1000).toInt()
-                        val watchTimeInMinutes = watchTimeInSeconds / 60
-
-                        formatMinutes(totalMinutes = watchTimeInMinutes)
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .border(1.dp, Color.White, CircleShape)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.play),
-                        contentDescription = "A play button icon",
-                        modifier = Modifier
-                            .size(50.dp),
-                        tint = Color.White
                     )
-                }
-
-                Text(
-                    text = itemLabel,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = Color.White,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
+            ) {
+                Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .fillMaxWidth()
-                        .padding(
-                            start = 8.dp,
-                            end = 8.dp,
-                            bottom = 8.dp,
-                        )
-                )
+                        .padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = itemLabel,
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 12.sp
+                        ),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1
+                    )
+
+                    LinearProgressIndicator(
+                        progress = progress,
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(0.4F),
+                        modifier = Modifier.clip(MaterialTheme.shapes.large)
+                    )
+                }
             }
 
             IconButton(
@@ -238,16 +244,19 @@ fun HomeContinueWatchingItem(
             }
         }
 
-        LinearProgressIndicator(
-            progress = progress,
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MaterialTheme.colorScheme.primary.copy(0.4F),
-            modifier = Modifier
-                .padding(5.dp)
-                .graphicsLayer {
-                    shape = RoundedCornerShape(25)
-                    clip = true
-                }
-        )
+        if(showCardTitle) {
+            Text(
+                text = film.title,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontSize = 12.sp
+                ),
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis,
+                color = colorOnMediumEmphasisMobile(emphasis = 0.8F),
+                maxLines = 1,
+                modifier = Modifier
+                    .padding(vertical = 5.dp)
+            )
+        }
     }
 }

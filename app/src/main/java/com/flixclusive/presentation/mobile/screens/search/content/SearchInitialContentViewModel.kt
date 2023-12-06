@@ -3,14 +3,12 @@ package com.flixclusive.presentation.mobile.screens.search.content
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.di.IoDispatcher
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.config.ConfigurationProvider
 import com.flixclusive.domain.model.config.SearchCategoryItem
 import com.flixclusive.domain.repository.TMDBRepository
-import com.flixclusive.presentation.common.NetworkConnectivityObserver
+import com.flixclusive.service.network.NetworkConnectivityObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,7 +25,6 @@ class SearchInitialContentViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     val configurationProvider: ConfigurationProvider,
     networkConnectivityObserver: NetworkConnectivityObserver,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     private val _state = MutableStateFlow(SearchInitialContentUiState(isLoading = true))
     val state = _state.asStateFlow()
@@ -52,7 +49,7 @@ class SearchInitialContentViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             connectionObserver.collect { isConnected ->
-                if (isConnected && _state.value.hasErrors || !isInitialized) {
+                if (isConnected && (_state.value.hasErrors || !isInitialized)) {
                     initialize()
                 }
             }
@@ -65,16 +62,11 @@ class SearchInitialContentViewModel @Inject constructor(
 
         _state.update { SearchInitialContentUiState(isLoading = true) }
 
-        filmTypes.clear()
-        genres.clear()
-
-        genres.addAll(configurationProvider.searchCategoriesConfig!!.genres)
-        filmTypes.addAll(configurationProvider.searchCategoriesConfig!!.type)
-
-        initializeJob = viewModelScope.launch(ioDispatcher) {
+        initializeJob = viewModelScope.launch {
+            usedPosterPaths.clear()
             // Items that need thumbnails =====
-            getGenresThumbnails()
             getFilmTypeThumbnails()
+            getGenresThumbnails()
             // ============================ END
             isInitialized = true
 
@@ -84,6 +76,9 @@ class SearchInitialContentViewModel @Inject constructor(
 
     private suspend fun getGenresThumbnails() {
         val randomPage = max(1, nextInt(1, 3000) % 5)
+
+        genres.clear()
+        genres.addAll(configurationProvider.searchCategoriesConfig!!.genres)
 
         configurationProvider
             .searchCategoriesConfig!!
@@ -108,7 +103,7 @@ class SearchInitialContentViewModel @Inject constructor(
                             var imageToUse: String? = null
 
                             if(data.results.isEmpty())
-                                return getGenresThumbnails()
+                                return@forEachIndexed
 
                             while (
                                 usedPosterPaths[imageToUse] != null
@@ -131,6 +126,9 @@ class SearchInitialContentViewModel @Inject constructor(
 
     private suspend fun getFilmTypeThumbnails() {
         val randomPage = max(1, nextInt(1, 3000) % 5)
+
+        filmTypes.clear()
+        filmTypes.addAll(configurationProvider.searchCategoriesConfig!!.type)
 
         configurationProvider
             .searchCategoriesConfig!!
@@ -155,7 +153,7 @@ class SearchInitialContentViewModel @Inject constructor(
                             var imageToUse: String? = null
 
                             if(data.results.isEmpty())
-                                return getFilmTypeThumbnails()
+                                return@forEachIndexed
 
                             while (
                                 usedPosterPaths[imageToUse] != null

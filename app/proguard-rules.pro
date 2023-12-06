@@ -65,9 +65,10 @@
 -keep class com.flixclusive.data.dto.tmdb.tv.** { *; }
 -keep class com.flixclusive.data.dto.tmdb.common.** { *; }
 
--keep class com.flixclusive_provider.models.common.** { *; }
--keep class com.flixclusive_provider.models.extractors.vidcloud.** { *; }
--keep class com.flixclusive_provider.models.providers.flixhq.** { *; }
+-keep class com.flixclusive.providers.models.common.** { *; }
+-keep class com.flixclusive.providers.models.extractors.vidcloud.** { *; }
+-keep class com.flixclusive.providers.models.providers.flixhq.** { *; }
+-keep class com.flixclusive.providers.models.providers.superstream.** { *; }
 
 # Prevent proguard from stripping interface information from TypeAdapter, TypeAdapterFactory,
 # JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)

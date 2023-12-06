@@ -62,7 +62,7 @@ interface TMDBRepository {
         id: Int,
         seasonNumber: Int,
         episodeNumber: Int,
-    ): TMDBEpisode?
+    ): Resource<TMDBEpisode?>
 
     suspend fun getCollection(id: Int): Resource<TMDBCollection>
 

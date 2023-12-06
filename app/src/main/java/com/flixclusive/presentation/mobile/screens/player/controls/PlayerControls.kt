@@ -7,8 +7,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
@@ -17,30 +15,27 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.TrackSelectionParameters
 import com.flixclusive.R
+import com.flixclusive.common.UiText
 import com.flixclusive.domain.common.Resource
-import com.flixclusive_provider.models.common.VideoData
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.Season
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.presentation.common.PlayerUiState
 import com.flixclusive.presentation.common.PlayerUiState.Companion.toPlaybackSpeed
 import com.flixclusive.presentation.mobile.screens.player.PlayerSnackbarMessageType
+import com.flixclusive.presentation.mobile.screens.player.controls.audio_and_display_sheet.AudioAndDisplaySheet
 import com.flixclusive.presentation.mobile.screens.player.controls.episodes_sheet.MoreEpisodesSheet
 import com.flixclusive.presentation.mobile.screens.player.controls.gestures.AnimatedSeeker
-import com.flixclusive.presentation.mobile.screens.player.controls.qualities_and_subtitles_sheet.QualitiesAndSubtitlesSheet
 import com.flixclusive.presentation.mobile.screens.player.controls.video_settings_dialog.VideoSettingsDialog
 import com.flixclusive.presentation.utils.PlayerUiUtils.LocalPlayer
-import com.flixclusive.common.UiText
+import com.flixclusive.providers.models.common.VideoData
 
 const val SEEK_ANIMATION_DELAY = 450L
 
@@ -49,16 +44,24 @@ const val SEEK_ANIMATION_DELAY = 450L
 fun PlayerControls(
     visibilityProvider: () -> Boolean,
     areControlsLocked: Boolean,
+    isEpisodesSheetOpened: Boolean,
+    isQualitiesAndSubtitlesSheetOpened: Boolean,
+    isVideoSettingsDialogOpened: Boolean,
     watchHistoryItem: WatchHistoryItem?,
     videoData: VideoData,
+    sources: List<String>,
     availableSeasons: Int?,
     isLastEpisode: Boolean,
     stateProvider: () -> PlayerUiState,
     videoQualities: List<String>,
+    audios: List<String>,
     seasonDataProvider: () -> Resource<Season>?,
     currentEpisodeSelected: TMDBEpisode?,
     onBrightnessChange: (Float) -> Unit,
     showControls: (Boolean) -> Unit,
+    toggleEpisodesSheet: (Boolean) -> Unit,
+    toggleQualitiesAndSubtitlesSheet: (Boolean) -> Unit,
+    toggleVideoSettingsDialog: (Boolean) -> Unit,
     toggleControlLock: (Boolean) -> Unit,
     onBack: () -> Unit,
     onPauseToggle: () -> Unit,
@@ -66,20 +69,20 @@ fun PlayerControls(
     onSeasonChange: (Int) -> Unit,
     onSubtitleChange: (Int, TrackSelectionParameters) -> TrackSelectionParameters,
     onVideoQualityChange: (Int, TrackSelectionParameters) -> TrackSelectionParameters?,
+    onAudioChange: (Int, TrackSelectionParameters) -> TrackSelectionParameters?,
+    onSourceChange: (String) -> Unit,
     onVideoServerChange: (Int) -> Unit,
     onPlaybackSpeedChange: (Int) -> Unit,
+    onResizeModeChange: (Int) -> Unit,
+    onPanelChange: (Int) -> Unit,
     onEpisodeClick: (TMDBEpisode?) -> Unit,
 ) {
     val context = LocalContext.current
-    val player = LocalPlayer.current
+    val player by rememberUpdatedState(newValue = LocalPlayer.current)
 
     val isVisible by rememberUpdatedState(visibilityProvider())
     val state by rememberUpdatedState(stateProvider())
     val seasonData by rememberUpdatedState(seasonDataProvider())
-
-    var shouldOpenEpisodesSheet by remember { mutableStateOf(false) }
-    var shouldOpenQualitiesAndSubtitles by remember { mutableStateOf(false) }
-    var shouldOpenVideoSettingsDialog by remember { mutableStateOf(false) }
 
     fun triggerSnackbar(
         message: String,
@@ -93,10 +96,19 @@ fun PlayerControls(
     }
 
     BackHandler {
-        if (shouldOpenEpisodesSheet || shouldOpenQualitiesAndSubtitles || areControlsLocked) {
-            shouldOpenEpisodesSheet = false
-            shouldOpenQualitiesAndSubtitles = false
-            showControls(true)
+        if (
+            isEpisodesSheetOpened
+            || isQualitiesAndSubtitlesSheetOpened
+            || isVideoSettingsDialogOpened
+            || areControlsLocked
+        ) {
+            toggleEpisodesSheet(false)
+            toggleQualitiesAndSubtitlesSheet(false)
+            toggleVideoSettingsDialog(false)
+
+            if(areControlsLocked)
+                showControls(true)
+
             return@BackHandler
         }
 
@@ -176,10 +188,10 @@ fun PlayerControls(
                                     }
                                 )
                             ),
+                        currentEpisodeSelected = currentEpisodeSelected,
                         onNavigationIconClick = onBack,
                         onVideoSettingsClick = {
-                            showControls(false)
-                            shouldOpenVideoSettingsDialog = true
+                            toggleVideoSettingsDialog(true)
                         }
                     )
 
@@ -210,13 +222,11 @@ fun PlayerControls(
                         isTvShow = currentEpisodeSelected != null,
                         isLastEpisode = isLastEpisode,
                         showControls = showControls,
-                        onQualityAndSubtitleClick = {
-                            shouldOpenQualitiesAndSubtitles = true
-                            showControls(false)
+                        onAudioAndDisplayClick = {
+                            toggleQualitiesAndSubtitlesSheet(true)
                         },
                         onMoreVideosClick = {
-                            shouldOpenEpisodesSheet = true
-                            showControls(false)
+                            toggleEpisodesSheet(true)
                         },
                         onNextEpisodeClick = onEpisodeClick,
                         onLockClick = {
@@ -230,7 +240,7 @@ fun PlayerControls(
     }
 
     AnimatedVisibility(
-        visible = shouldOpenEpisodesSheet,
+        visible = isEpisodesSheetOpened,
         enter = slideInHorizontally(animationSpec = tween(durationMillis = 500)),
         exit = slideOutHorizontally(animationSpec = tween(durationMillis = 500)),
     ) {
@@ -242,14 +252,13 @@ fun PlayerControls(
             onEpisodeClick = onEpisodeClick,
             onSeasonChange = onSeasonChange,
             onDismissSheet = {
-                shouldOpenEpisodesSheet = false
-                showControls(true)
+                toggleEpisodesSheet(false)
             },
         )
     }
 
     AnimatedVisibility(
-        visible = shouldOpenQualitiesAndSubtitles,
+        visible = isQualitiesAndSubtitlesSheetOpened,
         enter = slideInHorizontally(
             initialOffsetX = { it },
             animationSpec = tween(durationMillis = 500)
@@ -259,11 +268,27 @@ fun PlayerControls(
             animationSpec = tween(durationMillis = 500)
         )
     ) {
-        QualitiesAndSubtitlesSheet(
+        AudioAndDisplaySheet(
             subtitles = videoData.subtitles,
             qualities = videoQualities,
+            audios = audios,
+            selectedAudio = state.selectedAudio,
             selectedSubtitle = state.selectedSubtitle,
             selectedQuality = state.selectedQuality,
+            onAudioChange = { i, message ->
+                player?.run {
+                    trackSelectionParameters = onAudioChange(
+                        i,
+                        trackSelectionParameters
+                    ) ?: return@run
+
+                    triggerSnackbar(
+                        message,
+                        R.string.audio_snackbar_message,
+                        PlayerSnackbarMessageType.Subtitle
+                    )
+                }
+            },
             onSubtitleChange = { i, message ->
                 player?.run {
                     trackSelectionParameters = onSubtitleChange(
@@ -293,20 +318,20 @@ fun PlayerControls(
                 }
             },
             onDismissSheet = {
-                shouldOpenQualitiesAndSubtitles = false
-                showControls(true)
+                toggleQualitiesAndSubtitlesSheet(false)
             }
         )
     }
 
     AnimatedVisibility(
-        visible = shouldOpenVideoSettingsDialog,
-        enter = scaleIn(),
-        exit = scaleOut()
+        visible = isVideoSettingsDialogOpened,
+        enter = fadeIn(),
+        exit = fadeOut()
     ) {
         VideoSettingsDialog(
             state = state,
             servers = videoData.servers ?: emptyList(),
+            sources = sources,
             onPlaybackSpeedChange = {
                 val playbackSpeed = it.toPlaybackSpeed()
 
@@ -327,10 +352,19 @@ fun PlayerControls(
                     PlayerSnackbarMessageType.Server
                 )
             },
+            onSourceChange = { source ->
+                onSourceChange(source)
+                triggerSnackbar(
+                    source,
+                    R.string.source_snackbar_message,
+                    PlayerSnackbarMessageType.Source
+                )
+            },
+            onResizeModeChange = onResizeModeChange,
             onDismissSheet = {
-                shouldOpenVideoSettingsDialog = false
-                showControls(true)
-            }
+                toggleVideoSettingsDialog(false)
+            },
+            onPanelChange = onPanelChange
         )
     }
 }

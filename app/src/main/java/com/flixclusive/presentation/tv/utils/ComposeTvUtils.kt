@@ -12,10 +12,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -34,11 +38,33 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.flixclusive.presentation.tv.common.FilmCardShape
-import com.flixclusive.presentation.tv.utils.ModifierTvUtils.ifElse
+import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 import com.flixclusive.presentation.utils.FormatterUtils.formatRating
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 object ComposeTvUtils {
+
+    data class DirectionalFocusRequester(
+        val top: FocusRequester = FocusRequester(),
+        val left: FocusRequester = FocusRequester(),
+        val bottom: FocusRequester = FocusRequester(),
+        val right: FocusRequester = FocusRequester()
+    )
+    private val LocalDirectionalFocusRequester = compositionLocalOf { DirectionalFocusRequester() }
+
+    @Composable
+    fun useLocalDirectionalFocusRequester() = LocalDirectionalFocusRequester.current
+
+    @Composable
+    fun provideLocalDirectionalFocusRequester(
+        content: @Composable () -> Unit
+    ) {
+        CompositionLocalProvider(
+            value = LocalDirectionalFocusRequester provides remember { DirectionalFocusRequester() },
+            content = content
+        )
+    }
+
     @Composable
     fun DotSeparatedText(
         modifier: Modifier = Modifier,

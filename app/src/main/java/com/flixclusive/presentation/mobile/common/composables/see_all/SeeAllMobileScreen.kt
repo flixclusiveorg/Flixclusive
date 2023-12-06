@@ -7,6 +7,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.presentation.common.PagingState
 import com.flixclusive.presentation.common.viewmodels.see_all.SeeAllViewModel
@@ -20,6 +21,7 @@ fun SeeAllMobileScreen(
     onNavigationIconClick: (() -> Unit)? = null,
 ) {
     val viewModel: SeeAllViewModel = hiltViewModel()
+    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
 
     val listState = rememberLazyGridState()
 
@@ -38,6 +40,7 @@ fun SeeAllMobileScreen(
         listState =  listState,
         pagingState = viewModel.pagingState,
         currentFilter = if(viewModel.filmTypeCouldBeBoth) viewModel.currentFilterSelected else null,
+        isShowingFilmCardTitle = appSettings.isShowingFilmCardTitle,
         screenTitle = viewModel.itemConfig.name,
         films = viewModel.films,
         onRetry = {

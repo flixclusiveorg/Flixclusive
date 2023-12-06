@@ -48,13 +48,14 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player.STATE_BUFFERING
+import androidx.media3.common.Player.STATE_ENDED
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import com.flixclusive.domain.model.VideoDataDialogState
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.utils.WatchHistoryUtils.areThereLessThan10SecondsLeftToWatch
-import com.flixclusive.presentation.mobile.common.composables.film.dialog_content.VideoPlayerDialog
+import com.flixclusive.presentation.mobile.common.composables.film.VideoPlayerDialog
 import com.flixclusive.presentation.mobile.screens.player.controls.PlayerControls
 import com.flixclusive.presentation.mobile.theme.FlixclusiveMobileTheme
 import com.flixclusive.presentation.utils.PlayerUiUtils.LifecycleAwarePlayer
@@ -62,7 +63,7 @@ import com.flixclusive.presentation.utils.PlayerUiUtils.LocalPlayer
 import com.flixclusive.presentation.utils.PlayerUiUtils.PLAYER_CONTROL_VISIBILITY_TIMEOUT
 import com.flixclusive.presentation.utils.PlayerUiUtils.initializePlayer
 import com.flixclusive.presentation.utils.PlayerUiUtils.rePrepare
-import com.flixclusive_provider.models.common.VideoData
+import com.flixclusive.providers.models.common.VideoData
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -142,10 +143,13 @@ class PlayerActivity : ComponentActivity() {
                     val videoData by viewModel.videoData.collectAsStateWithLifecycle()
                     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
+                    var hasBeenInitialized by remember { mutableStateOf(false) }
                     var currentMediaId by remember { mutableStateOf(videoData.mediaId) }
                     var currentSource by remember { mutableStateOf(videoData.source) }
                     val availableQualities =
                         remember(viewModel.availableQualities.size) { viewModel.availableQualities }
+                    val availableAudios =
+                        remember(viewModel.availableAudios.size) { viewModel.availableAudios }
                     val subtitlesList =
                         remember(videoData.subtitles.first().url) { viewModel.availableSubtitles }
 
@@ -166,11 +170,11 @@ class PlayerActivity : ComponentActivity() {
                         val currentAutoAdaptiveSource = videoData.source
                         val isNewServer =
                             !currentAutoAdaptiveSource.equals(currentSource, ignoreCase = true)
-                            && videoData.mediaId == currentMediaId
+                                    && videoData.mediaId == currentMediaId
 
                         val isNewData = videoData.mediaId != currentMediaId
 
-                        if(isNewData) {
+                        if (isNewData) {
                             async { viewModel.initialize() }.await()
                             currentMediaId = videoData.mediaId
                         }
@@ -194,6 +198,9 @@ class PlayerActivity : ComponentActivity() {
                     }
                     var areControlsVisible by remember { mutableStateOf(true) }
                     var areControlsLocked by remember { mutableStateOf(false) }
+                    val (isEpisodesSheetOpened, toggleEpisodesSheet) = remember { mutableStateOf(false) }
+                    val (isQualitiesAndSubtitlesSheetOpened, toggleQualitiesAndSubtitlesSheet) = remember { mutableStateOf(false) }
+                    val (isVideoSettingsDialogOpened, toggleVideoSettingsDialog) = remember { mutableStateOf(false) }
                     val snackbarBottomPadding by animateDpAsState(
                         targetValue = if (areControlsVisible) 100.dp else 0.dp,
                         label = ""
@@ -207,8 +214,22 @@ class PlayerActivity : ComponentActivity() {
                     }
 
                     fun showControls(isShowing: Boolean) {
-                        controlTimeoutVisibility =
-                            if (isShowing) PLAYER_CONTROL_VISIBILITY_TIMEOUT else 0
+                        val areSomeSheetsOpened = isEpisodesSheetOpened
+                                || isVideoSettingsDialogOpened
+                                || isQualitiesAndSubtitlesSheetOpened
+
+                        val isLoading = (!hasBeenInitialized
+                                || !uiState.isPlaying
+                                || uiState.playbackState == STATE_BUFFERING
+                                || uiState.playbackState == STATE_ENDED) && !areControlsLocked
+
+                        controlTimeoutVisibility = if(!isShowing || areSomeSheetsOpened) {
+                            0
+                        } else if(isLoading) {
+                            Int.MAX_VALUE
+                        } else {
+                            PLAYER_CONTROL_VISIBILITY_TIMEOUT
+                        }
                     }
 
                     LaunchedEffect(Unit) {
@@ -228,17 +249,40 @@ class PlayerActivity : ComponentActivity() {
                         } else areControlsVisible = false
                     }
 
+                    /*
+                    *
+                    * Purpose (unless interacted):
+                    * Always show controls when player is paused.
+                    * Show it when player hasn't been initialized.
+                    * Don't show it if its locked and its buffering.
+                    * Show controls when buffering
+                    *
+                    * See: [showControls]
+                    *
+                    * */
+                    LaunchedEffect(
+                        hasBeenInitialized,
+                        areControlsLocked,
+                        uiState.isPlaying,
+                        uiState.playbackState,
+                        isEpisodesSheetOpened,
+                        isVideoSettingsDialogOpened,
+                        isQualitiesAndSubtitlesSheetOpened,
+                    ) {
+                        showControls(true)
+                    }
+
                     InitializeAudioFocusChangeListener(
                         play = {
                             mediaSession?.player?.run {
                                 play()
-                                viewModel.updateIsPlayingState(isPlaying)
+                                viewModel.updateIsPlayingState(true)
                             }
                         },
                         pause = {
                             mediaSession?.player?.run {
                                 pause()
-                                viewModel.updateIsPlayingState(isPlaying)
+                                viewModel.updateIsPlayingState(false)
                             }
                         }
                     )
@@ -262,9 +306,9 @@ class PlayerActivity : ComponentActivity() {
                     )
 
                     LaunchedEffect(
-                        uiState.currentTime,
-                        uiState.isPlaying,
-                        uiState.totalDuration
+                        key1 = uiState.currentTime,
+                        key2 = uiState.isPlaying,
+                        key3 = uiState.totalDuration
                     ) {
                         val areThereLessThan10SecondsLeft = areThereLessThan10SecondsLeftToWatch(
                             uiState.currentTime,
@@ -296,6 +340,11 @@ class PlayerActivity : ComponentActivity() {
                         }
                     }
 
+                    fun onEpisodeClick(episode: TMDBEpisode? = null) {
+                        viewModel.updateWatchHistory()
+                        viewModel.onEpisodeClick(episodeToWatch = episode)
+                    }
+
                     CompositionLocalProvider(LocalPlayer provides mediaSession?.player) {
                         Box(
                             modifier = Modifier
@@ -316,6 +365,8 @@ class PlayerActivity : ComponentActivity() {
                                 },
                                 appSettings = appSettings,
                                 areControlsVisible = areControlsVisible && !areControlsLocked,
+                                playWhenReady = uiState.playWhenReady,
+                                resizeMode = uiState.selectedResizeMode,
                                 onEventCallback = { duration, currentPosition, bufferPercentage, isPlaying, playbackState ->
                                     viewModel.updatePlayerState(
                                         totalDuration = duration,
@@ -325,23 +376,31 @@ class PlayerActivity : ComponentActivity() {
                                         playbackState = playbackState
                                     )
                                 },
-                                playWhenReady = uiState.playWhenReady,
                                 onPlaybackReady = {
                                     mediaSession?.player?.run {
+                                        hasBeenInitialized = true
+
                                         // Initialize player states
                                         viewModel.updateIsPlayingState(playWhenReady)
                                         playbackParameters =
                                             PlaybackParameters(uiState.playbackSpeed)
 
-                                        viewModel.initializeVideoQualities(currentTracks)
+                                        val qualityIndex = viewModel.extractQualities(currentTracks)
+                                        val audioIndex = viewModel.extractAudios(currentTracks)
                                         viewModel.updateWatchHistory()
 
                                         trackSelectionParameters = viewModel.onSubtitleChange(
                                             subtitleIndex = uiState.selectedSubtitle,
                                             trackParameters = trackSelectionParameters
                                         )
+
                                         trackSelectionParameters = viewModel.onVideoQualityChange(
-                                            qualityIndex = uiState.selectedQuality,
+                                            qualityIndex = qualityIndex,
+                                            trackParameters = trackSelectionParameters
+                                        ) ?: return@run
+
+                                        trackSelectionParameters = viewModel.onAudioChange(
+                                            audioIndex = audioIndex,
                                             trackParameters = trackSelectionParameters
                                         ) ?: return@run
                                     }
@@ -369,6 +428,8 @@ class PlayerActivity : ComponentActivity() {
                                         )
                                         viewModel.updateWatchHistory()
 
+                                        hasBeenInitialized = false
+
                                         player.removeListener(it)
                                         player.release()
                                         release()
@@ -380,8 +441,9 @@ class PlayerActivity : ComponentActivity() {
                                         isInPictureInPictureMode
                                     } else false
 
-                                    if (!isLastEpisode && !isInPipMode)
-                                        viewModel.onEpisodeClick()
+                                    if (!isLastEpisode && !isInPipMode) {
+                                        onEpisodeClick()
+                                    }
                                 }
                             )
 
@@ -391,12 +453,17 @@ class PlayerActivity : ComponentActivity() {
                                             !(if (SDK_INT >= Build.VERSION_CODES.N) isInPictureInPictureMode else false)
                                 },
                                 areControlsLocked = areControlsLocked,
+                                isEpisodesSheetOpened = isEpisodesSheetOpened,
+                                isQualitiesAndSubtitlesSheetOpened = isQualitiesAndSubtitlesSheetOpened,
+                                isVideoSettingsDialogOpened = isVideoSettingsDialogOpened,
                                 watchHistoryItem = watchHistoryItem,
                                 videoData = videoData,
+                                sources = viewModel.sources,
                                 availableSeasons = seasonCount,
                                 currentEpisodeSelected = currentSelectedEpisode,
                                 isLastEpisode = isLastEpisode,
                                 videoQualities = availableQualities,
+                                audios = availableAudios,
                                 stateProvider = { uiState },
                                 seasonDataProvider = { seasonData },
                                 onBack = ::finish,
@@ -425,13 +492,33 @@ class PlayerActivity : ComponentActivity() {
                                         trackParameters = trackSelectionParameters
                                     )
                                 },
+                                onAudioChange = { audioIndex, trackSelectionParameters ->
+                                    viewModel.onAudioChange(
+                                        audioIndex = audioIndex,
+                                        trackParameters = trackSelectionParameters
+                                    )
+                                },
                                 onVideoServerChange = {
-                                    viewModel.onVideoServerChange(serverIndex = it)
+                                    viewModel.onServerChange(serverIndex = it)
+                                },
+                                onSourceChange = {
+                                    viewModel.onSourceChange(newSource = it)
                                 },
                                 onPlaybackSpeedChange = {
                                     viewModel.onPlaybackSpeedChange(speedIndex = it)
                                 },
-                                onEpisodeClick = viewModel::onEpisodeClick
+                                onResizeModeChange = {
+                                    viewModel.onResizeModeChange(resizeMode = it)
+                                },
+                                onPanelChange = {
+                                    viewModel.onPanelChange(opened = it)
+                                },
+                                onEpisodeClick = {
+                                    onEpisodeClick(it)
+                                },
+                                toggleEpisodesSheet = toggleEpisodesSheet,
+                                toggleQualitiesAndSubtitlesSheet = toggleQualitiesAndSubtitlesSheet,
+                                toggleVideoSettingsDialog = toggleVideoSettingsDialog,
                             )
 
                             Box(
@@ -443,8 +530,9 @@ class PlayerActivity : ComponentActivity() {
                             ) {
                                 LazyColumn {
                                     itemsIndexed(viewModel.snackbarQueue) { i, data ->
-                                        PlayerSnackbarVisuals(
+                                        PlayerSnackbar(
                                             messageData = data,
+                                            index = i,
                                             onDismissMessage = {
                                                 viewModel.removeSnackbar(i)
                                             }

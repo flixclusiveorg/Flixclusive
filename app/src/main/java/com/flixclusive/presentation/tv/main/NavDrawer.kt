@@ -49,7 +49,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.presentation.destinations.Destination
 import com.flixclusive.presentation.tv.utils.ComposeTvUtils.colorOnMediumEmphasisTv
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils
-import com.flixclusive.presentation.tv.utils.ModifierTvUtils.ifElse
+import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 import com.ramcosta.composedestinations.spec.Direction
 
 val NavItemsFocusRequesters = List(size = TvAppDestination.values().size) { FocusRequester() }

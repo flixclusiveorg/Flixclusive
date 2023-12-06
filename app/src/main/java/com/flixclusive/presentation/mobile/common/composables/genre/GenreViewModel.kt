@@ -12,11 +12,14 @@ import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.FilmType.Companion.toFilmType
 import com.flixclusive.domain.model.tmdb.TMDBSearchItem
+import com.flixclusive.domain.preferences.AppSettingsManager
 import com.flixclusive.domain.repository.SortOptions
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.presentation.common.PagingState
 import com.flixclusive.presentation.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,7 +27,16 @@ import javax.inject.Inject
 class GenreViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     savedStateHandle: SavedStateHandle,
+    appSettingsManager: AppSettingsManager,
 ) : ViewModel() {
+    val appSettings = appSettingsManager.appSettings
+        .data
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = appSettingsManager.localAppSettings
+        )
+
     private val genreArgs = savedStateHandle.navArgs<GenreScreenNavArgs>()
     val filmTypeCouldBeBoth = genreArgs.genre.mediaType == "all"
     val films = mutableStateListOf<TMDBSearchItem>()

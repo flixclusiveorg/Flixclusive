@@ -11,7 +11,7 @@ import com.flixclusive.presentation.destinations.Destination
 import com.flixclusive.presentation.destinations.PreferencesFilmMobileScreenDestination
 import com.flixclusive.presentation.destinations.PreferencesRootMobileScreenDestination
 import com.flixclusive.presentation.mobile.common.MobileRootNavGraph
-import com.flixclusive.presentation.mobile.main.MainSharedViewModel
+import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
 import com.flixclusive.presentation.mobile.main.OnDoubleNavBarItemClickObserver
 import com.flixclusive.presentation.mobile.main.OnSeeMoreDetailsClickObserver
 import com.flixclusive.presentation.utils.ComposeUtils.navigateSingleTopTo
@@ -33,7 +33,7 @@ annotation class PreferencesNavGraph(
 )
 @Composable
 fun PreferencesMobileScreen(
-    mainSharedViewModel: MainSharedViewModel,
+    mainMobileSharedViewModel: MainMobileSharedViewModel,
 ) {
     val engine = rememberAnimatedNavHostEngine()
     val navController = engine.rememberNavController()
@@ -43,8 +43,8 @@ fun PreferencesMobileScreen(
     val currentScreen: Destination = navController.appCurrentDestinationAsState().value
         ?: startDestination
 
-    val navGraphThatNeedsToGoToRoot by rememberUpdatedState(newValue = mainSharedViewModel.navGraphThatNeedsToGoToRoot)
-    val mainUiState by mainSharedViewModel.uiState.collectAsStateWithLifecycle()
+    val navGraphThatNeedsToGoToRoot by rememberUpdatedState(newValue = mainMobileSharedViewModel.navGraphThatNeedsToGoToRoot)
+    val mainUiState by mainMobileSharedViewModel.uiState.collectAsStateWithLifecycle()
 
     OnSeeMoreDetailsClickObserver(
         isSeeingMoreDetailsProvider = { mainUiState.isSeeingMoreDetailsOfLongClickedFilm },
@@ -54,8 +54,8 @@ fun PreferencesMobileScreen(
             navController.navigate(
                 PreferencesFilmMobileScreenDestination(mainUiState.longClickedFilm!!)
             )
-            mainSharedViewModel.onBottomSheetClose()
-            mainSharedViewModel.onSeeMoreClick(shouldSeeMore = false)
+            mainMobileSharedViewModel.onBottomSheetClose()
+            mainMobileSharedViewModel.onSeeMoreClick(shouldSeeMore = false)
         }
     )
 
@@ -67,7 +67,7 @@ fun PreferencesMobileScreen(
         navigate = {
             navController.navigateSingleTopTo(startDestination, NavGraphs.mobileRoot)
         },
-        consume = mainSharedViewModel::onNavBarItemClickTwice
+        consume = mainMobileSharedViewModel::onNavBarItemClickTwice
     )
 
     DestinationsNavHost(
@@ -76,7 +76,7 @@ fun PreferencesMobileScreen(
         navGraph = navGraph,
         startRoute = startDestination,
         dependenciesContainerBuilder = {
-            dependency(mainSharedViewModel)
+            dependency(mainMobileSharedViewModel)
         }
     )
 }

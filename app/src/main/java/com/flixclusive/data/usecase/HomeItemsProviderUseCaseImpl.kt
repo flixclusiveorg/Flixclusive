@@ -20,6 +20,9 @@ import javax.inject.Inject
 import kotlin.random.Random
 import kotlin.random.Random.Default.nextInt
 
+const val MINIMUM_HOME_ITEMS = 15
+const val MAXIMUM_HOME_ITEMS = 28
+
 class HomeItemsProviderUseCaseImpl @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     private val watchHistoryRepository: WatchHistoryRepository,
@@ -113,7 +116,7 @@ class HomeItemsProviderUseCaseImpl @Inject constructor(
                         )
                     }
 
-                    else -> throw IllegalStateException("Item is not parsable to a film!")
+                    else -> throw IllegalStateException("SuperStreamSearchItem is not parsable to a film!")
                 }
             }
         }
@@ -129,7 +132,7 @@ class HomeItemsProviderUseCaseImpl @Inject constructor(
         val combinedMovieAndTvShowConfig = config.tv + config.movie
         val combinedConfig = config.all + combinedMovieAndTvShowConfig
 
-        var countOfItemsToFetch = nextInt(15, 25)
+        var countOfItemsToFetch = nextInt(MINIMUM_HOME_ITEMS, MAXIMUM_HOME_ITEMS)
         var i = 0
         while (i < countOfItemsToFetch) {
             val shouldEmitRequiredCategories = nextInt(0, 1000) % nextInt(2, 3) == 0
@@ -174,7 +177,7 @@ class HomeItemsProviderUseCaseImpl @Inject constructor(
     }
 
     override fun getUserRecommendations(userId: Int, count: Int): Flow<HomeCategoryItem?> = flow {
-        check(count > 0) { "Item count must be greater than 0" }
+        check(count > 0) { "SuperStreamSearchItem count must be greater than 0" }
 
         val randomWatchedFilms =
             watchHistoryRepository.getRandomWatchHistoryItems(ownerId = userId, count = count)

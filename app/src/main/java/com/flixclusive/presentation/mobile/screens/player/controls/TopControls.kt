@@ -24,22 +24,31 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.flixclusive.R
+import com.flixclusive.domain.model.tmdb.TMDBEpisode
+import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
 import com.flixclusive.presentation.utils.PlayerUiUtils.LocalPlayer
 
 @Composable
 fun TopControls(
     modifier: Modifier = Modifier,
+    currentEpisodeSelected: TMDBEpisode?,
     onNavigationIconClick: () -> Unit,
     onVideoSettingsClick: () -> Unit,
 ) {
     val player = LocalPlayer.current
 
     val topFadeEdge = Brush.verticalGradient(0F to Color.Black, 0.9F to Color.Transparent)
+
+    val titleStyle = MaterialTheme.typography.titleMedium.copy(
+        fontSize = 14.sp
+    )
 
     Box(
         modifier = modifier
@@ -57,21 +66,47 @@ fun TopControls(
             contentDescription = "Back button",
             onClick = onNavigationIconClick
         )
-        
-        Box(
+
+        Row(
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth(0.85F),
-            contentAlignment = Alignment.Center
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = (player?.mediaMetadata?.displayTitle ?: "").toString(),
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
+            if (currentEpisodeSelected != null) {
+                Text(
+                    text = "S${currentEpisodeSelected.season} E${currentEpisodeSelected.episode}: ",
+                    style = titleStyle,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                )
+
+                Text(
+                    text = currentEpisodeSelected.title,
+                    style = titleStyle.copy(
+                        fontWeight = FontWeight.Light
+                    ),
+                    color = colorOnMediumEmphasisMobile(
+                        color = Color.White,
+                        emphasis = 0.8F
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                )
+            } else {
+                Text(
+                    text = (player?.mediaMetadata?.displayTitle ?: "").toString(),
+                    style = titleStyle,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
 
         Row(
@@ -95,7 +130,7 @@ private fun TopControlsButton(
     @DrawableRes iconId: Int,
     contentDescription: String?,
     size: Dp = 65.dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Box(
         modifier = modifier

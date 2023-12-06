@@ -4,9 +4,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
@@ -21,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
 import com.flixclusive.presentation.utils.ComposeUtils.applyDropShadow
+import com.flixclusive.presentation.utils.ModifierUtils.placeholderEffect
 
 @Composable
 fun SheetItem(
@@ -71,6 +74,28 @@ fun SheetItem(
                 text = name,
                 style = style,
                 modifier = Modifier.padding(start = 60.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun SheetItemPlaceholder() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(start = 60.dp)
+        ) {
+            Spacer(
+                Modifier
+                    .placeholderEffect()
+                    .height(14.dp)
+                    .width(60.dp)
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.flixclusive.presentation.tv.utils
 
+import android.view.KeyEvent
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -35,47 +37,98 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 
 object ModifierTvUtils {
+    data class FocusPosition(
+        val row: Int,
+        val column: Int
+    )
+
     data class Padding(
         val start: Dp = 0.dp,
         val top: Dp = 0.dp,
         val end: Dp = 0.dp,
         val bottom: Dp = 0.dp
     ) {
+        constructor(all: Dp) : this(
+            all, all, all, all
+        )
+
         fun getPaddingValues() = PaddingValues(start, top, end, bottom)
     }
 
     val LabelStartPadding = Padding(start = 16.dp)
 
-    /**
-     * Used to apply modifiers conditionally.
-     */
-    fun Modifier.ifElse(
-        condition: () -> Boolean,
-        ifTrueModifier: Modifier,
-        ifFalseModifier: Modifier = Modifier
-    ): Modifier = then(if (condition()) ifTrueModifier else ifFalseModifier)
+    private val DPadEventsKeyCodes = listOf(
+        KeyEvent.KEYCODE_DPAD_LEFT,
+        KeyEvent.KEYCODE_SYSTEM_NAVIGATION_LEFT,
+        KeyEvent.KEYCODE_DPAD_RIGHT,
+        KeyEvent.KEYCODE_SYSTEM_NAVIGATION_RIGHT,
+        KeyEvent.KEYCODE_DPAD_CENTER,
+        KeyEvent.KEYCODE_ENTER,
+        KeyEvent.KEYCODE_NUMPAD_ENTER,
+        KeyEvent.KEYCODE_DPAD_UP,
+        KeyEvent.KEYCODE_SYSTEM_NAVIGATION_UP,
+        KeyEvent.KEYCODE_DPAD_DOWN,
+        KeyEvent.KEYCODE_SYSTEM_NAVIGATION_DOWN,
+    )
 
     /**
-     * Used to apply modifiers conditionally.
-     */
-    fun Modifier.ifElse(
-        condition: Boolean,
-        ifTrueModifier: Modifier,
-        ifFalseModifier: Modifier = Modifier
-    ): Modifier = ifElse({ condition }, ifTrueModifier, ifFalseModifier)
-
-    fun Modifier.onFilmFocusChange(
-        isFocused: () -> Unit
-    ) = onFocusChanged {
-        if(it.isFocused) {
-            isFocused()
+     * Handles horizontal (Left & Right) D-Pad Keys and consumes the event(s) so that the focus doesn't
+     * accidentally move to another element.
+     * */
+    fun Modifier.handleDPadKeyEvents(
+        onLeft: (() -> Unit)? = null,
+        onRight: (() -> Unit)? = null,
+        onUp: (() -> Unit)? = null,
+        onDown: (() -> Unit)? = null,
+        onEnter: (() -> Unit)? = null,
+    ) = onPreviewKeyEvent {
+        fun onActionUp(block: () -> Unit) {
+            if (it.nativeKeyEvent.action == KeyEvent.ACTION_UP) block()
         }
+
+        if (DPadEventsKeyCodes.contains(it.nativeKeyEvent.keyCode)) {
+            when (it.nativeKeyEvent.keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_SYSTEM_NAVIGATION_LEFT -> {
+                    onLeft?.apply {
+                        onActionUp(::invoke)
+                        return@onPreviewKeyEvent true
+                    }
+                }
+                KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_SYSTEM_NAVIGATION_RIGHT -> {
+                    onRight?.apply {
+                        onActionUp(::invoke)
+                        return@onPreviewKeyEvent true
+                    }
+                }
+                KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_SYSTEM_NAVIGATION_UP -> {
+                    onUp?.apply {
+                        onActionUp(::invoke)
+                        return@onPreviewKeyEvent true
+                    }
+                }
+                KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_SYSTEM_NAVIGATION_DOWN -> {
+                    onDown?.apply {
+                        onActionUp(::invoke)
+                        return@onPreviewKeyEvent true
+                    }
+                }
+                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER -> {
+                    onEnter?.apply {
+                        onActionUp(::invoke)
+                        return@onPreviewKeyEvent true
+                    }
+                }
+            }
+        }
+        false
     }
 
     /**
@@ -136,7 +189,9 @@ object ModifierTvUtils {
      * for the first time.
      * */
     @Composable
-    fun Modifier.focusOnInitialVisibility(isVisible: MutableState<Boolean>): Modifier {
+    fun Modifier.focusOnInitialVisibility(
+        isVisible: MutableState<Boolean> = remember { mutableStateOf(false) }
+    ): Modifier {
         val focusRequester = remember { FocusRequester() }
 
         return focusRequester(focusRequester)
@@ -262,5 +317,32 @@ object ModifierTvUtils {
                 colorStops = listOf(0F, 0.95F)
             )
         }
+    }
+
+    @Composable
+    fun Modifier.focusOnMount(
+        lastFocusPosition: FocusPosition,
+        currentFocusPosition: FocusPosition,
+        anItemHasBeenFocused: Boolean,
+        onFocus: () -> Unit
+    ): Modifier {
+        val focusRequester = remember { FocusRequester() }
+
+        return this
+            .focusRequester(focusRequester)
+            .onGloballyPositioned {
+                val shouldFocusThisItem = lastFocusPosition.row == currentFocusPosition.row
+                        && lastFocusPosition.column == currentFocusPosition.column
+                        && !anItemHasBeenFocused
+
+                if (shouldFocusThisItem) {
+                    focusRequester.requestFocus()
+                }
+            }
+            .onFocusChanged {
+                if (it.isFocused) {
+                    onFocus()
+                }
+            }
     }
 }

@@ -6,7 +6,7 @@ import com.flixclusive.presentation.common.viewmodels.film.FilmScreenNavArgs
 import com.flixclusive.presentation.destinations.SearchFilmScreenDestination
 import com.flixclusive.presentation.destinations.SearchGenreScreenDestination
 import com.flixclusive.presentation.mobile.common.transitions.CommonScreenTransition
-import com.flixclusive.presentation.mobile.main.MainSharedViewModel
+import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
 import com.flixclusive.presentation.mobile.common.composables.film.FilmMobileScreen
 import com.flixclusive.presentation.mobile.screens.search.SearchNavGraph
 import com.ramcosta.composedestinations.annotation.Destination
@@ -21,7 +21,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun SearchFilmScreen(
     navigator: DestinationsNavigator,
-    mainSharedViewModel: MainSharedViewModel,
+    mainMobileSharedViewModel: MainMobileSharedViewModel,
 ) {
     FilmMobileScreen(
         onNavigationIconClick = navigator::navigateUp,
@@ -31,7 +31,7 @@ fun SearchFilmScreen(
                 onlyIfResumed = true
             )
         },
-        onFilmLongClick = mainSharedViewModel::onFilmLongClick,
+        onFilmLongClick = mainMobileSharedViewModel::onFilmLongClick,
         onFilmClick = { clickedFilm ->
             navigator.navigate(
                 SearchFilmScreenDestination(
@@ -40,6 +40,6 @@ fun SearchFilmScreen(
                 onlyIfResumed = true
             )
         },
-        onPlayClick = mainSharedViewModel::onPlayClick
+        onPlayClick = mainMobileSharedViewModel::onPlayClick
     )
 }

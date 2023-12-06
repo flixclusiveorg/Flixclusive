@@ -39,17 +39,17 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.NonInteractiveSurfaceDefaults
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import com.flixclusive.common.UiText
 import com.flixclusive.domain.model.tmdb.Film
-import com.flixclusive.presentation.common.viewmodels.home.FocusPosition
 import com.flixclusive.presentation.tv.common.FilmCardShape
-import com.flixclusive.presentation.tv.common.FilmRowItem
+import com.flixclusive.presentation.tv.common.FilmCardTv
 import com.flixclusive.presentation.tv.main.InitialDrawerWidth
 import com.flixclusive.presentation.tv.utils.ComposeTvUtils.NonFocusableSpacer
 import com.flixclusive.presentation.tv.utils.ComposeTvUtils.colorOnMediumEmphasisTv
+import com.flixclusive.presentation.tv.utils.ModifierTvUtils
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.createInitialFocusRestorerModifiers
-import com.flixclusive.presentation.tv.utils.ModifierTvUtils.ifElse
+import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 import com.flixclusive.presentation.utils.ModifierUtils.fadingEdge
-import com.flixclusive.common.UiText
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -61,7 +61,7 @@ fun FilmTvScreenRow(
     @DrawableRes iconId: Int,
     films: List<Film>,
     hasFocus: Boolean,
-    lastFocusedItem: FocusPosition?,
+    lastFocusedItem: ModifierTvUtils.FocusPosition?,
     anItemHasBeenClicked: Boolean,
     onFilmClick: (Int, Film) -> Unit,
     onFocusChange: (Boolean) -> Unit
@@ -137,7 +137,7 @@ fun FilmTvScreenRow(
                         val focusRequester = remember { FocusRequester() }
 
                         Box {
-                            FilmRowItem(
+                            FilmCardTv(
                                 modifier = Modifier
                                     .focusRequester(focusRequester)
                                     .ifElse(

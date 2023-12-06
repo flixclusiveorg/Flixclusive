@@ -54,7 +54,7 @@ fun BottomControls(
     onMoreVideosClick: () -> Unit,
     onNextEpisodeClick: (TMDBEpisode?) -> Unit,
     onLockClick: () -> Unit,
-    onQualityAndSubtitleClick: () -> Unit,
+    onAudioAndDisplayClick: () -> Unit,
 ) {
     val player = LocalPlayer.current
 
@@ -175,9 +175,9 @@ fun BottomControls(
             PlayerBottomButtons(
                 modifier = buttonModifier,
                 iconId = R.drawable.outline_subtitles_24,
-                label = R.string.quality_and_subtitles,
-                contentDescription = "An icon for available qualities and subtitles for the player",
-                onClick = { onQualityAndSubtitleClick() }
+                label = R.string.audio_and_display,
+                contentDescription = "An icon for available audio and display for the player",
+                onClick = { onAudioAndDisplayClick() }
             )
 
             if(!isLastEpisode) {

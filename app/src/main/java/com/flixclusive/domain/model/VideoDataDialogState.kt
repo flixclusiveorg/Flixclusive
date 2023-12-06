@@ -10,12 +10,25 @@ sealed class VideoDataDialogState(val message: UiText) {
         @StringRes private val defaultErrorMessageId = R.string.video_data_dialog_state_error_default
     }
     
-    object Idle : VideoDataDialogState(message = UiText.StringValue(""))
-    object Fetching :
-        VideoDataDialogState(message = UiText.StringResource(R.string.video_data_dialog_state_fetching))
+    data object Idle : VideoDataDialogState(message = UiText.StringValue(""))
 
-    object Extracting :
-        VideoDataDialogState(message = UiText.StringResource(R.string.video_data_dialog_state_extracting))
+    class Fetching(
+        message: UiText? = null,
+    ) : VideoDataDialogState(
+        message = message
+            ?: UiText.StringResource(R.string.video_data_dialog_state_fetching)
+    ) {
+        constructor(message: String) : this(UiText.StringValue(message))
+    }
+
+    class Extracting(
+        message: UiText? = null,
+    ) : VideoDataDialogState(
+        message = message
+            ?: UiText.StringResource(R.string.video_data_dialog_state_extracting)
+    ) {
+        constructor(message: String) : this(UiText.StringValue(message))
+    }
 
     class Error(
         errorMessage: UiText? = null,

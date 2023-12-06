@@ -32,7 +32,8 @@ fun SubtitleSettingsDialog(
     title: String,
     appSettings: AppSettings,
     onDismissRequest: () -> Unit,
-    content: @Composable () -> Unit
+    hidePreview: Boolean = false,
+    content: @Composable () -> Unit,
 ) {
     val dialogShape = MaterialTheme.shapes.medium
     val buttonMinHeight = 50.dp
@@ -95,18 +96,20 @@ fun SubtitleSettingsDialog(
                 }
             }
 
-            SubtitlePreview(
-                modifier = Modifier
-                    .graphicsLayer {
-                        this.shape = dialogShape
-                        clip = true
-                    }
-                    .drawBehind {
-                        drawRect(dialogColor)
-                    },
-                appSettings = appSettings,
-                shape = dialogShape
-            )
+            if(!hidePreview) {
+                SubtitlePreview(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            this.shape = dialogShape
+                            clip = true
+                        }
+                        .drawBehind {
+                            drawRect(dialogColor)
+                        },
+                    appSettings = appSettings,
+                    shape = dialogShape
+                )
+            }
         }
     }
 }

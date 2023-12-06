@@ -9,10 +9,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.navigation.NavBackStackEntry
-import com.ramcosta.composedestinations.spec.DestinationStyleAnimated
+import com.ramcosta.composedestinations.spec.DestinationStyle
 
 @OptIn(ExperimentalAnimationApi::class)
-object CommonScreenTransition : DestinationStyleAnimated {
+object CommonScreenTransition : DestinationStyle.Animated {
     override fun AnimatedContentTransitionScope<NavBackStackEntry>.enterTransition(): EnterTransition = slideInHorizontally { 1000 } + fadeIn()
 
     override fun AnimatedContentTransitionScope<NavBackStackEntry>.exitTransition(): ExitTransition = fadeOut() + slideOutHorizontally { 1000 }

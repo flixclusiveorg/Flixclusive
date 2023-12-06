@@ -24,7 +24,6 @@ import com.flixclusive.presentation.utils.ModifierUtils.placeholderEffect
 
 @Composable
 fun SearchItemRow(
-    modifier: Modifier = Modifier,
     list: List<SearchCategoryItem>,
     showItemNames: Boolean,
     rowTitle: UiText,
@@ -38,7 +37,6 @@ fun SearchItemRow(
         ) {
             SearchItemRowPlaceholder()
         }
-
 
         AnimatedVisibility(
             visible = list.isNotEmpty(),
@@ -64,7 +62,6 @@ fun SearchItemRow(
                         key = { it.name }
                     ) {
                         SearchItemCard(
-                            modifier = modifier,
                             label = if(showItemNames) it.name else null,
                             posterPath = it.posterPath,
                             onClick = {

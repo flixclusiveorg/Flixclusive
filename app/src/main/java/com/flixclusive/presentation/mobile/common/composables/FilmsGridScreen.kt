@@ -57,6 +57,7 @@ fun FilmsGridScreen(
     modifier: Modifier = Modifier,
     screenTitle: String,
     films: List<Film>,
+    isShowingFilmCardTitle: Boolean,
     listState: LazyGridState = rememberLazyGridState(),
     pagingState: PagingState = PagingState.IDLE,
     currentFilter: FilmType? = null,
@@ -111,7 +112,7 @@ fun FilmsGridScreen(
         )
 
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 128.dp),
+            columns = GridCells.Adaptive(110.dp),
             state = listState,
             modifier = Modifier.padding(top = topPadding)
         ) {
@@ -123,7 +124,8 @@ fun FilmsGridScreen(
             ) { _, film ->
                 FilmCard(
                     modifier = Modifier
-                        .fillMaxSize(),
+                        .fillMaxWidth(),
+                    shouldShowTitle = isShowingFilmCardTitle,
                     film = film,
                     onClick = onFilmClick,
                     onLongClick = onFilmLongClick
