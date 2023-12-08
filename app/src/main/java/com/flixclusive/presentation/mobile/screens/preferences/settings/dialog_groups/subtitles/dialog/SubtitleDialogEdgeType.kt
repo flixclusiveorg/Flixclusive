@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.R
 import com.flixclusive.domain.preferences.AppSettings
-import com.flixclusive.domain.preferences.CaptionEdgeTypePreference
-import com.flixclusive.domain.preferences.CaptionStylePreference.Companion.getTextStyle
+import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionEdgeTypePreference
+import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionStylePreference.Companion.getTextStyle
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.SubtitleSettingsDialog
 import com.flixclusive.presentation.utils.ComposeUtils.BorderedText
 
@@ -39,7 +39,7 @@ fun SubtitleDialogEdgeType(
         onDismissRequest = onDismissRequest
     ) {
         Column {
-            CaptionEdgeTypePreference.values().forEach {
+            CaptionEdgeTypePreference.entries.forEach {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

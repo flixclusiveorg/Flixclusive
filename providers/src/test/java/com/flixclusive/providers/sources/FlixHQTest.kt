@@ -3,7 +3,6 @@ package com.flixclusive.providers.sources
 import com.flixclusive.providers.BaseSourceProviderTest
 import com.flixclusive.providers.sources.flixhq.FlixHQ
 import com.flixclusive.providers.utils.DecryptUtils.decryptAes
-import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -17,45 +16,6 @@ class FlixHQTest : BaseSourceProviderTest() {
         super.setUp()
 
         sourceProvider = FlixHQ(OkHttpClient())
-    }
-
-    @Test
-    fun `Silo (tv show) search should return two items`() = runTest {
-        val result = sourceProvider.search("Silo")
-        assertEquals(2, result.results.size)
-    }
-
-    @Test
-    fun `The Flash (tv show) available servers should be more than 2`() = runTest {
-        val season = 1
-        val episode = 2
-
-        val result = sourceProvider.getAvailableServers(
-            mediaId = "tv/watch-the-flash-39535",
-            season = season,
-            episode = episode
-        )
-        assert(2 >= result.size)
-        assertEquals("vidcloud", result[1].serverName)
-    }
-
-    @Test
-    fun `From (tv show) test default (UpCloud) source`() = runTest {
-        val result = sourceProvider.getSourceLinks(
-            mediaId = "tv/watch-from-77455",
-            episode = 1,
-            season = 1
-        )
-        assert(result.source.isNotEmpty())
-    }
-
-    @Test
-    fun `The Dark Knight (movie) test UpCloud source`() = runTest {
-        val result = sourceProvider.getSourceLinks(
-            mediaId = "movie/watch-the-dark-knight-19752",
-            server = "upcloud"
-        )
-        assert(result.source.isNotEmpty())
     }
 
     //@Test

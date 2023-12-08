@@ -46,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.imageLoader
 import coil.request.ImageRequest
 import com.flixclusive.R
 import com.flixclusive.domain.model.tmdb.Film
@@ -100,6 +101,7 @@ fun HomeHeader(
 
         AsyncImage(
             model = posterImage,
+            imageLoader = LocalContext.current.imageLoader,
             placeholder = painterResource(R.drawable.movie_placeholder),
             error = painterResource(R.drawable.movie_placeholder),
             contentDescription = stringResource(R.string.popular),
@@ -154,6 +156,7 @@ fun HomeHeader(
                     } else {
                         AsyncImage(
                             model = logoImage,
+                            imageLoader = LocalContext.current.imageLoader,
                             contentDescription = film.title,
                             contentScale = ContentScale.Fit,
                             modifier = Modifier

@@ -54,6 +54,7 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalAnimationGraphicsApi::class, ExperimentalPermissionsApi::class)
 @Composable
 fun SplashMobileScreen(
+    onStartUpdate: (Intent) -> Unit,
     onExitApplication: () -> Unit,
     onStartMainActivity: () -> Unit
 ) {
@@ -156,7 +157,7 @@ fun SplashMobileScreen(
         }
 
         if(uiState.isNeedingAnUpdate && !uiState.isDoneInitializing) {
-            context.startActivity(
+            onStartUpdate(
                 Intent(context, UpdateMobileActivity::class.java).apply {
                     putExtra(UPDATE_URL, uiState.updateUrl)
                     putExtra(UPDATE_NEW_VERSION, uiState.newVersion)

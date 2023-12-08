@@ -30,7 +30,7 @@ import androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import com.flixclusive.domain.preferences.AppSettings
-import com.flixclusive.domain.preferences.CaptionSizePreference.Companion.getDp
+import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionSizePreference.Companion.getDp
 import com.flixclusive.presentation.mobile.screens.player.PLAYER_SEEK_BACK_INCREMENT
 import com.flixclusive.presentation.mobile.screens.player.PLAYER_SEEK_FORWARD_INCREMENT
 import com.flixclusive.providers.models.common.VideoData

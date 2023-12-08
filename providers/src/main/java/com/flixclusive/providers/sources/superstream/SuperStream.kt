@@ -14,6 +14,7 @@ import com.flixclusive.providers.models.providers.superstream.SuperStreamMediaDe
 import com.flixclusive.providers.models.providers.superstream.SuperStreamSearchResponse
 import com.flixclusive.providers.models.providers.superstream.SuperStreamSearchResponse.SuperStreamSearchItem.Companion.toSearchResultItem
 import com.flixclusive.providers.models.providers.superstream.SuperStreamSubtitleResponse
+import com.flixclusive.providers.models.providers.superstream.SuperStreamSubtitleResponse.SuperStreamSubtitleItem.Companion.toValidSubtitleFilePath
 import com.flixclusive.providers.sources.superstream.SuperStreamCommon.apiUrl
 import com.flixclusive.providers.sources.superstream.SuperStreamCommon.appIdSecond
 import com.flixclusive.providers.sources.superstream.SuperStreamCommon.appKey
@@ -30,8 +31,8 @@ import com.flixclusive.providers.sources.superstream.utils.SuperStreamUtils.isEr
 import com.flixclusive.providers.sources.superstream.utils.SuperStreamUtils.randomToken
 import com.flixclusive.providers.utils.DecryptUtils.base64Encode
 import com.flixclusive.providers.utils.JsonUtils.fromJson
-import com.flixclusive.providers.utils.OkHttpUtils.POST
-import com.flixclusive.providers.utils.OkHttpUtils.asString
+import com.flixclusive.providers.utils.network.OkHttpUtils.POST
+import com.flixclusive.providers.utils.network.OkHttpUtils.asString
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 
@@ -39,11 +40,15 @@ import okhttp3.OkHttpClient
  *
  * SuperStream = SS
  *
+ * Based off:
+ * https://github.com/movie-web/providers/tree/dev/src/providers/sources/superstream
+ * https://codeberg.org/cloudstream/cloudstream-extensions/src/branch/master/SuperStream/src/main/kotlin/com/lagradost/SuperStream.kt
+ *
  * */
 @Suppress("SpellCheckingInspection")
 class SuperStream(
-    private val client: OkHttpClient,
-) : SourceProvider() {
+    client: OkHttpClient,
+) : SourceProvider(client) {
     override var name = "SuperStream"
 
     /**
@@ -106,7 +111,7 @@ class SuperStream(
         else throw Exception("$errorMessage: [${response.body.toString()}]")
     }
 
-    override suspend fun search(query: String, page: Int): SearchResults {
+    override suspend fun search(query: String, page: Int, mediaType: MediaType): SearchResults {
         val itemsPerPage = 20
         val apiQuery =
             // Originally 8 pagelimit
@@ -190,14 +195,14 @@ class SuperStream(
         if (data == null) {
             data = downloadResponse?.data?.list?.find {
                 it.path.isNullOrBlank().not()
-            }
+            } ?: throw Exception("Cannot find source")
         }
 
         // Should really run this query for every link :(
         val subtitleQuery = if (isMovie) {
-            """{"childmode":"0","fid":"${data?.fid}","uid":"","app_version":"$appVersion","appid":"$appIdSecond","module":"Movie_srt_list_v2","channel":"Website","mid":"$mediaId","lang":"en","expired_date":"${getExpiryDate()}","platform":"android"}"""
+            """{"childmode":"0","fid":"${data.fid}","uid":"","app_version":"$appVersion","appid":"$appIdSecond","module":"Movie_srt_list_v2","channel":"Website","mid":"$mediaId","lang":"en","expired_date":"${getExpiryDate()}","platform":"android"}"""
         } else {
-            """{"childmode":"0","fid":"${data?.fid}","app_version":"$appVersion","module":"TV_srt_list_v2","channel":"Website","episode":"$episode","expired_date":"${getExpiryDate()}","platform":"android","tid":"$mediaId","uid":"","appid":"$appIdSecond","season":"$seasonToUse","lang":"en"}"""
+            """{"childmode":"0","fid":"${data.fid}","app_version":"$appVersion","module":"TV_srt_list_v2","channel":"Website","episode":"$episode","expired_date":"${getExpiryDate()}","platform":"android","tid":"$mediaId","uid":"","appid":"$appIdSecond","season":"$seasonToUse","lang":"en"}"""
         }
 
         val subtitlesResponse = requestCall<SuperStreamSubtitleResponse>(subtitleQuery)
@@ -212,7 +217,7 @@ class SuperStream(
                     .map {
                         Subtitle(
                             lang = "${it.language ?: "UNKNOWN"} [${it.lang}] - Votes: ${it.order}",
-                            url = it.filePath!!
+                            url = it.filePath!!.toValidSubtitleFilePath()
                         )
                     }
             )
@@ -222,7 +227,7 @@ class SuperStream(
 
         return VideoData(
             mediaId = mediaId,
-            source = data?.path ?: throw NullPointerException("Cannot get path source."),
+            source = data.path ?: throw NullPointerException("Cannot get path source."),
             subtitles = subtitlesToUse,
             sourceName = name,
             servers = downloadResponse?.data?.list

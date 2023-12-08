@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.R
 import com.flixclusive.domain.preferences.AppSettings
-import com.flixclusive.domain.preferences.CaptionStylePreference.Companion.getTextStyle
+import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionStylePreference.Companion.getTextStyle
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.SubtitleSettingsDialog
 import com.flixclusive.presentation.theme.subtitleColors
 

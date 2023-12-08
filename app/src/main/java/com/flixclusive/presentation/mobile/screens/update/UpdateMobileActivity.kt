@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -89,7 +90,10 @@ class UpdateMobileActivity : ComponentActivity() {
                         onUpdate = {
                             startAppUpdater(updateUrl!!)
                         },
-                        onDismiss = { finish() }
+                        onDismiss = {
+                            setResult(RESULT_CANCELED)
+                            finish()
+                        }
                     )
                 }
             }
@@ -140,7 +144,10 @@ private fun UpdateScreen(
         broadcastReceiver, IntentFilter(UPDATE_PROGRESS_RECEIVER_ACTION)
     )
 
-    Box {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
@@ -194,8 +201,6 @@ private fun UpdateScreen(
                 ),
             )
         }
-
-
 
         AnimatedVisibility(
             visible = progress == null,

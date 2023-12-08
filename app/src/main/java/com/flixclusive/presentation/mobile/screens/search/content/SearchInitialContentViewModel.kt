@@ -84,9 +84,13 @@ class SearchInitialContentViewModel @Inject constructor(
             .searchCategoriesConfig!!
             .genres
             .forEachIndexed { i, genre ->
+                val pageToUse = if(genre.name.equals("reality", true))
+                    1
+                else randomPage
+
                 when (
                     val result = tmdbRepository.paginateConfigItems(
-                        url = genre.query, page = randomPage
+                        url = genre.query, page = pageToUse
                     )
                 ) {
                     is Resource.Failure -> {

@@ -56,6 +56,7 @@
     <string name="audio">Audio</string>
     <string name="subtitle">Subtitle</string>
     <string name="quality">Quality</string>
+    <string name="doh">DNS over HTTPS</string>
     <string name="watch">Watch</string>
     <string name="watch_again">Watch Again</string>
     <string name="remove">Remove</string>
@@ -93,6 +94,10 @@
     <string name="failed_checking_for_updates">Failed to check for updates</string>
     <string name="up_to_date">Version is up to date!</string>
     <string name="not_working">Not working</string>
+    <string name="maintenance_all_caps">MAINTENANCE</string>
+    <string name="are_you_sure">Are you sure?</string>
+    <string name="reset_settings_msg">This will reset all app settings.</string>
+    <string name="github_repository">Github Repository</string>
 
     <!--  Settings Items  -->
     <string name="subtitles_language">Subtitle Language</string>
@@ -102,6 +107,7 @@
     <string name="subtitles_background_color">Subtitle Background Color</string>
     <string name="subtitles_edge_type">Subtitle Edge Type</string>
     <string name="film_card_titles">Film Card Title</string>
+    <string name="reset_settings">Reset Settings</string>
 
     <!--  Error messages  -->
     <string name="splash_notice_permissions_header">Allow Permissions</string>

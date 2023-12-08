@@ -35,5 +35,4 @@ object ImageRequestCreator {
             .crossfade(true)
             .build()
     }
-
 }

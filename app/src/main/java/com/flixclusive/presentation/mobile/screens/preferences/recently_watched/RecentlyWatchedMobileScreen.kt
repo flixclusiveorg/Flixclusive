@@ -5,19 +5,19 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.R
-import com.flixclusive.appSettingsDataStore
 import com.flixclusive.presentation.common.FadeInAndOutScreenTransition
 import com.flixclusive.presentation.destinations.PreferencesFilmMobileScreenDestination
 import com.flixclusive.presentation.mobile.common.composables.FilmsGridScreen
@@ -52,21 +52,26 @@ fun RecentlyWatchedMobileScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
+            Scaffold(
+                topBar = {
+                    TopBarWithNavigationIcon(
+                        modifier = Modifier.align(Alignment.TopStart),
+                        headerTitle = stringResource(id = R.string.recently_watched),
+                        onNavigationIconClick = navigator::navigateUp
+                    )
+                }
             ) {
-                TopBarWithNavigationIcon(
-                    modifier = Modifier.align(Alignment.TopStart),
-                    headerTitle = stringResource(id = R.string.recently_watched),
-                    onNavigationIconClick = navigator::navigateUp
-                )
-
-                Text(
-                    text = "Start watching now!",
-                    textAlign = TextAlign.Center
-                )
+                Box(
+                    modifier = Modifier
+                        .padding(it)
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Start watching now!",
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
 

@@ -18,20 +18,20 @@ import com.flixclusive.providers.models.common.VideoDataServer
 import com.flixclusive.providers.models.providers.flixhq.FlixHQInitialSourceData
 import com.flixclusive.providers.models.providers.flixhq.TvShowCacheData
 import com.flixclusive.providers.utils.JsonUtils.fromJson
-import com.flixclusive.providers.utils.OkHttpUtils.GET
-import com.flixclusive.providers.utils.OkHttpUtils.asString
+import com.flixclusive.providers.utils.network.OkHttpUtils.GET
+import com.flixclusive.providers.utils.network.OkHttpUtils.asString
+import com.flixclusive.providers.utils.replaceWhitespaces
 import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
 import java.net.URL
 import java.net.URLDecoder
-import java.util.*
 
 @Suppress("SpellCheckingInspection")
 class FlixHQ(
-    private val client: OkHttpClient,
+    client: OkHttpClient,
     private val upCloudExtractor: UpCloud = UpCloud(client),
     private val mixDropExtractor: MixDrop = MixDrop(client),
-) : SourceProvider() {
+) : SourceProvider(client) {
     override val name: String = "FlixHQ"
     override val baseUrl: String = "https://flixhq.to"
 
@@ -52,16 +52,14 @@ class FlixHQ(
     override suspend fun search(
         query: String,
         page: Int,
+        mediaType: MediaType
     ): SearchResults {
         var searchResult = SearchResults(page, false, listOf())
 
         val response = client.newCall(
             GET(
                 "${baseUrl}/search/${
-                    query.replace(
-                        Regex("[\\W_]+"),
-                        "-"
-                    )
+                    query.replaceWhitespaces("-")
                 }?page=$page"
             )
         ).execute()
@@ -115,7 +113,7 @@ class FlixHQ(
             val uid = doc.select(".watch_block").attr("data-id")
             val releaseDate = Jsoup.parse(data).select("div.row-line:nth-child(3)").text()
                 .replace("Released: ", "").trim()
-            mediaInfo = mediaInfo.copy(releaseDate = releaseDate)
+            mediaInfo = mediaInfo.copy(releaseDate = releaseDate.split("-").first())
 
             if (mediaType == MediaType.Movie) {
                 mediaInfo = mediaInfo.copy(

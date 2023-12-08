@@ -9,8 +9,8 @@ import com.flixclusive.providers.models.extractors.vidcloud.DecryptedSource
 import com.flixclusive.providers.models.extractors.vidcloud.VidCloudEmbedData
 import com.flixclusive.providers.utils.DecryptUtils.decryptAes
 import com.flixclusive.providers.utils.JsonUtils.fromJson
-import com.flixclusive.providers.utils.OkHttpUtils.GET
-import com.flixclusive.providers.utils.OkHttpUtils.asString
+import com.flixclusive.providers.utils.network.OkHttpUtils.GET
+import com.flixclusive.providers.utils.network.OkHttpUtils.asString
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import java.net.URL

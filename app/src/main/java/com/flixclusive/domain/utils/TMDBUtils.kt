@@ -5,7 +5,7 @@ import com.flixclusive.data.dto.tmdb.tv.TvShowSeasonsPreview
 import com.flixclusive.domain.model.tmdb.TMDBSearchItem
 import java.text.SimpleDateFormat
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
 import java.time.format.DateTimeParseException
 import java.util.Calendar
 import java.util.Locale
@@ -26,9 +26,13 @@ object TMDBUtils {
      * @param dateString The date string to check. It should be in the format "yyyy-MM-dd" or "MMMM d, yyyy".
      * @return `true` if the date is in the future, `false` otherwise.
      */
-    fun isDateInFuture(dateString: String?): Boolean {
+    fun isDateInFuture(
+        dateString: String?
+    ): Boolean {
         if(dateString == null || dateString == "No release date" || dateString.isEmpty())
             return true
+
+        val locale = Locale.US
 
         val format = if(dateString.contains(",")) {
             "MMMM d, yyyy"
@@ -40,13 +44,17 @@ object TMDBUtils {
             val date = try {
                 LocalDate.parse(dateString)
             } catch (e: DateTimeParseException) {
-                val formatter = DateTimeFormatter.ofPattern(format, Locale.ENGLISH)
+                val formatter = DateTimeFormatterBuilder()
+                    .parseCaseInsensitive()
+                    .appendPattern(format)
+                    .toFormatter(locale)
+
                 LocalDate.parse(dateString, formatter)
             }
 
             date.isAfter(LocalDate.now())
         } else {
-            val formatter = SimpleDateFormat(format, Locale.US)
+            val formatter = SimpleDateFormat(format, locale)
             val currentDate = Calendar.getInstance().time
             val date = formatter.parse(dateString)
             date?.after(currentDate) ?: false

@@ -20,6 +20,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.ShapeDefaults
 import androidx.tv.material3.StandardCardLayout
 import coil.compose.AsyncImage
+import coil.imageLoader
 import com.flixclusive.R
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils
@@ -68,6 +69,7 @@ fun FilmCardTv(
             ) {
                 AsyncImage(
                     model = posterImage,
+                    imageLoader = LocalContext.current.imageLoader,
                     error = painterResource(id = R.drawable.movie_placeholder),
                     contentDescription = stringResource(R.string.film_item_content_description),
                     contentScale = ContentScale.Crop,

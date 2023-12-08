@@ -1,4 +1,4 @@
-package com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.video_player
+package com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,7 +26,7 @@ import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VideoPlayerSettingsDialog(
+fun BaseSettingsDialog(
     modifier: Modifier = Modifier,
     title: String,
     onDismissRequest: () -> Unit,

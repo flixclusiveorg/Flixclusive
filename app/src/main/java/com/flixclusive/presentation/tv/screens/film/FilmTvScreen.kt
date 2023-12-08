@@ -40,6 +40,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.tv.foundation.PivotOffsets
 import androidx.tv.foundation.lazy.list.TvLazyColumn
 import coil.compose.AsyncImage
+import coil.imageLoader
 import com.flixclusive.R
 import com.flixclusive.common.UiText
 import com.flixclusive.domain.model.tmdb.FilmType
@@ -183,6 +184,7 @@ fun FilmTvScreen(navigator: DestinationsNavigator) {
                             .align(Alignment.TopEnd)
                             .height(400.dp),
                         model = it,
+                        imageLoader = LocalContext.current.imageLoader,
                         contentDescription = null,
                         contentScale = ContentScale.Crop
                     )

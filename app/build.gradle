@@ -9,7 +9,7 @@ plugins {
 // Version
 def versionMajor = 1
 def versionMinor = 3
-def versionPatch = 0
+def versionPatch = 1
 def versionBuild = 0
 def applicationName = "Flixclusive"
 
@@ -81,20 +81,20 @@ android {
 dependencies {
     def tvCompose = '1.0.0-alpha09'
     def composeUi = '1.6.0-alpha04'
-    def googleMaterial = "1.9.0"
+    def googleMaterial = "1.10.0"
     def material3 = "1.1.2"
-    def media3 = "1.1.1"
+    def media3 = "1.2.0"
     def splashScreen = "1.0.1"
     def hilt = "2.48"
     def hiltNavigation = "1.1.0"
     def retrofit2 = "2.9.0"
     def composeDestination = '1.9.53'
     def lifecycleRuntime = "2.6.2"
-    def room = "2.6.0"
+    def room = "2.6.1"
     def dataStore = "1.0.0"
     def coreKtx = "1.12.0"
     def serialization = '1.6.0'
-    def activityCompose = "1.8.0"
+    def activityCompose = "1.8.1"
     def constraintLayout = "1.0.1"
     def gson = "2.10.1"
     def coil = "2.4.0"
@@ -105,6 +105,9 @@ dependencies {
     def androidXTestRunner = "1.5.2"
     def androidXTestRules = "1.5.0"
     def accompanistPermission = "0.32.0"
+    def conscrypt = "2.5.2"
+
+    implementation "org.conscrypt:conscrypt-android:$conscrypt"
 
     implementation(project(path: ":providers"))
 
@@ -189,9 +192,9 @@ dependencies {
     androidTestImplementation "androidx.test:rules:$androidXTestRules"
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$composeUi"
 
-    testImplementation "junit:junit:$jUnit4"
-    testImplementation "io.mockk:mockk:$mock"
-    testImplementation project(path: ':providers')
+    androidTestImplementation "junit:junit:$jUnit4"
+    androidTestImplementation "io.mockk:mockk:$mock"
+    androidTestImplementation project(path: ':providers')
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesTest"
 }
 

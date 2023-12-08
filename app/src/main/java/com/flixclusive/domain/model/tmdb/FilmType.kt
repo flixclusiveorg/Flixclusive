@@ -2,6 +2,7 @@ package com.flixclusive.domain.model.tmdb
 
 import androidx.annotation.StringRes
 import com.flixclusive.R
+import com.flixclusive.providers.models.common.MediaType
 
 enum class FilmType(
     val type: String,
@@ -18,7 +19,7 @@ enum class FilmType(
 
     companion object {
         fun String?.toFilmType(): FilmType {
-            var result = FilmType.values().find { it.type == this }
+            var result = entries.find { it.type == this }
             if(result == null) {
                 result = when(this) {
                     "TV Series" -> TV_SHOW
@@ -28,6 +29,13 @@ enum class FilmType(
             }
 
             return result
+        }
+
+        fun FilmType.toMediaType(): MediaType {
+            return when(this) {
+                MOVIE -> MediaType.Movie
+                TV_SHOW -> MediaType.TvShow
+            }
         }
     }
 }

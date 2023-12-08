@@ -221,14 +221,14 @@ abstract class BasePlayerViewModel(
      * extracts the subtitle configurations of it.
      *
      */
-    protected fun extractSubtitles() {
+    private fun extractSubtitles() {
         viewModelScope.launch {
             videoData.collectLatest {
                 availableSubtitles.clear()
                 it.subtitles.forEach { subtitle ->
-                    val mimeType = when (subtitle.url.split(".").last()) {
-                        "vtt" -> MimeTypes.TEXT_VTT
-                        "srt" -> MimeTypes.APPLICATION_SUBRIP
+                    val mimeType = when {
+                        subtitle.url.endsWith(".vtt", true) -> MimeTypes.TEXT_VTT
+                        subtitle.url.endsWith(".srt", true) -> MimeTypes.APPLICATION_SUBRIP
                         else -> null
                     }
 

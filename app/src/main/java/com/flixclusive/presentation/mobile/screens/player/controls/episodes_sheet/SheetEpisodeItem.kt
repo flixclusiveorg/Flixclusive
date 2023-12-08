@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.imageLoader
 import com.flixclusive.R
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
@@ -129,6 +130,7 @@ fun SheetEpisodeItem(
                         imagePath = episode.image,
                         imageSize = "w533_and_h300_bestv2"
                     ),
+                    imageLoader = LocalContext.current.imageLoader,
                     contentDescription = "An image of episode ${episode.episode}: ${episode.title}",
                     placeholder = painterResource(R.drawable.movie_placeholder),
                     error = painterResource(id = R.drawable.movie_placeholder),

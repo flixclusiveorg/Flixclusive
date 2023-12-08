@@ -5,6 +5,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,21 +50,26 @@ fun WatchlistMobileScreen(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
+            Scaffold(
+                topBar = {
+                    TopBarWithNavigationIcon(
+                        modifier = Modifier.align(Alignment.TopStart),
+                        headerTitle = stringResource(id = R.string.watchlist),
+                        onNavigationIconClick = navigator::navigateUp
+                    )
+                }
             ) {
-                TopBarWithNavigationIcon(
-                    modifier = Modifier.align(Alignment.TopStart),
-                    headerTitle = stringResource(id = R.string.watchlist),
-                    onNavigationIconClick = navigator::navigateUp
-                )
-
-                Text(
-                    text = "Your list is empty!",
-                    textAlign = TextAlign.Center
-                )
+                Box(
+                    modifier = Modifier
+                        .padding(it)
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Start adding now!",
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
 

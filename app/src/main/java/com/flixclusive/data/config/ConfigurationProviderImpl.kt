@@ -7,7 +7,11 @@ import com.flixclusive.domain.config.ConfigurationProvider
 import com.flixclusive.domain.config.RemoteConfigStatus
 import com.flixclusive.domain.model.config.AppConfig
 import com.flixclusive.domain.model.config.HomeCategoriesConfig
+import com.flixclusive.domain.model.config.ProviderStatus
 import com.flixclusive.domain.model.config.SearchCategoriesConfig
+import com.flixclusive.domain.preferences.AppSettingsManager
+import com.flixclusive.domain.preferences.ProviderConfiguration
+import com.flixclusive.domain.repository.ProvidersRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +24,8 @@ private const val MAX_RETRIES = 5
 
 class ConfigurationProviderImpl @Inject constructor(
     private val githubConfigService: GithubConfigService,
+    private val providersRepository: ProvidersRepository,
+    private val appSettingsManager: AppSettingsManager,
     private val ioScope: CoroutineScope
 ): ConfigurationProvider {
 
@@ -30,6 +36,7 @@ class ConfigurationProviderImpl @Inject constructor(
     override var homeCategoriesConfig: HomeCategoriesConfig? = null
     override var searchCategoriesConfig: SearchCategoriesConfig? = null
     override var appConfig: AppConfig? = null
+    override var providersStatus: List<ProviderStatus>? = null
 
     override fun initialize() {
         ioScope.launch {
@@ -38,6 +45,10 @@ class ConfigurationProviderImpl @Inject constructor(
 
                 try {
                     appConfig = githubConfigService.getAppConfig()
+                    providersStatus = githubConfigService.getProvidersStatus()
+
+                    initializeProviders()
+
                     homeCategoriesConfig = githubConfigService.getHomeCategoriesConfig()
                     searchCategoriesConfig = githubConfigService.getSearchCategoriesConfig()
                     _remoteStatus.update { RemoteConfigStatus.Success }
@@ -48,6 +59,49 @@ class ConfigurationProviderImpl @Inject constructor(
 
                     _remoteStatus.update { RemoteConfigStatus.Error(errorMessageId) }
                 }
+            }
+        }
+    }
+
+    private suspend fun initializeProviders() {
+        val appSettings = appSettingsManager.localAppSettings
+        val providersConfigurations = appSettings.providers.toMutableList()
+
+        val isConfigEmpty = providersConfigurations.isEmpty()
+
+        if(providersRepository.providers.size == providersStatus!!.size)
+            return
+
+        for (i in providersStatus!!.indices) {
+            val provider = if(!isConfigEmpty) {
+                providersStatus!!.find {
+                    it.name.equals(
+                        other = providersConfigurations[i].name,
+                        ignoreCase = true
+                    )
+                }
+            } else providersStatus!![i]
+
+            val isIgnored = if(isConfigEmpty)
+                false
+            else providersConfigurations[i].isIgnored
+
+            providersRepository.populate(
+                name = provider!!.name,
+                isMaintenance = provider.isMaintenance,
+                isIgnored = isIgnored
+            )
+
+            if(isConfigEmpty) {
+                providersConfigurations.add(
+                    ProviderConfiguration(name = provider.name)
+                )
+
+                appSettingsManager.updateData(
+                    appSettings.copy(
+                        providers = providersConfigurations.toList()
+                    )
+                )
             }
         }
     }
