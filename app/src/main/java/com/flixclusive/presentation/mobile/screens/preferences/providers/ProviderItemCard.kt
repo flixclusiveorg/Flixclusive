@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,23 +21,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.R
 import com.flixclusive.domain.model.provider.SourceProviderDetails
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProviderItemCard(
     provider: SourceProviderDetails,
     displacementOffset: Float?,
     onToggleProvider: () -> Unit,
 ) {
-    val color = MaterialTheme.colorScheme.surfaceVariant
-
     val isBeingDragged = remember(displacementOffset) {
         displacementOffset != null
     }
+
+    val color = if (isBeingDragged && !provider.isMaintenance) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceVariant
 
     Column(
         modifier = Modifier
@@ -44,16 +48,20 @@ fun ProviderItemCard(
             .fillMaxHeight()
     ) {
         Card(
+            enabled = !provider.isMaintenance,
             shape = MaterialTheme.shapes.medium,
             colors = CardDefaults.cardColors(
-                containerColor = color.copy(alpha = if (isBeingDragged) 0.9F else 1F),
+                containerColor = color,
                 contentColor = contentColorFor(backgroundColor = color)
             ),
-            border = if (isBeingDragged)
+            border = if (isBeingDragged && provider.isMaintenance)
                 BorderStroke(
                     width = 2.dp,
                     color = contentColorFor(color)
                 ) else null,
+            onClick = {
+                onToggleProvider()
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(3.dp)
@@ -63,10 +71,14 @@ fun ProviderItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Checkbox(
-                    checked = !provider.isIgnored,
+                    enabled = !provider.isMaintenance,
+                    checked = !provider.isIgnored && !provider.isMaintenance,
                     onCheckedChange = {
                         onToggleProvider()
                     },
+                    colors = CheckboxDefaults.colors(
+                        uncheckedColor = contentColorFor(color)
+                    ),
                     modifier = Modifier
                         .padding(2.dp)
                 )
@@ -74,7 +86,7 @@ fun ProviderItemCard(
                 Column(
                     modifier = Modifier
                         .weight(1F)
-                        .padding(2.dp)
+                        .padding(horizontal = 2.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = provider.source.name,
@@ -83,6 +95,18 @@ fun ProviderItemCard(
                             fontWeight = FontWeight.Normal
                         ),
                     )
+
+                    if (provider.isMaintenance) {
+                        Text(
+                            text = stringResource(id = R.string.maintenance_all_caps),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Normal,
+                                letterSpacing = 2.sp,
+                            ),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
 
                 Icon(
@@ -90,6 +114,7 @@ fun ProviderItemCard(
                     contentDescription = "Drag indicator for provider card",
                     modifier = Modifier
                         .padding(2.dp)
+                        .padding(end = 5.dp)
                 )
             }
         }

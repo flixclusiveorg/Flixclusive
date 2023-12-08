@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.R
 import com.flixclusive.domain.preferences.AppSettings
 import com.flixclusive.domain.preferences.AppSettings.Companion.possibleAvailableQualities
-import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.video_player.VideoPlayerSettingsDialog
+import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.BaseSettingsDialog
 
 @Composable
 fun VideoPlayerQuality(
@@ -30,7 +30,7 @@ fun VideoPlayerQuality(
 ) {
     val (selectedOption, onOptionSelected) = remember { mutableStateOf(appSettings.preferredQuality) }
 
-    VideoPlayerSettingsDialog(
+    BaseSettingsDialog(
         title = stringResource(id = R.string.quality),
         onDismissRequest = onDismissRequest
     ) {

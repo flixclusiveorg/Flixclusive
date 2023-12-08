@@ -9,6 +9,7 @@ import com.flixclusive.data.preferences.AppSettingsManagerImpl
 import com.flixclusive.domain.config.ConfigurationProvider
 import com.flixclusive.domain.preferences.AppSettings
 import com.flixclusive.domain.preferences.AppSettingsManager
+import com.flixclusive.domain.repository.ProvidersRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,9 +45,13 @@ object AppSettingsModule {
     @Singleton
     fun providesConfigurationProvider(
         githubConfigService: GithubConfigService,
+        providersRepository: ProvidersRepository,
+        appSettingsManager: AppSettingsManager,
         @IoDispatcher ioDispatcher: CoroutineDispatcher
     ): ConfigurationProvider = ConfigurationProviderImpl(
         githubConfigService = githubConfigService,
+        providersRepository = providersRepository,
+        appSettingsManager = appSettingsManager,
         ioScope = CoroutineScope(ioDispatcher)
     )
 }

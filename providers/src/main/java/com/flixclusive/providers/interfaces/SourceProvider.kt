@@ -5,10 +5,11 @@ import com.flixclusive.providers.models.common.MediaType
 import com.flixclusive.providers.models.common.SearchResults
 import com.flixclusive.providers.models.common.VideoData
 import com.flixclusive.providers.models.common.VideoDataServer
+import okhttp3.OkHttpClient
 
 internal typealias Server = String
 
-abstract class SourceProvider() {
+abstract class SourceProvider(protected val client: OkHttpClient) {
     abstract val name: String
     open val baseUrl: String = ""
 
@@ -20,7 +21,7 @@ abstract class SourceProvider() {
      * */
     open val providerServers: List<Server> = emptyList()
 
-    abstract suspend fun search(query: String, page: Int = 1): SearchResults
+    abstract suspend fun search(query: String, page: Int = 1, mediaType: MediaType): SearchResults
 
     abstract suspend fun getMediaInfo(
         mediaId: String,

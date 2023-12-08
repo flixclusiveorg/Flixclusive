@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,6 +20,20 @@ class SplashMobileActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+        val intentLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                when (result.resultCode) {
+                    RESULT_CANCELED -> {
+                        setResult(RESULT_OK)
+                        finish()
+                    }
+
+                    else -> throw IllegalStateException("Invalid result returned by Splash Activity")
+                }
+            }
+
         setContent {
             FlixclusiveMobileTheme {
                 Surface(
@@ -26,6 +41,7 @@ class SplashMobileActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     SplashMobileScreen(
+                        onStartUpdate = intentLauncher::launch,
                         onExitApplication = {
                             setResult(RESULT_CANCELED)
                             finish()
@@ -33,7 +49,7 @@ class SplashMobileActivity : ComponentActivity() {
                         onStartMainActivity = {
                             setResult(RESULT_OK)
                             finish()
-                        }
+                        },
                     )
                 }
             }

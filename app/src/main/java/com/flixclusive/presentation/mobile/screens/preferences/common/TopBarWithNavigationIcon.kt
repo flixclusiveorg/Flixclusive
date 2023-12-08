@@ -1,7 +1,10 @@
 package com.flixclusive.presentation.mobile.screens.preferences.common
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,33 +28,40 @@ import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
 fun TopBarWithNavigationIcon(
     modifier: Modifier = Modifier,
     headerTitle: String,
-    onNavigationIconClick: () -> Unit
+    onNavigationIconClick: () -> Unit,
 ) {
-    Row(
-        modifier = modifier
+    Column(
+        modifier = Modifier
             .fillMaxWidth()
-            .statusBarsPadding()
-            .height(65.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+            .background(MaterialTheme.colorScheme.surface)
     ) {
-        IconButton(onClick = onNavigationIconClick) {
-            Icon(
-                painter = painterResource(R.drawable.left_arrow),
-                contentDescription = stringResource(R.string.navigate_up)
+        Spacer(modifier = Modifier.statusBarsPadding())
+
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(65.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onNavigationIconClick) {
+                Icon(
+                    painter = painterResource(R.drawable.left_arrow),
+                    contentDescription = stringResource(R.string.navigate_up)
+                )
+            }
+
+            Text(
+                text = headerTitle,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                modifier = Modifier
+                    .weight(1F)
+                    .padding(start = LABEL_START_PADDING)
             )
         }
-
-        Text(
-            text = headerTitle,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = FontWeight.SemiBold
-            ),
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            modifier = Modifier
-                .weight(1F)
-                .padding(start = LABEL_START_PADDING)
-        )
     }
 }

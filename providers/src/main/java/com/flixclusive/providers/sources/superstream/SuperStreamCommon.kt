@@ -24,6 +24,11 @@ internal object SuperStreamCommon {
     val appKey = DecryptUtils.base64Decode("bW92aWVib3g=")
     val appId = DecryptUtils.base64Decode("Y29tLnRkby5zaG93Ym94")
     val appIdSecond = DecryptUtils.base64Decode("Y29tLm1vdmllYm94cHJvLmFuZHJvaWQ=")
-    val appVersion = "14.7"
-    val appVersionCode = "160"
+    val captionDomains =
+        arrayOf(
+            DecryptUtils.base64Decode("bWJwaW1hZ2VzLmNodWF4aW4uY29t"),
+            DecryptUtils.base64Decode("aW1hZ2VzLnNoZWd1Lm5ldA==")
+        )
+    const val appVersion = "14.7"
+    const val appVersionCode = "160"
 }

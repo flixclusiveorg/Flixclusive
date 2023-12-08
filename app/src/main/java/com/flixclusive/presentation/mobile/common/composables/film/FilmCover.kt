@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
+import coil.imageLoader
 import com.flixclusive.R
 import com.flixclusive.presentation.utils.ImageRequestCreator.buildImageUrl
 import com.flixclusive.presentation.utils.ModifierUtils.ifElse
@@ -47,6 +48,7 @@ enum class FilmCover(val ratio: Float) {
         AsyncImage(
             model = painter,
             placeholder = imagePlaceholder,
+            imageLoader = LocalContext.current.imageLoader,
             error = imagePlaceholder,
             contentDescription = contentDescription ?: stringResource(id = R.string.film_item_content_description),
             modifier = modifier

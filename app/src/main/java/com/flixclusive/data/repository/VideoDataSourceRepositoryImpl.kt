@@ -1,37 +1,32 @@
 package com.flixclusive.data.repository
 
-import androidx.compose.runtime.mutableStateListOf
 import com.flixclusive.R
 import com.flixclusive.common.LoggerUtils.errorLog
 import com.flixclusive.data.utils.catchInternetRelatedException
 import com.flixclusive.di.IoDispatcher
 import com.flixclusive.domain.common.Resource
-import com.flixclusive.domain.model.provider.SourceProviderDetails
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.FilmType
+import com.flixclusive.domain.model.tmdb.FilmType.Companion.toMediaType
 import com.flixclusive.domain.model.tmdb.TvShow
-import com.flixclusive.domain.repository.FilmSourcesRepository
+import com.flixclusive.domain.repository.ProvidersRepository
 import com.flixclusive.domain.repository.TMDBRepository
+import com.flixclusive.domain.repository.VideoDataSourceRepository
 import com.flixclusive.providers.models.common.MediaType
 import com.flixclusive.providers.models.common.VideoData
-import com.flixclusive.providers.sources.flixhq.FlixHQ
-import com.flixclusive.providers.sources.superstream.SuperStream
 import com.flixclusive.providers.utils.DecryptUtils.DecryptionException
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
 import javax.inject.Inject
 
-class FilmSourcesRepositoryImpl @Inject constructor(
-    client: OkHttpClient,
+class VideoDataSourceRepositoryImpl @Inject constructor(
+    private val providersRepository: ProvidersRepository,
     private val tmdbRepository: TMDBRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : FilmSourcesRepository {
-    override val providers = mutableStateListOf(
-        SourceProviderDetails(SuperStream(client)),
-        SourceProviderDetails(FlixHQ(client)),
-    )
+) : VideoDataSourceRepository {
+    private val providers
+        get() = providersRepository.providers
 
     override suspend fun getSourceLinks(
         mediaId: String,
@@ -90,7 +85,8 @@ class FilmSourcesRepositoryImpl @Inject constructor(
 
                     val searchResponse = providers[providerIndex].source.search(
                         query = filmToSearch.title,
-                        page = i
+                        page = i,
+                        mediaType = filmToSearch.filmType.toMediaType()
                     )
 
                     if (searchResponse.results.isEmpty())
@@ -98,13 +94,18 @@ class FilmSourcesRepositoryImpl @Inject constructor(
 
 
                     for(result in searchResponse.results) {
+                        if(result.tmdbId == filmToSearch.id) {
+                            id = result.id
+                            break
+                        }
+
                         val titleMatches = result.title.equals(filmToSearch.title, ignoreCase = true)
                         val filmTypeMatches = result.mediaType?.type == filmToSearch.filmType.type
                         val releaseDateMatches =
                             result.releaseDate == filmToSearch.dateReleased.split(" ").last()
 
                         if (titleMatches && filmTypeMatches && filmToSearch is TvShow) {
-                            if (filmToSearch.seasons.size == result.seasons) {
+                            if (filmToSearch.seasons.size == result.seasons || releaseDateMatches) {
                                 id = result.id
                                 break
                             }
@@ -114,8 +115,7 @@ class FilmSourcesRepositoryImpl @Inject constructor(
                                 mediaType = MediaType.TvShow
                             )
 
-                            val tvReleaseDateMatches = tvShowInfo.releaseDate.split("-")
-                                .first() == filmToSearch.dateReleased.split("-").first()
+                            val tvReleaseDateMatches = tvShowInfo.releaseDate == filmToSearch.dateReleased.split("-").first()
                             val seasonCountMatches = filmToSearch.seasons.size == tvShowInfo.seasons
 
                             if (tvReleaseDateMatches || seasonCountMatches) {

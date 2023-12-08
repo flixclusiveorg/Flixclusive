@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.tv.material3.MaterialTheme
 import coil.compose.AsyncImage
+import coil.imageLoader
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.presentation.utils.ImageRequestCreator.buildImageUrl
 
@@ -87,6 +88,7 @@ fun FilmEmphasisBackground(
                     .align(Alignment.TopEnd)
                     .height(backgroundHeight),
                 model = backdropImage,
+                imageLoader = LocalContext.current.imageLoader,
                 contentDescription = null,
                 contentScale = ContentScale.Crop
             )

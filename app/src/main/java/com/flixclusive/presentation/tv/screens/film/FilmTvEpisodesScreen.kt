@@ -52,6 +52,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
+import coil.imageLoader
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.model.tmdb.Season
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
@@ -372,6 +373,7 @@ private fun EpisodeItem(
                         imagePath = episode.image,
                         imageSize = "w533_and_h300_bestv2"
                     ),
+                    imageLoader = LocalContext.current.imageLoader,
                     contentDescription = "An image of episode ${episode.episode}: ${episode.title}",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

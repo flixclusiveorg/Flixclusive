@@ -2,6 +2,7 @@ package com.flixclusive.providers.models.common
 
 data class SearchResultItem(
     val id: String? = null,
+    val tmdbId: Int? = null,
     val title: String? = null,
     val url: String? = null,
     val image: String? = null,

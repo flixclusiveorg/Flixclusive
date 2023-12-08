@@ -49,12 +49,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.R
 import com.flixclusive.domain.preferences.AppSettings
-import com.flixclusive.domain.preferences.CaptionEdgeTypePreference
-import com.flixclusive.domain.preferences.CaptionStylePreference
+import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionEdgeTypePreference
+import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionStylePreference
 import com.flixclusive.presentation.common.FadeInAndOutScreenTransition
 import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
 import com.flixclusive.presentation.mobile.screens.preferences.PreferencesNavGraph
 import com.flixclusive.presentation.mobile.screens.preferences.common.TopBarWithNavigationIcon
+import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.advanced.AdvancedDialogWrapper
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.SubtitleDialogWrapper
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.SubtitlePreview
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.video_player.VideoPlayerDialogWrapper
@@ -225,6 +226,14 @@ fun SettingsMobileScreen(
         ),
     )
 
+    val currentAdvancedSettings = listOf(
+        SettingsItem(
+            title = stringResource(R.string.doh),
+            description = appSettings.dns.toString(),
+            dialogKey = KEY_DOH_DIALOG,
+        ),
+    )
+
     val listState = rememberLazyListState()
     val shouldShowTopBar by listState.isScrollingUp()
     val listIsAtTop by listState.isAtTop()
@@ -300,6 +309,15 @@ fun SettingsMobileScreen(
             }
 
             item {
+                SettingsGroup(
+                    items = currentAdvancedSettings,
+                    onItemClick = { item ->
+                        viewModel.toggleDialog(item.dialogKey!!)
+                    }
+                )
+            }
+
+            item {
                 Spacer(modifier = Modifier.height(25.dp))
             }
         }
@@ -313,6 +331,13 @@ fun SettingsMobileScreen(
     )
 
     VideoPlayerDialogWrapper(
+        openedDialogMap = viewModel.openedDialogMap,
+        appSettings = appSettings,
+        onChange = viewModel::onChangeSettings,
+        onDismissDialog = viewModel::toggleDialog
+    )
+
+    AdvancedDialogWrapper(
         openedDialogMap = viewModel.openedDialogMap,
         appSettings = appSettings,
         onChange = viewModel::onChangeSettings,

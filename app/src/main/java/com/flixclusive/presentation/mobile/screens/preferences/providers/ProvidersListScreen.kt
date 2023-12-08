@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.R
+import com.flixclusive.presentation.common.FadeInAndOutScreenTransition
 import com.flixclusive.presentation.mobile.screens.preferences.PreferencesNavGraph
 import com.flixclusive.presentation.mobile.screens.preferences.common.TopBarWithNavigationIcon
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.getFeedbackOnLongPress
@@ -34,12 +35,15 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.Job
 
 @PreferencesNavGraph
-@Destination
+@Destination(
+    style = FadeInAndOutScreenTransition::class
+)
 @Composable
 fun ProvidersListScreen(
     navigator: DestinationsNavigator
 ) {
     val viewModel = hiltViewModel<ProvidersListViewModel>()
+
     val coroutineScope = rememberCoroutineScope()
     val overscrollJob = remember { mutableStateOf<Job?>(null) }
     val dragDropListState = rememberDragDropListState(onMove = viewModel::onMove)

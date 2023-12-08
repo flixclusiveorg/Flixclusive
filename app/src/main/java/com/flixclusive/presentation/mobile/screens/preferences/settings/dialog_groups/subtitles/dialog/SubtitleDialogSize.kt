@@ -17,9 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.R
 import com.flixclusive.domain.preferences.AppSettings
-import com.flixclusive.domain.preferences.CaptionSizePreference
-import com.flixclusive.domain.preferences.CaptionSizePreference.Companion.getDp
-import com.flixclusive.domain.preferences.CaptionStylePreference.Companion.getTextStyle
+import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionSizePreference
+import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionSizePreference.Companion.getDp
+import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionStylePreference.Companion.getTextStyle
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.SubtitleSettingsDialog
 
 @Composable
@@ -36,7 +36,7 @@ fun SubtitleDialogSize(
         onDismissRequest = onDismissRequest
     ) {
         Column {
-            CaptionSizePreference.values().forEach {
+            CaptionSizePreference.entries.forEach {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

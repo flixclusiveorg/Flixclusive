@@ -1,11 +1,13 @@
-package com.flixclusive.providers.utils
+package com.flixclusive.providers.utils.network
 
+import android.annotation.SuppressLint
 import com.flixclusive.providers.utils.Constants.USER_AGENT
-import com.flixclusive.providers.utils.OkHttpUtils.RequestBodyType.Companion.toMediaTypeOrNull
+import com.flixclusive.providers.utils.network.OkHttpUtils.RequestBodyType.Companion.toMediaTypeOrNull
 import okhttp3.FormBody
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -15,12 +17,17 @@ import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.io.Reader
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 @Suppress("FunctionName")
-internal object OkHttpUtils {
+object OkHttpUtils {
     private val mustHaveBody = listOf("POST", "PUT")
 
-    enum class RequestBodyType(val type: String) {
+    internal enum class RequestBodyType(val type: String) {
         JSON("application/json;charset=utf-8"),
         TEXT("text/plain;charset=utf-8");
 
@@ -31,7 +38,7 @@ internal object OkHttpUtils {
         }
     }
 
-    fun Reader?.asString(): String? {
+    internal fun Reader?.asString(): String? {
         return use {
             val string = it?.readText()
             it?.close()
@@ -40,7 +47,7 @@ internal object OkHttpUtils {
         }
     }
 
-    fun GET(
+    internal fun GET(
         url: String,
         headers: Headers = Headers.headersOf(),
         userAgent: String = USER_AGENT,
@@ -56,7 +63,7 @@ internal object OkHttpUtils {
             .build()
     }
 
-    fun POST(
+    internal fun POST(
         url: String,
         data: Map<String, String>? = null,
         json: Any? = null,
@@ -78,7 +85,7 @@ internal object OkHttpUtils {
             .build()
     }
 
-    fun Response.asJsoup(html: String? = null): Document {
+    internal fun Response.asJsoup(html: String? = null): Document {
         return Jsoup.parse(html ?: body!!.string(), request.url.toString())
     }
 
@@ -115,5 +122,24 @@ internal object OkHttpUtils {
             json != null -> jsonToRequestBody(json)
             else -> if(mustHaveBody.contains(method)) FormBody.Builder().build() else null
         }
+    }
+
+    // https://stackoverflow.com/a/59322754
+    fun OkHttpClient.Builder.ignoreAllSSLErrors(): OkHttpClient.Builder {
+        val naiveTrustManager = @SuppressLint("CustomX509TrustManager")
+        object : X509TrustManager {
+            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+            override fun checkClientTrusted(certs: Array<X509Certificate>, authType: String) = Unit
+            override fun checkServerTrusted(certs: Array<X509Certificate>, authType: String) = Unit
+        }
+
+        val insecureSocketFactory = SSLContext.getInstance("SSL").apply {
+            val trustAllCerts = arrayOf<TrustManager>(naiveTrustManager)
+            init(null, trustAllCerts, SecureRandom())
+        }.socketFactory
+
+        sslSocketFactory(insecureSocketFactory, naiveTrustManager)
+        hostnameVerifier { _, _ -> true }
+        return this
     }
 }

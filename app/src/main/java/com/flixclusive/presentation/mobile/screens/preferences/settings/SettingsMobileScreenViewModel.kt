@@ -20,6 +20,7 @@ const val KEY_SUBTITLE_FONT_STYLE_DIALOG = "isSubtitleFontStyleDialogOpen"
 const val KEY_SUBTITLE_EDGE_TYPE_DIALOG = "isSubtitleEdgeTypeDialogOpen"
 const val KEY_VIDEO_PLAYER_SERVER_DIALOG = "isVideoPlayerServerDialogOpen"
 const val KEY_VIDEO_PLAYER_QUALITY_DIALOG = "isVideoPlayerQualityDialogOpen"
+const val KEY_DOH_DIALOG = "isDoHDialogOpen"
 
 @HiltViewModel
 class SettingsMobileScreenViewModel @Inject constructor(
@@ -36,6 +37,7 @@ class SettingsMobileScreenViewModel @Inject constructor(
         KEY_SUBTITLE_EDGE_TYPE_DIALOG to false,
         KEY_VIDEO_PLAYER_SERVER_DIALOG to false,
         KEY_VIDEO_PLAYER_QUALITY_DIALOG to false,
+        KEY_DOH_DIALOG to false,
     )
 
     val appSettings = appSettingsManager.appSettings.data

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
+import coil.imageLoader
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.Movie
 import com.flixclusive.domain.model.tmdb.TvShow
@@ -77,6 +78,7 @@ fun FilmTvOverview(
         } else {
             AsyncImage(
                 model = logoImage,
+                imageLoader = LocalContext.current.imageLoader,
                 contentDescription = film.title,
                 modifier = Modifier
                     .height(80.dp)

@@ -1,6 +1,5 @@
 package com.flixclusive.data.api
 
-import android.os.Build
 import com.flixclusive.data.dto.tmdb.TMDBMovieDto
 import com.flixclusive.data.dto.tmdb.TMDBTvShowDto
 import com.flixclusive.data.dto.tmdb.common.TMDBImagesResponseDto
@@ -13,8 +12,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Url
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -61,17 +58,12 @@ interface TMDBApiService {
         @Path("media_type") mediaType: String, // movie, tv
         @Query("api_key") apiKey: String,
         @Query("page") page: Int,
-        @Query("vote_count.gte") minVoteCount: String = "300",
         @Query("sort_by") sortBy: String = "vote_average.desc",
         @Query("with_genres") genres: String = "",
         @Query("with_companies") companies: String = "",
         @Query("with_networks") networks: String = "",
-        @Query("watch_region") watchRegion: String = "US",
         @Query("without_genres") withoutGenres: String = "10763", // news genre
-        @Query("release_date.lte") releasedDate: String = when(Build.VERSION.SDK_INT) {
-            Build.VERSION_CODES.O -> LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            else -> SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        },
+        @Query("release_date.lte") releasedDate: String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()),
         @Query("with_original_language") withOriginalLanguage: String = "en",
     ): TMDBPageResponse<TMDBSearchItem>
 

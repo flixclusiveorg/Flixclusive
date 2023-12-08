@@ -8,8 +8,9 @@ import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.model.tmdb.TvShow
-import com.flixclusive.domain.repository.FilmSourcesRepository
+import com.flixclusive.domain.repository.ProvidersRepository
 import com.flixclusive.domain.repository.TMDBRepository
+import com.flixclusive.domain.repository.VideoDataSourceRepository
 import com.flixclusive.domain.usecase.VideoDataProviderUseCase
 import com.flixclusive.domain.utils.FilmProviderUtils.initializeSubtitles
 import com.flixclusive.domain.utils.WatchHistoryUtils
@@ -20,11 +21,12 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class VideoDataProviderUseCaseImpl @Inject constructor(
-    private val filmSourcesRepository: FilmSourcesRepository,
+    private val videoDataSourceRepository: VideoDataSourceRepository,
+    private val providersRepository: ProvidersRepository,
     private val tmdbRepository: TMDBRepository,
 ) : VideoDataProviderUseCase {
     override val providers: List<String>
-        get() = filmSourcesRepository.providers.map { it.source.name }
+        get() = providersRepository.providers.map { it.source.name }
 
     override fun invoke(
         film: Film,
@@ -36,25 +38,23 @@ class VideoDataProviderUseCaseImpl @Inject constructor(
         onSuccess: (VideoData, TMDBEpisode?) -> Unit,
         onError: (() -> Unit)?,
     ): Flow<VideoDataDialogState> = flow {
-        val isThereNoAvailableSources = filmSourcesRepository.providers.size == filmSourcesRepository.providers.filter { it.isIgnored }.size
-
-        if(isThereNoAvailableSources) {
+        if(isThereNoAvailableSources()) {
             onError?.invoke()
             return@flow emit(VideoDataDialogState.Unavailable(R.string.no_available_sources))
         }
 
-        for(i in filmSourcesRepository.providers.indices) {
-            val provider = filmSourcesRepository.providers[i]
+        for(i in providersRepository.providers.indices) {
+            val provider = providersRepository.providers[i]
 
             val isSourceProvided = source != null && provider.source.name != source
-            if(isSourceProvided || provider.isIgnored)
+            if(isSourceProvided || provider.isIgnored || provider.isMaintenance)
                 continue
 
             emit(VideoDataDialogState.Fetching("Fetching from ${provider.source.name}..."))
 
-            val canStopLooping = i == filmSourcesRepository.providers.lastIndex || source != null
+            val canStopLooping = i == providersRepository.providers.lastIndex || source != null
 
-            val id = mediaId ?: filmSourcesRepository.getMediaId(
+            val id = mediaId ?: videoDataSourceRepository.getMediaId(
                 film = film,
                 providerIndex = i
             )
@@ -120,7 +120,7 @@ class VideoDataProviderUseCaseImpl @Inject constructor(
             emit(VideoDataDialogState.Extracting("Extracting from ${provider.source.name}..."))
             val titleToUse = FormatterUtils.formatPlayerTitle(film, episodeToUse)
 
-            val videoData = filmSourcesRepository.getSourceLinks(
+            val videoData = videoDataSourceRepository.getSourceLinks(
                 mediaId = id,
                 server = server,
                 season = episodeToUse?.season,
@@ -152,5 +152,9 @@ class VideoDataProviderUseCaseImpl @Inject constructor(
                 }
             }
         }
+
+        emit(VideoDataDialogState.Unavailable())
     }
+
+    private fun isThereNoAvailableSources() = providersRepository.providers.size == providersRepository.providers.filter { it.isIgnored || it.isMaintenance }.size
 }

@@ -12,7 +12,7 @@ import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.utils.WatchHistoryUtils.getNextEpisodeToWatch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
@@ -35,14 +35,20 @@ object FormatterUtils {
             return "No release date"
         }
 
+        val locale = Locale.US
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val date = LocalDate.parse(dateString)
-            val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy")
+            val formatter = DateTimeFormatterBuilder()
+                .parseCaseInsensitive()
+                .appendPattern("MMMM d, yyyy")
+                .toFormatter(locale)
+
             return date.format(formatter)
         }
 
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        val outputFormat = SimpleDateFormat("MMMM d, yyyy", Locale.US)
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", locale)
+        val outputFormat = SimpleDateFormat("MMMM d, yyyy", locale)
 
         val date = inputFormat.parse(dateString)
         return date?.let {

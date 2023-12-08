@@ -3,8 +3,8 @@ package com.flixclusive.providers.extractors.mixdrop
 import com.flixclusive.providers.extractors.mixdrop.utils.Unpacker
 import com.flixclusive.providers.interfaces.Extractor
 import com.flixclusive.providers.models.common.VideoData
-import com.flixclusive.providers.utils.OkHttpUtils.GET
-import com.flixclusive.providers.utils.OkHttpUtils.asJsoup
+import com.flixclusive.providers.utils.network.OkHttpUtils.GET
+import com.flixclusive.providers.utils.network.OkHttpUtils.asJsoup
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import java.net.URL

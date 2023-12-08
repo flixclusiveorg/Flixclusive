@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.imageLoader
 import com.flixclusive.R
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.Genre
@@ -65,6 +66,7 @@ fun FilmHeader(
                 imagePath = film.posterImage,
                 imageSize = "original"
             ),
+            imageLoader = LocalContext.current.imageLoader,
             placeholder = painterResource(R.drawable.movie_placeholder),
             error = painterResource(R.drawable.movie_placeholder),
             contentDescription = String.format(stringResource(R.string.poster_content_description), film.title),
