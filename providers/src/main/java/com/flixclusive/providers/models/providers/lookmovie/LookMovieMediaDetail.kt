@@ -15,19 +15,9 @@ data class LookMovieMediaDetail(
     @SerializedName("first_air_date", alternate = ["release_date"]) val releaseDate: String? = null
 ) {
    data class Episode(
-        val description: String,
-        val episode: Int,
-        val id: Int,
-        val id_show: Int,
-        val imdb_rating: Any,
-        val is_active: Int,
-        val poster: String,
-        val rel_title: String,
-        val season: Int,
-        val shard: String,
-        val show_title: Any,
-        val still_path: String,
-        val title: String
+       val id: Int,
+       val episode: Int,
+       val season: Int,
     )
 
     companion object {

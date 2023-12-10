@@ -61,10 +61,11 @@
 #-keep class com.google.gson.stream.** { *; }
 
 # Application classes that will be serialized/deserialized over Gson
--keep class com.flixclusive.providers.models.common.** { *; }
--keep class com.flixclusive.providers.models.extractors.vidcloud.** { *; }
--keep class com.flixclusive.providers.models.providers.flixhq.** { *; }
--keep class com.flixclusive.providers.models.providers.superstream.** { *; }
+#-keep class com.flixclusive.providers.models.common.** { *; }
+#-keep class com.flixclusive.providers.models.extractors.vidcloud.** { *; }
+#-keep class com.flixclusive.providers.models.providers.flixhq.** { *; }
+#-keep class com.flixclusive.providers.models.providers.superstream.** { *; }
+#-keep class com.flixclusive.providers.models.providers.lookmovie.** { *; }
 
 # Prevent proguard from stripping interface information from TypeAdapter, TypeAdapterFactory,
 # JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)
