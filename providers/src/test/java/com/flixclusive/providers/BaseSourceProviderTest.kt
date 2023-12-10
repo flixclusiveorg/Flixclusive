@@ -2,7 +2,9 @@ package com.flixclusive.providers
 
 import android.util.Base64
 import com.flixclusive.providers.interfaces.SourceProvider
+import com.flixclusive.providers.models.common.MediaInfo
 import com.flixclusive.providers.models.common.MediaType
+import com.flixclusive.providers.models.common.VideoData
 import io.mockk.every
 import io.mockk.mockkStatic
 import kotlinx.coroutines.test.runTest
@@ -33,6 +35,58 @@ abstract class BaseSourceProviderTest {
         }
     }
 
+    private suspend fun getSourceData(
+        title: String,
+        releaseDate: String,
+        type: MediaType,
+        season: Int? = null,
+        episode: Int? = null,
+    ): VideoData {
+        val response = sourceProvider.search(
+            query = title,
+            page = 1,
+            mediaType = type
+        )
+
+        val mediaId = response.results.find {
+            val releaseDateToUse = if(it.releaseDate == null) {
+                sourceProvider.getMediaInfo(it.id!!, it.mediaType!!).releaseDate
+            } else it.releaseDate
+
+            releaseDateToUse == releaseDate
+        }?.id
+        Assert.assertNotNull(mediaId)
+
+        return sourceProvider.getSourceLinks(
+            mediaId = mediaId!!,
+            season = season,
+            episode = episode
+        )
+    }
+
+    private suspend fun getMediaInfo(
+        title: String,
+        releaseDate: String,
+        type: MediaType,
+    ): MediaInfo {
+        val response = sourceProvider.search(
+            query = title,
+            page = 1,
+            mediaType = type
+        )
+
+        val mediaId = response.results.find {
+            val releaseDateToUse = if(it.releaseDate == null) {
+                sourceProvider.getMediaInfo(it.id!!, it.mediaType!!).releaseDate
+            } else it.releaseDate
+
+            releaseDateToUse == releaseDate
+        }?.id
+        Assert.assertNotNull(mediaId)
+
+        return sourceProvider.getMediaInfo(mediaId = mediaId!!, mediaType = type)
+    }
+
     @Test
     open fun `Search for The Dark Knight (2008)`() = runTest {
         val title = "The Dark Knight"
@@ -51,64 +105,60 @@ abstract class BaseSourceProviderTest {
     open fun `Get The Dark Knight (2008) source`() = runTest {
         val title = "The Dark Knight"
         val releaseDate = "2008"
-        val response = sourceProvider.search(
-            query = title,
-            page = 1,
-            mediaType = MediaType.Movie
+
+        val data = getSourceData(
+            title = title,
+            releaseDate = releaseDate,
+            type = MediaType.Movie
         )
 
-        val theDarkKnight = response.results.find { it.releaseDate == releaseDate }
-        Assert.assertNotNull(theDarkKnight?.id)
-
-        val data = sourceProvider.getSourceLinks(theDarkKnight!!.id!!)
-
+        assert(data.subtitles.isNotEmpty())
         assert(data.source.isNotBlank())
-        assert(data.subtitles.isNotEmpty())
         assert(data.servers?.isNotEmpty() == true)
-        assert(data.subtitles.isNotEmpty())
     }
 
     @Test
     open fun `Get World War Z (2013) source`() = runTest {
         val title = "World War Z"
         val releaseDate = "2013"
-        val response = sourceProvider.search(
-            query = title,
-            page = 1,
-            mediaType = MediaType.Movie
+
+        val data = getSourceData(
+            title = title,
+            releaseDate = releaseDate,
+            type = MediaType.Movie
         )
 
-        val fnaf = response.results.find { it.releaseDate == releaseDate }
-        Assert.assertNotNull(fnaf?.id)
-
-        val data = sourceProvider.getSourceLinks(fnaf!!.id!!)
-
+        assert(data.subtitles.isNotEmpty())
         assert(data.source.isNotBlank())
-        assert(data.subtitles.isNotEmpty())
         assert(data.servers?.isNotEmpty() == true)
+    }
+
+    @Test
+    open fun `Get When Evil Lurks (2023) source`() = runTest {
+        val title = "When Evil Lurks"
+        val releaseDate = "2023"
+
+        val data = getSourceData(
+            title = title,
+            releaseDate = releaseDate,
+            type = MediaType.Movie
+        )
+
         assert(data.subtitles.isNotEmpty())
+        assert(data.source.isNotBlank())
+        assert(data.servers?.isNotEmpty() == true)
     }
 
     @Test
     open fun `Get Silo (TV-2023) Details`() = runTest {
         val title = "Silo"
         val releaseDate = "2023"
-        val response = sourceProvider.search(
-            query = title,
-            page = 1,
-            mediaType = MediaType.TvShow
+
+        val data = getMediaInfo(
+            title = title,
+            releaseDate = releaseDate,
+            type = MediaType.TvShow
         )
-
-        val silo = response.results.find {
-            val releaseDateToUse = if(it.releaseDate == null) {
-                sourceProvider.getMediaInfo(it.id!!, it.mediaType!!).releaseDate
-            } else it.releaseDate
-
-            releaseDateToUse == releaseDate
-        }
-        Assert.assertNotNull(silo?.id)
-
-        val data = sourceProvider.getMediaInfo(silo!!.id!!, MediaType.TvShow)
 
         Assert.assertEquals(data.title, title)
         assert(data.releaseDate.isNotBlank())
@@ -122,25 +172,16 @@ abstract class BaseSourceProviderTest {
         val season = 1
         val episode = 3
 
-        val response = sourceProvider.search(
-            query = title,
-            page = 1,
-            mediaType = MediaType.TvShow
+        val data = getSourceData(
+            title = title,
+            releaseDate = releaseDate,
+            type = MediaType.TvShow,
+            season = season,
+            episode = episode
         )
 
-        val aOt = response.results.find {
-            val releaseDateToUse = if(it.releaseDate == null) {
-                sourceProvider.getMediaInfo(it.id!!, it.mediaType!!).releaseDate
-            } else it.releaseDate
-
-            releaseDateToUse == releaseDate
-        }
-        Assert.assertNotNull(aOt?.id)
-
-        val data = sourceProvider.getSourceLinks(aOt!!.id!!, season = season, episode = episode)
-
         assert(data.subtitles.isNotEmpty())
+        assert(data.source.isNotEmpty())
         assert(data.servers?.isNotEmpty() == true)
-        assert(data.mediaId.isNotEmpty())
     }
 }
