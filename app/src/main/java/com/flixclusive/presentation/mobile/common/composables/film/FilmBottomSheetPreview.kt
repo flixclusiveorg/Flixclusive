@@ -43,6 +43,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.flixclusive.R
 import com.flixclusive.domain.model.tmdb.Film
+import com.flixclusive.presentation.common.composables.FilmCover
 import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
 import com.flixclusive.presentation.theme.starColor
@@ -203,15 +204,11 @@ fun FilmBottomSheetPreview(
                         labelId = R.string.remove,
                         onClick = onWatchHistoryButtonClick
                     ) {
-                        Box(modifier = Modifier.size(33.dp)) {
-                            Icon(
-                                painter = painterResource(R.drawable.delete),
-                                contentDescription = stringResource(R.string.remove),
-                                modifier = Modifier
-                                    .size(25.dp)
-                                    .align(Alignment.Center)
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(R.drawable.delete),
+                            contentDescription = stringResource(R.string.remove),
+                            modifier = Modifier.size(33.dp)
+                        )
                     }
                 }
             }

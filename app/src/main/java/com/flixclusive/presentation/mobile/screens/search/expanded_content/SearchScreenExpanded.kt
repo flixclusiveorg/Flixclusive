@@ -71,6 +71,7 @@ import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
 import com.flixclusive.presentation.mobile.screens.search.SearchNavGraph
 import com.flixclusive.presentation.mobile.screens.search.common.SearchFilter
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
+import com.flixclusive.presentation.utils.ComposeUtils.createTextFieldValue
 import com.flixclusive.presentation.utils.LazyListUtils.shouldPaginate
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -215,13 +216,6 @@ fun SearchBarExpanded(
     onErrorChange: (Boolean) -> Unit,
     onQueryChange: (String) -> Unit
 ) {
-    fun String.createTextFieldValue(): TextFieldValue {
-        return TextFieldValue(
-            text = this,
-            selection = TextRange(length)
-        )
-    }
-
     val keyboardController = LocalSoftwareKeyboardController.current
     var lastSearchedQuery by remember { mutableStateOf(searchQuery) }
     var textFieldValue by remember {

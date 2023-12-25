@@ -1,6 +1,8 @@
 package com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,9 +35,9 @@ import com.flixclusive.presentation.utils.ComposeUtils.BorderedText
 fun SubtitlePreview(
     modifier: Modifier = Modifier,
     appSettings: AppSettings,
-    shape: Shape
+    shape: Shape,
 ) {
-    if(appSettings.isSubtitleEnabled) {
+    AnimatedVisibility(visible = appSettings.isSubtitleEnabled) {
         Box(
             modifier = modifier
                 .height(90.dp),
@@ -59,23 +61,28 @@ fun SubtitlePreview(
                     .padding(10.dp),
                 contentAlignment = Alignment.Center
             ) {
-                when(appSettings.subtitleEdgeType) {
+                when (appSettings.subtitleEdgeType) {
                     CaptionEdgeTypePreference.Drop_Shadow -> {
-                        Text(
-                            text = stringResource(id = R.string.sample_subtitle_text),
-                            style = appSettings.subtitleFontStyle.getTextStyle().copy(
-                                color = Color(appSettings.subtitleColor),
-                                fontSize = appSettings.subtitleSize.getDp().sp,
-                                shadow = Shadow(
-                                    offset = Offset(6F, 6F),
-                                    blurRadius = 3f,
-                                    color = Color(appSettings.subtitleEdgeType.color),
-                                ),
-                                background = Color(appSettings.subtitleBackgroundColor),
-                                textAlign = TextAlign.Center
+                        Box(
+                            modifier = Modifier
+                                .background(Color(appSettings.subtitleBackgroundColor))
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.sample_subtitle_text),
+                                style = appSettings.subtitleFontStyle.getTextStyle().copy(
+                                    color = Color(appSettings.subtitleColor),
+                                    fontSize = appSettings.subtitleSize.getDp().sp,
+                                    shadow = Shadow(
+                                        offset = Offset(6F, 6F),
+                                        blurRadius = 3f,
+                                        color = Color(appSettings.subtitleEdgeType.color),
+                                    ),
+                                    textAlign = TextAlign.Center
+                                )
                             )
-                        )
+                        }
                     }
+
                     CaptionEdgeTypePreference.Outline -> {
                         BorderedText(
                             text = stringResource(id = R.string.sample_subtitle_text),

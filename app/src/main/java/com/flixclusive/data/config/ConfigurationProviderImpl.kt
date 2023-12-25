@@ -1,6 +1,6 @@
 package com.flixclusive.data.config
 
-import com.flixclusive.common.LoggerUtils.errorLog
+import com.flixclusive.common.UiText
 import com.flixclusive.data.api.GithubConfigService
 import com.flixclusive.data.utils.catchInternetRelatedException
 import com.flixclusive.domain.config.ConfigurationProvider
@@ -12,6 +12,7 @@ import com.flixclusive.domain.model.config.SearchCategoriesConfig
 import com.flixclusive.domain.preferences.AppSettingsManager
 import com.flixclusive.domain.preferences.ProviderConfiguration
 import com.flixclusive.domain.repository.ProvidersRepository
+import com.flixclusive.utils.LoggerUtils.errorLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,8 +27,8 @@ class ConfigurationProviderImpl @Inject constructor(
     private val githubConfigService: GithubConfigService,
     private val providersRepository: ProvidersRepository,
     private val appSettingsManager: AppSettingsManager,
-    private val ioScope: CoroutineScope
-): ConfigurationProvider {
+    private val ioScope: CoroutineScope,
+) : ConfigurationProvider {
 
     private val _remoteStatus = MutableStateFlow<RemoteConfigStatus>(RemoteConfigStatus.Loading)
     override val remoteStatus: StateFlow<RemoteConfigStatus>
@@ -40,7 +41,7 @@ class ConfigurationProviderImpl @Inject constructor(
 
     override fun initialize() {
         ioScope.launch {
-            for(i in 0..MAX_RETRIES) {
+            for (i in 0..MAX_RETRIES) {
                 _remoteStatus.update { RemoteConfigStatus.Loading }
 
                 try {
@@ -51,15 +52,23 @@ class ConfigurationProviderImpl @Inject constructor(
 
                     homeCategoriesConfig = githubConfigService.getHomeCategoriesConfig()
                     searchCategoriesConfig = githubConfigService.getSearchCategoriesConfig()
+
+                    if (homeCategoriesConfig == null || searchCategoriesConfig == null || appConfig == null || providersStatus == null) {
+                        continue
+                    }
+
                     _remoteStatus.update { RemoteConfigStatus.Success }
-                    break
+                    return@launch
                 } catch (e: Exception) {
                     errorLog(e.stackTraceToString())
                     val errorMessageId = e.catchInternetRelatedException().error!!
 
                     _remoteStatus.update { RemoteConfigStatus.Error(errorMessageId) }
                 }
+
             }
+
+            _remoteStatus.update { RemoteConfigStatus.Error(UiText.StringValue("Couldn't initialize the app.")) }
         }
     }
 
@@ -69,11 +78,11 @@ class ConfigurationProviderImpl @Inject constructor(
 
         val isConfigEmpty = providersConfigurations.isEmpty()
 
-        if(providersRepository.providers.size == providersStatus!!.size)
+        if (providersRepository.providers.size == providersStatus!!.size)
             return
 
         for (i in providersStatus!!.indices) {
-            val provider = if(!isConfigEmpty) {
+            val provider = if (!isConfigEmpty) {
                 providersStatus!!.find {
                     it.name.equals(
                         other = providersConfigurations[i].name,
@@ -82,7 +91,7 @@ class ConfigurationProviderImpl @Inject constructor(
                 }
             } else providersStatus!![i]
 
-            val isIgnored = if(isConfigEmpty)
+            val isIgnored = if (isConfigEmpty)
                 false
             else providersConfigurations[i].isIgnored
 
@@ -92,7 +101,7 @@ class ConfigurationProviderImpl @Inject constructor(
                 isIgnored = isIgnored
             )
 
-            if(isConfigEmpty) {
+            if (isConfigEmpty) {
                 providersConfigurations.add(
                     ProviderConfiguration(name = provider.name)
                 )

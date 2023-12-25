@@ -1,14 +1,14 @@
 package com.flixclusive.data.dto.tmdb
 
-import com.flixclusive.domain.model.tmdb.Movie
-import com.flixclusive.domain.model.tmdb.TMDBSearchItem
 import com.flixclusive.data.dto.tmdb.common.BelongsToCollection
-import com.flixclusive.domain.model.tmdb.Genre
 import com.flixclusive.data.dto.tmdb.common.ProductionCompany
 import com.flixclusive.data.dto.tmdb.common.ProductionCountry
 import com.flixclusive.data.dto.tmdb.common.SpokenLanguage
 import com.flixclusive.data.dto.tmdb.common.TMDBImagesResponseDto
+import com.flixclusive.domain.model.tmdb.Genre
+import com.flixclusive.domain.model.tmdb.Movie
 import com.flixclusive.domain.model.tmdb.TMDBPageResponse
+import com.flixclusive.domain.model.tmdb.TMDBSearchItem
 import com.flixclusive.domain.model.tmdb.toRecommendation
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
@@ -64,6 +64,7 @@ fun TMDBMovieDto.toMovie(): Movie {
         description = overview,
         duration = runtime,
         genres = genres,
+        language = originalLanguage,
         recommendations = recommendations.results.map { it.toRecommendation() }
     )
 }

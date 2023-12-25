@@ -66,11 +66,11 @@ object FlixHQUtils {
 
         return if (mediaId.contains("movie")) {
             titleElement
-                .lowercase(Locale.getDefault())
+                .lowercase(Locale.US)
         } else {
             titleElement.substring(6)
                 .trim()
-                .lowercase(Locale.getDefault())
+                .lowercase(Locale.US)
         }
     }
 

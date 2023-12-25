@@ -41,17 +41,17 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.flixclusive.common.UiText
 import com.flixclusive.domain.model.tmdb.Film
-import com.flixclusive.presentation.tv.common.FilmCardShape
-import com.flixclusive.presentation.tv.common.FilmCardTv
+import com.flixclusive.presentation.tv.common.composables.FilmCardShape
+import com.flixclusive.presentation.tv.common.composables.FilmCardTv
 import com.flixclusive.presentation.tv.main.InitialDrawerWidth
 import com.flixclusive.presentation.tv.utils.ComposeTvUtils.NonFocusableSpacer
 import com.flixclusive.presentation.tv.utils.ComposeTvUtils.colorOnMediumEmphasisTv
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.createInitialFocusRestorerModifiers
-import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 import com.flixclusive.presentation.utils.ModifierUtils.fadingEdge
+import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun FilmTvScreenRow(
     modifier: Modifier = Modifier,

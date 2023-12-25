@@ -22,28 +22,23 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
-import androidx.media3.common.Player
 import androidx.media3.common.Player.STATE_BUFFERING
-import androidx.media3.common.TrackSelectionParameters
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.flixclusive.domain.model.VideoDataDialogState
-import com.flixclusive.presentation.common.PlayerUiState
+import com.flixclusive.presentation.common.player.PlayerUiState
+import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.rememberLocalPlayer
 import com.flixclusive.presentation.mobile.common.composables.GradientCircularProgressIndicator
 import com.flixclusive.presentation.tv.utils.PlayerTvUtils.getTimeToSeekToBasedOnSeekMultiplier
 import com.flixclusive.presentation.utils.FormatterUtils.formatMinSec
-import com.flixclusive.presentation.utils.PlayerUiUtils.LocalPlayer
-import com.flixclusive.providers.models.common.Subtitle
-import com.flixclusive.providers.models.common.VideoDataServer
+import com.flixclusive.providers.models.common.VideoData
 
 @Composable
 fun TvPlaybackControls(
     modifier: Modifier = Modifier,
     isVisible: Boolean,
     isTvShow: Boolean,
-    servers: List<VideoDataServer>,
-    subtitles: List<Subtitle>,
-    qualities: List<String>,
+    videoData: VideoData,
     stateProvider: () -> PlayerUiState,
     dialogStateProvider: () -> VideoDataDialogState,
     sideSheetFocusPriority: BottomControlsButtonType?,
@@ -53,19 +48,18 @@ fun TvPlaybackControls(
     onSideSheetDismiss: (BottomControlsButtonType?) -> Unit,
     showControls: (Boolean) -> Unit,
     onSeekMultiplierChange: (Long) -> Unit,
-    onPauseToggle: () -> Unit,
     onBack: () -> Unit,
     onNextEpisode: () -> Unit,
-    onSubtitleChange: (Int, TrackSelectionParameters) -> TrackSelectionParameters,
-    onVideoQualityChange: (Int, TrackSelectionParameters) -> TrackSelectionParameters?,
 ) {
-    val player = LocalPlayer.current
+    val player = rememberLocalPlayer()
 
     val state by rememberUpdatedState(stateProvider())
     val dialogState by rememberUpdatedState(dialogStateProvider())
 
-    val isLoading = remember(state, dialogState, seekMultiplier) {
-        state.playbackState == STATE_BUFFERING && seekMultiplier == 0L || dialogState !is VideoDataDialogState.Success
+    val isLoading = remember(player.playbackState, dialogState, seekMultiplier) {
+        player.playbackState == STATE_BUFFERING
+        && seekMultiplier == 0L
+        || dialogState !is VideoDataDialogState.Success
     }
 
     val topFadeEdge = Brush.verticalGradient(
@@ -77,8 +71,8 @@ fun TvPlaybackControls(
         0.9F to Color.Black
     )
 
-    val isInHours = remember(state.totalDuration) {
-        state.totalDuration.formatMinSec().count { it == ':' } == 2
+    val isInHours = remember(player.duration) {
+        player.duration.formatMinSec().count { it == ':' } == 2
     }
     val seekText by remember(seekMultiplier) {
         derivedStateOf {
@@ -87,8 +81,8 @@ fun TvPlaybackControls(
             else return@derivedStateOf ""
 
             val timeToFormat = getTimeToSeekToBasedOnSeekMultiplier(
-                currentTime = state.currentTime,
-                maxDuration = state.totalDuration,
+                currentTime = player.currentPosition,
+                maxDuration = player.duration,
                 seekMultiplier = seekMultiplier
             )
 
@@ -96,25 +90,21 @@ fun TvPlaybackControls(
         }
     }
 
-    val selectedSubtitle = remember(state.selectedSubtitle, subtitles.lastOrNull()?.url) {
+    val selectedSubtitle = remember(player.selectedSubtitle, player.availableSubtitles.size) {
         try {
-            subtitles[state.selectedSubtitle].lang
+            player.availableSubtitles[player.selectedSubtitle].language!!
         } catch (_: Exception) {
             "Subtitle Error!"
         }
     }
-    val selectedQuality = remember(state.selectedQuality, qualities.size) {
+
+    val selectedAudio = remember(player.selectedAudio, player.availableAudios.size) {
         try {
-            qualities[state.selectedQuality]
+            if (player.availableAudios.size == 1) {
+                null
+            } else player.availableAudios[state.selectedServer]
         } catch (_: Exception) {
             null
-        }
-    }
-    val selectedServer = remember(state.selectedServer, servers.size) {
-        try {
-            servers[state.selectedServer].serverName
-        } catch (_: Exception) {
-            "Server Error!"
         }
     }
 
@@ -202,31 +192,16 @@ fun TvPlaybackControls(
                     .drawBehind {
                         drawRect(brush = bottomFadeEdge)
                     },
-                state = state,
                 isSeeking = seekMultiplier > 0,
+                selectedServer = videoData.servers?.get(state.selectedServer)?.serverName ?: "Default Server",
+                selectedSubtitle = selectedSubtitle,
+                selectedAudio = selectedAudio,
                 onSeekMultiplierChange = onSeekMultiplierChange,
-                subtitle = selectedSubtitle,
-                quality = selectedQuality,
-                server = selectedServer,
                 extendControlsVisibility = { showControls(true) },
                 showSideSheetPanel = {
                     showControls(false)
                     onSideSheetDismiss(it)
                 },
-                onPauseToggle = {
-                    player?.run {
-                        when {
-                            isPlaying -> pause()
-                            !isPlaying && playbackState == Player.STATE_ENDED -> {
-                                seekTo(0)
-                                playWhenReady = true
-                            }
-
-                            else -> play()
-                        }
-                        onPauseToggle()
-                    }
-                }
             )
         }
 
@@ -241,35 +216,14 @@ fun TvPlaybackControls(
                 onSideSheetDismiss(null)
             }
 
-            SlidingPlayerSheet(
-                sideSheetFocusPriority = sideSheetFocusPriority,
-                subtitles = subtitles,
-                qualities = qualities,
-                servers = servers,
-                selectedSubtitle = state.selectedSubtitle,
-                selectedQuality = state.selectedQuality,
-                selectedServer = state.selectedServer,
-                onSubtitleChange = {
-                    player?.run {
-                        trackSelectionParameters = onSubtitleChange(
-                            it,
-                            trackSelectionParameters
-                        )
-                    }
-                },
-                onQualityChange = {
-                    player?.run {
-                        trackSelectionParameters = onVideoQualityChange(
-                            it,
-                            trackSelectionParameters
-                        ) ?: return@run
-                    }
-                },
-                onDismissSheet = {
-                    showControls(true)
-                    onSideSheetDismiss(null)
-                }
-            )
+            //SlidingAudioAndDisplaySheet(
+            //    sideSheetFocusPriority = sideSheetFocusPriority,
+            //    selectedAudio = state.selectedServer,
+            //    onDismissSheet = {
+            //        showControls(true)
+            //        onSideSheetDismiss(null)
+            //    }
+            //)
         }
     }
 }

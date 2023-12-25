@@ -9,6 +9,7 @@ data class Recommendation(
     override val title: String = "",
     val image: String? = null,
     val mediaType: String = "",
+    override val language: String = "en",
     override val rating: Double = 0.0,
     val releaseDate: String = ""
 ) : Film, java.io.Serializable {

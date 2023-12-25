@@ -3,7 +3,7 @@ package com.flixclusive.di
 import android.app.Application
 import com.flixclusive.common.Constants.GITHUB_BASE_URL
 import com.flixclusive.common.Constants.TMDB_API_BASE_URL
-import com.flixclusive.common.LoggerUtils.errorLog
+import com.flixclusive.utils.LoggerUtils.errorLog
 import com.flixclusive.data.api.GithubConfigService
 import com.flixclusive.data.api.TMDBApiService
 import com.flixclusive.domain.common.PaginatedSearchItemsDeserializer

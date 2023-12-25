@@ -36,9 +36,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.BuildConfig
 import com.flixclusive.R
-import com.flixclusive.presentation.common.viewmodels.configuration.AppConfigurationViewModel
+import com.flixclusive.presentation.common.viewmodels.config.AppConfigurationViewModel
 import com.flixclusive.presentation.mobile.common.composables.GradientCircularProgressIndicator
 import com.flixclusive.presentation.mobile.screens.splash_screen.dialog.ErrorMobileDialog
 import com.flixclusive.presentation.mobile.screens.update.UPDATE_INFORMATION
@@ -151,7 +150,7 @@ fun SplashMobileScreen(
 
     if(uiState.allPermissionsAreAllowed) {
         LaunchedEffect(uiState, isDoneAnimating) {
-            if((BuildConfig.DEBUG || uiState.isDoneInitializing) && isDoneAnimating) {
+            if(uiState.isDoneInitializing && isDoneAnimating) {
                 onStartMainActivity()
             }
         }
@@ -166,7 +165,7 @@ fun SplashMobileScreen(
             )
         }
 
-        if((uiState.errorMessage != null || uiState.isMaintenance) && !BuildConfig.DEBUG) {
+        if(uiState.errorMessage != null || uiState.isMaintenance) {
             val (title, description) = if(uiState.isMaintenance) {
                 Pair(
                     stringResource(R.string.splash_maintenance_header),

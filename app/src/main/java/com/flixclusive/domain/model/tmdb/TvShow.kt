@@ -15,6 +15,7 @@ data class TvShow(
     val releaseDate: String = "",
     val lastAirDate: String? = null,
     val description: String? = null,
+    override val language: String,
     override val genres: List<Genre> = emptyList(),
     val duration: Int? = null,
     val totalEpisodes: Int = 0,

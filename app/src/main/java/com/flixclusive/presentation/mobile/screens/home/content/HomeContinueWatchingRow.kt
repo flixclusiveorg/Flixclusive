@@ -43,7 +43,7 @@ import com.flixclusive.R
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.utils.WatchHistoryUtils.getNextEpisodeToWatch
-import com.flixclusive.presentation.mobile.common.composables.film.FilmCover
+import com.flixclusive.presentation.common.composables.FilmCover
 import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
 import com.flixclusive.presentation.utils.FormatterUtils.formatMinutes
@@ -168,9 +168,9 @@ private fun ContinueWatchingCard(
                 imageSize = "w220_and_h330_face"
             )
 
-
             Box(
                 modifier = Modifier
+                    .size(50.dp)
                     .align(Alignment.Center)
                     .border(
                         width = 1.dp,
@@ -184,9 +184,10 @@ private fun ContinueWatchingCard(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.play),
-                    contentDescription = "A play button icon",
+                    contentDescription = stringResource(id = R.string.play_button),
                     modifier = Modifier
-                        .size(50.dp),
+                        .size(30.dp)
+                        .align(Alignment.Center),
                     tint = Color.White
                 )
             }
@@ -238,7 +239,7 @@ private fun ContinueWatchingCard(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.round_more_vert_24),
-                    contentDescription = "A vertical see more button icon",
+                    contentDescription = stringResource(R.string.see_more_btn_content_desc),
                     tint = Color.White
                 )
             }

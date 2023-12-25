@@ -16,23 +16,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.Player
-import com.flixclusive.presentation.utils.PlayerUiUtils.LocalPlayer
+import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.rememberLocalPlayer
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.seconds
 
 @Suppress("DEPRECATION")
 @Composable
-fun AudioFocusManager(
-    isPlaying: Boolean,
-    shouldPlay: Boolean,
-    playbackState: Int,
-    onUpdateIsPlayingState: (Boolean) -> Unit,
-    onUpdateCurrentTime: (Long) -> Unit,
-    onShouldPlayChange: (Boolean) -> Unit,
-) {
-    val player = LocalPlayer.current
+fun AudioFocusManager() {
+    val player = rememberLocalPlayer()
     val context = LocalContext.current as Activity
     val scope = rememberCoroutineScope()
 
@@ -54,33 +45,33 @@ fun AudioFocusManager(
                             playbackDelayed = false
                             resumeOnFocusGain = false
                         }
-                        player?.play()
-                        onUpdateIsPlayingState(true)
+                        player.play()
+                        player.playWhenReady = true
                     }
                 }
                 AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                     synchronized(focusLock) {
                         // only resume if playback is being interrupted
-                        resumeOnFocusGain = shouldPlay
+                        resumeOnFocusGain = player.playWhenReady
                         playbackDelayed = false
                     }
-                    player?.pause()
-                    onUpdateIsPlayingState(false)
+                    player.pause()
+                    player.playWhenReady = false
                 }
                 AudioManager.AUDIOFOCUS_LOSS -> {
                     synchronized(focusLock) {
                         resumeOnFocusGain = false
                         playbackDelayed = false
                     }
-                    player?.pause()
-                    onUpdateIsPlayingState(false)
+                    player.pause()
+                    player.playWhenReady = false
                 }
             }
         }
     }
 
-    LaunchedEffect(isPlaying) {
-        if(isPlaying) {
+    LaunchedEffect(player.isPlaying) {
+        if(player.isPlaying) {
             val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val playbackAttributes = AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -110,16 +101,11 @@ fun AudioFocusManager(
                             return@synchronized
 
                         playerTimeUpdaterJob = scope.launch {
-                            player?.run {
-                                play()
-                                onUpdateIsPlayingState(true)
-                                while (this.isPlaying) {
-                                    onUpdateCurrentTime(currentPosition)
-                                    delay(1.seconds / 30)
-                                }
+                            player.run {
+                                playWhenReady = true
+                                observePlayerPosition()
                             }
                         }
-                        onShouldPlayChange(true)
                         true
                     }
                     AudioManager.AUDIOFOCUS_REQUEST_DELAYED  -> {
@@ -132,10 +118,10 @@ fun AudioFocusManager(
         }
     }
 
-    LaunchedEffect(isPlaying, playbackState) {
+    LaunchedEffect(player.isPlaying, player.playbackState) {
         val keepScreenOnFlag = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 
-        if(isPlaying || playbackState == Player.STATE_BUFFERING) {
+        if(player.isPlaying || player.playbackState == Player.STATE_BUFFERING) {
             context.window?.addFlags(keepScreenOnFlag)
         } else {
             context.window?.clearFlags(keepScreenOnFlag)

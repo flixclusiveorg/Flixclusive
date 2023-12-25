@@ -30,7 +30,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.R
-import com.flixclusive.presentation.common.viewmodels.configuration.AppConfigurationViewModel
+import com.flixclusive.presentation.common.viewmodels.config.AppConfigurationViewModel
 import com.flixclusive.presentation.mobile.common.composables.GradientCircularProgressIndicator
 import com.flixclusive.presentation.mobile.screens.preferences.PreferencesNavGraph
 import com.flixclusive.presentation.mobile.screens.update.UPDATE_INFORMATION

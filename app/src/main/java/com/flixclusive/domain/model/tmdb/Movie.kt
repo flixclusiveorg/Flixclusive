@@ -15,6 +15,7 @@ data class Movie(
     override val rating: Double = 0.0,
     val releaseDate: String = "",
     val description: String? = null,
+    override val language: String,
     override val genres: List<Genre> = emptyList(),
     val duration: Int? = null,
     val recommendations: List<Recommendation> = emptyList(),

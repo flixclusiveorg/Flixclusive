@@ -25,6 +25,7 @@ import com.flixclusive.R
 import com.flixclusive.domain.preferences.AppSettings
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.SubtitleSettingsDialog
 import java.util.Locale
+import kotlin.math.max
 
 @Composable
 fun SubtitleDialogLanguages(
@@ -35,7 +36,6 @@ fun SubtitleDialogLanguages(
     val (selectedOption, onOptionSelected) = remember { mutableStateOf(appSettings.subtitleLanguage) }
 
     val listState = rememberLazyListState()
-    
 
     val languages = remember {
         Locale.getAvailableLocales()
@@ -43,14 +43,11 @@ fun SubtitleDialogLanguages(
     }
 
     LaunchedEffect(Unit) {
-        var indexOfSelected = languages.indexOfFirst {
+        val indexOfSelected = languages.indexOfFirst {
             it.language == appSettings.subtitleLanguage
         }
 
-        if(indexOfSelected == -1)
-            indexOfSelected = 0
-
-        listState.animateScrollToItem(indexOfSelected)
+        listState.animateScrollToItem(max(indexOfSelected, 0))
     }
 
     SubtitleSettingsDialog(

@@ -12,8 +12,8 @@ import com.flixclusive.presentation.destinations.HomeFilmScreenDestination
 import com.flixclusive.presentation.destinations.HomeScreenContentDestination
 import com.flixclusive.presentation.mobile.common.MobileRootNavGraph
 import com.flixclusive.presentation.mobile.main.MainMobileSharedViewModel
-import com.flixclusive.presentation.mobile.main.OnDoubleNavBarItemClickObserver
-import com.flixclusive.presentation.mobile.main.OnSeeMoreDetailsClickObserver
+import com.flixclusive.presentation.mobile.main.utils.OnDoubleNavBarItemClickObserver
+import com.flixclusive.presentation.mobile.main.utils.OnSeeMoreDetailsClickObserver
 import com.flixclusive.presentation.utils.ComposeUtils.navigateSingleTopTo
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.ramcosta.composedestinations.DestinationsNavHost

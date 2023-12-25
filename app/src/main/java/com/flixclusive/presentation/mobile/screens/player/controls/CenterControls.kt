@@ -11,163 +11,151 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_ENDED
 import com.flixclusive.R
-import com.flixclusive.presentation.common.PlayerUiState
+import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.rememberLocalPlayer
 import com.flixclusive.presentation.mobile.common.composables.GradientCircularProgressIndicator
-import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils
-import com.flixclusive.presentation.utils.PlayerUiUtils.LocalPlayer
 
 @Composable
 fun CenterControls(
     modifier: Modifier = Modifier,
-    state: PlayerUiState,
-    onBrightnessChange: (Float) -> Unit,
-    onPauseToggle: () -> Unit,
+    seekIncrementMs: Long,
     showControls: (Boolean) -> Unit,
 ) {
-    val player = LocalPlayer.current
+    val player = rememberLocalPlayer()
 
     val buttonColor = Color.Black.copy(0.3F)
 
-    Box(
+    val (replaySeekIcon, forwardSeekIcon) = when(seekIncrementMs) {
+        5000L -> R.drawable.round_replay_5_24 to R.drawable.forward_5_black_24dp
+        10000L -> R.drawable.replay_10_black_24dp to R.drawable.round_forward_10_24
+        else -> R.drawable.replay_30_black_24dp to R.drawable.forward_30_black_24dp
+    }
+
+    Row(
         modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(
+            space = 100.dp,
+            alignment = Alignment.CenterHorizontally
+        )
     ) {
-        BrightnessSlider(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 10.dp),
-            currentBrightness = state.screenBrightness,
-            onBrightnessChange = onBrightnessChange
+
+        CenterControlsButtons(
+            drawableId = replaySeekIcon,
+            contentDescriptionId = R.string.backward_button_content_description,
+            onClick = {
+                player.seekBack()
+                showControls(true)
+            }
         )
 
-        Row(
-            modifier = Modifier.align(Alignment.Center),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(100.dp)
-        ) {
-
-            CenterControlsButtons(
-                drawableId = R.drawable.round_replay_5_24,
-                contentDescriptionId = R.string.backward_button_content_description,
-                onClick = {
-                    player?.seekBack()
-                    showControls(true)
+        Box(
+            modifier = Modifier
+                .size(65.dp)
+                .graphicsLayer {
+                    shape = CircleShape
+                    clip = true
                 }
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(65.dp)
-                    .graphicsLayer {
-                        shape = CircleShape
-                        clip = true
-                    }
-                    .drawBehind {
-                        drawRect(buttonColor)
-                    }
-                    .clickable(
-                        enabled = state.playbackState != STATE_BUFFERING
-                    ) {
-                        player?.run {
-                            when {
-                                isPlaying -> pause()
-                                !isPlaying && playbackState == STATE_ENDED -> {
-                                    seekTo(0)
-                                    playWhenReady = true
-                                }
-
-                                else -> play()
+                .drawBehind {
+                    drawRect(buttonColor)
+                }
+                .clickable(
+                    enabled = player.playbackState != STATE_BUFFERING
+                ) {
+                    player.run {
+                        playWhenReady = when {
+                            isPlaying -> {
+                                pause()
+                                false
                             }
-                            onPauseToggle()
-                            showControls(true)
+                            !isPlaying && playbackState == STATE_ENDED -> {
+                                seekTo(0)
+                                true
+                            }
+                            else -> {
+                                play()
+                                true
+                            }
                         }
-                    },
-                contentAlignment = Alignment.Center
+                        showControls(true)
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            this@Row.AnimatedVisibility(
+                visible = player.playbackState == STATE_BUFFERING,
+                enter = scaleIn(),
+                exit = scaleOut()
             ) {
-                this@Row.AnimatedVisibility(
-                    visible = state.playbackState == STATE_BUFFERING,
-                    enter = scaleIn(),
-                    exit = scaleOut()
-                ) {
-                    GradientCircularProgressIndicator()
-                }
-
-                this@Row.AnimatedVisibility(
-                    visible = !state.isPlaying && state.playbackState != STATE_ENDED && state.playbackState != STATE_BUFFERING,
-                    enter = slideInHorizontally { it } + fadeIn(),
-                    exit = fadeOut() + scaleOut()
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.play),
-                        contentDescription = stringResource(id = R.string.play_button),
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(42.dp)
-                    )
-                }
-
-                this@Row.AnimatedVisibility(
-                    visible = state.isPlaying && state.playbackState != STATE_BUFFERING && state.playbackState != STATE_ENDED,
-                    enter = slideInHorizontally { it } + fadeIn(),
-                    exit = fadeOut() + scaleOut()
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.pause),
-                        contentDescription = stringResource(R.string.pause_button),
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(42.dp)
-                    )
-                }
-
-                this@Row.AnimatedVisibility(
-                    visible = !state.isPlaying && state.playbackState == STATE_ENDED,
-                    enter = scaleIn(),
-                    exit = scaleOut()
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.round_replay_24),
-                        contentDescription = stringResource(R.string.replay_button),
-                        tint = Color.White
-                    )
-                }
+                GradientCircularProgressIndicator()
             }
 
-            CenterControlsButtons(
-                drawableId = R.drawable.round_forward_10_24,
-                contentDescriptionId = R.string.forward_button_content_description,
-                onClick = {
-                    player?.seekForward()
-                    showControls(true)
-                }
-            )
+            this@Row.AnimatedVisibility(
+                visible = !player.isPlaying && player.playbackState != STATE_ENDED && player.playbackState != STATE_BUFFERING,
+                enter = slideInHorizontally { it } + fadeIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.play),
+                    contentDescription = stringResource(id = R.string.play_button),
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(42.dp)
+                )
+            }
+
+            this@Row.AnimatedVisibility(
+                visible = player.isPlaying && player.playbackState != STATE_BUFFERING && player.playbackState != STATE_ENDED,
+                enter = slideInHorizontally { it } + fadeIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.pause),
+                    contentDescription = stringResource(R.string.pause_button),
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(42.dp)
+                )
+            }
+
+            this@Row.AnimatedVisibility(
+                visible = !player.isPlaying && player.playbackState == STATE_ENDED,
+                enter = scaleIn(),
+                exit = scaleOut()
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.round_replay_24),
+                    contentDescription = stringResource(R.string.replay_button),
+                    tint = Color.White
+                )
+            }
         }
+
+        CenterControlsButtons(
+            drawableId = forwardSeekIcon,
+            contentDescriptionId = R.string.forward_button_content_description,
+            onClick = {
+                player.seekForward()
+                showControls(true)
+            }
+        )
     }
 }
 
@@ -201,59 +189,6 @@ private fun CenterControlsButtons(
             tint = Color.White,
             modifier = Modifier
                 .size(iconSize)
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BrightnessSlider(
-    modifier: Modifier = Modifier,
-    currentBrightness: Float,
-    onBrightnessChange: (Float) -> Unit,
-) {
-    val sliderColors = SliderDefaults.colors(
-        thumbColor = Color.White,
-        activeTrackColor = Color.White,
-        inactiveTrackColor = ComposeMobileUtils.colorOnMediumEmphasisMobile(Color.White, emphasis = 0.4F)
-    )
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            painter = painterResource(id = R.drawable.round_wb_sunny_24),
-            contentDescription = "Brightness slider icon",
-            tint = Color.White,
-            modifier = Modifier
-                .padding(start = 10.dp)
-        )
-
-        Slider(
-            modifier = modifier
-                .graphicsLayer {
-                    rotationZ = 270f
-                    transformOrigin = TransformOrigin(0f, 0f)
-                }
-                .layout { measurable, constraints ->
-                    val placeable = measurable.measure(
-                        Constraints(
-                            minWidth = constraints.minHeight,
-                            maxWidth = constraints.maxHeight,
-                            minHeight = constraints.minWidth,
-                            maxHeight = constraints.maxHeight,
-                        )
-                    )
-                    layout(placeable.height, placeable.width) {
-                        placeable.place(-placeable.width, 0)
-                    }
-                }
-                .width(120.dp),
-            value = currentBrightness,
-            onValueChange = onBrightnessChange,
-            colors = sliderColors,
-            thumb = {}
         )
     }
 }

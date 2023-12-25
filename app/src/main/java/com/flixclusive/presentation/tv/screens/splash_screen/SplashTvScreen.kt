@@ -33,7 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import com.flixclusive.R
-import com.flixclusive.presentation.common.viewmodels.configuration.AppConfigurationUiState
+import com.flixclusive.presentation.common.viewmodels.config.AppConfigurationUiState
 import com.flixclusive.presentation.mobile.common.composables.GradientCircularProgressIndicator
 import com.flixclusive.presentation.tv.screens.splash_screen.dialog.ErrorTvDialog
 import com.flixclusive.presentation.tv.screens.splash_screen.dialog.UpdateTvDialog

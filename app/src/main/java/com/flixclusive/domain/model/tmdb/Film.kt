@@ -14,6 +14,7 @@ sealed interface Film {
     val dateReleased: String
     val runtime: String
     val rating: Double
+    val language: String
     val genres: List<Genre>
     val recommendedTitles: List<Recommendation>
 }

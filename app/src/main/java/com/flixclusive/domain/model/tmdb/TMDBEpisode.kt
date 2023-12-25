@@ -13,4 +13,15 @@ data class TMDBEpisode(
     val description: String = "",
     val image: String? = null,
     val runtime: Int? = null
-) : java.io.Serializable
+) : java.io.Serializable {
+    override fun hashCode(): Int {
+        return super.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if(other !is TMDBEpisode)
+            return false
+
+        return season == other.season && episode == other.episode && episodeId == other.episodeId
+    }
+}

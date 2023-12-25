@@ -1,5 +1,6 @@
 package com.flixclusive.presentation.mobile.screens.player
 
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,7 @@ import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.Season
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.preferences.AppSettingsManager
+import com.flixclusive.domain.repository.ProvidersRepository
 import com.flixclusive.domain.usecase.SeasonProviderUseCase
 import com.flixclusive.domain.usecase.VideoDataProviderUseCase
 import com.flixclusive.domain.usecase.WatchHistoryItemManagerUseCase
@@ -19,6 +21,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,11 +31,13 @@ import javax.inject.Inject
 class PlayerViewModel @Inject constructor(
     videoDataProvider: VideoDataProviderUseCase,
     appSettingsManager: AppSettingsManager,
+    providersRepository: ProvidersRepository,
     private val seasonProvider: SeasonProviderUseCase,
     private val watchHistoryItemManager: WatchHistoryItemManagerUseCase,
     val savedStateHandle: SavedStateHandle,
 ) : BasePlayerViewModel(
     appSettingsManager = appSettingsManager,
+    providersRepository = providersRepository,
     videoDataProvider = videoDataProvider
 ) {
     override val videoData = savedStateHandle.getStateFlow(VIDEO_DATA, VideoData())
@@ -51,48 +56,49 @@ class PlayerViewModel @Inject constructor(
     // =====================================
 
     private var onSeasonChangeJob: Job? = null
-    private var onShowSnackbarJob: Job? = null
-    private var onRemoveSnackbarJob: Job? = null
+    private var snackbarJobs: MutableList<Job?> =
+        MutableList(PlayerSnackbarMessageType.entries.size) { null }
 
     init {
-        initialize()
-    }
-
-    override fun initialize() {
         viewModelScope.launch {
-            if (currentSelectedEpisode.value != null) {
-                if (currentSelectedEpisode.value!!.season != seasonCount.value) {
-                    fetchSeasonFromProvider(
-                        showId = watchHistoryItem.value.id,
-                        seasonNumber = seasonCount.value!!
-                    )
-                }
+            currentSelectedEpisode.collectLatest {
+                if(it?.season != null) {
+                    if (it.season != seasonCount.value) {
+                        fetchSeasonFromProvider(
+                            showId = watchHistoryItem.value.id,
+                            seasonNumber = seasonCount.value ?: return@collectLatest
+                        )
+                    }
 
-                onSeasonChange(currentSelectedEpisode.value!!.season)
+                    onSeasonChange(it.season)
+                }
             }
         }
 
-        super.initialize()
+        resetUiState()
     }
 
-    override fun onSuccessCallback(newData: VideoData) {
-        super.onSuccessCallback(newData)
+    override fun onSuccessCallback(newData: VideoData, newEpisode: TMDBEpisode?) {
         savedStateHandle[VIDEO_DATA] = newData
+        savedStateHandle[EPISODE_SELECTED] = newEpisode
     }
 
     override fun onErrorCallback(message: String?) {
         showSnackbar(
-            message = message ?: "Unknown error occured",
+            message = message ?: "Unknown error occurred",
             type = PlayerSnackbarMessageType.Error
         )
     }
 
-    override fun updateWatchHistory() {
+    override fun updateWatchHistory(
+        currentTime: Long,
+        duration: Long,
+    ) {
         viewModelScope.launch {
             savedStateHandle[WATCH_HISTORY_ITEM] = watchHistoryItemManager.updateWatchHistoryItem(
                 watchHistoryItem = watchHistoryItem.value,
-                currentTime = _uiState.value.currentTime,
-                totalDuration = _uiState.value.totalDuration,
+                currentTime = currentTime,
+                totalDuration = duration,
                 currentSelectedEpisode = currentSelectedEpisode.value
             )
         }
@@ -129,14 +135,7 @@ class PlayerViewModel @Inject constructor(
         return seasonToUse
     }
 
-    fun onServerChange(serverIndex: Int) {
-        onServerChange(
-            film = watchHistoryItem.value.film,
-            serverIndex = serverIndex
-        )
-    }
-
-    fun onSourceChange(newSource: String) {
+    fun changeSource(newSource: String) {
         onSourceChange(
             film = watchHistoryItem.value.film,
             newSource = newSource
@@ -153,13 +152,20 @@ class PlayerViewModel @Inject constructor(
             film = watchHistoryItem.value.film,
             seasonCount = seasonCount.value!!,
             episodeToWatch = episodeToWatch,
-            onSuccess = { newData, newEpisode ->
-                savedStateHandle[VIDEO_DATA] = newData
-                savedStateHandle[EPISODE_SELECTED] = newEpisode
-            },
             updateSeason = { newSeason ->
                 _season.update { Resource.Success(newSeason!!) }
             }
+        )
+    }
+
+    /**
+     * Callback function to queue up next episode
+     *
+     */
+    fun onQueueNextEpisode() {
+        queueNextEpisode(
+            film = watchHistoryItem.value.film,
+            seasonCount = seasonCount.value!!
         )
     }
 
@@ -185,46 +191,65 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun showSnackbar(message: String, type: PlayerSnackbarMessageType) {
-        if (onShowSnackbarJob?.isActive == true)
+        val itemIndexInQueue = snackbarQueue.indexOfFirst {
+            it.type == type
+        }
+        val isSameTypeAlreadyQueued = itemIndexInQueue != -1
+
+        if (!isSameTypeAlreadyQueued) {
+            snackbarJobs[type.ordinal] = viewModelScope.launch {
+                val data = PlayerSnackbarMessage(message, type)
+                snackbarQueue.add(data)
+
+                if (type == PlayerSnackbarMessageType.Episode)
+                    return@launch
+
+                val durationInLong = when (data.duration) {
+                    SnackbarDuration.Short -> 4000L
+                    SnackbarDuration.Long -> 10000L
+                    SnackbarDuration.Indefinite -> Long.MAX_VALUE
+                }
+
+                delay(durationInLong)
+                snackbarQueue.remove(data)
+            }
             return
+        }
 
-        onShowSnackbarJob = viewModelScope.launch {
-            val itemIndexInQueue = snackbarQueue.indexOfFirst {
-                it.type == type
-            }
-            val isSameTypeAlreadyQueued = itemIndexInQueue != -1
+        when (type) {
+            PlayerSnackbarMessageType.Episode -> {
+                if (snackbarJobs[type.ordinal]?.isActive == true) {
+                    snackbarJobs[type.ordinal]?.cancel()
+                    snackbarJobs[type.ordinal] = null
+                }
 
-            if (!isSameTypeAlreadyQueued) {
-                snackbarQueue.add(PlayerSnackbarMessage(message, type))
-                return@launch
-            }
+                snackbarJobs[type.ordinal] = viewModelScope.launch {
+                    val currentIndex =
+                        snackbarQueue.indexOfFirst { it.type == type } // Have to call this everytime to be cautious of other snackbar item changes :<
 
-            when (type) {
-                PlayerSnackbarMessageType.Episode -> {
-                    val itemInQueue = snackbarQueue[itemIndexInQueue]
-                    snackbarQueue[itemIndexInQueue] = itemInQueue.copy(
+                    val itemInQueue = snackbarQueue[currentIndex]
+                    snackbarQueue[currentIndex] = itemInQueue.copy(
                         message = message
                     )
+
+                    delay(5000L)
+                    snackbarQueue.remove(snackbarQueue[currentIndex])
+                }
+            }
+
+            else -> {
+                if (snackbarJobs[type.ordinal]?.isActive == true) {
+                    snackbarJobs[type.ordinal]?.cancel()
+                    snackbarJobs[type.ordinal] = null
                 }
 
-                else -> {
-                    snackbarQueue.removeAt(itemIndexInQueue)
-                    delay(700)
-                    snackbarQueue.add(PlayerSnackbarMessage(message, type))
-                }
+                snackbarQueue.remove(snackbarQueue[itemIndexInQueue])
+                showSnackbar(message, type)
             }
         }
     }
 
-    fun removeSnackbar(position: Int) {
-        if (onRemoveSnackbarJob?.isActive == true)
-            return
-
-        onRemoveSnackbarJob = viewModelScope.launch {
-            if (position > snackbarQueue.size - 1)
-                return@launch
-
-            snackbarQueue.removeAt(position)
-        }
+    fun removeSnackbar(data: PlayerSnackbarMessage) {
+        snackbarQueue.remove(data)
     }
 }

@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.flixclusive.presentation.mobile.common.composables.film.FilmCover
+import com.flixclusive.presentation.common.composables.FilmCover
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
 import com.flixclusive.presentation.theme.lightGrayElevated
 import com.flixclusive.presentation.utils.ModifierUtils.ifElse

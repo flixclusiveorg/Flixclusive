@@ -7,14 +7,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -24,41 +18,32 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.session.MediaSession
 import androidx.tv.material3.MaterialTheme
-import androidx.tv.material3.Surface
-import androidx.tv.material3.Text
-import com.flixclusive.R
 import com.flixclusive.domain.model.VideoDataDialogState
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.Movie
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.model.tmdb.TvShow
-import com.flixclusive.presentation.mobile.common.composables.GradientCircularProgressIndicator
+import com.flixclusive.presentation.common.composables.SourceStateDialog
+import com.flixclusive.presentation.common.player.FlixclusivePlayer
+import com.flixclusive.presentation.common.player.PLAYER_CONTROL_VISIBILITY_TIMEOUT
+import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.LifecycleAwarePlayer
+import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.LocalPlayer
 import com.flixclusive.presentation.tv.main.TVMainActivity
 import com.flixclusive.presentation.tv.screens.player.controls.BottomControlsButtonType
 import com.flixclusive.presentation.tv.screens.player.controls.TvPlaybackControls
 import com.flixclusive.presentation.tv.utils.ComposeTvUtils.provideLocalDirectionalFocusRequester
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.handleDPadKeyEvents
 import com.flixclusive.presentation.tv.utils.PlayerTvUtils.getTimeToSeekToBasedOnSeekMultiplier
-import com.flixclusive.presentation.utils.PlayerUiUtils.LifecycleAwarePlayer
-import com.flixclusive.presentation.utils.PlayerUiUtils.LocalPlayer
-import com.flixclusive.presentation.utils.PlayerUiUtils.PLAYER_CONTROL_VISIBILITY_TIMEOUT
-import com.flixclusive.presentation.utils.PlayerUiUtils.initializePlayer
-import com.flixclusive.presentation.utils.PlayerUiUtils.rePrepare
 import kotlinx.coroutines.delay
 
 private const val PLAYER_SCREEN_DELAY = 800
@@ -100,67 +85,20 @@ fun FilmTvPlayerScreen(
         onBack()
     }
 
-    AnimatedVisibility(
-        visible = dialogState !is VideoDataDialogState.Idle && isPlayerStarting,
-        enter = fadeIn(),
-        exit = fadeOut(),
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                tonalElevation = 2.dp,
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier
-                    .sizeIn(
-                        minHeight = 250.dp,
-                        minWidth = 250.dp
-                    )
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(15.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                ) {
-                    if (
-                        dialogState is VideoDataDialogState.Extracting
-                        || dialogState is VideoDataDialogState.Fetching
-                        || dialogState is VideoDataDialogState.Success
-                    ) {
-                        GradientCircularProgressIndicator(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.tertiary,
-                            )
-                        )
-                    } else {
-                        Icon(
-                            painter = painterResource(id = R.drawable.round_error_outline_24),
-                            contentDescription = "Error icon",
-                            tint = androidx.compose.material3.MaterialTheme.colorScheme.error,
-                            modifier = Modifier
-                                .size(80.dp)
-                        )
-                    }
-
-                    Text(
-                        text = dialogState.message.asString(),
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(15.dp)
-                    )
-                }
-            }
-        }
-    }
+    SourceStateDialog(
+        state = dialogState,
+        isTv = true,
+        onConsumeDialog = viewModel::onConsumePlayerDialog
+    )
 
     AnimatedVisibility(
-        visible = dialogState is VideoDataDialogState.Success && isPlayerStarting && videoData != null,
+        visible = dialogState is VideoDataDialogState.Success && isPlayerStarting,
         enter = fadeIn(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY)),
         exit = fadeOut(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY))
     ) {
         LaunchedEffect(Unit) {
+            viewModel.resetUiState()
+
             if (film is TvShow) {
                 viewModel.initializeWatchItemManager(film.totalSeasons)
             }
@@ -170,9 +108,7 @@ fun FilmTvPlayerScreen(
             mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
         }
         val (sideSheetFocusPriority, toggleSideSheet) = remember {
-            mutableStateOf<BottomControlsButtonType?>(
-                null
-            )
+            mutableStateOf<BottomControlsButtonType?>(null)
         }
         var areControlsVisible by remember { mutableStateOf(true) }
         var seekMultiplier by remember { mutableLongStateOf(0L) }
@@ -185,37 +121,24 @@ fun FilmTvPlayerScreen(
 
             currentSelectedEpisode?.season == lastSeason && currentSelectedEpisode?.episode == lastEpisode
         }
-        var source by remember { mutableStateOf(videoData!!.source) }
-        var shouldPlay by remember { mutableStateOf(true) }
-        val availableQualities =
-            remember(viewModel.availableQualities.size) { viewModel.availableQualities }
-        val subtitlesList =
-            remember(videoData?.subtitles?.first()?.url) { viewModel.availableSubtitles }
+        var source by remember { mutableStateOf(videoData.source) }
 
-        var mediaSession: MediaSession? by remember {
-            mutableStateOf(
-                context.initializePlayer(
-                    source,
-                    videoData?.title,
-                    subtitlesList,
-                    uiState.currentTime,
-                    uiState.playWhenReady
-                )
-            )
+        val player by remember { 
+            mutableStateOf(FlixclusivePlayer(context, appSettings))
         }
 
         fun showControls(isShowing: Boolean) {
             controlTimeoutVisibility = if (isShowing) PLAYER_CONTROL_VISIBILITY_TIMEOUT else 0
         }
 
-        LaunchedEffect(uiState.isPlaying, uiState.playbackState) {
+        LaunchedEffect(player.isPlaying, player.playbackState) {
             if(sideSheetFocusPriority != null) {
                 controlTimeoutVisibility = 0
                 return@LaunchedEffect
             }
 
             controlTimeoutVisibility = if (
-                (!uiState.isPlaying || uiState.playbackState == Player.STATE_BUFFERING)
+                (!player.isPlaying || player.playbackState == Player.STATE_BUFFERING)
             ) {
                 Int.MAX_VALUE
             } else PLAYER_CONTROL_VISIBILITY_TIMEOUT
@@ -224,23 +147,24 @@ fun FilmTvPlayerScreen(
         LaunchedEffect(seekMultiplier) {
             if (seekMultiplier != 0L) {
                 var shouldPlayAfterSeek = false
-                if(mediaSession?.player?.isPlaying == true) {
-                    mediaSession?.player?.pause()
+
+                if(player.isPlaying) {
+                    player.pause()
                     shouldPlayAfterSeek = true
                 }
                 showControls(true)
                 delay(2000L)
 
                 val timeToSeekTo = getTimeToSeekToBasedOnSeekMultiplier(
-                    currentTime = uiState.currentTime,
-                    maxDuration = uiState.totalDuration,
+                    currentTime = player.currentPosition,
+                    maxDuration = player.duration,
                     seekMultiplier = seekMultiplier
                 )
-                mediaSession?.player?.seekTo(timeToSeekTo)
+                player.seekTo(timeToSeekTo)
                 seekMultiplier = 0
 
                 if(shouldPlayAfterSeek)
-                    mediaSession?.player?.play()
+                    player.play()
             }
         }
 
@@ -257,103 +181,53 @@ fun FilmTvPlayerScreen(
             }
         }
 
-        LaunchedEffect(videoData?.source) {
-            val currentAutoAdaptiveSource = videoData?.source
+        LaunchedEffect(videoData.source) {
+            val currentAutoAdaptiveSource = videoData.source
             val isNew = !currentAutoAdaptiveSource.equals(source, ignoreCase = true)
 
             if (isNew) {
-                source = currentAutoAdaptiveSource!!
-                mediaSession?.player?.rePrepare(
-                    source,
-                    videoData!!,
-                    subtitlesList,
-                    uiState.currentTime,
-                    uiState.playWhenReady
+                source = currentAutoAdaptiveSource
+
+                val (currentPosition, _) = viewModel.getSavedTimeForVideoData(currentSelectedEpisode)
+
+                player.prepare(
+                    videoData = videoData,
+                    initialPlaybackPosition = currentPosition
                 )
             }
         }
 
-        CompositionLocalProvider(LocalPlayer provides mediaSession?.player) {
+        CompositionLocalProvider(LocalPlayer provides player) {
             provideLocalDirectionalFocusRequester {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surface)
                 ) {
-                    AudioFocusManager(
-                        isPlaying = uiState.isPlaying,
-                        shouldPlay = shouldPlay,
-                        playbackState = uiState.playbackState,
-                        onUpdateIsPlayingState = viewModel::updateIsPlayingState,
-                        onUpdateCurrentTime = viewModel::updateCurrentTime,
-                        onShouldPlayChange = { shouldPlay = it }
-                    )
+                    AudioFocusManager()
 
                     LifecycleAwarePlayer(
                         isInTv = true,
-                        appSettings = appSettings,
                         areControlsVisible = areControlsVisible,
-                        onEventCallback = { duration, currentPosition, bufferPercentage, isPlaying, playbackState ->
-                            viewModel.updatePlayerState(
-                                totalDuration = duration,
-                                currentTime = currentPosition,
-                                bufferedPercentage = bufferPercentage,
-                                isPlaying = isPlaying,
-                                playbackState = playbackState
-                            )
-                        },
-                        playWhenReady = uiState.playWhenReady,
-                        onPlaybackReady = {
-                            mediaSession?.player?.run {
-                                viewModel.updateIsPlayingState(playWhenReady)
-                                playbackParameters =
-                                    PlaybackParameters(uiState.playbackSpeed)
-
-                                viewModel.initializeVideoQualities(currentTracks)
-                                viewModel.updateWatchHistory()
-
-                                trackSelectionParameters = viewModel.onSubtitleChange(
-                                    subtitleIndex = uiState.selectedSubtitle,
-                                    trackParameters = trackSelectionParameters
-                                )
-                                trackSelectionParameters = viewModel.onVideoQualityChange(
-                                    qualityIndex = uiState.selectedQuality,
-                                    trackParameters = trackSelectionParameters
-                                ) ?: return@run
-                            }
-                        },
-                        onPlaybackEnded = {
-                            if (!isLastEpisode && watchHistoryItem?.film?.filmType == FilmType.TV_SHOW) {
-                                viewModel.play(film)
-                            }
-                        },
                         onInitialize = {
-                            if (mediaSession != null) {
-                                mediaSession!!.player.addListener(it)
-                                return@LifecycleAwarePlayer
-                            }
+                            player.run {
+                                val (currentPosition, _) = viewModel.getSavedTimeForVideoData(currentSelectedEpisode)
 
-                            mediaSession = context.initializePlayer(
-                                source,
-                                videoData?.title,
-                                subtitlesList,
-                                uiState.currentTime,
-                                uiState.playWhenReady
-                            )
-                            mediaSession!!.player.addListener(it)
+                                initialize()
+                                prepare(
+                                    videoData = videoData,
+                                    initialPlaybackPosition = currentPosition
+                                )
+                            }
                         },
                         onRelease = {
-                            mediaSession?.run {
-                                viewModel.onActivityStop(
-                                    playWhenReady = player.isPlaying && player.playWhenReady,
-                                    currentTime = player.currentPosition
+                            player.run {
+                                viewModel.updateWatchHistory(
+                                    currentTime = currentPosition,
+                                    duration = duration
                                 )
-                                viewModel.updateWatchHistory()
 
-                                player.removeListener(it)
-                                player.release()
                                 release()
-                                mediaSession = null
                             }
                         },
                         modifier = Modifier
@@ -361,7 +235,7 @@ fun FilmTvPlayerScreen(
                                 onEnter = {
                                     if (!areControlsVisible && sideSheetFocusPriority == null) {
                                         showControls(true)
-                                        mediaSession?.player?.run {
+                                        player.run {
                                             if (isPlaying) {
                                                 pause()
                                             } else play()
@@ -388,42 +262,34 @@ fun FilmTvPlayerScreen(
                     TvPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         isVisible = areControlsVisible && seekMultiplier == 0L && sideSheetFocusPriority == null,
-                        qualities = availableQualities,
-                        servers = videoData?.servers ?: emptyList(),
-                        subtitles = videoData?.subtitles ?: emptyList(),
+                        videoData = videoData,
                         sideSheetFocusPriority = sideSheetFocusPriority,
                         stateProvider = { uiState },
                         dialogStateProvider = { dialogState },
-                        playbackTitle = videoData?.title ?: "",
+                        playbackTitle = videoData.title ?: "",
                         isTvShow = film.filmType == FilmType.TV_SHOW,
                         isLastEpisode = isLastEpisode,
                         seekMultiplier = seekMultiplier,
                         onSideSheetDismiss = { toggleSideSheet(it) },
                         showControls = { showControls(it) },
                         onSeekMultiplierChange = { seekMultiplier = it },
-                        onPauseToggle = {
-                            viewModel.updateIsPlayingState()
-                            shouldPlay = uiState.isPlaying
-                        },
                         onBack = {
-                            viewModel.updateWatchHistory()
-                            onBack()
+                            player.run {
+                                viewModel.updateWatchHistory(
+                                    currentTime = currentPosition,
+                                    duration = duration
+                                )
+                                onBack()
+                            }
                         },
                         onNextEpisode = {
-                            viewModel.updateWatchHistory()
-                            viewModel.play(film)
-                        },
-                        onSubtitleChange = { subtitleIndex, trackSelectionParameters ->
-                            viewModel.onSubtitleChange(
-                                subtitleIndex = subtitleIndex,
-                                trackParameters = trackSelectionParameters
-                            )
-                        },
-                        onVideoQualityChange = { videoQualityIndex, trackSelectionParameters ->
-                            viewModel.onVideoQualityChange(
-                                qualityIndex = videoQualityIndex,
-                                trackParameters = trackSelectionParameters
-                            )
+                            player.run {
+                                viewModel.updateWatchHistory(
+                                    currentTime = currentPosition,
+                                    duration = duration
+                                )
+                                viewModel.play(film)
+                            }
                         },
                     )
                 }

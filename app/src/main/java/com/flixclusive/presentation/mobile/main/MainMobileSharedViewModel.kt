@@ -15,6 +15,7 @@ import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.Movie
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.model.tmdb.TvShow
+import com.flixclusive.domain.model.tmdb.toFilmInstance
 import com.flixclusive.domain.preferences.AppSettingsManager
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.domain.repository.WatchHistoryRepository
@@ -167,7 +168,7 @@ class MainMobileSharedViewModel @Inject constructor(
 
         onPlayClickJob = viewModelScope.launch {
             try {
-                updateVideoDataDialogState(VideoDataDialogState.Fetching("Fetching film details..."))
+                updateVideoDataDialogState(VideoDataDialogState.Fetching(R.string.film_data_fetching))
 
                 val film = filmToWatch ?: _uiState.value.longClickedFilm!!
 
@@ -189,7 +190,14 @@ class MainMobileSharedViewModel @Inject constructor(
 
                 _uiState.update { it.copy(longClickedFilm = filmToShow) }
                 _longClickedFilmWatchHistoryItem.update {
-                    watchHistoryRepository.getWatchHistoryItemById(film.id)
+                    val oldWatchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(filmToShow.id)
+
+                    // Update watch history film data
+                    oldWatchHistoryItem
+                        ?.copy(film = filmToShow.toFilmInstance())
+                        ?.also { item ->
+                            watchHistoryRepository.insert(item)
+                        }
                 }
 
                 videoDataProvider(
