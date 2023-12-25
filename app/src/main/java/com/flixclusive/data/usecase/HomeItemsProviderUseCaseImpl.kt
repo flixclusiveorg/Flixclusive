@@ -11,7 +11,7 @@ import com.flixclusive.domain.model.tmdb.TMDBSearchItem
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.domain.repository.WatchHistoryRepository
 import com.flixclusive.domain.usecase.HomeItemsProviderUseCase
-import com.flixclusive.presentation.utils.FormatterUtils.formatGenreIds
+import com.flixclusive.presentation.utils.FormatterUtils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -43,80 +43,88 @@ class HomeItemsProviderUseCaseImpl @Inject constructor(
     override suspend fun getHeaderItem(): Film? {
         var headerItemToUse: TMDBSearchItem? = null
 
-        val page = nextInt(1, 3000)
-        val itemConfig =
-            if (page % 2 == 0) configurationProvider.homeCategoriesConfig!!.movie.random() else configurationProvider.homeCategoriesConfig!!.tv.random()
+        retry@ for(i in 0..5) {
+            val page = nextInt(1, 3000)
+            val itemConfig =
+                if (page % 2 == 0) configurationProvider.homeCategoriesConfig?.movie?.random() else configurationProvider.homeCategoriesConfig?.tv?.random() ?: continue
 
-        val response = tmdbRepository.paginateConfigItems(
-            url = itemConfig.query,
-            page = max(1, page % 5)
-        )
-        if (response is Resource.Failure)
-            return null
-
-        if(response.data?.results?.isEmpty() == true)
-            return getHeaderItem()
-
-        response.data?.results?.size?.let {
-            headerItemToUse = response.data.results.random()
-        }
-
-        headerItemToUse?.let { item ->
-            val imageResponse = tmdbRepository.getImages(
-                mediaType = if (page % 2 == 0) FilmType.MOVIE.type else FilmType.TV_SHOW.type,
-                id = item.id
+            val response = tmdbRepository.paginateConfigItems(
+                url = itemConfig!!.query,
+                page = max(1, page % 5)
             )
+            
+            if (response is Resource.Failure)
+                continue
 
-            if (imageResponse is Resource.Failure)
-                return null
+            if(response.data?.results?.isEmpty() == true)
+                continue
 
-            imageResponse.data?.logos?.let { logos ->
-                if (logos.isEmpty()) {
-                    return getHeaderItem()
-                }
+            response.data?.results?.size?.let {
+                headerItemToUse = response.data.results.random()
+            }
 
-                val logoToUse = logos[0].filePath.replace("svg", "png")
+            if (headerItemToUse != null) {
+                val item = headerItemToUse!! // For smart casting
 
-                headerItemToUse = when (item) {
-                    is TMDBSearchItem.MovieTMDBSearchItem -> {
-                        val newGenres = formatGenreIds(
-                            genreIds = item.genreIds,
-                            genresList = configurationProvider
-                                .searchCategoriesConfig!!.genres.map {
-                                    Genre(
-                                        id = it.id,
-                                        name = it.name,
-                                        mediaType = it.mediaType
-                                    )
-                                }
-                        ) + item.genres
-
-                        item.copy(
-                            logoImage = logoToUse,
-                            genres = newGenres
-                        )
+                val imageResponse = tmdbRepository.getImages(
+                    mediaType = if (page % 2 == 0) FilmType.MOVIE.type else FilmType.TV_SHOW.type,
+                    id = item.id
+                )
+    
+                if (imageResponse is Resource.Failure)
+                    continue
+    
+                if (imageResponse.data?.logos != null) {
+                    val logos = imageResponse.data.logos
+                    
+                    if (logos.isEmpty()) {
+                        continue
                     }
 
-                    is TMDBSearchItem.TvShowTMDBSearchItem -> {
-                        val newGenres = formatGenreIds(
-                            genreIds = item.genreIds,
-                            genresList = configurationProvider
-                                .searchCategoriesConfig!!.genres.map {
-                                    Genre(
-                                        id = it.id,
-                                        name = it.name,
-                                        mediaType = FilmType.TV_SHOW.type
-                                    )
-                                }
-                        ) + item.genres
+                    val logoToUse = logos[0].filePath.replace("svg", "png")
 
-                        item.copy(
-                            logoImage = logoToUse,
-                            genres = newGenres
-                        )
+                    when (item) {
+                        is TMDBSearchItem.MovieTMDBSearchItem -> {
+                            val newGenres = FormatterUtils.formatGenreIds(
+                                genreIds = item.genreIds,
+                                genresList = configurationProvider
+                                    .searchCategoriesConfig!!.genres.map {
+                                        Genre(
+                                            id = it.id,
+                                            name = it.name,
+                                            mediaType = it.mediaType
+                                        )
+                                    }
+                            ) + item.genres
+
+                            headerItemToUse = item.copy(
+                                logoImage = logoToUse,
+                                genres = newGenres
+                            )
+                            break
+                        }
+                        is TMDBSearchItem.TvShowTMDBSearchItem -> {
+                            val newGenres = FormatterUtils.formatGenreIds(
+                                genreIds = item.genreIds,
+                                genresList = configurationProvider
+                                    .searchCategoriesConfig!!.genres.map {
+                                        Genre(
+                                            id = it.id,
+                                            name = it.name,
+                                            mediaType = FilmType.TV_SHOW.type
+                                        )
+                                    }
+                            ) + item.genres
+
+                            headerItemToUse = item.copy(
+                                logoImage = logoToUse,
+                                genres = newGenres
+                            )
+                            break
+                        }
+
+                        else -> throw IllegalStateException("SearchItem is not parsable to a film!")
                     }
-
-                    else -> throw IllegalStateException("SuperStreamSearchItem is not parsable to a film!")
                 }
             }
         }
@@ -177,7 +185,7 @@ class HomeItemsProviderUseCaseImpl @Inject constructor(
     }
 
     override fun getUserRecommendations(userId: Int, count: Int): Flow<HomeCategoryItem?> = flow {
-        check(count > 0) { "SuperStreamSearchItem count must be greater than 0" }
+        check(count > 0) { "SearchItem count must be greater than 0" }
 
         val randomWatchedFilms =
             watchHistoryRepository.getRandomWatchHistoryItems(ownerId = userId, count = count)

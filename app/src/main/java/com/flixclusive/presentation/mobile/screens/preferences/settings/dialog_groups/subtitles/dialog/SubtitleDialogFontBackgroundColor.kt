@@ -9,25 +9,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.R
 import com.flixclusive.domain.preferences.AppSettings
 import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionStylePreference.Companion.getTextStyle
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.SubtitleSettingsDialog
+import com.flixclusive.presentation.mobile.theme.FlixclusiveMobileTheme
 import com.flixclusive.presentation.theme.subtitleBackgroundColors
 import com.flixclusive.presentation.utils.ColorPickerUtils.AlphaBar
+import kotlin.math.abs
 
 @Composable
 fun SubtitleDialogFontBackgroundColor(
@@ -36,11 +42,16 @@ fun SubtitleDialogFontBackgroundColor(
     onDismissRequest: () -> Unit
 ) {
     val (selectedOption, onOptionSelected) = remember {
-        val currentColor = Color(appSettings.subtitleBackgroundColor)
-            .copy(alpha = 1F)
+        mutableIntStateOf(0)
+    }
+
+    LaunchedEffect(Unit) {
+        val preferredColor = appSettings.subtitleBackgroundColor
+        val color = Color(preferredColor)
+            .copy(alpha = abs(preferredColor).toFloat().coerceIn(0F, 1F))
             .toArgb()
 
-        mutableIntStateOf(currentColor)
+        onOptionSelected(color)
     }
 
     val (alpha, onAlphaChange) = remember {
@@ -50,6 +61,7 @@ fun SubtitleDialogFontBackgroundColor(
 
     val onColorChange = { color: Int ->
         val isComingFromTransparent = color != 0 && alpha == 0F
+
         if(isComingFromTransparent)
             onAlphaChange(1F)
 
@@ -67,12 +79,13 @@ fun SubtitleDialogFontBackgroundColor(
         ) {
             subtitleBackgroundColors.forEach { (colorName, color) ->
                 val colorInt = remember { color.toArgb() }
+                val isSelected = remember(selectedOption) { colorInt == selectedOption }
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .selectable(
-                            selected = (colorInt == selectedOption),
+                            selected = isSelected,
                             onClick = {
                                 onColorChange(colorInt)
                             }
@@ -81,7 +94,7 @@ fun SubtitleDialogFontBackgroundColor(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     RadioButton(
-                        selected = (colorInt == selectedOption),
+                        selected = isSelected,
                         onClick = {
                             onColorChange(colorInt)
                         }
@@ -98,7 +111,7 @@ fun SubtitleDialogFontBackgroundColor(
                 }
             }
 
-            if(appSettings.subtitleBackgroundColor != 0) {
+            if(selectedOption != 0) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -113,14 +126,39 @@ fun SubtitleDialogFontBackgroundColor(
                         onAlphaChanged = { alpha, newColor ->
                             onAlphaChange(alpha)
 
-                            if(alpha == 0F)
+                            if(alpha == 0F) {
                                 onOptionSelected(0)
+                                onChange(0)
+                                return@AlphaBar
+                            }
 
                             onChange(newColor.toArgb())
                         },
                     )
                 }
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun SubtitleDialogFontBackgroundColorPreview() {
+    val (appSettings, onAppSettingsChange) = remember {
+        mutableStateOf(AppSettings(
+            subtitleBackgroundColor = Color.Red.copy(alpha = 0F).toArgb()
+        ))
+    }
+
+    FlixclusiveMobileTheme {
+        Surface {
+            SubtitleDialogFontBackgroundColor(
+                appSettings = appSettings,
+                onChange = {
+                    onAppSettingsChange(appSettings.copy(subtitleBackgroundColor = it))
+                },
+                onDismissRequest = {}
+            )
         }
     }
 }

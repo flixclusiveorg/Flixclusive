@@ -1,5 +1,6 @@
 package com.flixclusive.presentation.utils
 
+import android.content.res.Resources
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -9,7 +10,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavHostController
 import com.ramcosta.composedestinations.navigation.navigate
 import com.ramcosta.composedestinations.navigation.popUpTo
@@ -17,6 +20,14 @@ import com.ramcosta.composedestinations.spec.Direction
 import com.ramcosta.composedestinations.spec.Route
 
 object ComposeUtils {
+    val Int.toPx: Int get() = (this * Resources.getSystem().displayMetrics.density).toInt()
+    fun String.createTextFieldValue(): TextFieldValue {
+        return TextFieldValue(
+            text = this,
+            selection = TextRange(length)
+        )
+    }
+
     fun TextStyle.applyDropShadow(
         shadowColor: Color = Color.Black,
         offset: Offset = Offset(x = 2F, y = 4F),

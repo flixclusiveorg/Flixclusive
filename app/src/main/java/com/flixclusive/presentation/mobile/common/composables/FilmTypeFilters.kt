@@ -43,7 +43,7 @@ fun FilmTypeFilters(
             horizontalArrangement = Arrangement.Start,
             modifier = Modifier.fillMaxWidth()
         ) {
-            FilmType.values().forEach { filter ->
+            FilmType.entries.forEach { filter ->
                 val buttonColors = when (currentFilterSelected == filter) {
                     true -> ButtonDefaults.outlinedButtonColors(
                         disabledContainerColor = MaterialTheme.colorScheme.primary,

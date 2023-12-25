@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.flixclusive.presentation.tv.common.FilmCardShape
+import com.flixclusive.presentation.tv.common.composables.FilmCardShape
 import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 import com.flixclusive.presentation.utils.FormatterUtils.formatRating
 

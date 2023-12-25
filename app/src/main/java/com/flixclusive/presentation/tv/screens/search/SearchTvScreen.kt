@@ -31,7 +31,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.R
 import com.flixclusive.presentation.common.PagingState
 import com.flixclusive.presentation.destinations.FilmTvScreenDestination
-import com.flixclusive.presentation.tv.common.FilmCardTv
+import com.flixclusive.presentation.tv.common.composables.FilmCardTv
 import com.flixclusive.presentation.tv.common.TvRootNavGraph
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.createInitialFocusRestorerModifiers
 import com.flixclusive.presentation.utils.ModifierUtils.ifElse

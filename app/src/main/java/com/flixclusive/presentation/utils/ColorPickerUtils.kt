@@ -67,6 +67,7 @@ object ColorPickerUtils {
         onAlphaChanged: (Float, Color) -> Unit
     ) {
         val currentColor by rememberUpdatedState(color())
+        val currentOnAlphaChanged by rememberUpdatedState(onAlphaChanged)
 
         val currentColorToAlphaBrush = remember(currentColor) {
             Brush.horizontalGradient(
@@ -88,7 +89,7 @@ object ColorPickerUtils {
                             x = down.position.x,
                             maxWidth = this.size.width.toFloat()
                         ).coerceIn(0F, 1F)
-                        onAlphaChanged(
+                        currentOnAlphaChanged(
                             alpha,
                             currentColor.copy(alpha = alpha)
                         )
@@ -102,7 +103,7 @@ object ColorPickerUtils {
                                 maxWidth = this.size.width.toFloat()
                             ).coerceIn(0F, 1F)
 
-                            onAlphaChanged(
+                            currentOnAlphaChanged(
                                 alpha,
                                 currentColor.copy(alpha = alpha)
                             )

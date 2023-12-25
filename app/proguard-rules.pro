@@ -66,7 +66,7 @@
 -keep class com.flixclusive.data.dto.tmdb.common.** { *; }
 
 -keep class com.flixclusive.providers.models.common.** { *; }
--keep class com.flixclusive.providers.models.extractors.vidcloud.** { *; }
+-keep class com.flixclusive.providers.models.extractors.upcloud.** { *; }
 -keep class com.flixclusive.providers.models.providers.flixhq.** { *; }
 -keep class com.flixclusive.providers.models.providers.superstream.** { *; }
 -keep class com.flixclusive.providers.models.providers.lookmovie.** { *; }

@@ -94,7 +94,12 @@ abstract class AppDatabase : RoomDatabase() {
                     }
             }
         }
-        
+
+        /**
+         *
+         * This would be deleted on soon updates.
+         *
+         * */
         private fun Context.updateOldDatabase() {
             val oldDatabaseName = "watch_history_database"
 

@@ -8,7 +8,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.common.LoggerUtils.errorLog
+import com.flixclusive.utils.LoggerUtils.errorLog
 import com.flixclusive.di.IoDispatcher
 import com.flixclusive.domain.model.config.HomeCategoryItem
 import com.flixclusive.domain.model.tmdb.Film

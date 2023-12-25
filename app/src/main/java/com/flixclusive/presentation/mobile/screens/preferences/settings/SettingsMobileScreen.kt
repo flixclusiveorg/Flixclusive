@@ -1,5 +1,6 @@
 package com.flixclusive.presentation.mobile.screens.preferences.settings
 
+import android.text.format.Formatter.formatShortFileSize
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -22,6 +23,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -30,7 +32,11 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -38,6 +44,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -51,25 +59,41 @@ import com.flixclusive.R
 import com.flixclusive.domain.preferences.AppSettings
 import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionEdgeTypePreference
 import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionStylePreference
+import com.flixclusive.domain.preferences.AppSettings.Companion.resizeModes
 import com.flixclusive.presentation.common.FadeInAndOutScreenTransition
 import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
 import com.flixclusive.presentation.mobile.screens.preferences.PreferencesNavGraph
 import com.flixclusive.presentation.mobile.screens.preferences.common.TopBarWithNavigationIcon
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.advanced.AdvancedDialogWrapper
+import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.player.PlayerDialogWrapper
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.SubtitleDialogWrapper
 import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.subtitles.SubtitlePreview
-import com.flixclusive.presentation.mobile.screens.preferences.settings.dialog_groups.video_player.VideoPlayerDialogWrapper
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
 import com.flixclusive.presentation.utils.ColorPickerUtils.BoxWithColor
 import com.flixclusive.presentation.utils.ComposeUtils.BorderedText
 import com.flixclusive.presentation.utils.LazyListUtils.isAtTop
 import com.flixclusive.presentation.utils.LazyListUtils.isScrollingUp
+import com.flixclusive.utils.LoggerUtils.errorLog
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import java.io.File
 import java.util.Locale
 
 private const val DEFAULT_TEXT_PREVIEW = "Abc"
 private val settingItemShape = RoundedCornerShape(20.dp)
+
+private fun getFolderSize(dir: File): Long {
+    var size: Long = 0
+    dir.listFiles()?.let {
+        for (file in it) {
+            size += if (file.isFile) {
+                file.length()
+            } else getFolderSize(file)
+        }
+    }
+
+    return size
+}
 
 @PreferencesNavGraph
 @Destination(
@@ -79,20 +103,39 @@ private val settingItemShape = RoundedCornerShape(20.dp)
 fun SettingsMobileScreen(
     navigator: DestinationsNavigator,
 ) {
+    val context = LocalContext.current
+
     val viewModel = hiltViewModel<SettingsMobileScreenViewModel>()
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
 
-    val toggleSubtitlesLabel = stringResource(R.string.subtitle)
-    val toggleFilmCardTitleLabel = stringResource(R.string.film_card_titles)
+    var sizeSummary: String? by remember { mutableStateOf(null) }
 
     val toggleSwitch = { newValue: AppSettings ->
         viewModel.onChangeSettings(newValue)
     }
 
+    fun updateAppCacheSize() {
+        try {
+            sizeSummary = formatShortFileSize(
+                /* context = */ context,
+                /* sizeBytes = */ getFolderSize(context.cacheDir)
+            )
+        } catch (e: Exception) {
+            errorLog(e.stackTraceToString())
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        updateAppCacheSize()
+    }
+
     val currentGeneralSettings = listOf(
         SettingsItem(
-            title = toggleFilmCardTitleLabel,
-            description = "Show titles on film cards",
+            title = stringResource(R.string.film_card_titles),
+            description = stringResource(R.string.film_card_titles_label),
+            onClick = {
+                toggleSwitch(appSettings.copy(isShowingFilmCardTitle = !appSettings.isShowingFilmCardTitle))
+            },
             previewContent = {
                 Switch(
                     checked = appSettings.isShowingFilmCardTitle,
@@ -107,13 +150,16 @@ fun SettingsMobileScreen(
 
     val currentSubtitlesSettings = listOf(
         SettingsItem(
-            title = toggleSubtitlesLabel,
-            description = "Toggle to turn subtitles on/off",
+            title = stringResource(R.string.subtitle),
+            description = stringResource(id = R.string.subtitles_toggle_desc),
+            onClick = {
+                toggleSwitch(appSettings.copy(isSubtitleEnabled = !appSettings.isSubtitleEnabled))
+            },
             previewContent = {
                 Switch(
                     checked = appSettings.isSubtitleEnabled,
                     onCheckedChange = {
-                        toggleSwitch(appSettings.copy(isShowingFilmCardTitle = it))
+                        toggleSwitch(appSettings.copy(isSubtitleEnabled = it))
                     },
                     modifier = Modifier.scale(0.7F)
                 )
@@ -161,7 +207,7 @@ fun SettingsMobileScreen(
         ),
         SettingsItem(
             title = stringResource(R.string.subtitles_color),
-            description = "Choose a readable and preferred color",
+            description = stringResource(R.string.subtitles_color_desc),
             enabled = appSettings.isSubtitleEnabled,
             dialogKey = KEY_SUBTITLE_COLOR_DIALOG,
             previewContent = {
@@ -173,7 +219,7 @@ fun SettingsMobileScreen(
         ),
         SettingsItem(
             title = stringResource(R.string.subtitles_background_color),
-            description = "Choose a background color behind the subtitle",
+            description = stringResource(R.string.subtitles_background_color_desc),
             enabled = appSettings.isSubtitleEnabled,
             dialogKey = KEY_SUBTITLE_BACKGROUND_COLOR_DIALOG,
             previewContent = {
@@ -220,17 +266,96 @@ fun SettingsMobileScreen(
 
     val currentVideoPlayerSettings = listOf(
         SettingsItem(
-            title = stringResource(R.string.quality),
+            title = stringResource(R.string.release_player),
+            description = stringResource(R.string.release_player_desc),
+            onClick = {
+                toggleSwitch(appSettings.copy(shouldReleasePlayer = !appSettings.shouldReleasePlayer))
+            },
+            previewContent = {
+                Switch(
+                    checked = appSettings.shouldReleasePlayer,
+                    onCheckedChange = {
+                        toggleSwitch(appSettings.copy(shouldReleasePlayer = it))
+                    },
+                    modifier = Modifier.scale(0.7F)
+                )
+            }
+        ),
+        SettingsItem(
+            title = stringResource(R.string.reverse_player_time),
+            onClick = {
+                toggleSwitch(appSettings.copy(isPlayerTimeReversed = !appSettings.isPlayerTimeReversed))
+            },
+            previewContent = {
+                Switch(
+                    checked = appSettings.isPlayerTimeReversed,
+                    onCheckedChange = {
+                        toggleSwitch(appSettings.copy(isPlayerTimeReversed = !appSettings.isPlayerTimeReversed))
+                    },
+                    modifier = Modifier.scale(0.7F)
+                )
+            }
+        ),
+        SettingsItem(
+            title = stringResource(R.string.preferred_quality),
             description = appSettings.preferredQuality,
-            dialogKey = KEY_VIDEO_PLAYER_QUALITY_DIALOG,
+            dialogKey = KEY_PLAYER_QUALITY_DIALOG,
+        ),
+        SettingsItem(
+            title = stringResource(R.string.preferred_resize_mode),
+            description = resizeModes.entries.find { it.value == appSettings.preferredResizeMode }?.key,
+            dialogKey = KEY_PLAYER_RESIZE_MODE_DIALOG,
+        ),
+        SettingsItem(
+            title = stringResource(R.string.seek_length_label),
+            description = "${appSettings.preferredSeekAmount / 1000} seconds",
+            dialogKey = KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG,
         ),
     )
 
     val currentAdvancedSettings = listOf(
         SettingsItem(
             title = stringResource(R.string.doh),
-            description = appSettings.dns.toString(),
+            description = stringResource(R.string.dns_label),
             dialogKey = KEY_DOH_DIALOG,
+        ),
+    )
+
+    val currentCacheSettings = listOf(
+        SettingsItem(
+            title = stringResource(R.string.video_cache_size),
+            description = stringResource(R.string.video_cache_size_label),
+            dialogKey = KEY_PLAYER_DISK_CACHE_DIALOG,
+        ),
+        SettingsItem(
+            title = stringResource(R.string.video_buffer_size),
+            description = stringResource(R.string.video_buffer_size_label),
+            dialogKey = KEY_PLAYER_BUFFER_SIZE_DIALOG,
+        ),
+        SettingsItem(
+            title = stringResource(R.string.video_buffer_max_length),
+            description = stringResource(R.string.video_buffer_max_length_desc),
+            dialogKey = KEY_PLAYER_BUFFER_LENGTH_DIALOG,
+        ),
+        SettingsItem(
+            title = stringResource(R.string.clear_app_cache),
+            description = sizeSummary,
+            onClick = {
+                try {
+                    context.cacheDir.deleteRecursively()
+                    updateAppCacheSize()
+                } catch (e: Exception) {
+                    errorLog(e.stackTraceToString())
+                }
+            },
+            previewContent = {
+                Icon(
+                    painter = painterResource(id = R.drawable.delete),
+                    contentDescription = stringResource(
+                        id = R.string.delete_cache
+                    )
+                )
+            }
         ),
     )
 
@@ -267,8 +392,10 @@ fun SettingsMobileScreen(
             item {
                 SettingsGroup(
                     items = currentGeneralSettings,
-                    onItemClick = {
-                        toggleSwitch(appSettings.copy(isShowingFilmCardTitle = !appSettings.isShowingFilmCardTitle))
+                    onItemClick = { item ->
+                        if(item.onClick != null) {
+                            item.onClick.invoke()
+                        } else viewModel.toggleDialog(item.dialogKey!!)
                     }
                 )
             }
@@ -277,7 +404,9 @@ fun SettingsMobileScreen(
                 SettingsGroup(
                     items = currentVideoPlayerSettings,
                     onItemClick = { item ->
-                        viewModel.toggleDialog(item.dialogKey!!)
+                        if(item.onClick != null) {
+                            item.onClick.invoke()
+                        } else viewModel.toggleDialog(item.dialogKey!!)
                     }
                 )
             }
@@ -286,11 +415,9 @@ fun SettingsMobileScreen(
                 SettingsGroup(
                     items = currentSubtitlesSettings,
                     onItemClick = { item ->
-                        if (item.dialogKey != null) {
-                            viewModel.toggleDialog(item.dialogKey)
-                        } else {
-                            toggleSwitch(appSettings.copy(isShowingFilmCardTitle = !appSettings.isSubtitleEnabled))
-                        }
+                        if(item.onClick != null) {
+                            item.onClick.invoke()
+                        } else viewModel.toggleDialog(item.dialogKey!!)
                     }
                 )
             }
@@ -318,6 +445,17 @@ fun SettingsMobileScreen(
             }
 
             item {
+                SettingsGroup(
+                    items = currentCacheSettings,
+                    onItemClick = { item ->
+                        if(item.onClick != null) {
+                            item.onClick.invoke()
+                        } else viewModel.toggleDialog(item.dialogKey!!)
+                    }
+                )
+            }
+
+            item {
                 Spacer(modifier = Modifier.height(25.dp))
             }
         }
@@ -330,7 +468,7 @@ fun SettingsMobileScreen(
         onDismissDialog = viewModel::toggleDialog
     )
 
-    VideoPlayerDialogWrapper(
+    PlayerDialogWrapper(
         openedDialogMap = viewModel.openedDialogMap,
         appSettings = appSettings,
         onChange = viewModel::onChangeSettings,
@@ -372,8 +510,8 @@ private fun SettingsGroup(
 
                 if (i < items.lastIndex)
                     Divider(
-                        color = colorOnMediumEmphasisMobile(emphasis = 0.3F),
-                        thickness = 1.dp,
+                        color = colorOnMediumEmphasisMobile(emphasis = 0.15F),
+                        thickness = 0.5.dp,
                         modifier = Modifier
                             .padding(horizontal = 10.dp)
                     )
@@ -410,7 +548,10 @@ private fun SettingsGroupItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 60.dp)
-                    .padding(horizontal = LABEL_START_PADDING),
+                    .padding(
+                        horizontal = LABEL_START_PADDING,
+                        vertical = 8.dp
+                    ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
@@ -428,9 +569,10 @@ private fun SettingsGroupItem(
                             fontWeight = FontWeight.Normal,
                             fontSize = 16.sp
                         ),
-                        maxLines = 1,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
                     )
 
                     description?.let {

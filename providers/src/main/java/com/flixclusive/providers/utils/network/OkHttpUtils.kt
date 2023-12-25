@@ -126,12 +126,7 @@ object OkHttpUtils {
 
     // https://stackoverflow.com/a/59322754
     fun OkHttpClient.Builder.ignoreAllSSLErrors(): OkHttpClient.Builder {
-        val naiveTrustManager = @SuppressLint("CustomX509TrustManager")
-        object : X509TrustManager {
-            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-            override fun checkClientTrusted(certs: Array<X509Certificate>, authType: String) = Unit
-            override fun checkServerTrusted(certs: Array<X509Certificate>, authType: String) = Unit
-        }
+        val naiveTrustManager = SSLTrustManager()
 
         val insecureSocketFactory = SSLContext.getInstance("SSL").apply {
             val trustAllCerts = arrayOf<TrustManager>(naiveTrustManager)
@@ -141,5 +136,12 @@ object OkHttpUtils {
         sslSocketFactory(insecureSocketFactory, naiveTrustManager)
         hostnameVerifier { _, _ -> true }
         return this
+    }
+
+    @SuppressLint("CustomX509TrustManager")
+    class SSLTrustManager : X509TrustManager {
+        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+        override fun checkClientTrusted(certs: Array<X509Certificate>, authType: String) = Unit
+        override fun checkServerTrusted(certs: Array<X509Certificate>, authType: String) = Unit
     }
 }

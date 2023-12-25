@@ -8,11 +8,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,43 +33,49 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.flixclusive.R
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
-import com.flixclusive.presentation.common.PlayerUiState
+import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.rememberLocalPlayer
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
 import com.flixclusive.presentation.utils.FormatterUtils.formatMinSec
-import com.flixclusive.presentation.utils.PlayerUiUtils.LocalPlayer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomControls(
     modifier: Modifier = Modifier,
-    state: PlayerUiState,
+    isPlayerTimeReversed: Boolean,
     isTvShow: Boolean = false,
     isLastEpisode: Boolean = false,
     showControls: (Boolean) -> Unit,
-    onMoreVideosClick: () -> Unit,
+    toggleVideoTimeReverse: () -> Unit,
+    onEpisodesClick: () -> Unit,
     onNextEpisodeClick: (TMDBEpisode?) -> Unit,
     onLockClick: () -> Unit,
     onAudioAndDisplayClick: () -> Unit,
 ) {
-    val player = LocalPlayer.current
+    val player = rememberLocalPlayer()
 
-    val isInHours = remember(state.totalDuration) {
-        state.totalDuration.formatMinSec().count { it == ':' } == 2
+    val isInHours = remember(player.duration) {
+        player.duration.formatMinSec().count { it == ':' } == 2
     }
 
-    val bufferProgress by remember(state.bufferedPercentage) {
-        derivedStateOf { state.bufferedPercentage.toFloat() }
+    val bufferProgress by remember(player.bufferedPercentage) {
+        derivedStateOf { player.bufferedPercentage.toFloat() }
     }
-    val sliderProgress by remember(state.currentTime) {
-        derivedStateOf { state.currentTime.toFloat() }
+    val sliderProgress by remember(player.currentPosition) {
+        derivedStateOf { player.currentPosition.toFloat() }
     }
-    val videoTimeReversed by remember(state.currentTime) {
+    val videoTimeReversed by remember(player.currentPosition) {
         derivedStateOf {
-            (state.totalDuration - state.currentTime).formatMinSec(isInHours)
+            "-" + (player.duration - player.currentPosition).formatMinSec(isInHours)
+        }
+    }
+    val videoTime by remember(player.currentPosition) {
+        derivedStateOf {
+            player.currentPosition.formatMinSec(isInHours)
         }
     }
 
@@ -80,7 +85,10 @@ fun BottomControls(
     val sliderColors = SliderDefaults.colors(
         thumbColor = MaterialTheme.colorScheme.primary,
         activeTrackColor = MaterialTheme.colorScheme.primary,
-        inactiveTrackColor = colorOnMediumEmphasisMobile(Color.White)
+        inactiveTrackColor = colorOnMediumEmphasisMobile(
+            color = Color.White,
+            emphasis = 0.3F
+        )
     )
     val sliderWidthAndHeight = 10.dp
 
@@ -98,10 +106,11 @@ fun BottomControls(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(modifier = Modifier.weight(1F)) {
+            Box(
+                modifier = Modifier.weight(1F)
+            ) {
                 // buffer bar
                 Slider(
                     value = bufferProgress,
@@ -110,7 +119,7 @@ fun BottomControls(
                     valueRange = 0F..100F,
                     colors = SliderDefaults.colors(
                         disabledThumbColor = Color.Transparent,
-                        disabledActiveTrackColor = Color.White.copy(0.7F)
+                        disabledActiveTrackColor = colorOnMediumEmphasisMobile(color = Color.White)
                     )
                 )
 
@@ -118,10 +127,10 @@ fun BottomControls(
                 Slider(
                     value = sliderProgress,
                     onValueChange = {
-                        player?.seekTo(it.toLong())
+                        player.seekTo(it.toLong())
                         showControls(true)
                     },
-                    valueRange = 0F..state.totalDuration.toFloat(),
+                    valueRange = 0F..player.duration.toFloat(),
                     colors = sliderColors,
                     interactionSource = sliderInteractionSource,
                     thumb = {
@@ -138,14 +147,23 @@ fun BottomControls(
             }
 
             // show current video time
-            Text(
-                text = videoTimeReversed,
-                color = Color.White,
-                style = MaterialTheme.typography.labelMedium,
+            Box(
                 modifier = Modifier
-                    .width(if (isInHours) 65.dp else 85.dp)
-                    .padding(start = 5.dp)
-            )
+                    .widthIn(min = 85.dp)
+                    .clickable {
+                        toggleVideoTimeReverse()
+                    }
+            ) {
+                Text(
+                    text = if (isPlayerTimeReversed) videoTimeReversed else videoTime,
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelMedium,
+                    softWrap = false,
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .align(Alignment.Center)
+                )
+            }
         }
 
         Row(
@@ -154,13 +172,13 @@ fun BottomControls(
                 .padding(bottom = 10.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            if(isTvShow) {
+            if (isTvShow) {
                 PlayerBottomButtons(
                     modifier = buttonModifier,
                     iconId = R.drawable.outline_video_library_24,
                     label = R.string.episodes,
                     contentDescription = "An icon for episodes button",
-                    onClick = { onMoreVideosClick() }
+                    onClick = { onEpisodesClick() }
                 )
             }
 
@@ -175,12 +193,12 @@ fun BottomControls(
             PlayerBottomButtons(
                 modifier = buttonModifier,
                 iconId = R.drawable.outline_subtitles_24,
-                label = R.string.audio_and_display,
+                label = R.string.audio_and_subtitle,
                 contentDescription = "An icon for available audio and display for the player",
                 onClick = { onAudioAndDisplayClick() }
             )
 
-            if(!isLastEpisode) {
+            if (!isLastEpisode) {
                 PlayerBottomButtons(
                     modifier = buttonModifier,
                     iconModifier = Modifier.padding(end = 5.dp),
@@ -198,20 +216,18 @@ fun BottomControls(
 fun PlayerCustomThumb(
     interactionSource: MutableInteractionSource,
     colors: SliderColors,
-    thumbSize: DpSize
+    thumbSize: DpSize,
 ) {
-    Column {
-        Spacer(modifier = Modifier.size(5.dp))
-
-        Row {
-            Spacer(modifier = Modifier.size(5.dp))
-
-            Thumb(
-                interactionSource = interactionSource,
-                colors = colors,
-                thumbSize = thumbSize
-            )
-        }
+    Box(
+        contentAlignment = Alignment.Center
+    ) {
+        Thumb(
+            interactionSource = interactionSource,
+            colors = colors,
+            thumbSize = thumbSize,
+            modifier = Modifier
+                .padding(8.dp)
+        )
     }
 }
 
@@ -222,7 +238,7 @@ fun PlayerBottomButtons(
     @DrawableRes iconId: Int,
     @StringRes label: Int,
     contentDescription: String? = null,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Row(
         modifier = modifier
@@ -248,4 +264,37 @@ fun PlayerBottomButtons(
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview
+@Composable
+fun PlayerSeekSlider() {
+    val (value, onValueChange) = remember { mutableFloatStateOf(0F) }
+    val sliderInteractionSource = remember { MutableInteractionSource() }
+    val sliderColors = SliderDefaults.colors(
+        thumbColor = MaterialTheme.colorScheme.primary,
+        activeTrackColor = MaterialTheme.colorScheme.primary,
+        inactiveTrackColor = colorOnMediumEmphasisMobile(Color.White)
+    )
+    val sliderWidthAndHeight = 10.dp
+
+
+    Slider(
+        value = value,
+        onValueChange = onValueChange,
+        valueRange = 0F..100F,
+        colors = sliderColors,
+        interactionSource = sliderInteractionSource,
+        thumb = {
+            PlayerCustomThumb(
+                interactionSource = sliderInteractionSource,
+                colors = sliderColors,
+                thumbSize = DpSize(
+                    sliderWidthAndHeight,
+                    sliderWidthAndHeight
+                )
+            )
+        }
+    )
 }

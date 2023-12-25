@@ -1,7 +1,6 @@
 package com.flixclusive.data.repository
 
 import com.flixclusive.R
-import com.flixclusive.common.LoggerUtils.errorLog
 import com.flixclusive.data.utils.catchInternetRelatedException
 import com.flixclusive.di.IoDispatcher
 import com.flixclusive.domain.common.Resource
@@ -15,6 +14,7 @@ import com.flixclusive.domain.repository.VideoDataSourceRepository
 import com.flixclusive.providers.models.common.MediaType
 import com.flixclusive.providers.models.common.VideoData
 import com.flixclusive.providers.utils.DecryptUtils.DecryptionException
+import com.flixclusive.utils.LoggerUtils.errorLog
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext

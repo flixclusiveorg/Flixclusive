@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.flixclusive.BuildConfig
-import com.flixclusive.common.LoggerUtils.errorLog
+import com.flixclusive.utils.LoggerUtils.errorLog
 import kotlin.system.exitProcess
 
 const val ERROR_MESSAGE = "error_message"

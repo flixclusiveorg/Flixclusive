@@ -20,7 +20,7 @@ import androidx.tv.material3.MaterialTheme
 import coil.compose.AsyncImage
 import coil.imageLoader
 import com.flixclusive.domain.model.tmdb.Film
-import com.flixclusive.presentation.tv.common.FilmTvOverview
+import com.flixclusive.presentation.tv.common.composables.FilmTvOverview
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.LabelStartPadding
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.drawScrimOnBackground
 import com.flixclusive.presentation.utils.ImageRequestCreator.buildImageUrl

@@ -51,7 +51,7 @@ import com.flixclusive.presentation.common.FadeInAndOutScreenTransition
 import com.flixclusive.presentation.common.viewmodels.film.FilmScreenNavArgs
 import com.flixclusive.presentation.common.viewmodels.film.FilmScreenViewModel
 import com.flixclusive.presentation.destinations.FilmTvScreenDestination
-import com.flixclusive.presentation.tv.common.FilmTvOverview
+import com.flixclusive.presentation.tv.common.composables.FilmTvOverview
 import com.flixclusive.presentation.tv.common.TvRootNavGraph
 import com.flixclusive.presentation.tv.main.InitialDrawerWidth
 import com.flixclusive.presentation.tv.screens.player.FilmTvPlayerScreen

@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.net.Uri
 import android.os.Binder
 import android.os.Build
@@ -15,7 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.flixclusive.R
-import com.flixclusive.common.LoggerUtils.errorLog
+import com.flixclusive.utils.LoggerUtils.errorLog
 import com.flixclusive.di.IoDispatcher
 import com.flixclusive.presentation.mobile.screens.update.UPDATE_LOCATION
 import com.flixclusive.presentation.mobile.screens.update.UPDATE_PROGRESS
@@ -85,7 +86,11 @@ class AppUpdaterService : Service() {
         }
 
         setupWakeLock()
-        startForeground(APP_UPDATER_NOTIFICATION_ID, notifier.onDownloadStarted().build())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(APP_UPDATER_NOTIFICATION_ID, notifier.onDownloadStarted().build(), FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            startForeground(APP_UPDATER_NOTIFICATION_ID, notifier.onDownloadStarted().build())
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

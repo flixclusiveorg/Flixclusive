@@ -2,6 +2,7 @@ package com.flixclusive.domain.utils
 
 import com.flixclusive.common.Constants
 import com.flixclusive.domain.model.entities.WatchHistoryItem
+import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 
 object WatchHistoryUtils {
@@ -84,7 +85,12 @@ object WatchHistoryUtils {
      */
     private fun getEpisodeCountForSeason(seasonNumber: Int, episodeCountMap: Map<Int, Int>?): Int = episodeCountMap?.get(seasonNumber) ?: 0
 
-    fun areThereLessThan10SecondsLeftToWatch(currentWatchTime: Long, totalDurationToWatch: Long): Boolean = ((totalDurationToWatch - currentWatchTime) / 1000) <= 10L
+    fun isTimeInRangeOfThreshold(currentWatchTime: Long, totalDurationToWatch: Long, threshold: Long = 10_000L): Boolean = (totalDurationToWatch - currentWatchTime) <= threshold
+
+    fun calculateRemainingAmount(amount: Long, percentage: Double): Long {
+        val deductedAmount = (amount * percentage).toLong()
+        return amount - deductedAmount
+    }
 
     fun getLastWatchTime(
         watchHistoryItem: WatchHistoryItem,
@@ -93,12 +99,12 @@ object WatchHistoryUtils {
         if(watchHistoryItem.episodesWatched.isEmpty())
             return 0L
 
-        val isTvShow = watchHistoryItem.seasons != null
+        val isTvShow = watchHistoryItem.seasons != null || watchHistoryItem.film.filmType == FilmType.TV_SHOW
         return when {
             isTvShow -> {
                 val episodeToUse = watchHistoryItem.episodesWatched.find {
                     it.seasonNumber == episodeToWatch?.season
-                            && it.episodeNumber == episodeToWatch?.episode
+                    && it.episodeNumber == episodeToWatch?.episode
                 }
 
                 if(episodeToUse?.isFinished == true) 0L

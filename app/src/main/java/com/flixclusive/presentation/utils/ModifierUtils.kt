@@ -1,7 +1,11 @@
 package com.flixclusive.presentation.utils
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
@@ -48,4 +52,12 @@ object ModifierUtils {
         ifTrueModifier: Modifier,
         ifFalseModifier: Modifier = Modifier
     ): Modifier = ifElse({ condition }, ifTrueModifier, ifFalseModifier)
+
+    fun Modifier.noIndicationClickable(onClick: () -> Unit) = composed {
+        clickable(
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = onClick,
+        )
+    }
 }

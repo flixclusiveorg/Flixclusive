@@ -27,6 +27,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,7 +41,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.flixclusive.R
-import com.flixclusive.presentation.common.PlayerUiState
+import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.rememberLocalPlayer
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils
 import com.flixclusive.presentation.tv.utils.ComposeTvUtils.colorOnMediumEmphasisTv
 import com.flixclusive.presentation.tv.utils.ComposeTvUtils.useLocalDirectionalFocusRequester
@@ -52,7 +53,7 @@ import com.flixclusive.presentation.utils.FormatterUtils.formatMinSec
 
 enum class BottomControlsButtonType {
     Subtitle,
-    Server,
+    Audio,
     Quality;
 }
 
@@ -60,16 +61,16 @@ enum class BottomControlsButtonType {
 @Composable
 fun TvBottomControls(
     modifier: Modifier = Modifier,
-    state: PlayerUiState,
     isSeeking: Boolean,
-    subtitle: String,
-    quality: String?,
-    server: String,
-    onPauseToggle: () -> Unit,
+    selectedAudio: String?,
+    selectedSubtitle: String,
+    selectedServer: String,
     showSideSheetPanel: (BottomControlsButtonType) -> Unit,
     onSeekMultiplierChange: (Long) -> Unit,
     extendControlsVisibility: () -> Unit,
 ) {
+    val player = rememberLocalPlayer()
+
     val directionalFocusRequester = useLocalDirectionalFocusRequester()
     val bottomFocusRequester = directionalFocusRequester.bottom
     val topFocusRequester = directionalFocusRequester.top
@@ -79,19 +80,24 @@ fun TvBottomControls(
 
     var isPlayIconFocused by remember { mutableStateOf(false) }
 
-    val isInHours = remember(state.totalDuration) {
-        state.totalDuration.formatMinSec().count { it == ':' } == 2
+    val isInHours = remember(player.duration) {
+        player.duration.formatMinSec().count { it == ':' } == 2
     }
 
-    val bufferProgress by remember(state.bufferedPercentage) {
-        derivedStateOf { state.bufferedPercentage.toFloat() }
+    val bufferProgress by remember(player.bufferedPercentage) {
+        derivedStateOf { player.bufferedPercentage.toFloat() }
     }
-    val sliderProgress by remember(state.currentTime) {
-        derivedStateOf { state.currentTime.toFloat() }
+    val sliderProgress by remember(player.currentPosition) {
+        derivedStateOf { player.currentPosition.toFloat() }
     }
-    val videoTimeReversed by remember(state.currentTime) {
+    val videoTimeReversed by remember(player.currentPosition) {
         derivedStateOf {
-            (state.totalDuration - state.currentTime).formatMinSec(isInHours)
+            "-" + (player.duration - player.currentPosition).formatMinSec(isInHours)
+        }
+    }
+    val videoTime by remember(player.currentPosition) {
+        derivedStateOf {
+            player.currentPosition.formatMinSec(isInHours)
         }
     }
 
@@ -120,9 +126,14 @@ fun TvBottomControls(
             if (!isSeeking) {
                 IconButton(
                     onClick = {
-                        if (state.playbackState != Player.STATE_BUFFERING) {
-                            onPauseToggle()
-                            extendControlsVisibility()
+                        if (player.playbackState != Player.STATE_BUFFERING) {
+                            player.run {
+                                when {
+                                    isPlaying -> pause()
+                                    else -> play()
+                                }
+                                extendControlsVisibility()
+                            }
                         }
                     },
                     scale = IconButtonDefaults.scale(focusedScale = 1F),
@@ -157,14 +168,14 @@ fun TvBottomControls(
                             },
                         )
                 ) {
-                    val iconId = when (state.isPlaying) {
+                    val iconId = when (player.isPlaying) {
                         true -> R.drawable.pause
                         else -> R.drawable.play
                     }
 
                     Icon(
                         painter = painterResource(id = iconId),
-                        contentDescription = null,
+                        contentDescription = stringResource(id = R.string.play_button),
                         modifier = Modifier
                             .size(38.dp)
                             .glowOnFocus(
@@ -200,7 +211,7 @@ fun TvBottomControls(
                 Slider(
                     value = sliderProgress,
                     onValueChange = {},
-                    valueRange = 0F..state.totalDuration.toFloat(),
+                    valueRange = 0F..player.duration.toFloat(),
                     colors = sliderColors,
                     interactionSource = sliderInteractionSource,
                     thumb = {},
@@ -222,51 +233,52 @@ fun TvBottomControls(
             )
         }
 
-        quality?.let { _ ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 15.dp)
-            ) {
-                OptionButton(
-                    label = subtitle,
-                    onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
-                    modifier = Modifier
-                        .focusRequester(subtitlesFocusRequester)
-                        .onFocusChanged {
-                            if (it.isFocused) {
-                                extendControlsVisibility()
-                            }
-                        }
-                        .focusProperties {
-                            up = bottomFocusRequester
-                            left = serverFocusRequester
-                            down = FocusRequester.Cancel
-                        }
-                )
 
-                OptionButton(
-                    label = quality,
-                    onClick = { showSideSheetPanel(BottomControlsButtonType.Quality) },
-                    modifier = Modifier
-                        .onFocusChanged {
-                            if (it.isFocused) {
-                                extendControlsVisibility()
-                            }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 15.dp)
+        ) {
+            OptionButton(
+                label = selectedSubtitle,
+                onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
+                modifier = Modifier
+                    .focusRequester(subtitlesFocusRequester)
+                    .onFocusChanged {
+                        if (it.isFocused) {
+                            extendControlsVisibility()
                         }
-                        .focusProperties {
-                            up = bottomFocusRequester
-                            down = FocusRequester.Cancel
-                        }
-                )
+                    }
+                    .focusProperties {
+                        up = bottomFocusRequester
+                        left = serverFocusRequester
+                        down = FocusRequester.Cancel
+                    }
+            )
 
+            OptionButton(
+                label = selectedServer,
+                onClick = { showSideSheetPanel(BottomControlsButtonType.Quality) },
+                modifier = Modifier
+                    .onFocusChanged {
+                        if (it.isFocused) {
+                            extendControlsVisibility()
+                        }
+                    }
+                    .focusProperties {
+                        up = bottomFocusRequester
+                        down = FocusRequester.Cancel
+                    }
+            )
+
+            if (selectedAudio != null) {
                 OptionButton(
-                    label = server,
-                    onClick = { showSideSheetPanel(BottomControlsButtonType.Server) },
+                    label = selectedAudio,
+                    onClick = { showSideSheetPanel(BottomControlsButtonType.Audio) },
                     modifier = Modifier
                         .focusRequester(serverFocusRequester)
-                        .onFocusChanged {
-                            if (it.isFocused) {
+                        .onFocusChanged { focusProp ->
+                            if (focusProp.isFocused) {
                                 extendControlsVisibility()
                             }
                         }

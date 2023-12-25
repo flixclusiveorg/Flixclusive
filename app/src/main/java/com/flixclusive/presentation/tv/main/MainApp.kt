@@ -18,7 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.presentation.NavGraphs
 import com.flixclusive.presentation.appCurrentDestinationAsState
-import com.flixclusive.presentation.common.viewmodels.configuration.AppConfigurationViewModel
+import com.flixclusive.presentation.common.viewmodels.config.AppConfigurationViewModel
 import com.flixclusive.presentation.destinations.Destination
 import com.flixclusive.presentation.destinations.FilmTvScreenDestination
 import com.flixclusive.presentation.destinations.HomeTvScreenDestination

@@ -2,7 +2,6 @@ package com.flixclusive.domain.utils
 
 import com.flixclusive.providers.models.common.Subtitle
 import com.flixclusive.providers.models.common.VideoData
-import java.util.Locale
 
 object FilmProviderUtils {
 
@@ -19,27 +18,5 @@ object FilmProviderUtils {
         ) + subtitles
 
         return copy(subtitles = newSubtitles)
-    }
-
-    fun VideoData.getSubtitleIndex(lang: String? = null): Int {
-        val index = if(lang == null) {
-            subtitles.indexOfFirst {
-                 it.lang.contains("en", ignoreCase = true)
-            }
-        } else {
-            subtitles.indexOfFirst {
-                it.lang.contains(lang, ignoreCase = true)
-                || it.lang.contains(Locale(lang).displayLanguage, true)
-            }
-        }
-
-        return when(index) {
-            -1 -> {
-                if(lang != null)
-                    getSubtitleIndex()
-                else 0
-            }
-            else -> index
-        }
     }
 }

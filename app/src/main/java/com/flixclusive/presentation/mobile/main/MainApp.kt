@@ -30,19 +30,23 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.R
+import com.flixclusive.common.UiText
 import com.flixclusive.domain.model.VideoDataDialogState
 import com.flixclusive.domain.model.entities.toWatchHistoryItem
 import com.flixclusive.domain.model.tmdb.TvShow
 import com.flixclusive.presentation.NavGraphs
 import com.flixclusive.presentation.appCurrentDestinationAsState
+import com.flixclusive.presentation.common.composables.SourceStateDialog
 import com.flixclusive.presentation.destinations.Destination
 import com.flixclusive.presentation.destinations.HomeMobileScreenDestination
 import com.flixclusive.presentation.mobile.common.composables.film.FilmBottomSheetPreview
-import com.flixclusive.presentation.mobile.common.composables.film.VideoPlayerDialog
+import com.flixclusive.presentation.mobile.main.composables.FilmCoverPreview
+import com.flixclusive.presentation.mobile.main.composables.MainNavigationBar
+import com.flixclusive.presentation.mobile.main.composables.NetworkConnectivitySnackbar
+import com.flixclusive.presentation.mobile.main.composables.NetworkConnectivitySnackbarVisuals
 import com.flixclusive.presentation.mobile.screens.player.PlayerActivity.Companion.startPlayer
 import com.flixclusive.presentation.startAppDestination
 import com.flixclusive.presentation.utils.ComposeUtils.navigateSingleTopTo
-import com.flixclusive.common.UiText
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.rememberAnimatedNavHostEngine
@@ -186,8 +190,8 @@ fun MainActivity.MainApp() {
 
     if (uiState.videoDataDialogState !is VideoDataDialogState.Idle) {
         window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        VideoPlayerDialog(
-            videoDataDialogState = uiState.videoDataDialogState,
+        SourceStateDialog(
+            state = uiState.videoDataDialogState,
             onConsumeDialog = {
                 viewModel.onConsumePlayerDialog()
                 viewModel.onBottomSheetClose() // In case, the bottom sheet is opened

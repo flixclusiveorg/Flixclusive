@@ -25,9 +25,9 @@ import com.flixclusive.domain.model.config.HomeCategoryItem
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.presentation.common.PagingState
 import com.flixclusive.presentation.common.viewmodels.home.PaginationStateInfo
-import com.flixclusive.presentation.tv.common.FilmCardHeight
-import com.flixclusive.presentation.tv.common.FilmCardTv
-import com.flixclusive.presentation.tv.common.FilmPadding
+import com.flixclusive.presentation.tv.common.composables.FilmCardHeight
+import com.flixclusive.presentation.tv.common.composables.FilmCardTv
+import com.flixclusive.presentation.tv.common.composables.FilmPadding
 import com.flixclusive.presentation.tv.main.InitialDrawerWidth
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.FocusPosition
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.LabelStartPadding

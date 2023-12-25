@@ -19,6 +19,9 @@ sealed class VideoDataDialogState(val message: UiText) {
             ?: UiText.StringResource(R.string.video_data_dialog_state_fetching)
     ) {
         constructor(message: String) : this(UiText.StringValue(message))
+        constructor(@StringRes errorMessageId: Int) : this(
+            message = UiText.StringResource(errorMessageId)
+        )
     }
 
     class Extracting(

@@ -1,6 +1,5 @@
 package com.flixclusive.presentation.mobile.screens.player
 
-import android.app.PictureInPictureParams
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
@@ -10,22 +9,20 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Rational
+import android.view.KeyEvent
+import android.view.View
+import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -40,45 +37,45 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_ENDED
+import androidx.media3.common.Player.STATE_READY
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.session.MediaSession
 import com.flixclusive.domain.model.VideoDataDialogState
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
-import com.flixclusive.domain.utils.WatchHistoryUtils.areThereLessThan10SecondsLeftToWatch
-import com.flixclusive.presentation.mobile.common.composables.film.VideoPlayerDialog
+import com.flixclusive.domain.utils.WatchHistoryUtils.calculateRemainingAmount
+import com.flixclusive.domain.utils.WatchHistoryUtils.isTimeInRangeOfThreshold
+import com.flixclusive.presentation.common.composables.SourceStateDialog
+import com.flixclusive.presentation.common.player.FlixclusivePlayer
+import com.flixclusive.presentation.common.player.PLAYER_CONTROL_VISIBILITY_TIMEOUT
+import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.LifecycleAwarePlayer
+import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.LocalPlayer
 import com.flixclusive.presentation.mobile.screens.player.controls.PlayerControls
+import com.flixclusive.presentation.mobile.screens.player.utils.PlayerPiPUtils.updatePiPParams
+import com.flixclusive.presentation.mobile.screens.player.utils.PlayerPipReceiver
 import com.flixclusive.presentation.mobile.theme.FlixclusiveMobileTheme
-import com.flixclusive.presentation.utils.PlayerUiUtils.LifecycleAwarePlayer
-import com.flixclusive.presentation.utils.PlayerUiUtils.LocalPlayer
-import com.flixclusive.presentation.utils.PlayerUiUtils.PLAYER_CONTROL_VISIBILITY_TIMEOUT
-import com.flixclusive.presentation.utils.PlayerUiUtils.initializePlayer
-import com.flixclusive.presentation.utils.PlayerUiUtils.rePrepare
+import com.flixclusive.presentation.utils.ModifierUtils.noIndicationClickable
 import com.flixclusive.providers.models.common.VideoData
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.seconds
+import kotlin.math.roundToInt
 
-const val PLAYER_SEEK_BACK_INCREMENT = 5000L
-const val PLAYER_SEEK_FORWARD_INCREMENT = 10000L
+const val ACTION_PIP_CONTROL = "player_pip_control"
+const val PLAYER_PIP_EVENT = "player_pip_event"
+
+const val DEFAULT_PLAYER_SEEK_AMOUNT = 10000L
 const val WATCH_HISTORY_ITEM = "watch_history_item"
 const val SEASON_COUNT = "season_count"
 const val EPISODE_SELECTED = "episode_selected"
 const val VIDEO_DATA = "video_data"
 
-@Suppress("DEPRECATION")
 @AndroidEntryPoint
 @UnstableApi
 class PlayerActivity : ComponentActivity() {
@@ -113,15 +110,20 @@ class PlayerActivity : ComponentActivity() {
     private val focusLock = Any()
 
     private val viewModel: PlayerViewModel by viewModels()
+    private val flixclusivePlayer by lazy {
+        FlixclusivePlayer(
+            context = this,
+            appSettings = viewModel.appSettings.value
+        )
+    }
+
+    private val maxVolume: Int
+        get() = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+    private val currentVolume: Int
+        get() = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        WindowCompat.getInsetsController(window, window.decorView).run {
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            hide(WindowInsetsCompat.Type.systemBars())
-        }
 
         setContent {
             FlixclusiveMobileTheme {
@@ -129,7 +131,6 @@ class PlayerActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val context = LocalContext.current
                     val scope = rememberCoroutineScope()
 
                     var playerTimeUpdaterJob: Job? by remember { mutableStateOf(null) }
@@ -143,219 +144,289 @@ class PlayerActivity : ComponentActivity() {
                     val videoData by viewModel.videoData.collectAsStateWithLifecycle()
                     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
-                    var hasBeenInitialized by remember { mutableStateOf(false) }
                     var currentMediaId by remember { mutableStateOf(videoData.mediaId) }
                     var currentSource by remember { mutableStateOf(videoData.source) }
-                    val availableQualities =
-                        remember(viewModel.availableQualities.size) { viewModel.availableQualities }
-                    val availableAudios =
-                        remember(viewModel.availableAudios.size) { viewModel.availableAudios }
-                    val subtitlesList =
-                        remember(videoData.subtitles.first().url) { viewModel.availableSubtitles }
-
-                    var mediaSession: MediaSession? by remember {
-                        mutableStateOf(
-                            context.initializePlayer(
-                                currentSource,
-                                videoData.title,
-                                subtitlesList,
-                                uiState.currentTime,
-                                uiState.playWhenReady
-                            )
-                        )
-                    }
-
-                    // Re-prepare the player if video data has changed
-                    LaunchedEffect(videoData.source, uiState.totalDuration) {
-                        val currentAutoAdaptiveSource = videoData.source
-                        val isNewServer =
-                            !currentAutoAdaptiveSource.equals(currentSource, ignoreCase = true)
-                                    && videoData.mediaId == currentMediaId
-
-                        val isNewData = videoData.mediaId != currentMediaId
-
-                        if (isNewData) {
-                            async { viewModel.initialize() }.await()
-                            currentMediaId = videoData.mediaId
-                        }
-
-                        if (isNewServer || isNewData) {
-                            currentSource = videoData.source
-                            mediaSession?.player?.rePrepare(
-                                currentSource,
-                                videoData,
-                                subtitlesList,
-                                uiState.currentTime,
-                                uiState.playWhenReady,
-                            )
-                        }
-                    }
+                    var currentSubtitlesSize by remember { mutableIntStateOf(videoData.subtitles.size) }
 
                     var controlTimeoutVisibility by remember {
-                        mutableIntStateOf(
-                            PLAYER_CONTROL_VISIBILITY_TIMEOUT
-                        )
+                        mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
                     }
-                    var areControlsVisible by remember { mutableStateOf(true) }
-                    var areControlsLocked by remember { mutableStateOf(false) }
-                    val (isEpisodesSheetOpened, toggleEpisodesSheet) = remember { mutableStateOf(false) }
-                    val (isQualitiesAndSubtitlesSheetOpened, toggleQualitiesAndSubtitlesSheet) = remember { mutableStateOf(false) }
-                    val (isVideoSettingsDialogOpened, toggleVideoSettingsDialog) = remember { mutableStateOf(false) }
+                    val isEpisodesSheetOpened = remember {
+                        mutableStateOf(false)
+                    }
+                    val isAudiosAndSubtitlesDialogOpened = remember {
+                        mutableStateOf(false)
+                    }
+                    val isPlayerSettingsDialogOpened = remember {
+                        mutableStateOf(false)
+                    }
+                    val isServersDialogOpened = remember {
+                        mutableStateOf(false)
+                    }
                     val snackbarBottomPadding by animateDpAsState(
-                        targetValue = if (areControlsVisible) 100.dp else 0.dp,
+                        targetValue = if (viewModel.areControlsVisible) 100.dp else 0.dp,
                         label = ""
                     )
 
-                    val isLastEpisode = remember(currentSelectedEpisode) {
-                        val lastSeason = watchHistoryItem.seasons
-                        val lastEpisode = watchHistoryItem.episodes[lastSeason]
-
-                        currentSelectedEpisode?.season == lastSeason && currentSelectedEpisode?.episode == lastEpisode
-                    }
-
                     fun showControls(isShowing: Boolean) {
-                        val areSomeSheetsOpened = isEpisodesSheetOpened
-                                || isVideoSettingsDialogOpened
-                                || isQualitiesAndSubtitlesSheetOpened
+                        val areSomeSheetsOpened = isEpisodesSheetOpened.value
+                                || isPlayerSettingsDialogOpened.value
+                                || isAudiosAndSubtitlesDialogOpened.value
+                                || isServersDialogOpened.value
 
-                        val isLoading = (!hasBeenInitialized
-                                || !uiState.isPlaying
-                                || uiState.playbackState == STATE_BUFFERING
-                                || uiState.playbackState == STATE_ENDED) && !areControlsLocked
+                        val isLoading = (!flixclusivePlayer.hasBeenInitialized
+                                || !flixclusivePlayer.isPlaying
+                                || flixclusivePlayer.playbackState == STATE_BUFFERING
+                                || flixclusivePlayer.playbackState == STATE_ENDED) && !viewModel.areControlsLocked
 
-                        controlTimeoutVisibility = if(!isShowing || areSomeSheetsOpened) {
+                        controlTimeoutVisibility = if (!isShowing || areSomeSheetsOpened) {
                             0
-                        } else if(isLoading) {
+                        } else if (isLoading) {
                             Int.MAX_VALUE
                         } else {
                             PLAYER_CONTROL_VISIBILITY_TIMEOUT
                         }
                     }
 
+                    fun onEpisodeClick(episode: TMDBEpisode? = null) {
+                            viewModel.onEpisodeClick(episodeToWatch = episode)
+                    }
+
+                    PlayerPipReceiver(
+                        action = ACTION_PIP_CONTROL,
+                        onReceive = { broadcastIntent ->
+                            if (
+                                SDK_INT >= Build.VERSION_CODES.O
+                                && broadcastIntent?.action == ACTION_PIP_CONTROL
+                            ) {
+                                val event = broadcastIntent.getIntExtra(PLAYER_PIP_EVENT, -1)
+
+                                if (event == -1)
+                                    return@PlayerPipReceiver
+
+                                flixclusivePlayer.run {
+                                    handleBroadcastEvents(event)
+
+                                    if (SDK_INT >= Build.VERSION_CODES.O) {
+                                        updatePiPParams(
+                                            isPlaying = isPlaying,
+                                            hasEnded = playbackState == STATE_ENDED,
+                                            preferredSeekIncrement = appSettings.preferredSeekAmount,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    )
+
+                    LaunchedEffect(flixclusivePlayer.playbackState) {
+                        when (flixclusivePlayer.playbackState) {
+                            STATE_READY -> {
+                                // Find preferred audio language
+                                flixclusivePlayer.onAudioChange(language = watchHistoryItem.film.language)
+                            }
+
+                            STATE_ENDED -> {
+                                val isInPipMode = if (SDK_INT >= Build.VERSION_CODES.N) {
+                                    isInPictureInPictureMode
+                                } else false
+
+                                if (!viewModel.isLastEpisode && !isInPipMode) {
+                                    flixclusivePlayer.run {
+                                        viewModel.updateWatchHistory(
+                                            currentTime = currentPosition,
+                                            duration = duration
+                                        )
+                                    }
+                                    onEpisodeClick()
+                                }
+                            }
+                        }
+                    }
+
                     LaunchedEffect(Unit) {
+                        // Initialize brightness
                         val userDefaultBrightnessLevel = Settings.System.getInt(
                             contentResolver,
                             Settings.System.SCREEN_BRIGHTNESS,
                             -1
                         ) / 255F
+
                         viewModel.updateScreenBrightness(userDefaultBrightnessLevel)
+
+                        // Initialize volume level
+                        viewModel.updateVolume(percentOfVolume())
                     }
 
                     LaunchedEffect(controlTimeoutVisibility) {
                         if (controlTimeoutVisibility > 0) {
-                            areControlsVisible = true
+                            viewModel.areControlsVisible = true
                             delay(1000)
                             controlTimeoutVisibility -= 1
-                        } else areControlsVisible = false
+                        } else viewModel.areControlsVisible = false
                     }
 
-                    /*
-                    *
-                    * Purpose (unless interacted):
-                    * Always show controls when player is paused.
-                    * Show it when player hasn't been initialized.
-                    * Don't show it if its locked and its buffering.
-                    * Show controls when buffering
-                    *
-                    * See: [showControls]
-                    *
-                    * */
+                    // Re-prepare the player if video data has changed
                     LaunchedEffect(
-                        hasBeenInitialized,
-                        areControlsLocked,
-                        uiState.isPlaying,
-                        uiState.playbackState,
-                        isEpisodesSheetOpened,
-                        isVideoSettingsDialogOpened,
-                        isQualitiesAndSubtitlesSheetOpened,
+                        videoData.source,
+                        flixclusivePlayer.availableSubtitles.size
+                    ) {
+                        if (flixclusivePlayer.availableSubtitles.size < videoData.subtitles.size) {
+                            return@LaunchedEffect
+                        }
+
+                        val currentAutoAdaptiveSource = videoData.source
+                        val isNewServer =
+                            !currentAutoAdaptiveSource.equals(
+                                currentSource,
+                                ignoreCase = true
+                            ) && videoData.mediaId == currentMediaId
+
+                        val hasNewSubtitle = currentSubtitlesSize < videoData.subtitles.size
+                        val isNewData = videoData.mediaId != currentMediaId
+
+                        if (isNewData) {
+                            async { viewModel.resetUiState() }.await()
+                            currentMediaId = videoData.mediaId
+                        }
+
+                        if (isNewServer || isNewData || hasNewSubtitle) {
+                            currentSubtitlesSize = videoData.subtitles.size
+                            currentSource = videoData.source
+
+                            val (currentPosition, _) = viewModel.getSavedTimeForVideoData(
+                                currentSelectedEpisode
+                            )
+
+                            flixclusivePlayer.prepare(
+                                videoData = videoData,
+                                initialPlaybackPosition = currentPosition
+                            )
+                        }
+                    }
+
+                    /**
+                     *
+                     * Purpose (unless interacted):
+                     * Always show controls when player is paused.
+                     * Show it when player hasn't been initialized.
+                     * Don't show it if its locked and its buffering.
+                     * Show controls when buffering
+                     *
+                     * See (CTRL+F): [showControls]
+                     *
+                     * */
+                    LaunchedEffect(
+                        flixclusivePlayer.hasBeenInitialized,
+                        viewModel.areControlsLocked,
+                        flixclusivePlayer.isPlaying,
+                        flixclusivePlayer.playbackState,
+                        isEpisodesSheetOpened.value,
+                        isPlayerSettingsDialogOpened.value,
+                        isAudiosAndSubtitlesDialogOpened.value,
+                        isServersDialogOpened.value,
                     ) {
                         showControls(true)
                     }
 
                     InitializeAudioFocusChangeListener(
                         play = {
-                            mediaSession?.player?.run {
-                                play()
-                                viewModel.updateIsPlayingState(true)
-                            }
+                            flixclusivePlayer.play()
+                            flixclusivePlayer.playWhenReady = true
                         },
                         pause = {
-                            mediaSession?.player?.run {
-                                pause()
-                                viewModel.updateIsPlayingState(false)
-                            }
+                            flixclusivePlayer.pause()
+                            flixclusivePlayer.playWhenReady = false
                         }
                     )
 
                     RequestAudioFocus(
-                        isPlaying = uiState.isPlaying,
-                        playbackState = uiState.playbackState,
+                        isPlaying = flixclusivePlayer.isPlaying,
+                        playbackState = flixclusivePlayer.playbackState,
                         onRequestGranted = {
                             if (playerTimeUpdaterJob?.isActive == true)
                                 return@RequestAudioFocus
 
                             playerTimeUpdaterJob = scope.launch {
-                                viewModel.updateIsPlayingState(true)
-
-                                while (mediaSession?.player?.isPlaying == true) {
-                                    viewModel.updateCurrentTime(mediaSession?.player?.currentPosition)
-                                    delay(1.seconds / 30)
+                                if (SDK_INT >= Build.VERSION_CODES.O) {
+                                    updatePiPParams(
+                                        isPlaying = true,
+                                        hasEnded = false,
+                                        preferredSeekIncrement = appSettings.preferredSeekAmount,
+                                    )
                                 }
+
+                                flixclusivePlayer.observePlayerPosition()
                             }
                         }
                     )
 
                     LaunchedEffect(
-                        key1 = uiState.currentTime,
-                        key2 = uiState.isPlaying,
-                        key3 = uiState.totalDuration
+                        flixclusivePlayer.currentPosition,
+                        flixclusivePlayer.isPlaying,
+                        flixclusivePlayer.duration,
+                        viewModel.isLastEpisode
                     ) {
-                        val areThereLessThan10SecondsLeft = areThereLessThan10SecondsLeftToWatch(
-                            uiState.currentTime,
-                            uiState.totalDuration
-                        )
-                        val isPlayerInitialized = uiState.isPlaying && uiState.totalDuration > 0L
-                        val isTvShow = seasonCount != null
-
-                        val isInPipMode =
-                            if (SDK_INT >= Build.VERSION_CODES.N)
-                                isInPictureInPictureMode
-                            else false
-
-                        if (isPlayerInitialized && areThereLessThan10SecondsLeft && !isLastEpisode && isTvShow && !isInPipMode) {
-                            val secondsLeft = (uiState.totalDuration - uiState.currentTime) / 1000
-
-                            if (secondsLeft <= 0L) {
-                                viewModel.showSnackbar(
-                                    message = "Loading next episode...",
-                                    type = PlayerSnackbarMessageType.Episode
-                                )
-                                return@LaunchedEffect
-                            }
-
-                            viewModel.showSnackbar(
-                                message = "Next episode on $secondsLeft...",
-                                type = PlayerSnackbarMessageType.Episode
+                        flixclusivePlayer.run {
+                            val areThereLessThan10SecondsLeft = isTimeInRangeOfThreshold(
+                                currentWatchTime = currentPosition,
+                                totalDurationToWatch = duration,
                             )
+
+                            val areThere20PercentLeft = isTimeInRangeOfThreshold(
+                                currentWatchTime = currentPosition,
+                                totalDurationToWatch = duration,
+                                threshold = calculateRemainingAmount(
+                                    amount = duration,
+                                    percentage = 0.8
+                                )
+                            )
+                            val isPlayerInitialized = isPlaying && duration > 0L
+                            val isTvShow = seasonCount != null
+
+                            val isInPipMode =
+                                if (SDK_INT >= Build.VERSION_CODES.N)
+                                    isInPictureInPictureMode
+                                else false
+
+                            if (
+                                isPlayerInitialized
+                                && !viewModel.isLastEpisode
+                                && isTvShow
+                                && !isInPipMode
+                            ) {
+                                if (
+                                    areThere20PercentLeft
+                                    && !areThereLessThan10SecondsLeft
+                                ) {
+                                    viewModel.onQueueNextEpisode()
+                                }
+
+                                if (areThereLessThan10SecondsLeft) {
+                                    val secondsLeft = (duration - currentPosition) / 1000
+
+                                    if (secondsLeft <= 0L) {
+                                        viewModel.showSnackbar(
+                                            message = "Loading next episode...",
+                                            type = PlayerSnackbarMessageType.Episode
+                                        )
+                                        return@LaunchedEffect
+                                    }
+
+                                    viewModel.showSnackbar(
+                                        message = "Next episode on $secondsLeft...",
+                                        type = PlayerSnackbarMessageType.Episode
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    fun onEpisodeClick(episode: TMDBEpisode? = null) {
-                        viewModel.updateWatchHistory()
-                        viewModel.onEpisodeClick(episodeToWatch = episode)
-                    }
-
-                    CompositionLocalProvider(LocalPlayer provides mediaSession?.player) {
+                    CompositionLocalProvider(LocalPlayer provides flixclusivePlayer) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(Color.Black)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {
-                                    showControls(!areControlsVisible)
-                                }
                         ) {
                             LifecycleAwarePlayer(
                                 isInPipModeProvider = {
@@ -363,180 +434,116 @@ class PlayerActivity : ComponentActivity() {
                                         isInPictureInPictureMode
                                     } else false
                                 },
-                                appSettings = appSettings,
-                                areControlsVisible = areControlsVisible && !areControlsLocked,
-                                playWhenReady = uiState.playWhenReady,
+                                areControlsVisible = viewModel.areControlsVisible && !viewModel.areControlsLocked,
                                 resizeMode = uiState.selectedResizeMode,
-                                onEventCallback = { duration, currentPosition, bufferPercentage, isPlaying, playbackState ->
-                                    viewModel.updatePlayerState(
-                                        totalDuration = duration,
-                                        currentTime = currentPosition,
-                                        bufferedPercentage = bufferPercentage,
-                                        isPlaying = isPlaying,
-                                        playbackState = playbackState
-                                    )
-                                },
-                                onPlaybackReady = {
-                                    mediaSession?.player?.run {
-                                        hasBeenInitialized = true
-
-                                        // Initialize player states
-                                        viewModel.updateIsPlayingState(playWhenReady)
-                                        playbackParameters =
-                                            PlaybackParameters(uiState.playbackSpeed)
-
-                                        val qualityIndex = viewModel.extractQualities(currentTracks)
-                                        val audioIndex = viewModel.extractAudios(currentTracks)
-                                        viewModel.updateWatchHistory()
-
-                                        trackSelectionParameters = viewModel.onSubtitleChange(
-                                            subtitleIndex = uiState.selectedSubtitle,
-                                            trackParameters = trackSelectionParameters
+                                releaseOnStop = appSettings.shouldReleasePlayer,
+                                onInitialize = {
+                                    flixclusivePlayer.run {
+                                        val (currentPosition, _) = viewModel.getSavedTimeForVideoData(
+                                            currentSelectedEpisode
                                         )
 
-                                        trackSelectionParameters = viewModel.onVideoQualityChange(
-                                            qualityIndex = qualityIndex,
-                                            trackParameters = trackSelectionParameters
-                                        ) ?: return@run
-
-                                        trackSelectionParameters = viewModel.onAudioChange(
-                                            audioIndex = audioIndex,
-                                            trackParameters = trackSelectionParameters
-                                        ) ?: return@run
+                                        initialize()
+                                        prepare(
+                                            videoData = videoData,
+                                            initialPlaybackPosition = currentPosition
+                                        )
                                     }
-                                },
-                                onInitialize = {
-                                    if (mediaSession != null) {
-                                        mediaSession!!.player.addListener(it)
-                                        return@LifecycleAwarePlayer
-                                    }
-
-                                    mediaSession = initializePlayer(
-                                        currentSource,
-                                        videoData.title,
-                                        subtitlesList,
-                                        uiState.currentTime,
-                                        uiState.playWhenReady
-                                    )
-                                    mediaSession!!.player.addListener(it)
                                 },
                                 onRelease = {
-                                    mediaSession?.run {
-                                        viewModel.onActivityStop(
-                                            playWhenReady = player.isPlaying && player.playWhenReady,
-                                            currentTime = player.currentPosition
+                                    flixclusivePlayer.run {
+                                        viewModel.updateWatchHistory(
+                                            currentTime = currentPosition,
+                                            duration = duration
                                         )
-                                        viewModel.updateWatchHistory()
 
-                                        hasBeenInitialized = false
-
-                                        player.removeListener(it)
-                                        player.release()
                                         release()
-                                        mediaSession = null
                                     }
                                 },
-                                onPlaybackEnded = {
-                                    val isInPipMode = if (SDK_INT >= Build.VERSION_CODES.N) {
-                                        isInPictureInPictureMode
-                                    } else false
-
-                                    if (!isLastEpisode && !isInPipMode) {
-                                        onEpisodeClick()
-                                    }
-                                }
-                            )
-
-                            PlayerControls(
-                                visibilityProvider = {
-                                    areControlsVisible &&
-                                            !(if (SDK_INT >= Build.VERSION_CODES.N) isInPictureInPictureMode else false)
-                                },
-                                areControlsLocked = areControlsLocked,
-                                isEpisodesSheetOpened = isEpisodesSheetOpened,
-                                isQualitiesAndSubtitlesSheetOpened = isQualitiesAndSubtitlesSheetOpened,
-                                isVideoSettingsDialogOpened = isVideoSettingsDialogOpened,
-                                watchHistoryItem = watchHistoryItem,
-                                videoData = videoData,
-                                sources = viewModel.sources,
-                                availableSeasons = seasonCount,
-                                currentEpisodeSelected = currentSelectedEpisode,
-                                isLastEpisode = isLastEpisode,
-                                videoQualities = availableQualities,
-                                audios = availableAudios,
-                                stateProvider = { uiState },
-                                seasonDataProvider = { seasonData },
-                                onBack = ::finish,
-                                showControls = { showControls(it) },
-                                toggleControlLock = { areControlsLocked = it },
-                                onBrightnessChange = {
-                                    setBrightness(it)
-                                    viewModel.updateScreenBrightness(it)
-                                    showControls(true)
-                                },
-                                onPauseToggle = {
-                                    viewModel.updateIsPlayingState()
-                                    shouldPlay = uiState.isPlaying
-                                },
-                                onSnackbarToggle = viewModel::showSnackbar,
-                                onSeasonChange = viewModel::onSeasonChange,
-                                onSubtitleChange = { subtitleIndex, trackSelectionParameters ->
-                                    viewModel.onSubtitleChange(
-                                        subtitleIndex = subtitleIndex,
-                                        trackParameters = trackSelectionParameters
-                                    )
-                                },
-                                onVideoQualityChange = { videoQualityIndex, trackSelectionParameters ->
-                                    viewModel.onVideoQualityChange(
-                                        qualityIndex = videoQualityIndex,
-                                        trackParameters = trackSelectionParameters
-                                    )
-                                },
-                                onAudioChange = { audioIndex, trackSelectionParameters ->
-                                    viewModel.onAudioChange(
-                                        audioIndex = audioIndex,
-                                        trackParameters = trackSelectionParameters
-                                    )
-                                },
-                                onVideoServerChange = {
-                                    viewModel.onServerChange(serverIndex = it)
-                                },
-                                onSourceChange = {
-                                    viewModel.onSourceChange(newSource = it)
-                                },
-                                onPlaybackSpeedChange = {
-                                    viewModel.onPlaybackSpeedChange(speedIndex = it)
-                                },
-                                onResizeModeChange = {
-                                    viewModel.onResizeModeChange(resizeMode = it)
-                                },
-                                onPanelChange = {
-                                    viewModel.onPanelChange(opened = it)
-                                },
-                                onEpisodeClick = {
-                                    onEpisodeClick(it)
-                                },
-                                toggleEpisodesSheet = toggleEpisodesSheet,
-                                toggleQualitiesAndSubtitlesSheet = toggleQualitiesAndSubtitlesSheet,
-                                toggleVideoSettingsDialog = toggleVideoSettingsDialog,
                             )
 
                             Box(
                                 modifier = Modifier
-                                    .align(Alignment.BottomStart)
-                                    .widthIn(min = 250.dp, max = 465.dp)
-                                    .heightIn(min = 65.dp, max = 195.dp)
-                                    .padding(bottom = snackbarBottomPadding)
-                            ) {
-                                LazyColumn {
-                                    itemsIndexed(viewModel.snackbarQueue) { i, data ->
-                                        PlayerSnackbar(
-                                            messageData = data,
-                                            index = i,
-                                            onDismissMessage = {
-                                                viewModel.removeSnackbar(i)
-                                            }
+                                    .fillMaxSize()
+                                    .noIndicationClickable {
+                                        showControls(!viewModel.areControlsVisible)
+                                    }
+                            )
+
+                            PlayerControls(
+                                visibilityProvider = {
+                                    viewModel.areControlsVisible &&
+                                            !(if (SDK_INT >= Build.VERSION_CODES.N) isInPictureInPictureMode else false)
+                                },
+                                appSettings = appSettings,
+                                areControlsLocked = viewModel.areControlsLocked,
+                                isEpisodesSheetOpened = isEpisodesSheetOpened,
+                                isAudiosAndSubtitlesDialogOpened = isAudiosAndSubtitlesDialogOpened,
+                                isPlayerSettingsDialogOpened = isPlayerSettingsDialogOpened,
+                                isServersDialogOpened = isServersDialogOpened,
+                                watchHistoryItem = watchHistoryItem,
+                                videoData = videoData,
+                                sourceProviders = viewModel.sourceProviders,
+                                availableSeasons = seasonCount,
+                                currentEpisodeSelected = currentSelectedEpisode,
+                                isLastEpisode = viewModel.isLastEpisode,
+                                stateProvider = { uiState },
+                                seasonDataProvider = { seasonData },
+                                onBack = ::finish,
+                                showControls = { showControls(it) },
+                                toggleControlLock = { viewModel.areControlsLocked = it },
+                                onBrightnessChange = {
+                                    setBrightness(it)
+                                    viewModel.updateScreenBrightness(it)
+                                },
+                                onVolumeChange = {
+                                    flixclusivePlayer.run {
+                                        val newVolume = (it * 15).roundToInt()
+
+                                        setDeviceVolume(newVolume)
+                                        viewModel.updateVolume(it)
+                                    }
+                                },
+                                onSnackbarToggle = viewModel::showSnackbar,
+                                onSeasonChange = viewModel::onSeasonChange,
+                                onVideoServerChange = viewModel::onServerChange,
+                                onSourceChange = viewModel::changeSource,
+                                onResizeModeChange = viewModel::onResizeModeChange,
+                                onPanelChange = viewModel::onPanelChange,
+                                onEpisodeClick = {
+                                    flixclusivePlayer.run {
+                                        viewModel.updateWatchHistory(
+                                            currentTime = currentPosition,
+                                            duration = duration
                                         )
+                                    }
+                                    onEpisodeClick(it)
+                                },
+                                toggleVideoTimeReverse = viewModel::toggleVideoTimeReverse,
+                            )
+
+                            if (
+                                if (SDK_INT >= Build.VERSION_CODES.N) {
+                                    !isInPictureInPictureMode
+                                } else true
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomStart)
+                                        .padding(bottom = snackbarBottomPadding)
+                                ) {
+                                    LazyColumn {
+                                        items(
+                                            items = viewModel.snackbarQueue,
+                                            key = { data -> data.type }
+                                        ) { data ->
+                                            PlayerSnackbar(
+                                                messageData = data,
+                                                onDismissMessage = {
+                                                    viewModel.removeSnackbar(data)
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -544,20 +551,23 @@ class PlayerActivity : ComponentActivity() {
                     }
 
                     if (dialogState !is VideoDataDialogState.Idle) {
-                        if (mediaSession?.player?.isPlaying == true) {
-                            mediaSession?.player?.pause()
+                        LaunchedEffect(Unit) {
+                            flixclusivePlayer.run {
+                                if (isPlaying) {
+                                    pause()
+                                    playWhenReady = true
+                                }
+                            }
                         }
 
-                        VideoPlayerDialog(
-                            videoDataDialogState = dialogState,
+                        SourceStateDialog(
+                            state = dialogState,
                             onConsumeDialog = {
-                                // If something error has happened,
-                                // we will go back to the tv show details screen
-                                if (dialogState is VideoDataDialogState.Error || dialogState is VideoDataDialogState.Unavailable) {
-                                    this@PlayerActivity.finish()
-                                }
-
                                 viewModel.onConsumePlayerDialog()
+
+                                if (flixclusivePlayer.playWhenReady) {
+                                    flixclusivePlayer.play()
+                                }
                             }
                         )
                     }
@@ -566,13 +576,22 @@ class PlayerActivity : ComponentActivity() {
         }
     }
 
+    private fun percentOfVolume(volume: Int? = null): Float {
+        return ((volume ?: currentVolume) / maxVolume.toFloat()).coerceIn(0F, 1F)
+    }
+
+    @Suppress("DEPRECATION")
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         intent?.run {
-            viewModel.updateWatchHistory()
+            viewModel.updateWatchHistory(
+                currentTime = flixclusivePlayer.currentPosition,
+                duration = flixclusivePlayer.duration
+            )
 
             val videoData = getSerializableExtra(VIDEO_DATA)
-            val watchHistoryItem = getSerializableExtra(WATCH_HISTORY_ITEM) ?: WatchHistoryItem()
+            val watchHistoryItem =
+                getSerializableExtra(WATCH_HISTORY_ITEM) ?: WatchHistoryItem()
             val episodeSelected = getSerializableExtra(EPISODE_SELECTED)
             val seasonCount = getIntExtra(SEASON_COUNT, 1)
 
@@ -589,14 +608,70 @@ class PlayerActivity : ComponentActivity() {
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (SDK_INT >= Build.VERSION_CODES.O) {
+            val preferredSeekIncrement = viewModel.appSettings.value.preferredSeekAmount
+
             enterPictureInPictureMode(
-                with(PictureInPictureParams.Builder()) {
-                    val width = 16
-                    val height = 9
-                    setAspectRatio(Rational(width, height))
-                    build()
-                }
+                updatePiPParams(
+                    isPlaying = flixclusivePlayer.isPlaying,
+                    hasEnded = flixclusivePlayer.playbackState == STATE_ENDED,
+                    preferredSeekIncrement = preferredSeekIncrement
+                )
             )
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        /*
+        *
+        * Hide the system bars for immersive experience
+        * */
+        if (hasFocus && SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+            window.insetsController?.run {
+                systemBarsBehavior =
+                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                hide(WindowInsetsCompat.Type.ime())
+                hide(WindowInsetsCompat.Type.systemBars())
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    // Set the content to appear under the system bars so that the
+                    // content doesn't resize when the system bars hide and show.
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    // Hide the nav bar and status bar
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN)
+        }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        return when (event.keyCode) {
+            KeyEvent.KEYCODE_VOLUME_UP -> {
+                val newVolume = currentVolume + 1F
+                audioManager.setStreamVolume(
+                    /* streamType = */ AudioManager.STREAM_MUSIC,
+                    /* index = */ newVolume.roundToInt(),
+                    /* flags = */ 0
+                )
+                viewModel.updateVolume(newVolume / maxVolume)
+                true
+            }
+
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                val newVolume = currentVolume - 1F
+                audioManager.setStreamVolume(
+                    /* streamType = */ AudioManager.STREAM_MUSIC,
+                    /* index = */ newVolume.roundToInt(),
+                    /* flags = */ 0
+                )
+                viewModel.updateVolume(newVolume / maxVolume)
+                true
+            }
+
+            else -> super.onKeyDown(keyCode, event)
         }
     }
 
@@ -672,6 +747,7 @@ class PlayerActivity : ComponentActivity() {
 
                     audioManager.requestAudioFocus(focusRequest)
                 } else {
+                    @Suppress("DEPRECATION")
                     audioManager.requestAudioFocus(
                         afChangeListener,
                         AudioManager.STREAM_MUSIC,
@@ -684,7 +760,7 @@ class PlayerActivity : ComponentActivity() {
                         AudioManager.AUDIOFOCUS_REQUEST_FAILED -> false
                         AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
                             onRequestGranted()
-                            shouldPlay = true
+                            flixclusivePlayer.playWhenReady = true
                             true
                         }
 

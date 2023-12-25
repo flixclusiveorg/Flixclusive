@@ -1,7 +1,7 @@
 package com.flixclusive.data.utils
 
 import com.flixclusive.R
-import com.flixclusive.common.LoggerUtils.errorLog
+import com.flixclusive.utils.LoggerUtils.errorLog
 import com.flixclusive.domain.common.Resource
 import retrofit2.HttpException
 import java.net.ConnectException

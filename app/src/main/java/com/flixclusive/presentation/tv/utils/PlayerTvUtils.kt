@@ -1,11 +1,11 @@
 package com.flixclusive.presentation.tv.utils
 
-import com.flixclusive.presentation.utils.PlayerUiUtils.SECONDS_TO_SEEK
-import com.flixclusive.presentation.utils.PlayerUiUtils.SECONDS_TO_SEEK_ON_STREAK1
-import com.flixclusive.presentation.utils.PlayerUiUtils.SECONDS_TO_SEEK_ON_STREAK2
-import com.flixclusive.presentation.utils.PlayerUiUtils.SECONDS_TO_SEEK_ON_STREAK3
-
 object PlayerTvUtils {
+    private const val SECONDS_TO_SEEK = 10000
+    private const val SECONDS_TO_SEEK_ON_STREAK1 = 30000
+    private const val SECONDS_TO_SEEK_ON_STREAK2 = 60000
+    private const val SECONDS_TO_SEEK_ON_STREAK3 = 300000
+
     fun getTimeToSeekToBasedOnSeekMultiplier(
         currentTime: Long,
         maxDuration: Long,

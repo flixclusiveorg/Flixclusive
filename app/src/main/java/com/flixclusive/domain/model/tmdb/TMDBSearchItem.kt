@@ -9,19 +9,14 @@ sealed class TMDBSearchItem : Film {
     @Serializable
     data class MovieTMDBSearchItem(
         @SerializedName("poster_path") override val posterImage: String? = null,
-        val adult: Boolean = false,
         override val overview: String = "",
         @SerializedName("release_date") val releaseDate: String = "",
-        @SerializedName("original_title") val originalTitle: String = "",
         @SerializedName("genre_ids") val genreIds: List<Int> = emptyList(),
         override val id: Int = 0,
         @SerializedName("media_type") val mediaType: String? = null,
-        @SerializedName("original_language") val originalLanguage: String = "",
+        @SerializedName("original_language") override val language: String = "en",
         override val title: String = "",
         @SerializedName("backdrop_path") override val backdropImage: String? = null,
-        val popularity: Double = 0.0,
-        @SerializedName("vote_count") val voteCount: Int = 0,
-        val video: Boolean = false,
         @SerializedName("vote_average") override val rating: Double = 0.0,
         override val logoImage: String? = null,
         override val genres: List<Genre> = listOf(Genre(-1, "Movie"))
@@ -39,19 +34,15 @@ sealed class TMDBSearchItem : Film {
     @Serializable
     data class TvShowTMDBSearchItem(
         @SerializedName("poster_path") override val posterImage: String? = null,
-        val popularity: Double = 0.0,
         override val id: Int = 0,
         override val overview: String = "",
         @SerializedName("backdrop_path") override val backdropImage: String? = null,
         @SerializedName("vote_average") override val rating: Double = 0.0,
         @SerializedName("media_type") val mediaType: String? = null,
         @SerializedName("first_air_date") val firstAirDate: String = "",
-        @SerializedName("origin_country") val originCountry: List<String> = emptyList(),
         @SerializedName("genre_ids") val genreIds: List<Int> = emptyList(),
-        @SerializedName("original_language") val originalLanguage: String = "",
-        @SerializedName("vote_count") val voteCount: Int = 0,
+        @SerializedName("original_language") override val language: String = "en",
         @SerializedName("name") override val title: String = "",
-        @SerializedName("original_name") val originalName: String = "",
         override val logoImage: String? = null,
         override val genres: List<Genre> = listOf(Genre(-1, "TV Show"))
     ) : TMDBSearchItem() {
@@ -75,6 +66,9 @@ sealed class TMDBSearchItem : Film {
         val name: String = "",
         val popularity: Double = 0.0,
     ) : TMDBSearchItem() {
+        override val language: String
+            get() = "en"
+
         override val id: Int
             get() = -1
         override val title: String

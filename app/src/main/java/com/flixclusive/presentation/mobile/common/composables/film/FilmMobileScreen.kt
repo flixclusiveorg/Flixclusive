@@ -147,6 +147,7 @@ fun FilmMobileScreen(
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             FilmOverview(
                                 overview = film.overview,
+                                defaultExpandState = filmTabs.isEmpty(),
                                 modifier = Modifier
                                     .padding(horizontal = LABEL_START_PADDING)
                                     .padding(top = 25.dp)

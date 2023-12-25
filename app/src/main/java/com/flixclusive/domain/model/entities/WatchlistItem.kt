@@ -13,7 +13,6 @@ data class WatchlistItem(
     val film: FilmImpl = FilmImpl()
 )
 
-
 fun Film.toWatchlistItem(): WatchlistItem {
     return WatchlistItem(
         id = id,
