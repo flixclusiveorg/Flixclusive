@@ -3,17 +3,17 @@ package com.flixclusive.di
 import com.flixclusive.data.api.TMDBApiService
 import com.flixclusive.data.database.AppDatabase
 import com.flixclusive.data.repository.ProvidersRepositoryImpl
+import com.flixclusive.data.repository.SourceLinksRepositoryImpl
 import com.flixclusive.data.repository.TMDBRepositoryImpl
 import com.flixclusive.data.repository.UserRepositoryImpl
-import com.flixclusive.data.repository.VideoDataSourceRepositoryImpl
 import com.flixclusive.data.repository.WatchHistoryRepositoryImpl
 import com.flixclusive.data.repository.WatchlistRepositoryImpl
 import com.flixclusive.domain.config.ConfigurationProvider
 import com.flixclusive.domain.preferences.AppSettingsManager
 import com.flixclusive.domain.repository.ProvidersRepository
+import com.flixclusive.domain.repository.SourceLinksRepository
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.domain.repository.UserRepository
-import com.flixclusive.domain.repository.VideoDataSourceRepository
 import com.flixclusive.domain.repository.WatchHistoryRepository
 import com.flixclusive.domain.repository.WatchlistRepository
 import dagger.Module
@@ -47,7 +47,7 @@ object AppModule {
         tmdbRepository: TMDBRepository,
         providersRepository: ProvidersRepository,
         @IoDispatcher ioDispatcher: CoroutineDispatcher
-    ): VideoDataSourceRepository = VideoDataSourceRepositoryImpl(
+    ): SourceLinksRepository = SourceLinksRepositoryImpl(
         providersRepository = providersRepository,
         tmdbRepository = tmdbRepository,
         ioDispatcher = ioDispatcher
@@ -92,7 +92,6 @@ object AppModule {
         )
     }
 
-    // provide UserRepository
     @Provides
     @Singleton
     fun provideProvidersRepository(

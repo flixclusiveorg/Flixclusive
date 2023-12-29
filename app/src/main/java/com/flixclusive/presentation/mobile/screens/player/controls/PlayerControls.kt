@@ -34,7 +34,8 @@ import com.flixclusive.presentation.mobile.screens.player.controls.dialogs.setti
 import com.flixclusive.presentation.mobile.screens.player.controls.episodes.EpisodesScreen
 import com.flixclusive.presentation.mobile.screens.player.controls.gestures.GestureDirection
 import com.flixclusive.presentation.mobile.screens.player.controls.gestures.SeekerAndSliderGestures
-import com.flixclusive.providers.models.common.VideoData
+import com.flixclusive.providers.interfaces.SourceProvider
+import com.flixclusive.providers.models.common.SourceLink
 
 const val SEEK_ANIMATION_DELAY = 450L
 
@@ -49,9 +50,9 @@ fun PlayerControls(
     isPlayerSettingsDialogOpened: MutableState<Boolean>,
     isServersDialogOpened: MutableState<Boolean>,
     watchHistoryItem: WatchHistoryItem?,
-    videoData: VideoData,
+    servers: List<SourceLink>,
     isLastEpisode: Boolean,
-    sourceProviders: List<String>,
+    sourceProviders: List<SourceProvider>,
     availableSeasons: Int?,
     stateProvider: () -> PlayerUiState,
     seasonDataProvider: () -> Resource<Season>?,
@@ -92,7 +93,7 @@ fun PlayerControls(
         type: PlayerSnackbarMessageType,
     ) {
         onSnackbarToggle(
-            String.format(UiText.StringResource(messageFormat).asString(context), message),
+            UiText.StringResource(messageFormat, message).asString(context),
             type
         )
     }
@@ -315,7 +316,7 @@ fun PlayerControls(
     ) {
         PlayerServersDialog(
             state = state,
-            servers = videoData.servers ?: emptyList(),
+            servers = servers,
             sourceProviders = sourceProviders,
             onSourceChange = { source ->
                 onSourceChange(source)

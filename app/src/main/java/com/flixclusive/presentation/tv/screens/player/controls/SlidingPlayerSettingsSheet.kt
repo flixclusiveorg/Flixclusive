@@ -43,14 +43,14 @@ import com.flixclusive.presentation.utils.ComposeUtils.applyDropShadow
 import com.flixclusive.presentation.utils.ModifierUtils.fadingEdge
 import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 import com.flixclusive.providers.models.common.Subtitle
-import com.flixclusive.providers.models.common.VideoDataServer
+import com.flixclusive.providers.models.common.SourceLink
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SlidingPlayerSettingsSheet(
     modifier: Modifier = Modifier,
     sideSheetFocusPriority: BottomControlsButtonType?,
-    servers: List<VideoDataServer>,
+    servers: List<SourceLink>,
     subtitles: List<Subtitle>,
     qualities: List<String>,
     selectedSubtitle: Int,
@@ -148,7 +148,7 @@ fun SlidingPlayerSettingsSheet(
                                         shouldFocusOnServers
                                     )
                                 ),
-                            name = server.serverName,
+                            name = server.name,
                             index = i,
                             selectedIndex = selectedServer,
                             onClick = {

@@ -211,7 +211,6 @@ fun FilmMobileScreen(
                             if (currentSeasonSelected is Resource.Success) {
                                 items(
                                     items = currentSeasonSelected.data!!.episodes,
-                                    key = { it.episode },
                                     span = { GridItemSpan(maxLineSpan) },
                                     contentType = { it }
                                 ) { episode ->
@@ -229,9 +228,6 @@ fun FilmMobileScreen(
                         } else {
                             itemsIndexed(
                                 items = film.recommendedTitles,
-                                key = { i, film ->
-                                    film.id * i
-                                }
                             ) { _, film ->
                                 FilmCard(
                                     modifier = Modifier

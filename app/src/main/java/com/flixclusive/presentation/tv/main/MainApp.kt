@@ -61,7 +61,7 @@ fun TVMainActivity.MainApp() {
     }
 
     val currentScreenIndexSelected = remember(currentScreen) {
-        TvAppDestination.values().indexOfFirst {
+        TvAppDestination.entries.toTypedArray().indexOfFirst {
             it.direction == currentScreen
             || it.direction.route.contains(
                 other = currentScreen.baseRoute,

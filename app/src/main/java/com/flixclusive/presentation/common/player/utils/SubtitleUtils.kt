@@ -4,16 +4,16 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import com.flixclusive.providers.models.common.Subtitle
 import java.util.Locale
+import kotlin.math.max
 
 object SubtitleUtils {
-    fun getSubtitleMimeType(source: String, subtitle: Subtitle): String? {
+    fun getSubtitleMimeType(subtitle: Subtitle): String? {
         val isLocalSubtitle = subtitle.url.contains("content://")
         val uri = if(isLocalSubtitle) {
             subtitle.lang
         } else subtitle.url
 
         return when {
-            source.contains(".mp4") && uri.endsWith(".vtt", true) -> MimeTypes.APPLICATION_MP4VTT
             uri.endsWith(".vtt", true) -> MimeTypes.TEXT_VTT
             uri.endsWith(".ssa", true) -> MimeTypes.TEXT_SSA
             uri.endsWith(".ttml", true) || uri.endsWith(".xml", true) -> MimeTypes.APPLICATION_TTML
@@ -34,13 +34,9 @@ object SubtitleUtils {
             }
         }
 
-        return when(index) {
-            -1 -> {
-                if(lang != null)
-                    getIndexFromLanguage()
-                else 0
-            }
-            else -> index
-        }
+        return max(
+            index,
+            if (lang != null) getIndexFromLanguage() else 0
+        )
     }
 }

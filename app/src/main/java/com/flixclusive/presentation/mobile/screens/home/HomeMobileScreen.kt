@@ -46,6 +46,7 @@ fun HomeMobileScreen(
 
     val navGraphThatNeedsToGoToRoot by rememberUpdatedState(newValue = mainMobileSharedViewModel.navGraphThatNeedsToGoToRoot)
     val mainUiState by mainMobileSharedViewModel.uiState.collectAsStateWithLifecycle()
+    val filmToPreview by mainMobileSharedViewModel.filmToPreview.collectAsStateWithLifecycle()
 
     OnSeeMoreDetailsClickObserver(
         isSeeingMoreDetailsProvider = { mainUiState.isSeeingMoreDetailsOfLongClickedFilm },
@@ -53,7 +54,7 @@ fun HomeMobileScreen(
         navigate = {
             // consume it
             navController.navigate(
-                HomeFilmScreenDestination(mainUiState.longClickedFilm!!)
+                HomeFilmScreenDestination(filmToPreview!!)
             )
             mainMobileSharedViewModel.onBottomSheetClose()
             mainMobileSharedViewModel.onSeeMoreClick(shouldSeeMore = false)

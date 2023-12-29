@@ -50,8 +50,8 @@ class AppConfigurationViewModel @Inject constructor(
         }
     }
 
-    fun configInitialize() {
-        configurationProvider.initialize()
+    fun checkForUpdates() {
+        configurationProvider.checkForUpdates()
     }
 
     fun onConsumeUpdateDialog() {

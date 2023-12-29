@@ -1,25 +1,30 @@
 package com.flixclusive.presentation.mobile.main
 
 import androidx.lifecycle.ViewModel
+import com.flixclusive.domain.config.ConfigurationProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
-class MainMobileActivityViewModel @Inject constructor() : ViewModel() {
-    private val _isSplashActivityLaunched = MutableStateFlow(false)
-    val isSplashActivityLaunched = _isSplashActivityLaunched.asStateFlow()
-
+class MainMobileActivityViewModel @Inject constructor(
+    private val configurationProvider: ConfigurationProvider
+) : ViewModel() {
     private val _isConfigInitialized = MutableStateFlow(false)
     val isConfigInitialized = _isConfigInitialized.asStateFlow()
 
     fun onConfigSuccess() {
-        _isConfigInitialized.update { true }
+        _isConfigInitialized.value = true
     }
 
-    fun onSplashActivityLaunch() {
-        _isSplashActivityLaunched.update { true }
+    fun initializeConfigsIfNull() {
+        configurationProvider.run {
+            if(homeCategoriesConfig == null || searchCategoriesConfig == null || appConfig == null || providersStatus == null) {
+                _isConfigInitialized.value = false
+
+                initialize()
+            }
+        }
     }
 }

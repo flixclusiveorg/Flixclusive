@@ -92,53 +92,31 @@ object WatchHistoryUtils {
         return amount - deductedAmount
     }
 
-    fun getLastWatchTime(
+    fun getSavedTimeForFilm(
         watchHistoryItem: WatchHistoryItem,
         episodeToWatch: TMDBEpisode?
-    ): Long {
+    ): Pair<Long, Long> {
         if(watchHistoryItem.episodesWatched.isEmpty())
-            return 0L
+            return 0L to 0L
 
         val isTvShow = watchHistoryItem.seasons != null || watchHistoryItem.film.filmType == FilmType.TV_SHOW
         return when {
             isTvShow -> {
-                val episodeToUse = watchHistoryItem.episodesWatched.find {
+                watchHistoryItem.episodesWatched.find {
                     it.seasonNumber == episodeToWatch?.season
                     && it.episodeNumber == episodeToWatch?.episode
-                }
+                }?.let {
+                    if (it.isFinished) 0L to 0L
+                    else it.watchTime to it.durationTime
+                } ?: (0L to 0L)
 
-                if(episodeToUse?.isFinished == true) 0L
-                else episodeToUse?.watchTime ?: 0L
             }
             !watchHistoryItem.episodesWatched.last().isFinished -> {
-                watchHistoryItem.episodesWatched.last().watchTime
-            }
-            else -> 0L
-        }
-    }
-
-    fun getTotalDuration(
-        watchHistoryItem: WatchHistoryItem,
-        episodeToWatch: TMDBEpisode?
-    ): Long {
-        if(watchHistoryItem.episodesWatched.isEmpty())
-            return 0L
-
-        val isTvShow = watchHistoryItem.seasons != null
-        return when {
-            isTvShow -> {
-                val episodeToUse = watchHistoryItem.episodesWatched.find {
-                    it.seasonNumber == episodeToWatch?.season
-                        && it.episodeNumber == episodeToWatch?.episode
+                watchHistoryItem.episodesWatched.last().let {
+                    it.watchTime to it.durationTime
                 }
-
-                if(episodeToUse?.isFinished == true) 0L
-                else episodeToUse?.durationTime ?: 0L
             }
-            !watchHistoryItem.episodesWatched.last().isFinished -> {
-                watchHistoryItem.episodesWatched.last().durationTime
-            }
-            else -> 0L
+            else -> 0L to 0L
         }
     }
 }

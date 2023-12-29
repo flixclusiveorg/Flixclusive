@@ -127,10 +127,7 @@ fun SearchTvScreen(navigator: DestinationsNavigator) {
                 columns = TvGridCells.Adaptive(125.dp),
                 modifier = focusRestorerModifiers.parentModifier
             ) {
-                itemsIndexed(
-                    items = viewModel.searchResults,
-                    key = { i, film -> film.id * i }
-                ) { i, film ->
+                itemsIndexed(viewModel.searchResults) { i, film ->
                     FilmCardTv(
                         modifier = Modifier
                             .ifElse(

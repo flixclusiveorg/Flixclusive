@@ -89,7 +89,7 @@ fun ProviderItemCard(
                         .padding(horizontal = 2.dp, vertical = 8.dp)
                 ) {
                     Text(
-                        text = provider.source.name,
+                        text = provider.provider.name,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Normal

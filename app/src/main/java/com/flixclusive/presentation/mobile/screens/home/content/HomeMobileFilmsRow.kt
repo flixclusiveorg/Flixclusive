@@ -114,10 +114,7 @@ fun HomeMobileFilmsRow(
             }
 
             LazyRow(state = listState) {
-                items(
-                    items = films,
-                    key = { it.id }
-                ) { film ->
+                items(films) { film ->
 
                     // Necessary if we ever encounter a trending cast/person model
                     if(film is TMDBSearchItem.PersonTMDBSearchItem)

@@ -27,23 +27,27 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.tv.material3.MaterialTheme
-import com.flixclusive.domain.model.VideoDataDialogState
+import com.flixclusive.domain.model.SourceDataState
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.Movie
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.model.tmdb.TvShow
-import com.flixclusive.presentation.common.composables.SourceStateDialog
+import com.flixclusive.presentation.common.composables.SourceDataDialog
 import com.flixclusive.presentation.common.player.FlixclusivePlayer
 import com.flixclusive.presentation.common.player.PLAYER_CONTROL_VISIBILITY_TIMEOUT
+import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.AudioFocusManager
 import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.LifecycleAwarePlayer
 import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.LocalPlayer
+import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.ObserveNewLinksAndSubtitles
+import com.flixclusive.presentation.mobile.screens.player.utils.getActivity
 import com.flixclusive.presentation.tv.main.TVMainActivity
 import com.flixclusive.presentation.tv.screens.player.controls.BottomControlsButtonType
 import com.flixclusive.presentation.tv.screens.player.controls.TvPlaybackControls
 import com.flixclusive.presentation.tv.utils.ComposeTvUtils.provideLocalDirectionalFocusRequester
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.handleDPadKeyEvents
 import com.flixclusive.presentation.tv.utils.PlayerTvUtils.getTimeToSeekToBasedOnSeekMultiplier
+import com.flixclusive.presentation.utils.FormatterUtils
 import kotlinx.coroutines.delay
 
 private const val PLAYER_SCREEN_DELAY = 800
@@ -58,12 +62,11 @@ fun FilmTvPlayerScreen(
 ) {
     val viewModel = hiltViewModel<TvPlayerViewModel>()
 
-    val context = LocalContext.current as TVMainActivity
+    val context = LocalContext.current.getActivity<TVMainActivity>()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
     val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
-    val videoData by viewModel.videoData.collectAsStateWithLifecycle()
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
@@ -71,28 +74,28 @@ fun FilmTvPlayerScreen(
         if (
             ((currentSelectedEpisode?.episodeId == episode?.episodeId
                     && film is TvShow) || film is Movie)
-            && dialogState !is VideoDataDialogState.Error
-            && dialogState !is VideoDataDialogState.Unavailable
-            && dialogState !is VideoDataDialogState.Idle
+            && dialogState !is SourceDataState.Error
+            && dialogState !is SourceDataState.Unavailable
+            && dialogState !is SourceDataState.Idle
         ) return@LaunchedEffect
 
-        viewModel.play(film, episode)
+        viewModel.play(episode)
     }
 
     BackHandler(
-        enabled = dialogState !is VideoDataDialogState.Idle && isPlayerStarting
+        enabled = dialogState !is SourceDataState.Idle && isPlayerStarting
     ) {
         onBack()
     }
 
-    SourceStateDialog(
+    SourceDataDialog(
         state = dialogState,
         isTv = true,
         onConsumeDialog = viewModel::onConsumePlayerDialog
     )
 
     AnimatedVisibility(
-        visible = dialogState is VideoDataDialogState.Success && isPlayerStarting,
+        visible = dialogState is SourceDataState.Success && isPlayerStarting,
         enter = fadeIn(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY)),
         exit = fadeOut(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY))
     ) {
@@ -104,13 +107,17 @@ fun FilmTvPlayerScreen(
             }
         }
 
+        val sourceData = viewModel.sourceData
+
+        val currentPlayerTitle = remember(currentSelectedEpisode) {
+            FormatterUtils.formatPlayerTitle(film, currentSelectedEpisode)
+        }
         var controlTimeoutVisibility by remember {
             mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
         }
         val (sideSheetFocusPriority, toggleSideSheet) = remember {
             mutableStateOf<BottomControlsButtonType?>(null)
         }
-        var areControlsVisible by remember { mutableStateOf(true) }
         var seekMultiplier by remember { mutableLongStateOf(0L) }
 
         val playerFocusRequester = remember { FocusRequester() }
@@ -121,7 +128,6 @@ fun FilmTvPlayerScreen(
 
             currentSelectedEpisode?.season == lastSeason && currentSelectedEpisode?.episode == lastEpisode
         }
-        var source by remember { mutableStateOf(videoData.source) }
 
         val player by remember { 
             mutableStateOf(FlixclusivePlayer(context, appSettings))
@@ -170,32 +176,26 @@ fun FilmTvPlayerScreen(
 
         LaunchedEffect(controlTimeoutVisibility) {
             if (controlTimeoutVisibility > 0) {
-                areControlsVisible = true
+                viewModel.areControlsVisible = true
                 delay(1000)
                 controlTimeoutVisibility -= 1
             } else {
-                areControlsVisible = false
+                viewModel.areControlsVisible = false
 
                 if (sideSheetFocusPriority == null)
                     playerFocusRequester.requestFocus()
             }
         }
 
-        LaunchedEffect(videoData.source) {
-            val currentAutoAdaptiveSource = videoData.source
-            val isNew = !currentAutoAdaptiveSource.equals(source, ignoreCase = true)
-
-            if (isNew) {
-                source = currentAutoAdaptiveSource
-
-                val (currentPosition, _) = viewModel.getSavedTimeForVideoData(currentSelectedEpisode)
-
-                player.prepare(
-                    videoData = videoData,
-                    initialPlaybackPosition = currentPosition
-                )
+        ObserveNewLinksAndSubtitles(
+            selectedSourceLink = uiState.selectedSourceLink,
+            currentPlayerTitle = currentPlayerTitle,
+            sourceData.cachedLinks,
+            sourceData.cachedSubtitles,
+            getSavedTimeForCurrentSourceData = {
+                viewModel.getSavedTimeForSourceData(currentSelectedEpisode).first
             }
-        }
+        )
 
         CompositionLocalProvider(LocalPlayer provides player) {
             provideLocalDirectionalFocusRequester {
@@ -204,20 +204,35 @@ fun FilmTvPlayerScreen(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surface)
                 ) {
-                    AudioFocusManager()
+                    AudioFocusManager(
+                        activity = context,
+                        preferredSeekAmount = appSettings.preferredSeekAmount
+                    )
 
                     LifecycleAwarePlayer(
                         isInTv = true,
-                        areControlsVisible = areControlsVisible,
+                       areControlsVisible = viewModel.areControlsVisible,
                         onInitialize = {
-                            player.run {
-                                val (currentPosition, _) = viewModel.getSavedTimeForVideoData(currentSelectedEpisode)
-
-                                initialize()
-                                prepare(
-                                    videoData = videoData,
-                                    initialPlaybackPosition = currentPosition
+                            viewModel.run {
+                                val (currentPosition, _) = viewModel.getSavedTimeForSourceData(
+                                    currentSelectedEpisode
                                 )
+
+                                player.initialize()
+                                sourceData.run {
+                                    val getPossibleSourceLink = cachedLinks
+                                        .getOrNull(uiState.selectedSourceLink)
+                                        ?: cachedLinks.getOrNull(0)
+
+                                    getPossibleSourceLink?.let {
+                                        player.prepare(
+                                            link = it,
+                                            title = currentPlayerTitle,
+                                            subtitles = cachedSubtitles,
+                                            initialPlaybackPosition = currentPosition
+                                        )
+                                    }
+                                }
                             }
                         },
                         onRelease = {
@@ -233,7 +248,7 @@ fun FilmTvPlayerScreen(
                         modifier = Modifier
                             .handleDPadKeyEvents(
                                 onEnter = {
-                                    if (!areControlsVisible && sideSheetFocusPriority == null) {
+                                    if (!viewModel.areControlsVisible && sideSheetFocusPriority == null) {
                                         showControls(true)
                                         player.run {
                                             if (isPlaying) {
@@ -261,12 +276,12 @@ fun FilmTvPlayerScreen(
 
                     TvPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
-                        isVisible = areControlsVisible && seekMultiplier == 0L && sideSheetFocusPriority == null,
-                        videoData = videoData,
+                        isVisible = viewModel.areControlsVisible && seekMultiplier == 0L && sideSheetFocusPriority == null,
+                        servers = sourceData.cachedLinks,
                         sideSheetFocusPriority = sideSheetFocusPriority,
                         stateProvider = { uiState },
                         dialogStateProvider = { dialogState },
-                        playbackTitle = videoData.title ?: "",
+                        playbackTitle = currentPlayerTitle,
                         isTvShow = film.filmType == FilmType.TV_SHOW,
                         isLastEpisode = isLastEpisode,
                         seekMultiplier = seekMultiplier,
@@ -288,7 +303,7 @@ fun FilmTvPlayerScreen(
                                     currentTime = currentPosition,
                                     duration = duration
                                 )
-                                viewModel.play(film)
+                                viewModel.play()
                             }
                         },
                     )

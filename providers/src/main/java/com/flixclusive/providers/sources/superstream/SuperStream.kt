@@ -4,9 +4,8 @@ import com.flixclusive.providers.interfaces.SourceProvider
 import com.flixclusive.providers.models.common.MediaInfo
 import com.flixclusive.providers.models.common.MediaType
 import com.flixclusive.providers.models.common.SearchResults
+import com.flixclusive.providers.models.common.SourceLink
 import com.flixclusive.providers.models.common.Subtitle
-import com.flixclusive.providers.models.common.VideoData
-import com.flixclusive.providers.models.common.VideoDataServer
 import com.flixclusive.providers.models.providers.flixhq.TvShowCacheData
 import com.flixclusive.providers.models.providers.superstream.SuperStreamDownloadResponse
 import com.flixclusive.providers.models.providers.superstream.SuperStreamMediaDetailResponse
@@ -31,6 +30,8 @@ import com.flixclusive.providers.sources.superstream.utils.SuperStreamUtils.isEr
 import com.flixclusive.providers.sources.superstream.utils.SuperStreamUtils.randomToken
 import com.flixclusive.providers.utils.DecryptUtils.base64Encode
 import com.flixclusive.providers.utils.JsonUtils.fromJson
+import com.flixclusive.providers.utils.asyncCalls
+import com.flixclusive.providers.utils.mapAsync
 import com.flixclusive.providers.utils.network.OkHttpUtils.POST
 import com.flixclusive.providers.utils.network.OkHttpUtils.asString
 import okhttp3.Headers.Companion.toHeaders
@@ -152,12 +153,12 @@ class SuperStream(
 
     override suspend fun getSourceLinks(
         mediaId: String,
-        server: String?,
         season: Int?,
         episode: Int?,
-    ): VideoData {
+        onLinkLoaded: (SourceLink) -> Unit,
+        onSubtitleLoaded: (Subtitle) -> Unit,
+    ) {
         val isMovie = season == null && episode == null
-
 
         val tvShowInfo = if(season != null) {
             getMediaInfo(mediaId, MediaType.TvShow)
@@ -182,21 +183,9 @@ class SuperStream(
 
         downloadResponse?.msg?.isError("Failed to fetch source.")
 
-        var data: SuperStreamDownloadResponse.DownloadItem? = null
-        if (server != null) {
-            data = downloadResponse?.data?.list?.find {
-                it.path.isNullOrBlank().not() && (
-                it.realQuality?.contains(server, ignoreCase = true) == true
-                || it.realQuality?.equals(server, ignoreCase = true) == true
-                )
-            }
-        }
-
-        if (data == null) {
-            data = downloadResponse?.data?.list?.find {
-                it.path.isNullOrBlank().not()
-            } ?: throw Exception("Cannot find source")
-        }
+        val data = downloadResponse?.data?.list?.find {
+            it.path.isNullOrBlank().not()
+        } ?: throw Exception("Cannot find source")
 
         // Should really run this query for every link :(
         val subtitleQuery = if (isMovie) {
@@ -208,35 +197,41 @@ class SuperStream(
         val subtitlesResponse = requestCall<SuperStreamSubtitleResponse>(subtitleQuery)
         subtitlesResponse?.msg?.isError("Failed to fetch subtitles.")
 
-        val subtitlesToUse = mutableListOf<Subtitle>()
-        subtitlesResponse?.data?.list?.forEach { subtitle ->
-            subtitlesToUse.addAll(
-                subtitle.subtitles
-                    .sortedWith(compareByDescending { it.order })
-                    .filter { it.filePath != null && it.lang != null }
-                    .map {
-                        Subtitle(
-                            lang = "${it.language ?: "UNKNOWN"} [${it.lang}] - Votes: ${it.order}",
-                            url = it.filePath!!.toValidSubtitleFilePath()
+        asyncCalls(
+            {
+                subtitlesResponse?.data?.list?.mapAsync { subtitle ->
+                    subtitle.subtitles
+                        .sortedWith(compareByDescending { it.order })
+                        .mapAsync {
+                            if(
+                                it.filePath != null
+                                && it.lang != null
+                            ) {
+                                onSubtitleLoaded(
+                                    Subtitle(
+                                        lang = "${it.language ?: "UNKNOWN"} [${it.lang}] - Votes: ${it.order}",
+                                        url = it.filePath.toValidSubtitleFilePath()
+                                    )
+                                )
+                            }
+                        }
+                }
+            },
+            {
+                downloadResponse.data.list.mapAsync {
+                    if(
+                        !it.path.isNullOrBlank()
+                        && !it.realQuality.isNullOrBlank()
+                    ) {
+                        onLinkLoaded(
+                            SourceLink(
+                                name = "${it.realQuality} server",
+                                url = it.path
+                            )
                         )
                     }
-            )
-        }
-
-
-
-        return VideoData(
-            mediaId = mediaId,
-            source = data.path ?: throw NullPointerException("Cannot get path source."),
-            subtitles = subtitlesToUse,
-            sourceName = name,
-            servers = downloadResponse?.data?.list
-                ?.filter {
-                    !it.path.isNullOrBlank() && it.realQuality.isNullOrBlank().not()
                 }
-                ?.map {
-                    VideoDataServer("${it.realQuality!!} Server", it.path!!)
-                }
+            }
         )
     }
 }

@@ -32,6 +32,7 @@ import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
 import com.flixclusive.domain.preferences.AppSettings
 import com.flixclusive.domain.preferences.AppSettings.Companion.CaptionSizePreference.Companion.getDp
+import com.flixclusive.domain.utils.FilmProviderUtils.addOffSubtitles
 import com.flixclusive.presentation.common.player.renderer.CustomTextRenderer
 import com.flixclusive.presentation.common.player.utils.PlayerBuilderUtils.disableSSLVerification
 import com.flixclusive.presentation.common.player.utils.PlayerBuilderUtils.getCache
@@ -39,9 +40,10 @@ import com.flixclusive.presentation.common.player.utils.PlayerBuilderUtils.getLo
 import com.flixclusive.presentation.common.player.utils.PlayerBuilderUtils.getRenderers
 import com.flixclusive.presentation.common.player.utils.SubtitleUtils.getIndexFromLanguage
 import com.flixclusive.presentation.common.player.utils.SubtitleUtils.getSubtitleMimeType
+import com.flixclusive.providers.models.common.SourceLink
 import com.flixclusive.providers.models.common.Subtitle
-import com.flixclusive.providers.models.common.VideoData
 import com.flixclusive.providers.utils.Constants.USER_AGENT
+import com.flixclusive.utils.LoggerUtils.debugLog
 import kotlinx.coroutines.delay
 import java.util.Locale
 import kotlin.math.max
@@ -62,13 +64,6 @@ private const val toleranceAfterUs = 300_000L
 
 private const val FONT_SIZE_PIP_MODE = 8F // Equivalent to 8dp
 
-
-/**
- *
- * A Player wrapper for Player (Media3)
- *
- * */
-
 enum class PlayerEvents {
     PLAY,
     PAUSE,
@@ -77,6 +72,12 @@ enum class PlayerEvents {
     BACKWARD
 }
 
+
+/**
+ *
+ * A Player wrapper for [Player], [ExoPlayer] and [MediaSession]
+ *
+ */
 @OptIn(UnstableApi::class)
 class FlixclusivePlayer(
     private val context: Context,
@@ -108,7 +109,7 @@ class FlixclusivePlayer(
     var playWhenReady by mutableStateOf(true)
 
     val displayTitle: String
-        get() = mediaSession?.player?.mediaMetadata?.displayTitle.toString()
+        get() = (mediaSession?.player?.mediaMetadata?.displayTitle ?: "").toString()
 
     private lateinit var currentFactory: DefaultMediaSourceFactory
     private var currentTextRenderer: CustomTextRenderer? = null
@@ -151,6 +152,7 @@ class FlixclusivePlayer(
 
     @UnstableApi
     fun initialize() {
+        debugLog("Initializing the player...")
         val trackSelector = DefaultTrackSelector(context)
         val loadControl =
             getLoadControl(
@@ -200,21 +202,27 @@ class FlixclusivePlayer(
     }
 
     fun prepare(
-        videoData: VideoData,
+        link: SourceLink,
+        title: String,
+        subtitles: List<Subtitle>,
         initialPlaybackPosition: Long = 0L,
     ) {
         (mediaSession!!.player as ExoPlayer).run {
-            // extract subtitles from video data
-            val mediaSource = videoData.run {
-                extractSubtitles(this)
+            debugLog("Preparing the player...")
 
-                currentFactory.createMediaSource(
-                    getMediaItem(
-                        url = source,
-                        title = title
-                    )
-                )
+            extractSubtitles(subtitles)
+            selectedSubtitle = when {
+                !appSettings.isSubtitleEnabled -> 0
+                else -> availableSubtitles
+                    .getIndexFromLanguage(appSettings.subtitleLanguage)
             }
+
+            val mediaSource = currentFactory.createMediaSource(
+                getMediaItem(
+                    url = link.url,
+                    title = title
+                )
+            )
 
             setMediaSource(mediaSource, initialPlaybackPosition)
             prepare()
@@ -224,6 +232,8 @@ class FlixclusivePlayer(
 
     fun release() {
         mediaSession?.run {
+            debugLog("Releasing the player...")
+
             hasBeenInitialized = false
             clearTracks()
 
@@ -240,14 +250,7 @@ class FlixclusivePlayer(
 
     private fun onReady() {
         mediaSession?.player?.run {
-            hasBeenInitialized = true
             extractAudios()
-
-            selectedSubtitle = when {
-                !appSettings.isSubtitleEnabled -> 0
-                else -> availableSubtitles
-                    .getIndexFromLanguage(appSettings.subtitleLanguage)
-            }
 
             playbackParameters =
                 PlaybackParameters(playbackSpeed)
@@ -255,6 +258,8 @@ class FlixclusivePlayer(
             currentTextRenderer?.setRenderOffsetMs(offset = subtitleOffset)
             onSubtitleChange(index = selectedSubtitle)
             onAudioChange(index = selectedAudio)
+
+            hasBeenInitialized = true
         }
     }
 
@@ -303,7 +308,7 @@ class FlixclusivePlayer(
     }
 
     /**
-     * Extracts the source audios by populating
+     * Extracts the provider audios by populating
      * the available audios and track groups.
      *
      */
@@ -338,16 +343,14 @@ class FlixclusivePlayer(
      * extracts the subtitle configurations of it.
      *
      */
-    private fun extractSubtitles(videoData: VideoData) {
+    private fun extractSubtitles(subtitles: List<Subtitle>) {
         availableSubtitles.clear()
-        videoData.subtitles.forEach { subtitle ->
-            val mimeType = getSubtitleMimeType(videoData.source, subtitle)
 
+        subtitles.addOffSubtitles().forEach { subtitle ->
             val subtitleConfiguration = SubtitleConfiguration
                 .Builder(subtitle.url.toUri())
-                .setMimeType(mimeType)
+                .setMimeType(getSubtitleMimeType(subtitle))
                 .setLanguage(subtitle.lang)
-                //.setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
                 .build()
 
             availableSubtitles.add(subtitleConfiguration)
@@ -468,8 +471,8 @@ class FlixclusivePlayer(
         mediaSession?.player?.pause()
     }
 
-    fun addSubtitle(uri: String, subtitle: Subtitle) {
-        val mimeType = getSubtitleMimeType(uri, subtitle)
+    fun addSubtitle(subtitle: Subtitle) {
+        val mimeType = getSubtitleMimeType(subtitle)
 
         availableSubtitles.add(
             index = 1,

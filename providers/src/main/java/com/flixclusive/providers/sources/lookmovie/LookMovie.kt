@@ -4,13 +4,14 @@ import com.flixclusive.providers.interfaces.SourceProvider
 import com.flixclusive.providers.models.common.MediaInfo
 import com.flixclusive.providers.models.common.MediaType
 import com.flixclusive.providers.models.common.SearchResults
-import com.flixclusive.providers.models.common.VideoData
-import com.flixclusive.providers.models.common.VideoDataServer
+import com.flixclusive.providers.models.common.SourceLink
+import com.flixclusive.providers.models.common.Subtitle
 import com.flixclusive.providers.models.providers.lookmovie.LookMovieMediaDetail
 import com.flixclusive.providers.models.providers.lookmovie.LookMovieMediaDetail.Companion.toMediaInfo
 import com.flixclusive.providers.models.providers.lookmovie.LookMovieSearchResponse
 import com.flixclusive.providers.models.providers.lookmovie.LookMovieSearchResponse.Companion.toSearchResponse
 import com.flixclusive.providers.utils.JsonUtils.fromJson
+import com.flixclusive.providers.utils.asyncCalls
 import com.flixclusive.providers.utils.network.OkHttpUtils
 import com.flixclusive.providers.utils.network.OkHttpUtils.asString
 import com.flixclusive.providers.utils.replaceWhitespaces
@@ -42,10 +43,11 @@ class LookMovie(client: OkHttpClient) : SourceProvider(client) {
 
     override suspend fun getSourceLinks(
         mediaId: String,
-        server: String?,
         season: Int?,
         episode: Int?,
-    ): VideoData {
+        onLinkLoaded: (SourceLink) -> Unit,
+        onSubtitleLoaded: (Subtitle) -> Unit,
+    ) {
         val isTvShow = season != null || episode != null
         val mode = if (isTvShow) "episodes" else "movies"
 
@@ -72,42 +74,21 @@ class LookMovie(client: OkHttpClient) : SourceProvider(client) {
             ?.asString()
             ?: throw Exception("Error getting $mediaIdToUse data from LookMovie")
 
-        val possibleServers = arrayOf(
-            "auto",
-            "1080p",
-            "1080",
-            "720p",
-            "720",
-            "480p",
-            "480",
-            "240p",
-            "240",
-            "360p",
-            "360",
-            "144",
-            "144p"
-        )
-
         val data = fromJson<LookMovieMediaDetail>(response)
-        var sourceToUse = if (server != null && possibleServers.contains(server)) {
-            data.streams?.get(server)
-        } else null
 
-        if (sourceToUse == null) {
-            sourceToUse = data.streams?.values?.first()
-                ?: throw NullPointerException("Cannot get path source.")
-        }
-
-        return VideoData(
-            mediaId = mediaId,
-            source = sourceToUse,
-            subtitles = data.subtitles
-                ?.map { it.copy(url = baseUrl + it.url) }
-                ?.distinctBy { it.url }
-                ?: emptyList(),
-            sourceName = name,
-            servers = data.streams?.map { (key, value) ->
-                VideoDataServer("$key Server", value)
+        // For rapid parallel iterations
+        asyncCalls(
+            {
+                (data.subtitles
+                    ?.map { it.copy(url = baseUrl + it.url) }
+                    ?.distinctBy { it.url }
+                    ?: emptyList())
+                    .map(onSubtitleLoaded)
+            },
+            {
+                data.streams?.forEach { (key, value) ->
+                    onLinkLoaded(SourceLink("$key server", value))
+                }
             }
         )
     }

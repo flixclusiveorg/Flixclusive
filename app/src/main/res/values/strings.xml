@@ -68,7 +68,6 @@
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
     <string name="lock">Lock</string>
     <string name="not_now_label">Not now</string>
-    <string name="update_label">Update</string>
     <string name="unlock_label">Unlock</string>
     <string name="close_label">Close</string>
     <string name="ok">OK</string>
@@ -90,10 +89,11 @@
     <string name="download_in_progress">Downloading</string>
     <string name="download_completed">Download Completed</string>
     <string name="install">Install</string>
-    <string name="updating">Updating!</string>
+    <string name="update_label">Update</string>
     <string name="cancel">Cancel</string>
     <string name="description_placeholder">No description.</string>
     <string name="default_update_info_message">No additional update information provided.</string>
+    <string name="update_out_now_format">%1$s is out now</string>
     <string name="update_info">Update information</string>
     <string name="check_for_updates">Check for updates</string>
     <string name="checking_for_updates">Checking for updates…</string>
@@ -110,6 +110,7 @@
     <string name="video_buffer_max_length_desc">The default maximum duration of media that the player will attempt to ensure is buffered at all times.</string>
     <string name="release_player_desc">For seamless playback, turn this off. Though, this is required to free device memory.</string>
     <string name="film_card_titles_label">Show titles on film cards</string>
+    <string name="no_runtime">No runtime</string>
 
     <!--  Settings Items  -->
     <string name="subtitles_language">Subtitle language</string>
@@ -144,6 +145,8 @@
     <string name="something_went_wrong">Something went wrong</string>
     <string name="error_crash_title">Oops!</string>
     <string name="default_error_message">No additional error information provided.</string>
+    <string name="null_player_context_error">Player context should not be null!</string>
+    <string name="player_not_initialized">Player has not been initialized</string>
 
     <!--  Content Descriptions  -->
     <string name="delete_cache">Delete cache</string>
@@ -159,7 +162,7 @@
     <string name="search_item_content_description">An image of a search item</string>
     <string name="navigate_up">Navigate up</string>
     <string name="film_item_content_description">A film backdrop, picture or poster.</string>
-    <string name="poster_content_description">A poster of %%s</string>
+    <string name="poster_content_description">A poster of %1$s</string>
     <string name="unlock_content_description">An icon for unlocking the player</string>
     <string name="navigate_to_film">Go see details of film button</string>
     <string name="replay_button">Replay button</string>
@@ -173,20 +176,23 @@
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>
     <string name="subtract_500ms_content_description">Subtract 500ms on subtitle delay</string>
     <string name="subtract_1000ms_content_description">Subtract 1000ms on subtitle delay</string>
+    <string name="episodes_button_desc">An icon for episodes button</string>
+    <string name="lock_button_desc">An icon for locking the player</string>
+    <string name="audio_and_subtitle_button_desc">An icon for available audio and display for the player</string>
+    <string name="next_episode_button_desc">An icon for next episode</string>
 
     <!--  Activity Tags  -->
-    <string name="title_activity_player">PlayerActivity</string>
     <string name="title_activity_mobile_splash">SplashMobileActivity</string>
     <string name="title_activity_mobile_crash">CrashActivity</string>
     <string name="title_activity_mobile_update">UpdateMobileActivity</string>
 
     <!--  Player Strings/Messages  -->
-    <string name="audio_snackbar_message">Audio set to %%s</string>
-    <string name="subtitle_snackbar_message">Subtitle set to %%s</string>
-    <string name="quality_snackbar_message">Quality set to %%s</string>
-    <string name="playback_speed_snackbar_message">Playback speed set to %%s</string>
-    <string name="server_snackbar_message">Server set to %%s</string>
-    <string name="source_snackbar_message">Source set to %%s</string>
+    <string name="audio_snackbar_message">Audio set to %1$s</string>
+    <string name="subtitle_snackbar_message">Subtitle set to %1$s</string>
+    <string name="quality_snackbar_message">Quality set to %1$s</string>
+    <string name="playback_speed_snackbar_message">Playback speed set to %1$s</string>
+    <string name="server_snackbar_message">Server set to %1$s</string>
+    <string name="source_snackbar_message">Source set to %1$s</string>
 
 
     <!--  Error State Messages  -->
@@ -198,6 +204,7 @@
     <string name="copy_stack_trace_message">You could open a github issue and paste this stack trace.</string>
 
     <!--  Video Data Dialog State Messages  -->
+    <string name="fetching_episode_message">Fetching show episode…</string>
     <string name="video_data_dialog_state_error_default">Could not initialize video player!</string>
     <string name="video_data_dialog_state_unavailable_default">I\'m sorry, this is not yet watchable</string>
     <string name="video_data_dialog_state_fetching">Fetching video data…</string>
@@ -205,6 +212,7 @@
     <string name="video_data_dialog_state_success">Starting player…</string>
     <string name="failed_to_extract">Failed to extract, try again later</string>
     <string name="connection_timeout">Connection timeout</string>
+    <string name="failed_to_init_app">Couldn\'t initialize the app.</string>
     <string name="connection_failed">Connection failure</string>
     <string name="decryption_error">Decryption of data failed, try again later</string>
     <string name="unavailable_episode">Episode is not yet available</string>
@@ -217,23 +225,5 @@
     <!--  Internet State Messages  -->
     <string name="offline_message">You\'re offline</string>
     <string name="online_message">Back online</string>
-
-    <!--  Watch Providers  -->
-    <string name="netflix">Hot on Netflix</string>
-    <string name="hbo">Popular on HBO</string>
-    <string name="amazon">Picks from Amazon</string>
-    <string name="disney_plus">Disney+ Picks</string>
-    <string name="apple_tv">Top Apple TV Picks</string>
-    <string name="marvel_studios">Marvel\'s MultiVerse</string>
-    <string name="sony_pictures">From Sony Pictures</string>
-    <string name="pixar">Pixar Magic</string>
-    <string name="walt_disney_pictures">Disney Classics</string>
-    <string name="warner_brothers_pictures">Warner Bros. Blockbusters</string>
-    <string name="paramount_pictures">Paramount Prestige</string>
-    <string name="dc_entertainment">DC Entertainment Picks</string>
-    <string name="dreamworks_pictures">Dreamworks Delights</string>
-    <string name="columbia_pictures">Columbia Pictures Showcase</string>
-    <string name="amc">Best on AMC Channel</string>
-    <string name="the_cw">Popular on CW Channel</string>
 
 </resources>

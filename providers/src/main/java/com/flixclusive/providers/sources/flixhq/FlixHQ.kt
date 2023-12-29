@@ -1,25 +1,23 @@
 package com.flixclusive.providers.sources.flixhq
 
-import com.flixclusive.providers.extractors.mixdrop.MixDrop
 import com.flixclusive.providers.extractors.upcloud.UpCloud
 import com.flixclusive.providers.flixhq.utils.FlixHQUtils.getEpisodeId
 import com.flixclusive.providers.flixhq.utils.FlixHQUtils.getSeasonId
 import com.flixclusive.providers.flixhq.utils.FlixHQUtils.getServerName
 import com.flixclusive.providers.flixhq.utils.FlixHQUtils.getServerUrl
 import com.flixclusive.providers.flixhq.utils.FlixHQUtils.toSearchResultItem
-import com.flixclusive.providers.interfaces.Server
+import com.flixclusive.providers.interfaces.Extractor
 import com.flixclusive.providers.interfaces.SourceProvider
-import com.flixclusive.providers.models.common.EmbedData
 import com.flixclusive.providers.models.common.MediaInfo
 import com.flixclusive.providers.models.common.MediaType
 import com.flixclusive.providers.models.common.SearchResultItem
 import com.flixclusive.providers.models.common.SearchResults
+import com.flixclusive.providers.models.common.SourceLink
 import com.flixclusive.providers.models.common.Subtitle
-import com.flixclusive.providers.models.common.VideoData
-import com.flixclusive.providers.models.common.VideoDataServer
 import com.flixclusive.providers.models.providers.flixhq.FlixHQInitialSourceData
 import com.flixclusive.providers.models.providers.flixhq.TvShowCacheData
 import com.flixclusive.providers.utils.JsonUtils.fromJson
+import com.flixclusive.providers.utils.mapAsync
 import com.flixclusive.providers.utils.network.OkHttpUtils.GET
 import com.flixclusive.providers.utils.network.OkHttpUtils.asString
 import com.flixclusive.providers.utils.replaceWhitespaces
@@ -29,19 +27,15 @@ import java.net.URL
 import java.net.URLDecoder
 
 @Suppress("SpellCheckingInspection")
-class FlixHQ(
-    client: OkHttpClient,
-    private val upCloudExtractor: UpCloud = UpCloud(client),
-    private val mixDropExtractor: MixDrop = MixDrop(client),
-) : SourceProvider(client) {
+class FlixHQ(client: OkHttpClient) : SourceProvider(client) {
     override val name: String = "FlixHQ"
     override val baseUrl: String = "https://flixhq.to"
 
     private var tvCacheData: TvShowCacheData = TvShowCacheData()
 
-    override val supportedEmbeds: List<Server> = listOf(
-        "upcloud",
-        "vidcloud",
+    override val supportedExtractors: List<Extractor> = listOf(
+        UpCloud(client = client),
+        UpCloud(client = client, isAlternative = true), // Vidcloud
         //"mixdrop",
     )
 
@@ -109,7 +103,7 @@ class FlixHQ(
             val uid = doc.select(".watch_block").attr("data-id")
             val releaseDate = Jsoup.parse(data).select("div.row-line:nth-child(3)").text()
                 .replace("Released: ", "").trim()
-            mediaInfo = mediaInfo.copy(releaseDate = releaseDate.split("-").first())
+            mediaInfo = mediaInfo.copy(yearReleased = releaseDate.split("-").first())
 
             if (mediaType == MediaType.Movie) {
                 mediaInfo = mediaInfo.copy(
@@ -191,54 +185,11 @@ class FlixHQ(
 
     override suspend fun getSourceLinks(
         mediaId: String,
-        server: String?,
         season: Int?,
-        episode: Int?
-    ): VideoData {
-        val availableEmbeds = getAvailableServers(
-            mediaId = mediaId,
-            season = season,
-            episode = episode
-        )
-
-        if (availableEmbeds.isEmpty())
-            throw Exception("No available servers.")
-
-        var sourceToUse = availableEmbeds[0].servers[0]
-
-        val availableServers = arrayListOf<VideoDataServer>()
-        val availableSubtitles = arrayListOf<Subtitle>()
-        availableEmbeds.forEach {
-            val hasNotFoundPreferredServerYet = server != null && sourceToUse.serverName.contains(server, true)
-
-            if(hasNotFoundPreferredServerYet) {
-                sourceToUse = it.servers.find { embedServer ->
-                    embedServer.serverName.contains(server!!, true)
-                } ?: sourceToUse
-            }
-
-            availableServers.addAll(it.servers)
-            availableSubtitles.addAll(it.subtitles)
-        }
-
-        val distinctedSubtitles = availableSubtitles.distinctBy { it.url }
-
-        return VideoData(
-            mediaId = mediaId,
-            source = sourceToUse.serverUrl,
-            sourceName = name,
-            subtitles = distinctedSubtitles,
-            servers = availableServers
-        )
-    }
-
-    private suspend fun getAvailableServers(
-        mediaId: String,
-        season: Int?,
-        episode: Int?
-    ): List<EmbedData> {
-        val result = arrayListOf<EmbedData>()
-
+        episode: Int?,
+        onLinkLoaded: (SourceLink) -> Unit,
+        onSubtitleLoaded: (Subtitle) -> Unit,
+    ) {
         val isTvShow = season != null && episode != null
 
         val episodeId = if(isTvShow) {
@@ -265,20 +216,20 @@ class FlixHQ(
                 .filter { element ->
                     val serverName = element.select("a").getServerName(mediaId)
 
-                    supportedEmbeds.find { it == serverName } != null
+                    supportedExtractors.find { it.name == serverName } != null
                 }
-                .map { element ->
+                .mapAsync { element ->
                     val anchorElement = element.select("a")
 
-                    VideoDataServer(
-                        serverName = anchorElement.getServerName(mediaId),
-                        serverUrl = anchorElement.getServerUrl(baseUrl, mediaId)
+                    SourceLink(
+                        name = anchorElement.getServerName(mediaId),
+                        url = anchorElement.getServerUrl(baseUrl, mediaId)
                     )
                 }
 
-            servers.forEach { server ->
+            servers.mapAsync { server ->
                 val serverResponse = client.newCall(
-                    GET("${baseUrl}/ajax/get_link/${server.serverUrl.split('.').last()}")
+                    GET("${baseUrl}/ajax/get_link/${server.url.split('.').last()}")
                 ).execute()
 
                 serverResponse.body
@@ -290,47 +241,19 @@ class FlixHQ(
                             "UTF-8"
                         )
 
-                        extractFromServer(
-                            server = server.serverName,
-                            serverUrl = URL(serverUrl),
-                            mediaId = mediaId,
-                            episodeId = episodeId
-                        ).let { data ->
-                            if (data != null) {
-                                result.add(data)
+                        supportedExtractors.mapAsync { extractor ->
+                            if (extractor.name == server.name) {
+                                extractor.extract(
+                                    url = URL(serverUrl),
+                                    mediaId = mediaId,
+                                    episodeId = episodeId,
+                                    onLinkLoaded = onLinkLoaded,
+                                    onSubtitleLoaded = onSubtitleLoaded
+                                )
                             }
                         }
                     }
             }
-        }
-
-        return result
-    }
-
-    private suspend fun extractFromServer(
-        server: String,
-        serverUrl: URL,
-        mediaId: String,
-        episodeId: String,
-    ): EmbedData? {
-        return when (server) {
-            "mixdrop" -> mixDropExtractor.extract(
-                url = serverUrl,
-                mediaId = mediaId,
-                episodeId = episodeId
-            )
-            "upcloud" -> upCloudExtractor.extract(
-                url = serverUrl,
-                mediaId = mediaId,
-                episodeId = episodeId,
-            )
-            "vidcloud" -> upCloudExtractor.extract(
-                url = serverUrl,
-                mediaId = mediaId,
-                episodeId = episodeId,
-                isAlternative = true
-            )
-            else -> null
         }
     }
 }

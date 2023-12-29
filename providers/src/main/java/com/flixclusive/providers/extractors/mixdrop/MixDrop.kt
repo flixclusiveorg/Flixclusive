@@ -2,7 +2,8 @@ package com.flixclusive.providers.extractors.mixdrop
 
 import com.flixclusive.providers.extractors.mixdrop.utils.Unpacker
 import com.flixclusive.providers.interfaces.Extractor
-import com.flixclusive.providers.models.common.EmbedData
+import com.flixclusive.providers.models.common.SourceLink
+import com.flixclusive.providers.models.common.Subtitle
 import com.flixclusive.providers.utils.network.OkHttpUtils.GET
 import com.flixclusive.providers.utils.network.OkHttpUtils.asJsoup
 import com.flixclusive.providers.utils.network.OkHttpUtils.asString
@@ -21,8 +22,9 @@ class MixDrop(
         url: URL,
         mediaId: String,
         episodeId: String,
-        isAlternative: Boolean,
-    ): EmbedData {
+        onLinkLoaded: (SourceLink) -> Unit,
+        onSubtitleLoaded: (Subtitle) -> Unit,
+    ) {
         val newUrl = URL(url.toString().replace(oldHost, newHost))
         val headers = Headers.headersOf("Referer", newUrl.toString())
         val response = client.newCall(

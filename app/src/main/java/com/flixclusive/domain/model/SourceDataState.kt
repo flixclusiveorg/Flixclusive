@@ -4,17 +4,17 @@ import androidx.annotation.StringRes
 import com.flixclusive.R
 import com.flixclusive.common.UiText
 
-sealed class VideoDataDialogState(val message: UiText) {
+sealed class SourceDataState(val message: UiText) {
     companion object {
         @StringRes private val defaultUnavailableMessageId = R.string.video_data_dialog_state_unavailable_default
         @StringRes private val defaultErrorMessageId = R.string.video_data_dialog_state_error_default
     }
     
-    data object Idle : VideoDataDialogState(message = UiText.StringValue(""))
+    data object Idle : SourceDataState(message = UiText.StringValue(""))
 
     class Fetching(
         message: UiText? = null,
-    ) : VideoDataDialogState(
+    ) : SourceDataState(
         message = message
             ?: UiText.StringResource(R.string.video_data_dialog_state_fetching)
     ) {
@@ -26,7 +26,7 @@ sealed class VideoDataDialogState(val message: UiText) {
 
     class Extracting(
         message: UiText? = null,
-    ) : VideoDataDialogState(
+    ) : SourceDataState(
         message = message
             ?: UiText.StringResource(R.string.video_data_dialog_state_extracting)
     ) {
@@ -35,7 +35,7 @@ sealed class VideoDataDialogState(val message: UiText) {
 
     class Error(
         errorMessage: UiText? = null,
-    ) : VideoDataDialogState(
+    ) : SourceDataState(
         message = errorMessage
             ?: UiText.StringResource(defaultErrorMessageId)
     ) {
@@ -45,7 +45,7 @@ sealed class VideoDataDialogState(val message: UiText) {
     }
 
     class Unavailable(errorMessage: UiText? = null) :
-        VideoDataDialogState(
+        SourceDataState(
             message = errorMessage ?: UiText.StringResource(defaultUnavailableMessageId)
         ) {
         constructor(@StringRes errorMessageId: Int) : this(
@@ -54,5 +54,5 @@ sealed class VideoDataDialogState(val message: UiText) {
     }
 
     object Success :
-        VideoDataDialogState(message = UiText.StringResource(R.string.video_data_dialog_state_success))
+        SourceDataState(message = UiText.StringResource(R.string.video_data_dialog_state_success))
 }

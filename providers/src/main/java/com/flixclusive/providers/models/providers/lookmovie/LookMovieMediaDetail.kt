@@ -24,7 +24,7 @@ data class LookMovieMediaDetail(
         fun LookMovieMediaDetail.toMediaInfo() = MediaInfo(
             id = id.toString(),
             title = title,
-            releaseDate = releaseDate.toValidReleaseDate("yyyy-MM-dd HH:mm:ss")?.split("-")?.first() ?: year.toString()
+            yearReleased = releaseDate.toValidReleaseDate("yyyy-MM-dd HH:mm:ss")?.split("-")?.first() ?: year.toString()
         )
     }
 }

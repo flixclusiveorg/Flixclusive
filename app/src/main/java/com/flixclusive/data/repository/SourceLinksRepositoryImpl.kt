@@ -9,10 +9,12 @@ import com.flixclusive.domain.model.tmdb.FilmType
 import com.flixclusive.domain.model.tmdb.FilmType.Companion.toMediaType
 import com.flixclusive.domain.model.tmdb.TvShow
 import com.flixclusive.domain.repository.ProvidersRepository
+import com.flixclusive.domain.repository.SourceLinksRepository
 import com.flixclusive.domain.repository.TMDBRepository
-import com.flixclusive.domain.repository.VideoDataSourceRepository
+import com.flixclusive.providers.interfaces.SourceProvider
 import com.flixclusive.providers.models.common.MediaType
-import com.flixclusive.providers.models.common.VideoData
+import com.flixclusive.providers.models.common.SourceLink
+import com.flixclusive.providers.models.common.Subtitle
 import com.flixclusive.providers.utils.DecryptUtils.DecryptionException
 import com.flixclusive.utils.LoggerUtils.errorLog
 import com.google.gson.JsonSyntaxException
@@ -20,31 +22,31 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class VideoDataSourceRepositoryImpl @Inject constructor(
+class SourceLinksRepositoryImpl @Inject constructor(
     private val providersRepository: ProvidersRepository,
     private val tmdbRepository: TMDBRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : VideoDataSourceRepository {
-    private val providers
-        get() = providersRepository.providers
+) : SourceLinksRepository {
 
     override suspend fun getSourceLinks(
         mediaId: String,
-        providerIndex: Int,
-        server: String?,
+        provider: SourceProvider,
         season: Int?,
         episode: Int?,
-    ): Resource<VideoData?> {
+        onLinkLoaded: (SourceLink) -> Unit,
+        onSubtitleLoaded: (Subtitle) -> Unit,
+    ): Resource<Unit?> {
         return withContext(ioDispatcher) {
             try {
-                return@withContext Resource.Success(
-                    providers[providerIndex].source.getSourceLinks(
-                        mediaId = mediaId,
-                        server = server,
-                        episode = episode,
-                        season = season
-                    )
+                provider.getSourceLinks(
+                    mediaId = mediaId,
+                    episode = episode,
+                    season = season,
+                    onLinkLoaded = onLinkLoaded,
+                    onSubtitleLoaded = onSubtitleLoaded
                 )
+
+                return@withContext Resource.Success(Unit)
             } catch (e: Exception) {
                 errorLog(e.stackTraceToString())
                 return@withContext when (e) {
@@ -58,7 +60,7 @@ class VideoDataSourceRepositoryImpl @Inject constructor(
 
     override suspend fun getMediaId(
         film: Film?,
-        providerIndex: Int,
+        provider: SourceProvider,
     ): String? {
         return withContext(ioDispatcher) {
             try {
@@ -83,7 +85,7 @@ class VideoDataSourceRepositoryImpl @Inject constructor(
                         return@withContext ""
                     }
 
-                    val searchResponse = providers[providerIndex].source.search(
+                    val searchResponse = provider.search(
                         query = filmToSearch.title,
                         page = i,
                         mediaType = filmToSearch.filmType.toMediaType()
@@ -110,12 +112,12 @@ class VideoDataSourceRepositoryImpl @Inject constructor(
                                 break
                             }
 
-                            val tvShowInfo = providers[providerIndex].source.getMediaInfo(
+                            val tvShowInfo = provider.getMediaInfo(
                                 mediaId = result.id!!,
                                 mediaType = MediaType.TvShow
                             )
 
-                            val tvReleaseDateMatches = tvShowInfo.releaseDate == filmToSearch.dateReleased.split("-").first()
+                            val tvReleaseDateMatches = tvShowInfo.yearReleased == filmToSearch.dateReleased.split("-").first()
                             val seasonCountMatches = filmToSearch.seasons.size == tvShowInfo.seasons
 
                             if (tvReleaseDateMatches || seasonCountMatches) {

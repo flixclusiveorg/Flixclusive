@@ -64,9 +64,9 @@ import com.flixclusive.presentation.tv.utils.ModifierTvUtils
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.LabelStartPadding
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.createInitialFocusRestorerModifiers
 import com.flixclusive.presentation.tv.utils.ModifierTvUtils.focusOnMount
-import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 import com.flixclusive.presentation.utils.ImageRequestCreator.buildImageUrl
 import com.flixclusive.presentation.utils.ModifierUtils.fadingEdge
+import com.flixclusive.presentation.utils.ModifierUtils.ifElse
 import com.flixclusive.presentation.utils.ModifierUtils.placeholderEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -227,10 +227,7 @@ fun FilmTvEpisodesPanel(
                 }
 
                 if (currentSelectedSeason is Resource.Success) {
-                    items(
-                        items = currentSelectedSeason.data!!.episodes,
-                        key = { it.episodeId }
-                    ) { episode ->
+                    items(currentSelectedSeason.data!!.episodes) { episode ->
                         val currentFocusPosition =
                             remember { ModifierTvUtils.FocusPosition(1, episode.episode) }
 

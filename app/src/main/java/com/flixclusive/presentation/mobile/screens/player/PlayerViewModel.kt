@@ -1,22 +1,22 @@
 package com.flixclusive.presentation.mobile.screens.player
 
+import android.content.Context
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.domain.common.Resource
-import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.Season
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.domain.preferences.AppSettingsManager
-import com.flixclusive.domain.repository.ProvidersRepository
+import com.flixclusive.domain.repository.WatchHistoryRepository
 import com.flixclusive.domain.usecase.SeasonProviderUseCase
-import com.flixclusive.domain.usecase.VideoDataProviderUseCase
+import com.flixclusive.domain.usecase.SourceLinksProviderUseCase
 import com.flixclusive.domain.usecase.WatchHistoryItemManagerUseCase
 import com.flixclusive.presentation.common.viewmodels.player.BasePlayerViewModel
-import com.flixclusive.providers.models.common.VideoData
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,27 +29,22 @@ import javax.inject.Inject
 @UnstableApi
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    videoDataProvider: VideoDataProviderUseCase,
+    @ApplicationContext context: Context,
+    sourceLinksProvider: SourceLinksProviderUseCase,
     appSettingsManager: AppSettingsManager,
-    providersRepository: ProvidersRepository,
+    watchHistoryRepository: WatchHistoryRepository,
+    savedStateHandle: SavedStateHandle,
     private val seasonProvider: SeasonProviderUseCase,
     private val watchHistoryItemManager: WatchHistoryItemManagerUseCase,
-    val savedStateHandle: SavedStateHandle,
 ) : BasePlayerViewModel(
+    context = context,
+    watchHistoryRepository = watchHistoryRepository,
+    savedStateHandle = savedStateHandle,
     appSettingsManager = appSettingsManager,
-    providersRepository = providersRepository,
-    videoDataProvider = videoDataProvider
+    sourceLinksProvider = sourceLinksProvider,
+    watchHistoryItemManager = watchHistoryItemManager,
 ) {
-    override val videoData = savedStateHandle.getStateFlow(VIDEO_DATA, VideoData())
-    override val watchHistoryItem =
-        savedStateHandle.getStateFlow(WATCH_HISTORY_ITEM, WatchHistoryItem())
-    override val currentSelectedEpisode =
-        savedStateHandle.getStateFlow<TMDBEpisode?>(EPISODE_SELECTED, null)
-
     val snackbarQueue = mutableStateListOf<PlayerSnackbarMessage>()
-
-    // Only valid if video data is a tv show
-    val seasonCount = savedStateHandle.getStateFlow<Int?>(SEASON_COUNT, null)
 
     private val _season = MutableStateFlow<Resource<Season>?>(null)
     val season = _season.asStateFlow()
@@ -63,10 +58,10 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch {
             currentSelectedEpisode.collectLatest {
                 if(it?.season != null) {
-                    if (it.season != seasonCount.value) {
+                    if (it.season != seasonCount) {
                         fetchSeasonFromProvider(
-                            showId = watchHistoryItem.value.id,
-                            seasonNumber = seasonCount.value ?: return@collectLatest
+                            showId = film.id,
+                            seasonNumber = seasonCount!!
                         )
                     }
 
@@ -78,30 +73,11 @@ class PlayerViewModel @Inject constructor(
         resetUiState()
     }
 
-    override fun onSuccessCallback(newData: VideoData, newEpisode: TMDBEpisode?) {
-        savedStateHandle[VIDEO_DATA] = newData
-        savedStateHandle[EPISODE_SELECTED] = newEpisode
-    }
-
     override fun onErrorCallback(message: String?) {
         showSnackbar(
             message = message ?: "Unknown error occurred",
             type = PlayerSnackbarMessageType.Error
         )
-    }
-
-    override fun updateWatchHistory(
-        currentTime: Long,
-        duration: Long,
-    ) {
-        viewModelScope.launch {
-            savedStateHandle[WATCH_HISTORY_ITEM] = watchHistoryItemManager.updateWatchHistoryItem(
-                watchHistoryItem = watchHistoryItem.value,
-                currentTime = currentTime,
-                totalDuration = duration,
-                currentSelectedEpisode = currentSelectedEpisode.value
-            )
-        }
     }
 
 
@@ -111,7 +87,7 @@ class PlayerViewModel @Inject constructor(
         val currentLoadedSeasonNumber = seasonToUse?.seasonNumber
         if (currentLoadedSeasonNumber != seasonNumber) {
             seasonToUse = fetchSeasonFromProvider(
-                showId = watchHistoryItem.value.id,
+                showId = film.id,
                 seasonNumber = seasonNumber
             )
         }
@@ -127,19 +103,10 @@ class PlayerViewModel @Inject constructor(
                     id = showId,
                     seasonNumber = seasonToUse.seasonNumber,
                     episodeCount = seasonToUse.episodes.size
-                )?.let {
-                    savedStateHandle[WATCH_HISTORY_ITEM] = it
-                }
+                )
         }
 
         return seasonToUse
-    }
-
-    fun changeSource(newSource: String) {
-        onSourceChange(
-            film = watchHistoryItem.value.film,
-            newSource = newSource
-        )
     }
 
     /**
@@ -148,24 +115,11 @@ class PlayerViewModel @Inject constructor(
      * @param episodeToWatch The next episode to be played, or null if not available.
      */
     fun onEpisodeClick(episodeToWatch: TMDBEpisode? = null) {
-        loadVideoData(
-            film = watchHistoryItem.value.film,
-            seasonCount = seasonCount.value!!,
+        loadSourceData(
             episodeToWatch = episodeToWatch,
             updateSeason = { newSeason ->
                 _season.update { Resource.Success(newSeason!!) }
             }
-        )
-    }
-
-    /**
-     * Callback function to queue up next episode
-     *
-     */
-    fun onQueueNextEpisode() {
-        queueNextEpisode(
-            film = watchHistoryItem.value.film,
-            seasonCount = seasonCount.value!!
         )
     }
 
@@ -177,7 +131,7 @@ class PlayerViewModel @Inject constructor(
             _season.update { Resource.Loading }
             _season.update {
                 val result = fetchSeasonFromProvider(
-                    showId = watchHistoryItem.value.id,
+                    showId = film.id,
                     seasonNumber = seasonNumber
                 )
 

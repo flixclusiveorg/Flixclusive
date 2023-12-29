@@ -1,5 +1,6 @@
 package com.flixclusive.presentation.mobile.screens.player.utils
 
+import android.annotation.TargetApi
 import android.app.Activity
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
@@ -43,7 +44,7 @@ object PlayerPiPUtils {
         )
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @TargetApi(Build.VERSION_CODES.O)
     fun Activity.updatePiPParams(
         isPlaying: Boolean,
         hasEnded: Boolean,

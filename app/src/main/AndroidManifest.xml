@@ -58,18 +58,10 @@
             android:launchMode="singleTop"
             android:theme="@style/Theme.Flixclusive" />
         <activity
-            android:name=".presentation.mobile.screens.player.PlayerActivity"
-            android:parentActivityName=".presentation.mobile.main.MainActivity"
-            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
-            android:exported="false"
-            android:label="@string/title_activity_player"
-            android:resizeableActivity="true"
-            android:launchMode="singleTask"
-            android:supportsPictureInPicture="true"
-            android:screenOrientation="sensorLandscape"
-            android:theme="@style/Theme.Flixclusive" />
-        <activity
             android:name=".presentation.mobile.main.MainActivity"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:exported="true"
             android:theme="@style/Theme.Flixclusive">
             <intent-filter>

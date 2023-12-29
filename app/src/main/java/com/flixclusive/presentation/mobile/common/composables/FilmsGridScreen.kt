@@ -116,12 +116,7 @@ fun FilmsGridScreen(
             state = listState,
             modifier = Modifier.padding(top = topPadding)
         ) {
-            itemsIndexed(
-                items = films,
-                key = { i, film ->
-                    film.id * i
-                }
-            ) { _, film ->
+            itemsIndexed(items = films) { _, film ->
                 FilmCard(
                     modifier = Modifier
                         .fillMaxWidth(),

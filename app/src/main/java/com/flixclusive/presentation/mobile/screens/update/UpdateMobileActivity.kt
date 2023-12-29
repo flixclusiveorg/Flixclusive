@@ -160,11 +160,11 @@ private fun UpdateScreen(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.flixclusive_tag),
-                contentDescription = "Flixclusive Tag",
+                contentDescription = stringResource(R.string.app_name),
                 contentScale = ContentScale.FillHeight,
                 alignment = Alignment.CenterStart,
                 modifier = Modifier
-                    .height(100.dp)
+                    .height(150.dp)
                     .graphicsLayer(alpha = 0.99f)
                     .drawWithCache {
                         onDrawWithContent {
@@ -175,7 +175,7 @@ private fun UpdateScreen(
             )
 
             Text(
-                text = "$newVersion is out now!",
+                text = stringResource(id = R.string.update_out_now_format, newVersion),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontSize = 25.sp, fontWeight = FontWeight.Bold
                 )
@@ -282,9 +282,9 @@ private fun UpdateScreen(
                 var labelToUse = stringResource(R.string.update_label)
 
                 if (readyToInstall) {
-                    labelToUse = "Install"
+                    labelToUse = stringResource(R.string.install)
                 } else if (progress != null && progress!! > -1) {
-                    labelToUse = "Updating [$progress%]"
+                    labelToUse = "$progress%"
                 }
 
                 Box(

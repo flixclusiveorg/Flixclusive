@@ -57,10 +57,7 @@ fun SearchItemRow(
                     modifier = Modifier
                         .padding(bottom = 5.dp)
                 ) {
-                    items(
-                        items = list,
-                        key = { it.name }
-                    ) {
+                    items(list) {
                         SearchItemCard(
                             label = if(showItemNames) it.name else null,
                             posterPath = it.posterPath,

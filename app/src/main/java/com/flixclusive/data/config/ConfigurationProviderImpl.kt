@@ -1,5 +1,6 @@
 package com.flixclusive.data.config
 
+import com.flixclusive.R
 import com.flixclusive.common.UiText
 import com.flixclusive.data.api.GithubConfigService
 import com.flixclusive.data.utils.catchInternetRelatedException
@@ -14,6 +15,7 @@ import com.flixclusive.domain.preferences.ProviderConfiguration
 import com.flixclusive.domain.repository.ProvidersRepository
 import com.flixclusive.utils.LoggerUtils.errorLog
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +33,8 @@ class ConfigurationProviderImpl @Inject constructor(
 ) : ConfigurationProvider {
 
     private val _remoteStatus = MutableStateFlow<RemoteConfigStatus>(RemoteConfigStatus.Loading)
+    private var fetchJob: Job? = null
+
     override val remoteStatus: StateFlow<RemoteConfigStatus>
         get() = _remoteStatus.asStateFlow()
 
@@ -40,7 +44,10 @@ class ConfigurationProviderImpl @Inject constructor(
     override var providersStatus: List<ProviderStatus>? = null
 
     override fun initialize() {
-        ioScope.launch {
+        if(fetchJob?.isActive == true)
+            return
+
+        fetchJob = ioScope.launch {
             for (i in 0..MAX_RETRIES) {
                 _remoteStatus.update { RemoteConfigStatus.Loading }
 
@@ -57,8 +64,7 @@ class ConfigurationProviderImpl @Inject constructor(
                         continue
                     }
 
-                    _remoteStatus.update { RemoteConfigStatus.Success }
-                    return@launch
+                    return@launch _remoteStatus.update { RemoteConfigStatus.Success }
                 } catch (e: Exception) {
                     errorLog(e.stackTraceToString())
                     val errorMessageId = e.catchInternetRelatedException().error!!
@@ -68,32 +74,54 @@ class ConfigurationProviderImpl @Inject constructor(
 
             }
 
-            _remoteStatus.update { RemoteConfigStatus.Error(UiText.StringValue("Couldn't initialize the app.")) }
+            _remoteStatus.update {
+                RemoteConfigStatus.Error(UiText.StringResource(R.string.failed_to_init_app))
+            }
+        }
+    }
+
+    override fun checkForUpdates() {
+        if(fetchJob?.isActive == true)
+            return
+
+        fetchJob = ioScope.launch {
+            _remoteStatus.update { RemoteConfigStatus.Loading }
+
+            try {
+                appConfig = githubConfigService.getAppConfig()
+
+                return@launch _remoteStatus.update { RemoteConfigStatus.Success }
+            } catch (e: Exception) {
+                errorLog(e.stackTraceToString())
+                val errorMessageId = e.catchInternetRelatedException().error!!
+
+                _remoteStatus.update { RemoteConfigStatus.Error(errorMessageId) }
+            }
         }
     }
 
     private suspend fun initializeProviders() {
         val appSettings = appSettingsManager.localAppSettings
-        val providersConfigurations = appSettings.providers.toMutableList()
+        val providersPreferences = appSettings.providers.toMutableList()
 
-        val isConfigEmpty = providersConfigurations.isEmpty()
+        val isConfigEmpty = providersPreferences.isEmpty()
 
-        if (providersRepository.providers.size == providersStatus!!.size)
+        if (providersRepository.providers.size >= providersStatus!!.size)
             return
+
+        providersRepository.providers.clear()
 
         for (i in providersStatus!!.indices) {
             val provider = if (!isConfigEmpty) {
                 providersStatus!!.find {
                     it.name.equals(
-                        other = providersConfigurations[i].name,
+                        other = providersPreferences[i].name,
                         ignoreCase = true
                     )
                 }
             } else providersStatus!![i]
 
-            val isIgnored = if (isConfigEmpty)
-                false
-            else providersConfigurations[i].isIgnored
+            val isIgnored = providersPreferences.getOrNull(i)?.isIgnored ?: false
 
             providersRepository.populate(
                 name = provider!!.name,
@@ -102,14 +130,12 @@ class ConfigurationProviderImpl @Inject constructor(
             )
 
             if (isConfigEmpty) {
-                providersConfigurations.add(
+                providersPreferences.add(
                     ProviderConfiguration(name = provider.name)
                 )
 
                 appSettingsManager.updateData(
-                    appSettings.copy(
-                        providers = providersConfigurations.toList()
-                    )
+                    appSettings.copy(providers = providersPreferences)
                 )
             }
         }

@@ -1,7 +1,7 @@
 package com.flixclusive.providers.interfaces
 
-import com.flixclusive.providers.models.common.EmbedData
-import com.flixclusive.providers.models.common.VideoDataServer
+import com.flixclusive.providers.models.common.SourceLink
+import com.flixclusive.providers.models.common.Subtitle
 import java.net.URL
 
 interface Extractor {
@@ -11,6 +11,7 @@ interface Extractor {
         url: URL,
         mediaId: String,
         episodeId: String,
-        isAlternative: Boolean = false
-    ): EmbedData?
+        onLinkLoaded: (SourceLink) -> Unit,
+        onSubtitleLoaded: (Subtitle) -> Unit,
+    )
 }

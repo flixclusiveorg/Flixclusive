@@ -3,13 +3,16 @@ package com.flixclusive.providers.extractors.upcloud
 import com.flixclusive.providers.extractors.upcloud.utils.DecryptUtils.extractEmbedDecryptionDetails
 import com.flixclusive.providers.extractors.upcloud.utils.DecryptUtils.getKeyStops
 import com.flixclusive.providers.interfaces.Extractor
-import com.flixclusive.providers.models.common.EmbedData
-import com.flixclusive.providers.models.common.VideoDataServer
+import com.flixclusive.providers.models.common.SourceLink
+import com.flixclusive.providers.models.common.Subtitle
 import com.flixclusive.providers.models.extractors.upcloud.DecryptedSource
 import com.flixclusive.providers.models.extractors.upcloud.UpCloudEmbedData
 import com.flixclusive.providers.models.extractors.upcloud.UpCloudEmbedData.Companion.toSubtitle
 import com.flixclusive.providers.utils.DecryptUtils.decryptAes
 import com.flixclusive.providers.utils.JsonUtils.fromJson
+import com.flixclusive.providers.utils.asyncCalls
+import com.flixclusive.providers.utils.mapAsync
+import com.flixclusive.providers.utils.mapIndexedAsync
 import com.flixclusive.providers.utils.network.OkHttpUtils.GET
 import com.flixclusive.providers.utils.network.OkHttpUtils.asString
 import okhttp3.Headers
@@ -22,6 +25,7 @@ import java.net.URL
  * */
 class UpCloud(
     private val client: OkHttpClient,
+    private val isAlternative: Boolean = false,
 ) : Extractor {
     override val name: String = "upcloud"
     private val alternativeName: String = "vidcloud"
@@ -36,9 +40,9 @@ class UpCloud(
         url: URL,
         mediaId: String,
         episodeId: String,
-        isAlternative: Boolean,
-    ): EmbedData? {
-        val servers = arrayListOf<VideoDataServer>()
+        onLinkLoaded: (SourceLink) -> Unit,
+        onSubtitleLoaded: (Subtitle) -> Unit,
+    ) {
 
         val id = url.path.split('/').last().split('?').first()
         val options = Headers.Builder()
@@ -51,11 +55,11 @@ class UpCloud(
             GET("$hostToUse/ajax/embed-4/getSources?id=$id", options)
         ).execute()
 
-        val responseBody = response.body?.charStream().asString() ?: return null
+        val responseBody = response.body?.charStream().asString() ?: throw Exception("Cannot fetch sources")
 
 
         if(responseBody.isBlank())
-            return null
+            throw Exception("Cannot fetch sources")
 
         val upCloudEmbedData: UpCloudEmbedData
 
@@ -65,7 +69,7 @@ class UpCloud(
             println("!! Source could be an array !!")
             println(responseBody)
 
-            return null
+            throw Exception("Invalid source type. Possibly an array")
         }
 
         var sources = mutableListOf<DecryptedSource>()
@@ -74,7 +78,7 @@ class UpCloud(
             val e4Script = client.newCall(
                 GET(e4ScriptEndpoint, options)
             ).execute().body?.charStream().asString()
-                ?: return null
+                ?: throw Exception("Cannot fetch key decoder")
 
             val stops = getKeyStops(e4Script)
             val (decryptedKey, newSource) = extractEmbedDecryptionDetails(upCloudEmbedData.sources, stops)
@@ -82,55 +86,54 @@ class UpCloud(
             sources = fromJson<MutableList<DecryptedSource>>(decryptAes(newSource, decryptedKey))
         }
 
-        sources.forEach { source ->
-            client.newCall(
-                GET(source.url, options)
-            ).execute().body
-                ?.charStream()
-                .asString()
-                ?.let { data ->
-                    val urls = data
-                        .split('\n')
-                        .filter { line -> line.contains(".m3u8") }
 
-                    val qualities = data
-                        .split('\n')
-                        .filter { line -> line.contains("RESOLUTION=") }
-
-                    val extractedServers = qualities.mapIndexed { i, s ->
-                        val qualityTag = "${getName(isAlternative)}: ${s.split('x')[1]}p"
-                        val dataUrl = urls[i]
-                        dataUrl to qualityTag
-                    }
-
-                    for ((dataUrl, qualityTag) in extractedServers) {
-                        servers.add(
-                            VideoDataServer(
-                                serverName = qualityTag,
-                                serverUrl = dataUrl
-                            )
-                        )
-                    }
-                }
-        }
-
-        try {
-            check(sources.isNotEmpty())
-            servers.add(
-                index = 0,
-                element = VideoDataServer(
-                    serverUrl = sources[0].url,
-                    serverName = "${getName(isAlternative)}: " + "Auto"
-                )
+        check(sources.isNotEmpty())
+        onLinkLoaded(
+            SourceLink(
+                url = sources[0].url,
+                name = "${getName(isAlternative)}: " + "Auto"
             )
-        } catch (_: Exception) { }
+        )
 
-        return EmbedData(
-            servers = servers,
-            subtitles = upCloudEmbedData.tracks.map {
-                it.toSubtitle(
-                    customName = "${getName(isAlternative)}: ",
-                )
+        asyncCalls(
+            {
+                sources.mapAsync { source ->
+                    client.newCall(
+                        GET(source.url, options)
+                    ).execute().body
+                        ?.charStream()
+                        .asString()
+                        ?.let { data ->
+                            val urls = data
+                                .split('\n')
+                                .filter { line -> line.contains(".m3u8") }
+
+                            val qualities = data
+                                .split('\n')
+                                .filter { line -> line.contains("RESOLUTION=") }
+
+                            qualities.mapIndexedAsync { i, s ->
+                                val qualityTag = "${getName(isAlternative)}: ${s.split('x')[1]}p"
+                                val dataUrl = urls[i]
+
+                                onLinkLoaded(
+                                    SourceLink(
+                                        name = qualityTag,
+                                        url = dataUrl
+                                    )
+                                )
+                            }
+                        }
+                }
+            },
+            {
+                upCloudEmbedData.tracks.mapAsync {
+                    onSubtitleLoaded(
+                        it.toSubtitle(
+                            customName = "${getName(isAlternative)}: ",
+                        )
+                    )
+                }
             }
         )
     }
