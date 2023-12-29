@@ -26,31 +26,29 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.R
 import com.flixclusive.common.UiText
-import com.flixclusive.domain.model.VideoDataDialogState
-import com.flixclusive.domain.model.entities.toWatchHistoryItem
-import com.flixclusive.domain.model.tmdb.TvShow
+import com.flixclusive.domain.model.SourceDataState
 import com.flixclusive.presentation.NavGraphs
 import com.flixclusive.presentation.appCurrentDestinationAsState
-import com.flixclusive.presentation.common.composables.SourceStateDialog
+import com.flixclusive.presentation.common.composables.SourceDataDialog
 import com.flixclusive.presentation.destinations.Destination
 import com.flixclusive.presentation.destinations.HomeMobileScreenDestination
+import com.flixclusive.presentation.destinations.PlayerScreenDestination
 import com.flixclusive.presentation.mobile.common.composables.film.FilmBottomSheetPreview
 import com.flixclusive.presentation.mobile.main.composables.FilmCoverPreview
 import com.flixclusive.presentation.mobile.main.composables.MainNavigationBar
 import com.flixclusive.presentation.mobile.main.composables.NetworkConnectivitySnackbar
 import com.flixclusive.presentation.mobile.main.composables.NetworkConnectivitySnackbarVisuals
-import com.flixclusive.presentation.mobile.screens.player.PlayerActivity.Companion.startPlayer
 import com.flixclusive.presentation.startAppDestination
 import com.flixclusive.presentation.utils.ComposeUtils.navigateSingleTopTo
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.rememberAnimatedNavHostEngine
 import com.ramcosta.composedestinations.navigation.dependency
+import com.ramcosta.composedestinations.navigation.navigate
 import kotlinx.coroutines.launch
 
 @UnstableApi
@@ -61,16 +59,18 @@ import kotlinx.coroutines.launch
 )
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainActivity.MainApp() {
+fun MainActivity.MainApp(
+    viewModel: MainMobileSharedViewModel
+) {
     val context = LocalContext.current
-    val viewModel: MainMobileSharedViewModel = hiltViewModel()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isConnectedAtNetwork by viewModel.isConnectedAtNetwork.collectAsStateWithLifecycle(
         initialValue = true
     )
-    val longClickedFilmWatchHistoryItem by viewModel.longClickedFilmWatchHistoryItem.collectAsStateWithLifecycle()
-    val videoData by viewModel.videoData.collectAsStateWithLifecycle()
+
+    val filmToPreview by viewModel.filmToPreview.collectAsStateWithLifecycle()
+    val episodeToPlay by viewModel.episodeToPlay.collectAsStateWithLifecycle()
 
     var hasBeenDisconnected by remember { mutableStateOf(false) }
     var fullScreenImageToShow: String? by remember { mutableStateOf(null) }
@@ -87,21 +87,19 @@ fun MainActivity.MainApp() {
     val currentScreen: Destination = navController.appCurrentDestinationAsState().value
         ?: NavGraphs.mobileRoot.startAppDestination
 
-    LaunchedEffect(videoData) {
-        if (videoData != null && uiState.videoDataDialogState is VideoDataDialogState.Success) {
-            val film = uiState.longClickedFilm
-            var seasonCount: Int? = null
-            if (film is TvShow) {
-                seasonCount = film.seasons.size
-            }
+    val sourceData = viewModel.loadedSourceData
 
-            context.startPlayer(
-                videoData = videoData,
-                watchHistoryItem = longClickedFilmWatchHistoryItem ?: film?.toWatchHistoryItem(),
-                seasonCount = seasonCount,
-                episodeSelected = uiState.episodeToPlay,
+    LaunchedEffect(sourceData?.cachedLinks?.size, uiState.sourceDataState) {
+        if (
+            uiState.sourceDataState == SourceDataState.Success
+            && currentScreen != PlayerScreenDestination
+        ) {
+            navController.navigate(
+                PlayerScreenDestination(
+                    film = filmToPreview!!,
+                    episodeToPlay = episodeToPlay
+                )
             )
-
             viewModel.onConsumePlayerDialog()
         }
     }
@@ -115,7 +113,8 @@ fun MainActivity.MainApp() {
                     isDisconnected = true
                 )
             )
-        } else if (hasBeenDisconnected) {
+        }
+        else if (hasBeenDisconnected) {
             hasBeenDisconnected = false
             snackbarHostState.showSnackbar(
                 NetworkConnectivitySnackbarVisuals(
@@ -161,9 +160,9 @@ fun MainActivity.MainApp() {
         }
     }
 
-    if (uiState.isShowingBottomSheetCard) {
+    if (uiState.isShowingBottomSheetCard && filmToPreview != null) {
         FilmBottomSheetPreview(
-            film = uiState.longClickedFilm!!,
+            film = filmToPreview!!,
             isInWatchlist = { uiState.isLongClickedFilmInWatchlist },
             isInWatchHistory = { uiState.isLongClickedFilmInWatchHistory },
             sheetState = bottomSheetState,
@@ -188,12 +187,22 @@ fun MainActivity.MainApp() {
         )
     }
 
-    if (uiState.videoDataDialogState !is VideoDataDialogState.Idle) {
+    if (uiState.sourceDataState !is SourceDataState.Idle) {
         window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        SourceStateDialog(
-            state = uiState.videoDataDialogState,
-            onConsumeDialog = {
+        SourceDataDialog(
+            state = uiState.sourceDataState,
+            canSkipExtractingPhase = sourceData?.cachedLinks?.isNotEmpty() == true,
+            onSkipExtractingPhase = {
+                navController.navigate(
+                    PlayerScreenDestination(
+                        film = filmToPreview!!,
+                        episodeToPlay = episodeToPlay
+                    )
+                )
                 viewModel.onConsumePlayerDialog()
+            },
+            onConsumeDialog = {
+                viewModel.onConsumePlayerDialog(isForceClosing = true)
                 viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
             }
         )

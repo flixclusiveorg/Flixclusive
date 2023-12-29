@@ -48,10 +48,11 @@ fun SearchMobileScreen(
 
     val navGraphThatNeedsToGoToRoot by rememberUpdatedState(newValue = mainMobileSharedViewModel.navGraphThatNeedsToGoToRoot)
     val mainUiState by mainMobileSharedViewModel.uiState.collectAsStateWithLifecycle()
+    val filmToPreview by mainMobileSharedViewModel.filmToPreview.collectAsStateWithLifecycle()
 
     LaunchedEffect(currentScreen) {
-        mainMobileSharedViewModel.onBottomNavigationBarVisibilityChange(
-            newVisibilityValue = currentScreen != SearchScreenExpandedDestination
+        mainMobileSharedViewModel.toggleBottomBar(
+            isVisible = currentScreen != SearchScreenExpandedDestination
         )
     }
 
@@ -61,7 +62,7 @@ fun SearchMobileScreen(
         navigate = {
             // consume it
             navController.navigate(
-                SearchFilmScreenDestination(mainUiState.longClickedFilm!!)
+                SearchFilmScreenDestination(filmToPreview!!)
             )
             mainMobileSharedViewModel.onBottomSheetClose()
             mainMobileSharedViewModel.onSeeMoreClick(shouldSeeMore = false)

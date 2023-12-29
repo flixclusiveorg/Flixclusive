@@ -6,7 +6,6 @@ import com.flixclusive.domain.model.provider.SourceProviderDetails
 import com.flixclusive.domain.preferences.AppSettings
 import com.flixclusive.domain.preferences.AppSettingsManager
 import com.flixclusive.domain.repository.ProvidersRepository
-import com.flixclusive.providers.interfaces.SourceProvider
 import com.flixclusive.providers.sources.flixhq.FlixHQ
 import com.flixclusive.providers.sources.lookmovie.LookMovie
 import com.flixclusive.providers.sources.superstream.SuperStream
@@ -14,17 +13,14 @@ import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 class ProvidersRepositoryImpl @Inject constructor(
-    private val client: OkHttpClient,
+    client: OkHttpClient,
     private val appSettingsManager: AppSettingsManager,
 ) : ProvidersRepository {
-    private fun getSourceProvider(sourceName: String, client: OkHttpClient): SourceProvider {
-        return when(sourceName) {
-            "superstream" -> SuperStream(client)
-            "lookmovie" -> LookMovie(client)
-            "flixhq" -> FlixHQ(client)
-            else -> throw Exception("Invalid source provider provided.")
-        }
-    }
+    private val listOfAvailableProviders = arrayListOf(
+        SuperStream(client),
+        LookMovie(client),
+        FlixHQ(client)
+    )
 
     override val providers: SnapshotStateList<SourceProviderDetails> = mutableStateListOf()
 
@@ -33,12 +29,15 @@ class ProvidersRepositoryImpl @Inject constructor(
         isIgnored: Boolean,
         isMaintenance: Boolean
     ) {
-        if(providers.find { it.source.name == name } != null)
+        if(providers.any { it.provider.name == name })
             return
+
+        val provider = listOfAvailableProviders.find { it.name.equals(name, true) }
+            ?: throw Exception("Can't find this provider in the available list.")
 
         providers.add(
             SourceProviderDetails(
-                source = getSourceProvider(name, client),
+                provider = provider,
                 isMaintenance = isMaintenance,
                 isIgnored = isIgnored
             )
@@ -59,14 +58,29 @@ class ProvidersRepositoryImpl @Inject constructor(
         providers[fromIndex] = providers[toIndex]
         providers[toIndex] = tempProvidersList
         
+        appSettings.swapProviders(
+            fromIndex = fromIndex,
+            toIndex = toIndex
+        )
+    }
+
+    /**
+     *
+     * Swap the provider in app settings
+     *
+     * */
+    private suspend fun AppSettings.swapProviders(
+        fromIndex: Int,
+        toIndex: Int
+    ) {
         // === SWAP on APP SETTINGS
-        val providerConfig = appSettings.providers.toMutableList()
+        val providerConfig = providers.toMutableList()
         val tempProvidersConfig = providerConfig[fromIndex]
         providerConfig[fromIndex] = providerConfig[toIndex]
         providerConfig[toIndex] = tempProvidersConfig
 
         appSettingsManager.updateData(
-            appSettings.copy(
+            copy(
                 providers = providerConfig
             )
         )
@@ -88,15 +102,26 @@ class ProvidersRepositoryImpl @Inject constructor(
         )
 
 
+        appSettings.toggleProvider(index)
+    }
+
+
+    /**
+     *
+     * Toggles whether to use the provider
+     * inside app settings.
+     *
+     * */
+    private suspend fun AppSettings.toggleProvider(index: Int) {
         // === TOGGLE USAGE on APP SETTINGS
-        val providerConfig = appSettings.providers.toMutableList()
+        val providerConfig = providers.toMutableList()
         val dataProvidersConfig = providerConfig[index]
         providerConfig[index] = dataProvidersConfig.copy(
             isIgnored = !dataProvidersConfig.isIgnored
         )
 
         appSettingsManager.updateData(
-            appSettings.copy(
+            copy(
                 providers = providerConfig
             )
         )

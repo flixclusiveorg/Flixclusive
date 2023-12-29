@@ -77,10 +77,7 @@ fun EpisodesRow(
                 is Resource.Success -> {
                     val episodes = seasonData.data?.episodes ?: emptyList()
 
-                    items(
-                        items = episodes,
-                        key = { it.episode }
-                    ) { episode ->
+                    items(episodes) { episode ->
                         EpisodeCard(
                             data = episode,
                             watchHistoryItem = watchHistoryItem,

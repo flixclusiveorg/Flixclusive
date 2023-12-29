@@ -4,13 +4,16 @@ import android.util.Base64
 import com.flixclusive.providers.interfaces.SourceProvider
 import com.flixclusive.providers.models.common.MediaInfo
 import com.flixclusive.providers.models.common.MediaType
-import com.flixclusive.providers.models.common.VideoData
+import com.flixclusive.providers.models.common.SourceLink
+import com.flixclusive.providers.models.common.Subtitle
 import io.mockk.every
 import io.mockk.mockkStatic
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 abstract class BaseSourceProviderTest {
     lateinit var sourceProvider: SourceProvider
@@ -41,7 +44,7 @@ abstract class BaseSourceProviderTest {
         type: MediaType,
         season: Int? = null,
         episode: Int? = null,
-    ): VideoData {
+    ) {
         val response = sourceProvider.search(
             query = title,
             page = 1,
@@ -50,18 +53,33 @@ abstract class BaseSourceProviderTest {
 
         val mediaId = response.results.find {
             val releaseDateToUse = if(it.releaseDate == null) {
-                sourceProvider.getMediaInfo(it.id!!, it.mediaType!!).releaseDate
+                sourceProvider.getMediaInfo(it.id!!, it.mediaType!!).yearReleased
             } else it.releaseDate
 
             releaseDateToUse == releaseDate
         }?.id
         Assert.assertNotNull(mediaId)
 
-        return sourceProvider.getSourceLinks(
+        val links = mutableSetOf<SourceLink>()
+        val subtitles = mutableSetOf<Subtitle>()
+        sourceProvider.getSourceLinks(
             mediaId = mediaId!!,
             season = season,
-            episode = episode
+            episode = episode,
+            onLinkLoaded = {
+                assert(it.url.isNotEmpty())
+                links.add(it)
+                println("SourceLink for $title: $it")
+            },
+            onSubtitleLoaded = {
+                assert(it.url.isNotEmpty())
+                subtitles.add(it)
+                println("Subtitle for $title: $it")
+            }
         )
+
+        assert(links.isNotEmpty())
+        assert(subtitles.isNotEmpty())
     }
 
     private suspend fun getMediaInfo(
@@ -77,7 +95,7 @@ abstract class BaseSourceProviderTest {
 
         val mediaId = response.results.find {
             val releaseDateToUse = if(it.releaseDate == null) {
-                sourceProvider.getMediaInfo(it.id!!, it.mediaType!!).releaseDate
+                sourceProvider.getMediaInfo(it.id!!, it.mediaType!!).yearReleased
             } else it.releaseDate
 
             releaseDateToUse == releaseDate
@@ -106,15 +124,11 @@ abstract class BaseSourceProviderTest {
         val title = "The Dark Knight"
         val releaseDate = "2008"
 
-        val data = getSourceData(
+        getSourceData(
             title = title,
             releaseDate = releaseDate,
             type = MediaType.Movie
         )
-
-        assert(data.subtitles.isNotEmpty())
-        assert(data.source.isNotBlank())
-        assert(data.servers?.isNotEmpty() == true)
     }
 
     @Test
@@ -122,15 +136,11 @@ abstract class BaseSourceProviderTest {
         val title = "World War Z"
         val releaseDate = "2013"
 
-        val data = getSourceData(
+        getSourceData(
             title = title,
             releaseDate = releaseDate,
             type = MediaType.Movie
         )
-
-        assert(data.subtitles.isNotEmpty())
-        assert(data.source.isNotBlank())
-        assert(data.servers?.isNotEmpty() == true)
     }
 
     @Test
@@ -138,15 +148,11 @@ abstract class BaseSourceProviderTest {
         val title = "When Evil Lurks"
         val releaseDate = "2023"
 
-        val data = getSourceData(
+        getSourceData(
             title = title,
             releaseDate = releaseDate,
             type = MediaType.Movie
         )
-
-        assert(data.subtitles.isNotEmpty())
-        assert(data.source.isNotBlank())
-        assert(data.servers?.isNotEmpty() == true)
     }
 
     @Test
@@ -161,7 +167,7 @@ abstract class BaseSourceProviderTest {
         )
 
         Assert.assertEquals(data.title, title)
-        assert(data.releaseDate.isNotBlank())
+        assert(data.yearReleased.isNotBlank())
         assert(data.id.isNotEmpty())
     }
 
@@ -172,16 +178,12 @@ abstract class BaseSourceProviderTest {
         val season = 1
         val episode = 3
 
-        val data = getSourceData(
+        getSourceData(
             title = title,
             releaseDate = releaseDate,
             type = MediaType.TvShow,
             season = season,
             episode = episode
         )
-
-        assert(data.subtitles.isNotEmpty())
-        assert(data.source.isNotEmpty())
-        assert(data.servers?.isNotEmpty() == true)
     }
 }

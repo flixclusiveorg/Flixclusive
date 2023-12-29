@@ -10,7 +10,6 @@ data class TvShow(
     val image: String? = null,
     val cover: String? = null,
     val logo: String? = null,
-    val type: String = "TV Series",
     override val rating: Double = 0.0,
     val releaseDate: String = "",
     val lastAirDate: String? = null,

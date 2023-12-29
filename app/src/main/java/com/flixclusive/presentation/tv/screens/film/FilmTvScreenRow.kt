@@ -130,10 +130,7 @@ fun FilmTvScreenRow(
                     contentPadding = PaddingValues(start = InitialDrawerWidth),
                     pivotOffsets = PivotOffsets(parentFraction = 0.05F)
                 ) {
-                    itemsIndexed(
-                        items = films,
-                        key = { i, film -> film.id * i }
-                    ) { columnIndex, film ->
+                    itemsIndexed(films) { columnIndex, film ->
                         val focusRequester = remember { FocusRequester() }
 
                         Box {

@@ -11,7 +11,6 @@ data class Movie(
     val image: String? = null,
     val cover: String? = null,
     val logo: String? = null,
-    val type: String = "Movie",
     override val rating: Double = 0.0,
     val releaseDate: String = "",
     val description: String? = null,

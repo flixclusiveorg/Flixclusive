@@ -2,6 +2,7 @@ package com.flixclusive.presentation.mobile.screens.player.controls
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +20,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderColors
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SliderDefaults.Thumb
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -28,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.R
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
 import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.rememberLocalPlayer
+import com.flixclusive.presentation.mobile.theme.FlixclusiveMobileTheme
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
 import com.flixclusive.presentation.utils.FormatterUtils.formatMinSec
 
@@ -79,7 +81,7 @@ fun BottomControls(
         }
     }
 
-    val bottomFadeEdge = Brush.verticalGradient(0F to Color.Transparent, 0.9F to Color.Black)
+    val bottomFadeEdge = Brush.verticalGradient(0F to Color.Transparent, 0.85F to Color.Black)
 
     val sliderInteractionSource = remember { MutableInteractionSource() }
     val sliderColors = SliderDefaults.colors(
@@ -96,9 +98,7 @@ fun BottomControls(
 
     Column(
         modifier = modifier
-            .drawBehind {
-                drawRect(brush = bottomFadeEdge)
-            }
+            .background(bottomFadeEdge)
             .fillMaxWidth()
             .padding(horizontal = 25.dp)
     ) {
@@ -177,7 +177,7 @@ fun BottomControls(
                     modifier = buttonModifier,
                     iconId = R.drawable.outline_video_library_24,
                     label = R.string.episodes,
-                    contentDescription = "An icon for episodes button",
+                    contentDescription = stringResource(R.string.episodes_button_desc),
                     onClick = { onEpisodesClick() }
                 )
             }
@@ -186,7 +186,7 @@ fun BottomControls(
                 modifier = buttonModifier,
                 iconId = R.drawable.outline_lock_24,
                 label = R.string.lock,
-                contentDescription = "An icon for locking the player",
+                contentDescription = stringResource(R.string.lock_button_desc),
                 onClick = { onLockClick() }
             )
 
@@ -194,17 +194,17 @@ fun BottomControls(
                 modifier = buttonModifier,
                 iconId = R.drawable.outline_subtitles_24,
                 label = R.string.audio_and_subtitle,
-                contentDescription = "An icon for available audio and display for the player",
+                contentDescription = stringResource(id = R.string.audio_and_subtitle_button_desc),
                 onClick = { onAudioAndDisplayClick() }
             )
 
-            if (!isLastEpisode) {
+            if (!isLastEpisode && isTvShow) {
                 PlayerBottomButtons(
                     modifier = buttonModifier,
                     iconModifier = Modifier.padding(end = 5.dp),
                     iconId = R.drawable.round_skip_next_24,
                     label = R.string.next_episode,
-                    contentDescription = "An icon for next episode",
+                    contentDescription = stringResource(id = R.string.next_episode_button_desc),
                     onClick = { onNextEpisodeClick(null) }
                 )
             }
@@ -267,7 +267,7 @@ fun PlayerBottomButtons(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
+@Preview(device = "spec:parent=Realme 5,orientation=landscape")
 @Composable
 fun PlayerSeekSlider() {
     val (value, onValueChange) = remember { mutableFloatStateOf(0F) }
@@ -279,22 +279,120 @@ fun PlayerSeekSlider() {
     )
     val sliderWidthAndHeight = 10.dp
 
+    val buttonModifier = Modifier.clip(RoundedCornerShape(50))
+    val isLastEpisode = false
+    val isTvShow = false
 
-    Slider(
-        value = value,
-        onValueChange = onValueChange,
-        valueRange = 0F..100F,
-        colors = sliderColors,
-        interactionSource = sliderInteractionSource,
-        thumb = {
-            PlayerCustomThumb(
-                interactionSource = sliderInteractionSource,
-                colors = sliderColors,
-                thumbSize = DpSize(
-                    sliderWidthAndHeight,
-                    sliderWidthAndHeight
-                )
-            )
+    FlixclusiveMobileTheme {
+        Surface {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 25.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier.weight(1F)
+                    ) {
+                        // buffer bar
+                        Slider(
+                            value = 0F,
+                            enabled = false,
+                            onValueChange = {},
+                            valueRange = 0F..100F,
+                            colors = SliderDefaults.colors(
+                                disabledThumbColor = Color.Transparent,
+                                disabledActiveTrackColor = colorOnMediumEmphasisMobile(color = Color.White)
+                            )
+                        )
+
+                        // seek bar
+                        Slider(
+                            value = 60F,
+                            onValueChange = {},
+                            valueRange = 0F..600F.toFloat(),
+                            colors = sliderColors,
+                            interactionSource = sliderInteractionSource,
+                            thumb = {
+                                PlayerCustomThumb(
+                                    interactionSource = sliderInteractionSource,
+                                    colors = sliderColors,
+                                    thumbSize = DpSize(
+                                        sliderWidthAndHeight,
+                                        sliderWidthAndHeight
+                                    )
+                                )
+                            }
+                        )
+                    }
+
+                    // show current video time
+                    Box(
+                        modifier = Modifier
+                            .widthIn(min = 85.dp)
+                    ) {
+                        Text(
+                            text = "HH:MM:SS",
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelMedium,
+                            softWrap = false,
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .align(Alignment.Center)
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    if (isTvShow) {
+                        PlayerBottomButtons(
+                            modifier = buttonModifier,
+                            iconId = R.drawable.outline_video_library_24,
+                            label = R.string.episodes,
+                            contentDescription = "An icon for episodes button",
+                            onClick = {  }
+                        )
+                    }
+
+                    PlayerBottomButtons(
+                        modifier = buttonModifier,
+                        iconId = R.drawable.outline_lock_24,
+                        label = R.string.lock,
+                        contentDescription = "An icon for locking the player",
+                        onClick = {  }
+                    )
+
+                    PlayerBottomButtons(
+                        modifier = buttonModifier,
+                        iconId = R.drawable.outline_subtitles_24,
+                        label = R.string.audio_and_subtitle,
+                        contentDescription = "An icon for available audio and display for the player",
+                        onClick = { }
+                    )
+
+                    if (!isLastEpisode && isTvShow) {
+                        PlayerBottomButtons(
+                            modifier = buttonModifier,
+                            iconModifier = Modifier.padding(end = 5.dp),
+                            iconId = R.drawable.round_skip_next_24,
+                            label = R.string.next_episode,
+                            contentDescription = "An icon for next episode",
+                            onClick = {  }
+                        )
+                    }
+                }
+            }
         }
-    )
+    }
+
 }

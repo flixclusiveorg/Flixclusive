@@ -7,6 +7,7 @@ import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.config.ConfigurationProvider
 import com.flixclusive.domain.model.config.SearchCategoryItem
 import com.flixclusive.domain.repository.TMDBRepository
+import com.flixclusive.providers.utils.mapIndexedAsync
 import com.flixclusive.service.network.NetworkConnectivityObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -83,7 +84,7 @@ class SearchInitialContentViewModel @Inject constructor(
         configurationProvider
             .searchCategoriesConfig!!
             .genres
-            .forEachIndexed { i, genre ->
+            .mapIndexedAsync { i, genre ->
                 val pageToUse = if(genre.name.equals("reality", true))
                     1
                 else randomPage
@@ -100,14 +101,14 @@ class SearchInitialContentViewModel @Inject constructor(
                                 isLoading = false
                             )
                         }
-                        return
+                        return@mapIndexedAsync
                     }
                     is Resource.Success -> {
                         result.data?.let { data ->
                             var imageToUse: String? = null
 
                             if(data.results.isEmpty())
-                                return@forEachIndexed
+                                return@mapIndexedAsync
 
                             while (
                                 usedPosterPaths[imageToUse] != null
@@ -137,7 +138,7 @@ class SearchInitialContentViewModel @Inject constructor(
         configurationProvider
             .searchCategoriesConfig!!
             .type
-            .forEachIndexed { i, type ->
+            .mapIndexedAsync { i, type ->
                 when (
                     val result = tmdbRepository.paginateConfigItems(
                         url = type.query, page = randomPage
@@ -150,14 +151,14 @@ class SearchInitialContentViewModel @Inject constructor(
                                 isLoading = false
                             )
                         }
-                        return
+                        return@mapIndexedAsync
                     }
                     is Resource.Success -> {
                         result.data?.let { data ->
                             var imageToUse: String? = null
 
                             if(data.results.isEmpty())
-                                return@forEachIndexed
+                                return@mapIndexedAsync
 
                             while (
                                 usedPosterPaths[imageToUse] != null

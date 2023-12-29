@@ -46,7 +46,7 @@ class SplashMobileActivity : ComponentActivity() {
                             setResult(RESULT_CANCELED)
                             finish()
                         },
-                        onStartMainActivity = {
+                        onStartApplication = {
                             setResult(RESULT_OK)
                             finish()
                         },

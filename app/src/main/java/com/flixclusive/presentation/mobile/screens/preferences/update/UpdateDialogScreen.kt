@@ -58,7 +58,7 @@ fun UpdateDialogScreen(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.configInitialize()
+        viewModel.checkForUpdates()
     }
 
     LaunchedEffect(uiState.isDoneInitializing, uiState.isNeedingAnUpdate) {

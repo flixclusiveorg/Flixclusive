@@ -25,22 +25,22 @@ import androidx.compose.ui.unit.sp
 import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.flixclusive.domain.model.VideoDataDialogState
+import com.flixclusive.domain.model.SourceDataState
 import com.flixclusive.presentation.common.player.PlayerUiState
 import com.flixclusive.presentation.common.player.utils.PlayerComposeUtils.rememberLocalPlayer
 import com.flixclusive.presentation.mobile.common.composables.GradientCircularProgressIndicator
 import com.flixclusive.presentation.tv.utils.PlayerTvUtils.getTimeToSeekToBasedOnSeekMultiplier
 import com.flixclusive.presentation.utils.FormatterUtils.formatMinSec
-import com.flixclusive.providers.models.common.VideoData
+import com.flixclusive.providers.models.common.SourceLink
 
 @Composable
 fun TvPlaybackControls(
     modifier: Modifier = Modifier,
     isVisible: Boolean,
     isTvShow: Boolean,
-    videoData: VideoData,
+    servers: List<SourceLink>,
     stateProvider: () -> PlayerUiState,
-    dialogStateProvider: () -> VideoDataDialogState,
+    dialogStateProvider: () -> SourceDataState,
     sideSheetFocusPriority: BottomControlsButtonType?,
     playbackTitle: String,
     isLastEpisode: Boolean,
@@ -59,7 +59,7 @@ fun TvPlaybackControls(
     val isLoading = remember(player.playbackState, dialogState, seekMultiplier) {
         player.playbackState == STATE_BUFFERING
         && seekMultiplier == 0L
-        || dialogState !is VideoDataDialogState.Success
+        || dialogState !is SourceDataState.Success
     }
 
     val topFadeEdge = Brush.verticalGradient(
@@ -102,7 +102,7 @@ fun TvPlaybackControls(
         try {
             if (player.availableAudios.size == 1) {
                 null
-            } else player.availableAudios[state.selectedServer]
+            } else player.availableAudios[player.selectedAudio]
         } catch (_: Exception) {
             null
         }
@@ -193,7 +193,7 @@ fun TvPlaybackControls(
                         drawRect(brush = bottomFadeEdge)
                     },
                 isSeeking = seekMultiplier > 0,
-                selectedServer = videoData.servers?.get(state.selectedServer)?.serverName ?: "Default Server",
+                selectedServer = servers.getOrNull(state.selectedSourceLink)?.name ?: "Default Server",
                 selectedSubtitle = selectedSubtitle,
                 selectedAudio = selectedAudio,
                 onSeekMultiplierChange = onSeekMultiplierChange,

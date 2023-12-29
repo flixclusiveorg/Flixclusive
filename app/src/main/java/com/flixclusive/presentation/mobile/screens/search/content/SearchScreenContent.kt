@@ -127,7 +127,7 @@ fun SearchScreenContent(
             }
         }
         else {
-            items(viewModel.filmTypes, key = { it.name }) {
+            items(viewModel.filmTypes) {
                 SearchItemCard(
                     posterPath = it.posterPath,
                     label = it.name,
@@ -135,7 +135,7 @@ fun SearchScreenContent(
                 )
             }
 
-            items(viewModel.genres, key = { it.id }) {
+            items(viewModel.genres) {
                 SearchItemCard(
                     posterPath = it.posterPath,
                     label = it.name,

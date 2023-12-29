@@ -16,7 +16,7 @@ sealed class UiText {
     fun asString(context: Context): String {
         return when (this) {
             is StringValue -> str
-            is StringResource -> context.getString(stringId, args)
+            is StringResource -> context.getString(stringId, *args)
         }
     }
 

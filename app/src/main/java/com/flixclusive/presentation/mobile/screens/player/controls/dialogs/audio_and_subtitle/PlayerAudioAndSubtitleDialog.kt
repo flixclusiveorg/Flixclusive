@@ -75,9 +75,9 @@ fun PlayerAudioAndSubtitleDialog(
             )
 
             player.addSubtitle(
-                uri = filePath,
                 subtitle = localSub
             )
+
             showSnackbar(
                 localSub.lang,
                 R.string.audio_snackbar_message,
@@ -132,7 +132,7 @@ fun PlayerAudioAndSubtitleDialog(
                         onSubtitleChange(it)
                         showSnackbar(
                             availableSubtitles[it].language ?: "Default",
-                            R.string.audio_snackbar_message,
+                            R.string.subtitle_snackbar_message,
                             PlayerSnackbarMessageType.Audio
                         )
                     }

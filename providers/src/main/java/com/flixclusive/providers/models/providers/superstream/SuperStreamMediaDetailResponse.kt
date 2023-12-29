@@ -25,7 +25,7 @@ internal data class SuperStreamMediaDetailResponse(
                 id = data?.id.toString(),
                 title = data?.title
                     ?: throw NullPointerException("Movie title should not be blank or null!"),
-                releaseDate = if (isMovie) data.released!!.toValidReleaseDate()!!
+                yearReleased = if (isMovie) data.released!!.toValidReleaseDate()!!
                 else data.year.toString(),
                 seasons = data.maxSeason,
                 episodes = data.maxEpisode,

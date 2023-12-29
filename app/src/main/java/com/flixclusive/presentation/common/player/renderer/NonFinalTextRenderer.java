@@ -321,7 +321,7 @@ public class NonFinalTextRenderer extends BaseRenderer implements Callback {
                     decoderReplacementState = REPLACEMENT_STATE_WAIT_END_OF_STREAM;
                     return;
                 }
-                // Try and read the next subtitle from the source.
+                // Try and read the next subtitle from the provider.
                 @SampleStream.ReadDataResult int result = readSource(formatHolder, nextInputBuffer, /* readFlags= */ 0);
                 if (result == C.RESULT_BUFFER_READ) {
                     if (nextInputBuffer.isEndOfStream()) {

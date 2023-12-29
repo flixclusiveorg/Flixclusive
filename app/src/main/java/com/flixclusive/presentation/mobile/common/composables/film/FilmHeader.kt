@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.imageLoader
 import com.flixclusive.R
+import com.flixclusive.common.UiText
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.Genre
 import com.flixclusive.presentation.mobile.main.LABEL_START_PADDING
@@ -58,6 +60,10 @@ fun FilmHeader(
     val backgroundColor = MaterialTheme.colorScheme.background
     val context = LocalContext.current
 
+    val otherInfo = remember {
+        "${FormatterUtils.formatRating(film.rating)} | ${film.runtime.ifEmpty { UiText.StringResource(R.string.no_runtime).asString(context) }} | ${film.dateReleased}"
+    }
+
     Box(
         modifier = Modifier.heightIn(min = 480.dp)
     ) {
@@ -69,7 +75,10 @@ fun FilmHeader(
             imageLoader = LocalContext.current.imageLoader,
             placeholder = painterResource(R.drawable.movie_placeholder),
             error = painterResource(R.drawable.movie_placeholder),
-            contentDescription = String.format(stringResource(R.string.poster_content_description), film.title),
+            contentDescription = stringResource(
+                id = R.string.poster_content_description,
+                film.title
+            ),
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .height(480.dp)
@@ -86,12 +95,8 @@ fun FilmHeader(
                 .drawBehind {
                     drawRect(
                         Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                backgroundColor
-                            ),
-                            startY = 0F,
-                            endY = size.height.times(0.9F)
+                            0F to Color.Transparent,
+                            0.9F to backgroundColor,
                         )
                     )
                 }
@@ -147,7 +152,7 @@ fun FilmHeader(
                     )
 
                     Text(
-                        text = "${FormatterUtils.formatRating(film.rating)} | ${film.runtime} | ${film.dateReleased}",
+                        text = otherInfo,
                         style = MaterialTheme.typography.labelMedium,
                         color = colorOnMediumEmphasisMobile(),
                         textAlign = TextAlign.Start,

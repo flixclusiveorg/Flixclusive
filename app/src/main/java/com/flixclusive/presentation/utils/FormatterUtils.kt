@@ -148,7 +148,7 @@ object FormatterUtils {
         episode: TMDBEpisode? = null
     ): String {
         return when(film.filmType) {
-            FilmType.MOVIE -> String.format(film.title)
+            FilmType.MOVIE -> film.title
             FilmType.TV_SHOW -> String.format(
                 FILM_TV_SHOW_TITLE_FORMAT,
                 episode!!.season,

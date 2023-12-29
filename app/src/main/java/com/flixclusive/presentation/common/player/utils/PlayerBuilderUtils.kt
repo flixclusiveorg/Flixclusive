@@ -70,7 +70,7 @@ internal object PlayerBuilderUtils {
                 /* retainBackBufferFromKeyframe = */ true
             )
             .setBufferDurationsMs(
-                /* minBufferMs = */ DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+                /* minBufferMs = */ maxBufferMs,
                 /* maxBufferMs = */ maxBufferMs,
                 /* bufferForPlaybackMs = */ DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
                 /* bufferForPlaybackAfterRebufferMs = */ DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS

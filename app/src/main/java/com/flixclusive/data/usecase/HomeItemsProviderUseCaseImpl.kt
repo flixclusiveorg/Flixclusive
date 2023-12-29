@@ -28,6 +28,7 @@ class HomeItemsProviderUseCaseImpl @Inject constructor(
     private val watchHistoryRepository: WatchHistoryRepository,
     private val configurationProvider: ConfigurationProvider,
 ) : HomeItemsProviderUseCase {
+
     override suspend fun getFocusedItem(film: Film): Film? {
         val response: Resource<Film> = when (film.filmType) {
             FilmType.MOVIE -> tmdbRepository.getMovie(film.id)

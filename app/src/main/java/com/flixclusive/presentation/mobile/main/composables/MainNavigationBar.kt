@@ -74,7 +74,7 @@ fun MainNavigationBar(
             horizontalArrangement = Arrangement.spacedBy(55.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            MobileAppDestination.values().forEach {
+            MobileAppDestination.entries.forEach {
                 val icon = remember(currentScreen) {
                     if (currentScreen == it.direction) {
                         it.iconSelected

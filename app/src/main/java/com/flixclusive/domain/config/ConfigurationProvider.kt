@@ -24,4 +24,5 @@ interface ConfigurationProvider {
     var providersStatus: List<ProviderStatus>?
 
     fun initialize()
+    fun checkForUpdates()
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -21,18 +22,24 @@ import com.flixclusive.presentation.mobile.screens.player.controls.common.ListCo
 import com.flixclusive.presentation.mobile.screens.player.controls.common.PlayerDialogButton
 import com.flixclusive.presentation.mobile.theme.FlixclusiveMobileTheme
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
-import com.flixclusive.providers.models.common.VideoDataServer
-import kotlin.random.Random
+import com.flixclusive.providers.interfaces.SourceProvider
+import com.flixclusive.providers.models.common.SourceLink
+import com.flixclusive.providers.sources.superstream.SuperStream
+import okhttp3.OkHttpClient
 
 @Composable
 fun PlayerServersDialog(
     state: PlayerUiState,
-    servers: List<VideoDataServer>,
-    sourceProviders: List<String>,
+    servers: List<SourceLink>,
+    sourceProviders: List<SourceProvider>,
     onSourceChange: (String) -> Unit,
     onVideoServerChange: (Int, String) -> Unit,
     onDismissSheet: () -> Unit,
 ) {
+    val selectedSourceIndex = remember(state.selectedProvider) {
+        sourceProviders.indexOfFirst { it.name.equals(state.selectedProvider, true) }
+    }
+
     BasePlayerDialog(onDismissSheet = onDismissSheet) {
         Row(
             modifier = Modifier
@@ -45,10 +52,10 @@ fun PlayerServersDialog(
                 contentDescription = stringResource(id = R.string.source),
                 label = stringResource(id = R.string.source),
                 items = sourceProviders,
-                selectedIndex = sourceProviders.indexOf(state.selectedSource),
-                itemState = state.selectedSourceState,
+                selectedIndex = selectedSourceIndex,
+                itemState = state.selectedProviderState,
                 onItemClick = {
-                    onSourceChange(sourceProviders[it])
+                    onSourceChange(sourceProviders[it].name)
                 }
             )
 
@@ -68,9 +75,9 @@ fun PlayerServersDialog(
                 contentDescription = stringResource(id = R.string.server),
                 label = stringResource(id = R.string.servers),
                 items = servers,
-                selectedIndex = state.selectedServer,
+                selectedIndex = state.selectedSourceLink,
                 onItemClick = {
-                    onVideoServerChange(it, servers[it].serverName)
+                    onVideoServerChange(it, servers[it].name)
                 }
             )
         }
@@ -90,27 +97,23 @@ fun PlayerServersDialog(
 )
 @Composable
 private fun PlayerServersDialogPreview() {
-    val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
-    val sources = List(10) {
-        (1..8)
-            .map { Random.nextInt(0, charPool.size) }
-            .map(charPool::get)
-            .joinToString("")
+    val sources = List(5) {
+        SuperStream(OkHttpClient())
     }
 
     val serverNames = listOf("ServerA", "ServerB", "ServerC", "ServerD", "ServerE")
     val serverUrls = listOf("http://serverA.com", "http://serverB.com", "http://serverC.com", "http://serverD.com", "http://serverE.com")
     val servers = List(10) {
-        VideoDataServer(
-            serverName = serverNames.random(),
-            serverUrl = serverUrls.random()
+        SourceLink(
+            name = serverNames.random(),
+            url = serverUrls.random()
         )
     }
 
     FlixclusiveMobileTheme {
         Surface {
             PlayerServersDialog(
-                state = PlayerUiState(selectedSource = sources[0]),
+                state = PlayerUiState(selectedProvider = sources[0].name),
                 servers = servers,
                 sourceProviders = sources,
                 onSourceChange = {},

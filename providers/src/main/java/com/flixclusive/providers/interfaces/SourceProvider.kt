@@ -3,10 +3,9 @@ package com.flixclusive.providers.interfaces
 import com.flixclusive.providers.models.common.MediaInfo
 import com.flixclusive.providers.models.common.MediaType
 import com.flixclusive.providers.models.common.SearchResults
-import com.flixclusive.providers.models.common.VideoData
+import com.flixclusive.providers.models.common.SourceLink
+import com.flixclusive.providers.models.common.Subtitle
 import okhttp3.OkHttpClient
-
-internal typealias Server = String
 
 abstract class SourceProvider(protected val client: OkHttpClient) {
     abstract val name: String
@@ -18,7 +17,7 @@ abstract class SourceProvider(protected val client: OkHttpClient) {
      * this provider instance.
      *
      * */
-    open val supportedEmbeds: List<Server> = emptyList()
+    open val supportedExtractors: List<Extractor> = emptyList()
 
     abstract suspend fun search(query: String, page: Int = 1, mediaType: MediaType): SearchResults
 
@@ -27,10 +26,16 @@ abstract class SourceProvider(protected val client: OkHttpClient) {
         mediaType: MediaType,
     ): MediaInfo
 
+    /**
+     *
+     * Obtains source links for the film provided.
+     *
+     * */
     abstract suspend fun getSourceLinks(
         mediaId: String,
-        server: String? = null,
         season: Int? = null,
         episode: Int? = null,
-    ): VideoData
+        onLinkLoaded: (SourceLink) -> Unit,
+        onSubtitleLoaded: (Subtitle) -> Unit,
+    )
 }

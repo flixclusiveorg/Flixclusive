@@ -3,19 +3,15 @@ package com.flixclusive.di
 import com.flixclusive.data.usecase.FilmProviderUseCaseImpl
 import com.flixclusive.data.usecase.HomeItemsProviderUseCaseImpl
 import com.flixclusive.data.usecase.SeasonProviderUseCaseImpl
-import com.flixclusive.data.usecase.VideoDataProviderUseCaseImpl
 import com.flixclusive.data.usecase.WatchHistoryItemManagerUseCaseImpl
 import com.flixclusive.data.usecase.WatchlistItemManagerUseCaseImpl
 import com.flixclusive.domain.config.ConfigurationProvider
-import com.flixclusive.domain.repository.ProvidersRepository
 import com.flixclusive.domain.repository.TMDBRepository
-import com.flixclusive.domain.repository.VideoDataSourceRepository
 import com.flixclusive.domain.repository.WatchHistoryRepository
 import com.flixclusive.domain.repository.WatchlistRepository
 import com.flixclusive.domain.usecase.FilmProviderUseCase
 import com.flixclusive.domain.usecase.HomeItemsProviderUseCase
 import com.flixclusive.domain.usecase.SeasonProviderUseCase
-import com.flixclusive.domain.usecase.VideoDataProviderUseCase
 import com.flixclusive.domain.usecase.WatchHistoryItemManagerUseCase
 import com.flixclusive.domain.usecase.WatchlistItemManagerUseCase
 import dagger.Module
@@ -27,18 +23,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 @Module
 @InstallIn(ViewModelComponent::class)
 object UseCaseModule {
-
-    @Provides
-    fun provideVideoDataProviderUseCase(
-        videoDataSourceRepository: VideoDataSourceRepository,
-        providersRepository: ProvidersRepository,
-        tmdbRepository: TMDBRepository
-    ): VideoDataProviderUseCase
-        = VideoDataProviderUseCaseImpl(
-        videoDataSourceRepository = videoDataSourceRepository,
-        providersRepository = providersRepository,
-        tmdbRepository = tmdbRepository
-    )
 
     @Provides
     fun provideSeasonProviderUseCase(

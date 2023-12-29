@@ -55,16 +55,17 @@ import kotlinx.coroutines.delay
 fun SplashMobileScreen(
     onStartUpdate: (Intent) -> Unit,
     onExitApplication: () -> Unit,
-    onStartMainActivity: () -> Unit
+    onStartApplication: () -> Unit
 ) {
     val viewModel: AppConfigurationViewModel = hiltViewModel()
     val context = LocalContext.current
     val uiState by viewModel.state.collectAsStateWithLifecycle()
 
-    val image = AnimatedImageVector.animatedVectorResource(id = R.drawable.flixclusive_animated_tag)
     var isDoneAnimating by rememberSaveable { mutableStateOf(false) }
-    var atEnd by rememberSaveable { mutableStateOf(false) }
     var showLoadingCircle by rememberSaveable { mutableStateOf(false) }
+
+    val image = AnimatedImageVector.animatedVectorResource(id = R.drawable.flixclusive_animated_tag)
+    var atEnd by rememberSaveable { mutableStateOf(false) }
     val brushGradient = Brush.linearGradient(
         colors = listOf(
             MaterialTheme.colorScheme.primary,
@@ -151,7 +152,7 @@ fun SplashMobileScreen(
     if(uiState.allPermissionsAreAllowed) {
         LaunchedEffect(uiState, isDoneAnimating) {
             if(uiState.isDoneInitializing && isDoneAnimating) {
-                onStartMainActivity()
+                onStartApplication()
             }
         }
 
