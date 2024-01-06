@@ -22,7 +22,7 @@ import com.flixclusive.presentation.mobile.screens.player.controls.common.ListCo
 import com.flixclusive.presentation.mobile.screens.player.controls.common.PlayerDialogButton
 import com.flixclusive.presentation.mobile.theme.FlixclusiveMobileTheme
 import com.flixclusive.presentation.mobile.utils.ComposeMobileUtils.colorOnMediumEmphasisMobile
-import com.flixclusive.providers.interfaces.SourceProvider
+import com.flixclusive.providers.sources.SourceProvider
 import com.flixclusive.providers.models.common.SourceLink
 import com.flixclusive.providers.sources.superstream.SuperStream
 import okhttp3.OkHttpClient

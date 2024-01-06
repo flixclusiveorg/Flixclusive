@@ -5,7 +5,7 @@ import com.flixclusive.domain.model.SourceDataState
 import com.flixclusive.domain.model.entities.WatchHistoryItem
 import com.flixclusive.domain.model.tmdb.Film
 import com.flixclusive.domain.model.tmdb.TMDBEpisode
-import com.flixclusive.providers.interfaces.SourceProvider
+import com.flixclusive.providers.sources.SourceProvider
 import kotlinx.coroutines.flow.Flow
 
 interface SourceLinksProviderUseCase {

@@ -1,0 +1,161 @@
+[versions]
+compileSdk = "34"
+minSdk = "21"
+applicationName = "Flixclusive"
+androidGradlePlugin = "8.2.0"
+ksp = "1.9.10-1.0.13"
+kotlin = "1.9.10"
+androidDesugarJdkLibs = "2.0.4"
+compose = "1.6.0-alpha04"
+jsoup = "1.16.1"
+okhttp = "4.11.0"
+okhttpDnsoverhttps = "4.9.0"
+tvCompose = '1.0.0-alpha10'
+androidxComposeBom = "2023.10.01"
+androidxComposeCompiler = "1.5.7"
+composeDestinations = "1.9.53"
+androidxDataStore = "1.0.0"
+androidxCore = "1.12.0"
+androidxCoreSplashscreen = "1.0.1"
+material = "1.11.0"
+material3 = "1.1.2"
+constraintLayout = "1.0.1"
+accompanist = "0.32.0"
+lifecycleRuntime = "2.6.2"
+room = "2.6.1"
+hilt = "2.48"
+coil = "2.5.0"
+gson = "2.10.1"
+retrofit = "2.9.0"
+conscrypt = "2.5.2"
+hiltNavigation = "1.1.0"
+serialization = '1.6.0'
+coreKtx = "1.12.0"
+junit = "4.13.2"
+mockk = "1.13.8"
+coroutines = "1.7.3"
+androidxTestCore = "1.5.0"
+androidxTestExt = "1.1.5"
+androidxTestRules = "1.5.0"
+androidxTestRunner = "1.5.2"
+androidx-test-ext-junit = "1.1.5"
+espresso-core = "3.5.1"
+appcompat = "1.6.1"
+kotlin1910 = "1.9.10"
+kotlin19102 = "1.9.10"
+
+[libraries]
+# Accompanist
+accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
+
+# Testing
+coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+test-core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "androidxTestCore" }
+test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
+test-rules = { group = "androidx.test", name = "rules", version.ref = "androidxTestRules" }
+
+# TV UI (Compose)
+compose-tv-foundation = { module = "androidx.tv:tv-foundation", version.ref = "tvCompose"}
+compose-tv-material = { module = "androidx.tv:tv-material", version.ref = "tvCompose"}
+
+# UI (Compose)
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout" }
+compose-material-iconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-material3-windowSizeClass = { group = "androidx.compose.material3", name = "material3-window-size-class" }
+compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
+compose-ui-test = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui-util = { group = "androidx.compose.ui", name = "ui-util" }
+compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+compose-viewbinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
+core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "androidxCoreSplashscreen" }
+constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintLayout"}
+core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
+
+# Compose Destinations by raamcosta
+destinations-ksp = { module = "io.github.raamcosta.compose-destinations:ksp", version.ref = "composeDestinations" }
+destinations-core = { module = "io.github.raamcosta.compose-destinations:ksp", version.ref = "composeDestinations" }
+destinations-animations = { module = "io.github.raamcosta.compose-destinations:animations-core", version.ref = "composeDestinations" }
+
+# Coil
+coil-kt-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+
+# Jsoup
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+
+# Gson
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
+# Data Store
+dataStore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "androidxDataStore" }
+
+# Lifecycle
+lifecycle-viewModelKtx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleRuntime" }
+lifecycle-runtimeCompose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntime" }
+lifecycle-viewModelCompose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleRuntime" }
+
+# Hilt
+hilt-navigation = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigation"}
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt"}
+hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt"}
+
+desugarJdkLibs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "androidDesugarJdkLibs" }
+kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization"}
+kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+
+# Conscrypt
+conscrypt = { module = "org.conscrypt:conscrypt-android", version.ref = "conscrypt" }
+
+# OkHttp
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp-dnsoverhttps = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttpDnsoverhttps" }
+
+
+# Retrofit
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+retrofit-scalars = { group = "com.squareup.retrofit2", name = "converter-scalars", version.ref = "retrofit" }
+
+# Room
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+
+# Dependencies for build-logic
+android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
+kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
+room-gradlePlugin = { group = "androidx.room", name = "room-gradle-plugin", version.ref = "room" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
+espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
+appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+room = { id = "androidx.room", version.ref = "room" }
+
+
+
+# Plugins defined by this project
+flixclusive-application = { id = "flixclusive.android.application", version = "unspecified" }
+flixclusive-library = { id = "flixclusive.android.library", version = "unspecified" }
+flixclusive-compose = { id = "flixclusive.compose", version = "unspecified" }
+flixclusive-hilt = { id = "flixclusive.hilt", version = "unspecified" }
+flixclusive-room = { id = "flixclusive.room", version = "unspecified" }
+flixclusive-feature = { id = "flixclusive.feature", version = "unspecified" }
+flixclusive-destinations = { id = "flixclusive.destinations", version = "unspecified" }
+#flixclusive-android-test = { id = "flixclusive.android.test", version = "unspecified" }

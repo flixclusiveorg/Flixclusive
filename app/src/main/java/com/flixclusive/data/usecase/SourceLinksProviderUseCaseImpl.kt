@@ -14,7 +14,7 @@ import com.flixclusive.domain.repository.SourceLinksRepository
 import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.domain.usecase.SourceLinksProviderUseCase
 import com.flixclusive.domain.utils.WatchHistoryUtils
-import com.flixclusive.providers.interfaces.SourceProvider
+import com.flixclusive.providers.sources.SourceProvider
 import com.flixclusive.utils.LoggerUtils.debugLog
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fetching_episode_message">Fetching show episode…</string>
+    <string name="unavailable_episode">Episode is not yet available</string>
+    <string name="no_available_sources">No available source providers!</string>
+    <string name="error_finding_episode_id_from_meta">An unknown error occurred while obtaining episode data from meta api</string>
+    <string name="error_finding_episode_id_from_source_provider">An unknown error occurred while obtaining episode data from video data api</string>
+</resources>

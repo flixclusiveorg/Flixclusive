@@ -2,8 +2,6 @@ package com.flixclusive.domain.model
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.flixclusive.providers.models.common.SourceLink
-import com.flixclusive.providers.models.common.Subtitle
 import java.io.Serializable
 
 data class SourceData(

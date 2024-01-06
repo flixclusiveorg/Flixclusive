@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.presentation.utils.ModifierUtils.fadingEdge
-import com.flixclusive.providers.interfaces.SourceProvider
+import com.flixclusive.providers.sources.SourceProvider
 import com.flixclusive.providers.models.common.SourceLink
 
 @OptIn(ExperimentalFoundationApi::class)

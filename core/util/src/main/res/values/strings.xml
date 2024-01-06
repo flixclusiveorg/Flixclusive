@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connection_timeout">Connection timeout</string>
+    <string name="connection_failed">Connection failure</string>
+
+
+    <!--  Film Types  -->
+    <string name="movies">Movies</string>
+    <string name="tv_shows">TV Shows</string>
+</resources>
+

@@ -1,7 +1,6 @@
 package com.flixclusive.data.repository
 
 import com.flixclusive.common.Constants.TMDB_API_BASE_URL
-import com.flixclusive.utils.LoggerUtils.errorLog
 import com.flixclusive.data.api.TMDBApiService
 import com.flixclusive.data.dto.tmdb.common.TMDBImagesResponseDto
 import com.flixclusive.data.dto.tmdb.toMovie
@@ -24,6 +23,7 @@ import com.flixclusive.domain.repository.TMDBRepository
 import com.flixclusive.domain.utils.TMDBUtils.filterOutUnreleasedRecommendations
 import com.flixclusive.domain.utils.TMDBUtils.filterOutZeroSeasons
 import com.flixclusive.presentation.utils.FormatterUtils.formatGenreIds
+import com.flixclusive.utils.LoggerUtils.errorLog
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
