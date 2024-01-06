@@ -34,7 +34,7 @@ import com.flixclusive.presentation.mobile.screens.player.controls.dialogs.setti
 import com.flixclusive.presentation.mobile.screens.player.controls.episodes.EpisodesScreen
 import com.flixclusive.presentation.mobile.screens.player.controls.gestures.GestureDirection
 import com.flixclusive.presentation.mobile.screens.player.controls.gestures.SeekerAndSliderGestures
-import com.flixclusive.providers.interfaces.SourceProvider
+import com.flixclusive.providers.sources.SourceProvider
 import com.flixclusive.providers.models.common.SourceLink
 
 const val SEEK_ANIMATION_DELAY = 450L

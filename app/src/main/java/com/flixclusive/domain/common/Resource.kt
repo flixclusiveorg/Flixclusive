@@ -17,7 +17,7 @@ sealed class Resource<out T>(
         )
     }
 
-    object Loading : Resource<Nothing>(isLoading = true)
+    data object Loading : Resource<Nothing>(isLoading = true)
 }
 
 

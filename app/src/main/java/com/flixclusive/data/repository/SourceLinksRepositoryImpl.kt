@@ -11,7 +11,7 @@ import com.flixclusive.domain.model.tmdb.TvShow
 import com.flixclusive.domain.repository.ProvidersRepository
 import com.flixclusive.domain.repository.SourceLinksRepository
 import com.flixclusive.domain.repository.TMDBRepository
-import com.flixclusive.providers.interfaces.SourceProvider
+import com.flixclusive.providers.sources.SourceProvider
 import com.flixclusive.providers.models.common.MediaType
 import com.flixclusive.providers.models.common.SourceLink
 import com.flixclusive.providers.models.common.Subtitle

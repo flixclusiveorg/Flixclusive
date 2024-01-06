@@ -1,6 +1,6 @@
 package com.flixclusive.domain.model.provider
 
-import com.flixclusive.providers.interfaces.SourceProvider
+import com.flixclusive.providers.sources.SourceProvider
 
 data class SourceProviderDetails(
     val provider: SourceProvider,

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="film_data_fetching">Fetching film details…</string>
+    <string name="film_data_fetch_failed">Failed to fetch film data</string>
+</resources>

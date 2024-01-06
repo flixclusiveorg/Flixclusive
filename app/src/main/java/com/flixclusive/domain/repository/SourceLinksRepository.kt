@@ -2,7 +2,7 @@ package com.flixclusive.domain.repository
 
 import com.flixclusive.domain.common.Resource
 import com.flixclusive.domain.model.tmdb.Film
-import com.flixclusive.providers.interfaces.SourceProvider
+import com.flixclusive.providers.sources.SourceProvider
 import com.flixclusive.providers.models.common.SourceLink
 import com.flixclusive.providers.models.common.Subtitle
 
