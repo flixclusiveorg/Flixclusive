@@ -20,8 +20,7 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-##---------------Begin: proguard configuration for Retrofit2 ----------##
-# OkHttp proguard rules
+# Silence these mfs
 -dontwarn org.bouncycastle.jsse.BCSSLParameters
 -dontwarn org.bouncycastle.jsse.BCSSLSocket
 -dontwarn org.bouncycastle.jsse.provider.BouncyCastleJsseProvider
@@ -31,6 +30,15 @@
 -dontwarn org.openjsse.javax.net.ssl.SSLParameters
 -dontwarn org.openjsse.javax.net.ssl.SSLSocket
 -dontwarn org.openjsse.net.ssl.OpenJSSE
+-dontwarn edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+-dontwarn java.lang.instrument.UnmodifiableClassException
+-dontwarn org.apiguardian.api.API$Status
+-dontwarn org.apiguardian.api.API
+-dontwarn org.slf4j.Logger
+-dontwarn org.slf4j.LoggerFactory
+# ================
+
+##---------------Begin: proguard configuration for Retrofit2 ----------##
 
 # Keep generic signature of Call, Response (R8 full mode strips signatures from non-kept items).
 -keep,allowobfuscation,allowshrinking interface retrofit2.Call

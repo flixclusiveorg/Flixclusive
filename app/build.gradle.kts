@@ -45,11 +45,7 @@ android {
             )
         }
 
-        /*
-        *
-        * To have a debuggable release.
-        * */
-        create("prerelease") {
+        getByName("prerelease") {
             initWith(getByName("release"))
             applicationIdSuffix = ".pre_release"
             versionNameSuffix = "-PRE_RELEASE"

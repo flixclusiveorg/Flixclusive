@@ -23,6 +23,13 @@ internal fun Project.configureKotlinAndroid(
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
 
+        /*
+        * Create a pre-release build type to have a debuggable release.
+        * */
+        buildTypes {
+            create("prerelease")
+        }
+
         compileOptions {
             sourceCompatibility = JavaVersion.VERSION_17
             targetCompatibility = JavaVersion.VERSION_17
