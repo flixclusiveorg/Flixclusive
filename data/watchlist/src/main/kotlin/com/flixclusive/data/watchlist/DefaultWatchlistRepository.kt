@@ -1,8 +1,8 @@
 package com.flixclusive.data.watchlist
 
 import com.flixclusive.core.database.dao.WatchlistDao
-import com.flixclusive.core.util.common.network.AppDispatchers
-import com.flixclusive.core.util.common.network.Dispatcher
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers
+import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.model.database.WatchlistItem
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow

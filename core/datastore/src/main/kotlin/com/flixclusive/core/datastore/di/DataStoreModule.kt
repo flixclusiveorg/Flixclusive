@@ -5,16 +5,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.flixclusive.core.datastore.AppSettingsSerializer
 import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.core.util.common.network.AppDispatchers
-import com.flixclusive.core.util.common.network.Dispatcher
-import com.flixclusive.core.util.common.network.di.ApplicationScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import javax.inject.Singleton
 
 
@@ -27,7 +22,5 @@ object DataStoreModule {
     @Singleton
     internal fun providesUserPreferencesDataStore(
         @ApplicationContext context: Context,
-        @Dispatcher(AppDispatchers.IO) ioDispatcher: CoroutineDispatcher,
-        @ApplicationScope scope: CoroutineScope,
     ): DataStore<AppSettings> = context.appSettings
 }

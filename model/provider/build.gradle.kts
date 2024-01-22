@@ -9,9 +9,8 @@ android {
 }
 
 dependencies {
-    api(projects.provider.base)
-    api(libs.gson)
     api(libs.compose.runtime)
+    api(libs.gson)
 
     implementation(projects.core.util)
 }

@@ -4,15 +4,24 @@ import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.json.fromJson
+import com.flixclusive.core.util.network.CryptographyUtil.base64Encode
+import com.flixclusive.core.util.network.POST
+import com.flixclusive.core.util.network.asString
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.provider.base.Provider
 import com.flixclusive.provider.base.dto.FilmInfo
 import com.flixclusive.provider.base.dto.SearchResults
-import com.flixclusive.provider.base.util.CryptographyHelper.base64Encode
-import com.flixclusive.provider.base.util.POST
 import com.flixclusive.provider.base.util.TvShowCacheData
-import com.flixclusive.provider.base.util.asString
+import com.flixclusive.provider.superstream.SuperStreamCommon.apiUrl
+import com.flixclusive.provider.superstream.SuperStreamCommon.appIdSecond
+import com.flixclusive.provider.superstream.SuperStreamCommon.appKey
+import com.flixclusive.provider.superstream.SuperStreamCommon.appVersion
+import com.flixclusive.provider.superstream.SuperStreamCommon.appVersionCode
+import com.flixclusive.provider.superstream.SuperStreamCommon.iv
+import com.flixclusive.provider.superstream.SuperStreamCommon.key
+import com.flixclusive.provider.superstream.SuperStreamCommon.secondApiUrl
 import com.flixclusive.provider.superstream.dto.SuperStreamDownloadResponse
 import com.flixclusive.provider.superstream.dto.SuperStreamMediaDetailResponse
 import com.flixclusive.provider.superstream.dto.SuperStreamMediaDetailResponse.Companion.toMediaInfo
@@ -26,14 +35,6 @@ import com.flixclusive.provider.superstream.util.MD5Utils
 import com.flixclusive.provider.superstream.util.SuperStreamUtils.getExpiryDate
 import com.flixclusive.provider.superstream.util.SuperStreamUtils.isError
 import com.flixclusive.provider.superstream.util.SuperStreamUtils.randomToken
-import com.flixclusive.provider.superstream.SuperStreamCommon.apiUrl
-import com.flixclusive.provider.superstream.SuperStreamCommon.appIdSecond
-import com.flixclusive.provider.superstream.SuperStreamCommon.appKey
-import com.flixclusive.provider.superstream.SuperStreamCommon.appVersion
-import com.flixclusive.provider.superstream.SuperStreamCommon.appVersionCode
-import com.flixclusive.provider.superstream.SuperStreamCommon.iv
-import com.flixclusive.provider.superstream.SuperStreamCommon.key
-import com.flixclusive.provider.superstream.SuperStreamCommon.secondApiUrl
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 
@@ -93,18 +94,18 @@ class SuperStream(
             .body
             ?.charStream()
             ?.asString()
-            ?: throw Exception(errorMessage)
+            ?: throw Exception(errorMessage + " [${response.code} - ${response.message}]")
 
         if(
             responseBody.contains(
                 other = """"msg":"success""",
                 ignoreCase = true
             ).not()
-        ) throw Exception(errorMessage)
+        ) throw Exception(errorMessage + " [${response.code} - ${response.message}]")
 
         if (response.isSuccessful && responseBody.isNotBlank())
             return fromJson(responseBody)
-        else throw Exception("$errorMessage: [${response.body.toString()}]")
+        else throw Exception("$errorMessage: [${responseBody}]")
     }
 
     override suspend fun search(query: String, page: Int, filmType: FilmType): SearchResults {
@@ -181,9 +182,12 @@ class SuperStream(
 
         downloadResponse?.msg?.isError("Failed to fetch source.")
 
+        println("downloadResponse = ${downloadResponse}")
+
         val data = downloadResponse?.data?.list?.find {
             it.path.isNullOrBlank().not()
         } ?: throw Exception("Cannot find source")
+
 
         // Should really run this query for every link :(
         val subtitleQuery = if (isMovie) {
@@ -207,8 +211,9 @@ class SuperStream(
                             ) {
                                 onSubtitleLoaded(
                                     Subtitle(
-                                        lang = "${it.language ?: "UNKNOWN"} [${it.lang}] - Votes: ${it.order}",
-                                        url = it.filePath.toValidSubtitleFilePath()
+                                        language = "${it.language ?: "UNKNOWN"} [${it.lang}] - Votes: ${it.order}",
+                                        url = it.filePath.toValidSubtitleFilePath(),
+                                        type = SubtitleSource.ONLINE
                                     )
                                 )
                             }

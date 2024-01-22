@@ -37,5 +37,5 @@ fun <R> asyncCalls(
 ) = runBlocking {
     transforms.map {
         async { it.invoke() }
-    }.map { it.await() }
+    }.awaitAll()
 }

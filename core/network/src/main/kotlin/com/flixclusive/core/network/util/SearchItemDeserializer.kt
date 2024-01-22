@@ -1,5 +1,6 @@
 package com.flixclusive.core.network.util
 
+import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.tmdb.TMDBSearchItem
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
@@ -12,7 +13,7 @@ class SearchItemDeserializer : JsonDeserializer<TMDBSearchItem> {
         json: JsonElement?,
         typeOfT: Type?,
         context: JsonDeserializationContext?,
-    ): TMDBSearchItem {
+    ): TMDBSearchItem? {
         val resultJsonObject =
             json?.asJsonObject ?: JsonObject() // ensure we have a JsonObject to work with
 
@@ -31,37 +32,15 @@ class SearchItemDeserializer : JsonDeserializer<TMDBSearchItem> {
 
         // deserialize the JsonObject based on its media type
         val result = when (mediaType) {
-            "movie" -> context?.deserialize(
+            FilmType.MOVIE.type -> context?.deserialize(
                 resultJsonObject,
                 TMDBSearchItem.MovieTMDBSearchItem::class.java
             ) ?: TMDBSearchItem.MovieTMDBSearchItem()
-
-            "tv" -> context?.deserialize(
+            FilmType.TV_SHOW.type -> context?.deserialize(
                 resultJsonObject,
                 TMDBSearchItem.TvShowTMDBSearchItem::class.java
             ) ?: TMDBSearchItem.TvShowTMDBSearchItem()
-
-            "person" -> {
-                // get the "known_for" property and recursively deserialize each into a TMDBSearchItem object
-                val knownForArray = resultJsonObject.remove("known_for").asJsonArray
-
-                val knownForList = mutableListOf<TMDBSearchItem>()
-                for (knownFor in knownForArray) {
-                    val knownForObject: TMDBSearchItem =
-                        context?.deserialize(knownFor, TMDBSearchItem::class.java)
-                            ?: TMDBSearchItem.MovieTMDBSearchItem()
-
-                    knownForList.add(knownForObject)
-                }
-
-                // deserialize the rest of the JsonObject into a PersonTMDBSearchItem object
-                context?.deserialize(resultJsonObject, TMDBSearchItem.PersonTMDBSearchItem::class.java)
-                    ?: TMDBSearchItem.PersonTMDBSearchItem().copy(
-                        knownFor = knownForList
-                    )
-            }
-
-            else -> throw IllegalArgumentException("Unknown media type: $mediaType")
+            else -> null
         }
 
         return result // return the deserialized object

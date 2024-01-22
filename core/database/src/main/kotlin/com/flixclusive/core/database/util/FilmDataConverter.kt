@@ -1,9 +1,9 @@
 package com.flixclusive.core.database.util
 
 import androidx.room.TypeConverter
+import com.flixclusive.core.util.json.fromJson
 import com.flixclusive.model.tmdb.FilmImpl
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 
 internal class FilmDataConverter {
     private val gson = Gson()
@@ -15,7 +15,6 @@ internal class FilmDataConverter {
 
     @TypeConverter
     fun toFilmData(filmDataString: String): FilmImpl {
-        val listType = object : TypeToken<FilmImpl>() {}.type
-        return gson.fromJson(filmDataString, listType)
+        return fromJson<FilmImpl>(filmDataString)
     }
 }

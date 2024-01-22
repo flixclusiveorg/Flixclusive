@@ -4,10 +4,10 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.model.provider.ProviderWrapper
-import com.flixclusive.provider.provider.flixhq.FlixHQ
-import com.flixclusive.provider.provider.lookmovie.LookMovie
-import com.flixclusive.provider.provider.superstream.SuperStream
+import com.flixclusive.provider.base.ProviderData
+import com.flixclusive.provider.flixhq.FlixHQ
+import com.flixclusive.provider.lookmovie.LookMovie
+import com.flixclusive.provider.superstream.SuperStream
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
@@ -21,7 +21,7 @@ internal class DefaultProviderRepository @Inject constructor(
         FlixHQ(client)
     )
 
-    override val providers: SnapshotStateList<ProviderWrapper> = mutableStateListOf()
+    override val providers: SnapshotStateList<ProviderData> = mutableStateListOf()
 
     override fun populate(
         name: String,
@@ -35,7 +35,7 @@ internal class DefaultProviderRepository @Inject constructor(
             ?: throw Exception("Can't find this provider in the available list.")
 
         providers.add(
-            ProviderWrapper(
+            ProviderData(
                 provider = provider,
                 isMaintenance = isMaintenance,
                 isIgnored = isIgnored

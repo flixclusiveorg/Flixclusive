@@ -1,0 +1,101 @@
+package com.flixclusive
+
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
+import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
+import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
+import com.flixclusive.feature.mobile.home.destinations.HomeScreenDestination
+import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
+import com.flixclusive.feature.mobile.preferences.destinations.PreferencesScreenDestination
+import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
+import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
+import com.flixclusive.feature.mobile.search.destinations.SearchScreenDestination
+import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
+import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
+import com.flixclusive.feature.mobile.settings.destinations.SettingsScreenDestination
+import com.flixclusive.feature.mobile.splashScreen.destinations.SplashScreenDestination
+import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestination
+import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
+import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
+import com.ramcosta.composedestinations.dynamic.routedIn
+import com.ramcosta.composedestinations.spec.DestinationSpec
+import com.ramcosta.composedestinations.spec.NavGraphSpec
+
+const val ROOT = "root"
+
+object MobileNavGraphs {
+
+    val home = object : NavGraphSpec {
+        override val route = "home"
+
+        override val startRoute = HomeScreenDestination routedIn this
+
+        override val destinationsByRoute = listOf<DestinationSpec<*>>(
+            HomeScreenDestination,
+            FilmScreenDestination,
+            GenreScreenDestination,
+            SeeAllScreenDestination
+        ).routedIn(this)
+            .associateBy { it.route }
+    }
+
+    val search = object : NavGraphSpec {
+        override val route = "search"
+
+        override val startRoute = SearchScreenDestination routedIn this
+
+        override val destinationsByRoute = listOf<DestinationSpec<*>>(
+            SearchScreenDestination,
+            SearchExpandedScreenDestination,
+            FilmScreenDestination,
+            GenreScreenDestination,
+            SeeAllScreenDestination
+        ).routedIn(this)
+            .associateBy { it.route }
+    }
+
+    val preferences = object : NavGraphSpec {
+        override val route = "preferences"
+
+        override val startRoute = PreferencesScreenDestination routedIn this
+
+        override val destinationsByRoute = listOf<DestinationSpec<*>>(
+            PreferencesScreenDestination,
+            AboutScreenDestination,
+            FilmScreenDestination,
+            GenreScreenDestination,
+            ProvidersScreenDestination,
+            RecentlyWatchedScreenDestination,
+            SettingsScreenDestination,
+            UpdateDialogDestination,
+            WatchlistScreenDestination
+        ).routedIn(this)
+            .associateBy { it.route }
+    }
+
+    val root = object : NavGraphSpec {
+        override val route = ROOT
+
+        override val startRoute = SplashScreenDestination
+
+        override val destinationsByRoute = listOf<DestinationSpec<*>>(
+            PlayerScreenDestination,
+            SplashScreenDestination,
+            UpdateScreenDestination,
+        ).associateBy { it.route }
+
+        override val nestedNavGraphs = listOf(
+            home,
+            search,
+            preferences
+        )
+    }
+}
+
+internal data class AppNavigationItem(
+    val screen: NavGraphSpec,
+    @DrawableRes val iconSelected: Int,
+    @DrawableRes val iconUnselected: Int,
+    @StringRes val label: Int
+)

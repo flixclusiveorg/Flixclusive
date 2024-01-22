@@ -1,13 +1,7 @@
 plugins {
-    alias(libs.plugins.flixclusive.library)
+    alias(libs.plugins.flixclusive.extractor)
 }
 
 android {
     namespace = "com.flixclusive.extractor.upcloud"
-}
-
-dependencies {
-    implementation(projects.extractor.base)
-
-    implementation(libs.jsoup)
 }

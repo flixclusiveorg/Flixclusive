@@ -2,32 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
-    <!--  ExoPlayer Audio FX  -->
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+<!--    <uses-feature-->
+<!--        android:name="android.hardware.touchscreen"-->
+<!--        android:required="false" />-->
 
-    <!-- Notifications -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-
-    <!-- Background jobs -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-
-    <!-- App updates -->
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-
-    <uses-feature
-        android:name="android.hardware.touchscreen"
-        android:required="false" />
-
-    <uses-feature
-        android:name="android.software.leanback"
-        android:required="false" />
+<!--    <uses-feature-->
+<!--        android:name="android.software.leanback"-->
+<!--        android:required="false" />-->
 
     <application
         android:name=".FlixclusiveApplication"
@@ -42,52 +25,42 @@
         android:banner="@mipmap/ic_launcher"
         tools:targetApi="31">
         <activity
-            android:name=".presentation.mobile.screens.splash_screen.SplashMobileActivity"
+            android:name=".crash.CrashActivity"
             android:exported="false"
-            android:label="@string/title_activity_mobile_splash"
+            android:label="@string/title_activity_crash"
             android:theme="@style/Theme.Flixclusive" />
         <activity
-            android:name=".presentation.mobile.screens.crash.CrashMobileActivity"
-            android:exported="false"
-            android:label="@string/title_activity_mobile_crash"
-            android:theme="@style/Theme.Flixclusive" />
-        <activity
-            android:name=".presentation.mobile.screens.update.UpdateMobileActivity"
-            android:exported="false"
-            android:label="@string/title_activity_mobile_update"
-            android:launchMode="singleTop"
-            android:theme="@style/Theme.Flixclusive" />
-        <activity
-            android:name=".presentation.mobile.main.MainActivity"
+            android:name=".mobile.MobileActivity"
             android:supportsPictureInPicture="true"
             android:resizeableActivity="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:exported="true"
-            android:theme="@style/Theme.Flixclusive">
+            android:theme="@style/Theme.Flixclusive.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".presentation.tv.main.TVMainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.FlixclusiveTV.Starting">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
-            </intent-filter>
-        </activity>
+<!--        <activity-->
+<!--            android:name=".presentation.tv.main.TVMainActivity"-->
+<!--            android:exported="true"-->
+<!--            android:theme="@style/Theme.FlixclusiveTV.Starting">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />-->
+<!--            </intent-filter>-->
+<!--        </activity>-->
         <service
-            android:name=".service.app_updater.AppUpdaterService"
+            android:name=".service.update.AppUpdaterService"
             android:foregroundServiceType="dataSync"
             android:exported="false" />
         <receiver
-            android:name=".service.app_updater.AppUpdaterReceiver"
+            android:name=".service.update.AppUpdaterReceiver"
             android:exported="false" />
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.provider"
+            android:authorities="${applicationId}.storage_provider"
+            android:enabled="true"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -95,5 +68,4 @@
                 android:resource="@xml/provider_paths" />
         </provider>
     </application>
-
 </manifest>

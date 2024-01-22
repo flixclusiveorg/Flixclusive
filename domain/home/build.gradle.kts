@@ -9,7 +9,10 @@ android {
 }
 
 dependencies {
-    api(projects.data.watchHistory)
     api(projects.data.configuration)
     api(projects.data.tmdb)
+    api(projects.data.watchHistory)
+    api(projects.domain.tmdb)
+
+    implementation(projects.core.network)
 }

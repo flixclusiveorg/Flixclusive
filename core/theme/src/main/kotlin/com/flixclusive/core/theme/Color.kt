@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 val lightGray = Color.LightGray.copy(0.2F)
 val lightGrayElevated = Color.LightGray.copy(0.4F)
 val starColor = Color(0xFFFFD65B)
+val warningColor = Color(0xFFFFD54F)
 
 internal val md_theme_light_primary = Color(0xFF006689)
 internal val md_theme_light_onPrimary = Color(0xFFFFFFFF)

@@ -4,17 +4,17 @@ import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.coroutines.mapIndexedAsync
 import com.flixclusive.core.util.json.fromJson
+import com.flixclusive.core.util.network.CryptographyUtil.decryptAes
+import com.flixclusive.core.util.network.GET
+import com.flixclusive.core.util.network.asString
 import com.flixclusive.extractor.base.Extractor
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.provider.base.util.CryptographyHelper.decryptAes
-import com.flixclusive.provider.base.util.GET
-import com.flixclusive.provider.base.util.asString
-import com.flixclusive.extractor.upcloud.util.DecryptUtils.extractEmbedDecryptionDetails
-import com.flixclusive.extractor.upcloud.util.DecryptUtils.getKeyStops
 import com.flixclusive.extractor.upcloud.dto.DecryptedSource
 import com.flixclusive.extractor.upcloud.dto.UpCloudEmbedData
 import com.flixclusive.extractor.upcloud.dto.UpCloudEmbedData.Companion.toSubtitle
+import com.flixclusive.extractor.upcloud.util.DecryptUtils.extractEmbedDecryptionDetails
+import com.flixclusive.extractor.upcloud.util.DecryptUtils.getKeyStops
+import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Subtitle
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import java.net.URL
@@ -133,11 +133,7 @@ class UpCloud(
             },
             {
                 upCloudEmbedData.tracks.mapAsync {
-                    onSubtitleLoaded(
-                        it.toSubtitle(
-                            customName = "${getName(isAlternative)}: ",
-                        )
-                    )
+                    onSubtitleLoaded(it.toSubtitle())
                 }
             }
         )

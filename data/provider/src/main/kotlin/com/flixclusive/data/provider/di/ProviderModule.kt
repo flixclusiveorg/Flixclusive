@@ -8,15 +8,18 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ProviderModule {
+    @Singleton
     @Binds
     internal abstract fun bindsProviderRepository(
         providerRepository: DefaultProviderRepository,
     ): ProviderRepository
 
+    @Singleton
     @Binds
     internal abstract fun bindsSourceLinksRepository(
         sourceLinksRepository: DefaultSourceLinksRepository,

@@ -1,12 +1,12 @@
 package com.flixclusive.extractor.mixdrop
 
+import com.flixclusive.core.util.network.GET
+import com.flixclusive.core.util.network.asJsoup
+import com.flixclusive.core.util.network.asString
 import com.flixclusive.extractor.base.Extractor
+import com.flixclusive.extractor.mixdrop.util.Unpacker
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.provider.base.util.GET
-import com.flixclusive.provider.base.util.asJsoup
-import com.flixclusive.provider.base.util.asString
-import com.flixclusive.extractor.mixdrop.util.Unpacker
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import java.net.URL

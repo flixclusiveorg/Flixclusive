@@ -10,12 +10,16 @@ android {
 }
 
 dependencies {
+    api(libs.compose.runtime)
     api(projects.core.datastore)
+    api(projects.core.util)
     api(projects.model.datastore)
     api(projects.model.provider)
-    api(projects.core.util)
-    api(libs.compose.runtime)
+    api(projects.model.tmdb)
+    api(projects.provider.base)
 
-    implementation(projects.data.tmdb)
     implementation(libs.okhttp)
+    implementation(projects.provider.flixhq)
+    implementation(projects.provider.lookmovie)
+    implementation(projects.provider.superstream)
 }

@@ -2,10 +2,10 @@ package com.flixclusive.data.provider
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.model.provider.ProviderWrapper
+import com.flixclusive.provider.base.ProviderData
 
 interface ProviderRepository {
-    val providers: SnapshotStateList<ProviderWrapper>
+    val providers: SnapshotStateList<ProviderData>
 
     fun populate(
         name: String,

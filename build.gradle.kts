@@ -16,4 +16,5 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.room) apply false
+    id("com.osacky.doctor") version "0.9.1"
 }

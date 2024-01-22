@@ -12,10 +12,11 @@ dependencies {
     api(libs.okhttp.dnsoverhttps)
     api(libs.retrofit)
 
+    implementation(libs.conscrypt)
     implementation(libs.retrofit.gson)
     implementation(projects.core.datastore)
     implementation(projects.core.util)
+    implementation(projects.model.configuration)
     implementation(projects.model.datastore)
     implementation(projects.model.tmdb)
-    implementation(libs.conscrypt)
 }

@@ -9,7 +9,7 @@ android {
 }
 
 dependencies {
-    api(projects.model.database)
-    api(projects.data.tmdb)
     api(projects.data.provider)
+    api(projects.data.tmdb)
+    api(projects.model.database)
 }

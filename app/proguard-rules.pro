@@ -40,12 +40,10 @@
 # kept. Suspend functions are wrapped in continuations where the type argument
 # is used.
 -keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
-
 ##---------------End: proguard configuration for Retrofit2 ----------##
 
 
 ##---------------Begin: proguard configuration for Gson ----------##
-
 # Gson uses generic type information stored in a class file when working with fields. Proguard
 # removes such information by default, so configure it to keep all of it.
 -keepattributes Signature
@@ -58,18 +56,10 @@
 #-keep class com.google.gson.stream.** { *; }
 
 # Application classes that will be serialized/deserialized over Gson
--keep class com.flixclusive.domain.model.config.** { *; }
--keep class com.flixclusive.domain.model.entities.** { *; }
--keep class com.flixclusive.domain.model.tmdb.** { *; }
--keep class com.flixclusive.data.dto.tmdb.** { *; }
--keep class com.flixclusive.data.dto.tmdb.tv.** { *; }
--keep class com.flixclusive.data.dto.tmdb.common.** { *; }
-
--keep class com.flixclusive.providers.models.common.** { *; }
--keep class com.flixclusive.providers.models.extractors.upcloud.** { *; }
--keep class com.flixclusive.providers.models.providers.flixhq.** { *; }
--keep class com.flixclusive.providers.models.providers.superstream.** { *; }
--keep class com.flixclusive.providers.models.providers.lookmovie.** { *; }
+-keep class com.flixclusive.model.** { *; }
+-keep class com.flixclusive.provider.** { *; }
+-keep class com.flixclusive.extractor.** { *; }
+-keep class com.flixclusive.core.network.retrofit.dto.** { *; }
 
 # Prevent proguard from stripping interface information from TypeAdapter, TypeAdapterFactory,
 # JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)
@@ -87,6 +77,5 @@
 # Retain generic signatures of TypeToken and its subclasses with R8 version 3.0 and higher.
 -keep,allowobfuscation,allowshrinking class com.google.gson.reflect.TypeToken
 -keep,allowobfuscation,allowshrinking class * extends com.google.gson.reflect.TypeToken
-
 ##---------------End: proguard configuration for Gson ----------##
 

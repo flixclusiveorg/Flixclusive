@@ -1,8 +1,10 @@
+@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.flixclusive.application)
     alias(libs.plugins.flixclusive.compose)
+    alias(libs.plugins.flixclusive.destinations)
     alias(libs.plugins.flixclusive.hilt)
-    alias(libs.plugins.flixclusive.room)
+    alias(libs.plugins.flixclusive.testing)
 }
 
 // Version
@@ -10,18 +12,27 @@ val versionMajor = 1
 val versionMinor = 4
 val versionPatch = 0
 val versionBuild = 0
-val applicationName = libs.versions.applicationName.get()
+val applicationName: String = libs.versions.applicationName.get()
+val _applicationId: String = libs.versions.applicationId.get()
+val _versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
+
 
 android {
-    namespace = "com.flixclusive"
+    namespace = _applicationId
 
     defaultConfig {
-        applicationId = "com.flixclusive"
+        applicationId = _applicationId
         versionCode = versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
-        versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
+        versionName = _versionName
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        resValue("string", "build", versionCode.toString())
+        resValue("string", "app_name", applicationName)
+        resValue("string", "application_id", _applicationId)
+        resValue("string", "debug_mode", "false")
+        resValue("string", "version_name", _versionName)
     }
 
     buildTypes {
@@ -32,85 +43,82 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
 
-            resValue("string", "app_name", applicationName)
+        /*
+        *
+        * To have a debuggable release.
+        * */
+        create("prerelease") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".pre_release"
+            versionNameSuffix = "-PRE_RELEASE"
+
+            resValue("string", "app_name", "$applicationName Pre-Release")
+            resValue("string", "application_id", _applicationId + applicationIdSuffix)
+            resValue("string", "version_name", _versionName + versionNameSuffix)
         }
 
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-DEBUG"
-            resValue("string", "app_name", applicationName + " Debug")
+
+            resValue("string", "app_name", "$applicationName Debug")
+            resValue("string", "application_id", _applicationId + applicationIdSuffix)
+            resValue("string", "debug_mode", "true")
+            resValue("string", "version_name", _versionName + versionNameSuffix)
         }
     }
 
     packaging {
-        resources.excludes.add("/META-INF/{AL2.0,LGPL2.1}")
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            merges += "META-INF/LICENSE.md"
+            merges += "META-INF/LICENSE-notice.md"
+        }
     }
 }
 
 dependencies {
-    val media3 = "1.2.0"
-    val retrofit2 = "2.9.0"
-    val composeDestination = "1.9.53"
-    val dataStore = "1.0.0"
-    val gson = "2.10.1"
-    val coil = "2.4.0"
-    val jUnit4 = "4.13.2"
-    val mock = "1.13.8"
-    val coroutinesTest = "1.7.3"
-    val androidXTestCore = "1.5.0"
-    val androidXTestRunner = "1.5.2"
-    val androidXTestRules = "1.5.0"
+    implementation(projects.feature.mobile.about)
+    implementation(projects.feature.mobile.crash)
+    implementation(projects.feature.mobile.film)
+    implementation(projects.feature.mobile.genre)
+    implementation(projects.feature.mobile.home)
+    implementation(projects.feature.mobile.player)
+    implementation(projects.feature.mobile.preferences)
+    implementation(projects.feature.mobile.provider)
+    implementation(projects.feature.mobile.recentlyWatched)
+    implementation(projects.feature.mobile.search)
+    implementation(projects.feature.mobile.searchExpanded)
+    implementation(projects.feature.mobile.seeAll)
+    implementation(projects.feature.mobile.settings)
+    implementation(projects.feature.mobile.splashScreen)
+    implementation(projects.feature.mobile.update)
+    implementation(projects.feature.mobile.watchlist)
 
-    // Core KTX
-    implementation(libs.core.ktx)
+    implementation(projects.core.ui.mobile)
 
-    // Splash Screen
+    implementation(projects.data.configuration)
+    implementation(projects.data.network)
+    implementation(projects.data.watchHistory)
+    implementation(projects.data.watchlist)
+    implementation(projects.domain.provider)
+    implementation(projects.domain.tmdb)
+    implementation(projects.model.provider)
+
+    implementation(projects.service)
+
+    implementation(libs.accompanist.navigation.animation)
+    implementation(libs.coil.compose)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.constraintlayout.compose)
     implementation(libs.core.splashscreen)
-
-    // Datastore
-    implementation ("androidx.datastore:datastore-preferences:$dataStore")
-
-    // Exoplayer
-    implementation ("androidx.media3:media3-session:$media3")
-    implementation ("androidx.media3:media3-exoplayer:$media3")
-    implementation ("androidx.media3:media3-exoplayer-hls:$media3")
-    implementation ("androidx.media3:media3-ui:$media3")
-    implementation ("androidx.media3:media3-ui-leanback:$media3")
-    implementation ("androidx.media3:media3-cast:$media3")
-    implementation ("androidx.media3:media3-common:$media3")
-    implementation ("androidx.media3:media3-datasource-okhttp:$media3")
-
-    // Powerful URI provider
-    implementation ("com.github.seven332:unifile:1.0.0")
-
-    // Retrofit2
-    implementation ("com.squareup.retrofit2:retrofit:$retrofit2")
-    implementation ("com.squareup.retrofit2:converter-gson:$retrofit2")
-    implementation ("com.squareup.retrofit2:converter-scalars:$retrofit2")
-
-    // Gson
-    implementation ("com.google.code.gson:gson:$gson")
-
-    // Coil
-    implementation ("io.coil-kt:coil-compose:$coil")
-
-    // Compose Destinations by raamcosta
-    implementation ("io.github.raamcosta.compose-destinations:animations-core:$composeDestination")
-    ksp ("io.github.raamcosta.compose-destinations:ksp:$composeDestination")
-
-    // Jsoup - for testing only
-    implementation ("org.jsoup:jsoup:1.16.1")
-
-    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.4")
-
-    // Test dependencies
-    androidTestImplementation ("androidx.test:core:$androidXTestCore")
-    androidTestImplementation ("androidx.test:core-ktx:$androidXTestCore")
-    androidTestImplementation ("androidx.test:runner:$androidXTestRunner")
-    androidTestImplementation ("androidx.test:rules:$androidXTestRules")
-
-    androidTestImplementation ("junit:junit:$jUnit4")
-    androidTestImplementation ("io.mockk:mockk:$mock")
-    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesTest")
+    implementation(libs.hilt.navigation)
+    implementation(libs.lifecycle.runtimeCompose)
+    implementation(libs.material)
 }

@@ -1,11 +1,255 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="connection_timeout">Connection timeout</string>
+    <string name="app_name">Flixclusive</string>
+
+    <!--  Activity Tags  -->
+    <string name="title_activity_crash">CrashActivity</string>
+
+    <!--  Navigation Items  -->
+    <string name="about">About Flixclusive</string>
+    <string name="home">Home</string>
+    <string name="preferences">Preferences</string>
+    <string name="providers">Providers</string>
+    <string name="recently_watched">Recently Watched</string>
+    <string name="search">Search</string>
+    <string name="settings">Settings</string>
+    <string name="watchlist">Watchlist</string>
+
+    <!--  About the app information  -->
+    <string name="app_description">A modern streaming service app that provides users with a convenient way to play and watch the latest movies and TV shows available on the internet. With a user-friendly interface and a vast collection of content, it aims to deliver an exceptional streaming experience to its users.\n\n</string>
+    <string name="app_features">App Features:</string>
+    <string name="extensive_library">Extensive Library</string>
+    <string name="high_quality_streaming">High-Quality Streaming</string>
+    <string name="personalized_recommendations">Personalized Recommendations</string>
+    <string name="search_and_discover">Search and Discover</string>
+    <string name="smart_watch_history">Smart Watch History</string>
+    <string name="subtitle_selections">Subtitle Selections</string>
+
+    <!--  Errors  -->
     <string name="connection_failed">Connection failure</string>
+    <string name="connection_timeout">Connection timeout</string>
+    <string name="decryption_error">Decryption of data failed, try again later</string>
+    <string name="default_error">No additional error information provided.</string>
+    <string name="error_crash_title">Oops!</string>
+    <string name="error_downloading_update">Error updating the app</string>
+    <string name="error_film_message">Error while fetching data!</string>
+    <string name="error_finding_episode_id_from_meta">An unknown error occurred while obtaining episode data from meta api</string>
+    <string name="error_finding_episode_id_from_source_provider">An unknown error occurred while obtaining episode data from video data api</string>
+    <string name="error_on_initialization">UNKNOWN ERR: Failed to initialize data</string>
+    <string name="error_on_search">Error while searching</string>
+    <string name="fail_sending_error_log">Couldn\'t send error logs to server</string>
+    <string name="failed_checking_for_updates">Failed to check for updates</string>
+    <string name="failed_to_extract">Failed to extract, try again later</string>
+    <string name="failed_to_init_app">Couldn\'t initialize the app.</string>
+    <string name="failed_to_initialize_home_items">Failed to initialize home items</string>
+    <string name="failed_to_initialize_search_items">Failed to initialize search items</string>
+    <string name="film_data_fetch_failed">Failed to fetch film data</string>
+    <string name="high_cache_size_solution_message">To fix this high amount of cache you need to limit the cache size to a specific amount.</string>
+    <string name="high_cache_size_warning_message">Since you\'ve set the cache to unlimited, you\'re current cache size is </string>
+    <string name="null_player_context_error">Player context should not be null!</string>
+    <string name="pagination_error_message">Error while fetching items</string>
+    <string name="player_not_initialized">Player has not been initialized</string>
+    <string name="splash_default_error_message">An error occurred while initializing the app.</string>
+    <string name="splash_maintenance_message">Sorry for the inconvenience. We\'re performing a quick update. Be back soon!</string>
 
+    <!--  Errors with formatting  -->
+    <string name="failed_to_download_updates">Failed to download updates: %1$s</string>
+    <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
+    <string name="failed_to_retrieve_provider_message_format">Failed to retrieve provider [%1$s]</string>
 
-    <!--  Film Types  -->
+    <!--  Film/Filter types  -->
+    <string name="all">All</string>
     <string name="movies">Movies</string>
     <string name="tv_shows">TV Shows</string>
+
+    <!--  Extra labels  -->
+    <string name="add_own_subtitle">Add subs</string>
+    <string name="add_sync_offset_message">Add if subs are delayed.</string>
+    <string name="audio">Audio</string>
+    <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
+    <string name="auto_option">Auto</string>
+    <string name="browse_categories">Browse Categories</string>
+    <string name="browse_movie_companies">Top Movie Companies</string>
+    <string name="browse_tv_networks">Top TV Networks</string>
+    <string name="cancel">Cancel</string>
+    <string name="check_for_updates">Check for updates</string>
+    <string name="clear">Clear</string>
+    <string name="clear_app_cache">Clear app cache</string>
+    <string name="close_label">Close</string>
+    <string name="collections">Collections</string>
+    <string name="coming_soon">Coming Soon</string>
+    <string name="continue_watching">Continue Watching</string>
+    <string name="debug">DEBUG</string>
+    <string name="default_label">(default)</string>
+    <string name="doh">DNS over HTTPS</string>
+    <string name="doh_change_toast_message">Restart is required for this to take effect.</string>
+    <string name="episodes">Episodes</string>
+    <string name="exit">Exit</string>
+    <string name="film_card_titles">Film card titles</string>
+    <string name="film_filter">Film Type</string>
+    <string name="genres">Genres</string>
+    <string name="github_repository">Github Repository</string>
+    <string name="ignore_warning_message">Don\'t warn me anymore.</string>
+    <string name="install">Install</string>
+    <string name="lock">Lock</string>
+    <string name="maintenance_all_caps">MAINTENANCE</string>
+    <string name="more_details">More details</string>
+    <string name="more_like_this">More like this</string>
+    <string name="next_episode">Next episode</string>
+    <string name="no_cache_limit_label">No cache limit (plz dont)</string>
+    <string name="no_ratings">No ratings</string>
+    <string name="no_runtime">No runtime</string>
+    <string name="none_label">None</string>
+    <string name="not_now_label">Not now</string>
+    <string name="off_subtitles">Off</string>
+    <string name="ok">OK</string>
+    <string name="play">Play</string>
+    <string name="playback_speed">Playback speed</string>
+    <string name="popular">Popular</string>
+    <string name="preferred_quality">Preferred quality</string>
+    <string name="preferred_resize_mode">Preferred resize mode</string>
+    <string name="rating">Rating</string>
+    <string name="release">RELEASE</string>
+    <string name="release_player">Release player on app minimize</string>
+    <string name="remove">Remove</string>
+    <string name="reset_settings">Reset settings</string>
+    <string name="resize_mode">Resize mode</string>
+    <string name="restart">Restart</string>
+    <string name="retry">Retry</string>
+    <string name="reverse_player_time">Reverse player time</string>
+    <string name="sample_subtitle_text">ROSE: I\'m flying!</string>
+    <string name="search_suggestion">Try Searching \"Iron Man\"…</string>
+    <string name="see_all">See all</string>
+    <string name="seek_length_label">Player seek length</string>
+    <string name="servers">Servers</string>
+    <string name="share_button">Share button</string>
+    <string name="share_the_app">Share the App!</string>
+    <string name="something_went_wrong">Something went wrong</string>
+    <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
+    <string name="subtitle">Subtitle</string>
+    <string name="subtitles_background_color">Subtitle background color</string>
+    <string name="subtitles_color">Subtitle color</string>
+    <string name="subtitles_edge_type">Subtitle edge type</string>
+    <string name="subtitles_font_style">Subtitle font style</string>
+    <string name="subtitles_language">Subtitle language</string>
+    <string name="subtitles_size">Subtitle size</string>
+    <string name="subtract_sync_offset_message">Subtract if subs are early.</string>
+    <string name="sync_subtitles">Sync Subtitles</string>
+    <string name="too_much_cache">Too much cache</string>
+    <string name="unknown_language">Unknown language</string>
+    <string name="unlock_label">Unlock</string>
+    <string name="update_info">Update information</string>
+    <string name="update_label">Update</string>
+    <string name="video_buffer_max_length">Maximum time to buffer</string>
+    <string name="video_buffer_max_length_desc">The default maximum duration of media that the player will attempt to ensure is buffered at all times.</string>
+    <string name="video_buffer_size">Player\'s buffer size</string>
+    <string name="video_buffer_size_label">The target size to always buffer. Setting this too high could cause device problems.</string>
+    <string name="video_cache_size">Player\'s dedicated cache size</string>
+    <string name="video_cache_size_label">The dedicated video cache for the player. Always limit the cache if you have limited storage space.</string>
+    <string name="watch">Watch</string>
+    <string name="watch_again">Watch Again</string>
+    <string name="watchlisted">Added</string>
+
+    <!--  Extra labels with formatting  -->
+    <string name="continue_watching_tv_show">Continue Watching S%1$d E%2$d</string>
+    <string name="episode_runtime_formatter">%1$d Episode</string>
+    <string name="season_number_formatter">Season %1$d</string>
+    <string name="season_runtime_formatter">%1$d Season</string>
+    <string name="seek_seconds_format">%1$s seconds</string>
+
+    <!--  State messages  -->
+    <string name="checking_for_updates">Checking for updates…</string>
+    <string name="copy_stack_trace_message">You could open a github issue and paste this stack trace.</string>
+    <string name="default_update_info_message">No additional update information provided.</string>
+    <string name="download_completed">Download completed</string>
+    <string name="download_in_progress">Downloading</string>
+    <string name="fetching_episode_message">Fetching show episode…</string>
+    <string name="film_data_fetching">Fetching film details…</string>
+    <string name="load_link_job_active_error_message">Still processing the last request…</string>
+    <string name="loading_next_episode">Loading next episode…</string>
+    <string name="no_available_sources">No available source providers!</string>
+    <string name="offline_message">You\'re offline</string>
+    <string name="online_message">Back online</string>
+    <string name="source_data_dialog_state_error_default">Could not initialize video player!</string>
+    <string name="source_data_dialog_state_extracting">Extracting video data…</string>
+    <string name="source_data_dialog_state_fetching">Fetching video data…</string>
+    <string name="source_data_dialog_state_success">Starting player…</string>
+    <string name="source_data_dialog_state_unavailable_default">I\'m sorry, this is not yet watchable</string>
+    <string name="unavailable_episode">Episode is not yet available</string>
+    <string name="up_to_date">Version is up to date!</string>
+    <string name="watchlist_empty_message">Start adding now!</string>
+
+    <!--  State messages with formatting  -->
+    <string name="episode_non_existent_error_message_format">Episode %1$s doesn\'t exist on Season %2$s</string>
+    <string name="extracting_from_provider_format">Extracting from %1$s…</string>
+    <string name="fetching_from_provider_format">Fetching from %1$s…</string>
+    <string name="next_episode_on_format">Next episode on %1$d…</string>
+    <string name="update_out_now_format">%1$s is out now</string>
+
+    <!--  Content descriptions  -->
+    <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>
+    <string name="add_500ms_content_description">Add 500ms on subtitle delay</string>
+    <string name="add_to_watchlist_button">Add to watchlist button</string>
+    <string name="added_to_watchlist_button">Added to watchlist button</string>
+    <string name="animated_tag_content_desc">Animated Flixclusive tag</string>
+    <string name="audio_and_subtitle_button_desc">An icon for available audio and subtitle for the player</string>
+    <string name="audio_icon_content_desc">Audio icon</string>
+    <string name="backward_button_content_description">Backward button for the player</string>
+    <string name="clear_text_button">Clear text button</string>
+    <string name="copy_button">Copy to clipboard button</string>
+    <string name="clear_cache_content_desc">Clear cache</string>
+    <string name="dns_label">Configure this if your ISP blocks you from watching.</string>
+    <string name="drag_icon_content_desc">Drag indicator for provider card</string>
+    <string name="episode_image_content_desc_format">An image of episode %1$s: %2$s</string>
+    <string name="episodes_button_desc">An icon for episodes button</string>
+    <string name="error_icon_content_desc">Error icon</string>
+    <string name="film_card_titles_label">Show titles on film cards</string>
+    <string name="film_item_content_description">A film\'s backdrop, picture or poster.</string>
+    <string name="filter_button">Filter button</string>
+    <string name="flixclusive_icon_content_desc">Flixclusive icon</string>
+    <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>
+    <string name="forward_button_content_description">Forward button for the player</string>
+    <string name="lock_button_desc">An icon for locking the player</string>
+    <string name="navigate_to_film">Go see details of film button</string>
+    <string name="navigate_up">Go back</string>
+    <string name="next_episode_button_desc">An icon for next episode</string>
+    <string name="overview_collapse">Show less of the film\'s description</string>
+    <string name="overview_expand">Expand all of the film\'s description</string>
+    <string name="pause_button">Pause button</string>
+    <string name="play_button">Play button</string>
+    <string name="play_pause_button_content_description">Play or pause button</string>
+    <string name="poster_content_description">A poster of %1$s</string>
+    <string name="rating_icon">Rating Icon</string>
+    <string name="release_player_desc">For seamless playback, turn this off. Though, this is required to free device memory.</string>
+    <string name="replay_button">Replay button</string>
+    <string name="reset_settings_msg">This will reset all app settings.</string>
+    <string name="sample_movie_content_desc">Sample Movie for Subtitle Preview</string>
+    <string name="see_more_btn_content_desc">A vertical see more button icon</string>
+    <string name="subtitle_icon_content_desc">Subtitle icon</string>
+    <string name="subtitles_background_color_desc">Choose a background color behind the subtitle</string>
+    <string name="subtitles_color_desc">Choose a readable and preferred color</string>
+    <string name="subtitles_toggle_desc">Toggle to turn subtitles on/off</string>
+    <string name="subtract_1000ms_content_description">Subtract 1000ms on subtitle delay</string>
+    <string name="subtract_500ms_content_description">Subtract 500ms on subtitle delay</string>
+    <string name="unlock_content_description">An icon for unlocking the player</string>
+    <string name="warning_content_description">Warning icon</string>
+
+    <!--  Player snackbar messages  -->
+    <string name="audio_snackbar_message">Audio set to %1$s</string>
+    <string name="playback_speed_snackbar_message">Playback speed set to %1$s</string>
+    <string name="provider_snackbar_message">Provider set to %1$s</string>
+    <string name="quality_snackbar_message">Quality set to %1$s</string>
+    <string name="server_snackbar_message">Server set to %1$s</string>
+    <string name="subtitle_snackbar_message">Subtitle set to %1$s</string>
+
+    <!--  Share app message  -->
+    <string name="share_message">Watch all latest and exclusive films at:\n\n%1$s</string>
+    <string name="share_message_subject">Flixclusive download link</string>
+
+    <!-- Permission request messages -->
+    <string name="allow">Allow</string>
+    <string name="notification_persist_request_message">It seems that you\'ve blocked notification permissions. Please grant this permission.</string>
+    <string name="notification_request_message">Notification permission is required for this feature to be available. Please grant this permission.</string>
+    <string name="splash_notice_permissions_header">Allow Permissions</string>
 </resources>
 

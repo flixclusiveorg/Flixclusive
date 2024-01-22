@@ -5,13 +5,14 @@ import com.flixclusive.core.network.retrofit.dto.common.TMDBImagesResponseDto
 import com.flixclusive.core.network.retrofit.dto.toMovie
 import com.flixclusive.core.network.retrofit.dto.toTvShow
 import com.flixclusive.core.network.retrofit.dto.tv.toSeason
-import com.flixclusive.core.util.common.network.AppDispatchers
-import com.flixclusive.core.util.common.network.Dispatcher
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers
+import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.exception.catchInternetRelatedException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.configuration.AppConfigurationManager
-import com.flixclusive.data.tmdb.util.filterOutUnreleasedRecommendations
+import com.flixclusive.data.tmdb.util.filterOutUnreleasedFilms
+import com.flixclusive.data.tmdb.util.filterOutUnreleasedSeasons
 import com.flixclusive.data.tmdb.util.filterOutZeroSeasons
 import com.flixclusive.model.tmdb.Genre
 import com.flixclusive.model.tmdb.Movie
@@ -150,8 +151,9 @@ class DefaultTMDBRepository @Inject constructor(
                     collection.data
                 } else null
 
-                val filteredRecommendations =
-                    filterOutUnreleasedRecommendations(movie.recommendations.results)
+                val filteredRecommendations = movie.recommendations.results
+                    .filterOutUnreleasedFilms()
+
                 val newGenres = formatGenreIds(
                     genreIds = movie.genres.map { it.id },
                     genresList = configurationProvider
@@ -173,9 +175,9 @@ class DefaultTMDBRepository @Inject constructor(
                     )
                         .toMovie()
                         .copy(
-                            collection = collection?.copy(
-                                films = filterOutUnreleasedRecommendations(collection.films)
-                            )
+                            collection = collection?.run {
+                                copy(films = films.filterOutUnreleasedFilms())
+                            }
                         )
                 )
             } catch (e: Exception) {
@@ -191,9 +193,13 @@ class DefaultTMDBRepository @Inject constructor(
                     id = id, apiKey = tmdbApiKey
                 )
 
-                val filteredRecommendations =
-                    filterOutUnreleasedRecommendations(tvShow.recommendations.results)
-                val filteredSeasons = filterOutZeroSeasons(tvShow.seasons)
+                val filteredRecommendations = tvShow.recommendations.results
+                    .filterOutUnreleasedFilms()
+
+                val filteredSeasons = tvShow.seasons
+                    .filterOutZeroSeasons()
+                    .filterOutUnreleasedSeasons()
+
                 val newGenres = formatGenreIds(
                     genreIds = tvShow.genres.map { it.id },
                     genresList = configurationProvider

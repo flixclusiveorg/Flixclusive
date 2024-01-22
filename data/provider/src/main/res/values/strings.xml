@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="failed_to_extract">Failed to extract, try again later</string>
-    <string name="decryption_error">Decryption of data failed, try again later</string>
-</resources>

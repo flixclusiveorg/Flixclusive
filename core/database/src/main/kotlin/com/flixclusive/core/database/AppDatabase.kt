@@ -11,7 +11,7 @@ import com.flixclusive.core.database.dao.WatchHistoryDao
 import com.flixclusive.core.database.dao.WatchlistDao
 import com.flixclusive.core.database.util.FilmDataConverter
 import com.flixclusive.core.database.util.WatchHistoryItemConverter
-import com.flixclusive.core.util.common.network.di.ApplicationScope
+import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.model.database.User
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.WatchlistItem

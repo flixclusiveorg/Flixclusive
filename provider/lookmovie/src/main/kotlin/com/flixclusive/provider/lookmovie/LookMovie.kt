@@ -3,13 +3,14 @@ package com.flixclusive.provider.lookmovie
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.json.fromJson
+import com.flixclusive.core.util.network.GET
+import com.flixclusive.core.util.network.asString
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.provider.base.Provider
 import com.flixclusive.provider.base.dto.FilmInfo
 import com.flixclusive.provider.base.dto.SearchResults
-import com.flixclusive.provider.base.util.GET
-import com.flixclusive.provider.base.util.asString
 import com.flixclusive.provider.base.util.replaceWhitespaces
 import com.flixclusive.provider.lookmovie.dto.LookMovieMediaDetail
 import com.flixclusive.provider.lookmovie.dto.LookMovieMediaDetail.Companion.toMediaInfo
@@ -83,7 +84,12 @@ class LookMovie(client: OkHttpClient) : Provider(client) {
         asyncCalls(
             {
                 (data.subtitles
-                    ?.map { it.copy(url = baseUrl + it.url) }
+                    ?.map {
+                        it.copy(
+                            url = baseUrl + it.url,
+                            type = SubtitleSource.ONLINE
+                        )
+                    }
                     ?.distinctBy { it.url }
                     ?: emptyList())
                     .map(onSubtitleLoaded)

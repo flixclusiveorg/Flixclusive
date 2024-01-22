@@ -1,13 +1,14 @@
 package com.flixclusive.core.network.retrofit
 
-import com.flixclusive.core.model.config.AppConfig
-import com.flixclusive.core.model.config.HomeCategoriesConfig
-import com.flixclusive.core.model.config.ProviderStatus
-import com.flixclusive.core.model.config.SearchCategoriesConfig
+import com.flixclusive.model.configuration.AppConfig
+import com.flixclusive.model.configuration.HomeCategoriesConfig
+import com.flixclusive.model.configuration.ProviderStatus
+import com.flixclusive.model.configuration.SearchCategoriesConfig
 import retrofit2.http.GET
 
 const val GITHUB_USERNAME = "rhenwinch"
 const val GITHUB_CONFIG_REPOSITORY = "flixclusive-config"
+const val GITHUB_BASE_URL = "https://raw.githubusercontent.com/"
 
 /**
  * 

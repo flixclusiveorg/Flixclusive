@@ -1,15 +1,15 @@
 package com.flixclusive.core.network.retrofit.dto
 
-import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TMDBPageResponse
-import com.flixclusive.model.tmdb.TMDBSearchItem
-import com.flixclusive.model.tmdb.toRecommendation
 import com.flixclusive.core.network.retrofit.dto.common.BelongsToCollection
 import com.flixclusive.core.network.retrofit.dto.common.ProductionCompany
 import com.flixclusive.core.network.retrofit.dto.common.ProductionCountry
 import com.flixclusive.core.network.retrofit.dto.common.SpokenLanguage
 import com.flixclusive.core.network.retrofit.dto.common.TMDBImagesResponseDto
+import com.flixclusive.model.tmdb.Genre
+import com.flixclusive.model.tmdb.Movie
+import com.flixclusive.model.tmdb.TMDBPageResponse
+import com.flixclusive.model.tmdb.TMDBSearchItem
+import com.flixclusive.model.tmdb.toRecommendation
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -12,22 +12,15 @@ data class Recommendation(
     val mediaType: String = "",
     override val language: String = "en",
     override val rating: Double = 0.0,
-    val releaseDate: String = ""
+    val releaseDate: String = "",
+    override val isReleased: Boolean = false,
 ) : Film, java.io.Serializable {
     override val posterImage: String?
         get() = image
-    override val backdropImage: String?
-        get() = null
-    override val logoImage: String?
-        get() = null
-    override val overview: String?
-        get() = null
     override val filmType: FilmType
         get() = mediaType.toFilmType()
     override val dateReleased: String
         get() = releaseDate
-    override val runtime: String
-        get() = ""
     override val genres: List<Genre>
         get() = emptyList()
     override val recommendedTitles: List<Recommendation>

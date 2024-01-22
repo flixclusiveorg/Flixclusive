@@ -1,6 +1,6 @@
 package com.flixclusive.provider.superstream
 
-import com.flixclusive.provider.base.util.CryptographyHelper.base64Decode
+import com.flixclusive.core.util.network.CryptographyUtil.base64Decode
 
 internal object SuperStreamCommon {
     // We do not want content scanners to notice this scraping going on so we've hidden all constants

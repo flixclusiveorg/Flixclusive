@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.flixclusive.core.database.model.UserWithWatchHistoryList
+import com.flixclusive.model.database.UserWithWatchHistoryList
 import com.flixclusive.model.database.WatchHistoryItem
 import kotlinx.coroutines.flow.Flow
 
