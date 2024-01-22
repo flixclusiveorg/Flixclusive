@@ -1,14 +1,14 @@
-name: Build release
+name: Release CI
 
 on:
   push:
     branches:
-      - 'master'
+      - master
     tags:
-      - 'v*'
+      - v*
 
 concurrency:
-  group: "Build release for ${{ github.ref_name }}"
+  group: "Release"
   cancel-in-progress: true
 
 jobs:
@@ -23,6 +23,9 @@ jobs:
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v1
 
+      - name: Copy CI gradle.properties
+        run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
+
       - name: Setup Android SDK
         run: |
           ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0"
@@ -33,12 +36,15 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
 
-      - name: Build Release
-        uses: gradle/gradle-command-action@v2
-        with:
-          arguments: :app:assemblePrerelease :app:assembleRelease
+      - name: Get Tag Name
+        run: |
+          set -x
+          echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
 
-      - name: Sign release apk
+      - name: Build Release
+        run: ./gradlew :app:assembleRelease
+
+      - name: Sign Release APK
         uses: r0adkll/sign-android-release@v1
         id: sign_release
         with:
@@ -46,7 +52,6 @@ jobs:
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
         env:
           BUILD_TOOLS_VERSION: "34.0.0"
 
@@ -54,21 +59,20 @@ jobs:
         run: |
           set -e
           mv ${{ steps.sign_release.outputs.signedReleaseFile }} flixclusive-release.apk
-          mv ${{ steps.sign_prerelease.outputs.signedReleaseFile }} flixclusive-prerelease.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
+          tag_name: ${{ env.VERSION_TAG }}
+          name: ${{ env.VERSION_TAG }}
           body: |
             ---
             **NOTE: Android TV is still unstable!! I advise not to use it yet**
             
-            ### Updates for ${{ github.ref_name }}:
+            ### Updates for ${{ env.VERSION_TAG }}:
           files: |
             flixclusive-release.apk
-          draft: false
+          draft: true
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
