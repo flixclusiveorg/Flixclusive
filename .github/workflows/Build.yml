@@ -46,7 +46,6 @@ jobs:
 
       - name: Sign Release APK
         uses: r0adkll/sign-android-release@v1
-        id: sign_release
         with:
           releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
@@ -58,7 +57,7 @@ jobs:
       - name: Clean up build artifacts
         run: |
           set -e
-          mv ${{ steps.sign_release.outputs.signedReleaseFile }} flixclusive-release.apk
+          mv app/build/outputs/apk/release/app-release-unsigned-signed.apk flixclusive-release.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
