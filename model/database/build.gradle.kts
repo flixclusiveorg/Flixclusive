@@ -9,6 +9,7 @@ android {
 }
 
 dependencies {
-    api(projects.model.tmdb)
     api(libs.gson)
+    api(projects.core.util)
+    api(projects.model.tmdb)
 }

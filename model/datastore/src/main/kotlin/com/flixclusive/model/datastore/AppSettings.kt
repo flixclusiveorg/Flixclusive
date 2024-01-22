@@ -11,6 +11,9 @@ import kotlinx.serialization.json.Json
 import java.io.InputStream
 
 const val DEFAULT_PLAYER_SEEK_AMOUNT = 10000L
+const val DEFAULT_PLAYER_CACHE_SIZE_AMOUNT = 200L
+const val NO_LIMIT_PLAYER_CACHE_SIZE = -1L
+const val DEFAULT_PLAYER_BUFFER_AMOUNT = 50L
 
 @Serializable
 data class AppSettings(
@@ -34,14 +37,38 @@ data class AppSettings(
     // ==
 
     // == player
+    /**
+     * Default value should always be true!
+     * */
     val shouldReleasePlayer: Boolean = true,
     val isPlayerTimeReversed: Boolean = true,
+    /**
+     * 1080p is the default value
+     * */
     val preferredQuality: PlayerQuality = PlayerQuality._1080p,
+    /**
+     * Fit screen is the default value for resize mode
+     * */
     val preferredResizeMode: Int = 0, // Fit
-    val preferredDiskCacheSize: Long = 0L,
+    /**
+     * 50s = Default
+     * */
+    val preferredDiskCacheSize: Long = DEFAULT_PLAYER_CACHE_SIZE_AMOUNT,
     val preferredBufferCacheSize: Long = -1, // Unset
-    val preferredVideoBufferMs: Long = 50_000, // 50s (Default)
+    /**
+     * 10s = Default
+     * */
+    val preferredVideoBufferMs: Long = DEFAULT_PLAYER_BUFFER_AMOUNT,
+    /**
+     * Fit screen is the default value for resize mode
+     * */
     val preferredSeekAmount: Long = DEFAULT_PLAYER_SEEK_AMOUNT,
+    /**
+     *
+     * required for cache warnings, when [preferredDiskCacheSize]
+     * is set to -1, which means there is no limit set for caching.
+     * */
+    val shouldNotifyAboutCache: Boolean = true,
     // ==
 ) {
     companion object {

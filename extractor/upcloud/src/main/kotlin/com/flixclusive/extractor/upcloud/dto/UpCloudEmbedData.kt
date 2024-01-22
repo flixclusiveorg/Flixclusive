@@ -1,6 +1,7 @@
 package com.flixclusive.extractor.upcloud.dto
 
 import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.SubtitleSource
 import com.google.gson.annotations.SerializedName
 
 data class UpCloudEmbedData(
@@ -16,9 +17,10 @@ data class UpCloudEmbedData(
     )
 
     companion object {
-        fun UpCloudEmbedSubtitleData.toSubtitle(customName: String? = null) = Subtitle(
+        fun UpCloudEmbedSubtitleData.toSubtitle() = Subtitle(
             url = url,
-            lang = customName + lang
+            language = lang,
+            type = SubtitleSource.ONLINE
         )
     }
 }

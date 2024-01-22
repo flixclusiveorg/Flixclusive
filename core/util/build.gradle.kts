@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.flixclusive.library)
     alias(libs.plugins.flixclusive.hilt)
     alias(libs.plugins.flixclusive.compose)
-    alias(libs.plugins.flixclusive.destinations)
 }
 
 android {
@@ -12,9 +11,10 @@ android {
 dependencies {
     api(libs.okhttp)
 
-    implementation(projects.model.database)
-    implementation(projects.model.tmdb)
-    implementation(libs.retrofit)
-    implementation(libs.compose.ui)
     implementation(libs.compose.runtime)
+    implementation(libs.compose.ui)
+    implementation(libs.gson)
+    implementation(libs.jsoup)
+    implementation(libs.okhttp.dnsoverhttps)
+    implementation(libs.retrofit)
 }

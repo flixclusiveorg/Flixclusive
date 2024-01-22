@@ -1,7 +1,7 @@
 package com.flixclusive.provider.flixhq
 
+import com.flixclusive.core.util.network.CryptographyUtil.decryptAes
 import com.flixclusive.provider.base.testing.BaseProviderTest
-import com.flixclusive.provider.base.util.CryptographyHelper.decryptAes
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Before

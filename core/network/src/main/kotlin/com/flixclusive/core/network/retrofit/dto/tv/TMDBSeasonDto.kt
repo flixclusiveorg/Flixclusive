@@ -1,11 +1,13 @@
 package com.flixclusive.core.network.retrofit.dto.tv
 
+import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.film.isDateInFuture
 import com.flixclusive.model.tmdb.Season
 import com.google.gson.annotations.SerializedName
 
 data class TMDBSeasonDto(
     val _id: String,
-    @SerializedName("air_date") val airDate: String,
+    @SerializedName("air_date") val airDate: String?,
     val episodes: List<TMDBEpisodeDto>,
     val name: String,
     val overview: String,
@@ -20,6 +22,6 @@ fun TMDBSeasonDto.toSeason(): Season {
         image = posterPath,
         name = name,
         episodes = episodes.map { it.toEpisode() },
-        isReleased = true
+        isReleased = if(airDate != null) safeCall { !isDateInFuture(airDate) } ?: true else false
     )
 }

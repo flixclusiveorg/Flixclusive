@@ -1,7 +1,8 @@
 package com.flixclusive.model.tmdb
 
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.film.formatMinutes
+import com.flixclusive.core.util.film.isDateInFuture
 import com.flixclusive.model.tmdb.util.formatDate
 import kotlinx.serialization.Serializable
 
@@ -30,8 +31,8 @@ data class Movie(
     override val dateReleased: String
         get() = formatDate(releaseDate)
 
-    override val runtime: String
-        get() = formatMinutes(duration)
+    override val runtime: Int?
+        get() = duration
 
     override val overview: String?
         get() = description
@@ -44,6 +45,9 @@ data class Movie(
 
     override val recommendedTitles: List<Recommendation>
         get() = recommendations
+
+    override val isReleased: Boolean
+        get() = safeCall { !isDateInFuture(releaseDate) } ?: true
 }
 
 

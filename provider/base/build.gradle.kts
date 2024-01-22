@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.flixclusive.library)
+    alias(libs.plugins.flixclusive.testing)
 }
 
 android {
@@ -7,18 +8,14 @@ android {
 }
 
 dependencies {
-    api(projects.extractor.base)
-    api(projects.core.util)
-    api(projects.model.provider)
-    api(libs.okhttp)
-    api(libs.jsoup)
     api(libs.gson)
+    api(libs.jsoup)
+    api(libs.okhttp)
+    api(projects.core.util)
+    api(projects.extractor.base)
 
-    implementation(libs.mockk)
+    implementation(projects.model.provider)
     implementation(libs.coroutines.test)
     implementation(libs.junit)
-
-    testImplementation(libs.mockk)
-    testImplementation(libs.coroutines.test)
-    testImplementation(libs.junit)
+    implementation(libs.mockk)
 }

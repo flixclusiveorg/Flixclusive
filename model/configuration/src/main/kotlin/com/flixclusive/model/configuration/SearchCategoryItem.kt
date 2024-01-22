@@ -18,7 +18,22 @@ data class SearchCategoryItem(
     @SerializedName("poster_path") val posterPath: String? = null,
     override val query: String,
     @SerializedName("type") override val mediaType: String
-) : Serializable, CategoryItem
+) : Serializable, CategoryItem {
+    override fun equals(other: Any?): Boolean {
+        val newData = other as SearchCategoryItem
+
+        return name == newData.name && query == newData.query
+    }
+
+    override fun hashCode(): Int {
+        var result = id
+        result = 31 * result + name.hashCode()
+        result = 31 * result + (posterPath?.hashCode() ?: 0)
+        result = 31 * result + query.hashCode()
+        result = 31 * result + mediaType.hashCode()
+        return result
+    }
+}
 
 
 /**

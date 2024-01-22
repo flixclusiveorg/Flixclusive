@@ -1,6 +1,6 @@
 package com.flixclusive.core.network.retrofit.dto.tv
 
-import com.flixclusive.domain.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.TMDBEpisode
 import com.google.gson.annotations.SerializedName
 
 data class TMDBEpisodeDto(

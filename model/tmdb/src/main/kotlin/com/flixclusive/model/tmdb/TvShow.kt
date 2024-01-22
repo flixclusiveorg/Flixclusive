@@ -1,7 +1,8 @@
 package com.flixclusive.model.tmdb
 
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.film.formatMinutes
+import com.flixclusive.core.util.film.isDateInFuture
 import com.flixclusive.model.tmdb.util.formatAirDates
 import kotlinx.serialization.Serializable
 
@@ -16,7 +17,7 @@ data class TvShow(
     val releaseDate: String = "",
     val lastAirDate: String? = null,
     val description: String? = null,
-    override val language: String,
+    override val language: String = "en",
     override val genres: List<Genre> = emptyList(),
     val duration: Int? = null,
     val totalEpisodes: Int = 0,
@@ -38,30 +39,8 @@ data class TvShow(
             inProduction = inProduction
         )
 
-    override val runtime: String
-        get() {
-            var runtimeString = ""
-
-            if (duration != null)
-                runtimeString = "${formatMinutes(duration)} | "
-
-            if(totalSeasons > 0) {
-                runtimeString += "$totalSeasons Season"
-
-                if(totalSeasons > 1)
-                    runtimeString += "s"
-            }
-
-
-            if(totalEpisodes > 0) {
-                runtimeString += " | $totalEpisodes Episodes"
-
-                if(totalEpisodes > 1)
-                    runtimeString += "s"
-            }
-
-            return runtimeString
-        }
+    override val runtime: Int?
+        get() = duration
 
     override val overview: String?
         get() = description
@@ -74,4 +53,7 @@ data class TvShow(
 
     override val recommendedTitles: List<Recommendation>
         get() = recommendations
+
+    override val isReleased: Boolean
+        get() = safeCall { !isDateInFuture(releaseDate) } ?: true
 }

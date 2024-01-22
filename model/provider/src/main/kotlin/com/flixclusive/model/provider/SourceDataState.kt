@@ -2,12 +2,13 @@ package com.flixclusive.model.provider
 
 import androidx.annotation.StringRes
 import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.R as UtilR
 
 
 sealed class SourceDataState(val message: UiText) {
     companion object {
-        @StringRes private val defaultUnavailableMessageId = R.string.source_data_dialog_state_unavailable_default
-        @StringRes private val defaultErrorMessageId = R.string.source_data_dialog_state_error_default
+        @StringRes private val defaultUnavailableMessageId = UtilR.string.source_data_dialog_state_unavailable_default
+        @StringRes private val defaultErrorMessageId = UtilR.string.source_data_dialog_state_error_default
     }
     
     data object Idle : SourceDataState(message = UiText.StringValue(""))
@@ -16,7 +17,7 @@ sealed class SourceDataState(val message: UiText) {
         message: UiText? = null,
     ) : SourceDataState(
         message = message
-            ?: UiText.StringResource(R.string.source_data_dialog_state_fetching)
+            ?: UiText.StringResource(UtilR.string.source_data_dialog_state_fetching)
     ) {
         constructor(message: String) : this(UiText.StringValue(message))
         constructor(@StringRes errorMessageId: Int) : this(
@@ -28,7 +29,7 @@ sealed class SourceDataState(val message: UiText) {
         message: UiText? = null,
     ) : SourceDataState(
         message = message
-            ?: UiText.StringResource(R.string.source_data_dialog_state_extracting)
+            ?: UiText.StringResource(UtilR.string.source_data_dialog_state_extracting)
     ) {
         constructor(message: String) : this(UiText.StringValue(message))
     }
@@ -53,6 +54,6 @@ sealed class SourceDataState(val message: UiText) {
         )
     }
 
-    object Success :
-        SourceDataState(message = UiText.StringResource(R.string.source_data_dialog_state_success))
+    data object Success :
+        SourceDataState(message = UiText.StringResource(UtilR.string.source_data_dialog_state_success))
 }

@@ -9,8 +9,8 @@ android {
 }
 
 dependencies {
-    api(projects.data.watchlist)
     api(projects.data.watchHistory)
+    api(projects.data.watchlist)
     api(projects.model.tmdb)
 
     implementation(projects.core.util)

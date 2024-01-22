@@ -32,10 +32,10 @@ class PaginatedSearchItemsDeserializer : JsonDeserializer<TMDBPageResponse<TMDBS
         // Loop through the results JsonArray and deserialize each result into a TMDBSearchItem
         // (in this case, a TvShowTMDBSearchItem) and add it to the results list
         for (resultJson in resultsJsonArray) {
-            val result: TMDBSearchItem =
-                context?.deserialize(resultJson, TMDBSearchItem::class.java)
-                    ?: TMDBSearchItem.MovieTMDBSearchItem()
-            results.add(result)
+            context?.deserialize<TMDBSearchItem>(
+                /* json = */ resultJson,
+                /* typeOfT = */ TMDBSearchItem::class.java,
+            )?.let(results::add)
         }
 
         // Create and return a new TMDBPageResponse object with the currentPage, results, total pages, and total results counts
@@ -45,6 +45,5 @@ class PaginatedSearchItemsDeserializer : JsonDeserializer<TMDBPageResponse<TMDBS
             totalPages = totalPages,
             totalResults = totalResults,
         )
-
     }
 }

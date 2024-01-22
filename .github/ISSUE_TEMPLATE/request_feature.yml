@@ -1,0 +1,24 @@
+# Tachiyomi (RIP king!) feature template
+
+name: ⭐ Feature request
+description: Suggest a feature to improve Flixclusive
+labels: [Feature request]
+body:
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Describe your suggested feature
+      description: How can Flixclusive be improved?
+      placeholder: |
+        Example:
+          "It should work like this..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: other-details
+    attributes:
+      label: Other details
+      placeholder: |
+        Additional details and attachments.

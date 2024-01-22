@@ -4,13 +4,13 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.provider.provider.BaseProvider
+import com.flixclusive.provider.base.Provider
 
 interface SourceLinksRepository {
 
     suspend fun getSourceLinks(
         mediaId: String,
-        provider: BaseProvider,
+        provider: Provider,
         season: Int? = null,
         episode: Int? = null,
         onLinkLoaded: (SourceLink) -> Unit,
@@ -19,6 +19,6 @@ interface SourceLinksRepository {
 
     suspend fun getMediaId(
         film: Film?,
-        provider: BaseProvider,
+        provider: Provider,
     ): String?
 }

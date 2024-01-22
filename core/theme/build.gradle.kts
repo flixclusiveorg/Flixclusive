@@ -9,9 +9,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.compose.material3)
+    implementation(libs.compose.tv.material)
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
-    implementation(libs.compose.material3)
     implementation(libs.core.ktx)
-    implementation(libs.compose.tv.material)
 }

@@ -2,7 +2,6 @@ package com.flixclusive.core.network.di
 
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.core.util.network.OkHttpHelper.ignoreAllSSLErrors
 import com.flixclusive.core.util.network.doh360
 import com.flixclusive.core.util.network.dohAdGuard
 import com.flixclusive.core.util.network.dohAliDNS
@@ -15,6 +14,7 @@ import com.flixclusive.core.util.network.dohNajalla
 import com.flixclusive.core.util.network.dohQuad101
 import com.flixclusive.core.util.network.dohQuad9
 import com.flixclusive.core.util.network.dohSheCan
+import com.flixclusive.core.util.network.ignoreAllSSLErrors
 import com.flixclusive.model.datastore.network.DoHPreference
 import dagger.Module
 import dagger.Provides

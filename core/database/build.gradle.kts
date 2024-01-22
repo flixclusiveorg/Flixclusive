@@ -10,9 +10,9 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.util)
     implementation(projects.model.database)
     implementation(projects.model.tmdb)
-    implementation(projects.core.util)
 
     implementation(libs.gson)
 }

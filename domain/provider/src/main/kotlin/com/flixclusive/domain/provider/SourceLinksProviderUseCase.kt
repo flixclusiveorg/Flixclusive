@@ -2,20 +2,22 @@ package com.flixclusive.domain.provider
 
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.database.getNextEpisodeToWatch
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.SourceLinksRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.model.database.WatchHistoryItem
+import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.provider.SourceData
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.provider.provider.BaseProvider
+import com.flixclusive.provider.base.Provider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
+import javax.inject.Singleton
+import com.flixclusive.core.util.R as UtilR
 
 /**
  *
@@ -28,6 +30,7 @@ import javax.inject.Inject
  * */
 typealias FilmKey = String
 
+@Singleton
 class SourceLinksProviderUseCase @Inject constructor(
     private val sourceLinksRepository: SourceLinksRepository,
     private val providersRepository: ProviderRepository,
@@ -47,7 +50,7 @@ class SourceLinksProviderUseCase @Inject constructor(
         ): FilmKey = "$filmId-${episodeData?.season}:${episodeData?.episode}"
     }
 
-     val providers: List<BaseProvider>
+     val providers: List<Provider>
         get() = providersRepository.providers
             .filter { !it.isIgnored && !it.isMaintenance }
             .map { it.provider }
@@ -70,15 +73,15 @@ class SourceLinksProviderUseCase @Inject constructor(
         onSuccess: (TMDBEpisode?) -> Unit,
         onError: (() -> Unit)? = null,
     ): Flow<SourceDataState> = flow {
-        val providesList = getPrioritizedProvidersList(preferredProviderName)
+        val providersList = getPrioritizedProvidersList(preferredProviderName)
 
-        if (providesList.isEmpty()) {
+        if (providersList.isEmpty()) {
             onError?.invoke()
-            return@flow emit(SourceDataState.Unavailable(R.string.no_available_sources))
+            return@flow emit(SourceDataState.Unavailable(UtilR.string.no_available_sources))
         }
 
         val episodeToUse = if (episode == null && film is TvShow) {
-            emit(SourceDataState.Fetching(UiText.StringResource(R.string.fetching_episode_message)))
+            emit(SourceDataState.Fetching(UiText.StringResource(UtilR.string.fetching_episode_message)))
 
             when (
                 val episodeFetchResult = getNearestEpisodeToWatch(
@@ -95,26 +98,44 @@ class SourceLinksProviderUseCase @Inject constructor(
                 is Resource.Success -> episodeFetchResult.data
             }
         } else episode
-        val cacheKey = getFilmKey(film.id, episodeToUse)
+        val cacheKey = getFilmKey(
+            filmId = film.id,
+            episodeData = episodeToUse
+        )
 
-        val cachedSourceData = cache[cacheKey]?.let { cache ->
-            // If user chose the same provider then just skip all the process
-            // Otherwise, clear the links and fetch for a new provider
-            if (preferredProviderName == cache.providerName)
-                return@flow onSuccess(episodeToUse)
+        val cachedSourceData = cache[cacheKey].also { data ->
+            val isNewFilm = cache.keys.none {
+                it.contains(film.id.toString(), true)
+            }
+            if(data == null && isNewFilm) {
+                return@also cache.clear()
+            }
 
-            cache
+            /**
+             *
+             * If user chose the same film or the [FilmKey] is valid,
+             * then just proceed with the same cached link.
+             * */
+            if (
+                data != null
+                && data.cachedLinks.isNotEmpty()
+                && (preferredProviderName.equals(data.providerName, true)
+                || preferredProviderName == null)
+            ) {
+                onSuccess(episodeToUse)
+                return@flow emit(SourceDataState.Success)
+            }
         }
 
-        for (i in providesList.indices) {
-            val provider = providesList[i]
+        for (i in providersList.indices) {
+            val provider = providersList[i]
 
             if (provider.name != preferredProviderName && isChangingProvider)
                 continue
 
-            emit(SourceDataState.Fetching("Fetching from ${provider.name}..."))
+            emit(SourceDataState.Fetching(UiText.StringResource(UtilR.string.fetching_from_provider_format, provider.name)))
 
-            val canStopLooping = i == providesList.lastIndex
+            val canStopLooping = i == providersList.lastIndex
             val needsNewMediaId = mediaId != null && provider.name != preferredProviderName
 
             val mediaIdToUse = if (needsNewMediaId || mediaId == null) {
@@ -133,19 +154,14 @@ class SourceLinksProviderUseCase @Inject constructor(
                 continue
             }
 
-            emit(SourceDataState.Extracting("Extracting from ${provider.name}..."))
+            emit(SourceDataState.Extracting(UiText.StringResource(UtilR.string.extracting_from_provider_format, provider.name)))
 
             if (cachedSourceData != null) {
                 cachedSourceData.run {
                     /**
                      *
                      * Only clear links since subtitles
-                     * could be used on other provider's [SourceLink]
-                     * */
-                    /**
-                     *
-                     * Only clear links since subtitles
-                     * could be used on other provider's [SourceLink]
+                     * could be used on other provider's [SourceData]
                      * */
                     cachedLinks.clear()
                     cache[cacheKey] = copy(
@@ -224,10 +240,6 @@ class SourceLinksProviderUseCase @Inject constructor(
         SourceData()
     }
 
-    fun clearCache() {
-        cache.clear()
-    }
-
     /**
      *
      * Obtains the [TMDBEpisode] data of the nearest
@@ -267,7 +279,7 @@ class SourceLinksProviderUseCase @Inject constructor(
             return episodeFromApiService
         }
         else if (episodeFromApiService is Resource.Success && episodeFromApiService.data == null) {
-            return Resource.Failure(R.string.unavailable_episode)
+            return Resource.Failure(UtilR.string.unavailable_episode)
         }
 
         return episodeFromApiService
@@ -278,14 +290,14 @@ class SourceLinksProviderUseCase @Inject constructor(
      *
      * Returns a list of providers
      * available that prioritizes the
-     * given provider and on top of the list
+     * given provider and puts it on top of the list
      * */
     private fun getPrioritizedProvidersList(
-        preferredProvider: String?
-    ): List<BaseProvider> {
-        if(preferredProvider != null) {
+        preferredProviderName: String?
+    ): List<Provider> {
+        if(preferredProviderName != null) {
             return providers
-                .sortedBy { it.name == preferredProvider }
+                .sortedByDescending { it.name.equals(preferredProviderName, true) }
         }
 
         return providers

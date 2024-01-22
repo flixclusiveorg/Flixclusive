@@ -9,9 +9,9 @@ android {
 }
 
 dependencies {
-    api(projects.data.configuration)
-    api(projects.model.tmdb)
     api(projects.core.util)
+    api(projects.model.tmdb)
 
     implementation(projects.core.network)
+    implementation(projects.data.configuration)
 }

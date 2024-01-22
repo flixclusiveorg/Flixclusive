@@ -2,13 +2,26 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
-      <entry key="MainActivityPreview">
+      <entry key="PlayerSeekSlider">
         <State />
       </entry>
-      <entry key="app - mobile">
-        <State />
+      <entry key="app">
+        <State>
+          <targetSelectedWithDropDown>
+            <Target>
+              <type value="QUICK_BOOT_TARGET" />
+              <deviceKey>
+                <Key>
+                  <type value="VIRTUAL_DEVICE_PATH" />
+                  <value value="$USER_HOME$/.android/avd/Realme_5_ANDROID_10_29_API_29.avd" />
+                </Key>
+              </deviceKey>
+            </Target>
+          </targetSelectedWithDropDown>
+          <timeTargetWasSelectedWithDropDown value="2024-01-20T09:14:49.063952074Z" />
+        </State>
       </entry>
-      <entry key="app - tv">
+      <entry key="app2">
         <State />
       </entry>
     </value>

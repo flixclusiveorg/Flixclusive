@@ -1,14 +1,26 @@
 package com.flixclusive.core.datastore.di
 
+import androidx.datastore.core.DataStore
 import com.flixclusive.core.datastore.AppSettingsManager
-import dagger.Binds
+import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
+import com.flixclusive.model.datastore.AppSettings
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class AppSettingsModule {
-    @Binds
-    internal abstract fun providesAppSettingsManager(): AppSettingsManager
+object AppSettingsModule {
+    @Provides
+    @Singleton
+    internal fun providesAppSettingsManager(
+        appSettings: DataStore<AppSettings>,
+        @ApplicationScope scope: CoroutineScope
+    ): AppSettingsManager = AppSettingsManager(
+        appSettings = appSettings,
+        scope = scope
+    )
 }

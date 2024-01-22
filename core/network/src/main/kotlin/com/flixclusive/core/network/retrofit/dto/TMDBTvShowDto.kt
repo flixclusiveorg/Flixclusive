@@ -1,10 +1,5 @@
 package com.flixclusive.core.network.retrofit.dto
 
-import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.TMDBPageResponse
-import com.flixclusive.model.tmdb.TMDBSearchItem
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.toRecommendation
 import com.flixclusive.core.network.retrofit.dto.common.ProductionCompany
 import com.flixclusive.core.network.retrofit.dto.common.ProductionCountry
 import com.flixclusive.core.network.retrofit.dto.common.SpokenLanguage
@@ -14,6 +9,11 @@ import com.flixclusive.core.network.retrofit.dto.tv.EpisodeAir
 import com.flixclusive.core.network.retrofit.dto.tv.Network
 import com.flixclusive.core.network.retrofit.dto.tv.TvShowSeasonsPreview
 import com.flixclusive.core.network.retrofit.dto.tv.toSeason
+import com.flixclusive.model.tmdb.Genre
+import com.flixclusive.model.tmdb.TMDBPageResponse
+import com.flixclusive.model.tmdb.TMDBSearchItem
+import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.toRecommendation
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -74,7 +74,7 @@ fun TMDBTvShowDto.toTvShow(): TvShow {
         lastAirDate = lastAirDate,
         description = overview,
         genres = genres,
-        duration = if(episodeRunTime?.isNotEmpty() == true) episodeRunTime[0] else null,
+        duration = episodeRunTime?.getOrNull(0),
         totalEpisodes = numberOfEpisodes,
         totalSeasons = numberOfSeasons,
         recommendations = recommendations.results.map { it.toRecommendation() },

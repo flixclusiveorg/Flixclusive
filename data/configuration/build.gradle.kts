@@ -10,8 +10,8 @@ android {
 
 dependencies {
     api(projects.core.datastore)
-    api(projects.model.configuration)
     api(projects.core.util)
+    api(projects.model.configuration)
 
     implementation(projects.core.network)
     implementation(projects.data.provider)

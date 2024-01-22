@@ -1,31 +1,29 @@
 package com.flixclusive.data.provider
 
-import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.core.util.common.network.AppDispatchers
-import com.flixclusive.core.util.common.network.Dispatcher
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers
+import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.exception.catchInternetRelatedException
-import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.log.errorLog
+import com.flixclusive.core.util.network.CryptographyUtil
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.provider.provider.BaseProvider
-import com.flixclusive.provider.utils.DecryptUtils
+import com.flixclusive.provider.base.Provider
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.flixclusive.core.util.R as UtilR
 
 class DefaultSourceLinksRepository @Inject constructor(
-    private val tmdbRepository: TMDBRepository,
     @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
 ) : SourceLinksRepository {
 
     override suspend fun getSourceLinks(
         mediaId: String,
-        provider: BaseProvider,
+        provider: Provider,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
@@ -45,8 +43,8 @@ class DefaultSourceLinksRepository @Inject constructor(
             } catch (e: Exception) {
                 errorLog(e.stackTraceToString())
                 return@withContext when (e) {
-                    is DecryptUtils.DecryptionException -> Resource.Failure(R.string.decryption_error)
-                    is JsonSyntaxException -> Resource.Failure(R.string.failed_to_extract)
+                    is CryptographyUtil.DecryptionException -> Resource.Failure(UtilR.string.decryption_error)
+                    is JsonSyntaxException -> Resource.Failure(UtilR.string.failed_to_extract)
                     else -> e.catchInternetRelatedException()
                 }
             }
@@ -55,20 +53,11 @@ class DefaultSourceLinksRepository @Inject constructor(
 
     override suspend fun getMediaId(
         film: Film?,
-        provider: BaseProvider,
+        provider: Provider,
     ): String? {
         return withContext(ioDispatcher) {
             try {
-                val filmToSearch = if(film?.filmType == FilmType.TV_SHOW && film !is TvShow) {
-                    val response = tmdbRepository.getTvShow(film.id)
-
-                    if(response is Resource.Failure)
-                        return@withContext null
-
-                    response.data
-                } else film
-
-                if (filmToSearch == null)
+                if (film == null)
                     return@withContext null
 
                 var i = 1
@@ -81,9 +70,9 @@ class DefaultSourceLinksRepository @Inject constructor(
                     }
 
                     val searchResponse = provider.search(
-                        query = filmToSearch.title,
+                        query = film.title,
                         page = i,
-                        filmType = filmToSearch.filmType
+                        filmType = film.filmType
                     )
 
                     if (searchResponse.results.isEmpty())
@@ -91,29 +80,29 @@ class DefaultSourceLinksRepository @Inject constructor(
 
 
                     for(result in searchResponse.results) {
-                        if(result.tmdbId == filmToSearch.id) {
+                        if(result.tmdbId == film.id) {
                             id = result.id
                             break
                         }
 
-                        val titleMatches = result.title.equals(filmToSearch.title, ignoreCase = true)
-                        val filmTypeMatches = result.mediaType?.type == filmToSearch.filmType.type
+                        val titleMatches = result.title.equals(film.title, ignoreCase = true)
+                        val filmTypeMatches = result.filmType?.type == film.filmType.type
                         val releaseDateMatches =
-                            result.releaseDate == filmToSearch.dateReleased.split(" ").last()
+                            result.releaseDate == film.dateReleased.split(" ").last()
 
-                        if (titleMatches && filmTypeMatches && filmToSearch is TvShow) {
-                            if (filmToSearch.seasons.size == result.seasons || releaseDateMatches) {
+                        if (titleMatches && filmTypeMatches && film is TvShow) {
+                            if (film.seasons.size == result.seasons || releaseDateMatches) {
                                 id = result.id
                                 break
                             }
 
                             val tvShowInfo = provider.getFilmInfo(
                                 filmId = result.id!!,
-                                filmType = filmToSearch.filmType
+                                filmType = film.filmType
                             )
 
-                            val tvReleaseDateMatches = tvShowInfo.yearReleased == filmToSearch.dateReleased.split("-").first()
-                            val seasonCountMatches = filmToSearch.seasons.size == tvShowInfo.seasons
+                            val tvReleaseDateMatches = tvShowInfo.yearReleased == film.dateReleased.split("-").first()
+                            val seasonCountMatches = film.seasons.size == tvShowInfo.seasons
 
                             if (tvReleaseDateMatches || seasonCountMatches) {
                                 id = result.id

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!--  SourceData State messages  -->
-    <string name="source_data_dialog_state_error_default">Could not initialize video player!</string>
-    <string name="source_data_dialog_state_unavailable_default">I\'m sorry, this is not yet watchable</string>
-    <string name="source_data_dialog_state_fetching">Fetching video data…</string>
-    <string name="source_data_dialog_state_extracting">Extracting video data…</string>
-    <string name="source_data_dialog_state_success">Starting player…</string>
-</resources>

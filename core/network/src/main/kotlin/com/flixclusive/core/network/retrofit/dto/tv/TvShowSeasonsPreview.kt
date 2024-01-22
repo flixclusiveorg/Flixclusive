@@ -1,7 +1,8 @@
 package com.flixclusive.core.network.retrofit.dto.tv
 
+import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.film.isDateInFuture
 import com.flixclusive.model.tmdb.Season
-import com.flixclusive.domain.utils.TMDBUtils.isDateInFuture
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
@@ -13,7 +14,8 @@ data class TvShowSeasonsPreview(
     val name: String,
     val overview: String?,
     @SerializedName("poster_path") val posterPath: String?,
-    @SerializedName("season_number") val seasonNumber: Int
+    @SerializedName("season_number") val seasonNumber: Int,
+    @SerializedName("vote_average") val voteAverage: Double,
 )
 
 fun TvShowSeasonsPreview.toSeason(): Season {
@@ -21,6 +23,6 @@ fun TvShowSeasonsPreview.toSeason(): Season {
         seasonNumber = seasonNumber,
         image = posterPath,
         episodes = emptyList(),
-        isReleased = if(airDate != null) isDateInFuture(airDate) else true
+        isReleased = if(airDate != null) safeCall { !isDateInFuture(airDate) } ?: true else false
     )
 }

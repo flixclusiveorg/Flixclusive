@@ -1,8 +1,11 @@
 package com.flixclusive.core.util.film
 
-fun formatMinutes(totalMinutes: Int?): String {
-    if (totalMinutes == null)
-        return "No runtime"
+import com.flixclusive.core.util.R
+import com.flixclusive.core.util.common.ui.UiText
+
+fun formatMinutes(totalMinutes: Int?): UiText {
+    if (totalMinutes == null || totalMinutes <= 0)
+        return UiText.StringResource(R.string.no_runtime)
 
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
@@ -10,5 +13,15 @@ fun formatMinutes(totalMinutes: Int?): String {
     val hoursText = if (hours > 0) "${hours}h " else ""
     val minutesText = if (minutes > 0) "${minutes}m" else ""
 
-    return (hoursText + minutesText).trim()
+    return UiText.StringValue((hoursText + minutesText).trim())
+}
+
+fun formatRating(number: Double): UiText {
+    val ratings = if (number % 1 == 0.0) {
+        String.format("%.1f", number)
+    } else {
+        String.format("%.2f", number)
+    }
+    
+    return if(ratings == "0.0") UiText.StringResource(R.string.no_ratings) else UiText.StringValue(ratings)
 }

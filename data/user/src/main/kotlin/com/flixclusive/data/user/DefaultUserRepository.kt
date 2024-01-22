@@ -1,8 +1,8 @@
 package com.flixclusive.data.user
 
 import com.flixclusive.core.database.dao.UserDao
-import com.flixclusive.core.util.common.network.AppDispatchers
-import com.flixclusive.core.util.common.network.Dispatcher
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers
+import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.model.database.User
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
