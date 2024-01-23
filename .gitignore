@@ -1,17 +1,26 @@
-*.iml
+# Gradle cache
 .gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
+
+# Generated
 /build
+
+# IDEA/Android Studio project files, because
+# the project can be imported from settings.gradle.kts
+*.iml
+.idea/*
+!.idea/copyright
+# Keep the code styles.
+!/.idea/codeStyles
+/.idea/codeStyles/*
+!/.idea/codeStyles/Project.xml
+!/.idea/codeStyles/codeStyleConfig.xml
+!.idea/icon.png
+
+# Local configuration file (sdk path, etc)
+/local.properties
+
+# I don't know what are these
+.DS_Store
 /captures
 .externalNativeBuild
 .cxx
-local.properties
-keystore.jks
-keystore.jks.base64.txt
