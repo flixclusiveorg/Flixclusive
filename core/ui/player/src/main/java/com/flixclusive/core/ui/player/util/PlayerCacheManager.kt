@@ -7,6 +7,7 @@ import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.NoOpCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.datastore.NO_LIMIT_PLAYER_CACHE_SIZE
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -35,14 +36,18 @@ class PlayerCacheManager @Inject constructor(
      * */
     fun getCache(preferredDiskCacheSize: Long): SimpleCache {
         if(simpleCache == null) {
-            simpleCache = SimpleCache(
-                /* cacheDir = */ File(context.cacheDir, CACHE_DIR_KEY),
-                /* evictor = */ if(preferredDiskCacheSize == NO_LIMIT_PLAYER_CACHE_SIZE)
-                    NoOpCacheEvictor()
-                else
-                    LeastRecentlyUsedCacheEvictor(/* maxBytes = */ preferredDiskCacheSize * 1024L * 1024L),
-                /* databaseProvider = */ StandaloneDatabaseProvider(context)
-            )
+            simpleCache = safeCall {
+                SimpleCache(
+                    /* cacheDir = */ File(
+                        context.cacheDir, CACHE_DIR_KEY
+                    ).also { it.deleteOnExit() },
+                    /* evictor = */ if(preferredDiskCacheSize == NO_LIMIT_PLAYER_CACHE_SIZE)
+                        NoOpCacheEvictor()
+                    else
+                        LeastRecentlyUsedCacheEvictor(/* maxBytes = */ preferredDiskCacheSize * 1024L * 1024L),
+                    /* databaseProvider = */ StandaloneDatabaseProvider(context)
+                )
+            }
         }
 
         return simpleCache!!
