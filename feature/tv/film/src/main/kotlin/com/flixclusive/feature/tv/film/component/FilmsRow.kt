@@ -18,12 +18,10 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,7 +44,6 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.component.FilmCard
 import com.flixclusive.core.ui.tv.component.FilmCardShape
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
-import com.flixclusive.core.ui.tv.util.FocusPosition
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
 import com.flixclusive.core.util.common.ui.UiText
@@ -58,40 +55,24 @@ internal fun FilmsRow(
     modifier: Modifier = Modifier,
     currentFilm: Film,
     label: UiText,
-    rowIndex: Int,
     @DrawableRes iconId: Int,
     films: List<Film>,
     hasFocus: Boolean,
-    lastFocusedItem: FocusPosition?,
-    anItemHasBeenClicked: Boolean,
-    onFilmClick: (Int, Film) -> Unit,
+    onFilmClick: (Film) -> Unit,
     onFocusChange: (Boolean) -> Unit
 ) {
     val listState = rememberTvLazyListState()
-    val initialFocusPosition = remember { listState.firstVisibleItemIndex }
-
-    val focusRestorerModifiers = createInitialFocusRestorerModifiers()
     val leftFade = Brush.horizontalGradient(
         0F to Color.Transparent,
         0.05F to Color.Red
     )
-
-    fun restoreFocus(focusRequester: FocusRequester, columnIndex: Int) {
-        val shouldFocusThisItem = lastFocusedItem?.row == rowIndex
-                && lastFocusedItem.column == columnIndex
-                && !anItemHasBeenClicked
-
-        if (shouldFocusThisItem) {
-            focusRequester.requestFocus()
-        }
-    }
 
     Surface(
         shape = RectangleShape,
         colors = NonInteractiveSurfaceDefaults.colors(
             containerColor = Color.Transparent,
             contentColor = if(hasFocus) Color.White else LocalContentColor.current.onMediumEmphasis()
-        )
+        ),
     ) {
         Column(
             modifier = modifier.focusGroup(),
@@ -120,9 +101,12 @@ internal fun FilmsRow(
                 )
             }
 
+            val focusRestorers = createInitialFocusRestorerModifiers()
+            val firstInitialIndex = remember { listState.firstVisibleItemIndex }
+
             Box {
                 TvLazyRow(
-                    modifier = focusRestorerModifiers.parentModifier
+                    modifier = focusRestorers.parentModifier
                         .fadingEdge(leftFade)
                         .onFocusChanged {
                             onFocusChange(it.hasFocus)
@@ -132,19 +116,14 @@ internal fun FilmsRow(
                     pivotOffsets = PivotOffsets(parentFraction = 0.05F)
                 ) {
                     itemsIndexed(films) { columnIndex, film ->
-                        val focusRequester = remember { FocusRequester() }
 
                         Box {
                             FilmCard(
                                 modifier = Modifier
-                                    .focusRequester(focusRequester)
                                     .ifElse(
-                                        condition = columnIndex == initialFocusPosition,
-                                        ifTrueModifier = focusRestorerModifiers.childModifier
+                                        condition = columnIndex == firstInitialIndex,
+                                        ifTrueModifier = focusRestorers.childModifier
                                     )
-                                    .onPlaced {
-                                        restoreFocus(focusRequester, columnIndex)
-                                    }
                                     .focusProperties {
                                         if (columnIndex == films.lastIndex) {
                                             right = FocusRequester.Cancel
@@ -153,7 +132,7 @@ internal fun FilmsRow(
                                 film = film,
                                 onClick = {
                                     if (currentFilm.id != it.id) {
-                                        onFilmClick(columnIndex, it)
+                                        onFilmClick(it)
                                     }
                                 }
                             )

@@ -20,6 +20,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavOptionsBuilder
 import com.flixclusive.ROOT
 import com.flixclusive.mobile.MobileAppNavigator
 import com.flixclusive.mobile.MobileNavGraphs
@@ -55,12 +56,15 @@ internal fun NavHostController.navigateSingleTopTo(
 private fun NavBackStackEntry.lifecycleIsResumed() =
     lifecycle.currentState == Lifecycle.State.RESUMED
 
-internal fun NavController.navigateIfResumed(direction: Direction) {
+internal fun NavController.navigateIfResumed(
+    direction: Direction,
+    navOptionsBuilder: NavOptionsBuilder.() -> Unit = {}
+) {
     if (currentBackStackEntry?.lifecycleIsResumed() == false) {
         return
     }
 
-    navigate(direction)
+    navigate(direction, navOptionsBuilder)
 }
 
 internal fun NavDestination.navGraph(isTv: Boolean = false): NavGraphSpec {

@@ -6,7 +6,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.ui.tv.util.FocusPosition
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.film.FilmType
@@ -53,7 +52,7 @@ abstract class BaseFilmScreenViewModel(
     private val _uiState = MutableStateFlow(FilmUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _film = MutableStateFlow<Film?>(null)
+    protected val _film = MutableStateFlow<Film?>(null)
     val film = _film.asStateFlow()
 
     val watchHistoryItem = watchHistoryRepository
@@ -70,16 +69,23 @@ abstract class BaseFilmScreenViewModel(
     var selectedSeasonNumber by mutableIntStateOf(value = 1)
 
     init {
-        initializeData()
+        initializeData(
+            filmId = filmId,
+            filmType = filmType
+        )
     }
 
-    fun initializeData() {
-        if(initializeJob?.isActive == true)
+    fun initializeData(
+        filmId: Int = this.filmId,
+        filmType: FilmType = this.filmType
+    ) {
+        val isSameFilm = filmId == _film.value?.id && _uiState.value.errorMessage == null && !_uiState.value.isLoading
+
+        if(initializeJob?.isActive == true || isSameFilm)
             return
 
         initializeJob = viewModelScope.launch {
             _uiState.update { FilmUiState() }
-            _film.update { null }
 
             when(
                 val result = filmProvider(
@@ -106,6 +112,7 @@ abstract class BaseFilmScreenViewModel(
 
                     result.data?.run {
                         _film.update { this }
+                        isFilmInWatchlist()
 
                         if(filmType == FilmType.TV_SHOW) {
                             val seasonToInitialize =
@@ -117,7 +124,6 @@ abstract class BaseFilmScreenViewModel(
                     }
                 }
             }
-            isFilmInWatchlist()
         }
     }
 
@@ -154,12 +160,6 @@ abstract class BaseFilmScreenViewModel(
                     it.copy(isFilmInWatchlist = isInWatchlist)
                 }
             }
-        }
-    }
-
-    fun onLastItemFocusChange(row: Int, column: Int) {
-        _uiState.update {
-            it.copy(lastFocusedItem = FocusPosition(row, column))
         }
     }
 }

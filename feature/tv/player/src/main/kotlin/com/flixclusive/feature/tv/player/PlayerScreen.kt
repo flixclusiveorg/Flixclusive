@@ -75,19 +75,25 @@ fun PlayerScreen(
             && dialogState !is SourceDataState.Idle
         ) return@LaunchedEffect
 
-        viewModel.loadSourceData(args.episodeToPlay)
+        // TODO: UNDO THIS!
+//        viewModel.loadSourceData(
+//            episodeToWatch = args.episodeToPlay,
+//            silently = !isPlayerStarting
+//        )
     }
 
     BackHandler(
-        enabled = dialogState !is SourceDataState.Idle && isPlayerStarting
+        enabled = isPlayerStarting
     ) {
         onBack()
     }
 
-    SourceDataDialog(
-        state = dialogState,
-        onConsumeDialog = viewModel::onConsumePlayerDialog
-    )
+    if(dialogState !is SourceDataState.Idle && isPlayerStarting) {
+        SourceDataDialog(
+            state = dialogState,
+            onConsumeDialog = viewModel::onConsumePlayerDialog
+        )
+    }
 
     AnimatedVisibility(
         visible = dialogState is SourceDataState.Success && isPlayerStarting,

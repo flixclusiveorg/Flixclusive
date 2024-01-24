@@ -34,7 +34,7 @@ fun TvActivity.TvApp() {
     var isDrawerOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(currentSelectedScreen) {
-        isNavDrawerVisible = currentSelectedScreen != FilmScreenDestination
+        isNavDrawerVisible = currentSelectedScreen.route.contains(FilmScreenDestination.route, true).not()
             && currentSelectedScreen != SplashScreenDestination
     }
 
