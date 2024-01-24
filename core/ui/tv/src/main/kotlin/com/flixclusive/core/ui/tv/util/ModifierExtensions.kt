@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.log.debugLog
 
 private val DPadEventsKeyCodes = listOf(
     KeyEvent.KEYCODE_DPAD_LEFT,
@@ -160,7 +159,7 @@ fun createInitialFocusRestorerModifiers(): FocusRequesterModifiers {
 
                 if (isRestored == true) FocusRequester.Cancel
                 else if(isRestored == null) FocusRequester.Default // Fail-safe if compose tv acts up
-                 else childFocusRequester
+                else childFocusRequester
             }
         }
 

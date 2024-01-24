@@ -409,8 +409,12 @@ abstract class BasePlayerViewModel(
      * Function to load [SourceData] from a provider
      *
      * @param episodeToWatch an optional parameter for the episode to watch if film to be watched is a [TvShow]
+     * @param silently a parameter to optionally hide the [SourceDataState] dialog. This is used for tv to seamlessly watch
      */
-    fun loadSourceData(episodeToWatch: TMDBEpisode? = null) {
+    fun loadSourceData(
+        episodeToWatch: TMDBEpisode? = null,
+        silently: Boolean = false,
+    ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
             showErrorOnUiCallback(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
             return
@@ -436,7 +440,9 @@ abstract class BasePlayerViewModel(
                     resetNextEpisodeQueue()
                 }
             ).collect { state ->
-                _dialogState.update { state }
+                if(!silently) {
+                    _dialogState.update { state }
+                }
             }
         }
     }

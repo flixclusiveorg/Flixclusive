@@ -3,26 +3,31 @@ package com.flixclusive.feature.tv.film.component.episodes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
+import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import com.flixclusive.core.util.R as UtilR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -32,18 +37,10 @@ internal fun SeasonBlock(
     currentSelectedSeasonNumber: Int,
     onSeasonChange: () -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
     val isSelected =
         remember(currentSelectedSeasonNumber) { currentSelectedSeasonNumber == seasonNumber }
-    var isFocused by remember { mutableStateOf(false) }
 
-    val style = if (isSelected) {
-        MaterialTheme.typography.bodyMedium.copy(
-            fontWeight = FontWeight.Bold,
-            textDecoration = TextDecoration.Underline
-        )
-    } else {
-        MaterialTheme.typography.bodyMedium
-    }
     val focusedBorder = Border(
         border = BorderStroke(2.dp, Color.White),
         shape = RectangleShape
@@ -53,10 +50,11 @@ internal fun SeasonBlock(
         modifier = modifier
             .width(200.dp)
             .onFocusChanged {
-                isFocused = it.isFocused
-
-                if (isFocused) {
-                    onSeasonChange()
+                scope.launch {
+                    if (it.isFocused) {
+                        delay(800)
+                        onSeasonChange()
+                    }
                 }
             },
         border = ClickableSurfaceDefaults.border(
@@ -73,11 +71,24 @@ internal fun SeasonBlock(
         ),
         onClick = onSeasonChange
     ) {
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Rounded.Check,
+                contentDescription = stringResource(UtilR.string.check_indicator_content_desc),
+                modifier = Modifier.padding(start = 25.dp)
+                    .align(Alignment.CenterStart)
+            )
+        }
+
         Text(
-            text = "Season $seasonNumber",
-            style = style,
+            text = stringResource(UtilR.string.season_number_formatter, seasonNumber),
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            ),
             modifier = Modifier
                 .padding(16.dp)
+                .padding(start = 60.dp)
+                .align(Alignment.CenterStart)
         )
     }
 }

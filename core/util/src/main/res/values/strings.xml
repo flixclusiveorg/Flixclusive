@@ -252,5 +252,6 @@
     <string name="notification_persist_request_message">It seems that you\'ve blocked notification permissions. Please grant this permission.</string>
     <string name="notification_request_message">Notification permission is required for this feature to be available. Please grant this permission.</string>
     <string name="splash_notice_permissions_header">Allow Permissions</string>
+    <string name="check_indicator_content_desc">Check indicator for selected sheet item</string>
 </resources>
 

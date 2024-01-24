@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -12,6 +13,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +35,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,7 +43,7 @@ import androidx.tv.foundation.PivotOffsets
 import androidx.tv.foundation.lazy.list.TvLazyColumn
 import coil.compose.AsyncImage
 import coil.imageLoader
-import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
@@ -50,13 +53,20 @@ import com.flixclusive.core.ui.tv.component.FilmOverview
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.drawScrimOnBackground
+import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
+import com.flixclusive.core.ui.tv.util.useLocalFocusTransferredOnLaunch
+import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.feature.tv.film.component.FilmErrorSnackbar
 import com.flixclusive.feature.tv.film.component.FilmsRow
+import com.flixclusive.feature.tv.film.component.buttons.EPISODES_BUTTON_KEY
 import com.flixclusive.feature.tv.film.component.buttons.MainButtons
+import com.flixclusive.feature.tv.film.component.buttons.PLAY_BUTTON_KEY
 import com.flixclusive.feature.tv.film.component.episodes.EpisodesPanel
 import com.flixclusive.feature.tv.player.PlayerScreen
+import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
@@ -64,13 +74,19 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
+interface FilmScreenTvNavigator : GoBackAction {
+    fun openFilmScreenSeamlessly(film: Film)
+}
+
+@OptIn(ExperimentalAnimationApi::class)
 @Destination(
     navArgsDelegate = FilmScreenNavArgs::class,
     style = FadeInAndOutScreenTransition::class
 )
 @Composable
 fun FilmScreen(
-    navigator: CommonScreenNavigator
+    navigator: FilmScreenTvNavigator,
+    args: FilmScreenNavArgs
 ) {
     val viewModel = hiltViewModel<FilmScreenViewModel>()
     val context = LocalContext.current
@@ -81,34 +97,30 @@ fun FilmScreen(
     val currentSeasonSelected by viewModel.currentSeasonSelected.collectAsStateWithLifecycle()
 
     var episodeToWatch: TMDBEpisode? by remember { mutableStateOf(null) }
-    var anItemHasBeenClicked by remember { mutableStateOf(false) }
 
     var isOverviewShowing by remember { mutableStateOf(true) }
     var isPlayerRunning by remember { mutableStateOf(false) }
     var isEpisodesPanelOpen by remember { mutableStateOf(false) }
-    val shouldNotFocusOnEpisodeButton = remember { mutableStateOf(true) }
 
     var buttonsHasFocus by remember { mutableStateOf(false) }
     var collectionHasFocus by remember { mutableStateOf(false) }
     var otherFilmsHasFocus by remember { mutableStateOf(false) }
 
     val delayPlayerAnimation = 1000
-    val contentTransform = remember(isPlayerRunning) {
-        ContentTransform(
-            targetContentEnter = fadeIn() + slideInVertically(),
-            initialContentExit = slideOutVertically(
-                animationSpec = tween(
-                    delayMillis = if(isPlayerRunning) delayPlayerAnimation else 0,
-                    durationMillis = if(isPlayerRunning) delayPlayerAnimation else 300
-                )
-            ) + fadeOut(
-                animationSpec = tween(
-                    delayMillis = if(isPlayerRunning) delayPlayerAnimation else 0,
-                    durationMillis = if(isPlayerRunning) delayPlayerAnimation else 300
-                )
-            ),
+
+    val filmsRowEnterTransition = fadeIn() + slideInVertically()
+    val filmsRowExitTransition = slideOutVertically(
+        animationSpec = tween(
+            delayMillis = if (isPlayerRunning) delayPlayerAnimation else 0,
+            durationMillis = if (isPlayerRunning) delayPlayerAnimation else 300
         )
-    }
+    ) + fadeOut(
+        animationSpec = tween(
+            delayMillis = if (isPlayerRunning) delayPlayerAnimation else 0,
+            durationMillis = if (isPlayerRunning) delayPlayerAnimation else 300
+        )
+    )
+
     val backdropPath = remember(film) {
         context.buildImageUrl(
             imagePath = film?.backdropImage,
@@ -116,7 +128,7 @@ fun FilmScreen(
         )
     }
     val bottomFade = remember(buttonsHasFocus) {
-        if(buttonsHasFocus) {
+        if (buttonsHasFocus) {
             Brush.verticalGradient(
                 0.9F to Color.Red,
                 1F to Color.Transparent
@@ -135,9 +147,8 @@ fun FilmScreen(
         navigator.goBack()
     }
 
-    LaunchedEffect(isPlayerRunning) {
-        anItemHasBeenClicked = false
-    }
+    val lastItemFocusedMap = useLocalLastFocusedItemPerDestination()
+    val currentRoute = useLocalCurrentRoute()
 
     //LaunchedEffect(Unit) {
     //    isPlayerStarting = false
@@ -149,223 +160,256 @@ fun FilmScreen(
     //    isEpisodesPanelOpen = false
     //}
 
-    LaunchedEffect(Unit) {
-        anItemHasBeenClicked = false
-    }
 
-    LocalFocusTransferredOnLaunchProvider {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            AnimatedContent(
-                targetState = backdropPath,
-                transitionSpec = {
-                    ContentTransform(
-                        targetContentEnter = fadeIn(),
-                        initialContentExit = fadeOut(
-                            animationSpec = tween(
-                                delayMillis = if(isPlayerRunning) 800 else 0,
-                                durationMillis = if(isPlayerRunning) 800 else 300
-                            )
+    Box(
+        modifier = Modifier
+            .focusGroup()
+            .fillMaxSize()
+    ) {
+        AnimatedContent(
+            targetState = backdropPath,
+            transitionSpec = {
+                ContentTransform(
+                    targetContentEnter = fadeIn(),
+                    initialContentExit = fadeOut(
+                        animationSpec = tween(
+                            delayMillis = if (isPlayerRunning) 800 else 0,
+                            durationMillis = if (isPlayerRunning) 800 else 300
                         )
                     )
-                },
-                label = "",
-                modifier = Modifier.padding(start = useLocalDrawerWidth())
+                )
+            },
+            label = "",
+            modifier = Modifier.padding(start = useLocalDrawerWidth())
+        ) {
+            Box(
+                modifier = Modifier
+                    .drawScrimOnBackground(),
             ) {
                 Box(
                     modifier = Modifier
-                        .drawScrimOnBackground(),
+                        .fillMaxWidth()
+                        .background(Color.Black)
                 ) {
-                    Box(
+                    AsyncImage(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.Black)
-                    ) {
-                        AsyncImage(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .height(400.dp),
-                            model = it,
-                            imageLoader = LocalContext.current.imageLoader,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop
-                        )
-                    }
+                            .align(Alignment.TopEnd)
+                            .height(400.dp),
+                        model = it,
+                        imageLoader = LocalContext.current.imageLoader,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop
+                    )
                 }
             }
+        }
 
-            TvLazyColumn(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .fadingEdge(bottomFade),
-                pivotOffsets = PivotOffsets(
-                    parentFraction = if (collectionHasFocus || otherFilmsHasFocus) 0.4F else 0.8F
-                ),
-                contentPadding = PaddingValues(top = 35.dp, bottom = 35.dp)
-            ) {
-                item {
-                    AnimatedVisibility(
-                        visible = isOverviewShowing && film != null,
-                        enter = fadeIn() + slideInHorizontally(),
-                        exit = slideOutHorizontally() + fadeOut(),
-                        label = "",
-                        modifier = Modifier.padding(
-                            start = useLocalDrawerWidth(),
-                            bottom = 55.dp
-                        )
-                    ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(35.dp),
-                            modifier = Modifier.onFocusChanged {
-                                buttonsHasFocus = it.hasFocus
-                            }
-                        ) {
-                            FilmOverview(
-                                film = film!!,
-                                shouldEllipsize = false
-                            )
+        AnimatedVisibility(
+            visible = isOverviewShowing && !isPlayerRunning && !isEpisodesPanelOpen,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            label = ""
+        ) {
+            LocalFocusTransferredOnLaunchProvider {
+                val isInitialLaunchTransferred = useLocalFocusTransferredOnLaunch()
 
-                            MainButtons(
-                                watchHistoryItem = watchHistoryItem,
-                                isInWatchlist = uiState.isFilmInWatchlist,
-                                isTvShow = film!!.filmType == FilmType.TV_SHOW,
-                                shouldFocusOnPlayButton = !anItemHasBeenClicked && uiState.lastFocusedItem == null,
-                                shouldFocusOnEpisodesButton = shouldNotFocusOnEpisodeButton,
-                                onPlay = {
-                                    isPlayerRunning = true
-                                    isOverviewShowing = false
-                                },
-                                onWatchlistClick = viewModel::onWatchlistButtonClick,
-                                onSeeMoreEpisodes = {
-                                    isEpisodesPanelOpen = true
-                                    isOverviewShowing = false
-                                }
-                            )
-                        }
+                DisposableEffect(LocalLifecycleOwner.current) {
+                    viewModel.initializeData(
+                        filmId = args.film.id,
+                        filmType = args.film.filmType
+                    )
+
+                    lastItemFocusedMap.getOrPut(currentRoute) {
+                        PLAY_BUTTON_KEY
+                    }
+
+                    onDispose {
+                        lastItemFocusedMap.remove(currentRoute)
+                        isInitialLaunchTransferred.value = false
                     }
                 }
 
-                if(isOverviewShowing) {
-                    if (film is Movie) {
-                        item {
-                            AnimatedContent(
-                                targetState = film,
-                                transitionSpec = { contentTransform },
-                                label = ""
-                            ) { film ->
-                                (film as Movie).collection?.let { collection ->
-                                    val rowIndex = 1
-                                    Box(
-                                        modifier = Modifier.padding(bottom = 25.dp)
-                                    ) {
-                                        FilmsRow(
-                                            films = collection.films,
-                                            hasFocus = collectionHasFocus,
-                                            label = UiText.StringValue(collection.collectionName),
-                                            iconId = UiCommonR.drawable.round_library,
-                                            currentFilm = film,
-                                            lastFocusedItem = uiState.lastFocusedItem,
-                                            anItemHasBeenClicked = anItemHasBeenClicked,
-                                            rowIndex = rowIndex,
-                                            onFocusChange = {
-                                                collectionHasFocus = it
-                                            },
-                                            onFilmClick = { columnIndex, film ->
-                                                viewModel.onLastItemFocusChange(rowIndex, columnIndex)
-                                                anItemHasBeenClicked = true
-                                                navigator.openFilmScreen(film)
-                                            }
+                TvLazyColumn(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .fadingEdge(bottomFade),
+                    pivotOffsets = PivotOffsets(
+                        parentFraction = if (collectionHasFocus || otherFilmsHasFocus) 0.4F else 0.8F
+                    ),
+                    contentPadding = PaddingValues(top = 35.dp, bottom = 35.dp),
+                ) {
+                    item {
+                        if (film != null) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(35.dp),
+                                modifier = Modifier
+                                    .padding(
+                                        start = useLocalDrawerWidth(),
+                                        bottom = 55.dp
+                                    )
+                                    .animateEnterExit(
+                                        enter = slideInHorizontally(),
+                                        exit = slideOutHorizontally()
+                                    )
+                                    .onFocusChanged { buttonsHasFocus = it.hasFocus }
+                            ) {
+                                AnimatedContent(
+                                    targetState = film!!,
+                                    transitionSpec = {
+                                        ContentTransform(
+                                            targetContentEnter = fadeIn(),
+                                            initialContentExit = fadeOut(),
                                         )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if(film?.recommendedTitles?.isNotEmpty() == true) {
-                        item {
-                            AnimatedContent(
-                                targetState = film!!.recommendedTitles,
-                                transitionSpec = { contentTransform },
-                                label = ""
-                            ) { films ->
-                                val rowIndex = 2
-
-                                FilmsRow(
-                                    films = films,
-                                    hasFocus = otherFilmsHasFocus,
-                                    label = UiText.StringResource(UtilR.string.other_films_message),
-                                    iconId = R.drawable.round_dashboard_24,
-                                    currentFilm = film!!,
-                                    lastFocusedItem = uiState.lastFocusedItem,
-                                    anItemHasBeenClicked = anItemHasBeenClicked,
-                                    rowIndex = rowIndex,
-                                    onFocusChange = {
-                                        otherFilmsHasFocus = it
                                     },
-                                    onFilmClick = { columnIndex, film ->
-                                        viewModel.onLastItemFocusChange(rowIndex, columnIndex)
-                                        anItemHasBeenClicked = true
-                                        navigator.openFilmScreen(film)
+                                    label = ""
+                                ) {
+                                    FilmOverview(
+                                        film = it,
+                                        shouldEllipsize = false
+                                    )
+                                }
+
+                                MainButtons(
+                                    watchHistoryItem = watchHistoryItem,
+                                    isInWatchlist = uiState.isFilmInWatchlist,
+                                    isTvShow = film?.filmType == FilmType.TV_SHOW,
+                                    onPlay = {
+                                        isPlayerRunning = true
+                                        isOverviewShowing = false
+                                    },
+                                    onWatchlistClick = viewModel::onWatchlistButtonClick,
+                                    onSeeMoreEpisodes = {
+                                        isEpisodesPanelOpen = true
+                                        isOverviewShowing = false
                                     }
                                 )
                             }
                         }
                     }
 
-                    items(10) {
+                    if (film?.filmType == FilmType.MOVIE) {
+                        item {
+                            (film as Movie).collection?.let {
+                                Box(
+                                    modifier = Modifier
+                                        .padding(bottom = 25.dp)
+                                        .animateEnterExit(
+                                            enter = filmsRowEnterTransition,
+                                            exit = filmsRowExitTransition
+                                        )
+                                ) {
+                                    FilmsRow(
+                                        films = it.films,
+                                        hasFocus = collectionHasFocus,
+                                        label = UiText.StringValue(it.collectionName),
+                                        iconId = UiCommonR.drawable.round_library,
+                                        currentFilm = film as Movie,
+                                        onFocusChange = {
+                                            collectionHasFocus = it
+                                        },
+                                        onFilmClick = { newFilm ->
+                                            viewModel.initializeData(
+                                                filmId = newFilm.id,
+                                                filmType = newFilm.filmType
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (film?.recommendedTitles?.isNotEmpty() == true) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .animateEnterExit(
+                                        enter = filmsRowEnterTransition,
+                                        exit = filmsRowExitTransition
+                                    )
+                            ) {
+                                FilmsRow(
+                                    films = film!!.recommendedTitles,
+                                    hasFocus = otherFilmsHasFocus,
+                                    label = UiText.StringResource(UtilR.string.other_films_message),
+                                    iconId = R.drawable.round_dashboard_24,
+                                    currentFilm = film!!,
+                                    onFocusChange = {
+                                        otherFilmsHasFocus = it
+                                    },
+                                    onFilmClick = navigator::openFilmScreenSeamlessly
+                                )
+                            }
+                        }
+                    }
+
+                    items(2) {
                         NonFocusableSpacer(height = 50.dp)
                     }
                 }
             }
 
-            if(film is TvShow) {
-                EpisodesPanel(
-                    isVisible = isEpisodesPanelOpen,
-                    film = film as TvShow,
-                    currentSelectedSeasonNumber = viewModel.selectedSeasonNumber,
-                    currentSelectedSeason = currentSeasonSelected,
-                    onSeasonChange = {
-                        if(it != viewModel.selectedSeasonNumber) {
-                            viewModel.onSeasonChange(it)
-                        }
-                    },
-                    onEpisodeClick = {
-                        episodeToWatch = it
-                        isPlayerRunning = true
-                    },
-                    onHidePanel = {
-                        shouldNotFocusOnEpisodeButton.value = false
-                        isEpisodesPanelOpen = false
-                        isOverviewShowing = true
-                    }
-                )
-            }
+            FilmErrorSnackbar(errorMessage = viewModel.errorSnackBarMessage)
+        }
+    }
 
-            AnimatedContent(
-                targetState = film,
-                transitionSpec = {
-                    ContentTransform(
-                        targetContentEnter = fadeIn(),
-                        initialContentExit = fadeOut()
-                    )
-                },
-                label = "",
-                modifier = Modifier.align(Alignment.Center)
-            ) { item ->
-                item?.let {
-                    PlayerScreen(
-                        args = PlayerScreenNavArgs(film = it, episodeToPlay = episodeToWatch),
-                        isPlayerStarting = isPlayerRunning,
-                        onBack = {
-                            isPlayerRunning = false
 
-                            if(!isEpisodesPanelOpen)
-                                isOverviewShowing = true
+    if (film is TvShow) {
+        AnimatedVisibility(
+            visible = isEpisodesPanelOpen && !isPlayerRunning && !isOverviewShowing,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            LocalFocusTransferredOnLaunchProvider {
+                Box(
+                    modifier = Modifier
+                        .focusGroup()
+                        .fillMaxSize()
+                ) {
+                    EpisodesPanel(
+                        film = film as TvShow,
+                        currentSelectedSeasonNumber = viewModel.selectedSeasonNumber,
+                        currentSelectedSeason = currentSeasonSelected,
+                        onSeasonChange = {
+                            if (it != viewModel.selectedSeasonNumber) {
+                                viewModel.onSeasonChange(it)
+                            }
+                        },
+                        onEpisodeClick = {
+                            episodeToWatch = it
+                            isPlayerRunning = true
+                        },
+                        onHidePanel = {
+                            isEpisodesPanelOpen = false
+                            isOverviewShowing = true
+
+                            // Focus on episode button.
+                            lastItemFocusedMap[currentRoute] = EPISODES_BUTTON_KEY
                         }
                     )
                 }
+            }
+        }
+    }
+
+    LocalFocusTransferredOnLaunchProvider {
+        Box(
+            modifier = Modifier
+                .focusGroup()
+                .fillMaxSize()
+        ) {
+            film?.let {
+                PlayerScreen(
+                    args = PlayerScreenNavArgs(
+                        film = it,
+                        episodeToPlay = episodeToWatch
+                    ),
+                    isPlayerStarting = isPlayerRunning,
+                    onBack = {
+                        isPlayerRunning = false
+                        isOverviewShowing = true
+                    }
+                )
             }
         }
     }

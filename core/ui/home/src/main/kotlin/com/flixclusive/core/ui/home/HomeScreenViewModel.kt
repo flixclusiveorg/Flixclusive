@@ -97,8 +97,6 @@ class HomeScreenViewModel @Inject constructor(
     fun onPaginateCategories() {
         viewModelScope.launch {
             itemsSize += homeCategories.first().size
-
-            debugLog("Size = ${homeCategories.first().size}")
         }
     }
 
