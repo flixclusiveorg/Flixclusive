@@ -169,6 +169,7 @@
     <string name="no_available_sources">No available source providers!</string>
     <string name="offline_message">You\'re offline</string>
     <string name="online_message">Back online</string>
+    <string name="skip_loading_message">Player can be played now!</string>
     <string name="source_data_dialog_state_error_default">Could not initialize video player!</string>
     <string name="source_data_dialog_state_extracting">Extracting video data…</string>
     <string name="source_data_dialog_state_fetching">Fetching video data…</string>

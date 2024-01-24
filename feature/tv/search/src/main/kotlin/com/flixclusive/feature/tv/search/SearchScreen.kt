@@ -30,7 +30,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.ui.tv.FilmCard
+import com.flixclusive.core.ui.tv.component.FilmCard
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.shouldPaginate

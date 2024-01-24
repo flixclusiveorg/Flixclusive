@@ -21,7 +21,7 @@ import androidx.tv.foundation.lazy.list.rememberTvLazyListState
 import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.home.HomeScreenViewModel
-import com.flixclusive.core.ui.tv.NonFocusableSpacer
+import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.shouldPaginate
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute

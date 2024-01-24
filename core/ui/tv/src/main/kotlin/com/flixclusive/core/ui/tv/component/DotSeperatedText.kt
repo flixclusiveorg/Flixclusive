@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.tv
+package com.flixclusive.core.ui.tv.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

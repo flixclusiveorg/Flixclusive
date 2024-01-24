@@ -20,9 +20,9 @@ import androidx.tv.foundation.lazy.list.rememberTvLazyListState
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.flixclusive.core.ui.tv.FilmCard
-import com.flixclusive.core.ui.tv.FilmCardHeight
-import com.flixclusive.core.ui.tv.FilmPadding
+import com.flixclusive.core.ui.tv.component.FilmCard
+import com.flixclusive.core.ui.tv.component.FilmCardHeight
+import com.flixclusive.core.ui.tv.component.FilmPadding
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.createDefaultFocusRestorerModifier
 import com.flixclusive.core.ui.tv.util.focusOnMount

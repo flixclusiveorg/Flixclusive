@@ -143,7 +143,7 @@ private fun SourceDataDialogContent(
             exit = fadeOut()
         ){
             Button(onClick = onSkipExtractingPhase) {
-                Text(text = "Player can be played now!")
+                Text(text = stringResource(id = UtilR.string.skip_loading_message))
             }
         }
     }

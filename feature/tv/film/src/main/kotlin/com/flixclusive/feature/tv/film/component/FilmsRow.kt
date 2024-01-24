@@ -43,9 +43,9 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.tv.FilmCard
-import com.flixclusive.core.ui.tv.FilmCardShape
-import com.flixclusive.core.ui.tv.NonFocusableSpacer
+import com.flixclusive.core.ui.tv.component.FilmCard
+import com.flixclusive.core.ui.tv.component.FilmCardShape
+import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.FocusPosition
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
