@@ -43,7 +43,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.tv.NonFocusableSpacer
+import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.focusOnMount

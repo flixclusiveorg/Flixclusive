@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.tv
+package com.flixclusive.core.ui.tv.component
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height

@@ -34,7 +34,7 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.LifecycleAwarePlayer
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.LocalPlayerManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.ObserveNewLinksAndSubtitles
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatPlayerTitle
-import com.flixclusive.core.ui.tv.SourceDataDialog
+import com.flixclusive.core.ui.tv.component.SourceDataDialog
 import com.flixclusive.core.ui.tv.util.handleDPadKeyEvents
 import com.flixclusive.core.ui.tv.util.provideLocalDirectionalFocusRequester
 import com.flixclusive.core.util.android.getActivity

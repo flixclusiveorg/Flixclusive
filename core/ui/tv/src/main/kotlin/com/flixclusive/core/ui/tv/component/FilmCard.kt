@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalTvMaterial3Api::class)
 
-package com.flixclusive.core.ui.tv
+package com.flixclusive.core.ui.tv.component
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.VectorConverter

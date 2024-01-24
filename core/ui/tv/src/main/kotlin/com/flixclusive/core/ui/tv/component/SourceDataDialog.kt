@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.tv
+package com.flixclusive.core.ui.tv.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.tv.material3.Button
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
@@ -64,74 +65,89 @@ private fun SourceDataDialogContent(
     canSkipExtractingPhase: Boolean = false,
     onSkipExtractingPhase: () -> Unit = {},
 ) {
-    Surface(
-        tonalElevation = 2.dp,
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
-            .sizeIn(
-                minHeight = 250.dp,
-                minWidth = 250.dp
-            )
+    Column(
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier.padding(16.dp),
-            contentAlignment = Alignment.Center
+        Surface(
+            tonalElevation = 2.dp,
+            modifier = Modifier
+                .sizeIn(
+                    minHeight = 250.dp,
+                    minWidth = 250.dp
+                ),
+            shape = MaterialTheme.shapes.large,
         ) {
-            AnimatedVisibility(
-                visible = state !is SourceDataState.Error && state !is SourceDataState.Unavailable,
-                enter = fadeIn(),
-                exit = fadeOut()
+            Box(
+                modifier = Modifier.matchParentSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
-                    modifier = Modifier.matchParentSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(30.dp)
+                this@Column.AnimatedVisibility(
+                    visible = state !is SourceDataState.Error && state !is SourceDataState.Unavailable,
+                    enter = fadeIn(),
+                    exit = fadeOut()
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(30.dp)
                     ) {
-                        GradientCircularProgressIndicator(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.tertiary
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            GradientCircularProgressIndicator(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.tertiary,
+                                )
                             )
+                        }
+
+                        Text(
+                            text = state.message.asString(),
+                            style = MaterialTheme.typography.labelLarge
                         )
                     }
+                }
 
-                    Text(
-                        text = state.message.asString(),
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                this@Column.AnimatedVisibility(
+                    visible = state is SourceDataState.Error || state is SourceDataState.Unavailable,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Column(
+                        modifier = Modifier.matchParentSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(30.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = UiCommonR.drawable.round_error_outline_24),
+                            contentDescription = stringResource(id = UtilR.string.error_icon_content_desc),
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier
+                                .size(80.dp)
+                                .padding(bottom = 15.dp)
+                        )
+
+                        Text(
+                            text = state.message.asString(),
+                            style = MaterialTheme.typography.labelLarge,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
+        }
 
-            AnimatedVisibility(
-                visible = state is SourceDataState.Error || state is SourceDataState.Unavailable,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                Column(
-                    modifier = Modifier.matchParentSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(30.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = UiCommonR.drawable.round_error_outline_24),
-                        contentDescription = stringResource(id = UtilR.string.error_icon_content_desc),
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .size(80.dp)
-                            .padding(bottom = 15.dp)
-                    )
-
-                    Text(
-                        text = state.message.asString(),
-                        style = MaterialTheme.typography.labelLarge,
-                        textAlign = TextAlign.Center
-                    )
-                }
+        AnimatedVisibility(
+            visible = canSkipExtractingPhase,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ){
+            Button(onClick = onSkipExtractingPhase) {
+                Text(text = stringResource(id = UtilR.string.skip_loading_message))
             }
         }
     }
@@ -158,7 +174,7 @@ fun VideoPlayerDialogPreview() {
 //        emit(SourceDataState.Idle)
 //    }.collectAsStateWithLifecycle(initialValue = SourceDataState.Idle)
 
-    FlixclusiveTheme {
+    FlixclusiveTheme(isTv = true) {
         Box(
             modifier = Modifier
                 .background(Color.White)

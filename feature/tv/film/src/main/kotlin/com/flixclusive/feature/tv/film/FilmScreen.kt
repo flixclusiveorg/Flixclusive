@@ -46,8 +46,8 @@ import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.tv.FadeInAndOutScreenTransition
-import com.flixclusive.core.ui.tv.FilmOverview
-import com.flixclusive.core.ui.tv.NonFocusableSpacer
+import com.flixclusive.core.ui.tv.component.FilmOverview
+import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.drawScrimOnBackground
 import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
