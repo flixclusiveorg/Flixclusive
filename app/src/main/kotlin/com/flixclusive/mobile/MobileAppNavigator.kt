@@ -2,7 +2,6 @@ package com.flixclusive.mobile
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import com.flixclusive.MobileNavGraphs
 import com.flixclusive.core.ui.common.navigation.UpdateDialogNavigator
 import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
 import com.flixclusive.feature.mobile.film.FilmScreenNavigator
@@ -18,10 +17,10 @@ import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
 import com.flixclusive.feature.mobile.settings.destinations.SettingsScreenDestination
-import com.flixclusive.feature.mobile.splashScreen.SplashScreenNavigator
 import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
+import com.flixclusive.feature.splashScreen.SplashScreenNavigator
 import com.flixclusive.model.configuration.CategoryItem
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Genre
@@ -36,8 +35,7 @@ internal class MobileAppNavigator(
     private val destination: NavDestination,
     private val navController: NavController,
     private val closeApp: () -> Unit,
-) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator, FilmScreenNavigator, SplashScreenNavigator,
-    PlayerScreenNavigator {
+) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator, FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator {
 
     override fun goBack() {
         navController.navigateUp()

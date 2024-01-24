@@ -6,21 +6,20 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.ui.tv.util.FocusPosition
 import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.data.util.InternetMonitor
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.model.database.util.filterWatchedFilms
+import com.flixclusive.model.tmdb.Film
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -49,9 +48,6 @@ class HomeScreenViewModel @Inject constructor(
     val homeRowItemsPagingState = homeItemsProviderUseCase.rowItemsPagingState
 
     val uiState = homeItemsProviderUseCase.initializationStatus
-
-    private val _lastFocusedItem = MutableStateFlow(FocusPosition(0, 0))
-    val lastFocusedItem = _lastFocusedItem.asStateFlow()
 
     private val connectionObserver = internetMonitor
         .isOnline
@@ -82,6 +78,8 @@ class HomeScreenViewModel @Inject constructor(
                 .onEach { (isConnected, status) ->
                     if (isConnected && status is Resource.Failure || status is Resource.Loading) {
                         initialize()
+                    } else if(status is Resource.Success) {
+                        onPaginateCategories()
                     }
                 }
                 .collect()
@@ -92,21 +90,16 @@ class HomeScreenViewModel @Inject constructor(
         homeItemsProviderUseCase()
     }
 
-    /**
-     *
-     * Used for Android TV compose focus properties
-     * */
-    fun onLastItemFocusChange(row: Int, column: Int) {
-        _lastFocusedItem.update {
-            it.copy(
-                row = row,
-                column = column
-            )
-        }
+    suspend fun loadFocusedFilm(film: Film) {
+        homeItemsProviderUseCase.getFocusedFilm(film)
     }
 
     fun onPaginateCategories() {
-        itemsSize += homeCategories.value.size
+        viewModelScope.launch {
+            itemsSize += homeCategories.first().size
+
+            debugLog("Size = ${homeCategories.first().size}")
+        }
     }
 
     fun onPaginateFilms(

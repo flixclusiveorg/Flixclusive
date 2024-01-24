@@ -27,7 +27,7 @@ internal class CrashActivity : ComponentActivity() {
 
         setContent {
             FlixclusiveTheme(isTv = isTv) {
-                if(!isTv) {
+                // if(!isTv) {
                     CrashMobileScreen(
                         softwareInfo = softwareInfo,
                         errorMessage = errorMessage,
@@ -42,7 +42,7 @@ internal class CrashActivity : ComponentActivity() {
                             )
                         }
                     )
-                }
+                // }
             }
         }
     }

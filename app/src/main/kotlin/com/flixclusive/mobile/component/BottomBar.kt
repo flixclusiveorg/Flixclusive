@@ -40,8 +40,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.flixclusive.AppNavigationItem
-import com.flixclusive.MobileNavGraphs
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.mobile.MobileNavGraphs
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
@@ -116,7 +116,7 @@ private fun CustomNavItem(
                 onClick = onClick,
                 role = Role.Button,
                 interactionSource = interactionSource,
-                indication = null
+                indication = null,
             ),
         verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally

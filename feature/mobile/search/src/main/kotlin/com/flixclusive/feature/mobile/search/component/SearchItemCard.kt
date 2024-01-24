@@ -24,7 +24,7 @@ import com.flixclusive.core.theme.lightGrayElevated
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 
 
 @Composable

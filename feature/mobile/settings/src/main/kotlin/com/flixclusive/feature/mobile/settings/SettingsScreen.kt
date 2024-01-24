@@ -47,7 +47,7 @@ import com.flixclusive.core.ui.common.TopBarWithBackButton
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
-import com.flixclusive.core.util.activity.getDirectorySize
+import com.flixclusive.core.util.android.getDirectorySize
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.settings.component.SettingsGroup
 import com.flixclusive.feature.mobile.settings.component.dialog.advanced.AdvancedDialogWrapper

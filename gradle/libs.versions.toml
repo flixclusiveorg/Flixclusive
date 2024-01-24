@@ -21,7 +21,7 @@ androidxTestRules = "1.5.0"
 androidxTestRunner = "1.5.2"
 appcompat = "1.6.1"
 coil = "2.5.0"
-compose = "1.6.0-alpha04"
+compose = "1.6.0-alpha07"
 composeDestinations = "1.9.53"
 conscrypt = "2.5.2"
 constraintLayout = "1.0.1"
@@ -76,6 +76,7 @@ compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 compose-material3-windowSizeClass = { group = "androidx.compose.material3", name = "material3-window-size-class" }
 compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui-alpha = { group = "androidx.compose.ui", name = "ui", version.ref = "compose" }
 compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 compose-ui-test = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }

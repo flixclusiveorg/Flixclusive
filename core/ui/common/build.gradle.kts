@@ -11,6 +11,7 @@ android {
 dependencies {
     api(projects.core.theme)
     api(projects.core.util)
+    implementation(projects.model.database)
     implementation(projects.model.provider)
     implementation(projects.model.tmdb)
 

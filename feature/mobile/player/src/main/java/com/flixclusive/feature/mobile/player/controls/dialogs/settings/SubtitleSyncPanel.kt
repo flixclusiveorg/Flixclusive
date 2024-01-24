@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.applyDropShadow
 import com.flixclusive.core.ui.common.util.createTextFieldValue
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR

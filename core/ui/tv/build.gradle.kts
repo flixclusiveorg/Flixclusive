@@ -11,6 +11,7 @@ android {
 dependencies {
     api(projects.core.ui.common)
     api(projects.core.util)
+    implementation(projects.model.tmdb)
     implementation(projects.model.provider)
 
     implementation(libs.coil.compose)
@@ -20,4 +21,5 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling)
     implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.destinations.animations)
 }
