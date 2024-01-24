@@ -20,11 +20,13 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import com.flixclusive.MobileNavGraphs
 import com.flixclusive.ROOT
 import com.flixclusive.mobile.MobileAppNavigator
+import com.flixclusive.mobile.MobileNavGraphs
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.tv.TvAppNavigator
+import com.flixclusive.tv.TvNavGraphs
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.defaults.RootNavGraphDefaultAnimations
@@ -63,11 +65,12 @@ internal fun NavController.navigateIfResumed(direction: Direction) {
 
 internal fun NavDestination.navGraph(isTv: Boolean = false): NavGraphSpec {
     hierarchy.forEach { destination ->
-        if (!isTv) {
-            MobileNavGraphs.root.nestedNavGraphs.forEach { navGraph ->
-                if (destination.route == navGraph.route) {
-                    return navGraph
-                }
+        when (isTv) {
+            true -> TvNavGraphs.root
+            else -> MobileNavGraphs.root
+        }.nestedNavGraphs.forEach { navGraph ->
+            if (destination.route == navGraph.route) {
+                return navGraph
             }
         }
     }
@@ -108,9 +111,9 @@ internal fun NavController.currentScreenAsState(
 internal fun AppNavHost(
     navController: NavHostController,
     isTv: Boolean = false,
-    previewFilm: (Film) -> Unit,
-    play: (Film, TMDBEpisode?) -> Unit,
     closeApp: () -> Unit,
+    previewFilm: (Film) -> Unit = {},
+    play: (Film, TMDBEpisode?) -> Unit = { _, _ -> },
 ) {
     DestinationsNavHost(
         engine = rememberAnimatedNavHostEngine(
@@ -122,18 +125,27 @@ internal fun AppNavHost(
             )
         ),
         navController = navController,
-        navGraph = MobileNavGraphs.root,
+        navGraph = if (isTv) TvNavGraphs.root else MobileNavGraphs.root,
         dependenciesContainerBuilder = {
-            dependency(
-                MobileAppNavigator(
-                    destination = navBackStackEntry.destination,
-                    navController = navController,
-                    closeApp = closeApp
+            if (isTv) {
+                dependency(
+                    TvAppNavigator(
+                        destination = navBackStackEntry.destination,
+                        navController = navController,
+                        closeApp = closeApp
+                    )
                 )
-            )
-
-            dependency(previewFilm)
-            dependency(play)
+            } else {
+                dependency(previewFilm)
+                dependency(play)
+                dependency(
+                    MobileAppNavigator(
+                        destination = navBackStackEntry.destination,
+                        navController = navController,
+                        closeApp = closeApp
+                    )
+                )
+            }
         }
     )
 }

@@ -9,7 +9,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -43,29 +42,10 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
-
-data class FocusPosition(
-    val row: Int,
-    val column: Int
-)
-
-data class Padding(
-    val start: Dp = 0.dp,
-    val top: Dp = 0.dp,
-    val end: Dp = 0.dp,
-    val bottom: Dp = 0.dp
-) {
-    constructor(all: Dp) : this(
-        all, all, all, all
-    )
-
-    fun getPaddingValues() = PaddingValues(start, top, end, bottom)
-}
-
-val LabelStartPadding = Padding(start = 16.dp)
+import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.log.debugLog
 
 private val DPadEventsKeyCodes = listOf(
     KeyEvent.KEYCODE_DPAD_LEFT,
@@ -173,8 +153,14 @@ fun createInitialFocusRestorerModifiers(): FocusRequesterModifiers {
                 FocusRequester.Default
             }
             enter = {
-                if (focusRequester.restoreFocusedChild()) FocusRequester.Cancel
-                else childFocusRequester
+                // Safe call because this one's still bugged.
+                val isRestored = safeCall {
+                    focusRequester.restoreFocusedChild()
+                }
+
+                if (isRestored == true) FocusRequester.Cancel
+                else if(isRestored == null) FocusRequester.Default // Fail-safe if compose tv acts up
+                 else childFocusRequester
             }
         }
 
@@ -185,6 +171,39 @@ fun createInitialFocusRestorerModifiers(): FocusRequesterModifiers {
         childModifier = childModifier
     )
 }
+
+
+/**
+ * A workaround for compose tv 1.0.0-alpha09/10 weird bug.
+ * Use this until the bug is fixed lol.
+ *
+ * @see createInitialFocusRestorerModifiers
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun createDefaultFocusRestorerModifier(): Modifier {
+    val focusRequester = remember { FocusRequester() }
+
+    return Modifier
+        .focusRequester(focusRequester)
+        .focusProperties {
+            exit = {
+                focusRequester.saveFocusedChild()
+                FocusRequester.Default
+            }
+            enter = {
+                // Safe call because this one's still bugged.
+                val isRestored = safeCall {
+                    focusRequester.restoreFocusedChild()
+                }
+
+                if (isRestored == true) FocusRequester.Cancel
+                else FocusRequester.Default
+            }
+        }
+}
+
+
 
 /**
  * This modifier can be used to gain focus on a focusable component when it becomes visible
@@ -205,6 +224,7 @@ fun Modifier.focusOnInitialVisibility(
         }
 }
 
+@OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun Modifier.drawScrimOnBackground(
     gradientColor: Color = MaterialTheme.colorScheme.surface
@@ -323,27 +343,30 @@ fun getGlowRadialGradient(
 
 @Composable
 fun Modifier.focusOnMount(
-    lastFocusPosition: FocusPosition,
-    currentFocusPosition: FocusPosition,
-    anItemHasBeenFocused: Boolean,
-    onFocus: () -> Unit
+    itemKey: String,
+    onFocus: (() -> Unit)? = null
 ): Modifier {
+    val isInitialFocusTransferred = useLocalFocusTransferredOnLaunch()
+    val lastFocusedItemPerDestination = useLocalLastFocusedItemPerDestination()
+    val currentRoute = useLocalCurrentRoute()
+
     val focusRequester = remember { FocusRequester() }
 
     return this
         .focusRequester(focusRequester)
         .onGloballyPositioned {
-            val shouldFocusThisItem = lastFocusPosition.row == currentFocusPosition.row
-                    && lastFocusPosition.column == currentFocusPosition.column
-                    && !anItemHasBeenFocused
+            val lastFocusedKey = lastFocusedItemPerDestination[currentRoute]
 
-            if (shouldFocusThisItem) {
+            if (!isInitialFocusTransferred.value && lastFocusedKey == itemKey) {
                 focusRequester.requestFocus()
+                isInitialFocusTransferred.value = true
             }
         }
         .onFocusChanged {
             if (it.isFocused) {
-                onFocus()
+                onFocus?.invoke()
+                lastFocusedItemPerDestination[currentRoute] = itemKey
+                isInitialFocusTransferred.value = true
             }
         }
 }

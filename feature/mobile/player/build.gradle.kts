@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling)
     implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.ui.util)
     implementation(libs.lifecycle.runtimeCompose)
     implementation(libs.media3.cast)
     implementation(libs.media3.common)

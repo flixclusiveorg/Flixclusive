@@ -23,7 +23,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
-import com.flixclusive.MobileNavGraphs
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
 import com.flixclusive.core.ui.mobile.component.SourceDataDialog
@@ -31,8 +30,8 @@ import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
-import com.flixclusive.feature.mobile.splashScreen.destinations.SplashScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
+import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
 import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.FilmCoverPreview
 import com.flixclusive.mobile.component.FilmPreviewBottomSheet

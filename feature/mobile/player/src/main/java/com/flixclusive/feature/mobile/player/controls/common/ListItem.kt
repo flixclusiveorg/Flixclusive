@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.applyDropShadow
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.common.resource.Resource
 
 @Composable

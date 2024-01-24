@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.film.component
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,7 +34,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -48,8 +46,9 @@ import coil.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.theme.starColor
 import com.flixclusive.core.ui.common.util.buildImageUrl
+import com.flixclusive.core.ui.common.util.formatTvRuntime
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.GenreButton
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
 import com.flixclusive.core.util.film.formatMinutes
 import com.flixclusive.core.util.film.formatRating
 import com.flixclusive.feature.mobile.film.R
@@ -57,38 +56,6 @@ import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Genre
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.core.util.R as UtilR
-
-private fun AnnotatedString.Builder.formatTvRuntime(
-    context: Context,
-    show: TvShow,
-    separator: String = " | "
-) {
-    context.run {
-        show.run {
-            if (runtime != null) {
-                append(separator)
-                append(formatMinutes(runtime).asString(context))
-            }
-
-            if(totalSeasons > 0) {
-                append(separator)
-                append(getString(UtilR.string.season_runtime_formatter, totalSeasons))
-
-                if(totalSeasons > 1)
-                    append("s")
-            }
-
-
-            if(totalEpisodes > 0) {
-                append(separator)
-                append(getString(UtilR.string.episode_runtime_formatter, totalEpisodes))
-
-                if(totalEpisodes > 1)
-                    append("s")
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -195,17 +162,20 @@ internal fun FilmScreenHeader(
                             append(formatRating(film.rating).asString(context))
 
                             if(film is TvShow) {
-                                formatTvRuntime(
-                                    context = context,
-                                    show = film,
-                                    separator = separator
+                                append(separator)
+                                append(
+                                    formatTvRuntime(
+                                        context = context,
+                                        show = film,
+                                        separator = separator
+                                    )
                                 )
                             } else {
                                 append(separator)
                                 append(formatMinutes(film.runtime).asString(context))
+                                append(separator)
                             }
 
-                            append(separator)
                             append(film.dateReleased)
                         }
                     },
