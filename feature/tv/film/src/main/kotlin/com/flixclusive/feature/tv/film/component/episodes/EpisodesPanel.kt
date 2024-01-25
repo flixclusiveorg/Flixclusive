@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +39,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.tv.FilmLogo
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.focusOnMount
@@ -109,12 +111,9 @@ internal fun EpisodesPanel(
             .background(MaterialTheme.colorScheme.surface.onMediumEmphasis()),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        TvLazyColumn(
-            pivotOffsets = PivotOffsets(0.16F),
-            contentPadding = PaddingValues(top = LabelStartPadding.start),
+        Box(
             modifier = Modifier
-                .padding(start = 100.dp, top = 100.dp)
-                .fadingEdge(topFade)
+                .padding(start = 100.dp, top = 50.dp)
                 .onKeyEvent {
                     if (hasPressedLeft(it) && isEpisodesTabFullyFocused) {
                         onHidePanel()
@@ -124,36 +123,52 @@ internal fun EpisodesPanel(
                     false
                 }
         ) {
-            item {
-                NonFocusableSpacer(height = 40.dp)
+            TvLazyColumn(
+                pivotOffsets = PivotOffsets(0.16F),
+                contentPadding = PaddingValues(top = LabelStartPadding.start),
+                modifier = Modifier
+                    .padding(top = 80.dp)
+                    .fadingEdge(topFade)
+                    .align(Alignment.Center)
+            ) {
+                item {
+                    NonFocusableSpacer(height = 40.dp)
+                }
+
+                itemsIndexed(film.seasons) { i, season ->
+                    val currentFocusPosition = remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 0, i) }
+
+                    SeasonBlock(
+                        seasonNumber = season.seasonNumber,
+                        currentSelectedSeasonNumber = currentSelectedSeasonNumber,
+                        onSeasonChange = {
+                            if(seasonChangeJob?.isActive == true)
+                                seasonChangeJob?.cancel()
+
+                            seasonChangeJob = scope.launch {
+                                delay(800)
+                                onSeasonChange(season.seasonNumber)
+                                episodesListState.scrollToItem(0)
+                            }
+                        },
+                        modifier = Modifier
+                            .focusOnMount(itemKey = currentFocusPosition)
+                    )
+                }
+
+                items(10) {
+                    NonFocusableSpacer(height = 40.dp)
+                }
             }
 
-            itemsIndexed(
-                film.seasons
-            ) { i, season ->
-                val currentFocusPosition = remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 0, i) }
-
-                SeasonBlock(
-                    seasonNumber = season.seasonNumber,
-                    currentSelectedSeasonNumber = currentSelectedSeasonNumber,
-                    onSeasonChange = {
-                        if(seasonChangeJob?.isActive == true)
-                            seasonChangeJob?.cancel()
-
-                        seasonChangeJob = scope.launch {
-                            delay(800)
-                            onSeasonChange(season.seasonNumber)
-                            episodesListState.scrollToItem(0)
-                        }
-                    },
-                    modifier = Modifier
-                        .focusOnMount(itemKey = currentFocusPosition)
-                )
-            }
-
-            items(10) {
-                NonFocusableSpacer(height = 40.dp)
-            }
+            FilmLogo(
+                film = film,
+                showTitleOnError = false,
+                alignment = Alignment.Center,
+                modifier = Modifier
+                    .size(height = 80.dp, width = 200.dp)
+                    .align(Alignment.TopCenter)
+            )
         }
 
         TvLazyColumn(
