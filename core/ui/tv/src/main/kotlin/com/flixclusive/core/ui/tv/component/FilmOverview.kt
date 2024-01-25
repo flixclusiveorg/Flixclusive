@@ -6,10 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -21,11 +18,9 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import coil.compose.AsyncImage
-import coil.imageLoader
-import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.formatTvRuntime
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.tv.FilmLogo
 import com.flixclusive.core.util.film.formatMinutes
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TvShow
@@ -40,7 +35,6 @@ fun FilmOverview(
     val context = LocalContext.current
 
     val colorOnMediumEmphasis = LocalContentColor.current.onMediumEmphasis()
-    var shouldShowTextInsteadOfLogo by remember { mutableStateOf(false) }
 
     val filmInfo = remember(film) {
         val infoList = mutableListOf<String>()
@@ -65,41 +59,16 @@ fun FilmOverview(
         film.genres.map { it.name }
     }
 
-    val logoImage = context.buildImageUrl(
-        imagePath = film.logoImage?.replace("svg", "png"),
-        imageSize = "w500"
-    )
-
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        if(shouldShowTextInsteadOfLogo || film.logoImage == null) {
-            Text(
-                text = film.title,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontSize = 30.sp
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                softWrap = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-            )
-        } else {
-            AsyncImage(
-                model = logoImage,
-                imageLoader = LocalContext.current.imageLoader,
-                contentDescription = film.title,
-                modifier = Modifier
-                    .height(80.dp)
-                    .fillMaxWidth(0.45F),
-                alignment = Alignment.CenterStart,
-                onError = {
-                    shouldShowTextInsteadOfLogo = true
-                },
-            )
-        }
+        FilmLogo(
+            film = film,
+            modifier = Modifier
+                .height(80.dp)
+                .fillMaxWidth(0.45F)
+        )
 
         Row(
             modifier = Modifier

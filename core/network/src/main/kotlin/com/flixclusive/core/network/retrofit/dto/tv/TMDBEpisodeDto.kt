@@ -4,7 +4,7 @@ import com.flixclusive.model.tmdb.TMDBEpisode
 import com.google.gson.annotations.SerializedName
 
 data class TMDBEpisodeDto(
-    @SerializedName("air_date") val airDate: String,
+    @SerializedName("air_date") val airDate: String?,
     @SerializedName("episode_number") val episodeNumber: Int,
     val id: Int,
     val name: String,
@@ -26,7 +26,7 @@ fun TMDBEpisodeDto.toEpisode(): TMDBEpisode {
         title = name,
         episode = episodeNumber,
         season = seasonNumber,
-        releaseDate = airDate,
+        releaseDate = airDate ?: "",
         description = overview,
         image = stillPath,
         rating = voteAverage

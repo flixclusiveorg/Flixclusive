@@ -58,7 +58,8 @@ internal fun HomeFilmsRow(
     LaunchedEffect(listState.firstVisibleItemIndex) {
         safeCall {
             if (
-                listState.firstVisibleItemIndex % films.size == 1
+                films.isNotEmpty()
+                && listState.firstVisibleItemIndex % films.size == 1
                 && listState.firstVisibleItemIndex > films.size
                 && !paginationState.canPaginate
             ) {

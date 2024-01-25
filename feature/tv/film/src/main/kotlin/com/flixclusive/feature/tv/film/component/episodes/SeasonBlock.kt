@@ -3,8 +3,6 @@ package com.flixclusive.feature.tv.film.component.episodes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -19,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
-import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
@@ -71,15 +68,6 @@ internal fun SeasonBlock(
         ),
         onClick = onSeasonChange
     ) {
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Rounded.Check,
-                contentDescription = stringResource(UtilR.string.check_indicator_content_desc),
-                modifier = Modifier.padding(start = 25.dp)
-                    .align(Alignment.CenterStart)
-            )
-        }
-
         Text(
             text = stringResource(UtilR.string.season_number_formatter, seasonNumber),
             style = MaterialTheme.typography.bodyMedium.copy(
@@ -87,8 +75,7 @@ internal fun SeasonBlock(
             ),
             modifier = Modifier
                 .padding(16.dp)
-                .padding(start = 60.dp)
-                .align(Alignment.CenterStart)
+                .align(Alignment.Center)
         )
     }
 }
