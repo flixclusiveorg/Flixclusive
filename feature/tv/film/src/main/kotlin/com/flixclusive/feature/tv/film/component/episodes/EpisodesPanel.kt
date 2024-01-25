@@ -4,6 +4,7 @@ package com.flixclusive.feature.tv.film.component.episodes
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,12 +17,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onKeyEvent
@@ -31,28 +36,28 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.foundation.ExperimentalTvFoundationApi
 import androidx.tv.foundation.PivotOffsets
 import androidx.tv.foundation.lazy.list.TvLazyColumn
-import androidx.tv.foundation.lazy.list.items
 import androidx.tv.foundation.lazy.list.itemsIndexed
 import androidx.tv.foundation.lazy.list.rememberTvLazyListState
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.fadingEdge
+import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.FilmLogo
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
+import com.flixclusive.core.ui.tv.util.FocusRequesterModifiers
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
+import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.hasPressedLeft
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.tmdb.Season
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 private const val EPISODES_PANEL_FOCUS_KEY_FORMAT = "row=%d, column=%d"
 
@@ -67,19 +72,22 @@ internal fun EpisodesPanel(
 ) {
     val episodesListState = rememberTvLazyListState()
 
-    val scope = rememberCoroutineScope()
     val topFade = Brush.verticalGradient(
         0F to Color.Transparent,
         0.16F to Color.Red
     )
 
-    var seasonChangeJob by remember { mutableStateOf<Job?>(null) }
     var isEpisodesTabFullyFocused by remember { mutableStateOf(false) }
+    var firstEpisodeCard by remember { mutableIntStateOf(episodesListState.firstVisibleItemIndex) }
 
     var seasonName by remember { mutableStateOf("") }
 
     LaunchedEffect(currentSelectedSeason)
     {
+        safeCall {
+            episodesListState.scrollToItem(0)
+            firstEpisodeCard = episodesListState.firstVisibleItemIndex
+        }
         when (currentSelectedSeason) {
             is Resource.Success -> {
                 seasonName = currentSelectedSeason.data?.name ?: return@LaunchedEffect
@@ -92,6 +100,9 @@ internal fun EpisodesPanel(
     // Initialize focus
     val lastFocusedItemMap = useLocalLastFocusedItemPerDestination()
     val currentRoute = useLocalCurrentRoute()
+
+    val seasonsFocusModifiers = createInitialFocusRestorerModifiers()
+    val episodesFocusModifiers = createEpisodesPanelFocusRestorers(currentSelectedSeason)
 
     LaunchedEffect(Unit) {
         // Initialize the focus on episode 1.
@@ -114,6 +125,7 @@ internal fun EpisodesPanel(
         Box(
             modifier = Modifier
                 .padding(start = 100.dp, top = 50.dp)
+                .focusGroup()
                 .onKeyEvent {
                     if (hasPressedLeft(it) && isEpisodesTabFullyFocused) {
                         onHidePanel()
@@ -126,7 +138,7 @@ internal fun EpisodesPanel(
             TvLazyColumn(
                 pivotOffsets = PivotOffsets(0.16F),
                 contentPadding = PaddingValues(top = LabelStartPadding.start),
-                modifier = Modifier
+                modifier = seasonsFocusModifiers.parentModifier
                     .padding(top = 80.dp)
                     .fadingEdge(topFade)
                     .align(Alignment.Center)
@@ -142,17 +154,14 @@ internal fun EpisodesPanel(
                         seasonNumber = season.seasonNumber,
                         currentSelectedSeasonNumber = currentSelectedSeasonNumber,
                         onSeasonChange = {
-                            if(seasonChangeJob?.isActive == true)
-                                seasonChangeJob?.cancel()
-
-                            seasonChangeJob = scope.launch {
-                                delay(800)
-                                onSeasonChange(season.seasonNumber)
-                                episodesListState.scrollToItem(0)
-                            }
+                            onSeasonChange(season.seasonNumber)
                         },
                         modifier = Modifier
                             .focusOnMount(itemKey = currentFocusPosition)
+                            .ifElse(
+                                condition = i == 0,
+                                ifTrueModifier = seasonsFocusModifiers.childModifier
+                            )
                     )
                 }
 
@@ -174,7 +183,7 @@ internal fun EpisodesPanel(
         TvLazyColumn(
             pivotOffsets = PivotOffsets(0.13F),
             state = episodesListState,
-            modifier = Modifier
+            modifier = episodesFocusModifiers.parentModifier
                 .weight(1F)
                 .fillMaxHeight()
                 .onPreviewKeyEvent {
@@ -204,7 +213,7 @@ internal fun EpisodesPanel(
             }
 
             if (currentSelectedSeason is Resource.Success) {
-                items(currentSelectedSeason.data!!.episodes) { episode ->
+                itemsIndexed(currentSelectedSeason.data!!.episodes) { i, episode ->
                     val currentFocusPosition = remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 1, episode.episode) }
 
                     EpisodeCard(
@@ -212,6 +221,10 @@ internal fun EpisodesPanel(
                         onEpisodeClick = { onEpisodeClick(episode) },
                         modifier = Modifier
                             .focusOnMount(itemKey = currentFocusPosition)
+                            .ifElse(
+                                condition = i == firstEpisodeCard,
+                                ifTrueModifier = episodesFocusModifiers.childModifier
+                            )
                     )
                 }
             }
@@ -223,4 +236,58 @@ internal fun EpisodesPanel(
             }
         }
     }
+}
+
+/**
+ *
+ * Just a cheap workaround for [createInitialFocusRestorerModifiers]
+ * to focus initially on the first episode whenever the season state
+ * changes.
+ * */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+private fun createEpisodesPanelFocusRestorers(
+    currentSelectedSeason: Resource<Season>,
+): FocusRequesterModifiers {
+    var shouldFocusInitialChild by remember { mutableStateOf(false) }
+
+    LaunchedEffect(currentSelectedSeason) {
+        shouldFocusInitialChild = true
+    }
+
+    val focusRequester = remember { FocusRequester() }
+    val childFocusRequester = remember { FocusRequester() }
+
+    val parentModifier = Modifier
+        .focusRequester(focusRequester)
+        .focusProperties {
+            exit = {
+                focusRequester.saveFocusedChild()
+                FocusRequester.Default
+            }
+            enter = {
+                if (shouldFocusInitialChild) {
+                    shouldFocusInitialChild = false
+                    childFocusRequester
+                } else {
+                    // Safe call because this one's still bugged.
+                    val isRestored = safeCall {
+                        focusRequester.restoreFocusedChild()
+                    }
+
+                    when (isRestored) {
+                        true -> FocusRequester.Cancel
+                        null -> FocusRequester.Default // Fail-safe if compose tv acts up
+                        else -> childFocusRequester
+                    }
+                }
+            }
+        }
+
+    val childModifier = Modifier.focusRequester(childFocusRequester)
+
+    return FocusRequesterModifiers(
+        parentModifier = parentModifier,
+        childModifier = childModifier
+    )
 }
