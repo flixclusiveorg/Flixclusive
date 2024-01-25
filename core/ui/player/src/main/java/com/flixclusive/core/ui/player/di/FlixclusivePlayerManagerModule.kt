@@ -25,7 +25,7 @@ internal object FlixclusivePlayerManagerModule {
     ) = FlixclusivePlayerManager(
         context = context,
         playerCacheManager = playerCacheManager,
-        appSettingsManager = appSettingsManager,
+        appSettings = appSettingsManager.localAppSettings,
         client = client
     )
 }
