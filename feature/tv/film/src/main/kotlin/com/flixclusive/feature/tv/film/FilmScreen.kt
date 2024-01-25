@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +47,7 @@ import coil.imageLoader
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
+import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.tv.FadeInAndOutScreenTransition
@@ -57,6 +59,7 @@ import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.useLocalFocusTransferredOnLaunch
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
+import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.tv.film.component.FilmErrorSnackbar
@@ -149,6 +152,14 @@ fun FilmScreen(
 
     val lastItemFocusedMap = useLocalLastFocusedItemPerDestination()
     val currentRoute = useLocalCurrentRoute()
+
+    // TODO: REMOVE THIS!
+    LaunchedEffect(currentSeasonSelected) {
+        if (currentSeasonSelected is Resource.Success) {
+            episodeToWatch = currentSeasonSelected.data!!.episodes.firstOrNull()
+            context.showToast("All good!")
+        }
+    }
 
     //LaunchedEffect(Unit) {
     //    isPlayerStarting = false

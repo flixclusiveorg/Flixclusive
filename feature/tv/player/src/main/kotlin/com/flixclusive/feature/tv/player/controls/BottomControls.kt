@@ -2,6 +2,9 @@
 
 package com.flixclusive.feature.tv.player.controls
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.Player
+import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
@@ -68,7 +73,7 @@ internal fun BottomControls(
     modifier: Modifier = Modifier,
     isSeeking: Boolean,
     selectedAudio: String?,
-    selectedSubtitle: String,
+    selectedSubtitle: String?,
     selectedServer: String,
     showSideSheetPanel: (BottomControlsButtonType) -> Unit,
     onSeekMultiplierChange: (Long) -> Unit,
@@ -81,7 +86,6 @@ internal fun BottomControls(
     val topFocusRequester = directionalFocusRequester.top
 
     val subtitlesFocusRequester = remember { FocusRequester() }
-    val serverFocusRequester = remember { FocusRequester() }
 
     var isPlayIconFocused by remember { mutableStateOf(false) }
 
@@ -160,7 +164,6 @@ internal fun BottomControls(
                         }
                         .focusProperties {
                             up = topFocusRequester
-                            down = subtitlesFocusRequester
                             left = FocusRequester.Cancel
                             right = FocusRequester.Cancel
                         }
@@ -242,31 +245,37 @@ internal fun BottomControls(
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 15.dp)
+            modifier = Modifier
+                .padding(bottom = 15.dp)
+                .focusGroup()
         ) {
             OptionButton(
-                label = selectedSubtitle,
+                label = selectedSubtitle ?: "Sample subtitle" /*TODO: UNDO THIS*/,
                 onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
+                iconId = PlayerR.drawable.outline_subtitles_24,
+                contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
                 modifier = Modifier
                     .focusRequester(subtitlesFocusRequester)
-                    .onFocusChanged {
-                        if (it.isFocused) {
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
                             extendControlsVisibility()
                         }
                     }
                     .focusProperties {
                         up = bottomFocusRequester
-                        left = serverFocusRequester
+                        left = bottomFocusRequester
                         down = FocusRequester.Cancel
                     }
             )
 
             OptionButton(
-                label = selectedServer,
-                onClick = { showSideSheetPanel(BottomControlsButtonType.Quality) },
+                label = stringResource(id = UtilR.string.sync) /*TODO: UNDO THIS*/,
+                onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
+                iconId = PlayerR.drawable.sync_black_24dp,
+                contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
                 modifier = Modifier
-                    .onFocusChanged {
-                        if (it.isFocused) {
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
                             extendControlsVisibility()
                         }
                     }
@@ -276,24 +285,23 @@ internal fun BottomControls(
                     }
             )
 
-            if (selectedAudio != null) {
-                OptionButton(
-                    label = selectedAudio,
-                    onClick = { showSideSheetPanel(BottomControlsButtonType.Audio) },
-                    modifier = Modifier
-                        .focusRequester(serverFocusRequester)
-                        .onFocusChanged { focusProp ->
-                            if (focusProp.isFocused) {
-                                extendControlsVisibility()
-                            }
+            OptionButton(
+                label = null,
+                onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
+                iconId = UiCommonR.drawable.settings,
+                contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
+                modifier = Modifier
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused) {
+                            extendControlsVisibility()
                         }
-                        .focusProperties {
-                            up = bottomFocusRequester
-                            right = subtitlesFocusRequester
-                            down = FocusRequester.Cancel
-                        }
-                )
-            }
+                    }
+                    .focusProperties {
+                        up = bottomFocusRequester
+                        right = subtitlesFocusRequester
+                        down = FocusRequester.Cancel
+                    }
+            )
         }
     }
 }
@@ -301,32 +309,59 @@ internal fun BottomControls(
 @Composable
 private fun OptionButton(
     modifier: Modifier = Modifier,
-    label: String,
+    label: String?,
+    @DrawableRes iconId: Int,
+    contentDescription: String?,
     onClick: () -> Unit,
 ) {
-    val shape = MaterialTheme.shapes.extraSmall
+    var isFocused by remember { mutableStateOf(false) }
+    val whiteMediumEmphasis = Color.White.onMediumEmphasis()
 
     Surface(
         onClick = onClick,
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = LocalContentColor.current.onMediumEmphasis(emphasis = 0.2F),
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            focusedContainerColor = Color.White,
-            focusedContentColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.Transparent,
+            contentColor = whiteMediumEmphasis,
+            focusedContainerColor = Color.White.onMediumEmphasis(0.8F),
+            focusedContentColor = Color.Black
         ),
-        shape = ClickableSurfaceDefaults.shape(shape),
+        border = ClickableSurfaceDefaults.border(
+            border = Border(BorderStroke(1.dp, whiteMediumEmphasis)),
+            focusedBorder = Border.None,
+            pressedBorder = Border.None
+        ),
+        shape = ClickableSurfaceDefaults.shape(MaterialTheme.shapes.small),
         modifier = modifier
+            .onFocusChanged {
+                isFocused = it.isFocused
+            }
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(vertical = 5.dp, horizontal = 8.dp)
-        )
+                .padding(5.dp)
+        ) {
+            CompositionLocalProvider(LocalContentColor provides if(isFocused) Color.Black else whiteMediumEmphasis) {
+                label?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontSize = 14.sp,
+                            fontWeight = if(isFocused) FontWeight.SemiBold else FontWeight.Normal
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Icon(
+                    painter = painterResource(id = iconId),
+                    contentDescription = contentDescription,
+                    modifier = Modifier
+                        .size(16.dp)
+                )
+            }
+        }
     }
 }

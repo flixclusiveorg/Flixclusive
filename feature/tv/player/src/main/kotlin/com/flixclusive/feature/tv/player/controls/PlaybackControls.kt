@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTvMaterial3Api::class)
+
 package com.flixclusive.feature.tv.player.controls
 
 import androidx.activity.compose.BackHandler
@@ -6,12 +8,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -21,21 +23,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.Player
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.NonInteractiveSurfaceDefaults
+import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
-import com.flixclusive.core.ui.common.util.fadingEdge
+import com.flixclusive.core.ui.player.FlixclusivePlayerManager
 import com.flixclusive.core.ui.player.PlayerUiState
+import com.flixclusive.core.ui.player.util.PlayerCacheManager
+import com.flixclusive.core.ui.player.util.PlayerUiUtil
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatMinSec
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.feature.tv.player.util.getTimeToSeekToBasedOnSeekMultiplier
+import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.provider.SourceLink
+import okhttp3.OkHttpClient
 
-@OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 internal fun PlaybackControls(
     modifier: Modifier = Modifier,
@@ -44,7 +54,6 @@ internal fun PlaybackControls(
     servers: List<SourceLink>,
     stateProvider: () -> PlayerUiState,
     dialogStateProvider: () -> SourceDataState,
-    sideSheetFocusPriority: BottomControlsButtonType?,
     playbackTitle: String,
     isLastEpisode: Boolean,
     seekMultiplier: Long,
@@ -97,17 +106,16 @@ internal fun PlaybackControls(
         player.selectedSubtitleIndex,
         player.availableSubtitles.size
     ) {
-        player.availableSubtitles[player.selectedSubtitleIndex].language
+        player.availableSubtitles.getOrNull(player.selectedSubtitleIndex)?.language
     }
 
-    val selectedAudio = remember(player.selectedAudio, player.availableAudios.size) {
-        try {
-            if (player.availableAudios.size == 1) {
-                null
-            } else player.availableAudios[player.selectedAudio]
-        } catch (_: Exception) {
+    val selectedAudio = remember(
+        player.selectedAudio,
+        player.availableAudios.size
+    ) {
+        if (player.availableAudios.size == 1) {
             null
-        }
+        } else player.availableAudios.getOrNull(player.selectedAudio)
     }
 
     BackHandler(enabled = !isVisible) {
@@ -132,7 +140,9 @@ internal fun PlaybackControls(
             modifier = Modifier.align(Alignment.TopCenter)
         ) {
             TopControls(
-                modifier = Modifier.fadingEdge(topFadeEdge),
+                modifier = Modifier.drawBehind {
+                    drawRect(topFadeEdge)
+                },
                 isTvShow = isTvShow,
                 isLastEpisode = isLastEpisode,
                 title = playbackTitle,
@@ -187,10 +197,9 @@ internal fun PlaybackControls(
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
             BottomControls(
-                modifier = Modifier
-                    .drawBehind {
-                        drawRect(brush = bottomFadeEdge)
-                    },
+                modifier = Modifier.drawBehind {
+                    drawRect(brush = bottomFadeEdge)
+                },
                 isSeeking = seekMultiplier > 0,
                 selectedServer = servers.getOrNull(state.selectedSourceLink)?.name ?: "Default Server",
                 selectedSubtitle = selectedSubtitle,
@@ -203,26 +212,46 @@ internal fun PlaybackControls(
                 },
             )
         }
+    }
+}
 
-        AnimatedVisibility(
-            visible = sideSheetFocusPriority != null,
-            enter = slideInHorizontally { it },
-            exit = slideOutHorizontally { it },
-            modifier = Modifier.align(Alignment.CenterEnd)
+
+@Preview(device = "id:tv_1080p")
+@Composable
+private fun PlaybackControlsPreview() {
+    FlixclusiveTheme(isTv = true) {
+        Surface(
+            colors = NonInteractiveSurfaceDefaults.colors(Color.Black),
+            modifier = Modifier
+                .fillMaxSize()
         ) {
-            BackHandler {
-                showControls(true)
-                onSideSheetDismiss(null)
+            CompositionLocalProvider(
+                PlayerUiUtil.LocalPlayerManager provides
+                        FlixclusivePlayerManager(
+                            OkHttpClient(),
+                            LocalContext.current,
+                            PlayerCacheManager(LocalContext.current),
+                            AppSettings()
+                        )
+            ) {
+                PlaybackControls(
+                    isVisible = true,
+                    isTvShow = true,
+                    servers = emptyList(),
+                    stateProvider = { PlayerUiState() },
+                    dialogStateProvider = { SourceDataState.Idle },
+                    playbackTitle = "American Bad Boy",
+                    isLastEpisode = false,
+                    seekMultiplier = 0,
+                    onSideSheetDismiss = {},
+                    showControls = {},
+                    onSeekMultiplierChange = {},
+                    onBack = { },
+                    onNextEpisode = {},
+                    modifier = Modifier
+                        .fillMaxSize()
+                )
             }
-
-            //SlidingAudioAndDisplaySheet(
-            //    sideSheetFocusPriority = sideSheetFocusPriority,
-            //    selectedAudio = state.selectedServer,
-            //    onDismissSheet = {
-            //        showControls(true)
-            //        onSideSheetDismiss(null)
-            //    }
-            //)
         }
     }
 }
