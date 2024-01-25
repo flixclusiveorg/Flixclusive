@@ -22,11 +22,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.tv.material3.ExperimentalTvMaterial3Api
-import androidx.tv.material3.MaterialTheme
 import com.flixclusive.core.ui.player.PLAYER_CONTROL_VISIBILITY_TIMEOUT
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.AudioFocusManager
@@ -39,6 +39,7 @@ import com.flixclusive.core.ui.tv.util.handleDPadKeyEvents
 import com.flixclusive.core.ui.tv.util.provideLocalDirectionalFocusRequester
 import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.feature.tv.player.controls.BottomControlsButtonType
 import com.flixclusive.feature.tv.player.controls.PlaybackControls
 import com.flixclusive.feature.tv.player.util.getTimeToSeekToBasedOnSeekMultiplier
@@ -67,6 +68,7 @@ fun PlayerScreen(
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
     LaunchedEffect(args.episodeToPlay, isPlayerStarting) {
+        debugLog("args ${args.episodeToPlay}")
         if (
             ((currentSelectedEpisode?.episodeId == args.episodeToPlay?.episodeId
                     && args.film is TvShow) || args.film is Movie)
@@ -95,8 +97,8 @@ fun PlayerScreen(
         )
     }
 
-    AnimatedVisibility(
-        visible = dialogState is SourceDataState.Success && isPlayerStarting,
+    AnimatedVisibility(// TODO: UNDO THIS!!!!
+        visible = /*dialogState is SourceDataState.Success && */isPlayerStarting,
         enter = fadeIn(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY)),
         exit = fadeOut(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY))
     ) {
@@ -182,22 +184,23 @@ fun PlayerScreen(
             }
         }
 
-        ObserveNewLinksAndSubtitles(
-            selectedSourceLink = uiState.selectedSourceLink,
-            currentPlayerTitle = currentPlayerTitle,
-            sourceData.cachedLinks,
-            sourceData.cachedSubtitles,
-            getSavedTimeForCurrentSourceData = {
-                viewModel.getSavedTimeForSourceData(currentSelectedEpisode).first
-            }
-        )
-
         CompositionLocalProvider(LocalPlayerManager provides viewModel.player) {
+            ObserveNewLinksAndSubtitles(
+                selectedSourceLink = uiState.selectedSourceLink,
+                currentPlayerTitle = currentPlayerTitle,
+                sourceData.cachedLinks,
+                sourceData.cachedSubtitles,
+                getSavedTimeForCurrentSourceData = {
+                    viewModel.getSavedTimeForSourceData(currentSelectedEpisode).first
+                }
+            )
+
             provideLocalDirectionalFocusRequester {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface)
+                        .background(Color.White)
+//                        .background(MaterialTheme.colorScheme.surface) // TODO: UNCOMMENT THIS
                 ) {
                     AudioFocusManager(
                         activity = context,
@@ -273,7 +276,6 @@ fun PlayerScreen(
                         modifier = Modifier.fillMaxSize(),
                         isVisible = viewModel.areControlsVisible && seekMultiplier == 0L && sideSheetFocusPriority == null,
                         servers = sourceData.cachedLinks,
-                        sideSheetFocusPriority = sideSheetFocusPriority,
                         stateProvider = { uiState },
                         dialogStateProvider = { dialogState },
                         playbackTitle = currentPlayerTitle,

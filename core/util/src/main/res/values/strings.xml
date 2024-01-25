@@ -135,6 +135,7 @@
     <string name="subtitles_size">Subtitle size</string>
     <string name="subtract_sync_offset_message">Subtract if subs are early.</string>
     <string name="sync_subtitles">Sync Subtitles</string>
+    <string name="sync">Sync</string>
     <string name="unknown_language">Unknown language</string>
     <string name="unlock_label">Unlock</string>
     <string name="update_info">Update information</string>

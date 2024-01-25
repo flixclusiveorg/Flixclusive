@@ -62,7 +62,7 @@ internal fun TopControls(
 
     var isArrowIconFocused by remember { mutableStateOf(false) }
     var isEpisodeIconFocused by remember { mutableStateOf(false) }
-    var isSpedometerIconFocused by remember { mutableStateOf(false) }
+    var isSpeedometerIconFocused by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -178,20 +178,20 @@ internal fun TopControls(
                     ),
                     modifier = Modifier
                         .onFocusChanged {
-                            isSpedometerIconFocused = it.isFocused
+                            isSpeedometerIconFocused = it.isFocused
 
                             if (it.isFocused) {
                                 extendControlsVisibility()
                             }
                         }
                         .focusProperties {
-                            right = if (!isSpedometerIconFocused) FocusRequester.Cancel
+                            right = if (!isSpeedometerIconFocused) FocusRequester.Cancel
                                 else FocusRequester.Default
 
                             down = bottomFocusRequester
                         }
                 ) {
-                    val iconId = when (isSpedometerIconFocused) {
+                    val iconId = when (isSpeedometerIconFocused) {
                         true -> PlayerR.drawable.speedometer_filled
                         false -> PlayerR.drawable.speedometer
                     }
@@ -200,7 +200,7 @@ internal fun TopControls(
                         modifier = Modifier
                             .size(iconSurfaceSize)
                             .glowOnFocus(
-                                isFocused = isSpedometerIconFocused,
+                                isFocused = isSpeedometerIconFocused,
                                 brush = largeRadialGradient
                             ),
                         contentAlignment = Alignment.Center
