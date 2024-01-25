@@ -374,11 +374,7 @@ fun FilmScreen(
                         film = film as TvShow,
                         currentSelectedSeasonNumber = viewModel.selectedSeasonNumber,
                         currentSelectedSeason = currentSeasonSelected,
-                        onSeasonChange = {
-                            if (it != viewModel.selectedSeasonNumber) {
-                                viewModel.onSeasonChange(it)
-                            }
-                        },
+                        onSeasonChange = viewModel::onSeasonChange,
                         onEpisodeClick = {
                             episodeToWatch = it
                             isPlayerRunning = true

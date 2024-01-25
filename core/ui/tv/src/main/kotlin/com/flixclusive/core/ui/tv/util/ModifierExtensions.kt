@@ -157,9 +157,11 @@ fun createInitialFocusRestorerModifiers(): FocusRequesterModifiers {
                     focusRequester.restoreFocusedChild()
                 }
 
-                if (isRestored == true) FocusRequester.Cancel
-                else if(isRestored == null) FocusRequester.Default // Fail-safe if compose tv acts up
-                else childFocusRequester
+                when (isRestored) {
+                    true -> FocusRequester.Cancel
+                    null -> FocusRequester.Default // Fail-safe if compose tv acts up
+                    else -> childFocusRequester
+                }
             }
         }
 

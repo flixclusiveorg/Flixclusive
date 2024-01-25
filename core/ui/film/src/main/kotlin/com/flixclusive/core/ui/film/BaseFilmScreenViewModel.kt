@@ -52,7 +52,7 @@ abstract class BaseFilmScreenViewModel(
     private val _uiState = MutableStateFlow(FilmUiState())
     val uiState = _uiState.asStateFlow()
 
-    protected val _film = MutableStateFlow<Film?>(null)
+    private val _film = MutableStateFlow<Film?>(null)
     val film = _film.asStateFlow()
 
     val watchHistoryItem = watchHistoryRepository
@@ -136,7 +136,7 @@ abstract class BaseFilmScreenViewModel(
     }
 
     fun onSeasonChange(seasonNumber: Int) {
-        if(onSeasonChangeJob?.isActive == true)
+        if(onSeasonChangeJob?.isActive == true || selectedSeasonNumber == seasonNumber && _currentSeasonSelected.value is Resource.Success)
             return
 
         onSeasonChangeJob = viewModelScope.launch {
