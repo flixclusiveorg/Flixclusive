@@ -34,7 +34,6 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
-import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.ui.player.util.addOffSubtitle
@@ -47,13 +46,12 @@ import com.flixclusive.core.ui.player.util.getSubtitleMimeType
 import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.USER_AGENT
+import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.player.CaptionSizePreference.Companion.getDp
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.util.Locale
 import javax.inject.Inject
@@ -93,10 +91,8 @@ class FlixclusivePlayerManager @Inject constructor(
     client: OkHttpClient,
     private val context: Context,
     private val playerCacheManager: PlayerCacheManager,
-    appSettingsManager: AppSettingsManager
+    private val appSettings: AppSettings
 ) : Player.Listener {
-    private val appSettings = runBlocking { appSettingsManager.appSettings.data.first() }
-
     private var mediaSession: MediaSession? = null
     var player: ExoPlayer? by mutableStateOf(null)
         private set
