@@ -243,6 +243,7 @@ fun FilmScreen(
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(35.dp),
                                 modifier = Modifier
+                                    .focusGroup()
                                     .padding(
                                         start = useLocalDrawerWidth(),
                                         bottom = 55.dp
@@ -278,6 +279,7 @@ fun FilmScreen(
                                         isOverviewShowing = false
                                     },
                                     onWatchlistClick = viewModel::onWatchlistButtonClick,
+                                    goBack = navigator::goBack,
                                     onSeeMoreEpisodes = {
                                         isEpisodesPanelOpen = true
                                         isOverviewShowing = false
@@ -304,6 +306,7 @@ fun FilmScreen(
                                         label = UiText.StringValue(it.collectionName),
                                         iconId = UiCommonR.drawable.round_library,
                                         currentFilm = film as Movie,
+                                        goBack = navigator::goBack,
                                         onFocusChange = {
                                             collectionHasFocus = it
                                         },
@@ -334,6 +337,7 @@ fun FilmScreen(
                                     label = UiText.StringResource(UtilR.string.other_films_message),
                                     iconId = R.drawable.round_dashboard_24,
                                     currentFilm = film!!,
+                                    goBack = navigator::goBack,
                                     onFocusChange = {
                                         otherFilmsHasFocus = it
                                     },

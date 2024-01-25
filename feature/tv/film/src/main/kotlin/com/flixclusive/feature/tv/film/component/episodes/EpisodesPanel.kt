@@ -21,9 +21,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,6 +48,7 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.model.tmdb.Season
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -70,7 +71,8 @@ internal fun EpisodesPanel(
         0.16F to Color.Red
     )
 
-    var seasonsTabHasFocus by remember { mutableStateOf(false) }
+    var seasonChangeJob by remember { mutableStateOf<Job?>(null) }
+    var isEpisodesTabFullyFocused by remember { mutableStateOf(false) }
 
     var seasonName by remember { mutableStateOf("") }
 
@@ -104,14 +106,7 @@ internal fun EpisodesPanel(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface.onMediumEmphasis())
-            .onPreviewKeyEvent {
-                if (hasPressedLeft(it) && seasonsTabHasFocus) {
-                    onHidePanel()
-                    return@onPreviewKeyEvent true
-                }
-                false
-            },
+            .background(MaterialTheme.colorScheme.surface.onMediumEmphasis()),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         TvLazyColumn(
@@ -120,13 +115,13 @@ internal fun EpisodesPanel(
             modifier = Modifier
                 .padding(start = 100.dp, top = 100.dp)
                 .fadingEdge(topFade)
-                .onFocusChanged {
-                    scope.launch {
-                        seasonsTabHasFocus = if (it.hasFocus) {
-                            delay(500) // <- huh?
-                            true
-                        } else false
-                    }
+                .onKeyEvent {
+                    if (hasPressedLeft(it) && isEpisodesTabFullyFocused) {
+                        onHidePanel()
+                        return@onKeyEvent true
+                    } else isEpisodesTabFullyFocused = true
+
+                    false
                 }
         ) {
             item {
@@ -142,7 +137,10 @@ internal fun EpisodesPanel(
                     seasonNumber = season.seasonNumber,
                     currentSelectedSeasonNumber = currentSelectedSeasonNumber,
                     onSeasonChange = {
-                        scope.launch {
+                        if(seasonChangeJob?.isActive == true)
+                            seasonChangeJob?.cancel()
+
+                        seasonChangeJob = scope.launch {
                             delay(800)
                             onSeasonChange(season.seasonNumber)
                             episodesListState.scrollToItem(0)
@@ -164,6 +162,10 @@ internal fun EpisodesPanel(
             modifier = Modifier
                 .weight(1F)
                 .fillMaxHeight()
+                .onPreviewKeyEvent {
+                    isEpisodesTabFullyFocused = false
+                    false
+                }
         ) {
             stickyHeader {
                 Box(
