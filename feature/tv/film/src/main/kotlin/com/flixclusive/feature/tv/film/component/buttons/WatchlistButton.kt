@@ -44,6 +44,7 @@ import com.flixclusive.core.util.R as UtilR
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 internal fun WatchlistButton(
+    modifier: Modifier = Modifier,
     isInWatchlist: Boolean,
     shape: Shape,
     onClick: () -> Unit,
@@ -83,7 +84,7 @@ internal fun WatchlistButton(
             focusedBorder = Border.None,
             pressedBorder = Border.None
         ),
-        modifier = Modifier
+        modifier = modifier
             .clip(shape)
             .animateContentSize()
             .onFocusChanged {

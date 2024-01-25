@@ -12,7 +12,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -22,6 +25,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,6 +50,7 @@ import com.flixclusive.core.ui.tv.component.FilmCard
 import com.flixclusive.core.ui.tv.component.FilmCardShape
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
+import com.flixclusive.core.ui.tv.util.hasPressedLeft
 import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.model.tmdb.Film
@@ -59,13 +65,16 @@ internal fun FilmsRow(
     films: List<Film>,
     hasFocus: Boolean,
     onFilmClick: (Film) -> Unit,
-    onFocusChange: (Boolean) -> Unit
+    onFocusChange: (Boolean) -> Unit,
+    goBack: () -> Unit,
 ) {
     val listState = rememberTvLazyListState()
     val leftFade = Brush.horizontalGradient(
         0F to Color.Transparent,
         0.05F to Color.Red
     )
+
+    var isFirstItemFullyFocused by remember { mutableStateOf(true) }
 
     Surface(
         shape = RectangleShape,
@@ -116,13 +125,27 @@ internal fun FilmsRow(
                     pivotOffsets = PivotOffsets(parentFraction = 0.05F)
                 ) {
                     itemsIndexed(films) { columnIndex, film ->
-
                         Box {
                             FilmCard(
                                 modifier = Modifier
                                     .ifElse(
                                         condition = columnIndex == firstInitialIndex,
                                         ifTrueModifier = focusRestorers.childModifier
+                                    )
+                                    .ifElse(
+                                        condition = columnIndex == firstInitialIndex,
+                                        ifTrueModifier = Modifier.onKeyEvent {
+                                            if (hasPressedLeft(it) && isFirstItemFullyFocused) {
+                                                goBack()
+                                                return@onKeyEvent true
+                                            } else isFirstItemFullyFocused = true
+
+                                            false
+                                        },
+                                        ifFalseModifier = Modifier.onPreviewKeyEvent {
+                                            isFirstItemFullyFocused = false
+                                            false
+                                        }
                                     )
                                     .focusProperties {
                                         if (columnIndex == films.lastIndex) {
