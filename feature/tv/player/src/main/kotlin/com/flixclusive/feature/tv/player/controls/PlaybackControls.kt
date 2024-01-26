@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -40,15 +42,17 @@ import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatMinSec
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
-import com.flixclusive.feature.tv.player.util.getTimeToSeekToBasedOnSeekMultiplier
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.provider.SourceLink
+import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient
+import kotlin.math.abs
 
 @Composable
 internal fun PlaybackControls(
     modifier: Modifier = Modifier,
+    appSettings: AppSettings,
     isVisible: Boolean,
     isTvShow: Boolean,
     servers: List<SourceLink>,
@@ -86,20 +90,43 @@ internal fun PlaybackControls(
     val isInHours = remember(player.duration) {
         player.duration.formatMinSec().count { it == ':' } == 2
     }
-    val seekText by remember(seekMultiplier) {
-        derivedStateOf {
-            val symbol = if (seekMultiplier > 0) "+"
-            else if (seekMultiplier < 0) "-"
-            else return@derivedStateOf ""
+    val isSeeking = remember(seekMultiplier) { seekMultiplier != 0L }
+    var seekPosition by remember { mutableLongStateOf(player.currentPosition) }
 
-            val timeToFormat = getTimeToSeekToBasedOnSeekMultiplier(
-                currentTime = player.currentPosition,
-                maxDuration = player.duration,
-                seekMultiplier = seekMultiplier
-            )
+    val seekingTimeInReverse = remember(seekMultiplier) {
+        val timeToSeekTo = appSettings.preferredSeekAmount * seekMultiplier
 
-            symbol + timeToFormat.formatMinSec(isInHours)
+        "-" + abs((player.duration - (seekPosition + timeToSeekTo))).formatMinSec(isInHours)
+    }
+    val seekingTime = remember(seekMultiplier) {
+        val timeToSeekTo = appSettings.preferredSeekAmount * seekMultiplier
+
+        (seekPosition + timeToSeekTo).formatMinSec(isInHours)
+    }
+
+    LaunchedEffect(isSeeking) {
+        seekPosition = player.currentPosition
+    }
+
+    LaunchedEffect(seekMultiplier) {
+        var shouldPlayAfterSeek = false
+
+        showControls(true)
+        if(player.isPlaying) {
+            player.pause()
+            shouldPlayAfterSeek = true
         }
+
+        if (seekMultiplier != 0L) {
+            delay(2500)
+            val timeToSeekTo = appSettings.preferredSeekAmount * seekMultiplier
+            player.seekTo(seekPosition + timeToSeekTo)
+
+            onSeekMultiplierChange(0)
+        }
+
+        if(shouldPlayAfterSeek)
+            player.play()
     }
 
     val selectedSubtitle = remember(
@@ -119,6 +146,11 @@ internal fun PlaybackControls(
     }
 
     BackHandler(enabled = !isVisible) {
+        if (isSeeking) {
+            onSeekMultiplierChange(0)
+            return@BackHandler
+        }
+
         showControls(true)
     }
 
@@ -126,7 +158,7 @@ internal fun PlaybackControls(
         modifier = modifier
     ) {
         AnimatedVisibility(
-            visible = isVisible,
+            visible = isVisible && !isSeeking,
             enter = slideInVertically(
                 initialOffsetY = { fullHeight: Int ->
                     -fullHeight
@@ -154,13 +186,13 @@ internal fun PlaybackControls(
         }
 
         AnimatedVisibility(
-            visible = seekMultiplier != 0L,
+            visible = isSeeking,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.Center)
         ) {
             Text(
-                text = seekText,
+                text = if (appSettings.isPlayerTimeReversed) seekingTimeInReverse else seekingTime,
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontSize = 65.sp
                 ),
@@ -183,7 +215,7 @@ internal fun PlaybackControls(
         }
 
         AnimatedVisibility(
-            visible = isVisible || seekMultiplier > 0,
+            visible = isVisible || isSeeking,
             enter = slideInVertically(
                 initialOffsetY = { fullHeight: Int ->
                     fullHeight
@@ -200,7 +232,8 @@ internal fun PlaybackControls(
                 modifier = Modifier.drawBehind {
                     drawRect(brush = bottomFadeEdge)
                 },
-                isSeeking = seekMultiplier > 0,
+                isPlayerTimeReversed = appSettings.isPlayerTimeReversed,
+                isSeeking = isSeeking,
                 selectedServer = servers.getOrNull(state.selectedSourceLink)?.name ?: "Default Server",
                 selectedSubtitle = selectedSubtitle,
                 selectedAudio = selectedAudio,
@@ -219,6 +252,8 @@ internal fun PlaybackControls(
 @Preview(device = "id:tv_1080p")
 @Composable
 private fun PlaybackControlsPreview() {
+    var seekMultiplier by remember { mutableLongStateOf(0L) }
+
     FlixclusiveTheme(isTv = true) {
         Surface(
             colors = NonInteractiveSurfaceDefaults.colors(Color.Black),
@@ -237,15 +272,23 @@ private fun PlaybackControlsPreview() {
                 PlaybackControls(
                     isVisible = true,
                     isTvShow = true,
+                    appSettings = AppSettings(isPlayerTimeReversed = false),
                     servers = emptyList(),
                     stateProvider = { PlayerUiState() },
-                    dialogStateProvider = { SourceDataState.Idle },
-                    playbackTitle = "American Bad Boy",
+                    dialogStateProvider = { SourceDataState.Success },
+                    playbackTitle = "American Bad Boy [$seekMultiplier]",
                     isLastEpisode = false,
-                    seekMultiplier = 0,
+                    seekMultiplier = seekMultiplier,
                     onSideSheetDismiss = {},
                     showControls = {},
-                    onSeekMultiplierChange = {},
+                    onSeekMultiplierChange = {
+                        if (it == 0L) {
+                            seekMultiplier = 0L
+                            return@PlaybackControls
+                        }
+
+                        seekMultiplier += it
+                    },
                     onBack = { },
                     onNextEpisode = {},
                     modifier = Modifier

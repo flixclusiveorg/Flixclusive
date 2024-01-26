@@ -42,7 +42,6 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.feature.tv.player.controls.BottomControlsButtonType
 import com.flixclusive.feature.tv.player.controls.PlaybackControls
-import com.flixclusive.feature.tv.player.util.getTimeToSeekToBasedOnSeekMultiplier
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TvShow
@@ -145,30 +144,6 @@ fun PlayerScreen(
             ) {
                 Int.MAX_VALUE
             } else PLAYER_CONTROL_VISIBILITY_TIMEOUT
-        }
-
-        LaunchedEffect(seekMultiplier) {
-            if (seekMultiplier != 0L) {
-                var shouldPlayAfterSeek = false
-
-                if(player.isPlaying) {
-                    player.pause()
-                    shouldPlayAfterSeek = true
-                }
-                showControls(true)
-                delay(2000L)
-
-                val timeToSeekTo = getTimeToSeekToBasedOnSeekMultiplier(
-                    currentTime = player.currentPosition,
-                    maxDuration = player.duration,
-                    seekMultiplier = seekMultiplier
-                )
-                player.seekTo(timeToSeekTo)
-                seekMultiplier = 0
-
-                if(shouldPlayAfterSeek)
-                    player.play()
-            }
         }
 
         LaunchedEffect(controlTimeoutVisibility) {
@@ -274,7 +249,8 @@ fun PlayerScreen(
 
                     PlaybackControls(
                         modifier = Modifier.fillMaxSize(),
-                        isVisible = viewModel.areControlsVisible && seekMultiplier == 0L && sideSheetFocusPriority == null,
+                        appSettings = appSettings,
+                        isVisible = viewModel.areControlsVisible,
                         servers = sourceData.cachedLinks,
                         stateProvider = { uiState },
                         dialogStateProvider = { dialogState },
@@ -284,7 +260,14 @@ fun PlayerScreen(
                         seekMultiplier = seekMultiplier,
                         onSideSheetDismiss = { toggleSideSheet(it) },
                         showControls = { showControls(it) },
-                        onSeekMultiplierChange = { seekMultiplier = it },
+                        onSeekMultiplierChange = {
+                            if (it == 0L) {
+                                seekMultiplier = 0L
+                                return@PlaybackControls
+                            }
+
+                            seekMultiplier += it
+                        },
                         onBack = {
                             player.run {
                                 viewModel.updateWatchHistory(

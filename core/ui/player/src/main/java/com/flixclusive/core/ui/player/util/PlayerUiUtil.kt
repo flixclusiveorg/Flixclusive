@@ -85,6 +85,14 @@ object PlayerUiUtil {
         }
     }
 
+    /**
+     *
+     *
+     * Formats milliseconds time to readable time string.
+     * It also coerces the time on a minimum of 0.
+     *
+     * @param isInHours to check if the method would pad the string thrice.
+     * */
     fun Long.formatMinSec(isInHours: Boolean = false): String {
         return if (this <= 0L && isInHours) {
             "00:00:00"
