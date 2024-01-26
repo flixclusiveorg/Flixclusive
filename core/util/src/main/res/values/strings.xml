@@ -118,6 +118,7 @@
     <string name="retry">Retry</string>
     <string name="reverse_player_time">Reverse player time</string>
     <string name="sample_subtitle_text">ROSE: I\'m flying!</string>
+    <string name="save">Save</string>
     <string name="search_suggestion">Try Searching \"Iron Man\"…</string>
     <string name="see_all">See all</string>
     <string name="seek_length_label">Player seek length</string>
@@ -127,12 +128,12 @@
     <string name="something_went_wrong">Something went wrong</string>
     <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
     <string name="subtitle">Subtitle</string>
-    <string name="subtitles_background_color">Subtitle background color</string>
-    <string name="subtitles_color">Subtitle color</string>
-    <string name="subtitles_edge_type">Subtitle edge type</string>
-    <string name="subtitles_font_style">Subtitle font style</string>
+    <string name="subtitles_background_color">Background color</string>
+    <string name="subtitles_color">Font color</string>
+    <string name="subtitles_edge_type">Edge type</string>
+    <string name="subtitles_font_style">Font style</string>
     <string name="subtitles_language">Subtitle language</string>
-    <string name="subtitles_size">Subtitle size</string>
+    <string name="subtitles_size">Font size</string>
     <string name="subtract_sync_offset_message">Subtract if subs are early.</string>
     <string name="sync_subtitles">Sync Subtitles</string>
     <string name="sync">Sync</string>

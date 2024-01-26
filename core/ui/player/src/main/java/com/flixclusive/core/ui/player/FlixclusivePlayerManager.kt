@@ -87,7 +87,7 @@ enum class PlayerEvents {
  *
  */
 @OptIn(UnstableApi::class)
-class FlixclusivePlayerManager @Inject constructor(
+class FlixclusivePlayerManager(
     client: OkHttpClient,
     private val context: Context,
     private val playerCacheManager: PlayerCacheManager,

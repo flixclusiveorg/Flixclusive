@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.util
+package com.flixclusive.core.ui.common.util
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -9,7 +9,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.flixclusive.model.datastore.player.CaptionStylePreference
 
 @Composable
-internal fun CaptionStylePreference.getTextStyle(): TextStyle {
+fun CaptionStylePreference.getTextStyle(): TextStyle {
     return MaterialTheme.typography.labelLarge.run {
         when(this@getTextStyle) {
             CaptionStylePreference.Normal -> copy(fontWeight = FontWeight.Normal)

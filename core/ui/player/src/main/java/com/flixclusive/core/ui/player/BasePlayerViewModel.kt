@@ -1,11 +1,13 @@
 package com.flixclusive.core.ui.player
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.watch_history.WatchHistoryRepository
@@ -31,19 +33,29 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import okhttp3.OkHttpClient
 import kotlin.math.max
 import com.flixclusive.core.util.R as UtilR
 
 abstract class BasePlayerViewModel(
     args: PlayerScreenNavArgs,
+    client: OkHttpClient,
+    context: Context,
+    playerCacheManager: PlayerCacheManager,
     watchHistoryRepository: WatchHistoryRepository,
     private val appSettingsManager: AppSettingsManager,
     private val seasonProviderUseCase: SeasonProviderUseCase,
     private val sourceLinksProvider: SourceLinksProviderUseCase,
     private val watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
-    val player: FlixclusivePlayerManager,
 ) : ViewModel() {
     val film = args.film
+
+    val player = FlixclusivePlayerManager(
+        client = client,
+        context = context,
+        playerCacheManager = playerCacheManager,
+        appSettings = appSettingsManager.localAppSettings
+    )
 
     val sourceData: SourceData
         get() = sourceLinksProvider.getLinks(

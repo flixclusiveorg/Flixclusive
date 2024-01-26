@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -42,6 +44,7 @@ import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatMinSec
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
+import com.flixclusive.feature.tv.player.controls.settings.SubtitleStylePanel
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.provider.SourceLink
@@ -53,6 +56,7 @@ import kotlin.math.abs
 internal fun PlaybackControls(
     modifier: Modifier = Modifier,
     appSettings: AppSettings,
+    isSubtitleStylePanelOpened: MutableState<Boolean>,
     isVisible: Boolean,
     isTvShow: Boolean,
     servers: List<SourceLink>,
@@ -61,9 +65,9 @@ internal fun PlaybackControls(
     playbackTitle: String,
     isLastEpisode: Boolean,
     seekMultiplier: Long,
-    onSideSheetDismiss: (BottomControlsButtonType?) -> Unit,
     showControls: (Boolean) -> Unit,
     onSeekMultiplierChange: (Long) -> Unit,
+    updateAppSettings: (AppSettings) -> Unit,
     onBack: () -> Unit,
     onNextEpisode: () -> Unit,
 ) {
@@ -145,7 +149,11 @@ internal fun PlaybackControls(
         } else player.availableAudios.getOrNull(player.selectedAudio)
     }
 
-    BackHandler(enabled = !isVisible) {
+    val areControlsVisible = remember(isVisible, isSubtitleStylePanelOpened, isSeeking) {
+        isVisible && !isSubtitleStylePanelOpened.value && !isSeeking
+    }
+
+    BackHandler(enabled = !areControlsVisible) {
         if (isSeeking) {
             onSeekMultiplierChange(0)
             return@BackHandler
@@ -158,8 +166,8 @@ internal fun PlaybackControls(
         modifier = modifier
     ) {
         AnimatedVisibility(
-            visible = isVisible && !isSeeking,
-            enter = slideInVertically(
+            visible = areControlsVisible,
+            enter = fadeIn() + slideInVertically(
                 initialOffsetY = { fullHeight: Int ->
                     -fullHeight
                 }
@@ -168,7 +176,7 @@ internal fun PlaybackControls(
                 targetOffsetY = { fullHeight: Int ->
                     -fullHeight
                 }
-            ),
+            ) + fadeOut(),
             modifier = Modifier.align(Alignment.TopCenter)
         ) {
             TopControls(
@@ -186,7 +194,7 @@ internal fun PlaybackControls(
         }
 
         AnimatedVisibility(
-            visible = isSeeking,
+            visible = isSeeking && !isSubtitleStylePanelOpened.value,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.Center)
@@ -201,7 +209,7 @@ internal fun PlaybackControls(
         }
 
         AnimatedVisibility(
-            visible = isLoading,
+            visible = isLoading && !isSubtitleStylePanelOpened.value,
             enter = scaleIn(),
             exit = scaleOut(),
             modifier = Modifier.align(Alignment.Center)
@@ -215,8 +223,8 @@ internal fun PlaybackControls(
         }
 
         AnimatedVisibility(
-            visible = isVisible || isSeeking,
-            enter = slideInVertically(
+            visible = areControlsVisible || isSeeking,
+            enter = fadeIn() + slideInVertically(
                 initialOffsetY = { fullHeight: Int ->
                     fullHeight
                 }
@@ -225,7 +233,7 @@ internal fun PlaybackControls(
                 targetOffsetY = { fullHeight: Int ->
                     fullHeight
                 }
-            ),
+            ) + fadeOut(),
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
             BottomControls(
@@ -239,10 +247,30 @@ internal fun PlaybackControls(
                 selectedAudio = selectedAudio,
                 onSeekMultiplierChange = onSeekMultiplierChange,
                 extendControlsVisibility = { showControls(true) },
-                showSideSheetPanel = {
-                    showControls(false)
-                    onSideSheetDismiss(it)
+                onSubtitleStylePanelOpen = {
+                    isSubtitleStylePanelOpened.value = true
                 },
+            )
+        }
+
+        AnimatedVisibility(
+            visible =  isSubtitleStylePanelOpened.value,
+            enter = fadeIn() + slideInVertically(
+                initialOffsetY = { fullHeight: Int ->
+                    fullHeight
+                }
+            ),
+            exit = slideOutVertically(
+                targetOffsetY = { fullHeight: Int ->
+                    fullHeight
+                }
+            ) + fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            SubtitleStylePanel(
+                appSettings = appSettings,
+                updateAppSettings = updateAppSettings,
+                hidePanel = { isSubtitleStylePanelOpened.value = false },
             )
         }
     }
@@ -272,6 +300,7 @@ private fun PlaybackControlsPreview() {
                 PlaybackControls(
                     isVisible = true,
                     isTvShow = true,
+                    isSubtitleStylePanelOpened = remember { mutableStateOf(false) },
                     appSettings = AppSettings(isPlayerTimeReversed = false),
                     servers = emptyList(),
                     stateProvider = { PlayerUiState() },
@@ -279,7 +308,6 @@ private fun PlaybackControlsPreview() {
                     playbackTitle = "American Bad Boy [$seekMultiplier]",
                     isLastEpisode = false,
                     seekMultiplier = seekMultiplier,
-                    onSideSheetDismiss = {},
                     showControls = {},
                     onSeekMultiplierChange = {
                         if (it == 0L) {
@@ -291,6 +319,7 @@ private fun PlaybackControlsPreview() {
                     },
                     onBack = { },
                     onNextEpisode = {},
+                    updateAppSettings = {},
                     modifier = Modifier
                         .fillMaxSize()
                 )

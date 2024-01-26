@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.model.database)
     implementation(projects.model.provider)
     implementation(projects.model.tmdb)
+    implementation(projects.model.datastore)
 
     implementation(libs.coil.compose)
     implementation(libs.compose.foundation)
