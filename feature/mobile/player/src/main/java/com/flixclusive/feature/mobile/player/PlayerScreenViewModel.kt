@@ -1,15 +1,16 @@
 package com.flixclusive.feature.mobile.player
 
+import android.content.Context
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.player.BasePlayerViewModel
-import com.flixclusive.core.ui.player.FlixclusivePlayerManager
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.PlayerSnackbarMessage
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
+import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
@@ -21,25 +22,30 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 @HiltViewModel
 class PlayerScreenViewModel @Inject constructor(
     appSettingsManager: AppSettingsManager,
+    client: OkHttpClient,
+    context: Context,
+    playerCacheManager: PlayerCacheManager,
     savedStateHandle: SavedStateHandle,
+    seasonProvider: SeasonProviderUseCase,
     sourceLinksProvider: SourceLinksProviderUseCase,
     watchHistoryRepository: WatchHistoryRepository,
     watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
-    seasonProvider: SeasonProviderUseCase,
-    player: FlixclusivePlayerManager,
 ) : BasePlayerViewModel(
     args = savedStateHandle.navArgs<PlayerScreenNavArgs>(),
+    client = client,
+    context = context,
+    playerCacheManager = playerCacheManager,
     watchHistoryRepository = watchHistoryRepository,
     appSettingsManager = appSettingsManager,
     seasonProviderUseCase = seasonProvider,
     sourceLinksProvider = sourceLinksProvider,
     watchTimeUpdaterUseCase = watchTimeUpdaterUseCase,
-    player = player,
 ) {
     val snackbarQueue = mutableStateListOf<PlayerSnackbarMessage>()
 
