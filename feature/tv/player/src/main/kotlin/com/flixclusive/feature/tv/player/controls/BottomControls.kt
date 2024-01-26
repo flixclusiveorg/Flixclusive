@@ -61,12 +61,6 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
 
-internal enum class BottomControlsButtonType {
-    Subtitle,
-    Audio,
-    Quality;
-}
-
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 internal fun BottomControls(
@@ -76,7 +70,7 @@ internal fun BottomControls(
     selectedAudio: String?,
     selectedSubtitle: String?,
     selectedServer: String,
-    showSideSheetPanel: (BottomControlsButtonType) -> Unit,
+    onSubtitleStylePanelOpen: () -> Unit,
     onSeekMultiplierChange: (Long) -> Unit,
     extendControlsVisibility: () -> Unit,
 ) {
@@ -251,7 +245,7 @@ internal fun BottomControls(
             if (!isSeeking) {
                 OptionButton(
                     label = selectedSubtitle ?: "Sample subtitle" /*TODO: UNDO THIS*/,
-                    onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
+                    onClick = { /* TODO */ },
                     iconId = PlayerR.drawable.outline_subtitles_24,
                     contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
                     modifier = Modifier
@@ -269,8 +263,8 @@ internal fun BottomControls(
                 )
 
                 OptionButton(
-                    label = stringResource(id = UtilR.string.sync) /*TODO: UNDO THIS*/,
-                    onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
+                    label = stringResource(id = UtilR.string.sync),
+                    onClick = { /* TODO */ },
                     iconId = PlayerR.drawable.sync_black_24dp,
                     contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
                     modifier = Modifier
@@ -287,7 +281,7 @@ internal fun BottomControls(
 
                 OptionButton(
                     label = null,
-                    onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
+                    onClick = { onSubtitleStylePanelOpen() },
                     iconId = UiCommonR.drawable.settings,
                     contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
                     modifier = Modifier

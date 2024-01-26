@@ -40,7 +40,6 @@ import com.flixclusive.core.ui.tv.util.provideLocalDirectionalFocusRequester
 import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.log.debugLog
-import com.flixclusive.feature.tv.player.controls.BottomControlsButtonType
 import com.flixclusive.feature.tv.player.controls.PlaybackControls
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Movie
@@ -113,11 +112,11 @@ fun PlayerScreen(
         var controlTimeoutVisibility by remember {
             mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
         }
-        val (sideSheetFocusPriority, toggleSideSheet) = remember {
-            mutableStateOf<BottomControlsButtonType?>(null)
-        }
+
         var seekMultiplier by remember { mutableLongStateOf(0L) }
 
+
+        val isSubtitleStylePanelOpened = remember { mutableStateOf(false) }
         val playerFocusRequester = remember { FocusRequester() }
 
         val isLastEpisode = remember(currentSelectedEpisode) {
@@ -130,20 +129,41 @@ fun PlayerScreen(
         val player = viewModel.player
 
         fun showControls(isShowing: Boolean) {
-            controlTimeoutVisibility = if (isShowing) PLAYER_CONTROL_VISIBILITY_TIMEOUT else 0
+            val areSomeSheetsOpened = isSubtitleStylePanelOpened.value
+
+            val isLoading = !viewModel.player.hasBeenInitialized
+                    || !viewModel.player.isPlaying
+                    || viewModel.player.playbackState == Player.STATE_BUFFERING
+                    || viewModel.player.playbackState == Player.STATE_ENDED
+
+
+            controlTimeoutVisibility = if (!isShowing || areSomeSheetsOpened) {
+                0
+            } else if (isLoading) {
+                Int.MAX_VALUE
+            } else {
+                PLAYER_CONTROL_VISIBILITY_TIMEOUT
+            }
         }
 
-        LaunchedEffect(player.isPlaying, player.playbackState) {
-            if(sideSheetFocusPriority != null) {
-                controlTimeoutVisibility = 0
-                return@LaunchedEffect
-            }
-
-            controlTimeoutVisibility = if (
-                (!player.isPlaying || player.playbackState == Player.STATE_BUFFERING)
-            ) {
-                Int.MAX_VALUE
-            } else PLAYER_CONTROL_VISIBILITY_TIMEOUT
+        /**
+         *
+         * Purpose (unless interacted):
+         * Always show controls when player is paused.
+         * Show it when player hasn't been initialized.
+         * Don't show it if its locked and its buffering.
+         * Show controls when buffering
+         *
+         * See local function (CTRL+F): [showControls]
+         *
+         * */
+        LaunchedEffect(
+            player.hasBeenInitialized,
+            player.isPlaying,
+            player.playbackState,
+            isSubtitleStylePanelOpened.value
+        ) {
+            showControls(true)
         }
 
         LaunchedEffect(controlTimeoutVisibility) {
@@ -151,12 +171,7 @@ fun PlayerScreen(
                 viewModel.areControlsVisible = true
                 delay(1000)
                 controlTimeoutVisibility -= 1
-            } else {
-                viewModel.areControlsVisible = false
-
-                if (sideSheetFocusPriority == null)
-                    playerFocusRequester.requestFocus()
-            }
+            } else viewModel.areControlsVisible = false
         }
 
         CompositionLocalProvider(LocalPlayerManager provides viewModel.player) {
@@ -221,7 +236,7 @@ fun PlayerScreen(
                         modifier = Modifier
                             .handleDPadKeyEvents(
                                 onEnter = {
-                                    if (!viewModel.areControlsVisible && sideSheetFocusPriority == null) {
+                                    if (!viewModel.areControlsVisible) {
                                         showControls(true)
                                         player.run {
                                             if (isPlaying) {
@@ -250,6 +265,7 @@ fun PlayerScreen(
                     PlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         appSettings = appSettings,
+                        isSubtitleStylePanelOpened = isSubtitleStylePanelOpened,
                         isVisible = viewModel.areControlsVisible,
                         servers = sourceData.cachedLinks,
                         stateProvider = { uiState },
@@ -258,8 +274,8 @@ fun PlayerScreen(
                         isTvShow = args.film.filmType == FilmType.TV_SHOW,
                         isLastEpisode = isLastEpisode,
                         seekMultiplier = seekMultiplier,
-                        onSideSheetDismiss = { toggleSideSheet(it) },
                         showControls = { showControls(it) },
+                        updateAppSettings = viewModel::updateAppSettings,
                         onSeekMultiplierChange = {
                             if (it == 0L) {
                                 seekMultiplier = 0L

@@ -6,4 +6,4 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun Color.onMediumEmphasis(
     emphasis: Float = 0.6F
-) = copy(emphasis)
+) = copy(alpha = emphasis)
