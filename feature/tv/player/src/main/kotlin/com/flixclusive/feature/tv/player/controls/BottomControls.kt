@@ -72,6 +72,7 @@ internal enum class BottomControlsButtonType {
 internal fun BottomControls(
     modifier: Modifier = Modifier,
     isSeeking: Boolean,
+    isPlayerTimeReversed: Boolean,
     selectedAudio: String?,
     selectedSubtitle: String?,
     selectedServer: String,
@@ -132,66 +133,64 @@ internal fun BottomControls(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (!isSeeking) {
-                IconButton(
-                    onClick = {
-                        if (player.playbackState != Player.STATE_BUFFERING) {
-                            player.run {
-                                when {
-                                    isPlaying -> pause()
-                                    else -> play()
-                                }
-                                extendControlsVisibility()
+            IconButton(
+                onClick = {
+                    if (player.playbackState != Player.STATE_BUFFERING) {
+                        player.run {
+                            when {
+                                isPlaying -> pause()
+                                else -> play()
                             }
+                            extendControlsVisibility()
                         }
-                    },
-                    scale = IconButtonDefaults.scale(focusedScale = 1F),
-                    colors = IconButtonDefaults.colors(
-                        containerColor = Color.Transparent,
-                        contentColor = unfocusedContentColor,
-                        focusedContainerColor = Color.Transparent,
-                        focusedContentColor = Color.White
-                    ),
-                    modifier = Modifier
-                        .focusOnInitialVisibility()
-                        .focusRequester(bottomFocusRequester)
-                        .onFocusChanged {
-                            isPlayIconFocused = it.isFocused
-
-                            if (it.isFocused) {
-                                extendControlsVisibility()
-                            }
-                        }
-                        .focusProperties {
-                            up = topFocusRequester
-                            left = FocusRequester.Cancel
-                            right = FocusRequester.Cancel
-                        }
-                        .handleDPadKeyEvents(
-                            onLeft = {
-                                onSeekMultiplierChange(-1)
-                            },
-                            onRight = {
-                                onSeekMultiplierChange(1)
-                            },
-                        )
-                ) {
-                    val iconId = when (player.isPlaying) {
-                        true -> PlayerR.drawable.pause
-                        else -> UiCommonR.drawable.play
                     }
+                },
+                scale = IconButtonDefaults.scale(focusedScale = 1F),
+                colors = IconButtonDefaults.colors(
+                    containerColor = Color.Transparent,
+                    contentColor = unfocusedContentColor,
+                    focusedContainerColor = Color.Transparent,
+                    focusedContentColor = Color.White
+                ),
+                modifier = Modifier
+                    .focusOnInitialVisibility()
+                    .focusRequester(bottomFocusRequester)
+                    .onFocusChanged {
+                        isPlayIconFocused = it.isFocused
 
-                    Icon(
-                        painter = painterResource(id = iconId),
-                        contentDescription = stringResource(id = UtilR.string.play_button),
-                        modifier = Modifier
-                            .size(38.dp)
-                            .glowOnFocus(
-                                isFocused = isPlayIconFocused,
-                                brush = largeRadialGradient
-                            ),
+                        if (it.isFocused) {
+                            extendControlsVisibility()
+                        }
+                    }
+                    .focusProperties {
+                        up = topFocusRequester
+                        left = FocusRequester.Cancel
+                        right = FocusRequester.Cancel
+                    }
+                    .handleDPadKeyEvents(
+                        onLeft = {
+                            onSeekMultiplierChange(-1)
+                        },
+                        onRight = {
+                            onSeekMultiplierChange(1)
+                        },
                     )
+            ) {
+                val iconId = when (player.isPlaying) {
+                    true -> PlayerR.drawable.pause
+                    else -> UiCommonR.drawable.play
                 }
+
+                Icon(
+                    painter = painterResource(id = iconId),
+                    contentDescription = stringResource(id = UtilR.string.play_button),
+                    modifier = Modifier
+                        .size(38.dp)
+                        .glowOnFocus(
+                            isFocused = isPlayIconFocused,
+                            brush = largeRadialGradient
+                        ),
+                )
             }
 
             Box(
@@ -232,7 +231,7 @@ internal fun BottomControls(
 
             // show current video time
             Text(
-                text = videoTimeReversed,
+                text = if (isPlayerTimeReversed) videoTimeReversed else videoTime,
                 color = Color.White,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier
@@ -249,59 +248,61 @@ internal fun BottomControls(
                 .padding(bottom = 15.dp)
                 .focusGroup()
         ) {
-            OptionButton(
-                label = selectedSubtitle ?: "Sample subtitle" /*TODO: UNDO THIS*/,
-                onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
-                iconId = PlayerR.drawable.outline_subtitles_24,
-                contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
-                modifier = Modifier
-                    .focusRequester(subtitlesFocusRequester)
-                    .onFocusChanged { focusState ->
-                        if (focusState.isFocused) {
-                            extendControlsVisibility()
+            if (!isSeeking) {
+                OptionButton(
+                    label = selectedSubtitle ?: "Sample subtitle" /*TODO: UNDO THIS*/,
+                    onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
+                    iconId = PlayerR.drawable.outline_subtitles_24,
+                    contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
+                    modifier = Modifier
+                        .focusRequester(subtitlesFocusRequester)
+                        .onFocusChanged { focusState ->
+                            if (focusState.isFocused) {
+                                extendControlsVisibility()
+                            }
                         }
-                    }
-                    .focusProperties {
-                        up = bottomFocusRequester
-                        left = bottomFocusRequester
-                        down = FocusRequester.Cancel
-                    }
-            )
+                        .focusProperties {
+                            up = bottomFocusRequester
+                            left = bottomFocusRequester
+                            down = FocusRequester.Cancel
+                        }
+                )
 
-            OptionButton(
-                label = stringResource(id = UtilR.string.sync) /*TODO: UNDO THIS*/,
-                onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
-                iconId = PlayerR.drawable.sync_black_24dp,
-                contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
-                modifier = Modifier
-                    .onFocusChanged { focusState ->
-                        if (focusState.isFocused) {
-                            extendControlsVisibility()
+                OptionButton(
+                    label = stringResource(id = UtilR.string.sync) /*TODO: UNDO THIS*/,
+                    onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
+                    iconId = PlayerR.drawable.sync_black_24dp,
+                    contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
+                    modifier = Modifier
+                        .onFocusChanged { focusState ->
+                            if (focusState.isFocused) {
+                                extendControlsVisibility()
+                            }
                         }
-                    }
-                    .focusProperties {
-                        up = bottomFocusRequester
-                        down = FocusRequester.Cancel
-                    }
-            )
+                        .focusProperties {
+                            up = bottomFocusRequester
+                            down = FocusRequester.Cancel
+                        }
+                )
 
-            OptionButton(
-                label = null,
-                onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
-                iconId = UiCommonR.drawable.settings,
-                contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
-                modifier = Modifier
-                    .onFocusChanged { focusState ->
-                        if (focusState.isFocused) {
-                            extendControlsVisibility()
+                OptionButton(
+                    label = null,
+                    onClick = { showSideSheetPanel(BottomControlsButtonType.Subtitle) },
+                    iconId = UiCommonR.drawable.settings,
+                    contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
+                    modifier = Modifier
+                        .onFocusChanged { focusState ->
+                            if (focusState.isFocused) {
+                                extendControlsVisibility()
+                            }
                         }
-                    }
-                    .focusProperties {
-                        up = bottomFocusRequester
-                        right = subtitlesFocusRequester
-                        down = FocusRequester.Cancel
-                    }
-            )
+                        .focusProperties {
+                            up = bottomFocusRequester
+                            right = subtitlesFocusRequester
+                            down = FocusRequester.Cancel
+                        }
+                )
+            }
         }
     }
 }
