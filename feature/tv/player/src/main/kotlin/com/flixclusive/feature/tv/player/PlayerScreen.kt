@@ -117,6 +117,8 @@ fun PlayerScreen(
 
 
         val isSubtitleStylePanelOpened = remember { mutableStateOf(false) }
+        val isSyncSubtitlesPanelOpened = remember { mutableStateOf(false) }
+        val isSubtitlesPanelOpened = remember { mutableStateOf(false) }
         val playerFocusRequester = remember { FocusRequester() }
 
         val isLastEpisode = remember(currentSelectedEpisode) {
@@ -266,6 +268,8 @@ fun PlayerScreen(
                         modifier = Modifier.fillMaxSize(),
                         appSettings = appSettings,
                         isSubtitleStylePanelOpened = isSubtitleStylePanelOpened,
+                        isSyncSubtitlesPanelOpened = isSyncSubtitlesPanelOpened,
+                        isSubtitlesPanelOpened = isSubtitlesPanelOpened,
                         isVisible = viewModel.areControlsVisible,
                         servers = sourceData.cachedLinks,
                         stateProvider = { uiState },
