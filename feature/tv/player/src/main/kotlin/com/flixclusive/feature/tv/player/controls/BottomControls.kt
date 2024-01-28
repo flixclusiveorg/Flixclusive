@@ -71,6 +71,8 @@ internal fun BottomControls(
     selectedSubtitle: String?,
     selectedServer: String,
     onSubtitleStylePanelOpen: () -> Unit,
+    onSubtitlesPanelOpen: () -> Unit,
+    onSyncSubtitlesPanelOpen: () -> Unit,
     onSeekMultiplierChange: (Long) -> Unit,
     extendControlsVisibility: () -> Unit,
 ) {
@@ -245,7 +247,7 @@ internal fun BottomControls(
             if (!isSeeking) {
                 OptionButton(
                     label = selectedSubtitle ?: "Sample subtitle" /*TODO: UNDO THIS*/,
-                    onClick = { /* TODO */ },
+                    onClick = onSubtitlesPanelOpen,
                     iconId = PlayerR.drawable.outline_subtitles_24,
                     contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
                     modifier = Modifier
@@ -264,7 +266,7 @@ internal fun BottomControls(
 
                 OptionButton(
                     label = stringResource(id = UtilR.string.sync),
-                    onClick = { /* TODO */ },
+                    onClick = onSyncSubtitlesPanelOpen,
                     iconId = PlayerR.drawable.sync_black_24dp,
                     contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
                     modifier = Modifier
@@ -281,7 +283,7 @@ internal fun BottomControls(
 
                 OptionButton(
                     label = null,
-                    onClick = { onSubtitleStylePanelOpen() },
+                    onClick = onSubtitleStylePanelOpen,
                     iconId = UiCommonR.drawable.settings,
                     contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
                     modifier = Modifier

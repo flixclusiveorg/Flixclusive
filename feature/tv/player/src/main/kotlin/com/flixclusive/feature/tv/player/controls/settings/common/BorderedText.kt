@@ -1,4 +1,4 @@
-package com.flixclusive.feature.tv.player.controls.settings.util
+package com.flixclusive.feature.tv.player.controls.settings.common
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable

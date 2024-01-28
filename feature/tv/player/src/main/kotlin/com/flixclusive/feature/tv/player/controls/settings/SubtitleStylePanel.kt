@@ -15,10 +15,8 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,14 +31,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
-import androidx.tv.material3.Glow
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.NonInteractiveSurfaceDefaults
@@ -53,7 +49,7 @@ import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.feature.tv.player.R
-import com.flixclusive.feature.tv.player.controls.settings.util.BorderedText
+import com.flixclusive.feature.tv.player.controls.settings.common.BorderedText
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionSizePreference
@@ -275,7 +271,7 @@ internal fun SubtitleStylePanel(
             ConfirmButton(
                 onClick = hidePanel,
                 isEmphasis = false,
-                label = stringResource(id = UtilR.string.close_label),
+                label = stringResource(id = UtilR.string.cancel),
                 modifier = Modifier
                     .focusOnInitialVisibility()
             )
@@ -359,60 +355,5 @@ private fun StyleItem(
         onClick = onClick
     ) {
         content()
-    }
-}
-
-
-@OptIn(ExperimentalTvMaterial3Api::class)
-@Composable
-private fun ConfirmButton(
-    modifier: Modifier = Modifier,
-    label: String,
-    isEmphasis: Boolean,
-    onClick: () -> Unit
-) {
-    val (containerColor, contentColor) = when(isEmphasis) {
-        true -> MaterialTheme.colorScheme.onSurface to MaterialTheme.colorScheme.surface.onMediumEmphasis(0.8F)
-        false -> Color(0xFF5F5F5F) to Color(0xFFFFFFFF).onMediumEmphasis()
-    }
-
-    Surface(
-        onClick = onClick,
-        colors = ClickableSurfaceDefaults.colors(
-            containerColor = containerColor,
-            contentColor = contentColor,
-            focusedContainerColor = containerColor,
-            focusedContentColor = contentColor
-        ),
-        border = ClickableSurfaceDefaults.border(
-            focusedBorder = Border(
-                border = BorderStroke(
-                    width = 2.dp,
-                    color = MaterialTheme.colorScheme.primary
-                ),
-                shape = MaterialTheme.shapes.extraSmall
-            )
-        ),
-        glow = ClickableSurfaceDefaults.glow(
-            focusedGlow = Glow(
-                elevationColor = MaterialTheme.colorScheme.primary,
-                elevation = 15.dp
-            )
-        ),
-        shape = ClickableSurfaceDefaults.shape(MaterialTheme.shapes.extraSmall),
-        modifier = modifier
-            .heightIn(min = 20.dp)
-            .width(150.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Black
-            ),
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(5.dp)
-        )
     }
 }
