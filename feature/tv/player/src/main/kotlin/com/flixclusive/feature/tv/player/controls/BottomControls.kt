@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTvMaterial3Api::class)
-
 package com.flixclusive.feature.tv.player.controls
 
 import androidx.annotation.DrawableRes
@@ -61,7 +59,11 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalComposeUiApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalTvMaterial3Api::class
+)
 @Composable
 internal fun BottomControls(
     modifier: Modifier = Modifier,
@@ -303,6 +305,7 @@ internal fun BottomControls(
     }
 }
 
+@OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun OptionButton(
     modifier: Modifier = Modifier,

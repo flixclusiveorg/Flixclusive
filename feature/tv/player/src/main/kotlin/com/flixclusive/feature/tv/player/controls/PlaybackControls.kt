@@ -48,7 +48,7 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatMinSec
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.feature.tv.player.controls.settings.SubtitleStylePanel
-import com.flixclusive.feature.tv.player.controls.settings.SyncSubtitlesPanel
+import com.flixclusive.feature.tv.player.controls.settings.SubtitleSyncPanel
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.provider.SourceLink
@@ -279,7 +279,7 @@ internal fun PlaybackControls(
             exit = bottomHalfSlideExit,
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
-            SyncSubtitlesPanel(
+            SubtitleSyncPanel(
                 hidePanel = { isSyncSubtitlesPanelOpened.value = false },
             )
         }
