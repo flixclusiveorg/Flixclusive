@@ -3,7 +3,6 @@ package com.flixclusive.feature.tv.player.controls.settings
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -49,9 +48,9 @@ import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
 
-@OptIn(ExperimentalTvMaterial3Api::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-internal fun SyncSubtitlesPanel(
+internal fun SubtitleSyncPanel(
     modifier: Modifier = Modifier,
     hidePanel: () -> Unit,
 ) {
@@ -146,11 +145,11 @@ internal fun SyncSubtitlesPanel(
                 targetState = player.subtitleOffset,
                 transitionSpec = {
                     if (targetState > initialState) {
-                        slideInHorizontally { it / 2 } + fadeIn() togetherWith
-                                slideOutHorizontally { it / 2 } + fadeOut()
+                        slideInHorizontally { it / 3 } + fadeIn() togetherWith
+                                slideOutHorizontally { -it / 3 } + fadeOut()
                     } else {
-                        slideInHorizontally { -it / 2 } + fadeIn() togetherWith
-                                slideOutHorizontally { -it / 2 } + fadeOut()
+                        slideInHorizontally { -it / 3 } + fadeIn() togetherWith
+                                slideOutHorizontally { it / 3 } + fadeOut()
                     }.using(
                         SizeTransform(clip = false)
                     )
