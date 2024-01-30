@@ -8,7 +8,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -47,6 +49,7 @@ import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatMinSec
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
+import com.flixclusive.feature.tv.player.controls.settings.AudioAndSubtitlesPanel
 import com.flixclusive.feature.tv.player.controls.settings.SubtitleStylePanel
 import com.flixclusive.feature.tv.player.controls.settings.SubtitleSyncPanel
 import com.flixclusive.model.datastore.AppSettings
@@ -65,7 +68,7 @@ internal fun PlaybackControls(
     appSettings: AppSettings,
     isSubtitleStylePanelOpened: MutableState<Boolean>,
     isSyncSubtitlesPanelOpened: MutableState<Boolean>,
-    isSubtitlesPanelOpened: MutableState<Boolean>,
+    isAudioAndSubtitlesPanelOpened: MutableState<Boolean>,
     isVisible: Boolean,
     isTvShow: Boolean,
     servers: List<SourceLink>,
@@ -133,8 +136,10 @@ internal fun PlaybackControls(
         } else player.availableAudios.getOrNull(player.selectedAudio)
     }
 
-    val noPanelsAreOpen = remember(isSubtitleStylePanelOpened.value, isSyncSubtitlesPanelOpened.value) {
-        !isSubtitleStylePanelOpened.value && !isSyncSubtitlesPanelOpened.value
+    val noPanelsAreOpen = remember(isSubtitleStylePanelOpened.value, isSyncSubtitlesPanelOpened.value, isAudioAndSubtitlesPanelOpened.value) {
+        !isSubtitleStylePanelOpened.value
+            && !isSyncSubtitlesPanelOpened.value
+            && !isAudioAndSubtitlesPanelOpened.value
     }
 
     val areControlsVisible = remember(isVisible, noPanelsAreOpen, isSeeking) {
@@ -255,7 +260,7 @@ internal fun PlaybackControls(
                 onSeekMultiplierChange = onSeekMultiplierChange,
                 extendControlsVisibility = { showControls(true) },
                 onSubtitleStylePanelOpen = { isSubtitleStylePanelOpened.value = true },
-                onSubtitlesPanelOpen = { /* TODO */ },
+                onSubtitlesPanelOpen = { isAudioAndSubtitlesPanelOpened.value = true },
                 onSyncSubtitlesPanelOpen = { isSyncSubtitlesPanelOpened.value = true },
             )
         }
@@ -281,6 +286,17 @@ internal fun PlaybackControls(
         ) {
             SubtitleSyncPanel(
                 hidePanel = { isSyncSubtitlesPanelOpened.value = false },
+            )
+        }
+
+        AnimatedVisibility(
+            visible =  isAudioAndSubtitlesPanelOpened.value,
+            enter = fadeIn() + slideInHorizontally { it / 2 },
+            exit = fadeOut() + slideOutHorizontally { it / 2 },
+            modifier = Modifier.align(Alignment.CenterEnd)
+        ) {
+            AudioAndSubtitlesPanel(
+                hidePanel = { isAudioAndSubtitlesPanelOpened.value = false },
             )
         }
     }
@@ -330,8 +346,8 @@ private fun PlaybackControlsPreview() {
                         isVisible = true,
                         isTvShow = true,
                         isSubtitleStylePanelOpened = remember { mutableStateOf(false) },
-                        isSyncSubtitlesPanelOpened = remember { mutableStateOf(true) },
-                        isSubtitlesPanelOpened = remember { mutableStateOf(true) },
+                        isSyncSubtitlesPanelOpened = remember { mutableStateOf(false) },
+                        isAudioAndSubtitlesPanelOpened = remember { mutableStateOf(true) },
                         appSettings = AppSettings(isPlayerTimeReversed = false),
                         servers = emptyList(),
                         stateProvider = { PlayerUiState() },
