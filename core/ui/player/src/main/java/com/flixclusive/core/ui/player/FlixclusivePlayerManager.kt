@@ -54,7 +54,6 @@ import com.flixclusive.model.provider.SubtitleSource
 import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient
 import java.util.Locale
-import javax.inject.Inject
 import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
 
@@ -91,7 +90,7 @@ class FlixclusivePlayerManager(
     client: OkHttpClient,
     private val context: Context,
     private val playerCacheManager: PlayerCacheManager,
-    private val appSettings: AppSettings
+    private var appSettings: AppSettings
 ) : Player.Listener {
     private var mediaSession: MediaSession? = null
     var player: ExoPlayer? by mutableStateOf(null)
@@ -414,7 +413,7 @@ class FlixclusivePlayerManager(
     fun onSubtitleChange(index: Int) {
         selectedSubtitleIndex = index
 
-        preferredSubtitleLanguage = availableSubtitles[selectedSubtitleIndex].language
+        preferredSubtitleLanguage = availableSubtitles.getOrNull(selectedSubtitleIndex)?.language ?: return
 
         val oldTrackSelectionParameters = player?.trackSelectionParameters
 
@@ -445,7 +444,7 @@ class FlixclusivePlayerManager(
     fun onAudioChange(index: Int) {
         selectedAudio = index
 
-        audioTrackGroups[selectedAudio]?.let { group ->
+        audioTrackGroups.getOrNull(selectedAudio)?.let { group ->
             player?.run {
                 trackSelectionParameters =
                     trackSelectionParameters.buildUpon()
@@ -608,6 +607,10 @@ class FlixclusivePlayerManager(
                 /* size = */ fontSize
             )
         }
+    }
+
+    fun updateAppSettings(newAppSettings: AppSettings) {
+        appSettings = newAppSettings
     }
 
     /**
