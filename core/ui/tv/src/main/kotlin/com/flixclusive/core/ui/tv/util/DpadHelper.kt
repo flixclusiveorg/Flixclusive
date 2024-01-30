@@ -16,6 +16,10 @@ fun hasPressedLeft(keyEvent: KeyEvent): Boolean {
     return keyEvent.key == Key.DirectionLeft && keyEvent.type == KeyEventType.KeyUp
 }
 
+fun hasPressedRight(keyEvent: KeyEvent): Boolean {
+    return keyEvent.key == Key.DirectionRight && keyEvent.type == KeyEventType.KeyUp
+}
+
 data class DirectionalFocusRequester(
     val top: FocusRequester = FocusRequester(),
     val left: FocusRequester = FocusRequester(),

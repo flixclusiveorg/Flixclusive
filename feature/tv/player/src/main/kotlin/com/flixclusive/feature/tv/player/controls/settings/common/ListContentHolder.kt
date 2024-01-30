@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -34,14 +33,14 @@ import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.provider.SubtitleSource
+import com.flixclusive.provider.base.Provider
 
 @OptIn(ExperimentalTvMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun <Type> ListContentHolder(
     modifier: Modifier = Modifier,
-    icon: Painter,
     contentDescription: String?,
     label: String,
     items: List<Type>,
@@ -80,11 +79,11 @@ internal fun <Type> ListContentHolder(
                 NonFocusableSpacer(height = 35.dp)
             }
 
-            itemsIndexed(List(10) { Subtitle("Haha", "Subtitle $it", SubtitleSource.ONLINE) }) { i, item ->
+            itemsIndexed(items) { i, item ->
                 val name = when (item) {
-                    // is String -> item
-                    // is SourceLink -> item.name
-                    // is Provider -> item.name
+                    is String -> item
+                    is SourceLink -> item.name
+                    is Provider -> item.name
                     is Subtitle -> item.language
                     else -> throw ClassFormatError("Invalid content type provided.")
                 }
@@ -94,7 +93,9 @@ internal fun <Type> ListContentHolder(
                         .animateItemPlacement()
                         .ifElse(
                             condition = initializeFocus && i == 0,
-                            ifTrueModifier = Modifier.focusOnInitialVisibility(isFirstItemFocusedLaunched)
+                            ifTrueModifier = Modifier.focusOnInitialVisibility(
+                                isFirstItemFocusedLaunched
+                            )
                         ),
                     name = name,
                     index = i,

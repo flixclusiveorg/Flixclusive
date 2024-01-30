@@ -20,24 +20,33 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.res.stringResource
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
-import com.flixclusive.core.ui.tv.util.hasPressedLeft
+import com.flixclusive.core.ui.player.PlayerUiState
+import com.flixclusive.core.ui.tv.util.hasPressedRight
 import com.flixclusive.feature.tv.player.controls.settings.common.ListContentHolder
+import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.provider.base.Provider
+import com.flixclusive.core.util.R as UtilR
 
 @Composable
-internal fun AudioAndSubtitlesPanel(
+internal fun ServersPanel(
     modifier: Modifier = Modifier,
+    state: PlayerUiState,
+    servers: List<SourceLink>,
+    providers: List<Provider>,
+    onProviderChange: (String) -> Unit,
+    onServerChange: (Int) -> Unit,
     hidePanel: () -> Unit,
 ) {
-    val player by rememberLocalPlayerManager()
-
+    val selectedSourceIndex = remember(state.selectedProvider) {
+        providers.indexOfFirst { it.name.equals(state.selectedProvider, true) }
+    }
 
     var isFirstItemFullyFocused by remember { mutableStateOf(true) }
 
     val blackBackgroundGradient = Brush.horizontalGradient(
-        0F to Color.Black.onMediumEmphasis(0.4F),
-        0.15F to Color.Black.onMediumEmphasis(),
-        1F to Color.Black
+        0F to Color.Black,
+        0.85F to Color.Black.onMediumEmphasis(),
+        1F to Color.Black.onMediumEmphasis(0.4F),
     )
 
     BackHandler {
@@ -48,7 +57,7 @@ internal fun AudioAndSubtitlesPanel(
         modifier = modifier
             .fillMaxSize()
             .background(blackBackgroundGradient),
-        contentAlignment = Alignment.CenterEnd
+        contentAlignment = Alignment.CenterStart
     ) {
         Row(
             modifier = Modifier
@@ -58,34 +67,37 @@ internal fun AudioAndSubtitlesPanel(
             ListContentHolder(
                 modifier = Modifier
                     .weight(1F)
+                    .onPreviewKeyEvent {
+                        isFirstItemFullyFocused = false
+                        false
+                    },
+                contentDescription = stringResource(id = UtilR.string.providers),
+                label = stringResource(id = UtilR.string.providers),
+                items = providers,
+                selectedIndex = selectedSourceIndex,
+                itemState = state.selectedProviderState,
+                onItemClick = {
+                    onProviderChange(providers[it].name)
+                }
+            )
+
+            ListContentHolder(
+                modifier = Modifier
+                    .weight(1F)
                     .onKeyEvent {
-                        if (hasPressedLeft(it) && isFirstItemFullyFocused) {
+                        if (hasPressedRight(it) && isFirstItemFullyFocused) {
                             hidePanel()
                             return@onKeyEvent true
                         } else isFirstItemFullyFocused = true
 
                         false
                     },
+                contentDescription = stringResource(id = UtilR.string.servers),
+                label = stringResource(id = UtilR.string.servers),
+                items = servers,
                 initializeFocus = true,
-                contentDescription = stringResource(id = com.flixclusive.core.util.R.string.audio_icon_content_desc),
-                label = stringResource(id = com.flixclusive.core.util.R.string.audio),
-                items = player.availableAudios,
-                selectedIndex = player.selectedAudio,
-                onItemClick = player::onAudioChange
-            )
-
-            ListContentHolder(
-                modifier = Modifier
-                    .weight(1F)
-                    .onPreviewKeyEvent {
-                        isFirstItemFullyFocused = false
-                        false
-                    },
-                contentDescription = stringResource(id = com.flixclusive.core.util.R.string.subtitle_icon_content_desc),
-                label = stringResource(id = com.flixclusive.core.util.R.string.subtitle),
-                items = player.availableSubtitles,
-                selectedIndex = player.selectedSubtitleIndex,
-                onItemClick = player::onSubtitleChange
+                selectedIndex = state.selectedSourceLink,
+                onItemClick = onServerChange
             )
         }
     }

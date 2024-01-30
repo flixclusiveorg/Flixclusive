@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,7 +37,6 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.core.util.R
 import com.flixclusive.core.util.common.resource.Resource
 
@@ -52,7 +50,6 @@ internal fun ListItem(
     itemState: Resource<Any?>,
     onClick: () -> Unit,
 ) {
-    val player by rememberLocalPlayerManager()
     val baseStyle = MaterialTheme.typography.labelLarge
     val unselectedColor = LocalContentColor.current.onMediumEmphasis(0.4F)
 

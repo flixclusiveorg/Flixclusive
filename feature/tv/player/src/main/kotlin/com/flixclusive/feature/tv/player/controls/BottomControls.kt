@@ -308,7 +308,7 @@ internal fun BottomControls(
                 OptionButton(
                     label = null,
                     onClick = onSubtitleStylePanelOpen,
-                    iconId = UiCommonR.drawable.settings,
+                    iconId = PlayerR.drawable.style_icon,
                     contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
                     modifier = Modifier
                         .onFocusChanged { focusState ->
