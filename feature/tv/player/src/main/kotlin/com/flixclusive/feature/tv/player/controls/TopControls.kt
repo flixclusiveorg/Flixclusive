@@ -58,7 +58,7 @@ internal fun TopControls(
     showControls: () -> Unit,
     onNavigationIconClick: () -> Unit,
     onNextEpisodeClick: () -> Unit,
-    onVideoSettingsClick: () -> Unit,
+    onServersPanelOpen: () -> Unit,
 ) {
     val directionalFocusRequester = useLocalDirectionalFocusRequester()
     val bottomFocusRequester = directionalFocusRequester.bottom
@@ -177,7 +177,7 @@ internal fun TopControls(
                 modifier = Modifier.padding(start = 5.dp)
             ) {
                 IconButton(
-                    onClick = onVideoSettingsClick,
+                    onClick = onServersPanelOpen,
                     shape = IconButtonDefaults.shape(CircleShape),
                     scale = IconButtonDefaults.scale(focusedScale = 1F),
                     colors = IconButtonDefaults.colors(

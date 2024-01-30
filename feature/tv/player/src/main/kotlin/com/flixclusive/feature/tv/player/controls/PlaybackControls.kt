@@ -49,13 +49,19 @@ import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatMinSec
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
+import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.tv.player.controls.settings.AudioAndSubtitlesPanel
+import com.flixclusive.feature.tv.player.controls.settings.ServersPanel
 import com.flixclusive.feature.tv.player.controls.settings.SubtitleStylePanel
 import com.flixclusive.feature.tv.player.controls.settings.SubtitleSyncPanel
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.provider.base.Provider
+import com.flixclusive.provider.base.dto.FilmInfo
+import com.flixclusive.provider.base.dto.SearchResults
 import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient
 import kotlin.math.abs
@@ -71,8 +77,11 @@ internal fun PlaybackControls(
     isSubtitleStylePanelOpened: MutableState<Boolean>,
     isSyncSubtitlesPanelOpened: MutableState<Boolean>,
     isAudioAndSubtitlesPanelOpened: MutableState<Boolean>,
+    isPlaybackSpeedPanelOpened: MutableState<Boolean>,
+    isServerPanelOpened: MutableState<Boolean>,
     isVisible: Boolean,
     isTvShow: Boolean,
+    providers: List<Provider>,
     servers: List<SourceLink>,
     stateProvider: () -> PlayerUiState,
     dialogStateProvider: () -> SourceDataState,
@@ -82,6 +91,8 @@ internal fun PlaybackControls(
     showControls: (Boolean) -> Unit,
     onSeekMultiplierChange: (Long) -> Unit,
     updateAppSettings: (AppSettings) -> Unit,
+    onProviderChange: (String) -> Unit,
+    onServerChange: (Int) -> Unit,
     onBack: () -> Unit,
     onNextEpisode: () -> Unit,
 ) {
@@ -122,10 +133,18 @@ internal fun PlaybackControls(
         (seekPosition + timeToSeekTo).formatMinSec(isInHours)
     }
 
-    val noPanelsAreOpen = remember(isSubtitleStylePanelOpened.value, isSyncSubtitlesPanelOpened.value, isAudioAndSubtitlesPanelOpened.value) {
+    val noPanelsAreOpen = remember(
+        isSubtitleStylePanelOpened.value,
+        isSyncSubtitlesPanelOpened.value,
+        isAudioAndSubtitlesPanelOpened.value,
+        isServerPanelOpened.value,
+        isPlaybackSpeedPanelOpened.value,
+    ) {
         !isSubtitleStylePanelOpened.value
             && !isSyncSubtitlesPanelOpened.value
             && !isAudioAndSubtitlesPanelOpened.value
+            && !isServerPanelOpened.value
+            && !isPlaybackSpeedPanelOpened.value
     }
 
     val areControlsVisible = remember(isVisible, noPanelsAreOpen, isSeeking) {
@@ -196,7 +215,7 @@ internal fun PlaybackControls(
                 showControls = { showControls(true) },
                 onNavigationIconClick = onBack,
                 onNextEpisodeClick = onNextEpisode,
-                onVideoSettingsClick = { /* TODO */ }
+                onServersPanelOpen = { isServerPanelOpened.value = true }
             )
         }
 
@@ -246,7 +265,7 @@ internal fun PlaybackControls(
                 onSubtitleStylePanelOpen = { isSubtitleStylePanelOpened.value = true },
                 onSubtitlesPanelOpen = { isAudioAndSubtitlesPanelOpened.value = true },
                 onSyncSubtitlesPanelOpen = { isSyncSubtitlesPanelOpened.value = true },
-                onSpeedometerPanelOpen = { isSyncSubtitlesPanelOpened.value = true },
+                onSpeedometerPanelOpen = { isPlaybackSpeedPanelOpened.value = true },
             )
         }
 
@@ -284,6 +303,22 @@ internal fun PlaybackControls(
                 hidePanel = { isAudioAndSubtitlesPanelOpened.value = false },
             )
         }
+
+        AnimatedVisibility(
+            visible =  isServerPanelOpened.value,
+            enter = fadeIn() + slideInHorizontally(),
+            exit = fadeOut() + slideOutHorizontally(),
+            modifier = Modifier.align(Alignment.CenterStart)
+        ) {
+            ServersPanel(
+                state = state,
+                servers = servers,
+                providers = providers,
+                onProviderChange = onProviderChange,
+                onServerChange = onServerChange,
+                hidePanel = { isServerPanelOpened.value = false },
+            )
+        }
     }
 }
 
@@ -303,6 +338,45 @@ private fun slideTransition(
 @Composable
 private fun PlaybackControlsPreview() {
     var seekMultiplier by remember { mutableLongStateOf(0L) }
+
+    val sources = List(5) {
+        object : Provider(OkHttpClient()) {
+            override val name: String
+                get() = "Provider #$it"
+
+            override suspend fun search(
+                query: String,
+                page: Int,
+                filmType: FilmType
+            ): SearchResults {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun getFilmInfo(filmId: String, filmType: FilmType): FilmInfo {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun getSourceLinks(
+                filmId: String,
+                season: Int?,
+                episode: Int?,
+                onLinkLoaded: (SourceLink) -> Unit,
+                onSubtitleLoaded: (Subtitle) -> Unit
+            ) {
+                TODO("Not yet implemented")
+            }
+
+        }
+    }
+
+    val serverNames = listOf("ServerA", "ServerB", "ServerC", "ServerD", "ServerE")
+    val serverUrls = listOf("http://serverA.com", "http://serverB.com", "http://serverC.com", "http://serverD.com", "http://serverE.com")
+    val servers = List(10) {
+        SourceLink(
+            name = serverNames.random(),
+            url = serverUrls.random()
+        )
+    }
 
     FlixclusiveTheme(isTv = true) {
         Surface(
@@ -333,8 +407,9 @@ private fun PlaybackControlsPreview() {
                         isSubtitleStylePanelOpened = remember { mutableStateOf(false) },
                         isSyncSubtitlesPanelOpened = remember { mutableStateOf(false) },
                         isAudioAndSubtitlesPanelOpened = remember { mutableStateOf(false) },
+                        isServerPanelOpened = remember { mutableStateOf(false) },
+                        isPlaybackSpeedPanelOpened = remember { mutableStateOf(false) },
                         appSettings = AppSettings(isPlayerTimeReversed = false),
-                        servers = emptyList(),
                         stateProvider = { PlayerUiState() },
                         dialogStateProvider = { SourceDataState.Success },
                         playbackTitle = "American Bad Boy",
@@ -354,6 +429,10 @@ private fun PlaybackControlsPreview() {
                         updateAppSettings = {},
 //                        currentEpisodeSelected = TMDBEpisode(episode = 1, season = 1, title = "American Bad Boy"),
                         currentEpisodeSelected = null,
+                        servers = servers,
+                        providers = sources,
+                        onProviderChange = {},
+                        onServerChange = {},
                         modifier = Modifier
                             .fillMaxSize()
                     )

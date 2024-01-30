@@ -119,6 +119,9 @@ fun PlayerScreen(
         val isSubtitleStylePanelOpened = remember { mutableStateOf(false) }
         val isSyncSubtitlesPanelOpened = remember { mutableStateOf(false) }
         val isAudioAndSubtitlesPanelOpened = remember { mutableStateOf(false) }
+        val isServerPanelOpened = remember { mutableStateOf(false) }
+        val isPlaybackSpeedPanelOpened = remember { mutableStateOf(false) }
+
         val playerFocusRequester = remember { FocusRequester() }
 
         val isLastEpisode = remember(currentEpisodeSelected) {
@@ -132,6 +135,10 @@ fun PlayerScreen(
 
         fun showControls(isShowing: Boolean) {
             val areSomeSheetsOpened = isSubtitleStylePanelOpened.value
+                    || isSyncSubtitlesPanelOpened.value
+                    || isAudioAndSubtitlesPanelOpened.value
+                    || isServerPanelOpened.value
+                    || isPlaybackSpeedPanelOpened.value
 
             val isLoading = !viewModel.player.hasBeenInitialized
                     || !viewModel.player.isPlaying
@@ -270,8 +277,11 @@ fun PlayerScreen(
                         isSubtitleStylePanelOpened = isSubtitleStylePanelOpened,
                         isSyncSubtitlesPanelOpened = isSyncSubtitlesPanelOpened,
                         isAudioAndSubtitlesPanelOpened = isAudioAndSubtitlesPanelOpened,
+                        isServerPanelOpened = isServerPanelOpened,
+                        isPlaybackSpeedPanelOpened = isPlaybackSpeedPanelOpened,
                         isVisible = viewModel.areControlsVisible,
                         servers = sourceData.cachedLinks,
+                        providers = viewModel.sourceProviders,
                         currentEpisodeSelected = currentEpisodeSelected,
                         stateProvider = { uiState },
                         dialogStateProvider = { dialogState },
@@ -281,6 +291,8 @@ fun PlayerScreen(
                         seekMultiplier = seekMultiplier,
                         showControls = { showControls(it) },
                         updateAppSettings = viewModel::updateAppSettings,
+                        onServerChange = viewModel::onServerChange,
+                        onProviderChange = viewModel::onProviderChange,
                         onSeekMultiplierChange = {
                             if (it == 0L) {
                                 seekMultiplier = 0L
