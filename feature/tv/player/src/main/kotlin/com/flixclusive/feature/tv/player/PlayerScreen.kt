@@ -63,12 +63,12 @@ fun PlayerScreen(
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
     val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
-    val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
+    val currentEpisodeSelected by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
     LaunchedEffect(args.episodeToPlay, isPlayerStarting) {
         debugLog("args ${args.episodeToPlay}")
         if (
-            ((currentSelectedEpisode?.episodeId == args.episodeToPlay?.episodeId
+            ((currentEpisodeSelected?.episodeId == args.episodeToPlay?.episodeId
                     && args.film is TvShow) || args.film is Movie)
             && dialogState !is SourceDataState.Error
             && dialogState !is SourceDataState.Unavailable
@@ -106,8 +106,8 @@ fun PlayerScreen(
 
         val sourceData = viewModel.sourceData
 
-        val currentPlayerTitle = remember(currentSelectedEpisode) {
-            formatPlayerTitle(args.film, currentSelectedEpisode)
+        val currentPlayerTitle = remember(currentEpisodeSelected) {
+            formatPlayerTitle(args.film, currentEpisodeSelected)
         }
         var controlTimeoutVisibility by remember {
             mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
@@ -121,11 +121,11 @@ fun PlayerScreen(
         val isAudioAndSubtitlesPanelOpened = remember { mutableStateOf(false) }
         val playerFocusRequester = remember { FocusRequester() }
 
-        val isLastEpisode = remember(currentSelectedEpisode) {
+        val isLastEpisode = remember(currentEpisodeSelected) {
             val lastSeason = watchHistoryItem?.seasons
             val lastEpisode = watchHistoryItem?.episodes?.get(lastSeason)
 
-            currentSelectedEpisode?.season == lastSeason && currentSelectedEpisode?.episode == lastEpisode
+            currentEpisodeSelected?.season == lastSeason && currentEpisodeSelected?.episode == lastEpisode
         }
 
         val player = viewModel.player
@@ -183,7 +183,7 @@ fun PlayerScreen(
                 sourceData.cachedLinks,
                 sourceData.cachedSubtitles,
                 getSavedTimeForCurrentSourceData = {
-                    viewModel.getSavedTimeForSourceData(currentSelectedEpisode).first
+                    viewModel.getSavedTimeForSourceData(currentEpisodeSelected).first
                 }
             )
 
@@ -205,7 +205,7 @@ fun PlayerScreen(
                         onInitialize = {
                             viewModel.run {
                                 val (currentPosition, _) = getSavedTimeForSourceData(
-                                    currentSelectedEpisode
+                                    currentEpisodeSelected
                                 )
 
                                 player.initialize()
@@ -272,6 +272,7 @@ fun PlayerScreen(
                         isAudioAndSubtitlesPanelOpened = isAudioAndSubtitlesPanelOpened,
                         isVisible = viewModel.areControlsVisible,
                         servers = sourceData.cachedLinks,
+                        currentEpisodeSelected = currentEpisodeSelected,
                         stateProvider = { uiState },
                         dialogStateProvider = { dialogState },
                         playbackTitle = currentPlayerTitle,

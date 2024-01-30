@@ -69,22 +69,27 @@ internal fun BottomControls(
     modifier: Modifier = Modifier,
     isSeeking: Boolean,
     isPlayerTimeReversed: Boolean,
-    selectedAudio: String?,
-    selectedSubtitle: String?,
-    selectedServer: String,
     onSubtitleStylePanelOpen: () -> Unit,
     onSubtitlesPanelOpen: () -> Unit,
     onSyncSubtitlesPanelOpen: () -> Unit,
+    onSpeedometerPanelOpen: () -> Unit,
     onSeekMultiplierChange: (Long) -> Unit,
-    extendControlsVisibility: () -> Unit,
+    showControls: () -> Unit,
 ) {
     val player by rememberLocalPlayerManager()
+
+    val selectedSubtitle = remember(
+        player.selectedSubtitleIndex,
+        player.availableSubtitles.size
+    ) {
+        player.availableSubtitles.getOrNull(player.selectedSubtitleIndex)?.language
+    }
 
     val directionalFocusRequester = useLocalDirectionalFocusRequester()
     val bottomFocusRequester = directionalFocusRequester.bottom
     val topFocusRequester = directionalFocusRequester.top
 
-    val subtitlesFocusRequester = remember { FocusRequester() }
+    val speedometerFocusRequester = remember { FocusRequester() }
 
     var isPlayIconFocused by remember { mutableStateOf(false) }
 
@@ -139,7 +144,7 @@ internal fun BottomControls(
                                 isPlaying -> pause()
                                 else -> play()
                             }
-                            extendControlsVisibility()
+                            showControls()
                         }
                     }
                 },
@@ -157,7 +162,7 @@ internal fun BottomControls(
                         isPlayIconFocused = it.isFocused
 
                         if (it.isFocused) {
-                            extendControlsVisibility()
+                            showControls()
                         }
                     }
                     .focusProperties {
@@ -248,20 +253,37 @@ internal fun BottomControls(
         ) {
             if (!isSeeking) {
                 OptionButton(
-                    label = selectedSubtitle ?: "Sample subtitle" /*TODO: UNDO THIS*/,
-                    onClick = onSubtitlesPanelOpen,
-                    iconId = PlayerR.drawable.outline_subtitles_24,
-                    contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
+                    label = "${player.playbackSpeed.coerceAtLeast(1F)}x",
+                    onClick = onSpeedometerPanelOpen,
+                    iconId = null,
+                    contentDescription = stringResource(id = UtilR.string.playback_speed),
                     modifier = Modifier
-                        .focusRequester(subtitlesFocusRequester)
+                        .focusRequester(speedometerFocusRequester)
                         .onFocusChanged { focusState ->
                             if (focusState.isFocused) {
-                                extendControlsVisibility()
+                                showControls()
                             }
                         }
                         .focusProperties {
                             up = bottomFocusRequester
                             left = bottomFocusRequester
+                            down = FocusRequester.Cancel
+                        }
+                )
+
+                OptionButton(
+                    label = selectedSubtitle ?: "Sample subtitle" /*TODO: UNDO THIS*/,
+                    onClick = onSubtitlesPanelOpen,
+                    iconId = PlayerR.drawable.outline_subtitles_24,
+                    contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
+                    modifier = Modifier
+                        .onFocusChanged { focusState ->
+                            if (focusState.isFocused) {
+                                showControls()
+                            }
+                        }
+                        .focusProperties {
+                            up = bottomFocusRequester
                             down = FocusRequester.Cancel
                         }
                 )
@@ -274,7 +296,7 @@ internal fun BottomControls(
                     modifier = Modifier
                         .onFocusChanged { focusState ->
                             if (focusState.isFocused) {
-                                extendControlsVisibility()
+                                showControls()
                             }
                         }
                         .focusProperties {
@@ -291,12 +313,12 @@ internal fun BottomControls(
                     modifier = Modifier
                         .onFocusChanged { focusState ->
                             if (focusState.isFocused) {
-                                extendControlsVisibility()
+                                showControls()
                             }
                         }
                         .focusProperties {
                             up = bottomFocusRequester
-                            right = subtitlesFocusRequester
+                            right = speedometerFocusRequester
                             down = FocusRequester.Cancel
                         }
                 )
@@ -310,7 +332,7 @@ internal fun BottomControls(
 private fun OptionButton(
     modifier: Modifier = Modifier,
     label: String?,
-    @DrawableRes iconId: Int,
+    @DrawableRes iconId: Int?,
     contentDescription: String?,
     onClick: () -> Unit,
 ) {
@@ -342,25 +364,27 @@ private fun OptionButton(
             modifier = Modifier
                 .padding(5.dp)
         ) {
-            CompositionLocalProvider(LocalContentColor provides if(isFocused) Color.Black else whiteMediumEmphasis) {
+            CompositionLocalProvider(LocalContentColor provides if (isFocused) Color.Black else whiteMediumEmphasis) {
                 label?.let {
                     Text(
                         text = it,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontSize = 14.sp,
-                            fontWeight = if(isFocused) FontWeight.SemiBold else FontWeight.Normal
+                            fontWeight = if (isFocused) FontWeight.SemiBold else FontWeight.Normal
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Icon(
-                    painter = painterResource(id = iconId),
-                    contentDescription = contentDescription,
-                    modifier = Modifier
-                        .size(16.dp)
-                )
+                iconId?.let {
+                    Icon(
+                        painter = painterResource(id = it),
+                        contentDescription = contentDescription,
+                        modifier = Modifier
+                            .size(16.dp)
+                    )
+                }
             }
         }
     }

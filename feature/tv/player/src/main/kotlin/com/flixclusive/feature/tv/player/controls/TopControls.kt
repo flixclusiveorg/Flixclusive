@@ -1,5 +1,6 @@
 package com.flixclusive.feature.tv.player.controls
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,8 +23,12 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
@@ -36,7 +41,9 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.util.getGlowRadialGradient
 import com.flixclusive.core.ui.tv.util.glowOnFocus
 import com.flixclusive.core.ui.tv.util.useLocalDirectionalFocusRequester
+import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.core.ui.player.R as PlayerR
+import com.flixclusive.core.util.R as UtilR
 
 internal val PlaybackButtonsSize = 24.dp
 
@@ -46,8 +53,9 @@ internal fun TopControls(
     modifier: Modifier = Modifier,
     isTvShow: Boolean,
     isLastEpisode: Boolean = false,
+    currentEpisodeSelected: TMDBEpisode?,
     title: String,
-    extendControlsVisibility: () -> Unit,
+    showControls: () -> Unit,
     onNavigationIconClick: () -> Unit,
     onNextEpisodeClick: () -> Unit,
     onVideoSettingsClick: () -> Unit,
@@ -62,18 +70,20 @@ internal fun TopControls(
 
     var isArrowIconFocused by remember { mutableStateOf(false) }
     var isEpisodeIconFocused by remember { mutableStateOf(false) }
-    var isSpeedometerIconFocused by remember { mutableStateOf(false) }
+    var isServersIconFocused by remember { mutableStateOf(false) }
 
-    Box(
+
+    val titleStyle = MaterialTheme.typography.titleMedium
+
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 25.dp)
-            .padding(top = 4.dp)
+            .padding(horizontal = 25.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(
             modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(top = 8.dp),
+                .padding(top = 15.dp),
             verticalAlignment = Alignment.Top
         ) {
             IconButton(
@@ -91,7 +101,7 @@ internal fun TopControls(
                         isArrowIconFocused = it.isFocused
 
                         if (it.isFocused) {
-                            extendControlsVisibility()
+                            showControls()
                         }
                     }
                     .focusProperties {
@@ -136,7 +146,7 @@ internal fun TopControls(
                                 isEpisodeIconFocused = it.isFocused
 
                                 if (it.isFocused) {
-                                    extendControlsVisibility()
+                                    showControls()
                                 }
                             }
                             .focusProperties {
@@ -178,36 +188,31 @@ internal fun TopControls(
                     ),
                     modifier = Modifier
                         .onFocusChanged {
-                            isSpeedometerIconFocused = it.isFocused
+                            isServersIconFocused = it.isFocused
 
                             if (it.isFocused) {
-                                extendControlsVisibility()
+                                showControls()
                             }
                         }
                         .focusProperties {
-                            right = if (!isSpeedometerIconFocused) FocusRequester.Cancel
-                                else FocusRequester.Default
+                            right = if (!isServersIconFocused) FocusRequester.Cancel
+                            else FocusRequester.Default
 
                             down = bottomFocusRequester
                         }
                 ) {
-                    val iconId = when (isSpeedometerIconFocused) {
-                        true -> PlayerR.drawable.speedometer_filled
-                        false -> PlayerR.drawable.speedometer
-                    }
-
                     Box(
                         modifier = Modifier
                             .size(iconSurfaceSize)
                             .glowOnFocus(
-                                isFocused = isSpeedometerIconFocused,
+                                isFocused = isServersIconFocused,
                                 brush = largeRadialGradient
                             ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = painterResource(id = iconId),
-                            contentDescription = null,
+                            painter = painterResource(id = PlayerR.drawable.round_cloud_queue_24),
+                            contentDescription = stringResource(id = UtilR.string.servers),
                             modifier = Modifier
                                 .size(PlaybackButtonsSize)
                         )
@@ -218,18 +223,39 @@ internal fun TopControls(
 
         Box(
             modifier = Modifier
-                .align(Alignment.Center)
-                .padding(top = 8.dp),
-            contentAlignment = Alignment.TopCenter,
+                .padding(top = 25.dp),
+            contentAlignment = Alignment.CenterEnd,
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
+            if (currentEpisodeSelected != null) {
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = titleStyle.toSpanStyle()) {
+                            append("S${currentEpisodeSelected.season} E${currentEpisodeSelected.episode}:\n")
+                        }
+                        withStyle(
+                            style = titleStyle.copy(
+                                fontWeight = FontWeight.Light,
+                                color = Color.White.onMediumEmphasis(emphasis = 0.8F),
+                            ).toSpanStyle()
+                        ) {
+                            append(currentEpisodeSelected.title)
+                        }
+                    },
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.End,
+                )
+            } else {
+                Text(
+                    text = title,
+                    style = titleStyle,
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.End,
+                )
+            }
         }
     }
 }
