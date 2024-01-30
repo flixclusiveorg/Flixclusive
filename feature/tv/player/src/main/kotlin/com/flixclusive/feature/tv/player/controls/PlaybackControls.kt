@@ -55,6 +55,7 @@ import com.flixclusive.feature.tv.player.controls.settings.SubtitleSyncPanel
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.tmdb.TMDBEpisode
 import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient
 import kotlin.math.abs
@@ -66,6 +67,7 @@ import com.flixclusive.core.util.R as UtilR
 internal fun PlaybackControls(
     modifier: Modifier = Modifier,
     appSettings: AppSettings,
+    currentEpisodeSelected: TMDBEpisode?,
     isSubtitleStylePanelOpened: MutableState<Boolean>,
     isSyncSubtitlesPanelOpened: MutableState<Boolean>,
     isAudioAndSubtitlesPanelOpened: MutableState<Boolean>,
@@ -118,22 +120,6 @@ internal fun PlaybackControls(
         val timeToSeekTo = appSettings.preferredSeekAmount * seekMultiplier
 
         (seekPosition + timeToSeekTo).formatMinSec(isInHours)
-    }
-
-    val selectedSubtitle = remember(
-        player.selectedSubtitleIndex,
-        player.availableSubtitles.size
-    ) {
-        player.availableSubtitles.getOrNull(player.selectedSubtitleIndex)?.language
-    }
-
-    val selectedAudio = remember(
-        player.selectedAudio,
-        player.availableAudios.size
-    ) {
-        if (player.availableAudios.size == 1) {
-            null
-        } else player.availableAudios.getOrNull(player.selectedAudio)
     }
 
     val noPanelsAreOpen = remember(isSubtitleStylePanelOpened.value, isSyncSubtitlesPanelOpened.value, isAudioAndSubtitlesPanelOpened.value) {
@@ -206,7 +192,8 @@ internal fun PlaybackControls(
                 isTvShow = isTvShow,
                 isLastEpisode = isLastEpisode,
                 title = playbackTitle,
-                extendControlsVisibility = { showControls(true) },
+                currentEpisodeSelected = currentEpisodeSelected,
+                showControls = { showControls(true) },
                 onNavigationIconClick = onBack,
                 onNextEpisodeClick = onNextEpisode,
                 onVideoSettingsClick = { /* TODO */ }
@@ -254,14 +241,12 @@ internal fun PlaybackControls(
                 },
                 isPlayerTimeReversed = appSettings.isPlayerTimeReversed,
                 isSeeking = isSeeking,
-                selectedServer = servers.getOrNull(state.selectedSourceLink)?.name ?: "Default Server",
-                selectedSubtitle = selectedSubtitle,
-                selectedAudio = selectedAudio,
                 onSeekMultiplierChange = onSeekMultiplierChange,
-                extendControlsVisibility = { showControls(true) },
+                showControls = { showControls(true) },
                 onSubtitleStylePanelOpen = { isSubtitleStylePanelOpened.value = true },
                 onSubtitlesPanelOpen = { isAudioAndSubtitlesPanelOpened.value = true },
                 onSyncSubtitlesPanelOpen = { isSyncSubtitlesPanelOpened.value = true },
+                onSpeedometerPanelOpen = { isSyncSubtitlesPanelOpened.value = true },
             )
         }
 
@@ -347,12 +332,12 @@ private fun PlaybackControlsPreview() {
                         isTvShow = true,
                         isSubtitleStylePanelOpened = remember { mutableStateOf(false) },
                         isSyncSubtitlesPanelOpened = remember { mutableStateOf(false) },
-                        isAudioAndSubtitlesPanelOpened = remember { mutableStateOf(true) },
+                        isAudioAndSubtitlesPanelOpened = remember { mutableStateOf(false) },
                         appSettings = AppSettings(isPlayerTimeReversed = false),
                         servers = emptyList(),
                         stateProvider = { PlayerUiState() },
                         dialogStateProvider = { SourceDataState.Success },
-                        playbackTitle = "American Bad Boy [$seekMultiplier]",
+                        playbackTitle = "American Bad Boy",
                         isLastEpisode = false,
                         seekMultiplier = seekMultiplier,
                         showControls = {},
@@ -367,6 +352,8 @@ private fun PlaybackControlsPreview() {
                         onBack = { },
                         onNextEpisode = {},
                         updateAppSettings = {},
+//                        currentEpisodeSelected = TMDBEpisode(episode = 1, season = 1, title = "American Bad Boy"),
+                        currentEpisodeSelected = null,
                         modifier = Modifier
                             .fillMaxSize()
                     )
