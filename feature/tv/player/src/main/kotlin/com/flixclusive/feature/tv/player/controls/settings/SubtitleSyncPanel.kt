@@ -45,6 +45,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
+import com.flixclusive.feature.tv.player.controls.settings.common.ConfirmButton
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
 
@@ -149,10 +150,8 @@ internal fun SubtitleSyncPanel(
                                 slideOutHorizontally { -it / 3 } + fadeOut()
                     } else {
                         slideInHorizontally { -it / 3 } + fadeIn() togetherWith
-                                slideOutHorizontally { it / 3 } + fadeOut()
-                    }.using(
-                        SizeTransform(clip = false)
-                    )
+                            slideOutHorizontally { it / 3 } + fadeOut()
+                    }.using(SizeTransform(clip = false))
                 },
                 label = "",
                 modifier = Modifier.weight(1F)

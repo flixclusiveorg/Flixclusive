@@ -50,6 +50,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.feature.tv.player.R
 import com.flixclusive.feature.tv.player.controls.settings.common.BorderedText
+import com.flixclusive.feature.tv.player.controls.settings.common.ConfirmButton
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionSizePreference

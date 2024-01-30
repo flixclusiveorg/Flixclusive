@@ -1,4 +1,4 @@
-package com.flixclusive.feature.tv.player.controls.settings
+package com.flixclusive.feature.tv.player.controls.settings.common
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.heightIn
