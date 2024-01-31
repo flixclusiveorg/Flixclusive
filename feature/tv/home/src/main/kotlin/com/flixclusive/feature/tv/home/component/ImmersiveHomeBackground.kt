@@ -23,7 +23,7 @@ import coil.imageLoader
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.tv.component.FilmOverview
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
-import com.flixclusive.core.ui.tv.util.drawScrimOnBackground
+import com.flixclusive.core.ui.tv.util.drawScrimOnForeground
 import com.flixclusive.model.tmdb.Film
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -52,7 +52,7 @@ fun ImmersiveHomeBackground(
                     initialContentExit = exitAnimation
                 )
             },
-            modifier = Modifier.drawScrimOnBackground(),
+            modifier = Modifier.drawScrimOnForeground(),
             label = ""
         ) {
             val backdropImage = context.buildImageUrl(
