@@ -195,8 +195,8 @@ fun PlayerScreen(
             ObserveNewLinksAndSubtitles(
                 selectedSourceLink = uiState.selectedSourceLink,
                 currentPlayerTitle = currentPlayerTitle,
-                sourceData.cachedLinks,
-                sourceData.cachedSubtitles,
+                newLinks = sourceData.cachedLinks,
+                newSubtitles = sourceData.cachedSubtitles,
                 getSavedTimeForCurrentSourceData = {
                     viewModel.getSavedTimeForSourceData(currentEpisodeSelected).first
                 }
