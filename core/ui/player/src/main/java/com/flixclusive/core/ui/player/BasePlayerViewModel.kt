@@ -425,7 +425,6 @@ abstract class BasePlayerViewModel(
      */
     fun loadSourceData(
         episodeToWatch: TMDBEpisode? = null,
-        silently: Boolean = false,
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
             showErrorOnUiCallback(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
@@ -451,11 +450,7 @@ abstract class BasePlayerViewModel(
                     resetUiState()
                     resetNextEpisodeQueue()
                 }
-            ).collect { state ->
-                if(!silently) {
-                    _dialogState.update { state }
-                }
-            }
+            ).collect { _dialogState.update { it } }
         }
     }
 

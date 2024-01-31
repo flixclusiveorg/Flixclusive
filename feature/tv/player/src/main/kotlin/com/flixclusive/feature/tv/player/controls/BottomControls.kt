@@ -272,8 +272,8 @@ internal fun BottomControls(
                 )
 
                 OptionButton(
-                    label = selectedSubtitle ?: "Sample subtitle" /*TODO: UNDO THIS*/,
-                    onClick = onSubtitlesPanelOpen,
+                    label = selectedSubtitle ?: "No subtitles",
+                    onClick = { selectedSubtitle?.let { onSubtitlesPanelOpen() } },
                     iconId = PlayerR.drawable.outline_subtitles_24,
                     contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
                     modifier = Modifier
