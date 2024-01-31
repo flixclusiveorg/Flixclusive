@@ -582,10 +582,8 @@ class FlixclusivePlayerManager(
             // Add margin on subtitle view
             var subtitleMarginBottom = 0.05F
 
-            if (areControlsVisible && !isInTv) {
+            if (areControlsVisible) {
                 subtitleMarginBottom += 0.15F
-            } else if (areControlsVisible) {
-                subtitleMarginBottom += 0.22F
             }
 
             setBottomPaddingFraction(subtitleMarginBottom)
@@ -607,7 +605,6 @@ class FlixclusivePlayerManager(
             setApplyEmbeddedFontSizes(false)
             setApplyEmbeddedStyles(false)
             setStyle(style)
-            //translationY = 20.toPx.toFloat()
             setFixedTextSize(
                 /* unit = */ TypedValue.COMPLEX_UNIT_SP,
                 /* size = */ fontSize
