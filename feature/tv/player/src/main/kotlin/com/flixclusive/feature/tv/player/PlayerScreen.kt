@@ -42,12 +42,21 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.tv.player.controls.PlaybackControls
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
 import kotlinx.coroutines.delay
 
 private const val PLAYER_SCREEN_DELAY = 800
+
+private fun isSameEpisode(
+    film: Film,
+    currentEpisode: TMDBEpisode?,
+    episodeToPlay: TMDBEpisode?
+) = film is TvShow
+        && currentEpisode != null
+        && episodeToPlay != null
+        && currentEpisode.episodeId == episodeToPlay.episodeId
+
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -74,13 +83,22 @@ fun PlayerScreen(
 
     LaunchedEffect(episodeToPlay, isPlayerRunning) {
         if (
-            ((currentEpisodeSelected?.episodeId == episodeToPlay?.episodeId
-                    && film is TvShow) || film is Movie)
-            && dialogState is SourceDataState.Idle
-            && dialogState is SourceDataState.Success
+            dialogState is SourceDataState.Success
+            && (
+                isSameEpisode(
+                    film = film,
+                    currentEpisode = currentEpisodeSelected,
+                    episodeToPlay = episodeToPlay,
+                ) || film.filmType == FilmType.MOVIE
+                || !isPlayerRunning
+            )
         ) return@LaunchedEffect
 
-        viewModel.loadSourceData(episodeToWatch = episodeToPlay)
+        if (episodeToPlay != null) {
+            viewModel.onEpisodeClick(episodeToWatch = episodeToPlay)
+        } else {
+            viewModel.loadSourceData()
+        }
     }
 
     BackHandler(enabled = isPlayerRunning) {
@@ -94,7 +112,12 @@ fun PlayerScreen(
     ) {
         SourceDataDialog(
             state = dialogState,
-            onConsumeDialog = { /* DO NOTHING */ }
+            onConsumeDialog = {
+                if (dialogState !is SourceDataState.Success) {
+                    viewModel.onConsumePlayerDialog()
+                    onBack()
+                }
+            }
         )
     }
 
@@ -299,15 +322,7 @@ fun PlayerScreen(
 
                             seekMultiplier += it
                         },
-                        onBack = {
-                            player.run {
-                                viewModel.updateWatchHistory(
-                                    currentTime = currentPosition,
-                                    duration = duration
-                                )
-                                onBack()
-                            }
-                        },
+                        onBack = onBack,
                         onNextEpisode = {
                             player.run {
                                 viewModel.updateWatchHistory(
@@ -315,7 +330,7 @@ fun PlayerScreen(
                                     duration = duration
                                 )
 
-                                viewModel.loadSourceData()
+                                viewModel.onEpisodeClick()
                             }
                         },
                     )

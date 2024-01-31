@@ -1,5 +1,6 @@
 package com.flixclusive.core.ui.tv.component
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,15 +41,13 @@ fun SourceDataDialog(
     onConsumeDialog: () -> Unit,
     onSkipExtractingPhase: () -> Unit = {},
 ) {
-    LaunchedEffect(key1 = state) {
-        if (state is SourceDataState.Success) {
-            onConsumeDialog()
-        }
-    }
-
     Dialog(
         onDismissRequest = onConsumeDialog
     ) {
+        BackHandler {
+            onConsumeDialog()
+        }
+
         SourceDataDialogContent(
             state = state,
             canSkipExtractingPhase = canSkipExtractingPhase,
@@ -79,7 +77,8 @@ private fun SourceDataDialogContent(
             shape = MaterialTheme.shapes.large,
         ) {
             Box(
-                modifier = Modifier.matchParentSize()
+                modifier = Modifier
+                    .matchParentSize()
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
