@@ -92,7 +92,7 @@ internal fun <Type> ListContentHolder(
                     modifier = Modifier
                         .animateItemPlacement()
                         .ifElse(
-                            condition = initializeFocus && i == 0,
+                            condition = initializeFocus && i == selectedIndex && !isFirstItemFocusedLaunched.value,
                             ifTrueModifier = Modifier.focusOnInitialVisibility(
                                 isFirstItemFocusedLaunched
                             )
