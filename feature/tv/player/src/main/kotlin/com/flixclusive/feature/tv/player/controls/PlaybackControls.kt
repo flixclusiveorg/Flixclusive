@@ -51,6 +51,7 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatMinSec
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.tv.player.controls.settings.AudioAndSubtitlesPanel
+import com.flixclusive.feature.tv.player.controls.settings.PlaybackSpeedPanel
 import com.flixclusive.feature.tv.player.controls.settings.ServersPanel
 import com.flixclusive.feature.tv.player.controls.settings.SubtitleStylePanel
 import com.flixclusive.feature.tv.player.controls.settings.SubtitleSyncPanel
@@ -317,6 +318,17 @@ internal fun PlaybackControls(
                 onProviderChange = onProviderChange,
                 onServerChange = onServerChange,
                 hidePanel = { isServerPanelOpened.value = false },
+            )
+        }
+
+        AnimatedVisibility(
+            visible =  isPlaybackSpeedPanelOpened.value,
+            enter = bottomHalfSlideEnter,
+            exit = bottomHalfSlideExit,
+            modifier = Modifier.align(Alignment.CenterStart)
+        ) {
+            PlaybackSpeedPanel(
+                hidePanel = { isPlaybackSpeedPanelOpened.value = false }
             )
         }
     }

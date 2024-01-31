@@ -36,6 +36,7 @@ import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
 import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
+import com.flixclusive.core.ui.player.util.PlayerUiUtil.availablePlaybackSpeeds
 import com.flixclusive.core.ui.player.util.addOffSubtitle
 import com.flixclusive.core.ui.player.util.disableSSLVerification
 import com.flixclusive.core.ui.player.util.getCacheFactory
@@ -474,7 +475,12 @@ class FlixclusivePlayerManager(
     }
 
     fun onPlaybackSpeedChange(speed: Int) {
-        playbackSpeed = 1F + (speed * 0.25F)
+        playbackSpeed = availablePlaybackSpeeds[speed]
+        player?.setPlaybackSpeed(playbackSpeed)
+    }
+
+    fun onPlaybackSpeedChange(speed: Float) {
+        playbackSpeed = speed
         player?.setPlaybackSpeed(playbackSpeed)
     }
 

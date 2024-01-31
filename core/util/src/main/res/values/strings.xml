@@ -157,6 +157,7 @@
     <string name="season_number_formatter">Season %1$d</string>
     <string name="season_runtime_formatter">%1$d Season</string>
     <string name="seek_seconds_format">%1$s seconds</string>
+    <string name="current_playback_speed_format">Current playback speed: %1$sx</string>
 
     <!--  State messages  -->
     <string name="checking_for_updates">Checking for updates…</string>
