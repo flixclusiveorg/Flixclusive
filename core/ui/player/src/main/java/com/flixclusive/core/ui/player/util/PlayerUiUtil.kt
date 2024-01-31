@@ -494,4 +494,8 @@ object PlayerUiUtil {
             }
         }
     }
+
+    val availablePlaybackSpeeds = List(8) {
+        0F + ((it + 1) * 0.25F)
+    }
 }
