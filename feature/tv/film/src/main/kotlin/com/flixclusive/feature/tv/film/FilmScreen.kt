@@ -49,7 +49,6 @@ import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
-import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.tv.FadeInAndOutScreenTransition
 import com.flixclusive.core.ui.tv.component.FilmOverview
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
@@ -99,7 +98,7 @@ fun FilmScreen(
     val film by viewModel.film.collectAsStateWithLifecycle()
     val currentSeasonSelected by viewModel.currentSeasonSelected.collectAsStateWithLifecycle()
 
-    var episodeToWatch: TMDBEpisode? by remember { mutableStateOf(null) }
+    var episodeToPlay: TMDBEpisode? by remember { mutableStateOf(null) }
 
     var isOverviewShowing by remember { mutableStateOf(true) }
     var isPlayerRunning by remember { mutableStateOf(false) }
@@ -156,7 +155,7 @@ fun FilmScreen(
     // TODO: REMOVE THIS!
     LaunchedEffect(currentSeasonSelected) {
         if (currentSeasonSelected is Resource.Success) {
-            episodeToWatch = currentSeasonSelected.data!!.episodes.firstOrNull()
+            episodeToPlay = currentSeasonSelected.data!!.episodes.firstOrNull()
             context.showToast("All good!")
         }
     }
@@ -387,7 +386,7 @@ fun FilmScreen(
                         currentSelectedSeason = currentSeasonSelected,
                         onSeasonChange = viewModel::onSeasonChange,
                         onEpisodeClick = {
-                            episodeToWatch = it
+                            episodeToPlay = it
                             isPlayerRunning = true
                         },
                         onHidePanel = {
@@ -411,11 +410,9 @@ fun FilmScreen(
         ) {
             film?.let {
                 PlayerScreen(
-                    args = PlayerScreenNavArgs(
-                        film = it,
-                        episodeToPlay = episodeToWatch
-                    ),
-                    isPlayerStarting = isPlayerRunning,
+                    film = it,
+                    episodeToPlay = episodeToPlay,
+                    isPlayerRunning = isPlayerRunning,
                     onBack = {
                         isPlayerRunning = false
                         isOverviewShowing = true

@@ -22,11 +22,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.tv.material3.ExperimentalTvMaterial3Api
+import androidx.tv.material3.MaterialTheme
 import com.flixclusive.core.ui.player.PLAYER_CONTROL_VISIBILITY_TIMEOUT
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.AudioFocusManager
@@ -39,10 +39,11 @@ import com.flixclusive.core.ui.tv.util.handleDPadKeyEvents
 import com.flixclusive.core.ui.tv.util.provideLocalDirectionalFocusRequester
 import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.feature.tv.player.controls.PlaybackControls
 import com.flixclusive.model.provider.SourceDataState
+import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Movie
+import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
 import kotlinx.coroutines.delay
 
@@ -51,11 +52,17 @@ private const val PLAYER_SCREEN_DELAY = 800
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun PlayerScreen(
-    args: PlayerScreenNavArgs,
-    isPlayerStarting: Boolean,
+    film: Film,
+    episodeToPlay: TMDBEpisode?,
+    isPlayerRunning: Boolean,
     onBack: () -> Unit,
 ) {
-    val viewModel = playerScreenViewModel(args = args)
+    val viewModel = playerScreenViewModel(
+        args = PlayerScreenNavArgs(
+            film = film,
+            episodeToPlay = episodeToPlay
+        )
+    )
 
     val context = LocalContext.current.getActivity<ComponentActivity>()
 
@@ -65,38 +72,36 @@ fun PlayerScreen(
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
     val currentEpisodeSelected by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
-    LaunchedEffect(args.episodeToPlay, isPlayerStarting) {
-        debugLog("args ${args.episodeToPlay}")
+    LaunchedEffect(episodeToPlay) {
         if (
-            ((currentEpisodeSelected?.episodeId == args.episodeToPlay?.episodeId
-                    && args.film is TvShow) || args.film is Movie)
-            && dialogState !is SourceDataState.Error
-            && dialogState !is SourceDataState.Unavailable
-            && dialogState !is SourceDataState.Idle
+            ((currentEpisodeSelected?.episodeId == episodeToPlay?.episodeId
+                    && film is TvShow) || film is Movie)
+            && dialogState is SourceDataState.Idle
+            && dialogState is SourceDataState.Success
         ) return@LaunchedEffect
 
-        // TODO: UNDO THIS!
-//        viewModel.loadSourceData(
-//            episodeToWatch = args.episodeToPlay,
-//            silently = !isPlayerStarting
-//        )
+        viewModel.loadSourceData(episodeToWatch = episodeToPlay)
     }
 
     BackHandler(
-        enabled = isPlayerStarting
+        enabled = isPlayerRunning
     ) {
         onBack()
     }
 
-    if(dialogState !is SourceDataState.Idle && isPlayerStarting) {
+    if(
+        dialogState !is SourceDataState.Success
+        && dialogState !is SourceDataState.Idle
+        && isPlayerRunning
+    ) {
         SourceDataDialog(
             state = dialogState,
-            onConsumeDialog = viewModel::onConsumePlayerDialog
+            onConsumeDialog = { /* DO NOTHING */ }
         )
     }
 
-    AnimatedVisibility(// TODO: UNDO THIS!!!!
-        visible = /*dialogState is SourceDataState.Success && */isPlayerStarting,
+    AnimatedVisibility(
+        visible = dialogState is SourceDataState.Success && isPlayerRunning,
         enter = fadeIn(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY)),
         exit = fadeOut(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY))
     ) {
@@ -107,14 +112,13 @@ fun PlayerScreen(
         val sourceData = viewModel.sourceData
 
         val currentPlayerTitle = remember(currentEpisodeSelected) {
-            formatPlayerTitle(args.film, currentEpisodeSelected)
+            formatPlayerTitle(film, currentEpisodeSelected)
         }
         var controlTimeoutVisibility by remember {
             mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
         }
 
         var seekMultiplier by remember { mutableLongStateOf(0L) }
-
 
         val isSubtitleStylePanelOpened = remember { mutableStateOf(false) }
         val isSyncSubtitlesPanelOpened = remember { mutableStateOf(false) }
@@ -170,7 +174,11 @@ fun PlayerScreen(
             player.hasBeenInitialized,
             player.isPlaying,
             player.playbackState,
-            isSubtitleStylePanelOpened.value
+            isSubtitleStylePanelOpened.value,
+            isServerPanelOpened.value,
+            isAudioAndSubtitlesPanelOpened.value,
+            isSyncSubtitlesPanelOpened.value,
+            isPlaybackSpeedPanelOpened.value,
         ) {
             showControls(true)
         }
@@ -198,8 +206,7 @@ fun PlayerScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.White)
-//                        .background(MaterialTheme.colorScheme.surface) // TODO: UNCOMMENT THIS
+                        .background(MaterialTheme.colorScheme.surface)
                 ) {
                     AudioFocusManager(
                         activity = context,
@@ -209,6 +216,7 @@ fun PlayerScreen(
                     LifecycleAwarePlayer(
                         isInTv = true,
                         areControlsVisible = viewModel.areControlsVisible,
+                        isSubtitlesVisible = !isSubtitleStylePanelOpened.value,
                         onInitialize = {
                             viewModel.run {
                                 val (currentPosition, _) = getSavedTimeForSourceData(
@@ -254,18 +262,10 @@ fun PlayerScreen(
                                         }
                                     }
                                 },
-                                onUp = {
-                                    showControls(true)
-                                },
-                                onDown = {
-                                    showControls(true)
-                                },
-                                onLeft = {
-                                    seekMultiplier -= 1
-                                },
-                                onRight = {
-                                    seekMultiplier += 1
-                                },
+                                onUp = { showControls(true) },
+                                onDown = { showControls(true) },
+                                onLeft = { seekMultiplier -= 1 },
+                                onRight = { seekMultiplier += 1 },
                             )
                             .focusRequester(playerFocusRequester)
                             .focusable()
@@ -286,7 +286,7 @@ fun PlayerScreen(
                         stateProvider = { uiState },
                         dialogStateProvider = { dialogState },
                         playbackTitle = currentPlayerTitle,
-                        isTvShow = args.film.filmType == FilmType.TV_SHOW,
+                        isTvShow = film.filmType == FilmType.TV_SHOW,
                         isLastEpisode = isLastEpisode,
                         seekMultiplier = seekMultiplier,
                         showControls = { showControls(it) },

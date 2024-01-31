@@ -8,6 +8,7 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -120,6 +121,7 @@ object PlayerUiUtil {
     fun LifecycleAwarePlayer(
         modifier: Modifier = Modifier,
         areControlsVisible: Boolean,
+        isSubtitlesVisible: Boolean = true,
         isInPipMode: Boolean = false,
         isInTv: Boolean = false,
         resizeMode: Int = AspectRatioFrameLayout.RESIZE_MODE_FIT,
@@ -135,6 +137,7 @@ object PlayerUiUtil {
             modifier = modifier,
             areControlsVisible = areControlsVisible,
             isInTv = isInTv,
+            isSubtitlesVisible = isSubtitlesVisible,
             isInPipMode = isInPipMode,
             resizeMode = resizeMode
         )
@@ -189,6 +192,7 @@ object PlayerUiUtil {
     private fun CustomPlayerView(
         modifier: Modifier = Modifier,
         areControlsVisible: Boolean,
+        isSubtitlesVisible: Boolean,
         isInTv: Boolean = false,
         isInPipMode: Boolean = false,
         resizeMode: Int = AspectRatioFrameLayout.RESIZE_MODE_FIT,
@@ -232,12 +236,16 @@ object PlayerUiUtil {
                     showController()
                 }
 
-                playerManager.setSubtitleStyle(
-                    subtitleView = subtitleView,
-                    isInPictureInPictureMode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPipMode,
-                    isInTv = isInTv,
-                    areControlsVisible = areControlsVisible
-                )
+                subtitleView?.visibility = if (isSubtitlesVisible) View.VISIBLE else View.GONE
+
+                if (isSubtitlesVisible) {
+                    playerManager.setSubtitleStyle(
+                        subtitleView = subtitleView,
+                        isInPictureInPictureMode = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPipMode,
+                        isInTv = isInTv,
+                        areControlsVisible = areControlsVisible
+                    )
+                }
             }
         }
     }
