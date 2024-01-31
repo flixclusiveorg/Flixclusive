@@ -51,6 +51,7 @@ import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.core.ui.tv.FadeInAndOutScreenTransition
 import com.flixclusive.core.ui.tv.component.FilmOverview
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
+import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.drawScrimOnBackground
 import com.flixclusive.core.ui.tv.util.drawScrimOnForeground
@@ -179,7 +180,7 @@ fun FilmScreen(
             },
             label = "",
             modifier = Modifier
-                .padding(start = useLocalDrawerWidth())
+                .padding(start = LabelStartPadding.start + useLocalDrawerWidth())
                 .ifElse(
                     condition = !isOverviewShown,
                     ifTrueModifier = Modifier.drawScrimOnForeground()
@@ -270,7 +271,7 @@ fun FilmScreen(
                                 modifier = Modifier
                                     .focusGroup()
                                     .padding(
-                                        start = useLocalDrawerWidth(),
+                                        start = LabelStartPadding.start + useLocalDrawerWidth(),
                                         bottom = 55.dp
                                     )
                                     .animateEnterExit(

@@ -49,6 +49,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.component.FilmCard
 import com.flixclusive.core.ui.tv.component.FilmCardShape
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
+import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.hasPressedLeft
 import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
@@ -91,7 +92,7 @@ internal fun FilmsRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(start = useLocalDrawerWidth())
+                    .padding(start = LabelStartPadding.start + useLocalDrawerWidth())
             ) {
                 Icon(
                     painter = painterResource(id = iconId),
@@ -121,7 +122,7 @@ internal fun FilmsRow(
                             onFocusChange(it.hasFocus)
                         },
                     state = listState,
-                    contentPadding = PaddingValues(start = useLocalDrawerWidth()),
+                    contentPadding = PaddingValues(start = LabelStartPadding.start + useLocalDrawerWidth()),
                     pivotOffsets = PivotOffsets(parentFraction = 0.05F)
                 ) {
                     itemsIndexed(films) { columnIndex, film ->
