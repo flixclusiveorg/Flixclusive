@@ -42,7 +42,8 @@ import com.flixclusive.core.util.R as UtilR
 
 @Composable
 fun FilmErrorSnackbar(
-    errorMessage: UiText?
+    errorMessage: UiText?,
+    modifier: Modifier = Modifier,
 ) {
     AnimatedContent(
         targetState = errorMessage,
@@ -52,7 +53,8 @@ fun FilmErrorSnackbar(
                 initialContentExit = slideOutVertically()
             )
         },
-        label = ""
+        label = "",
+        modifier = modifier
     ) { message ->
         message?.let {
             Surface(
