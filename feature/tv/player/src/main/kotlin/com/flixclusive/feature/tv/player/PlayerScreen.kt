@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -45,6 +46,7 @@ import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private const val PLAYER_SCREEN_DELAY = 800
 
@@ -64,7 +66,8 @@ fun PlayerScreen(
     film: Film,
     episodeToPlay: TMDBEpisode?,
     isPlayerRunning: Boolean,
-    onBack: () -> Unit,
+    isOverviewShown: Boolean,
+    onBack: (isForced: Boolean) -> Unit,
 ) {
     val viewModel = playerScreenViewModel(
         args = PlayerScreenNavArgs(
@@ -74,6 +77,7 @@ fun PlayerScreen(
     )
 
     val context = LocalContext.current.getActivity<ComponentActivity>()
+    val scope = rememberCoroutineScope()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
@@ -101,10 +105,6 @@ fun PlayerScreen(
         }
     }
 
-    BackHandler(enabled = isPlayerRunning) {
-        onBack()
-    }
-
     if(
         dialogState !is SourceDataState.Success
         && dialogState !is SourceDataState.Idle
@@ -115,7 +115,7 @@ fun PlayerScreen(
             onConsumeDialog = {
                 if (dialogState !is SourceDataState.Success) {
                     viewModel.onConsumePlayerDialog()
-                    onBack()
+                    onBack(true)
                 }
             }
         )
@@ -126,10 +126,6 @@ fun PlayerScreen(
         enter = fadeIn(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY)),
         exit = fadeOut(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY))
     ) {
-        LaunchedEffect(Unit) {
-            viewModel.resetUiState()
-        }
-
         val sourceData = viewModel.sourceData
 
         val currentPlayerTitle = remember(currentEpisodeSelected) {
@@ -177,6 +173,33 @@ fun PlayerScreen(
                 Int.MAX_VALUE
             } else {
                 PLAYER_CONTROL_VISIBILITY_TIMEOUT
+            }
+        }
+
+        fun goBackToFilmScreen() {
+            val playWhenReady = player.isPlaying
+            player.pause()
+            player.playWhenReady = playWhenReady
+
+            onBack(false)
+
+            scope.launch {
+                delay(300) // Delay hack pfftt :3
+                showControls(false)
+            }
+        }
+
+        BackHandler(enabled = !isOverviewShown) {
+            goBackToFilmScreen()
+        }
+
+        LaunchedEffect(Unit) {
+            viewModel.resetUiState()
+        }
+
+        LaunchedEffect(isOverviewShown) {
+            if (player.playWhenReady && !isOverviewShown) {
+                player.play()
             }
         }
 
@@ -322,7 +345,7 @@ fun PlayerScreen(
 
                             seekMultiplier += it
                         },
-                        onBack = onBack,
+                        onBack = { goBackToFilmScreen() },
                         onNextEpisode = {
                             player.run {
                                 viewModel.updateWatchHistory(

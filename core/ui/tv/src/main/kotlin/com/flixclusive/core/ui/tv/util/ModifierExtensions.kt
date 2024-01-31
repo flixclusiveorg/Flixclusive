@@ -227,7 +227,7 @@ fun Modifier.focusOnInitialVisibility(
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun Modifier.drawScrimOnBackground(
+fun Modifier.drawScrimOnForeground(
     gradientColor: Color = MaterialTheme.colorScheme.surface
 ) =
     drawWithCache {
@@ -259,6 +259,38 @@ fun Modifier.drawScrimOnBackground(
                 )
             )
         }
+    }
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+fun Modifier.drawScrimOnBackground(
+    gradientColor: Color = MaterialTheme.colorScheme.surface
+) = drawBehind {
+        drawRect(
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    Color.Transparent,
+                    gradientColor,
+                ),
+                endY = size.height.times(0.9F)
+            )
+        )
+        drawRect(
+            brush = Brush.linearGradient(
+                colors = listOf(
+                    gradientColor,
+                    Color.Transparent
+                ),
+                start = Offset(
+                    size.width.times(0.1F),
+                    size.height.times(0.3F)
+                ),
+                end = Offset(
+                    size.width.times(0.75F),
+                    0F
+                )
+            )
+        )
     }
 
 fun Modifier.drawAnimatedBorder(

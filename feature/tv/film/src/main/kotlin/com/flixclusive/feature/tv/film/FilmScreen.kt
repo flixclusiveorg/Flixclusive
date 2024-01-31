@@ -46,12 +46,14 @@ import coil.imageLoader
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
+import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.core.ui.tv.FadeInAndOutScreenTransition
 import com.flixclusive.core.ui.tv.component.FilmOverview
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.drawScrimOnBackground
+import com.flixclusive.core.ui.tv.util.drawScrimOnForeground
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.useLocalFocusTransferredOnLaunch
@@ -99,6 +101,7 @@ fun FilmScreen(
 
     var isPlayerRunning by remember { mutableStateOf(false) }
     var isEpisodesPanelOpen by remember { mutableStateOf(false) }
+    var isOverviewShown by remember { mutableStateOf(true) }
 
     var buttonsHasFocus by remember { mutableStateOf(false) }
     var collectionHasFocus by remember { mutableStateOf(false) }
@@ -141,10 +144,6 @@ fun FilmScreen(
         }
     }
 
-    BackHandler(enabled = !isPlayerRunning) {
-        navigator.goBack()
-    }
-
     val lastItemFocusedMap = useLocalLastFocusedItemPerDestination()
     val currentRoute = useLocalCurrentRoute()
 
@@ -163,6 +162,7 @@ fun FilmScreen(
         modifier = Modifier
             .focusGroup()
             .fillMaxSize()
+            .background(Color.Black)
     ) {
         AnimatedContent(
             targetState = backdropPath,
@@ -178,37 +178,64 @@ fun FilmScreen(
                 )
             },
             label = "",
-            modifier = Modifier.padding(start = useLocalDrawerWidth())
+            modifier = Modifier
+                .padding(start = useLocalDrawerWidth())
+                .ifElse(
+                    condition = !isOverviewShown,
+                    ifTrueModifier = Modifier.drawScrimOnForeground()
+                )
         ) {
             Box(
                 modifier = Modifier
-                    .drawScrimOnBackground(),
+                    .fillMaxWidth()
             ) {
-                Box(
+                AsyncImage(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.Black)
-                ) {
-                    AsyncImage(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .height(400.dp),
-                        model = it,
-                        imageLoader = LocalContext.current.imageLoader,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop
+                        .align(Alignment.TopEnd)
+                        .height(400.dp),
+                    model = it,
+                    imageLoader = LocalContext.current.imageLoader,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        LocalFocusTransferredOnLaunchProvider {
+            Box(
+                modifier = Modifier
+                    .focusGroup()
+                    .fillMaxSize()
+            ) {
+                film?.let {
+                    PlayerScreen(
+                        film = it,
+                        episodeToPlay = episodeToPlay,
+                        isPlayerRunning = isPlayerRunning,
+                        isOverviewShown = isOverviewShown,
+                        onBack = { forceClose ->
+                            if (isEpisodesPanelOpen || forceClose) {
+                                isPlayerRunning = false
+                            } else isOverviewShown = true
+                        }
                     )
                 }
             }
         }
 
         AnimatedVisibility(
-            visible = !isPlayerRunning && !isEpisodesPanelOpen,
+            visible = isOverviewShown,
             enter = fadeIn(),
             exit = fadeOut(),
-            label = ""
+            label = "",
+            modifier = Modifier
+                .drawScrimOnBackground()
         ) {
             LocalFocusTransferredOnLaunchProvider {
+                BackHandler {
+                    navigator.goBack()
+                }
+
                 val isInitialLaunchTransferred = useLocalFocusTransferredOnLaunch()
 
                 DisposableEffect(LocalLifecycleOwner.current) {
@@ -273,7 +300,10 @@ fun FilmScreen(
                                     watchHistoryItem = watchHistoryItem,
                                     isInWatchlist = uiState.isFilmInWatchlist,
                                     isTvShow = film?.filmType == FilmType.TV_SHOW,
-                                    onPlay = { isPlayerRunning = true },
+                                    onPlay = {
+                                        isOverviewShown = false
+                                        isPlayerRunning = true
+                                    },
                                     onWatchlistClick = viewModel::onWatchlistButtonClick,
                                     goBack = navigator::goBack,
                                     onSeeMoreEpisodes = { isEpisodesPanelOpen = true }
@@ -304,6 +334,7 @@ fun FilmScreen(
                                             collectionHasFocus = it
                                         },
                                         onFilmClick = { newFilm ->
+                                            isPlayerRunning = false
                                             viewModel.initializeData(
                                                 filmId = newFilm.id,
                                                 filmType = newFilm.filmType
@@ -334,7 +365,10 @@ fun FilmScreen(
                                     onFocusChange = {
                                         otherFilmsHasFocus = it
                                     },
-                                    onFilmClick = navigator::openFilmScreenSeamlessly
+                                    onFilmClick = {
+                                        isPlayerRunning = false
+                                        navigator.openFilmScreenSeamlessly(it)
+                                    }
                                 )
                             }
                         }
@@ -346,7 +380,10 @@ fun FilmScreen(
                 }
             }
 
-            FilmErrorSnackbar(errorMessage = viewModel.errorSnackBarMessage)
+            FilmErrorSnackbar(
+                errorMessage = viewModel.errorSnackBarMessage,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
     }
 
@@ -380,23 +417,6 @@ fun FilmScreen(
                         }
                     )
                 }
-            }
-        }
-    }
-
-    LocalFocusTransferredOnLaunchProvider {
-        Box(
-            modifier = Modifier
-                .focusGroup()
-                .fillMaxSize()
-        ) {
-            film?.let {
-                PlayerScreen(
-                    film = it,
-                    episodeToPlay = episodeToPlay,
-                    isPlayerRunning = isPlayerRunning,
-                    onBack = { isPlayerRunning = false }
-                )
             }
         }
     }
