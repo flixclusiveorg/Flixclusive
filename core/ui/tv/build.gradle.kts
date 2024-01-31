@@ -13,6 +13,7 @@ dependencies {
     api(projects.core.util)
     implementation(projects.model.tmdb)
     implementation(projects.model.provider)
+    implementation(projects.model.database)
 
     implementation(libs.coil.compose)
     implementation(libs.compose.runtime)

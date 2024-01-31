@@ -93,7 +93,10 @@ fun ImmersiveHomeBackground(
                         .padding(LabelStartPadding.getPaddingValues())
                         .padding(top = 20.dp)
                 ) {
-                    FilmOverview(film = film)
+                    FilmOverview(
+                        film = film,
+                        watchHistoryItem = null
+                    ) // TODO: Add watch history item here.
                 }
             }
         }

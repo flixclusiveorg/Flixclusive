@@ -264,6 +264,7 @@ fun FilmScreen(
                                 ) {
                                     FilmOverview(
                                         film = it,
+                                        watchHistoryItem = watchHistoryItem,
                                         shouldEllipsize = false
                                     )
                                 }
