@@ -450,7 +450,9 @@ abstract class BasePlayerViewModel(
                     resetUiState()
                     resetNextEpisodeQueue()
                 }
-            ).collect { _dialogState.update { it } }
+            ).collect {
+                _dialogState.value = it
+            }
         }
     }
 

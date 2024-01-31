@@ -72,7 +72,7 @@ fun PlayerScreen(
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
     val currentEpisodeSelected by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
-    LaunchedEffect(episodeToPlay) {
+    LaunchedEffect(episodeToPlay, isPlayerRunning) {
         if (
             ((currentEpisodeSelected?.episodeId == episodeToPlay?.episodeId
                     && film is TvShow) || film is Movie)
@@ -83,9 +83,7 @@ fun PlayerScreen(
         viewModel.loadSourceData(episodeToWatch = episodeToPlay)
     }
 
-    BackHandler(
-        enabled = isPlayerRunning
-    ) {
+    BackHandler(enabled = isPlayerRunning) {
         onBack()
     }
 
