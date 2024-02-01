@@ -7,11 +7,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.data.util.InternetMonitor
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
-import com.flixclusive.model.database.util.filterWatchedFilms
+import com.flixclusive.model.database.WatchHistoryItem
+import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.tmdb.Film
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,7 +21,26 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
+
+
+private fun filterWatchedFilms(watchHistoryItem: WatchHistoryItem): Boolean {
+    val isTvShow = watchHistoryItem.seasons != null
+
+    var isFinished = true
+    if (watchHistoryItem.episodesWatched.isEmpty()) {
+        isFinished = false
+    } else if(isTvShow) {
+        val nextEpisodeToWatch = getNextEpisodeToWatch(watchHistoryItem)
+        if(nextEpisodeToWatch.first != null)
+            isFinished = false
+    } else {
+        isFinished = watchHistoryItem.episodesWatched.last().isFinished
+    }
+
+    return isFinished
+}
 
 @HiltViewModel
 class HomeScreenViewModel @Inject constructor(
@@ -61,12 +80,11 @@ class HomeScreenViewModel @Inject constructor(
         .getAllItemsInFlow()
         .onEach { items ->
             items.filterNot(::filterWatchedFilms)
-                .take(10)
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
+            initialValue = runBlocking { watchHistoryRepository.getAllItemsInFlow().first()  }
         )
 
     init {

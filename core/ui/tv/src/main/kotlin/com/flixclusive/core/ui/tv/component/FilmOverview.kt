@@ -169,7 +169,7 @@ fun FilmOverview(
                     CustomLinearProgressIndicator(
                         progress = progress!!,
                         color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.primary.copy(0.4F),
+                        trackColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(0.4F),
                         modifier = Modifier
                             .clip(MaterialTheme.shapes.large)
                     )

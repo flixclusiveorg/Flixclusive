@@ -33,8 +33,15 @@ data class Padding(
     val end: Dp = 0.dp,
     val bottom: Dp = 0.dp
 ) {
+    constructor(
+        horizontal: Dp,
+        vertical: Dp,
+    ) : this(
+        start = horizontal, top = vertical, end = horizontal, bottom = vertical
+    )
+
     constructor(all: Dp) : this(
-        all, all, all, all
+        start = all, top = all, end = all, bottom = all
     )
 
     fun getPaddingValues() = PaddingValues(start, top, end, bottom)

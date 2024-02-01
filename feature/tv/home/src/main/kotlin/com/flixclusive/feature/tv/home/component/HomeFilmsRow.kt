@@ -31,9 +31,10 @@ import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.home.PaginationStateInfo
-import com.flixclusive.feature.tv.home.HOME_FOCUS_KEY_FORMAT
 import com.flixclusive.model.configuration.HomeCategoryItem
 import com.flixclusive.model.tmdb.Film
+
+internal const val HOME_FOCUS_KEY_FORMAT = "row=%d, column=%d"
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable

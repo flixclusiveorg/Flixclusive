@@ -68,7 +68,11 @@ fun FilmCard(
                     focusedGlow = Glow(
                         elevationColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
                         elevation = 15.dp
-                    )
+                    ),
+                    pressedGlow = Glow(
+                        elevationColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
+                        elevation = 40.dp
+                    ),
                 ),
                 border = CardDefaults.border(
                     focusedBorder = Border(

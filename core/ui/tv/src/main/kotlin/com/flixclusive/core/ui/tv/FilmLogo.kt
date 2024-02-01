@@ -42,11 +42,11 @@ fun FilmLogo(
             style = MaterialTheme.typography.titleLarge.copy(
                 fontSize = 30.sp
             ),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             softWrap = true,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.45F)
         )
     } else {
         AsyncImage(

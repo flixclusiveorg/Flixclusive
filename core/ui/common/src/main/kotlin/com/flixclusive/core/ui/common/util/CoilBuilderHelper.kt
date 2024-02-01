@@ -7,7 +7,7 @@ private const val TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/"
 
 fun Context.buildImageUrl(
     imagePath: String?,
-    imageSize: String = "w500"
+    imageSize: String = "w500",
 ): ImageRequest? {
     if(imagePath == null)
         return null

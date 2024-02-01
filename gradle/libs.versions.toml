@@ -43,6 +43,7 @@ media3 = '1.2.0'
 mockk = "1.13.8"
 okhttp = "4.12.0"
 okhttpDnsoverhttps = "4.9.0"
+palette = "1.0.0"
 retrofit = "2.9.0"
 room = "2.6.1"
 serialization = '1.6.0'
@@ -92,6 +93,9 @@ material = { group = "com.google.android.material", name = "material", version.r
 destinations-animations = { module = "io.github.raamcosta.compose-destinations:animations-core", version.ref = "composeDestinations" }
 destinations-core = { module = "io.github.raamcosta.compose-destinations:ksp", version.ref = "composeDestinations" }
 destinations-ksp = { module = "io.github.raamcosta.compose-destinations:ksp", version.ref = "composeDestinations" }
+
+# Palette API
+palette = { module = "androidx.palette:palette", version.ref = "palette" }
 
 # Jsoup
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }

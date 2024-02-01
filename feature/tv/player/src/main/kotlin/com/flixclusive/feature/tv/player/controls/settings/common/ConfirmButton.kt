@@ -54,7 +54,11 @@ internal fun ConfirmButton(
             focusedGlow = Glow(
                 elevationColor = MaterialTheme.colorScheme.primary,
                 elevation = 15.dp
-            )
+            ),
+            pressedGlow = Glow(
+                elevationColor = MaterialTheme.colorScheme.primary,
+                elevation = 40.dp
+            ),
         ),
         shape = ClickableSurfaceDefaults.shape(MaterialTheme.shapes.extraSmall),
         modifier = modifier
