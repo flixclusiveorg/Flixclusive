@@ -30,6 +30,7 @@ import java.net.URLDecoder
 class FlixHQ(client: OkHttpClient) : Provider(client) {
     override val name: String = "FlixHQ"
     override val baseUrl: String = "https://flixhq.to"
+    override val isMaintenance: Boolean = false
 
     private var tvCacheData: TvShowCacheData = TvShowCacheData()
 

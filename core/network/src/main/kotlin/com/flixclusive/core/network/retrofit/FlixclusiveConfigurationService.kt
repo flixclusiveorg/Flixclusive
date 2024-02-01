@@ -25,7 +25,4 @@ interface FlixclusiveConfigurationService {
 
     @GET("$GITHUB_USERNAME/$GITHUB_CONFIG_REPOSITORY/main/app.json")
     suspend fun getAppConfig(): AppConfig
-
-    @GET("$GITHUB_USERNAME/$GITHUB_CONFIG_REPOSITORY/main/providers_config.json")
-    suspend fun getProvidersStatus(): List<ProviderStatus>
 }

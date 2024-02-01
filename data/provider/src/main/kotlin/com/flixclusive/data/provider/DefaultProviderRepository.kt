@@ -3,44 +3,90 @@ package com.flixclusive.data.provider
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.model.datastore.AppSettings
+import com.flixclusive.model.datastore.ProviderPreference
 import com.flixclusive.provider.base.ProviderData
 import com.flixclusive.provider.flixhq.FlixHQ
 import com.flixclusive.provider.lookmovie.LookMovie
 import com.flixclusive.provider.superstream.SuperStream
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 internal class DefaultProviderRepository @Inject constructor(
     client: OkHttpClient,
+    @ApplicationScope private val scope: CoroutineScope,
     private val appSettingsManager: AppSettingsManager,
 ) : ProviderRepository {
-    private val listOfAvailableProviders = arrayListOf(
-        SuperStream(client),
-        LookMovie(client),
-        FlixHQ(client)
-    )
 
     override val providers: SnapshotStateList<ProviderData> = mutableStateListOf()
 
-    override fun populate(
-        name: String,
-        isIgnored: Boolean,
-        isMaintenance: Boolean
-    ) {
-        if(providers.any { it.provider.name == name })
-            return
+    /**
+     *
+     * This is the list of currently embedded providers.
+     * This will be removed soon to support provider add-ons/plugins.
+     *
+     * This is arranged by competence.
+     * */
+    private val listOfAvailableProviders = arrayListOf(
+        FlixHQ(client),
+        LookMovie(client),
+        SuperStream(client)
+    )
 
-        val provider = listOfAvailableProviders.find { it.name.equals(name, true) }
-            ?: throw Exception("Can't find this provider in the available list.")
+    /**
+     *
+     * Initializes provider. It could be based off [listOfAvailableProviders]
+     * or [AppSettings.providers], if the user has a pre-defined order of providers.
+     * */
+    override fun initialize() {
+        scope.launch {
+            val appSettings = appSettingsManager.localAppSettings
+            val providersPreferences = appSettings.providers.toMutableList()
 
-        providers.add(
-            ProviderData(
-                provider = provider,
-                isMaintenance = isMaintenance,
-                isIgnored = isIgnored
+            var isConfigEmpty = providersPreferences.isEmpty()
+            val isNotInitializedCorrectly = providersPreferences.size < listOfAvailableProviders.size
+
+            if (!isConfigEmpty && isNotInitializedCorrectly) {
+                providersPreferences.clear()
+                isConfigEmpty = true
+            }
+
+            listOfAvailableProviders.forEachIndexed { index, availableProvider ->
+                val provider = if (isConfigEmpty) {
+                    availableProvider
+                } else {
+                    listOfAvailableProviders.find {
+                        it.name.equals(
+                            other = providersPreferences[index].name,
+                            ignoreCase = true
+                        )
+                    }!!
+                }
+
+                val isIgnored = providersPreferences.getOrNull(index)?.isIgnored ?: false
+
+                providers.add(
+                    ProviderData(
+                        provider = provider,
+                        isMaintenance = provider.isMaintenance,
+                        isIgnored = isIgnored
+                    )
+                )
+
+                if(isConfigEmpty) {
+                    providersPreferences.add(
+                        ProviderPreference(name = provider.name)
+                    )
+                }
+            }
+
+            appSettingsManager.updateData(
+                appSettings.copy(providers = providersPreferences)
             )
-        )
+        }
     }
 
     override suspend fun swap(
@@ -57,7 +103,7 @@ internal class DefaultProviderRepository @Inject constructor(
         providers[fromIndex] = providers[toIndex]
         providers[toIndex] = tempProvidersList
         
-        appSettings.swapProviders(
+        appSettings.swapProvidersOnSettings(
             fromIndex = fromIndex,
             toIndex = toIndex
         )
@@ -65,10 +111,10 @@ internal class DefaultProviderRepository @Inject constructor(
 
     /**
      *
-     * Swap the provider in app settings
+     * Swap the provider on app settings
      *
      * */
-    private suspend fun AppSettings.swapProviders(
+    private suspend fun AppSettings.swapProvidersOnSettings(
         fromIndex: Int,
         toIndex: Int
     ) {
@@ -101,17 +147,17 @@ internal class DefaultProviderRepository @Inject constructor(
         )
 
 
-        appSettings.toggleProvider(index)
+        appSettings.toggleProviderOnSettings(index)
     }
 
 
     /**
      *
      * Toggles whether to use the provider
-     * inside app settings.
+     * on the app's settings.
      *
      * */
-    private suspend fun AppSettings.toggleProvider(index: Int) {
+    private suspend fun AppSettings.toggleProviderOnSettings(index: Int) {
         // === TOGGLE USAGE on APP SETTINGS
         val providerConfig = providers.toMutableList()
         val dataProvidersConfig = providerConfig[index]
