@@ -81,7 +81,7 @@ internal class MobileAppViewModel @Inject constructor(
 
     fun initializeConfigsIfNull() {
         configurationManager.run {
-            if(homeCategoriesConfig == null || searchCategoriesConfig == null || appConfig == null || providersStatus == null) {
+            if(homeCategoriesConfig == null || searchCategoriesConfig == null || appConfig == null) {
                 initialize()
             }
         }

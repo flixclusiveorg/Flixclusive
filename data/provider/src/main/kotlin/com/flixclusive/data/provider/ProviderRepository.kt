@@ -7,11 +7,7 @@ import com.flixclusive.provider.base.ProviderData
 interface ProviderRepository {
     val providers: SnapshotStateList<ProviderData>
 
-    fun populate(
-        name: String,
-        isIgnored: Boolean,
-        isMaintenance: Boolean
-    )
+    fun initialize()
 
     suspend fun swap(appSettings: AppSettings, fromIndex: Int, toIndex: Int)
 

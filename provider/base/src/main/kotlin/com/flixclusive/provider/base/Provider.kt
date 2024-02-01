@@ -8,10 +8,15 @@ import com.flixclusive.provider.base.dto.FilmInfo
 import com.flixclusive.provider.base.dto.SearchResults
 import okhttp3.OkHttpClient
 
+/**
+ *
+ * The base class for every provider api
+ * */
 abstract class Provider(
     protected val client: OkHttpClient
 ) {
     abstract val name: String
+    abstract val isMaintenance: Boolean
     open val baseUrl: String = ""
 
     /**

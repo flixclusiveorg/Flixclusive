@@ -14,5 +14,4 @@ dependencies {
     api(projects.model.configuration)
 
     implementation(projects.core.network)
-    implementation(projects.data.provider)
 }
