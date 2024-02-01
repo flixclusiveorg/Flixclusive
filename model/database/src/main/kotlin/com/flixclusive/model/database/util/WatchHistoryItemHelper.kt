@@ -18,25 +18,6 @@ fun isFinishedWatching(currentTime: Long, totalTime: Long): Boolean {
     return percentage >= FINISHED_WATCHING_THRESHOLD
 }
 
-
-
-fun filterWatchedFilms(watchHistoryItem: WatchHistoryItem): Boolean {
-    val isTvShow = watchHistoryItem.seasons != null
-
-    var isFinished = true
-    if (watchHistoryItem.episodesWatched.isEmpty()) {
-        isFinished = false
-    } else if(isTvShow) {
-        val nextEpisodeToWatch = getNextEpisodeToWatch(watchHistoryItem)
-        if(nextEpisodeToWatch.first != null)
-            isFinished = false
-    } else {
-        isFinished = watchHistoryItem.episodesWatched.last().isFinished
-    }
-
-    return isFinished
-}
-
 /**
  * Retrieves the next episode to watch based on the watch history item.
  * If the show has been finished watching, it returns a pair of `null` values to indicate that the show is finished.

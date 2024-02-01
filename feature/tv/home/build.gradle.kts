@@ -20,5 +20,7 @@ dependencies {
     implementation(libs.compose.tv.material)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui.alpha)
+    implementation(libs.compose.ui.tooling.preview)
     implementation(libs.lifecycle.runtimeCompose)
+    implementation(libs.palette)
 }

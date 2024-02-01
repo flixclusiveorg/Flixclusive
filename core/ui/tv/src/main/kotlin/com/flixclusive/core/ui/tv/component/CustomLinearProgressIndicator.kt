@@ -15,19 +15,20 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 
 @Composable
 fun CustomLinearProgressIndicator(
     modifier: Modifier = Modifier,
     progress: Float,
     color: Color,
-    trackColor: Color,
+    trackColor: Color = color.onMediumEmphasis(),
 ) {
     Box(
         modifier = Modifier
             .height(4.dp)
-            .width(240.dp)
             .then(modifier)
+            .width(240.dp)
     ) {
         Box(
             modifier = Modifier

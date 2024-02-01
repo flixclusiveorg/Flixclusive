@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
@@ -29,6 +30,7 @@ enum class FilmCover(val ratio: Float) {
         modifier: Modifier = Modifier,
         imagePath: String?,
         imageSize: String,
+        contentScale: ContentScale = ContentScale.FillBounds,
         contentDescription: String? = null,
         onClick: (() -> Unit)? = null,
         onLongClick: (() -> Unit)? = null,
@@ -50,6 +52,7 @@ enum class FilmCover(val ratio: Float) {
             placeholder = imagePlaceholder,
             imageLoader = LocalContext.current.imageLoader,
             error = imagePlaceholder,
+            contentScale = contentScale,
             contentDescription = contentDescription ?: stringResource(id = UtilR.string.film_item_content_description),
             modifier = modifier
                 .aspectRatio(ratio)
