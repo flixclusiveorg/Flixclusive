@@ -383,7 +383,9 @@ fun FilmScreen(
 
             FilmErrorSnackbar(
                 errorMessage = viewModel.errorSnackBarMessage,
-                modifier = Modifier.align(Alignment.TopCenter)
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
             )
         }
     }
