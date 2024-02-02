@@ -249,7 +249,7 @@ fun Modifier.drawScrimOnForeground(
                         Color.Transparent
                     ),
                     start = Offset(
-                        size.width.times(0.1F),
+                        size.width.times(0.3F),
                         size.height.times(0.3F)
                     ),
                     end = Offset(
@@ -279,7 +279,7 @@ fun Modifier.drawScrimOnBackground(
                     Color.Transparent
                 ),
                 start = Offset(
-                    size.width.times(0.1F),
+                    size.width.times(0.3F),
                     size.height.times(0.3F)
                 ),
                 end = Offset(
