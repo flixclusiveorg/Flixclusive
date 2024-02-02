@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -57,7 +56,7 @@ fun ImmersiveHomeBackground(
         ) {
             val backdropImage = context.buildImageUrl(
                 imagePath = it?.backdropImage,
-                imageSize = "w1920_and_h600_multi_faces"
+                imageSize = "w1280"
             )
 
             Box(
@@ -70,8 +69,7 @@ fun ImmersiveHomeBackground(
                         .height(backgroundHeight),
                     model = backdropImage,
                     imageLoader = LocalContext.current.imageLoader,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop
+                    contentDescription = null
                 )
             }
         }

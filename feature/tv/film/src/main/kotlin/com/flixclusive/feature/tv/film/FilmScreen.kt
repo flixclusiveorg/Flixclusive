@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
@@ -126,7 +125,7 @@ fun FilmScreen(
     val backdropPath = remember(film) {
         context.buildImageUrl(
             imagePath = film?.backdropImage,
-            imageSize = "w1920_and_h600_multi_faces"
+            imageSize = "w1280"
         )
     }
     val bottomFade = remember(buttonsHasFocus) {
@@ -196,8 +195,7 @@ fun FilmScreen(
                         .height(400.dp),
                     model = it,
                     imageLoader = LocalContext.current.imageLoader,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop
+                    contentDescription = null
                 )
             }
         }
