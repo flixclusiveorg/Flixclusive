@@ -255,6 +255,7 @@ object PlayerUiUtil {
     fun AudioFocusManager(
         activity: Activity,
         preferredSeekAmount: Long,
+        isTv: Boolean = false,
     ) {
         val playerManager by rememberLocalPlayerManager()
         val scope = rememberCoroutineScope()
@@ -334,7 +335,7 @@ object PlayerUiUtil {
 
                             playerTimeUpdaterJob = scope.launch {
                                 playerManager.run {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !isTv) {
                                         activity.updatePiPParams(
                                             isPlaying = isPlaying,
                                             hasEnded = playbackState == Player.STATE_ENDED,

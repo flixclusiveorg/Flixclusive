@@ -254,7 +254,8 @@ fun PlayerScreen(
                 ) {
                     AudioFocusManager(
                         activity = context,
-                        preferredSeekAmount = appSettings.preferredSeekAmount
+                        preferredSeekAmount = appSettings.preferredSeekAmount,
+                        isTv = true
                     )
 
                     LifecycleAwarePlayer(
