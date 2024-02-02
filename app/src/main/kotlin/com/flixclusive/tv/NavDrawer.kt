@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusDirection
@@ -49,7 +50,9 @@ import com.flixclusive.AppNavigationItem
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.tv.util.LocalLastFocusedItemFocusedRequesterProvider
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
+import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemFocusedRequester
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 
 internal val tvNavigationItems = listOf(
@@ -70,7 +73,7 @@ internal val tvNavigationItems = listOf(
 internal val NavItemsFocusRequesters = List(size = tvNavigationItems.size) { FocusRequester() }
 internal val InitialDrawerWidth = 50.dp
 
-@OptIn(ExperimentalTvMaterial3Api::class)
+@OptIn(ExperimentalTvMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 internal fun NavDrawer(
     modifier: Modifier = Modifier,
@@ -97,62 +100,61 @@ internal fun NavDrawer(
     val drawerColor = MaterialTheme.colorScheme.surface
     val focusRestorerModifiers = createInitialFocusRestorerModifiers()
 
-    val contentFocusRequester = remember { FocusRequester() }
-    Box(
-        modifier = modifier
-    ) {
+    LocalLastFocusedItemFocusedRequesterProvider {
+        val lastItemFocusedFocusRequester = useLocalLastFocusedItemFocusedRequester()
+
         Box(
-            Modifier.focusRequester(contentFocusRequester)
+            modifier = modifier
         ) {
             content()
-        }
 
-        AnimatedVisibility(
-            visible = isNavDrawerVisible,
-            enter = slideInHorizontally(),
-            exit = slideOutHorizontally()
-        ) {
-            Column(
-                modifier = focusRestorerModifiers.parentModifier
-                    .focusGroup()
-                    .fillMaxHeight()
-                    .width(drawerWidth)
-                    .drawBehind {
-                        drawRect(
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    drawerColor,
-                                    Color.Transparent
-                                ),
-                                startX = size.width.times(0.15F)
+            AnimatedVisibility(
+                visible = isNavDrawerVisible,
+                enter = slideInHorizontally(),
+                exit = slideOutHorizontally()
+            ) {
+                Column(
+                    modifier = focusRestorerModifiers.parentModifier
+                        .focusGroup()
+                        .fillMaxHeight()
+                        .width(drawerWidth)
+                        .drawBehind {
+                            drawRect(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        drawerColor,
+                                        Color.Transparent
+                                    ),
+                                    startX = size.width.times(0.15F)
+                                )
                             )
+                        }
+                        .padding(drawerPadding)
+                        .onFocusChanged {
+                            onDrawerStateChange(it.isFocused)
+                        },
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    tvNavigationItems.forEachIndexed { i, item ->
+                        NavDrawerItem(
+                            isDrawerOpen = isDrawerOpen,
+                            appDestination = item,
+                            currentScreen = currentScreen,
+                            onClick = {
+                                onNavigate(item.screen)
+                                focusManager.moveFocus(FocusDirection.Right)
+                            },
+                            modifier = Modifier
+                                .focusRequester(focusRequesters[i])
+                                .ifElse(
+                                    condition = i == 0,
+                                    ifTrueModifier = focusRestorerModifiers.childModifier
+                                )
+                                .focusProperties {
+                                    right = lastItemFocusedFocusRequester.value
+                                }
                         )
                     }
-                    .padding(drawerPadding)
-                    .onFocusChanged {
-                        onDrawerStateChange(it.isFocused)
-                    },
-                verticalArrangement = Arrangement.Center
-            ) {
-                tvNavigationItems.forEachIndexed { i, item ->
-                    NavDrawerItem(
-                        isDrawerOpen = isDrawerOpen,
-                        appDestination = item,
-                        currentScreen = currentScreen,
-                        onClick = {
-                            onNavigate(item.screen)
-                            focusManager.moveFocus(FocusDirection.Right)
-                        },
-                        modifier = Modifier
-                            .focusRequester(focusRequesters[i])
-                            .ifElse(
-                                condition = i == 0,
-                                ifTrueModifier = focusRestorerModifiers.childModifier
-                            )
-                            .focusProperties {
-                                right = contentFocusRequester
-                            }
-                    )
                 }
             }
         }
