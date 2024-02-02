@@ -22,7 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FilmScreenViewModel @Inject constructor(
-    private val filmProvider: FilmProviderUseCase,
+    filmProvider: FilmProviderUseCase,
     watchHistoryRepository: WatchHistoryRepository,
     seasonProvider: SeasonProviderUseCase,
     toggleWatchlistStatusUseCase: ToggleWatchlistStatusUseCase,
@@ -54,7 +54,7 @@ class FilmScreenViewModel @Inject constructor(
             errorSnackBarMessage = null
 
         errorSnackBarMessage = error
-        delay(3000)
+        delay(5000)
         errorSnackBarMessage = null
     }
 }
