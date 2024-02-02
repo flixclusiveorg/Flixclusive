@@ -268,11 +268,8 @@ fun Modifier.drawScrimOnBackground(
 ) = drawBehind {
         drawRect(
             brush = Brush.verticalGradient(
-                colors = listOf(
-                    Color.Transparent,
-                    gradientColor,
-                ),
-                endY = size.height.times(0.9F)
+                0F to Color.Transparent,
+                0.8F to gradientColor,
             )
         )
         drawRect(
