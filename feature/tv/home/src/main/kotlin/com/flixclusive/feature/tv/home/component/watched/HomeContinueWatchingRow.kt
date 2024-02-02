@@ -1,7 +1,6 @@
 package com.flixclusive.feature.tv.home.component.watched
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.foundation.PivotOffsets
 import androidx.tv.foundation.lazy.list.TvLazyRow
+import androidx.tv.foundation.lazy.list.itemsIndexed
 import androidx.tv.foundation.lazy.list.rememberTvLazyListState
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
@@ -33,7 +33,7 @@ import com.flixclusive.core.util.R as UtilR
 
 internal const val HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT = "watchedRow=%d, watchedColumn=%d"
 
-@OptIn(ExperimentalTvMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun HomeContinueWatchingRow(
     modifier: Modifier = Modifier,
@@ -78,14 +78,13 @@ fun HomeContinueWatchingRow(
                 start = LabelStartPadding.start + useLocalDrawerWidth()
             )
         ) {
-            items(count = Int.MAX_VALUE) { i ->
-                val columnIndex = i % items.size
-                val key = String.format(HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT, 0, columnIndex)
+            itemsIndexed(items = items) { i, item ->
+                val key = String.format(HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT, 0, i)
 
                 WatchedFilmCard(
                     modifier = Modifier
                         .focusOnMount(itemKey = key),
-                    watchHistoryItem = items[columnIndex],
+                    watchHistoryItem = item,
                     onClick = onPlayClick,
                 )
             }
