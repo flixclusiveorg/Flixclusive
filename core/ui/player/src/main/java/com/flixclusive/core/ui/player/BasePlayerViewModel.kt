@@ -421,7 +421,6 @@ abstract class BasePlayerViewModel(
      * Function to load [SourceData] from a provider
      *
      * @param episodeToWatch an optional parameter for the episode to watch if film to be watched is a [TvShow]
-     * @param silently a parameter to optionally hide the [SourceDataState] dialog. This is used for tv to seamlessly watch
      */
     fun loadSourceData(
         episodeToWatch: TMDBEpisode? = null,
