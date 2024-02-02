@@ -2,22 +2,25 @@ package com.flixclusive.feature.tv.home.component.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 
-typealias ChangeImmersiveColorCallback = (Color) -> Unit
-internal val LocalImmersiveColorHandler = compositionLocalOf<ChangeImmersiveColorCallback> {
+private val LocalBackgroundImmersiveColor = compositionLocalOf<MutableState<Color?>> {
     error("LocalBackgroundColorSetter is not provided")
 }
 
 @Composable
-fun LocalImmersiveColorHandlerProvider(
-    onColorChange: ChangeImmersiveColorCallback,
+fun LocalImmersiveBackgroundColorProvider(
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(
-        value = LocalImmersiveColorHandler provides rememberUpdatedState(onColorChange).value,
+        value = LocalBackgroundImmersiveColor provides remember { mutableStateOf(null) },
         content = content
     )
 }
+
+@Composable
+fun useLocalImmersiveBackgroundColor() = LocalBackgroundImmersiveColor.current
