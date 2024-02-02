@@ -6,7 +6,7 @@ import com.flixclusive.core.util.json.fromJson
 import com.flixclusive.core.util.network.GET
 import com.flixclusive.core.util.network.asString
 import com.flixclusive.extractor.base.Extractor
-import com.flixclusive.extractor.upcloud.UpCloud
+import com.flixclusive.extractor.upcloud.VidCloud
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.provider.base.Provider
@@ -35,8 +35,8 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
     private var tvCacheData: TvShowCacheData = TvShowCacheData()
 
     override val supportedExtractors: List<Extractor> = listOf(
-        UpCloud(client = client),
-        UpCloud(client = client, isAlternative = true), // Vidcloud
+        VidCloud(client = client),
+        VidCloud(client = client, isAlternative = true), // upcloud
         //"mixdrop",
     )
 
@@ -217,7 +217,7 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
                 .filter { element ->
                     val serverName = element.select("a").getServerName(filmId)
 
-                    supportedExtractors.find { it.name == serverName } != null
+                    supportedExtractors.find { it.name == serverName || it.alternateNames.contains(serverName) } != null
                 }
                 .mapAsync { element ->
                     val anchorElement = element.select("a")
