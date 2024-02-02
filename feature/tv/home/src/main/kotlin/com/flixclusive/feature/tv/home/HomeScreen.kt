@@ -14,10 +14,12 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -36,12 +38,12 @@ import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.shouldPaginate
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
-import com.flixclusive.core.ui.tv.util.useLocalFocusTransferredOnLaunch
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.feature.tv.home.component.HOME_FOCUS_KEY_FORMAT
 import com.flixclusive.feature.tv.home.component.HomeFilmsRow
 import com.flixclusive.feature.tv.home.component.ImmersiveHomeBackground
-import com.flixclusive.feature.tv.home.component.util.LocalImmersiveColorHandlerProvider
+import com.flixclusive.feature.tv.home.component.util.LocalImmersiveBackgroundColorProvider
+import com.flixclusive.feature.tv.home.component.util.useLocalImmersiveBackgroundColor
 import com.flixclusive.feature.tv.home.component.watched.HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT
 import com.flixclusive.feature.tv.home.component.watched.HomeContinueWatchingRow
 import com.flixclusive.model.tmdb.Film
@@ -57,6 +59,7 @@ fun HomeScreen(
     val viewModel: HomeScreenViewModel = hiltViewModel()
 
     val currentRoute = useLocalCurrentRoute()
+    val lastItemFocused = useLocalLastFocusedItemPerDestination()
 
     val listState = rememberTvLazyListState()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -65,22 +68,16 @@ fun HomeScreen(
     val homeRowItems by viewModel.homeRowItems.collectAsStateWithLifecycle()
     val homeRowItemsPagingState by viewModel.homeRowItemsPagingState.collectAsStateWithLifecycle()
     val continueWatchingList by viewModel.continueWatchingList.collectAsStateWithLifecycle()
-    val lastItemFocused = useLocalLastFocusedItemPerDestination()
 
-    var backgroundColor: Color? by remember { mutableStateOf(null) }
     var focusedFilm: Film? by remember { mutableStateOf(null) }
-    var focusedOnWatchedFilms by remember { mutableStateOf(continueWatchingList.isNotEmpty()) }
+    var focusedOnWatchedFilms by rememberSaveable { mutableStateOf(continueWatchingList.isNotEmpty()) }
     val backgroundHeight = 400.dp
 
     val fadeFloat by animateFloatAsState(
         targetValue = if (focusedOnWatchedFilms) 0F else 0.5F,
         label = ""
     )
-    val animatedBackgroundColor by animateColorAsState(
-        targetValue = backgroundColor ?: MaterialTheme.colorScheme.surface,
-        animationSpec = tween(durationMillis = 800),
-        label = ""
-    )
+    val surface = MaterialTheme.colorScheme.surface
 
     // Initialize focus to the first item.
     LaunchedEffect(Unit) {
@@ -102,20 +99,6 @@ fun HomeScreen(
         }
     }
 
-    LaunchedEffect(focusedOnWatchedFilms, lastItemFocused[currentRoute]) {
-        // Check if there's a `watched` term on the last
-        // Focused item before the screen got unfocused.
-        // If true, then don't show the immersive background yet.
-        // See [HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT]
-        focusedOnWatchedFilms = focusedOnWatchedFilms
-            || lastItemFocused[currentRoute]?.contains("watched", true) == true
-
-        // Remove the custom color if watched films aren't focused anymore
-        if (!focusedOnWatchedFilms) {
-            backgroundColor = null
-        }
-    }
-
     LaunchedEffect(focusedFilm) {
         delay(800)
         focusedFilm?.let {
@@ -124,22 +107,47 @@ fun HomeScreen(
     }
 
     LocalFocusTransferredOnLaunchProvider {
-        val isInitialFocusTransferred = useLocalFocusTransferredOnLaunch()
+        LocalImmersiveBackgroundColorProvider {
+            val backgroundColor = useLocalImmersiveBackgroundColor()
 
-        LocalImmersiveColorHandlerProvider(
-            onColorChange = { backgroundColor = it }
-        ) {
+            LaunchedEffect(focusedOnWatchedFilms, lastItemFocused[currentRoute]) {
+                // Check if there's a `watched` term on the last
+                // Focused item before the screen got unfocused.
+                // If true, then don't show the immersive background yet.
+                // See [HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT]
+                focusedOnWatchedFilms = focusedOnWatchedFilms
+                        || lastItemFocused[currentRoute]?.contains("watched", true) == true
+
+                // Remove the custom color if watched films aren't focused anymore
+                if (!focusedOnWatchedFilms) {
+                    backgroundColor.value = null
+                }
+            }
+
+            val animatedBackgroundColor by animateColorAsState(
+                targetValue = backgroundColor.value ?: surface,
+                animationSpec = tween(durationMillis = 800),
+                label = ""
+            )
+
             Box(
                 modifier = Modifier
-                    .onFocusChanged {
-                        // Restore focus hack coz [Modifier.focusRestorer] sucks
-                        if (!it.hasFocus) {
-
-                            isInitialFocusTransferred.value = false
-                        }
-                    }
                     .drawBehind {
-                        drawRect(animatedBackgroundColor)
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    animatedBackgroundColor,
+                                    surface
+                                ),
+                                center = Offset(
+                                    x = size.width,
+                                    y = size.height
+                                ),
+                                radius = size.width.times(0.85F)
+                            )
+                        )
+
+                        drawRect(surface.copy(alpha = 0.6F))
                     }
             ) {
                 AnimatedVisibility(
@@ -185,18 +193,20 @@ fun HomeScreen(
                                 NonFocusableSpacer(height = 110.dp)
                             }
 
-                            item {
-                                HomeContinueWatchingRow(
-                                    items = continueWatchingList,
-                                    onPlayClick = {
-                                        /* TODO: Navigate directly to PlayerScreen */
-                                    },
-                                    modifier = Modifier
-                                        .padding(bottom = 20.dp)
-                                        .onFocusChanged {
-                                            focusedOnWatchedFilms = it.hasFocus
-                                        }
-                                )
+                            if (continueWatchingList.isNotEmpty()) {
+                                item {
+                                    HomeContinueWatchingRow(
+                                        items = continueWatchingList,
+                                        onPlayClick = {
+                                            /* TODO: Navigate directly to PlayerScreen */
+                                        },
+                                        modifier = Modifier
+                                            .padding(bottom = 20.dp)
+                                            .onFocusChanged {
+                                                focusedOnWatchedFilms = it.hasFocus
+                                            }
+                                    )
+                                }
                             }
 
                             items(

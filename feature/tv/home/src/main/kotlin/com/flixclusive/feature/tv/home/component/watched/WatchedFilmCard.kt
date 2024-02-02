@@ -63,7 +63,7 @@ import com.flixclusive.core.util.R
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.film.formatMinutes
-import com.flixclusive.feature.tv.home.component.util.LocalImmersiveColorHandler
+import com.flixclusive.feature.tv.home.component.util.useLocalImmersiveBackgroundColor
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 
@@ -79,7 +79,7 @@ internal fun WatchedFilmCard(
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "")
     val film = watchHistoryItem.film
-    val changeImmersiveColor: (Color) -> Unit = LocalImmersiveColorHandler.current
+    val immersiveBackgroundColor = useLocalImmersiveBackgroundColor()
 
     var isFocused by remember { mutableStateOf(false) }
     var drawable: Drawable? by remember { mutableStateOf(null) }
@@ -89,9 +89,9 @@ internal fun WatchedFilmCard(
             Palette
                 .from(drawable!!.toBitmap())
                 .generate()
-                .darkMutedSwatch
+                .vibrantSwatch
                 ?.rgb?.let {
-                    changeImmersiveColor(Color(it))
+                    immersiveBackgroundColor.value = Color(it)
                 }
         }
     }
