@@ -15,10 +15,13 @@ import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.tv.util.focusOnMount
+
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 internal fun KeyboardButton(
     modifier: Modifier = Modifier,
+    itemKey: String,
     enabled: Boolean = true,
     size: ButtonSize = ButtonSize(KeyboardCellSize),
     colors: ClickableSurfaceColors = ClickableSurfaceDefaults.colors(
@@ -39,6 +42,7 @@ internal fun KeyboardButton(
         colors = colors,
         shape = shape,
         modifier = Modifier
+            .focusOnMount(itemKey = itemKey)
             .size(size.width, size.height)
             .padding(3.dp)
             .then(modifier)
