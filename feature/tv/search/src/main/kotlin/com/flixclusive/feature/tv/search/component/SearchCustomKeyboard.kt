@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,7 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -26,15 +28,14 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
-import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
+import com.flixclusive.core.ui.tv.util.LabelStartPadding
+import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
 import com.flixclusive.feature.tv.search.R
 
 internal val KeyboardCellSize = 35.dp
+internal const val KEYBOARD_FOCUS_KEY_FORMAT = "keyboard=%s"
 
 internal data class ButtonSize(
     val width: Dp,
@@ -66,7 +67,6 @@ internal fun SearchCustomKeyboard(
         '0', '/', '$', '%', '+', '[', ']'
     )
     val alphabets = ('a'..'z').toList() + listOf('-', '\'')
-    val isFirstItemVisible = remember { mutableStateOf(false) }
 
     val textStyle = MaterialTheme.typography.bodyMedium.copy(
         fontSize = 16.sp
@@ -74,90 +74,81 @@ internal fun SearchCustomKeyboard(
 
     val longButtonSize = ButtonSize(
         height = KeyboardCellSize,
-        width = 85.dp
-    )
-    val longButtonColors = ClickableSurfaceDefaults.colors(
-        containerColor = LocalContentColor.current.onMediumEmphasis(emphasis = 0.2F),
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        focusedContainerColor = Color.White,
-        focusedContentColor = MaterialTheme.colorScheme.surface
+        width = (KeyboardCellSize * 2) + 6.dp
     )
     val longButtonShape = ClickableSurfaceDefaults.shape(
         shape = MaterialTheme.shapes.extraSmall
     )
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(5.dp)
+        verticalArrangement = Arrangement.spacedBy(5.dp),
+        modifier = Modifier
+            .padding(start = LabelStartPadding.start + useLocalDrawerWidth())
     ) {
-        AnimatedVisibility(
-            visible = !areSymbolsShown,
-            enter = fadeIn(animationSpec = tween(delayMillis = 100)),
-            exit = fadeOut(animationSpec = tween(delayMillis = 100))
-        ) {
-            FlowRow {
-                alphabets.forEachIndexed { i, alphabet ->
-                    KeyboardButton(
-                        onClick = {
-                            onKeyboardClick(alphabet)
-                        },
-                        modifier = Modifier
-                            .ifElse(
-                                condition = i == 0 && !isFirstItemVisible.value,
-                                ifTrueModifier = Modifier.focusOnInitialVisibility(isFirstItemVisible)
-                            )
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+        Box {
+            this@Column.AnimatedVisibility(
+                visible = !areSymbolsShown,
+                enter = fadeIn(animationSpec = tween(delayMillis = 100)),
+                exit = fadeOut(animationSpec = tween(delayMillis = 100))
+            ) {
+                FlowRow {
+                    alphabets.forEach {
+                        KeyboardButton(
+                            onClick = { onKeyboardClick(it) },
+                            itemKey = String.format(KEYBOARD_FOCUS_KEY_FORMAT, it)
                         ) {
-                            Text(
-                                text = alphabet.uppercase(),
-                                style = textStyle
-                            )
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = it.uppercase(),
+                                    style = textStyle
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-        AnimatedVisibility(
-            visible = areSymbolsShown,
-            enter = fadeIn(animationSpec = tween(delayMillis = 100)),
-            exit = fadeOut(animationSpec = tween(delayMillis = 100))
-        ) {
-            FlowRow {
-                symbolsAndNumbers.forEachIndexed { i, symbolOrNumber ->
-                    KeyboardButton(
-                        onClick = {
-                            onKeyboardClick(symbolOrNumber)
-                        },
-                        modifier = Modifier
-                            .ifElse(
-                                condition = i == 0 && !isFirstItemVisible.value,
-                                ifTrueModifier = Modifier.focusOnInitialVisibility(isFirstItemVisible)
-                            )
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+            this@Column.AnimatedVisibility(
+                visible = areSymbolsShown,
+                enter = fadeIn(animationSpec = tween(delayMillis = 100)),
+                exit = fadeOut(animationSpec = tween(delayMillis = 100))
+            ) {
+                FlowRow {
+                    symbolsAndNumbers.forEach {
+                        KeyboardButton(
+                            onClick = { onKeyboardClick(it) },
+                            itemKey = String.format(KEYBOARD_FOCUS_KEY_FORMAT, it)
                         ) {
-                            Text(
-                                text = symbolOrNumber.toString(),
-                                style = textStyle
-                            )
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = it.toString(),
+                                    style = textStyle
+                                )
+                            }
                         }
                     }
                 }
             }
         }
         
-        FlowRow {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
             KeyboardButton(
                 onClick = {
                     onKeyboardClick(' ')
                 },
                 size = longButtonSize,
-                colors = longButtonColors,
+                itemKey = String.format(KEYBOARD_FOCUS_KEY_FORMAT, "space"),
                 shape = longButtonShape
             ) {
                 Box(
@@ -176,7 +167,7 @@ internal fun SearchCustomKeyboard(
                     areSymbolsShown = !areSymbolsShown
                 },
                 size = longButtonSize,
-                colors = longButtonColors,
+                itemKey = String.format(KEYBOARD_FOCUS_KEY_FORMAT, "symbols"),
                 shape = longButtonShape
             ) {
                 Box(
@@ -196,7 +187,7 @@ internal fun SearchCustomKeyboard(
                 onClick = onBackspacePress,
                 enabled = currentSearchQuery.isNotEmpty(),
                 size = longButtonSize,
-                colors = longButtonColors,
+                itemKey = String.format(KEYBOARD_FOCUS_KEY_FORMAT, "backpress"),
                 shape = longButtonShape
             ) {
                 Box(

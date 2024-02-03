@@ -35,6 +35,10 @@ class SearchScreenViewModel @Inject constructor(
     var searchQuery by mutableStateOf("")
     var isError by mutableStateOf(false)
 
+    init {
+        loadRecentlyTrending()
+    }
+
     fun onSearch() {
         if (searchingJob?.isActive == true)
             return

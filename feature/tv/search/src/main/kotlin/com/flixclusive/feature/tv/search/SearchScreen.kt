@@ -33,14 +33,16 @@ import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.tv.component.FilmCard
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
+import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.shouldPaginate
+import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
+import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.core.util.common.ui.PagingState
+import com.flixclusive.feature.tv.search.component.KEYBOARD_FOCUS_KEY_FORMAT
 import com.flixclusive.feature.tv.search.component.SearchCustomKeyboard
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
 import com.flixclusive.core.ui.common.R as UiCommonR
-
-internal val FilmSearchHeight = 215.dp
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Destination
@@ -62,7 +64,7 @@ fun SearchScreen(
 
     LaunchedEffect(shouldStartPaginate) {
         if(shouldStartPaginate && (viewModel.pagingState == PagingState.IDLE || viewModel.pagingState == PagingState.ERROR))
-            viewModel.onSearch()
+            viewModel.paginate()
     }
 
 
@@ -78,6 +80,14 @@ fun SearchScreen(
         lastSearchedQuery = viewModel.searchQuery
     }
 
+    val lastFocusedItems = useLocalLastFocusedItemPerDestination()
+    val currentRoute = useLocalCurrentRoute()
+    LaunchedEffect(Unit) {
+        lastFocusedItems.getOrPut(currentRoute) {
+            String.format(KEYBOARD_FOCUS_KEY_FORMAT, "a")
+        }
+    }
+
     LocalFocusTransferredOnLaunchProvider {
         Row(
             modifier = Modifier
@@ -86,7 +96,8 @@ fun SearchScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth(0.30F)
+                    .focusGroup()
+                    .fillMaxWidth(0.35F)
                     .fillMaxHeight()
             ) {
                 SearchCustomKeyboard(
@@ -126,9 +137,13 @@ fun SearchScreen(
                     )
                 }
 
+                val filmSearchHeight = 215.dp
+                val filmSearchWidth = 165.dp
+
                 TvLazyVerticalGrid(
-                    columns = TvGridCells.Adaptive(125.dp),
-                    modifier = focusRestorerModifiers.parentModifier
+                    columns = TvGridCells.Adaptive(150.dp),
+                    modifier = focusRestorerModifiers.parentModifier,
+                    state = listState,
                 ) {
                     itemsIndexed(viewModel.searchResults) { i, film ->
                         FilmCard(
@@ -136,12 +151,14 @@ fun SearchScreen(
                                 .ifElse(
                                     condition = i == 0,
                                     ifTrueModifier = focusRestorerModifiers.childModifier
-                                ),
+                                )
+                                .focusOnMount(itemKey = "filmIndex=$i"),
                             film = film,
                             onClick = {
                                 navigator.openFilmScreen(it)
                             },
-                            filmCardHeight = FilmSearchHeight
+                            filmCardHeight = filmSearchHeight,
+                            filmCardWidth = filmSearchWidth,
                         )
                     }
                 }
