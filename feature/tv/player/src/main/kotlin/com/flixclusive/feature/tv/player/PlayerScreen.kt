@@ -181,11 +181,10 @@ fun PlayerScreen(
             player.pause()
             player.playWhenReady = playWhenReady
 
-            onBack(false)
-
             scope.launch {
                 delay(300) // Delay hack pfftt :3
                 showControls(false)
+                onBack(false)
             }
         }
 
