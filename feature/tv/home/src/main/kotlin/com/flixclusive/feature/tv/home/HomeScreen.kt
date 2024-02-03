@@ -71,7 +71,6 @@ fun HomeScreen(
 
     var focusedFilm: Film? by remember { mutableStateOf(null) }
     var focusedOnWatchedFilms by rememberSaveable { mutableStateOf(continueWatchingList.isNotEmpty()) }
-    val backgroundHeight = 400.dp
 
     val fadeFloat by animateFloatAsState(
         targetValue = if (focusedOnWatchedFilms) 0F else 0.5F,
@@ -157,7 +156,6 @@ fun HomeScreen(
                 ) {
                     ImmersiveHomeBackground(
                         headerItem = headerItem,
-                        backgroundHeight = backgroundHeight,
                         modifier = Modifier
                             .padding(start = useLocalDrawerWidth())
                     )

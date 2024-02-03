@@ -23,7 +23,6 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.tv.component.FilmCardHeight
 import com.flixclusive.core.ui.tv.component.FilmPadding
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
-import com.flixclusive.core.ui.tv.util.createDefaultFocusRestorerModifier
 import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
 import com.flixclusive.core.util.exception.safeCall
@@ -53,7 +52,6 @@ fun HomeContinueWatchingRow(
 
     Column(
         modifier = modifier
-            .focusGroup()
             .heightIn(min = FilmPadding.bottom + 18.dp + FilmCardHeight)
     ) {
         Text(
@@ -71,7 +69,7 @@ fun HomeContinueWatchingRow(
         )
 
         TvLazyRow(
-            modifier = createDefaultFocusRestorerModifier(),
+            modifier = Modifier.focusGroup(),
             state = listState,
             pivotOffsets = PivotOffsets(parentFraction = 0.07F),
             contentPadding = PaddingValues(
