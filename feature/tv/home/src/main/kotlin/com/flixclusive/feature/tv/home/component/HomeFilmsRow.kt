@@ -20,11 +20,12 @@ import androidx.tv.foundation.lazy.list.rememberTvLazyListState
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.tv.component.FilmCard
 import com.flixclusive.core.ui.tv.component.FilmCardHeight
 import com.flixclusive.core.ui.tv.component.FilmPadding
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
-import com.flixclusive.core.ui.tv.util.createDefaultFocusRestorerModifier
+import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.shouldPaginate
 import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
@@ -48,6 +49,8 @@ internal fun HomeFilmsRow(
     onFocusedFilmChange: (film: Film) -> Unit,
     paginate: (query: String, page: Int) -> Unit,
 ) {
+    val focusRestorers = createInitialFocusRestorerModifiers()
+
     val listState = rememberTvLazyListState()
 
     val shouldStartPaginate by remember {
@@ -73,7 +76,8 @@ internal fun HomeFilmsRow(
         if (
             shouldStartPaginate && paginationState.canPaginate
             && (paginationState.pagingState == PagingState.IDLE
-            || paginationState.pagingState == PagingState.ERROR)
+            || paginationState.pagingState == PagingState.ERROR
+            || films.isEmpty())
         ) {
             paginate(
                 categoryItem.query,
@@ -83,8 +87,7 @@ internal fun HomeFilmsRow(
     }
 
     Column(
-        modifier = modifier
-            .focusGroup()
+        modifier = Modifier
             .heightIn(min = FilmPadding.bottom + 18.dp + FilmCardHeight)
     ) {
         Text(
@@ -102,7 +105,9 @@ internal fun HomeFilmsRow(
         )
 
         TvLazyRow(
-            modifier = createDefaultFocusRestorerModifier(),
+            modifier = Modifier
+                .focusGroup()
+                .then(focusRestorers.parentModifier),
             pivotOffsets = PivotOffsets(parentFraction = 0.07F),
             state = listState,
             contentPadding = PaddingValues(
@@ -119,6 +124,10 @@ internal fun HomeFilmsRow(
 
                 FilmCard(
                     modifier = Modifier
+                        .ifElse(
+                            condition = it == 0,
+                            ifTrueModifier = focusRestorers.childModifier
+                        )
                         .focusOnMount(
                             itemKey = key,
                             onFocus = {
