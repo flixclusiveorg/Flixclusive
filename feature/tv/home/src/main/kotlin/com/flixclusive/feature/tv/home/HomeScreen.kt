@@ -187,10 +187,6 @@ fun HomeScreen(
                             pivotOffsets = PivotOffsets(if (focusedOnWatchedFilms) 0.15F else 0.55F),
                             state = listState,
                         ) {
-                            items(3) {
-                                NonFocusableSpacer(height = 110.dp)
-                            }
-
                             if (continueWatchingList.isNotEmpty()) {
                                 item {
                                     HomeContinueWatchingRow(
@@ -204,6 +200,10 @@ fun HomeScreen(
                                                 focusedOnWatchedFilms = it.hasFocus
                                             }
                                     )
+                                }
+                            } else {
+                                items(3) {
+                                    NonFocusableSpacer(height = 110.dp)
                                 }
                             }
 
