@@ -166,7 +166,7 @@ internal fun BottomControls(
                         }
                     }
                     .focusProperties {
-                        up = topFocusRequester
+                        up = if (isSeeking) FocusRequester.Cancel else topFocusRequester
                         left = FocusRequester.Cancel
                         right = FocusRequester.Cancel
                     }
