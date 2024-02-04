@@ -10,18 +10,27 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.ui.common.SearchFilter
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
+import com.flixclusive.core.util.film.replaceTypeInUrl
 import com.flixclusive.data.tmdb.TMDBRepository
+import com.flixclusive.domain.search.GetSearchRecommendedCardsUseCase
+import com.flixclusive.model.configuration.SearchCategoryItem
+import com.flixclusive.model.tmdb.TMDBPageResponse
 import com.flixclusive.model.tmdb.TMDBSearchItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SearchScreenViewModel @Inject constructor(
-    private val tmdbRepository: TMDBRepository
+    private val tmdbRepository: TMDBRepository,
+    private val getSearchRecommendedCardsUseCase: GetSearchRecommendedCardsUseCase
 ) : ViewModel() {
     val searchResults = mutableStateListOf<TMDBSearchItem>()
+    val searchSuggestions = mutableStateListOf<String>()
 
     private var searchingJob: Job? = null
     private var onChangeFilterJob: Job? = null
@@ -29,11 +38,30 @@ class SearchScreenViewModel @Inject constructor(
     private var page by mutableIntStateOf(1)
     private var maxPage by mutableIntStateOf(1)
     var currentFilterSelected by mutableStateOf(SearchFilter.ALL)
+        private set
     var canPaginate by mutableStateOf(false)
+        private set
     var pagingState by mutableStateOf(PagingState.IDLE)
+        private set
 
     var searchQuery by mutableStateOf("")
+        private set
+    var selectedCategory: SearchCategoryItem? by mutableStateOf(null)
+        private set
     var isError by mutableStateOf(false)
+        private set
+
+    val categories = getSearchRecommendedCardsUseCase.cards
+        .map { value ->
+            if (value is Resource.Success) {
+                Resource.Success(value.data?.filterNot { it.id == -1 })
+            } else value
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = Resource.Loading
+        )
 
     init {
         loadRecentlyTrending()
@@ -69,113 +97,150 @@ class SearchScreenViewModel @Inject constructor(
     }
 
     fun onQueryChange(query: String) {
+        selectedCategory = null // remove selected category
+
         searchQuery = query
     }
 
+    fun onCategoryChange(item: SearchCategoryItem) {
+        selectedCategory = item
+    }
+
     fun paginate() {
-        if(searchQuery.isNotEmpty()) {
-            getSearchItems()
-        } else loadRecentlyTrending()
+        when {
+            selectedCategory != null -> getCategoryItems()
+            searchQuery.isNotBlank() -> getSearchItems()
+            else -> loadRecentlyTrending()
+        }
+    }
+
+    private fun loadItems(
+        callResponse: Resource<TMDBPageResponse<TMDBSearchItem>>,
+        onSuccess: TMDBPageResponse<TMDBSearchItem>.() -> Unit
+    ) {
+        if (page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE))
+            return
+
+        pagingState = when (page) {
+            1 -> PagingState.LOADING
+            else -> PagingState.PAGINATING
+        }
+
+        when (callResponse) {
+            is Resource.Failure -> {
+                pagingState = when (page) {
+                    1 -> PagingState.ERROR
+                    else -> PagingState.PAGINATING_EXHAUST
+                }
+            }
+            Resource.Loading -> Unit
+            is Resource.Success -> {
+                callResponse.data?.run(onSuccess)
+            }
+        }
     }
 
     private fun getSearchItems() {
         viewModelScope.launch {
-            if (page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE) || searchQuery.isEmpty())
-                return@launch
-
-            pagingState = when (page) {
-                1 -> PagingState.LOADING
-                else -> PagingState.PAGINATING
-            }
-
-            when (
-                val result = tmdbRepository.search(
+            loadItems(
+                callResponse = tmdbRepository.search(
                     mediaType = currentFilterSelected.type,
                     page = page,
                     query = searchQuery
-                )
-            ) {
-                is Resource.Failure -> {
-                    pagingState = when (page) {
-                        1 -> PagingState.ERROR
-                        else -> PagingState.PAGINATING_EXHAUST
+                ),
+                onSuccess = {
+                    val results = results
+                        .filterNot { it.posterImage == null }
+
+                    maxPage = totalPages
+                    canPaginate = results.size == 20 || page < maxPage
+
+                    if (page == 1) {
+                        searchResults.clear()
+
+                        searchSuggestions.clear()
+                        searchSuggestions.addAll(results.map { it.title }.take(6))
                     }
+
+                    searchResults.addAll(results)
+
+                    pagingState = PagingState.IDLE
+
+                    if (canPaginate)
+                        this@SearchScreenViewModel.page++
                 }
+            )
+        }
+    }
 
-                Resource.Loading -> Unit
-                is Resource.Success -> {
-                    result.data?.run {
-                        val results = results
-                            .filterNot { it.posterImage == null }
+    private fun getCategoryItems() {
+        viewModelScope.launch {
+            val filmTypeCouldBeBoth = selectedCategory!!.mediaType == "all"
+            val urlQuery = if(filmTypeCouldBeBoth && currentFilterSelected != SearchFilter.ALL) {
+                selectedCategory!!.query.replaceTypeInUrl(currentFilterSelected.type)
+            } else selectedCategory!!.query
 
-                        maxPage = totalPages
-                        canPaginate = results.size == 20 || page < maxPage
 
-                        if (page == 1) {
-                            searchResults.clear()
-                        }
+            loadItems(
+                callResponse = tmdbRepository.paginateConfigItems(
+                    url = urlQuery,
+                    page = page
+                ),
+                onSuccess = {
+                    val results = results
+                        .filterNot { it.posterImage == null }
 
-                        searchResults.addAll(results)
+                    maxPage = totalPages
+                    canPaginate = results.size == 20 || page < maxPage
 
-                        pagingState = PagingState.IDLE
-
-                        if (canPaginate)
-                            this@SearchScreenViewModel.page++
+                    if (page == 1) {
+                        searchResults.clear()
+                        searchSuggestions.clear()
                     }
+
+                    searchResults.addAll(results)
+                    searchSuggestions.addAll(results.map { it.title })
+
+                    pagingState = PagingState.IDLE
+
+                    if (canPaginate)
+                        this@SearchScreenViewModel.page++
                 }
-            }
+            )
         }
     }
 
     private fun loadRecentlyTrending() {
         viewModelScope.launch {
-            if (page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE))
-                return@launch
-
-            pagingState = when (page) {
-                1 -> PagingState.LOADING
-                else -> PagingState.PAGINATING
-            }
-
             val filmType =
                 if (currentFilterSelected.type == "multi")
                     "all"
                 else currentFilterSelected.type
 
-            when (
-                val result = tmdbRepository.getTrending(
+            loadItems(
+                callResponse = tmdbRepository.getTrending(
                     mediaType = filmType,
                     page = page,
-                )
-            ) {
-                is Resource.Failure -> {
-                    pagingState = when (page) {
-                        1 -> PagingState.ERROR
-                        else -> PagingState.PAGINATING_EXHAUST
+                ),
+                onSuccess = {
+                    val results = results
+                        .filterNot { it.posterImage == null }
+
+                    maxPage = totalPages
+                    canPaginate = results.size == 20 || page < maxPage
+
+                    if (page == 1) {
+                        searchResults.clear()
                     }
+
+                    searchResults.addAll(results)
+
+                    pagingState = PagingState.IDLE
+
+                    if (canPaginate)
+                        this@SearchScreenViewModel.page++
                 }
-                Resource.Loading -> Unit
-                is Resource.Success -> {
-                    result.data?.run {
-                        val results = results
-                            .filterNot { it.posterImage == null }
-
-                        maxPage = totalPages
-                        canPaginate = results.size == 20 || page < maxPage
-
-                        if (page == 1) {
-                            searchResults.clear()
-                        }
-
-                        searchResults.addAll(results)
-
-                        pagingState = PagingState.IDLE
-
-                        if (canPaginate)
-                            this@SearchScreenViewModel.page++
-                    }
-                }
-            }
+            )
         }
     }
 }

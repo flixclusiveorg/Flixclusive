@@ -20,9 +20,9 @@ data class SearchCategoryItem(
     @SerializedName("type") override val mediaType: String
 ) : Serializable, CategoryItem {
     override fun equals(other: Any?): Boolean {
-        val newData = other as SearchCategoryItem
+        val newData = other as? SearchCategoryItem
 
-        return name == newData.name && query == newData.query
+        return name == newData?.name && query == newData.query
     }
 
     override fun hashCode(): Int {

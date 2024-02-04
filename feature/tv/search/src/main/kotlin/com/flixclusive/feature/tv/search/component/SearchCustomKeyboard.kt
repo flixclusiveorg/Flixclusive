@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,13 +24,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.flixclusive.core.ui.tv.util.LabelStartPadding
-import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
 import com.flixclusive.feature.tv.search.R
 
 internal val KeyboardCellSize = 35.dp
@@ -47,9 +43,11 @@ internal data class ButtonSize(
 @OptIn(ExperimentalLayoutApi::class, ExperimentalTvMaterial3Api::class)
 @Composable
 internal fun SearchCustomKeyboard(
+    modifier: Modifier = Modifier,
     currentSearchQuery: String,
     onKeyboardClick: (letter: Char) -> Unit,
-    onBackspacePress: () -> Unit
+    onBackspaceClick: () -> Unit,
+    onBackspaceLongClick: () -> Unit,
 ) {
     var areSymbolsShown by remember { mutableStateOf(false) }
     val symbolButtonText = remember(areSymbolsShown) {
@@ -76,14 +74,10 @@ internal fun SearchCustomKeyboard(
         height = KeyboardCellSize,
         width = (KeyboardCellSize * 2) + 6.dp
     )
-    val longButtonShape = ClickableSurfaceDefaults.shape(
-        shape = MaterialTheme.shapes.extraSmall
-    )
 
     Column(
         verticalArrangement = Arrangement.spacedBy(5.dp),
-        modifier = Modifier
-            .padding(start = LabelStartPadding.start + useLocalDrawerWidth())
+        modifier = modifier
     ) {
         Box {
             this@Column.AnimatedVisibility(
@@ -91,7 +85,10 @@ internal fun SearchCustomKeyboard(
                 enter = fadeIn(animationSpec = tween(delayMillis = 100)),
                 exit = fadeOut(animationSpec = tween(delayMillis = 100))
             ) {
-                FlowRow {
+                FlowRow(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
                     alphabets.forEach {
                         KeyboardButton(
                             onClick = { onKeyboardClick(it) },
@@ -148,8 +145,7 @@ internal fun SearchCustomKeyboard(
                     onKeyboardClick(' ')
                 },
                 size = longButtonSize,
-                itemKey = String.format(KEYBOARD_FOCUS_KEY_FORMAT, "space"),
-                shape = longButtonShape
+                itemKey = String.format(KEYBOARD_FOCUS_KEY_FORMAT, "space")
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -167,8 +163,7 @@ internal fun SearchCustomKeyboard(
                     areSymbolsShown = !areSymbolsShown
                 },
                 size = longButtonSize,
-                itemKey = String.format(KEYBOARD_FOCUS_KEY_FORMAT, "symbols"),
-                shape = longButtonShape
+                itemKey = String.format(KEYBOARD_FOCUS_KEY_FORMAT, "symbols")
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -184,11 +179,11 @@ internal fun SearchCustomKeyboard(
             }
 
             KeyboardButton(
-                onClick = onBackspacePress,
+                onClick = onBackspaceClick,
                 enabled = currentSearchQuery.isNotEmpty(),
                 size = longButtonSize,
                 itemKey = String.format(KEYBOARD_FOCUS_KEY_FORMAT, "backpress"),
-                shape = longButtonShape
+                onLongClick = onBackspaceLongClick
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),

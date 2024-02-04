@@ -24,7 +24,7 @@ import com.flixclusive.core.ui.tv.component.FilmCardHeight
 import com.flixclusive.core.ui.tv.component.FilmPadding
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.focusOnMount
-import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
+import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.database.WatchHistoryItem
 import kotlinx.coroutines.launch
@@ -61,7 +61,7 @@ fun HomeContinueWatchingRow(
                 fontSize = 40.sp
             ),
             modifier = Modifier
-                .padding(start = LabelStartPadding.start + useLocalDrawerWidth())
+                .padding(start = LabelStartPadding.start + getLocalDrawerWidth())
                 .padding(
                     bottom = FilmPadding.bottom,
                     top = 18.dp
@@ -73,7 +73,7 @@ fun HomeContinueWatchingRow(
             state = listState,
             pivotOffsets = PivotOffsets(parentFraction = 0.07F),
             contentPadding = PaddingValues(
-                start = LabelStartPadding.start + useLocalDrawerWidth()
+                start = LabelStartPadding.start + getLocalDrawerWidth()
             )
         ) {
             itemsIndexed(items = items) { i, item ->

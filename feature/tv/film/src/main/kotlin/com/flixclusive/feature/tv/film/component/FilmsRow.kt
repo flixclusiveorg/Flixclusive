@@ -52,7 +52,7 @@ import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.hasPressedLeft
-import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
+import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.model.tmdb.Film
 
@@ -92,7 +92,7 @@ internal fun FilmsRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(start = LabelStartPadding.start + useLocalDrawerWidth())
+                    .padding(start = LabelStartPadding.start + getLocalDrawerWidth())
             ) {
                 Icon(
                     painter = painterResource(id = iconId),
@@ -122,7 +122,7 @@ internal fun FilmsRow(
                             onFocusChange(it.hasFocus)
                         },
                     state = listState,
-                    contentPadding = PaddingValues(start = LabelStartPadding.start + useLocalDrawerWidth()),
+                    contentPadding = PaddingValues(start = LabelStartPadding.start + getLocalDrawerWidth()),
                     pivotOffsets = PivotOffsets(parentFraction = 0.05F)
                 ) {
                     itemsIndexed(films) { columnIndex, film ->

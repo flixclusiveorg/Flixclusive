@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatterBuilder
 import java.time.format.DateTimeParseException
 import java.util.Calendar
 import java.util.Locale
+import java.util.regex.Pattern
 
 /**
  * Determines whether the given date string represents a date in the future.
@@ -47,4 +48,15 @@ fun isDateInFuture(
         val date = formatter.parse(dateString)
         date?.after(currentDate) ?: false
     }
+}
+
+fun String.replaceTypeInUrl(type: String): String {
+    val pattern = Pattern.compile("(?<=/)[a-z]+(?=\\?)")
+    val matcher = pattern.matcher(this)
+
+    if (matcher.find()) {
+        return matcher.replaceFirst(type)
+    }
+
+    return this
 }
