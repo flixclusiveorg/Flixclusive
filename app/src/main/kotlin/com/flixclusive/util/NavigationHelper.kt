@@ -26,7 +26,7 @@ import com.flixclusive.mobile.MobileAppNavigator
 import com.flixclusive.mobile.MobileNavGraphs
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
-import com.flixclusive.tv.TvAppNavigator
+import com.flixclusive.tv.AppTvNavigator
 import com.flixclusive.tv.TvNavGraphs
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.ramcosta.composedestinations.DestinationsNavHost
@@ -133,7 +133,7 @@ internal fun AppNavHost(
         dependenciesContainerBuilder = {
             if (isTv) {
                 dependency(
-                    TvAppNavigator(
+                    AppTvNavigator(
                         destination = navBackStackEntry.destination,
                         navController = navController,
                         closeApp = closeApp

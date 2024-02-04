@@ -27,6 +27,7 @@ import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.database.WatchHistoryItem
+import com.flixclusive.model.tmdb.Film
 import kotlinx.coroutines.launch
 import com.flixclusive.core.util.R as UtilR
 
@@ -37,7 +38,7 @@ internal const val HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT = "watchedRow=%d, watched
 fun HomeContinueWatchingRow(
     modifier: Modifier = Modifier,
     items: List<WatchHistoryItem>,
-    onPlayClick: () -> Unit,
+    onPlayClick: (Film) -> Unit,
 ) {
     val listState = rememberTvLazyListState()
     val scope = rememberCoroutineScope()
@@ -83,7 +84,7 @@ fun HomeContinueWatchingRow(
                     modifier = Modifier
                         .focusOnMount(itemKey = key),
                     watchHistoryItem = item,
-                    onClick = onPlayClick,
+                    onClick = { onPlayClick(item.film) },
                 )
             }
         }
