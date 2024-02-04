@@ -1,11 +1,13 @@
 package com.flixclusive.core.ui.player
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.watch_history.WatchHistoryRepository
@@ -31,19 +33,29 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import okhttp3.OkHttpClient
 import kotlin.math.max
 import com.flixclusive.core.util.R as UtilR
 
 abstract class BasePlayerViewModel(
     args: PlayerScreenNavArgs,
+    client: OkHttpClient,
+    context: Context,
+    playerCacheManager: PlayerCacheManager,
     watchHistoryRepository: WatchHistoryRepository,
     private val appSettingsManager: AppSettingsManager,
     private val seasonProviderUseCase: SeasonProviderUseCase,
     private val sourceLinksProvider: SourceLinksProviderUseCase,
     private val watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
-    val player: FlixclusivePlayerManager,
 ) : ViewModel() {
     val film = args.film
+
+    val player = FlixclusivePlayerManager(
+        client = client,
+        context = context,
+        playerCacheManager = playerCacheManager,
+        appSettings = appSettingsManager.localAppSettings
+    )
 
     val sourceData: SourceData
         get() = sourceLinksProvider.getLinks(
@@ -410,7 +422,9 @@ abstract class BasePlayerViewModel(
      *
      * @param episodeToWatch an optional parameter for the episode to watch if film to be watched is a [TvShow]
      */
-    fun loadSourceData(episodeToWatch: TMDBEpisode? = null) {
+    fun loadSourceData(
+        episodeToWatch: TMDBEpisode? = null,
+    ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
             showErrorOnUiCallback(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
             return
@@ -435,8 +449,8 @@ abstract class BasePlayerViewModel(
                     resetUiState()
                     resetNextEpisodeQueue()
                 }
-            ).collect { state ->
-                _dialogState.update { state }
+            ).collect {
+                _dialogState.value = it
             }
         }
     }

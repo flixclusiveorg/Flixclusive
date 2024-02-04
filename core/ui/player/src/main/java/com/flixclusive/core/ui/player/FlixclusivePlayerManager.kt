@@ -34,9 +34,9 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
-import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
+import com.flixclusive.core.ui.player.util.PlayerUiUtil.availablePlaybackSpeeds
 import com.flixclusive.core.ui.player.util.addOffSubtitle
 import com.flixclusive.core.ui.player.util.disableSSLVerification
 import com.flixclusive.core.ui.player.util.getCacheFactory
@@ -47,16 +47,14 @@ import com.flixclusive.core.ui.player.util.getSubtitleMimeType
 import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.USER_AGENT
+import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.player.CaptionSizePreference.Companion.getDp
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.util.Locale
-import javax.inject.Inject
 import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
 
@@ -89,14 +87,12 @@ enum class PlayerEvents {
  *
  */
 @OptIn(UnstableApi::class)
-class FlixclusivePlayerManager @Inject constructor(
+class FlixclusivePlayerManager(
     client: OkHttpClient,
     private val context: Context,
     private val playerCacheManager: PlayerCacheManager,
-    appSettingsManager: AppSettingsManager
+    private var appSettings: AppSettings
 ) : Player.Listener {
-    private val appSettings = runBlocking { appSettingsManager.appSettings.data.first() }
-
     private var mediaSession: MediaSession? = null
     var player: ExoPlayer? by mutableStateOf(null)
         private set
@@ -418,7 +414,7 @@ class FlixclusivePlayerManager @Inject constructor(
     fun onSubtitleChange(index: Int) {
         selectedSubtitleIndex = index
 
-        preferredSubtitleLanguage = availableSubtitles[selectedSubtitleIndex].language
+        preferredSubtitleLanguage = availableSubtitles.getOrNull(selectedSubtitleIndex)?.language ?: return
 
         val oldTrackSelectionParameters = player?.trackSelectionParameters
 
@@ -449,7 +445,7 @@ class FlixclusivePlayerManager @Inject constructor(
     fun onAudioChange(index: Int) {
         selectedAudio = index
 
-        audioTrackGroups[selectedAudio]?.let { group ->
+        audioTrackGroups.getOrNull(selectedAudio)?.let { group ->
             player?.run {
                 trackSelectionParameters =
                     trackSelectionParameters.buildUpon()
@@ -479,7 +475,12 @@ class FlixclusivePlayerManager @Inject constructor(
     }
 
     fun onPlaybackSpeedChange(speed: Int) {
-        playbackSpeed = 1F + (speed * 0.25F)
+        playbackSpeed = availablePlaybackSpeeds[speed]
+        player?.setPlaybackSpeed(playbackSpeed)
+    }
+
+    fun onPlaybackSpeedChange(speed: Float) {
+        playbackSpeed = speed
         player?.setPlaybackSpeed(playbackSpeed)
     }
 
@@ -581,10 +582,8 @@ class FlixclusivePlayerManager @Inject constructor(
             // Add margin on subtitle view
             var subtitleMarginBottom = 0.05F
 
-            if (areControlsVisible && !isInTv) {
+            if (areControlsVisible) {
                 subtitleMarginBottom += 0.15F
-            } else if (areControlsVisible) {
-                subtitleMarginBottom += 0.22F
             }
 
             setBottomPaddingFraction(subtitleMarginBottom)
@@ -606,12 +605,15 @@ class FlixclusivePlayerManager @Inject constructor(
             setApplyEmbeddedFontSizes(false)
             setApplyEmbeddedStyles(false)
             setStyle(style)
-            //translationY = 20.toPx.toFloat()
             setFixedTextSize(
                 /* unit = */ TypedValue.COMPLEX_UNIT_SP,
                 /* size = */ fontSize
             )
         }
+    }
+
+    fun updateAppSettings(newAppSettings: AppSettings) {
+        appSettings = newAppSettings
     }
 
     /**

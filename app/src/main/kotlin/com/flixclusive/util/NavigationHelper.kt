@@ -20,11 +20,14 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import com.flixclusive.MobileNavGraphs
+import androidx.navigation.NavOptionsBuilder
 import com.flixclusive.ROOT
 import com.flixclusive.mobile.MobileAppNavigator
+import com.flixclusive.mobile.MobileNavGraphs
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.tv.AppTvNavigator
+import com.flixclusive.tv.TvNavGraphs
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.defaults.RootNavGraphDefaultAnimations
@@ -53,21 +56,25 @@ internal fun NavHostController.navigateSingleTopTo(
 private fun NavBackStackEntry.lifecycleIsResumed() =
     lifecycle.currentState == Lifecycle.State.RESUMED
 
-internal fun NavController.navigateIfResumed(direction: Direction) {
+internal fun NavController.navigateIfResumed(
+    direction: Direction,
+    navOptionsBuilder: NavOptionsBuilder.() -> Unit = {}
+) {
     if (currentBackStackEntry?.lifecycleIsResumed() == false) {
         return
     }
 
-    navigate(direction)
+    navigate(direction, navOptionsBuilder)
 }
 
 internal fun NavDestination.navGraph(isTv: Boolean = false): NavGraphSpec {
     hierarchy.forEach { destination ->
-        if (!isTv) {
-            MobileNavGraphs.root.nestedNavGraphs.forEach { navGraph ->
-                if (destination.route == navGraph.route) {
-                    return navGraph
-                }
+        when (isTv) {
+            true -> TvNavGraphs.root
+            else -> MobileNavGraphs.root
+        }.nestedNavGraphs.forEach { navGraph ->
+            if (destination.route == navGraph.route) {
+                return navGraph
             }
         }
     }
@@ -108,32 +115,41 @@ internal fun NavController.currentScreenAsState(
 internal fun AppNavHost(
     navController: NavHostController,
     isTv: Boolean = false,
-    previewFilm: (Film) -> Unit,
-    play: (Film, TMDBEpisode?) -> Unit,
     closeApp: () -> Unit,
+    previewFilm: (Film) -> Unit = {},
+    play: (Film, TMDBEpisode?) -> Unit = { _, _ -> },
 ) {
     DestinationsNavHost(
         engine = rememberAnimatedNavHostEngine(
             rootDefaultAnimations = RootNavGraphDefaultAnimations(
-                enterTransition = { defaultEnterTransition(initialState, targetState) },
-                exitTransition = { defaultExitTransition(initialState, targetState) },
-                popEnterTransition = { defaultPopEnterTransition() },
-                popExitTransition = { defaultPopExitTransition() },
+                enterTransition = { defaultEnterTransition(isTv, initialState, targetState) },
+                exitTransition = { defaultExitTransition(isTv, initialState, targetState) },
+                popEnterTransition = { defaultPopEnterTransition(isTv) },
+                popExitTransition = { defaultPopExitTransition(isTv) },
             )
         ),
         navController = navController,
-        navGraph = MobileNavGraphs.root,
+        navGraph = if (isTv) TvNavGraphs.root else MobileNavGraphs.root,
         dependenciesContainerBuilder = {
-            dependency(
-                MobileAppNavigator(
-                    destination = navBackStackEntry.destination,
-                    navController = navController,
-                    closeApp = closeApp
+            if (isTv) {
+                dependency(
+                    AppTvNavigator(
+                        destination = navBackStackEntry.destination,
+                        navController = navController,
+                        closeApp = closeApp
+                    )
                 )
-            )
-
-            dependency(previewFilm)
-            dependency(play)
+            } else {
+                dependency(previewFilm)
+                dependency(play)
+                dependency(
+                    MobileAppNavigator(
+                        destination = navBackStackEntry.destination,
+                        navController = navController,
+                        closeApp = closeApp
+                    )
+                )
+            }
         }
     )
 }
@@ -144,28 +160,31 @@ private val NavDestination.hostNavGraph: NavGraph
 
 @ExperimentalAnimationApi
 private fun AnimatedContentTransitionScope<*>.defaultEnterTransition(
+    isTv: Boolean,
     initial: NavBackStackEntry,
     target: NavBackStackEntry,
 ): EnterTransition {
     val initialNavGraph = initial.destination.hostNavGraph
     val targetNavGraph = target.destination.hostNavGraph
     // If we're crossing nav graphs (bottom navigation graphs), we crossfade
-    if (initialNavGraph.id != targetNavGraph.id) {
+    if (initialNavGraph.id != targetNavGraph.id || isTv) {
         return fadeIn()
     }
+
     // Otherwise we're in the same nav graph, we can imply a direction
     return fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start)
 }
 
 @ExperimentalAnimationApi
 private fun AnimatedContentTransitionScope<*>.defaultExitTransition(
+    isTv: Boolean,
     initial: NavBackStackEntry,
     target: NavBackStackEntry,
 ): ExitTransition {
     val initialNavGraph = initial.destination.hostNavGraph
     val targetNavGraph = target.destination.hostNavGraph
     // If we're crossing nav graphs (bottom navigation graphs), we crossfade
-    if (initialNavGraph.id != targetNavGraph.id) {
+    if (initialNavGraph.id != targetNavGraph.id || isTv) {
         return fadeOut()
     }
     // Otherwise we're in the same nav graph, we can imply a direction
@@ -173,11 +192,19 @@ private fun AnimatedContentTransitionScope<*>.defaultExitTransition(
 }
 
 @ExperimentalAnimationApi
-private fun AnimatedContentTransitionScope<*>.defaultPopEnterTransition(): EnterTransition {
+private fun AnimatedContentTransitionScope<*>.defaultPopEnterTransition(isTv: Boolean): EnterTransition {
+    if (isTv) {
+        return fadeIn()
+    }
+
     return fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End)
 }
 
 @ExperimentalAnimationApi
-private fun AnimatedContentTransitionScope<*>.defaultPopExitTransition(): ExitTransition {
+private fun AnimatedContentTransitionScope<*>.defaultPopExitTransition(isTv: Boolean): ExitTransition {
+    if (isTv) {
+        return fadeOut()
+    }
+
     return fadeOut() + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End)
 }

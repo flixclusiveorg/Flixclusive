@@ -3,8 +3,8 @@ package com.flixclusive.service.update
 import android.content.Context
 import android.net.Uri
 import androidx.core.app.NotificationCompat
-import com.flixclusive.core.util.activity.installApkActivity
-import com.flixclusive.core.util.activity.installApkPendingActivity
+import com.flixclusive.core.util.android.installApkActivity
+import com.flixclusive.core.util.android.installApkPendingActivity
 import com.flixclusive.service.R
 import com.flixclusive.service.update.util.notificationBuilder
 import com.flixclusive.service.update.util.notify

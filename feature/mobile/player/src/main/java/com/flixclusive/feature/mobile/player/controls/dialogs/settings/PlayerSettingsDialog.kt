@@ -25,14 +25,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.PlayerUiState
+import com.flixclusive.core.ui.player.util.PlayerUiUtil.availablePlaybackSpeeds
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.feature.mobile.player.controls.common.BasePlayerDialog
 import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
 import com.flixclusive.model.datastore.player.ResizeMode
-import kotlin.math.roundToInt
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
 
@@ -46,8 +46,6 @@ internal data class VideoSettingItem(
     val items: List<String>? = null,
     val content: (@Composable () -> Unit)? = null,
 )
-
-internal fun Float.toPlaybackSpeedIndex() = ((this - 1F) / 0.25F).roundToInt().coerceAtLeast(0)
 
 @Composable
 internal fun PlayerSettingsDialog(
@@ -65,20 +63,13 @@ internal fun PlayerSettingsDialog(
         VideoSettingItem(
             iconId = PlayerR.drawable.speedometer,
             labelId = UtilR.string.playback_speed,
-            items = List(5) { index ->
-                if (index == 0) "Normal"
-                else "${1F + (index * 0.25F)}x"
-            },
-            selected = player.playbackSpeed.toPlaybackSpeedIndex(),
+            items = availablePlaybackSpeeds.map { "${it}x" },
+            selected = availablePlaybackSpeeds.indexOf(player.playbackSpeed),
             onClick = { i, _ ->
                 player.onPlaybackSpeedChange(i)
 
-                var message = "${player.playbackSpeed}x"
-                if(i == 0)
-                    message = "Normal"
-
                 showSnackbar(
-                    message,
+                    "${player.playbackSpeed}x",
                     UtilR.string.playback_speed_snackbar_message,
                     PlayerSnackbarMessageType.PlaybackSpeed
                 )

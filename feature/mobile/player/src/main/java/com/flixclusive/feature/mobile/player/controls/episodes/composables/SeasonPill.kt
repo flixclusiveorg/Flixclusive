@@ -24,7 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.R as UtilR
 

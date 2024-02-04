@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.theme.subtitleBackgroundColors
+import com.flixclusive.core.ui.common.util.getTextStyle
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.SubtitleSettingsDialog
-import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.util.getTextStyle
 import com.flixclusive.feature.mobile.settings.util.ColorPickerHelper.AlphaBar
 import com.flixclusive.model.datastore.AppSettings
 import kotlin.math.abs

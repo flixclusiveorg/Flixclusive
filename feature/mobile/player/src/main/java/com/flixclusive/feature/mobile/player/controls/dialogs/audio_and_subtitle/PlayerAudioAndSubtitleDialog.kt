@@ -23,7 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.feature.mobile.player.controls.common.BasePlayerDialog

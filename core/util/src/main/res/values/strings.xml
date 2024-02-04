@@ -44,8 +44,6 @@
     <string name="failed_to_initialize_home_items">Failed to initialize home items</string>
     <string name="failed_to_initialize_search_items">Failed to initialize search items</string>
     <string name="film_data_fetch_failed">Failed to fetch film data</string>
-    <string name="high_cache_size_solution_message">To fix this high amount of cache you need to limit the cache size to a specific amount.</string>
-    <string name="high_cache_size_warning_message">Since you\'ve set the cache to unlimited, you\'re current cache size is </string>
     <string name="null_player_context_error">Player context should not be null!</string>
     <string name="pagination_error_message">Error while fetching items</string>
     <string name="player_not_initialized">Player has not been initialized</string>
@@ -65,6 +63,7 @@
     <!--  Extra labels  -->
     <string name="add_own_subtitle">Add subs</string>
     <string name="add_sync_offset_message">Add if subs are delayed.</string>
+    <string name="add_to_watchlist">Add to Watchlist</string>
     <string name="audio">Audio</string>
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
     <string name="auto_option">Auto</string>
@@ -73,7 +72,6 @@
     <string name="browse_tv_networks">Top TV Networks</string>
     <string name="cancel">Cancel</string>
     <string name="check_for_updates">Check for updates</string>
-    <string name="clear">Clear</string>
     <string name="clear_app_cache">Clear app cache</string>
     <string name="close_label">Close</string>
     <string name="collections">Collections</string>
@@ -103,6 +101,7 @@
     <string name="not_now_label">Not now</string>
     <string name="off_subtitles">Off</string>
     <string name="ok">OK</string>
+    <string name="other_films_message">Other films you might like!</string>
     <string name="play">Play</string>
     <string name="playback_speed">Playback speed</string>
     <string name="popular">Popular</string>
@@ -112,12 +111,14 @@
     <string name="release">RELEASE</string>
     <string name="release_player">Release player on app minimize</string>
     <string name="remove">Remove</string>
+    <string name="remove_from_watchlist">Remove from Watchlist</string>
     <string name="reset_settings">Reset settings</string>
     <string name="resize_mode">Resize mode</string>
     <string name="restart">Restart</string>
     <string name="retry">Retry</string>
     <string name="reverse_player_time">Reverse player time</string>
     <string name="sample_subtitle_text">ROSE: I\'m flying!</string>
+    <string name="save">Save</string>
     <string name="search_suggestion">Try Searching \"Iron Man\"…</string>
     <string name="see_all">See all</string>
     <string name="seek_length_label">Player seek length</string>
@@ -127,15 +128,15 @@
     <string name="something_went_wrong">Something went wrong</string>
     <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
     <string name="subtitle">Subtitle</string>
-    <string name="subtitles_background_color">Subtitle background color</string>
-    <string name="subtitles_color">Subtitle color</string>
-    <string name="subtitles_edge_type">Subtitle edge type</string>
-    <string name="subtitles_font_style">Subtitle font style</string>
+    <string name="subtitles_background_color">Background color</string>
+    <string name="subtitles_color">Font color</string>
+    <string name="subtitles_edge_type">Edge type</string>
+    <string name="subtitles_font_style">Font style</string>
     <string name="subtitles_language">Subtitle language</string>
-    <string name="subtitles_size">Subtitle size</string>
+    <string name="subtitles_size">Font size</string>
     <string name="subtract_sync_offset_message">Subtract if subs are early.</string>
     <string name="sync_subtitles">Sync Subtitles</string>
-    <string name="too_much_cache">Too much cache</string>
+    <string name="sync">Sync</string>
     <string name="unknown_language">Unknown language</string>
     <string name="unlock_label">Unlock</string>
     <string name="update_info">Update information</string>
@@ -156,6 +157,7 @@
     <string name="season_number_formatter">Season %1$d</string>
     <string name="season_runtime_formatter">%1$d Season</string>
     <string name="seek_seconds_format">%1$s seconds</string>
+    <string name="current_playback_speed_format">Current playback speed: %1$sx</string>
 
     <!--  State messages  -->
     <string name="checking_for_updates">Checking for updates…</string>
@@ -170,6 +172,7 @@
     <string name="no_available_sources">No available source providers!</string>
     <string name="offline_message">You\'re offline</string>
     <string name="online_message">Back online</string>
+    <string name="skip_loading_message">Player can be played now!</string>
     <string name="source_data_dialog_state_error_default">Could not initialize video player!</string>
     <string name="source_data_dialog_state_extracting">Extracting video data…</string>
     <string name="source_data_dialog_state_fetching">Fetching video data…</string>
@@ -195,11 +198,12 @@
     <string name="audio_and_subtitle_button_desc">An icon for available audio and subtitle for the player</string>
     <string name="audio_icon_content_desc">Audio icon</string>
     <string name="backward_button_content_description">Backward button for the player</string>
+    <string name="clear_cache_content_desc">Clear cache</string>
     <string name="clear_text_button">Clear text button</string>
     <string name="copy_button">Copy to clipboard button</string>
-    <string name="clear_cache_content_desc">Clear cache</string>
     <string name="dns_label">Configure this if your ISP blocks you from watching.</string>
     <string name="drag_icon_content_desc">Drag indicator for provider card</string>
+    <string name="episode_image_content_desc">An image of episode %1$s: %2$s</string>
     <string name="episode_image_content_desc_format">An image of episode %1$s: %2$s</string>
     <string name="episodes_button_desc">An icon for episodes button</string>
     <string name="error_icon_content_desc">Error icon</string>
@@ -251,5 +255,6 @@
     <string name="notification_persist_request_message">It seems that you\'ve blocked notification permissions. Please grant this permission.</string>
     <string name="notification_request_message">Notification permission is required for this feature to be available. Please grant this permission.</string>
     <string name="splash_notice_permissions_header">Allow Permissions</string>
+    <string name="check_indicator_content_desc">Check indicator for selected sheet item</string>
 </resources>
 

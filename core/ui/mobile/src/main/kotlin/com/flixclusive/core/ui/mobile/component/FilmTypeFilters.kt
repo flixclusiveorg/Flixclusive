@@ -18,7 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.R as UtilR
 

@@ -58,7 +58,7 @@ import com.flixclusive.core.ui.player.util.updatePiPParams
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.mobile.player.controls.PlayerControls
 import com.flixclusive.feature.mobile.player.util.PlayerPipReceiver
-import com.flixclusive.feature.mobile.player.util.getActivity
+import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.feature.mobile.player.util.percentOfVolume
 import com.flixclusive.feature.mobile.player.util.setBrightness
 import com.flixclusive.model.provider.SourceData

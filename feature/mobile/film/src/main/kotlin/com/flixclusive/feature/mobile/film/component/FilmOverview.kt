@@ -29,7 +29,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.film.R
 import kotlin.math.roundToInt
 import com.flixclusive.core.util.R as UtilR

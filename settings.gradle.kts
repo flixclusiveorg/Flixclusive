@@ -27,6 +27,10 @@ include(":core:ui:player")
 include(":core:ui:setup")
 // ===========================================================
 
+// Common features
+include(":feature:splash-screen")
+
+// Mobile features
 include(":feature:mobile:about")
 include(":feature:mobile:crash")
 include(":feature:mobile:film")
@@ -40,9 +44,15 @@ include(":feature:mobile:search")
 include(":feature:mobile:search-expanded")
 include(":feature:mobile:see-all")
 include(":feature:mobile:settings")
-include(":feature:mobile:splash-screen")
 include(":feature:mobile:update")
 include(":feature:mobile:watchlist")
+
+// TV features
+include(":feature:tv:film")
+include(":feature:tv:home")
+include(":feature:tv:player")
+//include(":feature:tv:preferences")
+include(":feature:tv:search")
 
 include(":model:configuration")
 include(":model:database")

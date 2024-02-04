@@ -52,6 +52,7 @@ class SuperStream(
     client: OkHttpClient,
 ) : Provider(client) {
     override var name = "SuperStream"
+    override val isMaintenance: Boolean = true
 
     private var tvCacheData = TvShowCacheData()
 

@@ -38,8 +38,8 @@ import coil.compose.AsyncImage
 import coil.imageLoader
 import com.flixclusive.core.theme.lightGrayElevated
 import com.flixclusive.core.ui.common.util.buildImageUrl
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.tmdb.TMDBEpisode
@@ -105,7 +105,11 @@ internal fun EpisodeCard(
                     imageSize = "w500"
                 ),
                 imageLoader = LocalContext.current.imageLoader,
-                contentDescription = "An image of episode ${episode.episode}: ${episode.title}",
+                contentDescription = stringResource(
+                    UtilR.string.episode_image_content_desc,
+                    episode.episode,
+                    episode.title
+                ),
                 placeholder = painterResource(R.drawable.movie_placeholder),
                 error = painterResource(R.drawable.movie_placeholder),
                 contentScale = ContentScale.Crop,

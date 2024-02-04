@@ -31,7 +31,7 @@ import javax.inject.Singleton
 import kotlin.random.Random
 import com.flixclusive.core.util.R as UtilR
 
-private const val MINIMUM_HOME_ITEMS = 15
+const val MINIMUM_HOME_ITEMS = 15
 private const val MAXIMUM_HOME_ITEMS = 28
 private const val HOME_MAX_PAGE = 5
 
@@ -63,11 +63,7 @@ class HomeItemsProviderUseCase @Inject constructor(
 
     val categories = _categories.asStateFlow()
     val rowItems = _rowItems.asStateFlow()
-    val rowItemsPagingState =  _rowItemsPagingState.asStateFlow()
-
-    init {
-        invoke()
-    }
+    val rowItemsPagingState = _rowItemsPagingState.asStateFlow()
 
     operator fun invoke() {
         if(initializeJob?.isActive == true)

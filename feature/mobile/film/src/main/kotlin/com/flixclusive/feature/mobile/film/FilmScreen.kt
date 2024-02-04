@@ -39,7 +39,7 @@ import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.CollapsibleTopBar
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.mobile.film.component.EpisodeCard
