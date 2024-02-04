@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -28,6 +29,7 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.flixclusive.core.ui.tv.util.useLocalDirectionalFocusRequester
 import com.flixclusive.feature.tv.search.R
 
 internal val KeyboardCellSize = 35.dp
@@ -49,6 +51,8 @@ internal fun SearchCustomKeyboard(
     onBackspaceClick: () -> Unit,
     onBackspaceLongClick: () -> Unit,
 ) {
+    val filtersGroupFocusRequester = useLocalDirectionalFocusRequester().right
+
     var areSymbolsShown by remember { mutableStateOf(false) }
     val symbolButtonText = remember(areSymbolsShown) {
         if(!areSymbolsShown) {
@@ -87,7 +91,7 @@ internal fun SearchCustomKeyboard(
             ) {
                 FlowRow(
                     verticalArrangement = Arrangement.Center,
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     alphabets.forEach {
                         KeyboardButton(
