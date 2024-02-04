@@ -1,6 +1,5 @@
 package com.flixclusive.core.ui.tv.util
 
-import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -31,9 +30,8 @@ private val LocalDirectionalFocusRequester = compositionLocalOf { DirectionalFoc
 @Composable
 fun useLocalDirectionalFocusRequester() = LocalDirectionalFocusRequester.current
 
-@SuppressLint("ComposableNaming")
 @Composable
-fun provideLocalDirectionalFocusRequester(
+fun LocalDirectionalFocusRequesterProvider(
     content: @Composable () -> Unit
 ) {
     CompositionLocalProvider(
