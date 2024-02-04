@@ -50,7 +50,12 @@ internal class MobileAppNavigator(
     }
 
     override fun openFilmScreen(film: Film) {
-        navController.navigateIfResumed(FilmScreenDestination(film = film) within destination.navGraph())
+        navController.navigateIfResumed(
+            FilmScreenDestination(
+                film = film,
+                startPlayerAutomatically = false
+            ) within destination.navGraph()
+        )
     }
 
     override fun openGenreScreen(genre: Genre) {

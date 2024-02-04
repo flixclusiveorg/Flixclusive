@@ -7,6 +7,7 @@ import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestinatio
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
 import com.flixclusive.feature.tv.film.FilmScreenTvNavigator
 import com.flixclusive.feature.tv.film.destinations.FilmScreenDestination
+import com.flixclusive.feature.tv.home.HomeScreenTvNavigator
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.util.navGraph
 import com.flixclusive.util.navigateIfResumed
@@ -14,25 +15,39 @@ import com.ramcosta.composedestinations.dynamic.within
 import com.ramcosta.composedestinations.navigation.navigate
 import com.ramcosta.composedestinations.navigation.popUpTo
 
-internal class TvAppNavigator(
+internal class AppTvNavigator(
     private val destination: NavDestination,
     private val navController: NavController,
     private val closeApp: () -> Unit,
-) : CommonScreenNavigator, SplashScreenNavigator, FilmScreenTvNavigator {
+) : CommonScreenNavigator, SplashScreenNavigator, FilmScreenTvNavigator, HomeScreenTvNavigator {
     override fun goBack() {
         navController.navigateUp()
     }
 
     override fun openFilmScreen(film: Film) {
-        navController.navigateIfResumed(FilmScreenDestination(film = film) within destination.navGraph())
+        navController.navigateIfResumed(
+            FilmScreenDestination(
+                film = film,
+                startPlayerAutomatically = false
+            ) within destination.navGraph())
     }
 
     override fun openFilmScreenSeamlessly(film: Film) {
         navController.navigateIfResumed(
-            FilmScreenDestination(film = film) within destination.navGraph()
+            FilmScreenDestination(
+                film = film,
+                startPlayerAutomatically = false
+            ) within destination.navGraph()
         ) {
             launchSingleTop = true
         }
+    }
+
+    override fun openPlayerScreen(film: Film) {
+        navController.navigateIfResumed(FilmScreenDestination(
+            film = film,
+            startPlayerAutomatically = true
+        ) within destination.navGraph())
     }
 
     //    override fun openSearchExpandedScreen() {

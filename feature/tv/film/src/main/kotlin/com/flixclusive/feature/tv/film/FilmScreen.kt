@@ -103,9 +103,9 @@ fun FilmScreen(
 
     var episodeToPlay: TMDBEpisode? by remember { mutableStateOf(null) }
 
-    var isPlayerRunning by remember { mutableStateOf(false) }
+    var isPlayerRunning by remember { mutableStateOf(args.startPlayerAutomatically) }
     var isEpisodesPanelOpen by remember { mutableStateOf(false) }
-    var isOverviewShown by remember { mutableStateOf(true) }
+    var isOverviewShown by remember { mutableStateOf(!args.startPlayerAutomatically) }
     var isIdle by remember { mutableStateOf(true) }
 
     var buttonsHasFocus by remember { mutableStateOf(false) }

@@ -170,7 +170,10 @@ internal fun MobileActivity.MobileApp(
         if(uiState.isShowingBottomSheetCard && filmToPreview != null) {
             val navigateToFilmScreen = {
                 navController.navigateIfResumed(
-                    direction = FilmScreenDestination(film = filmToPreview!!) within currentNavGraph
+                    direction = FilmScreenDestination(
+                        film = filmToPreview!!,
+                        startPlayerAutomatically = false
+                    ) within currentNavGraph
                 )
                 viewModel.onBottomSheetClose()
             }

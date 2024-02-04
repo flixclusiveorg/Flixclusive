@@ -35,9 +35,9 @@ import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.home.HomeScreenViewModel
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
+import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.shouldPaginate
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
-import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.feature.tv.home.component.HOME_FOCUS_KEY_FORMAT
 import com.flixclusive.feature.tv.home.component.HomeFilmsRow
@@ -50,11 +50,15 @@ import com.flixclusive.model.tmdb.Film
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
 
+interface HomeScreenTvNavigator : CommonScreenNavigator {
+    fun openPlayerScreen(film: Film)
+}
+
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Destination
 @Composable
 fun HomeScreen(
-    navigator: CommonScreenNavigator
+    navigator: HomeScreenTvNavigator
 ) {
     val viewModel: HomeScreenViewModel = hiltViewModel()
 
@@ -191,9 +195,7 @@ fun HomeScreen(
                                 item {
                                     HomeContinueWatchingRow(
                                         items = continueWatchingList,
-                                        onPlayClick = {
-                                            /* TODO: Navigate directly to PlayerScreen */
-                                        },
+                                        onPlayClick = navigator::openPlayerScreen,
                                         modifier = Modifier
                                             .padding(bottom = 20.dp)
                                             .onFocusChanged {
