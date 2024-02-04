@@ -19,10 +19,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusDirection
@@ -51,9 +52,10 @@ import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.util.LocalLastFocusedItemFocusedRequesterProvider
-import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
+import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemFocusedRequester
 import com.ramcosta.composedestinations.spec.NavGraphSpec
+import kotlinx.coroutines.delay
 
 internal val tvNavigationItems = listOf(
     AppNavigationItem(
@@ -73,7 +75,7 @@ internal val tvNavigationItems = listOf(
 internal val NavItemsFocusRequesters = List(size = tvNavigationItems.size) { FocusRequester() }
 internal val InitialDrawerWidth = 50.dp
 
-@OptIn(ExperimentalTvMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 internal fun NavDrawer(
     modifier: Modifier = Modifier,
@@ -98,7 +100,14 @@ internal fun NavDrawer(
         label = ""
     )
     val drawerColor = MaterialTheme.colorScheme.surface
-    val focusRestorerModifiers = createInitialFocusRestorerModifiers()
+    val isNavItemFocusedAlready = remember { mutableStateOf(false) }
+
+    LaunchedEffect(isDrawerOpen) {
+        if (!isDrawerOpen) {
+            delay(500) // Add delay for UX
+            isNavItemFocusedAlready.value = false
+        }
+    }
 
     LocalLastFocusedItemFocusedRequesterProvider {
         val lastItemFocusedFocusRequester = useLocalLastFocusedItemFocusedRequester()
@@ -114,7 +123,7 @@ internal fun NavDrawer(
                 exit = slideOutHorizontally()
             ) {
                 Column(
-                    modifier = focusRestorerModifiers.parentModifier
+                    modifier = Modifier
                         .focusGroup()
                         .fillMaxHeight()
                         .width(drawerWidth)
@@ -147,8 +156,8 @@ internal fun NavDrawer(
                             modifier = Modifier
                                 .focusRequester(focusRequesters[i])
                                 .ifElse(
-                                    condition = i == 0,
-                                    ifTrueModifier = focusRestorerModifiers.childModifier
+                                    condition = i == 0 && isDrawerOpen,
+                                    ifTrueModifier = Modifier.focusOnInitialVisibility(isNavItemFocusedAlready)
                                 )
                                 .focusProperties {
                                     right = lastItemFocusedFocusRequester.value
@@ -227,7 +236,7 @@ private fun NavDrawerItem(
 
             AnimatedVisibility(
                 visible = isDrawerOpen,
-                enter = slideInHorizontally { -1500 } + fadeIn(),
+                enter = slideInHorizontally() + fadeIn(),
                 exit = fadeOut()
             ) {
                 Text(

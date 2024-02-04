@@ -40,7 +40,6 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.unit.Dp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
@@ -217,7 +216,7 @@ fun Modifier.focusOnInitialVisibility(
     val focusRequester = remember { FocusRequester() }
 
     return focusRequester(focusRequester)
-        .onPlaced {
+        .onGloballyPositioned {
             if (!isVisible.value) {
                 focusRequester.requestFocus()
                 isVisible.value = true
