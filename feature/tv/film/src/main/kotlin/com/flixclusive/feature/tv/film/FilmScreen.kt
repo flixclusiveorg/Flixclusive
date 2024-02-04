@@ -215,7 +215,9 @@ fun FilmScreen(
                         onBack = { forceClose ->
                             if (isEpisodesPanelOpen || forceClose) {
                                 isPlayerRunning = false
-                            } else isOverviewShown = true
+                            }
+
+                            isOverviewShown = true
                         }
                     )
                 }
