@@ -47,14 +47,14 @@ import com.flixclusive.core.ui.common.TopBarWithBackButton
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
-import com.flixclusive.core.util.activity.getDirectorySize
+import com.flixclusive.core.util.android.getDirectorySize
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.settings.component.SettingsGroup
 import com.flixclusive.feature.mobile.settings.component.dialog.advanced.AdvancedDialogWrapper
 import com.flixclusive.feature.mobile.settings.component.dialog.player.PlayerDialogWrapper
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.SubtitleDialogWrapper
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.SubtitlePreview
-import com.flixclusive.feature.mobile.settings.util.BorderedText
+import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.BorderedText
 import com.flixclusive.feature.mobile.settings.util.ColorPickerHelper.BoxWithColor
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionStylePreference

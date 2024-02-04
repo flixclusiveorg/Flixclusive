@@ -21,6 +21,7 @@ import okhttp3.OkHttpClient
 class LookMovie(client: OkHttpClient) : Provider(client) {
     override val name: String = "LookMovie"
     override val baseUrl: String = "https://lmscript.xyz"
+    override val isMaintenance: Boolean = true
 
     override suspend fun search(
         query: String,

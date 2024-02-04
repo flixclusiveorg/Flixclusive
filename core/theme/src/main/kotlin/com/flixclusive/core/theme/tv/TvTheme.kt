@@ -93,7 +93,7 @@ private val lightColors = lightColorScheme(
 
 
 @OptIn(ExperimentalTvMaterial3Api::class)
-private val darkColors = darkColorScheme(
+val darkTvColors = darkColorScheme(
     primary = md_theme_dark_primary,
     onPrimary = md_theme_dark_onPrimary,
     primaryContainer = md_theme_dark_primaryContainer,
@@ -132,7 +132,7 @@ internal fun FlixclusiveTvTheme(
     val colors = if (!useDarkTheme) {
         lightColors
     } else {
-        darkColors
+        darkTvColors
     }
 
     MaterialTheme(

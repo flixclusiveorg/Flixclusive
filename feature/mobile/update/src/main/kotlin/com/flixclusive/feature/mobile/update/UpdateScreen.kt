@@ -52,8 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
-import com.flixclusive.core.util.activity.installApkActivity
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.util.android.installApkActivity
 import com.flixclusive.service.update.AppUpdaterService
 import com.flixclusive.service.update.AppUpdaterService.Companion.startAppUpdater
 import com.ramcosta.composedestinations.annotation.Destination

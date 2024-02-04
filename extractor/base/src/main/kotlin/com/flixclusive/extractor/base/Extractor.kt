@@ -10,6 +10,7 @@ import java.net.URL
  * */
 abstract class Extractor {
     abstract val name: String
+    open val alternateNames: List<String> = emptyList()
     abstract val host: String
 
     abstract suspend fun extract(

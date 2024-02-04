@@ -16,7 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.SubtitleSettingsDialog
-import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.util.getTextStyle
+import com.flixclusive.core.ui.common.util.getTextStyle
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.player.CaptionSizePreference
 import com.flixclusive.model.datastore.player.CaptionSizePreference.Companion.getDp

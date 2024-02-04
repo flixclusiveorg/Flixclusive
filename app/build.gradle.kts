@@ -89,11 +89,16 @@ dependencies {
     implementation(projects.feature.mobile.searchExpanded)
     implementation(projects.feature.mobile.seeAll)
     implementation(projects.feature.mobile.settings)
-    implementation(projects.feature.mobile.splashScreen)
+    implementation(projects.feature.splashScreen)
     implementation(projects.feature.mobile.update)
     implementation(projects.feature.mobile.watchlist)
 
+    implementation(projects.feature.tv.home)
+    implementation(projects.feature.tv.search)
+    implementation(projects.feature.tv.film)
+
     implementation(projects.core.ui.mobile)
+    implementation(projects.core.ui.tv)
 
     implementation(projects.data.configuration)
     implementation(projects.data.network)
@@ -110,6 +115,7 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)
+    implementation(libs.compose.tv.material)
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.constraintlayout.compose)

@@ -5,7 +5,10 @@
       <entry key="PlayerSeekSlider">
         <State />
       </entry>
-      <entry key="app">
+      <entry key="app - mobile">
+        <State />
+      </entry>
+      <entry key="app - tv">
         <State>
           <targetSelectedWithDropDown>
             <Target>
@@ -13,16 +16,13 @@
               <deviceKey>
                 <Key>
                   <type value="VIRTUAL_DEVICE_PATH" />
-                  <value value="$USER_HOME$/.android/avd/Realme_5_ANDROID_10_29_API_29.avd" />
+                  <value value="$USER_HOME$/.android/avd/Television_1080p_API_31.avd" />
                 </Key>
               </deviceKey>
             </Target>
           </targetSelectedWithDropDown>
-          <timeTargetWasSelectedWithDropDown value="2024-01-20T09:14:49.063952074Z" />
+          <timeTargetWasSelectedWithDropDown value="2024-02-01T09:45:01.973966295Z" />
         </State>
-      </entry>
-      <entry key="app2">
-        <State />
       </entry>
     </value>
   </component>

@@ -71,9 +71,14 @@
             <option value="$PROJECT_DIR$/feature/mobile/search-expanded" />
             <option value="$PROJECT_DIR$/feature/mobile/see-all" />
             <option value="$PROJECT_DIR$/feature/mobile/settings" />
-            <option value="$PROJECT_DIR$/feature/mobile/splash-screen" />
             <option value="$PROJECT_DIR$/feature/mobile/update" />
             <option value="$PROJECT_DIR$/feature/mobile/watchlist" />
+            <option value="$PROJECT_DIR$/feature/splash-screen" />
+            <option value="$PROJECT_DIR$/feature/tv" />
+            <option value="$PROJECT_DIR$/feature/tv/film" />
+            <option value="$PROJECT_DIR$/feature/tv/home" />
+            <option value="$PROJECT_DIR$/feature/tv/player" />
+            <option value="$PROJECT_DIR$/feature/tv/search" />
             <option value="$PROJECT_DIR$/model" />
             <option value="$PROJECT_DIR$/model/configuration" />
             <option value="$PROJECT_DIR$/model/database" />

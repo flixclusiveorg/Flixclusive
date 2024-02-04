@@ -45,7 +45,7 @@ import androidx.constraintlayout.compose.Dimension
 import com.flixclusive.R
 import com.flixclusive.core.theme.starColor
 import com.flixclusive.core.ui.common.FilmCover
-import com.flixclusive.core.ui.mobile.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.film.formatRating
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.core.ui.common.R as UiCommonR
