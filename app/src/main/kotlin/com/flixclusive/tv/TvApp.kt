@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.flixclusive.core.ui.tv.util.LocalCurrentRouteProvider
 import com.flixclusive.core.ui.tv.util.LocalDrawerWidth
@@ -20,7 +21,9 @@ import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
 import com.flixclusive.feature.tv.film.destinations.FilmScreenDestination
 import com.flixclusive.util.AppNavHost
 import com.flixclusive.util.currentScreenAsState
-import com.flixclusive.util.navigateSingleTopTo
+import com.ramcosta.composedestinations.navigation.navigate
+import com.ramcosta.composedestinations.navigation.popUpTo
+import com.ramcosta.composedestinations.spec.Direction
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import kotlin.system.exitProcess
 
@@ -52,13 +55,17 @@ fun TvActivity.TvApp() {
         enabled = isNavDrawerVisible,
         onBack = {
             when {
-                // 1. On user's first back press, bring focus to the current selected tab, if TopBar is not
-                //    visible, first make it visible, then focus the selected tab
-                // 2. On second back press, bring focus back to the first displayed tab
-                // 3. On third back press, exit the app
+                /*
+                1. On user's first back press, bring focus to the current selected tab, if TopBar is not visible, first make it visible, then focus the selected tab
+                2. On second back press, bring focus back to the first displayed tab
+                3. On third back press, exit the app
+                */
 
                 !isDrawerOpen -> isDrawerOpen = true
-                currentScreenIndexSelected == 0 -> finish()
+                currentScreenIndexSelected == 0 -> {
+                    finish()
+                    exitProcess(0)
+                }
                 else -> NavItemsFocusRequesters[0].requestFocus()
             }
         }
@@ -73,16 +80,7 @@ fun TvActivity.TvApp() {
                 ) {
                     NavDrawer(
                         currentScreen = currentNavGraph,
-                        onNavigate = { screen ->
-                            navController.run {
-                                val isPoppingToRoot = screen == currentNavGraph
-
-                                navigateSingleTopTo(
-                                    direction = screen,
-                                    isPoppingToRoot = isPoppingToRoot
-                                )
-                            }
-                        },
+                        onNavigate = navController::navigateSingleTopFromRoot,
                         isNavDrawerVisible = isNavDrawerVisible,
                         isDrawerOpen = isDrawerOpen,
                         onDrawerStateChange = { isDrawerOpen = it },
@@ -100,4 +98,15 @@ fun TvActivity.TvApp() {
             }
         }
     }
+}
+
+private fun NavHostController.navigateSingleTopFromRoot(
+    screen: Direction
+) = navigate(screen) {
+    popUpTo(TvNavGraphs.root) {
+        saveState = true
+    }
+
+    launchSingleTop = true
+    restoreState = true
 }
