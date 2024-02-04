@@ -37,7 +37,7 @@ import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.shouldPaginate
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
-import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
+import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.feature.tv.home.component.HOME_FOCUS_KEY_FORMAT
 import com.flixclusive.feature.tv.home.component.HomeFilmsRow
@@ -157,7 +157,7 @@ fun HomeScreen(
                     ImmersiveHomeBackground(
                         headerItem = headerItem,
                         modifier = Modifier
-                            .padding(start = useLocalDrawerWidth())
+                            .padding(start = getLocalDrawerWidth())
                     )
                 }
 

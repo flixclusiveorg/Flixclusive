@@ -55,7 +55,7 @@ import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.drawScrimOnBackground
 import com.flixclusive.core.ui.tv.util.drawScrimOnForeground
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
-import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
+import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.useLocalFocusTransferredOnLaunch
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.core.util.common.ui.UiText
@@ -179,7 +179,7 @@ fun FilmScreen(
             },
             label = "",
             modifier = Modifier
-                .padding(start = LabelStartPadding.start + useLocalDrawerWidth())
+                .padding(start = LabelStartPadding.start + getLocalDrawerWidth())
                 .ifElse(
                     condition = !isOverviewShown,
                     ifTrueModifier = Modifier.drawScrimOnForeground()
@@ -271,7 +271,7 @@ fun FilmScreen(
                                 modifier = Modifier
                                     .focusGroup()
                                     .padding(
-                                        start = LabelStartPadding.start + useLocalDrawerWidth(),
+                                        start = LabelStartPadding.start + getLocalDrawerWidth(),
                                         bottom = 55.dp
                                     )
                                     .animateEnterExit(

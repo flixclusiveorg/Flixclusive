@@ -28,7 +28,7 @@ import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.shouldPaginate
-import com.flixclusive.core.ui.tv.util.useLocalDrawerWidth
+import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.home.PaginationStateInfo
@@ -97,7 +97,7 @@ internal fun HomeFilmsRow(
                 fontSize = 16.sp
             ),
             modifier = Modifier
-                .padding(start = LabelStartPadding.start + useLocalDrawerWidth())
+                .padding(start = LabelStartPadding.start + getLocalDrawerWidth())
                 .padding(
                     bottom = FilmPadding.bottom,
                     top = 18.dp
@@ -111,7 +111,7 @@ internal fun HomeFilmsRow(
             pivotOffsets = PivotOffsets(parentFraction = 0.07F),
             state = listState,
             contentPadding = PaddingValues(
-                start = LabelStartPadding.start + useLocalDrawerWidth()
+                start = LabelStartPadding.start + getLocalDrawerWidth()
             )
         ) {
             items(

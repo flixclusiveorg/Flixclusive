@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.dp
 
 val LocalDrawerWidth = compositionLocalOf { 50.dp }
 @Composable
-fun useLocalDrawerWidth() = LocalDrawerWidth.current
+fun getLocalDrawerWidth() = LocalDrawerWidth.current
 
 data class FocusPosition(
     val row: Int,

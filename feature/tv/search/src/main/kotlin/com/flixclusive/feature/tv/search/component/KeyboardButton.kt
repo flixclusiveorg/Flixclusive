@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ClickableSurfaceColors
 import androidx.tv.material3.ClickableSurfaceDefaults
@@ -25,20 +23,22 @@ internal fun KeyboardButton(
     enabled: Boolean = true,
     size: ButtonSize = ButtonSize(KeyboardCellSize),
     colors: ClickableSurfaceColors = ClickableSurfaceDefaults.colors(
-        containerColor = Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.surface,
         contentColor = LocalContentColor.current.onMediumEmphasis(),
         focusedContainerColor = MaterialTheme.colorScheme.inverseSurface,
         focusedContentColor = MaterialTheme.colorScheme.inverseOnSurface
     ),
     shape: ClickableSurfaceShape = ClickableSurfaceDefaults.shape(
-        shape = RectangleShape
+        shape = MaterialTheme.shapes.extraSmall
     ),
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     Surface(
         enabled = enabled,
         onClick = onClick,
+        onLongClick = onLongClick,
         colors = colors,
         shape = shape,
         modifier = Modifier

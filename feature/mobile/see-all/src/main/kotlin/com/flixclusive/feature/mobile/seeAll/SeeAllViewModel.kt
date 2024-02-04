@@ -13,6 +13,7 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.film.FilmType.Companion.toFilmType
+import com.flixclusive.core.util.film.replaceTypeInUrl
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.model.configuration.CategoryItem
 import com.flixclusive.model.tmdb.TMDBSearchItem
@@ -20,7 +21,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.regex.Pattern
 import javax.inject.Inject
 
 internal fun String.getTypeFromQuery(): String {
@@ -130,16 +130,5 @@ class SeeAllViewModel @Inject constructor(
 
         // Reload films
         getFilms()
-    }
-
-    private fun String.replaceTypeInUrl(type: String): String {
-        val pattern = Pattern.compile("(?<=/)[a-z]+(?=\\?)")
-        val matcher = pattern.matcher(this)
-
-        if (matcher.find()) {
-            return matcher.replaceFirst(type)
-        }
-
-        return this
     }
 }

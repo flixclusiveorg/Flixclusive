@@ -20,10 +20,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.tv.foundation.PivotOffsets
 import androidx.tv.foundation.lazy.grid.TvGridCells
 import androidx.tv.foundation.lazy.grid.TvLazyVerticalGrid
 import androidx.tv.foundation.lazy.grid.itemsIndexed
 import androidx.tv.foundation.lazy.grid.rememberTvLazyGridState
+import androidx.tv.foundation.lazy.list.TvLazyColumn
+import androidx.tv.foundation.lazy.list.itemsIndexed
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
@@ -31,15 +35,20 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.tv.component.FilmCard
+import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.focusOnMount
+import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.shouldPaginate
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
+import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.tv.search.component.KEYBOARD_FOCUS_KEY_FORMAT
 import com.flixclusive.feature.tv.search.component.SearchCustomKeyboard
+import com.flixclusive.feature.tv.search.component.SuggestionBlock
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -51,11 +60,12 @@ fun SearchScreen(
     navigator: CommonScreenNavigator
 ) {
     val viewModel: SearchScreenViewModel = hiltViewModel()
-    val listState = rememberTvLazyGridState()
+    val categories by viewModel.categories.collectAsStateWithLifecycle()
 
-    val focusRestorerModifiers = createInitialFocusRestorerModifiers()
+
     var lastSearchedQuery by remember { mutableStateOf(viewModel.searchQuery) }
 
+    val listState = rememberTvLazyGridState()
     val shouldStartPaginate by remember {
         derivedStateOf {
             viewModel.canPaginate && listState.shouldPaginate()
@@ -74,10 +84,16 @@ fun SearchScreen(
 
         if(queryIsNotEmpty && userIsTypingNewQuery) {
             delay(1500L)
+            safeCall { listState.scrollToItem(0) }
             viewModel.onSearch()
         }
 
         lastSearchedQuery = viewModel.searchQuery
+    }
+
+    LaunchedEffect(viewModel.selectedCategory?.query) {
+        safeCall { listState.scrollToItem(0) }
+        viewModel.onSearch()
     }
 
     val lastFocusedItems = useLocalLastFocusedItemPerDestination()
@@ -91,25 +107,69 @@ fun SearchScreen(
     LocalFocusTransferredOnLaunchProvider {
         Row(
             modifier = Modifier
-                .padding(top = 20.dp),
+                .focusGroup()
+                .padding(
+                    top = 20.dp,
+                    start = LabelStartPadding.start + getLocalDrawerWidth()
+                ),
             horizontalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Column(
                 modifier = Modifier
                     .focusGroup()
-                    .fillMaxWidth(0.35F)
+                    .weight(0.35F)
                     .fillMaxHeight()
             ) {
+                val focusRestorersModifiers = createInitialFocusRestorerModifiers()
+
                 SearchCustomKeyboard(
                     currentSearchQuery = viewModel.searchQuery,
                     onKeyboardClick = {
                         val newQuery = viewModel.searchQuery + it
                         viewModel.onQueryChange(query = newQuery)
                     },
-                    onBackspacePress = {
+                    onBackspaceClick = {
                         viewModel.onQueryChange(query = viewModel.searchQuery.dropLast(1))
-                    }
+                    },
+                    onBackspaceLongClick = { viewModel.onQueryChange("") },
+                    modifier = Modifier
+                        .focusGroup()
                 )
+
+                TvLazyColumn(
+                    pivotOffsets = PivotOffsets(0F, 0F),
+                    modifier = focusRestorersModifiers.parentModifier
+                        .fillMaxWidth()
+                        .padding(top = 25.dp)
+                ) {
+                    if (viewModel.searchQuery.isBlank() && categories is Resource.Success) {
+                        itemsIndexed(categories.data ?: emptyList()) { i, item ->
+                            SuggestionBlock(
+                                suggestion = item.name,
+                                isSelected = item.query == viewModel.selectedCategory?.query,
+                                onClick = { viewModel.onCategoryChange(item) },
+                                modifier = Modifier
+                                    .ifElse(
+                                        condition = i == 0,
+                                        ifTrueModifier = focusRestorersModifiers.childModifier
+                                    )
+                            )
+                        }
+                    }
+                    else if (viewModel.searchSuggestions.isNotEmpty()) {
+                        itemsIndexed(viewModel.searchSuggestions) { i, suggestion ->
+                            SuggestionBlock(
+                                suggestion = suggestion,
+                                onClick = { viewModel.onQueryChange(suggestion) },
+                                modifier = Modifier
+                                    .ifElse(
+                                        condition = i == 0,
+                                        ifTrueModifier = focusRestorersModifiers.childModifier
+                                    )
+                            )
+                        }
+                    }
+                }
             }
 
             Column(
@@ -119,7 +179,9 @@ fun SearchScreen(
                     .weight(1F)
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
                 ) {
                     Icon(
                         painter = painterResource(id = UiCommonR.drawable.search_outlined),
@@ -132,6 +194,8 @@ fun SearchScreen(
                     Text(
                         text = viewModel.searchQuery,
                         style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        softWrap = false,
                         modifier = Modifier
                             .weight(1F)
                     )
@@ -139,24 +203,24 @@ fun SearchScreen(
 
                 val filmSearchHeight = 215.dp
                 val filmSearchWidth = 165.dp
+                val focusRestorersModifiers = createInitialFocusRestorerModifiers()
 
                 TvLazyVerticalGrid(
                     columns = TvGridCells.Adaptive(150.dp),
-                    modifier = focusRestorerModifiers.parentModifier,
+                    modifier = focusRestorersModifiers.parentModifier,
+                    pivotOffsets = PivotOffsets(0F, 0F),
                     state = listState,
                 ) {
                     itemsIndexed(viewModel.searchResults) { i, film ->
                         FilmCard(
                             modifier = Modifier
+                                .focusOnMount(itemKey = "filmIndex=$i")
                                 .ifElse(
                                     condition = i == 0,
-                                    ifTrueModifier = focusRestorerModifiers.childModifier
-                                )
-                                .focusOnMount(itemKey = "filmIndex=$i"),
+                                    ifTrueModifier = focusRestorersModifiers.childModifier
+                                ),
                             film = film,
-                            onClick = {
-                                navigator.openFilmScreen(it)
-                            },
+                            onClick = navigator::openFilmScreen,
                             filmCardHeight = filmSearchHeight,
                             filmCardWidth = filmSearchWidth,
                         )
