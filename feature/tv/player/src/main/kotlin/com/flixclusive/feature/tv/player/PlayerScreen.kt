@@ -36,8 +36,8 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.LocalPlayerManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.ObserveNewLinksAndSubtitles
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatPlayerTitle
 import com.flixclusive.core.ui.tv.component.SourceDataDialog
+import com.flixclusive.core.ui.tv.util.LocalDirectionalFocusRequesterProvider
 import com.flixclusive.core.ui.tv.util.handleDPadKeyEvents
-import com.flixclusive.core.ui.tv.util.provideLocalDirectionalFocusRequester
 import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.tv.player.controls.PlaybackControls
@@ -66,7 +66,10 @@ fun PlayerScreen(
     film: Film,
     episodeToPlay: TMDBEpisode?,
     isPlayerRunning: Boolean,
+    isIdle: Boolean,
     isOverviewShown: Boolean,
+    onPlayerScreenVisibilityChange: (Boolean) -> Unit,
+    onOverviewVisibilityChange: (Boolean) -> Unit,
     onBack: (isForced: Boolean) -> Unit,
 ) {
     val viewModel = playerScreenViewModel(
@@ -79,13 +82,14 @@ fun PlayerScreen(
     val context = LocalContext.current.getActivity<ComponentActivity>()
     val scope = rememberCoroutineScope()
 
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
     val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
     val currentEpisodeSelected by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
-    LaunchedEffect(episodeToPlay, isPlayerRunning) {
+    LaunchedEffect(episodeToPlay, isPlayerRunning, isIdle) {
         if (
             dialogState is SourceDataState.Success
             && (
@@ -98,10 +102,30 @@ fun PlayerScreen(
             )
         ) return@LaunchedEffect
 
+        if (!isPlayerRunning) {
+            // If user had already pressed a button
+            // then don't silently load the player anymore.
+            if (!isIdle) {
+                return@LaunchedEffect
+            }
+
+            delay(3000)
+        }
+
         if (episodeToPlay != null) {
             viewModel.onEpisodeClick(episodeToWatch = episodeToPlay)
         } else {
             viewModel.loadSourceData()
+        }
+    }
+
+    LaunchedEffect(dialogState, isIdle, isPlayerRunning) {
+        if (!isPlayerRunning && dialogState is SourceDataState.Success && isIdle) {
+            onPlayerScreenVisibilityChange(true)
+            while (viewModel.player.playbackState == Player.STATE_BUFFERING) {
+                delay(3000)
+            }
+            onOverviewVisibilityChange(false)
         }
     }
 
@@ -160,6 +184,7 @@ fun PlayerScreen(
                     || isAudioAndSubtitlesPanelOpened.value
                     || isServerPanelOpened.value
                     || isPlaybackSpeedPanelOpened.value
+                    || isOverviewShown
 
             val isLoading = !viewModel.player.hasBeenInitialized
                     || !viewModel.player.isPlaying
@@ -245,7 +270,7 @@ fun PlayerScreen(
                 }
             )
 
-            provideLocalDirectionalFocusRequester {
+            LocalDirectionalFocusRequesterProvider {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()

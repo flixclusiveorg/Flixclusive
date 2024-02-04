@@ -33,8 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,8 +58,8 @@ import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.LocalFocusTransferredOnLaunchProvider
 import com.flixclusive.core.ui.tv.util.drawScrimOnBackground
 import com.flixclusive.core.ui.tv.util.drawScrimOnForeground
-import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
+import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalFocusTransferredOnLaunch
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.core.util.common.ui.UiText
@@ -102,6 +106,7 @@ fun FilmScreen(
     var isPlayerRunning by remember { mutableStateOf(false) }
     var isEpisodesPanelOpen by remember { mutableStateOf(false) }
     var isOverviewShown by remember { mutableStateOf(true) }
+    var isIdle by remember { mutableStateOf(true) }
 
     var buttonsHasFocus by remember { mutableStateOf(false) }
     var collectionHasFocus by remember { mutableStateOf(false) }
@@ -147,22 +152,19 @@ fun FilmScreen(
     val lastItemFocusedMap = useLocalLastFocusedItemPerDestination()
     val currentRoute = useLocalCurrentRoute()
 
-    //LaunchedEffect(Unit) {
-    //    isPlayerStarting = false
-    //    delay(8000L)
-    //    isPlayerStarting = true
-    //
-    //    isOverviewShowing = false
-    //    isBackdropImageShowing = false
-    //    isEpisodesPanelOpen = false
-    //}
-
 
     Box(
         modifier = Modifier
             .focusGroup()
             .fillMaxSize()
             .background(Color.Black)
+            .onPreviewKeyEvent { keyEvent ->
+                if (keyEvent.type == KeyEventType.KeyUp) {
+                    isIdle = false
+                }
+
+                false
+            }
     ) {
         AnimatedContent(
             targetState = backdropPath,
@@ -195,7 +197,7 @@ fun FilmScreen(
                         .height(400.dp),
                     model = it,
                     imageLoader = LocalContext.current.imageLoader,
-                    contentDescription = null
+                    contentDescription = stringResource(id = UtilR.string.film_item_content_description)
                 )
             }
         }
@@ -212,6 +214,13 @@ fun FilmScreen(
                         episodeToPlay = episodeToPlay,
                         isPlayerRunning = isPlayerRunning,
                         isOverviewShown = isOverviewShown,
+                        isIdle = isIdle,
+                        onPlayerScreenVisibilityChange = { visible ->
+                            isPlayerRunning = visible
+                        },
+                        onOverviewVisibilityChange = { visible ->
+                            isOverviewShown = visible
+                        },
                         onBack = { forceClose ->
                             if (isEpisodesPanelOpen || forceClose) {
                                 isPlayerRunning = false
@@ -240,6 +249,7 @@ fun FilmScreen(
                 val isInitialLaunchTransferred = useLocalFocusTransferredOnLaunch()
 
                 DisposableEffect(LocalLifecycleOwner.current) {
+                    isIdle = true
                     viewModel.initializeData(
                         filmId = args.film.id,
                         filmType = args.film.filmType
