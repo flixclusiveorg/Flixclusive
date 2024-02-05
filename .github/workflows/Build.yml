@@ -5,8 +5,11 @@ on:
     branches:
       - master
 
+permissions:
+  contents: write
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: "pre-release"
   cancel-in-progress: true
 
 jobs:
@@ -34,7 +37,7 @@ jobs:
       - name: Build release
         uses: gradle/gradle-command-action@v2
         with:
-          arguments: assembleRelease
+          arguments: assembleRelease assemblePrerelease
 
       - name: Sign as pre-release APK
         uses: r0adkll/sign-android-release@v1
@@ -49,17 +52,38 @@ jobs:
         run: |
           set -e
           mv app/build/outputs/apk/release/app-release-unsigned-signed.apk flixclusive-release.apk
+          sha=`sha256sum flixclusive-release.apk | awk '{ print $1 }'`
+          echo "RELEASE_SHA=$sha" >> $GITHUB_ENV
+          
+          mv app/build/outputs/apk/release/app-prerelease-unsigned-signed.apk flixclusive-prerelease.apk
+          sha=`sha256sum flixclusive-prerelease.apk | awk '{ print $1 }'`
+          echo "PRERELEASE_SHA=$sha" >> $GITHUB_ENV
+          
 
       - name: Create Pre-release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: "pre-release"
-          name: "Pre-realease build"
+          name: "Pre-release build"
           body: |
             ---
-            _NOTE: Android TV is still incomplete, but please test it!_
+            _NOTE: Android TV is incomplete. Though, you could test it now._
+            
+            ### Changes
+            
+            ---
+            ##### The `prerelease` apk is similar to release but for _debugging_ purposes only. Use this if you want to test the latest features without messing up your authentic release data.
+            ---
+            
+            ### Checksums
+
+            | Variant | SHA-256 |
+            | ------- | ------- |
+            | release | ${{ env.RELEASE_SHA }} |
+            | pre-release | ${{ env.PRERELEASE_SHA }} |
           files: |
             flixclusive-release.apk
+            flixclusive-prerelease.apk
           draft: false
           prerelease: true
         env:
