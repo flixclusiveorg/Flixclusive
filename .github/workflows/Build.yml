@@ -34,15 +34,24 @@ jobs:
           java-version: 17
           distribution: adopt
 
-      - name: Build release
+      - name: Build release and prerelease
         uses: gradle/gradle-command-action@v2
         with:
           arguments: :app:assembleRelease :app:assemblePrerelease
 
-      - name: Sign as pre-release APK
+      - name: Sign release APK
         uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Sign pre-release APK
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/apk/prerelease
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
