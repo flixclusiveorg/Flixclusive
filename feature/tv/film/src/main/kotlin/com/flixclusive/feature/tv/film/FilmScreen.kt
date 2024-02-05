@@ -421,6 +421,7 @@ fun FilmScreen(
                         onEpisodeClick = {
                             episodeToPlay = it
                             isPlayerRunning = true
+                            isOverviewShown = false
                         },
                         onHidePanel = {
                             isEpisodesPanelOpen = false
