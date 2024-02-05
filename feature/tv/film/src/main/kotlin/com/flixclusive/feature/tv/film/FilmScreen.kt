@@ -317,7 +317,10 @@ fun FilmScreen(
                                     },
                                     onWatchlistClick = viewModel::onWatchlistButtonClick,
                                     goBack = navigator::goBack,
-                                    onSeeMoreEpisodes = { isEpisodesPanelOpen = true }
+                                    onSeeMoreEpisodes = {
+                                        isOverviewShown = false
+                                        isEpisodesPanelOpen = true
+                                    }
                                 )
                             }
                         }
@@ -424,6 +427,7 @@ fun FilmScreen(
                             isOverviewShown = false
                         },
                         onHidePanel = {
+                            isOverviewShown = true
                             isEpisodesPanelOpen = false
 
                             // Focus on episode button.
