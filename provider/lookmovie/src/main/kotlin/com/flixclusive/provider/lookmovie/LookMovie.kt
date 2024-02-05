@@ -4,7 +4,6 @@ import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.json.fromJson
 import com.flixclusive.core.util.network.GET
-import com.flixclusive.core.util.network.asString
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
@@ -37,8 +36,7 @@ class LookMovie(client: OkHttpClient) : Provider(client) {
 
         val data = client.newCall(uri).execute()
             .body
-            ?.charStream()
-            ?.asString()
+            ?.string()
             ?: throw Exception("Error searching on LookMovie")
 
         return fromJson<LookMovieSearchResponse>(data).toSearchResponse()
@@ -75,8 +73,7 @@ class LookMovie(client: OkHttpClient) : Provider(client) {
             )
         ).execute()
             .body
-            ?.charStream()
-            ?.asString()
+            ?.string()
             ?: throw Exception("Error getting $mediaIdToUse data from LookMovie")
 
         val data = fromJson<LookMovieMediaDetail>(response)
@@ -110,8 +107,7 @@ class LookMovie(client: OkHttpClient) : Provider(client) {
             )
         ).execute()
             .body
-            ?.charStream()
-            ?.asString()
+            ?.string()
             ?: throw Exception("Error getting $mediaId from LookMovie")
 
         return fromJson<LookMovieMediaDetail>(data)
