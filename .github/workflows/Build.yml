@@ -37,7 +37,7 @@ jobs:
       - name: Build release
         uses: gradle/gradle-command-action@v2
         with:
-          arguments: assembleRelease assemblePrerelease
+          arguments: :app:assembleRelease :app:assemblePrerelease
 
       - name: Sign as pre-release APK
         uses: r0adkll/sign-android-release@v1
@@ -55,7 +55,7 @@ jobs:
           sha=`sha256sum flixclusive-release.apk | awk '{ print $1 }'`
           echo "RELEASE_SHA=$sha" >> $GITHUB_ENV
           
-          mv app/build/outputs/apk/release/app-prerelease-unsigned-signed.apk flixclusive-prerelease.apk
+          mv app/build/outputs/apk/prerelease/app-prerelease-unsigned-signed.apk flixclusive-prerelease.apk
           sha=`sha256sum flixclusive-prerelease.apk | awk '{ print $1 }'`
           echo "PRERELEASE_SHA=$sha" >> $GITHUB_ENV
           
