@@ -55,7 +55,7 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
             )
         ).execute()
 
-        response.body?.charStream().asString()?.let { data ->
+        response.body?.string()?.let { data ->
             val doc = Jsoup.parse(data)
             val navSelector = "div.pre-pagination:nth-child(3) > nav:nth-child(1) > ul:nth-child(1)"
             searchResult = searchResult.copy(
@@ -93,7 +93,7 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
         )
 
         val response = client.newCall(GET(filmIdToUse)).execute()
-        val data = response.body?.charStream().asString()
+        val data = response.body?.string()
 
         if (data != null) {
             val doc = Jsoup.parse(data)
@@ -143,7 +143,7 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
         if (tvCacheData.seasons == null || !isSameId) {
             val responseSeasons =
                 client.newCall(GET(ajaxReqUrl(filmIdToUse, "tv", true))).execute()
-            val dataSeasons = responseSeasons.body?.charStream().asString()
+            val dataSeasons = responseSeasons.body?.string()
                 ?: throw Exception("Failed to fetch season data from provider")
 
             val seasonsDoc = Jsoup.parse(dataSeasons)
@@ -209,7 +209,7 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
             }
 
         val response = client.newCall(GET(fetchServerUrl)).execute()
-        val data = response.body?.charStream().asString()
+        val data = response.body?.string()
 
         if (data != null) {
             val doc = Jsoup.parse(data)

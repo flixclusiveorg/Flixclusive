@@ -6,7 +6,6 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.json.fromJson
 import com.flixclusive.core.util.network.CryptographyUtil.base64Encode
 import com.flixclusive.core.util.network.POST
-import com.flixclusive.core.util.network.asString
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
@@ -93,8 +92,7 @@ class SuperStream(
 
         val responseBody = response
             .body
-            ?.charStream()
-            ?.asString()
+            ?.string()
             ?: throw Exception(errorMessage + " [${response.code} - ${response.message}]")
 
         if(
