@@ -127,15 +127,3 @@ dependencies {
     implementation(libs.lifecycle.runtimeCompose)
     implementation(libs.material)
 }
-
-tasks.register("androidSourcesJar", Jar::class) {
-    archiveClassifier.set("sources")
-    from(android.sourceSets.getByName("main").java.srcDirs) // Full Sources
-}
-
-// For GradLew Plugin
-tasks.register("makeJar", Copy::class) {
-    from("build/intermediates/compile_app_classes_jar/prerelease")
-    into("build")
-    include("classes.jar")
-}
