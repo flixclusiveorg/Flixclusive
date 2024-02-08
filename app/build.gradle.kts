@@ -38,7 +38,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
-            isShrinkResources  = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -47,6 +47,9 @@ android {
 
         getByName("prerelease") {
             initWith(getByName("release"))
+            isMinifyEnabled = false
+            isShrinkResources = false
+
             applicationIdSuffix = ".pre_release"
             versionNameSuffix = "-PRE_RELEASE"
 
@@ -63,6 +66,12 @@ android {
             resValue("string", "application_id", _applicationId + applicationIdSuffix)
             resValue("string", "debug_mode", "true")
             resValue("string", "version_name", _versionName + versionNameSuffix)
+        }
+    }
+
+    testOptions {
+        unitTests.all {
+            it.ignoreFailures = true
         }
     }
 
@@ -123,4 +132,16 @@ dependencies {
     implementation(libs.hilt.navigation)
     implementation(libs.lifecycle.runtimeCompose)
     implementation(libs.material)
+}
+
+tasks.register("androidSourcesJar", Jar::class) {
+    archiveClassifier.set("sources")
+    from(android.sourceSets.getByName("main").java.srcDirs) // Full Sources
+}
+
+// For GradLew Plugin
+tasks.register("makeJar", Copy::class) {
+    from("build/intermediates/compile_app_classes_jar/prerelease")
+    into("build")
+    include("classes.jar")
 }

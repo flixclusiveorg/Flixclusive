@@ -37,7 +37,12 @@ jobs:
       - name: Build release and prerelease
         uses: gradle/gradle-command-action@v2
         with:
-          arguments: :app:assembleRelease :app:assemblePrerelease
+          arguments: :app:assembleRelease :app:assemblePrerelease build androidSourcesJar
+
+      - name: Make JAR
+        uses: gradle/gradle-command-action@v2
+        with:
+          arguments: makeJar
 
       - name: Sign release APK
         uses: r0adkll/sign-android-release@v1
@@ -93,6 +98,8 @@ jobs:
           files: |
             flixclusive-release.apk
             flixclusive-prerelease.apk
+            app/build/libs/app-sources.jar
+            app/build/classes.jar
           draft: false
           prerelease: true
         env:
