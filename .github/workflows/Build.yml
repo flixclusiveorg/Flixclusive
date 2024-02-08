@@ -34,15 +34,15 @@ jobs:
           java-version: 17
           distribution: adopt
 
-      - name: Build release and prerelease
+      - name: Build release artifacts
         uses: gradle/gradle-command-action@v2
         with:
-          arguments: :app:assembleRelease :app:assemblePrerelease build androidSourcesJar
+          arguments: :app:assembleRelease assemblePrerelease bundlePrereleaseClassesToCompileJar fatJar
 
-      - name: Make JAR
+      - name: Generate plugins stubs
         uses: gradle/gradle-command-action@v2
         with:
-          arguments: makeJar
+          arguments: generateStubsJar
 
       - name: Sign release APK
         uses: r0adkll/sign-android-release@v1
@@ -85,6 +85,9 @@ jobs:
             
             ### Changes
             
+            ### Known issues
+            - TV focus crashes. Compose TV is bugged af; we wait til the new update.
+            
             ---
             ##### The `prerelease` apk is similar to release but for _debugging_ purposes only. Use this if you want to test the latest features without messing up your authentic release data.
             ---
@@ -98,7 +101,7 @@ jobs:
           files: |
             flixclusive-release.apk
             flixclusive-prerelease.apk
-            app/build/libs/app-sources.jar
+            app/build/libs/fat-sources.jar
             app/build/classes.jar
           draft: false
           prerelease: true
