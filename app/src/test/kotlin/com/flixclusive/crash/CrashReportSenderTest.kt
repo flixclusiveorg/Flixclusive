@@ -1,8 +1,8 @@
 package com.flixclusive.crash
 
-import com.flixclusive.core.util.network.POST
-import com.flixclusive.core.util.network.asString
+import com.flixclusive.core.util.network.HttpMethod
 import com.flixclusive.core.util.network.ignoreAllSSLErrors
+import com.flixclusive.core.util.network.formRequest
 import okhttp3.OkHttpClient
 import org.junit.Before
 import org.junit.Test
@@ -39,13 +39,12 @@ class CrashReportSenderTest : CrashReportSender {
     }
 
     override fun send(errorLog: String) {
-        val response = client.newCall(
-            POST(
-                url = errorReportFormUrl,
-                data = mapOf("entry.1687138646" to errorLog)
-            )
+        val response = client.formRequest(
+            url = errorReportFormUrl,
+            method = HttpMethod.POST,
+            body = mapOf("entry.1687138646" to errorLog)
         ).execute()
-        val responseString = response.body?.charStream().asString()
+        val responseString = response.body?.string()
 
         assert(
             response.isSuccessful

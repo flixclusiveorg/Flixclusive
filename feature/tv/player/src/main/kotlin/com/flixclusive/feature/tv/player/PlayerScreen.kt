@@ -82,6 +82,7 @@ fun PlayerScreen(
     val context = LocalContext.current.getActivity<ComponentActivity>()
     val scope = rememberCoroutineScope()
 
+    var hasLaunchedFromIdle by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
@@ -120,7 +121,8 @@ fun PlayerScreen(
     }
 
     LaunchedEffect(dialogState, isIdle, isPlayerRunning) {
-        if (!isPlayerRunning && dialogState is SourceDataState.Success && isIdle) {
+        if (!isPlayerRunning && dialogState is SourceDataState.Success && isIdle && !hasLaunchedFromIdle) {
+            hasLaunchedFromIdle = true
             onPlayerScreenVisibilityChange(true)
             while (viewModel.player.playbackState == Player.STATE_BUFFERING) {
                 delay(3000)

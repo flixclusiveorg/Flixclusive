@@ -11,16 +11,14 @@ import javax.net.ssl.SSLException
 
 
 /**
- *
- * Catches all internet-related exceptions
- * and returns the message.
- *
- * */
+ * Catches exceptions related to internet operations and converts them into a [Resource.Failure] object.
+ * @return A [Resource.Failure] object with an appropriate error message.
+ */
 fun Exception.catchInternetRelatedException(): Resource.Failure {
     val defaultMessage = localizedMessage ?: message ?: "Unknown error occurred"
     errorLog(message = defaultMessage)
 
-    val error = when (this) {
+    return when (this) {
         is SocketTimeoutException -> Resource.Failure(R.string.connection_timeout)
         is ConnectException, is UnknownHostException -> Resource.Failure(R.string.connection_failed)
         is HttpException -> {
@@ -37,21 +35,22 @@ fun Exception.catchInternetRelatedException(): Resource.Failure {
             errorLog(defaultMessage)
             Resource.Failure(defaultMessage)
         }
+    }.also {
+        errorLog(stackTraceToString())
     }
-
-    errorLog(stackTraceToString())
-    return error
 }
 
 /**
+ * Executes the provided lambda [unsafeCall] safely, catching any exceptions and logging them.
  *
- * Converts a possible unsafe call to a safe call.
- *
- * */
-inline fun <T> safeCall(unsafeCall: () -> T?)
-    = try {
+ * @param unsafeCall The lambda representing the possibly unsafe call.
+ * @return The result of the lambda if it executes successfully, otherwise null.
+ */
+inline fun <T> safeCall(unsafeCall: () -> T?): T? {
+    return try {
         unsafeCall()
     } catch (e: Exception) {
         errorLog(e.stackTraceToString())
         null
     }
+}

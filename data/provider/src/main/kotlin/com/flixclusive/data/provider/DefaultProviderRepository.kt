@@ -71,7 +71,7 @@ internal class DefaultProviderRepository @Inject constructor(
                 providers.add(
                     ProviderData(
                         provider = provider,
-                        isMaintenance = provider.isMaintenance,
+                        isMaintenance = false,
                         isIgnored = isIgnored
                     )
                 )

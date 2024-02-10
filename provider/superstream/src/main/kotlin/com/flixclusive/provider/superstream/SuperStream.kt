@@ -3,9 +3,10 @@ package com.flixclusive.provider.superstream
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.json.fromJson
 import com.flixclusive.core.util.network.CryptographyUtil.base64Encode
-import com.flixclusive.core.util.network.POST
+import com.flixclusive.core.util.network.HttpMethod
+import com.flixclusive.core.util.network.formRequest
+import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
@@ -51,7 +52,6 @@ class SuperStream(
     client: OkHttpClient,
 ) : Provider(client) {
     override var name = "SuperStream"
-    override val isMaintenance: Boolean = true
 
     private var tvCacheData = TvShowCacheData()
 
@@ -82,12 +82,11 @@ class SuperStream(
 
         val errorMessage = "Failed to fetch SuperStream API"
         val url = if (useAlternativeApi) secondApiUrl else apiUrl
-        val response = client.newCall(
-            POST(
-                url = url,
-                data = data,
-                headers = headers.toHeaders()
-            )
+        val response = client.formRequest(
+            url = url,
+            method = HttpMethod.POST,
+            body = data,
+            headers = headers.toHeaders()
         ).execute()
 
         val responseBody = response

@@ -108,9 +108,6 @@ private fun PlayerServersDialogPreview() {
             override val name: String
                 get() = "Provider #$it"
 
-            override val isMaintenance: Boolean
-                get() = false
-
             override suspend fun search(
                 query: String,
                 page: Int,

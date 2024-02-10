@@ -3,8 +3,8 @@ package com.flixclusive.crash
 import android.content.Context
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
-import com.flixclusive.core.util.network.POST
-import com.flixclusive.core.util.network.asString
+import com.flixclusive.core.util.network.HttpMethod
+import com.flixclusive.core.util.network.formRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -33,13 +33,12 @@ internal class DefaultCrashReportSender @Inject constructor(
 ) : CrashReportSender {
     override fun send(errorLog: String) {
         scope.launch {
-            val response = client.newCall(
-                POST(
-                    url = errorReportFormUrl,
-                    data = mapOf("entry.1687138646" to errorLog)
-                )
+            val response = client.formRequest(
+                url = errorReportFormUrl,
+                method = HttpMethod.POST,
+                body = mapOf("entry.1687138646" to errorLog)
             ).execute()
-            val responseString = response.body?.charStream().asString()
+            val responseString = response.body?.string()
 
             val isSent = response.isSuccessful
                     && (responseString?.contains("form_confirm", true) == true || responseString?.contains("submit another response", true) == true)
