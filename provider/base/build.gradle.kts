@@ -14,7 +14,6 @@ dependencies {
     api(projects.core.util)
     api(projects.extractor.base)
 
-    implementation(projects.model.provider)
     implementation(libs.coroutines.test)
     implementation(libs.junit)
     implementation(libs.mockk)
