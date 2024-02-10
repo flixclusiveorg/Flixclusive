@@ -2,8 +2,8 @@ package com.flixclusive.provider.lookmovie
 
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.json.fromJson
-import com.flixclusive.core.util.network.GET
+import com.flixclusive.core.util.network.fromJson
+import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
@@ -20,7 +20,6 @@ import okhttp3.OkHttpClient
 class LookMovie(client: OkHttpClient) : Provider(client) {
     override val name: String = "LookMovie"
     override val baseUrl: String = "https://lmscript.xyz"
-    override val isMaintenance: Boolean = true
 
     override suspend fun search(
         query: String,
@@ -28,13 +27,12 @@ class LookMovie(client: OkHttpClient) : Provider(client) {
         filmType: FilmType,
     ): SearchResults {
         val mode = if (filmType == FilmType.MOVIE) "movies" else "shows"
-        val uri = GET(
-            "$baseUrl/v1/$mode?filters[q]=${
+
+        val data = client.request(
+            url = "$baseUrl/v1/$mode?filters[q]=${
                 query.replaceWhitespaces("+")
             }&page=$page"
-        )
-
-        val data = client.newCall(uri).execute()
+        ).execute()
             .body
             ?.string()
             ?: throw Exception("Error searching on LookMovie")
@@ -67,10 +65,8 @@ class LookMovie(client: OkHttpClient) : Provider(client) {
             mediaIdToUse = newId.toString()
         }
 
-        val response = client.newCall(
-            GET(
-                "$baseUrl/v1/$mode/view?expand=streams,subtitles&id=$mediaIdToUse"
-            )
+        val response = client.request(
+            url = "$baseUrl/v1/$mode/view?expand=streams,subtitles&id=$mediaIdToUse"
         ).execute()
             .body
             ?.string()
@@ -101,10 +97,8 @@ class LookMovie(client: OkHttpClient) : Provider(client) {
     }
 
     private fun getTvShow(mediaId: String): LookMovieMediaDetail {
-        val data = client.newCall(
-            GET(
-                "$baseUrl/v1/shows?expand=episodes&id=$mediaId"
-            )
+        val data = client.request(
+            url = "$baseUrl/v1/shows?expand=episodes&id=$mediaId"
         ).execute()
             .body
             ?.string()

@@ -8,7 +8,12 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
-// https://stackoverflow.com/a/59322754
+
+/**
+ * Configures the [OkHttpClient.Builder] to ignore all SSL errors, allowing connections to be established
+ * even if certificates are not trusted.
+ * @return The configured [OkHttpClient.Builder].
+ */
 fun OkHttpClient.Builder.ignoreAllSSLErrors(): OkHttpClient.Builder {
     val naiveTrustManager = SSLTrustManager()
 
@@ -22,6 +27,10 @@ fun OkHttpClient.Builder.ignoreAllSSLErrors(): OkHttpClient.Builder {
     return this
 }
 
+/**
+ * Implementation of [X509TrustManager] that accepts all certificates without verification.
+ * @suppress("CustomX509TrustManager")
+ */
 @SuppressLint("CustomX509TrustManager")
 class SSLTrustManager : X509TrustManager {
     override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()

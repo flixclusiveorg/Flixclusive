@@ -1,8 +1,7 @@
 package com.flixclusive.extractor.mixdrop
 
-import com.flixclusive.core.util.network.GET
 import com.flixclusive.core.util.network.asJsoup
-import com.flixclusive.core.util.network.asString
+import com.flixclusive.core.util.network.request
 import com.flixclusive.extractor.base.Extractor
 import com.flixclusive.extractor.mixdrop.util.Unpacker
 import com.flixclusive.model.provider.SourceLink
@@ -27,10 +26,11 @@ class MixDrop(
     ) {
         val newUrl = URL(url.toString().replace(host, newHost))
         val headers = Headers.headersOf("Referer", newUrl.toString())
-        val response = client.newCall(
-            GET(newUrl.toString(), headers)
+        val response = client.request(
+            url = newUrl.toString(),
+            headers = headers
         ).execute().use {
-            if(it.body?.charStream().asString()?.contains("WE ARE SORRY", true) == true)
+            if(it.body?.string()?.contains("WE ARE SORRY", true) == true)
                 throw NullPointerException("Mixdrop cannot find the source.")
 
             it.asJsoup()

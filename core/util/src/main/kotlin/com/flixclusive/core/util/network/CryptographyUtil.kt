@@ -9,15 +9,29 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 object CryptographyUtil {
+    /**
+     * Exception class representing an error during decryption process.
+     * @param message The message describing the decryption error.
+     */
     class DecryptionException(message: String) : Exception(message)
 
+    /**
+     * Decrypts the specified AES encrypted data using the provided key.
+     *
+     * @param encryptedData The AES encrypted data to decrypt.
+     * @param key The key used for decryption.
+     * @return The decrypted data as a string.
+     * @throws DecryptionException if an error occurs during decryption process.
+     */
     fun decryptAes(encryptedData: String, key: String): String {
         return try {
             val cipherData = Base64.decode(encryptedData, Base64.DEFAULT)
             val saltData: ByteArray = Arrays.copyOfRange(cipherData, 8, 16)
 
             val md5 = MessageDigest.getInstance("MD5")
-            val keyAndIV = generateKeyAndIV(saltData, key.toByteArray(), md5) ?: throw Exception("Null Key and IV")
+            val keyAndIV = generateKeyAndIV(saltData, key.toByteArray(), md5)
+                ?: throw Exception("Null Key and IV")
+
             val keySpec = SecretKeySpec(keyAndIV[0], "AES")
             val iv = IvParameterSpec(keyAndIV[1])
 
@@ -50,8 +64,8 @@ object CryptographyUtil {
      * @return an two-element array with the generated key and IV
      */
     private fun generateKeyAndIV(
-        salt: ByteArray?,
-        password: ByteArray?,
+        salt: ByteArray,
+        password: ByteArray,
         md: MessageDigest,
         keyLength: Int = 32,
         ivLength: Int = 16,
@@ -70,7 +84,7 @@ object CryptographyUtil {
                 // Digest data (last digest if available, password data, salt if available)
                 if (generatedLength > 0) md.update(generatedData, generatedLength - digestLength, digestLength)
                 md.update(password)
-                if (salt != null) md.update(salt, 0, 8)
+                md.update(salt, 0, 8)
                 md.digest(generatedData, generatedLength, digestLength)
 
                 // additional rounds
@@ -94,7 +108,17 @@ object CryptographyUtil {
         }
     }
 
+    /**
+     * Decodes the specified base64-encoded string.
+     * @param data The base64-encoded string to decode.
+     * @return The decoded string.
+     */
     fun base64Decode(data: String): String = String(Base64.decode(data, Base64.DEFAULT))
 
+    /**
+     * Encodes the specified data into a base64-encoded string.
+     * @param data The data to encode.
+     * @return The base64-encoded string.
+     */
     fun base64Encode(data: ByteArray): String = Base64.encodeToString(data, Base64.DEFAULT)
 }

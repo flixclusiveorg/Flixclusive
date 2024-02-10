@@ -3,11 +3,10 @@ package com.flixclusive.extractor.upcloud
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.coroutines.mapIndexedAsync
-import com.flixclusive.core.util.json.fromJson
 import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.CryptographyUtil.decryptAes
-import com.flixclusive.core.util.network.GET
-import com.flixclusive.core.util.network.asString
+import com.flixclusive.core.util.network.fromJson
+import com.flixclusive.core.util.network.request
 import com.flixclusive.extractor.base.Extractor
 import com.flixclusive.extractor.upcloud.dto.DecryptedSource
 import com.flixclusive.extractor.upcloud.dto.UpCloudEmbedData
@@ -53,13 +52,13 @@ class VidCloud(
             .build()
 
         val hostToUse = if (isAlternative) alternateHost else host
-        val response = client.newCall(
-            GET("$hostToUse/ajax/embed-4/getSources?id=$id", options)
+        val response = client.request(
+            url = "$hostToUse/ajax/embed-4/getSources?id=$id",
+            headers = options
         ).execute()
 
         val responseBody = response.body
-            ?.charStream()
-            .asString()
+            ?.string()
             ?: throw Exception("Cannot fetch sources")
 
 
@@ -80,9 +79,10 @@ class VidCloud(
         var sources = mutableListOf<DecryptedSource>()
 
         if (upCloudEmbedData.encrypted) {
-            val e4Script = client.newCall(
-                GET(e4ScriptEndpoint, options)
-            ).execute().body?.charStream().asString()
+            val e4Script = client.request(
+                url = e4ScriptEndpoint,
+                headers = options
+            ).execute().body?.string()
                 ?: throw Exception("Cannot fetch key decoder")
 
             val stops = getKeyStops(e4Script)
@@ -105,11 +105,11 @@ class VidCloud(
         asyncCalls(
             {
                 sources.mapAsync { source ->
-                    client.newCall(
-                        GET(source.url, options)
+                    client.request(
+                        url = source.url,
+                        headers = options
                     ).execute().body
-                        ?.charStream()
-                        .asString()
+                        ?.string()
                         ?.let { data ->
                             val urls = data
                                 .split('\n')

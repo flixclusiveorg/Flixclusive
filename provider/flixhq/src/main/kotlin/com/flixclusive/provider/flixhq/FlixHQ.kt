@@ -2,9 +2,8 @@ package com.flixclusive.provider.flixhq
 
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.json.fromJson
-import com.flixclusive.core.util.network.GET
-import com.flixclusive.core.util.network.asString
+import com.flixclusive.core.util.network.fromJson
+import com.flixclusive.core.util.network.request
 import com.flixclusive.extractor.base.Extractor
 import com.flixclusive.extractor.upcloud.VidCloud
 import com.flixclusive.model.provider.SourceLink
@@ -30,7 +29,6 @@ import java.net.URLDecoder
 class FlixHQ(client: OkHttpClient) : Provider(client) {
     override val name: String = "FlixHQ"
     override val baseUrl: String = "https://flixhq.to"
-    override val isMaintenance: Boolean = false
 
     private var tvCacheData: TvShowCacheData = TvShowCacheData()
 
@@ -47,15 +45,11 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
     ): SearchResults {
         var searchResult = SearchResults(page, false, listOf())
 
-        val response = client.newCall(
-            GET(
-                "${baseUrl}/search/${
-                    query.replaceWhitespaces("-")
-                }?page=$page"
-            )
-        ).execute()
-
-        response.body?.string()?.let { data ->
+        client.request(
+            url = "${baseUrl}/search/${
+                query.replaceWhitespaces("-")
+            }?page=$page"
+        ).execute().body?.string()?.let { data ->
             val doc = Jsoup.parse(data)
             val navSelector = "div.pre-pagination:nth-child(3) > nav:nth-child(1) > ul:nth-child(1)"
             searchResult = searchResult.copy(
@@ -92,7 +86,7 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
             title = ""
         )
 
-        val response = client.newCall(GET(filmIdToUse)).execute()
+        val response = client.request(url = filmIdToUse).execute()
         val data = response.body?.string()
 
         if (data != null) {
@@ -142,7 +136,7 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
 
         if (tvCacheData.seasons == null || !isSameId) {
             val responseSeasons =
-                client.newCall(GET(ajaxReqUrl(filmIdToUse, "tv", true))).execute()
+                client.request(url = ajaxReqUrl(filmIdToUse, "tv", true)).execute()
             val dataSeasons = responseSeasons.body?.string()
                 ?: throw Exception("Failed to fetch season data from provider")
 
@@ -164,7 +158,7 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
         val seasonId =
             seasons.getSeasonId(season) ?: throw Exception("Season $season is not available")
 
-        val responseEpisodes = client.newCall(GET(ajaxReqUrl(seasonId, "season", false))).execute()
+        val responseEpisodes = client.request(url = ajaxReqUrl(seasonId, "season", false)).execute()
         val dataEpisodes = responseEpisodes.body?.string()
             ?: throw Exception("Failed to fetch episode id from provider")
 
@@ -208,7 +202,7 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
                 "$baseUrl/ajax/movie/episodes/$episodeId"
             }
 
-        val response = client.newCall(GET(fetchServerUrl)).execute()
+        val response = client.request(url = fetchServerUrl).execute()
         val data = response.body?.string()
 
         if (data != null) {
@@ -229,13 +223,10 @@ class FlixHQ(client: OkHttpClient) : Provider(client) {
                 }
 
             servers.mapAsync { server ->
-                val serverResponse = client.newCall(
-                    GET("${baseUrl}/ajax/get_link/${server.url.split('.').last()}")
-                ).execute()
+                val serverResponse = client.request(url = "${baseUrl}/ajax/get_link/${server.url.split('.').last()}").execute()
 
                 serverResponse.body
-                    ?.charStream()
-                    ?.asString()
+                    ?.string()
                     ?.let { initialSourceData ->
                         val serverUrl = URLDecoder.decode(
                             fromJson<FlixHQInitialSourceData>(initialSourceData).link,
