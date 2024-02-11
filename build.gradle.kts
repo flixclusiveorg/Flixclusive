@@ -17,7 +17,14 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.room) apply false
     id("com.osacky.doctor") version "0.9.1"
-    id("maven-publish")
+}
+
+subprojects {
+    val moduleGroup = if (group.toString().contains(rootProject.name, true).not()) {
+        path.substringBeforeLast(":").replace(":", ".")
+    } else ""
+
+    group = "$group$moduleGroup"
 }
 
 // Generate a mf FAT AHH JAR!
@@ -66,34 +73,4 @@ tasks.register<Jar>("generateStubsJar") {
             }
         }
     }
-}
-
-
-
-subprojects {
-    apply(plugin = "maven-publish")
-
-    if (subprojects.size == 0) {
-        val publishingGroup = "com.github.rhenwinch"
-        this.group = this.group.toString().replace(rootProject.name, publishingGroup)
-
-        publishing {
-            repositories {
-                mavenLocal()
-
-                val token = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
-
-                if (token != null) {
-                    maven {
-                        credentials {
-                            username = "rhenwinch"
-                            password = token
-                        }
-                        setUrl("https://maven.pkg.github.com/rhenwinch/flixclusive")
-                    }
-                }
-            }
-        }
-    }
-
 }

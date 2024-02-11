@@ -184,7 +184,6 @@ room = { id = "androidx.room", version.ref = "room" }
 flixclusive-application = { id = "flixclusive.android.application", version = "unspecified" }
 flixclusive-compose = { id = "flixclusive.compose", version = "unspecified" }
 flixclusive-destinations = { id = "flixclusive.destinations", version = "unspecified" }
-flixclusive-extractor = { id = "flixclusive.extractor", version = "unspecified" }
 flixclusive-feature = { id = "flixclusive.feature", version = "unspecified" }
 flixclusive-hilt = { id = "flixclusive.hilt", version = "unspecified" }
 flixclusive-library = { id = "flixclusive.android.library", version = "unspecified" }

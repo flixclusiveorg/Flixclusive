@@ -4,7 +4,6 @@ import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
-import com.flixclusive.extractor.base.Extractor
 import com.flixclusive.extractor.upcloud.VidCloud
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
@@ -12,6 +11,7 @@ import com.flixclusive.provider.base.Provider
 import com.flixclusive.provider.base.dto.FilmInfo
 import com.flixclusive.provider.base.dto.SearchResultItem
 import com.flixclusive.provider.base.dto.SearchResults
+import com.flixclusive.provider.base.extractor.Extractor
 import com.flixclusive.provider.base.util.TvShowCacheData
 import com.flixclusive.provider.base.util.replaceWhitespaces
 import com.flixclusive.provider.flixhq.dto.FlixHQInitialSourceData
