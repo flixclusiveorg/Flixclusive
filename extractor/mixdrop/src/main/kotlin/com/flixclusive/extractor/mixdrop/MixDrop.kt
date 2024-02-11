@@ -2,7 +2,7 @@ package com.flixclusive.extractor.mixdrop
 
 import com.flixclusive.core.util.network.asJsoup
 import com.flixclusive.core.util.network.request
-import com.flixclusive.extractor.base.Extractor
+import com.flixclusive.provider.base.extractor.Extractor
 import com.flixclusive.extractor.mixdrop.util.Unpacker
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle

@@ -74,7 +74,6 @@ include(":data:user")
 include(":data:watch_history")
 include(":data:watchlist")
 
-include(":extractor:base")
 include(":extractor:mixdrop")
 include(":extractor:upcloud")
 

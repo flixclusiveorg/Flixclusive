@@ -7,7 +7,6 @@ import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.CryptographyUtil.decryptAes
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
-import com.flixclusive.extractor.base.Extractor
 import com.flixclusive.extractor.upcloud.dto.DecryptedSource
 import com.flixclusive.extractor.upcloud.dto.UpCloudEmbedData
 import com.flixclusive.extractor.upcloud.dto.UpCloudEmbedData.Companion.toSubtitle
@@ -15,6 +14,7 @@ import com.flixclusive.extractor.upcloud.util.DecryptUtils.extractEmbedDecryptio
 import com.flixclusive.extractor.upcloud.util.DecryptUtils.getKeyStops
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.provider.base.extractor.Extractor
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import java.net.URL

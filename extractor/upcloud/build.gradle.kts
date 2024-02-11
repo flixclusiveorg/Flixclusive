@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.flixclusive.extractor)
+    alias(libs.plugins.flixclusive.provider)
 }
 
 android {
