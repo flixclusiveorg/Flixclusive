@@ -3,7 +3,7 @@ package com.flixclusive.provider.base.plugin
 import android.content.Context
 import android.content.res.Resources
 import androidx.compose.runtime.Composable
-import com.flixclusive.provider.base.Provider
+import okhttp3.OkHttpClient
 
 
 /**
@@ -15,13 +15,6 @@ import com.flixclusive.provider.base.Provider
 @Suppress("PropertyName")
 abstract class Plugin(var manifest: PluginManifest? = null) {
     /**
-     *
-     * The list of [Provider]s to be loaded on the
-     * providers list.
-     * */
-    abstract val providers: List<Provider>
-
-    /**
      * Resources associated with the plugin, if specified.
      * */
     var resources: Resources? = null
@@ -32,10 +25,14 @@ abstract class Plugin(var manifest: PluginManifest? = null) {
 
     /**
      * Called when your Plugin is loaded
-     * @param context Context
+     * @param context The app's context
+     * @param client The app's global [OkHttpClient] for network requests
      */
     @Throws(Throwable::class)
-    open fun load(context: Context?) {
+    open fun load(
+        context: Context?,
+        client: OkHttpClient
+    ) {
         // TODO(Add default value)
     }
 
@@ -81,6 +78,8 @@ abstract class Plugin(var manifest: PluginManifest? = null) {
      * */
     @Composable
     open fun SettingsScreen(
-        resources: Resources? = this.resources
-    ) {}
+        resources: Resources? = this.resources,
+    ) {
+        // TODO(Add default value)
+    }
 }
