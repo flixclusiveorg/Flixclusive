@@ -19,14 +19,6 @@ plugins {
     id("com.osacky.doctor") version "0.9.1"
 }
 
-subprojects {
-    val moduleGroup = if (group.toString().contains(rootProject.name, true).not()) {
-        path.substringBeforeLast(":").replace(":", ".")
-    } else ""
-
-    group = "$group$moduleGroup"
-}
-
 // Generate a mf FAT AHH JAR!
 tasks.register<Jar>("fatJar") {
     archiveBaseName.set("fat")
