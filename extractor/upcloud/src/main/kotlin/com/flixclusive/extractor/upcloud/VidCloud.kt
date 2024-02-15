@@ -10,8 +10,7 @@ import com.flixclusive.core.util.network.request
 import com.flixclusive.extractor.upcloud.dto.DecryptedSource
 import com.flixclusive.extractor.upcloud.dto.UpCloudEmbedData
 import com.flixclusive.extractor.upcloud.dto.UpCloudEmbedData.Companion.toSubtitle
-import com.flixclusive.extractor.upcloud.util.DecryptUtils.extractEmbedDecryptionDetails
-import com.flixclusive.extractor.upcloud.util.DecryptUtils.getKeyStops
+import com.flixclusive.extractor.upcloud.util.getKey
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.provider.base.extractor.Extractor
@@ -33,7 +32,7 @@ class VidCloud(
 
     override val host: String = "https://rabbitstream.net"
     private val alternateHost: String = "https://dokicloud.one"
-    private val e4ScriptEndpoint = "https://rabbitstream.net/js/player/prod/e4-player.min.js"
+    private val luckyAnimalImage = "https://rabbitstream.net/images/lucky_animal/icon.png"
 
     private fun getHost(isAlternative: Boolean) =
         (if (isAlternative) "DokiCloud" else "Rabbitstream")
@@ -79,18 +78,15 @@ class VidCloud(
         var sources = mutableListOf<DecryptedSource>()
 
         if (upCloudEmbedData.encrypted) {
-            val e4Script = client.request(
-                url = e4ScriptEndpoint,
-                headers = options
-            ).execute().body?.string()
-                ?: throw Exception("Cannot fetch key decoder")
-
-            val stops = getKeyStops(e4Script)
-            val (decryptedKey, newSource) = extractEmbedDecryptionDetails(upCloudEmbedData.sources, stops)
-
-            sources = fromJson<MutableList<DecryptedSource>>(
-                decryptAes(newSource, decryptedKey)
-            )
+            client.request(luckyAnimalImage).execute()
+                .use { keyResponse ->
+                    keyResponse.body?.run {
+                        val key = getKey(byteStream())
+                        sources = fromJson<MutableList<DecryptedSource>>(
+                            decryptAes(upCloudEmbedData.sources, key)
+                        )
+                    }
+                }
         }
 
 
