@@ -113,12 +113,12 @@ object CryptographyUtil {
      * @param data The base64-encoded string to decode.
      * @return The decoded string.
      */
-    fun base64Decode(data: String): String = String(Base64.decode(data, Base64.DEFAULT))
+    fun base64Decode(data: String, flag: Int = Base64.DEFAULT): String = String(Base64.decode(data, flag))
 
     /**
      * Encodes the specified data into a base64-encoded string.
      * @param data The data to encode.
      * @return The base64-encoded string.
      */
-    fun base64Encode(data: ByteArray): String = Base64.encodeToString(data, Base64.DEFAULT)
+    fun base64Encode(data: ByteArray, flag: Int = Base64.DEFAULT): String = String(Base64.encode(data, flag))
 }

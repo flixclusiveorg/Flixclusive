@@ -14,7 +14,7 @@ val versionPatch = 0
 val versionBuild = 0
 val applicationName: String = libs.versions.applicationName.get()
 val _applicationId: String = libs.versions.applicationId.get()
-val _versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
+val _versionName = "${versionMajor}.${versionMinor}.${versionPatch}-beta" // TODO: Remove beta
 
 
 android {

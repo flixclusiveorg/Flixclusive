@@ -53,7 +53,6 @@
             <option value="$PROJECT_DIR$/domain/search" />
             <option value="$PROJECT_DIR$/domain/tmdb" />
             <option value="$PROJECT_DIR$/extractor" />
-            <option value="$PROJECT_DIR$/extractor/base" />
             <option value="$PROJECT_DIR$/extractor/mixdrop" />
             <option value="$PROJECT_DIR$/extractor/upcloud" />
             <option value="$PROJECT_DIR$/feature" />
