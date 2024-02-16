@@ -39,9 +39,10 @@ import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.util.AppNavHost
 import com.flixclusive.util.currentScreenAsState
 import com.flixclusive.util.navigateIfResumed
-import com.flixclusive.util.navigateSingleTopTo
 import com.ramcosta.composedestinations.dynamic.within
+import com.ramcosta.composedestinations.navigation.navigate
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
+import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 import com.flixclusive.core.util.R as UtilR
@@ -141,10 +142,18 @@ internal fun MobileActivity.MobileApp(
                         navController.run {
                             val isPoppingToRoot = screen == currentNavGraph
 
-                            navigateSingleTopTo(
-                                direction = screen,
-                                isPoppingToRoot = isPoppingToRoot
-                            )
+                            navigate(screen) {
+                                if (isPoppingToRoot) {
+                                    popUpTo(screen.startRoute.route)
+                                } else {
+                                    popUpTo(MobileNavGraphs.home.startDestination.route) {
+                                        saveState = true
+                                    }
+                                }
+
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     }
                 )
