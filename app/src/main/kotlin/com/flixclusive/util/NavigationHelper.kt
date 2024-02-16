@@ -18,7 +18,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
 import com.flixclusive.ROOT
@@ -36,22 +35,6 @@ import com.ramcosta.composedestinations.navigation.dependency
 import com.ramcosta.composedestinations.navigation.navigate
 import com.ramcosta.composedestinations.spec.Direction
 import com.ramcosta.composedestinations.spec.NavGraphSpec
-
-internal fun NavHostController.navigateSingleTopTo(
-    direction: NavGraphSpec,
-    isPoppingToRoot: Boolean = false,
-) = navigate(direction) {
-    if (isPoppingToRoot) {
-        popUpTo(direction.startRoute.route)
-    } else {
-        popUpTo(graph.findStartDestination().id) {
-            saveState = true
-        }
-    }
-
-    launchSingleTop = true
-    restoreState = true
-}
 
 private fun NavBackStackEntry.lifecycleIsResumed() =
     lifecycle.currentState == Lifecycle.State.RESUMED
