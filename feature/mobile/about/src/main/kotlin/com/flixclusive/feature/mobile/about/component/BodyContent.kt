@@ -65,6 +65,65 @@ internal fun BodyContent() {
                 ) {
                     withStyle(style = SpanStyle(fontSize = fontSize)) {
                         append(UiText.StringResource(UtilR.string.app_description).asString(context))
+                        append("\n")
+                    }
+                }
+
+                withStyle(
+                    style = ParagraphStyle(
+                        lineHeight = 10.sp
+                    )
+                ) {
+                    withStyle(
+                        style = SpanStyle(
+                            fontSize = fontSize,
+                            fontWeight = FontWeight.Bold
+                        )
+                    ) {
+                        append(UiText.StringResource(UtilR.string.privacy_notice).asString(context))
+                        append("\n")
+                    }
+                }
+
+                withStyle(
+                    style = ParagraphStyle(
+                        lineBreak = LineBreak.Paragraph,
+                        textAlign = TextAlign.Justify,
+                        textIndent = TextIndent(firstLine = 15.sp),
+                    )
+                ) {
+                    withStyle(style = SpanStyle(fontSize = fontSize)) {
+                        append(UiText.StringResource(UtilR.string.privacy_notice_crash_log_sender).asString(context))
+                        append("\n")
+                    }
+                }
+
+                withStyle(
+                    style = ParagraphStyle(
+                        lineHeight = 10.sp
+                    )
+                ) {
+                    withStyle(
+                        style = SpanStyle(
+                            fontSize = fontSize,
+                            fontWeight = FontWeight.Bold
+                        )
+                    ) {
+                        append(UiText.StringResource(UtilR.string.provider_disclaimer).asString(context))
+                        append("\n")
+                    }
+                }
+
+                withStyle(
+                    style = ParagraphStyle(
+                        lineBreak = LineBreak.Paragraph,
+                        textAlign = TextAlign.Justify,
+                        textIndent = TextIndent(firstLine = 15.sp),
+                    )
+                ) {
+                    withStyle(style = SpanStyle(fontSize = fontSize)) {
+                        append(UiText.StringResource(UtilR.string.disclaimer_provider_message).asString(context))
+                        append("\n")
                     }
                 }
 

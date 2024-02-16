@@ -47,7 +47,6 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 interface SearchScreenNavigator {
-
     fun openSearchExpandedScreen()
 
     fun openSeeAllScreen(item: CategoryItem)

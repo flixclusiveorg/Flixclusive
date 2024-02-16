@@ -52,9 +52,9 @@ import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.settings.component.SettingsGroup
 import com.flixclusive.feature.mobile.settings.component.dialog.advanced.AdvancedDialogWrapper
 import com.flixclusive.feature.mobile.settings.component.dialog.player.PlayerDialogWrapper
+import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.BorderedText
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.SubtitleDialogWrapper
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.SubtitlePreview
-import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.BorderedText
 import com.flixclusive.feature.mobile.settings.util.ColorPickerHelper.BoxWithColor
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionStylePreference
@@ -106,6 +106,22 @@ fun SettingsScreen(
                     checked = appSettings.isShowingFilmCardTitle,
                     onCheckedChange = {
                         viewModel.onChangeSettings(appSettings.copy(isShowingFilmCardTitle = it))
+                    },
+                    modifier = Modifier.scale(0.7F)
+                )
+            },
+        ),
+        SettingsItem(
+            title = stringResource(UtilR.string.automatic_crash_report),
+            description = stringResource(UtilR.string.automatic_crash_report_label),
+            onClick = {
+                viewModel.onChangeSettings(appSettings.copy(isSendingCrashLogsAutomatically = !appSettings.isSendingCrashLogsAutomatically))
+            },
+            previewContent = {
+                Switch(
+                    checked = appSettings.isSendingCrashLogsAutomatically,
+                    onCheckedChange = {
+                        viewModel.onChangeSettings(appSettings.copy(isSendingCrashLogsAutomatically = it))
                     },
                     modifier = Modifier.scale(0.7F)
                 )
