@@ -2,6 +2,8 @@
 
 ![Flixclusive Logo](docs/logo.png?raw=true)
 
+**DISCLAIMER**: The app utilizes the services of movie/TV show providers obtained from the internet. It does not host these providers; instead, it _utilizes_ their services. Flixclusive assumes no responsibility for the content displayed. Legal issues pertaining to the movies/TV shows should be addressed directly with the respective third-party providers.
+
 A modern streaming service app that provides users with a convenient way to play and watch the latest movies and TV shows available on the internet. With a user-friendly interface and a vast collection of content, Flixclusive aims to deliver an exceptional streaming experience to its users.
 
 
@@ -9,13 +11,10 @@ A modern streaming service app that provides users with a convenient way to play
 ![Screenshot 1](/docs/flixclusive.gif?raw=true)
 ![Screenshot 2](/docs/flixclusive-player.gif?raw=true)
 
-## Installation
-
-To install Flixclusive on your device, follow these steps:
-
-1. Download the latest release Flixclusive apk from the [releases page.](/releases/latest).
-2. Install the downloaded file (apk). **IMPORTANT: If prompted by an "Unknown Source" warning, read and follow the prompted instructions to get rid of the error.**
-3. Start streaming and enjoy Flixclusive!
+## Roadmap
+- **A badly needed add-ons/plugins system for providers**
+- **Android TV Support**
+- **Offline Viewing**
 
 ## Features
 
@@ -25,10 +24,6 @@ To install Flixclusive on your device, follow these steps:
 - **Continue Watching**: Seamlessly pick up where you left off and resume watching from any device.
 - **High-Quality Streaming**: Experience high-definition streaming with adaptive streaming technology that adjusts video quality based on your internet connection.
 - **Subtitle Selections**: Choose from a wide variety of subtitle options in different languages to enhance your viewing experience.
-
-## Roadmap
-- **Android TV Support**
-- **Offline Viewing**
 
 ## License
 The Flixclusive app is licensed under the [MIT License](LICENSE). Feel free to modify and distribute it according to your needs.
