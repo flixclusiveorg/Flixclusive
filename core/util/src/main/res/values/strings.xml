@@ -16,7 +16,7 @@
     <string name="watchlist">Watchlist</string>
 
     <!--  About the app information  -->
-    <string name="app_description">A modern streaming service app that provides users with a convenient way to play and watch the latest movies and TV shows available on the internet. With a user-friendly interface and a vast collection of content, it aims to deliver an exceptional streaming experience to its users.\n\n</string>
+    <string name="app_description">A modern streaming service app that provides users with a convenient way to play and watch the latest movies and TV shows available on the internet. With a user-friendly interface and a vast collection of content, it aims to deliver an exceptional streaming experience to its users.</string>
     <string name="app_features">App Features:</string>
     <string name="extensive_library">Extensive Library</string>
     <string name="high_quality_streaming">High-Quality Streaming</string>
@@ -64,9 +64,12 @@
     <string name="add_own_subtitle">Add subs</string>
     <string name="add_sync_offset_message">Add if subs are delayed.</string>
     <string name="add_to_watchlist">Add to Watchlist</string>
+    <string name="allow">Allow</string>
     <string name="audio">Audio</string>
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
     <string name="auto_option">Auto</string>
+    <string name="automatic_crash_report">Automatic crash report</string>
+    <string name="automatic_crash_report_label">Automatically send the crash data to Flixclusive\'s server.</string>
     <string name="browse_categories">Browse Categories</string>
     <string name="browse_movie_companies">Top Movie Companies</string>
     <string name="browse_tv_networks">Top TV Networks</string>
@@ -107,6 +110,8 @@
     <string name="popular">Popular</string>
     <string name="preferred_quality">Preferred quality</string>
     <string name="preferred_resize_mode">Preferred resize mode</string>
+    <string name="privacy_notice">Privacy notice</string>
+    <string name="provider_disclaimer">Providers Disclaimer</string>
     <string name="rating">Rating</string>
     <string name="release">RELEASE</string>
     <string name="release_player">Release player on app minimize</string>
@@ -135,8 +140,9 @@
     <string name="subtitles_language">Subtitle language</string>
     <string name="subtitles_size">Font size</string>
     <string name="subtract_sync_offset_message">Subtract if subs are early.</string>
-    <string name="sync_subtitles">Sync Subtitles</string>
     <string name="sync">Sync</string>
+    <string name="sync_subtitles">Sync Subtitles</string>
+    <string name="understood">Understood</string>
     <string name="unknown_language">Unknown language</string>
     <string name="unlock_label">Unlock</string>
     <string name="update_info">Update information</string>
@@ -251,10 +257,26 @@
     <string name="share_message_subject">Flixclusive download link</string>
 
     <!-- Permission request messages -->
-    <string name="allow">Allow</string>
-    <string name="notification_persist_request_message">It seems that you\'ve blocked notification permissions. Please grant this permission.</string>
-    <string name="notification_request_message">Notification permission is required for this feature to be available. Please grant this permission.</string>
+    <string name="notification_persist_request_message">It seems that you\'ve blocked notification permissions. Please grant this permission for the app update service.</string>
+    <string name="notification_request_message">Notification permission is required for the app updater feature to be available. Please grant this permission.</string>
     <string name="splash_notice_permissions_header">Allow Permissions</string>
     <string name="check_indicator_content_desc">Check indicator for selected sheet item</string>
+
+    <!--  Disclaimer/Privacy Notice messages  -->
+    <string name="privacy_notice_crash_log_sender">
+        <![CDATA[
+        The app collects crash data, including stacktrace and device model/brand (SDK), solely to diagnose and fix software issues. Your data\'s security is paramount, and Flixclusive employs industry-standard measures to protect it. You can opt out of automatic crash logs sender in app settings.\n\n
+
+        Flixclusive prioritizes access to a wider range of content providers by foregoing SSL verification, which can restrict access to some providers. While this decision enhances accessibility, users should be aware of potential security risks and exercise caution when accessing content.
+        ]]>
+    </string>
+    <string name="disclaimer_provider_message">
+        <![CDATA[
+        The app utilizes the services of movie/TV show providers obtained from the internet. It does not host these providers; instead, it utilizes their services. The app assumes no responsibility for the content displayed. Legal issues pertaining to the movies/TV shows should be addressed directly with the respective third-party providers.\n\n
+
+        Please note that while some of the providers will be trusted, others may not be. Users are advised to exercise caution.
+        ]]>
+    </string>
+    <string name="privacy_notice_opt_in">Opt-in to crash data collection</string>
 </resources>
 

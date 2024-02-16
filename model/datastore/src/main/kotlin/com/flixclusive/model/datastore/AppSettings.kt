@@ -19,6 +19,11 @@ const val DEFAULT_PLAYER_BUFFER_AMOUNT = 50L
 data class AppSettings(
     // General
     val isShowingFilmCardTitle: Boolean = false,
+    val isSendingCrashLogsAutomatically: Boolean = true,
+    // ===
+
+    // On-boarding settings
+    val isFirstTimeUserLaunch_: Boolean = true, // TODO: Remove underscore
     // ===
 
     // == Subs

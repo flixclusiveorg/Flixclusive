@@ -1,7 +1,10 @@
 package com.flixclusive.core.util.android
 
+import android.app.Activity
+import android.app.UiModeManager
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.res.Configuration
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -28,4 +31,9 @@ inline fun <reified Activity : ComponentActivity> Context.getActivity(): Activit
     }
 
     return activity
+}
+
+fun Activity.isTvMode(): Boolean {
+    val uiModeManager = getSystemService(ComponentActivity.UI_MODE_SERVICE) as UiModeManager
+    return uiModeManager.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
 }

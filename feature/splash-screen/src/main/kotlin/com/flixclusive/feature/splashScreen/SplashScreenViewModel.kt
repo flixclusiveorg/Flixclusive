@@ -2,15 +2,19 @@ package com.flixclusive.feature.splashScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.home.MINIMUM_HOME_ITEMS
+import com.flixclusive.model.datastore.AppSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,9 +29,19 @@ internal sealed class SplashScreenUiState {
 internal class SplashScreenViewModel @Inject constructor(
     homeItemsProviderUseCase: HomeItemsProviderUseCase,
     appConfigurationManager: AppConfigurationManager,
+    private val appSettingsManager: AppSettingsManager
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<SplashScreenUiState>(SplashScreenUiState.Loading)
     val uiState = _uiState.asStateFlow()
+
+    val appSettings = appSettingsManager
+        .appSettings
+        .data
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            appSettingsManager.localAppSettings
+        )
 
     init {
         viewModelScope.launch {
@@ -53,6 +67,12 @@ internal class SplashScreenViewModel @Inject constructor(
                         }
                     }
             }
+        }
+    }
+
+    fun updateSettings(newAppSettings: AppSettings) {
+        viewModelScope.launch {
+            appSettingsManager.updateData(newAppSettings)
         }
     }
 }

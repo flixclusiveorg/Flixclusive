@@ -2,6 +2,9 @@ package com.flixclusive.feature.splashScreen
 
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
@@ -9,10 +12,11 @@ import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +48,8 @@ import com.flixclusive.core.util.android.hasAllPermissionGranted
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.data.configuration.UpdateStatus
 import com.flixclusive.feature.splashScreen.component.ErrorDialog
+import com.flixclusive.feature.splashScreen.component.PrivacyNotice
+import com.flixclusive.feature.splashScreen.component.ProvidersDisclaimer
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -67,13 +73,15 @@ fun SplashScreen(
     val splashScreenViewModel: SplashScreenViewModel = hiltViewModel()
     val setupViewModel: SetupScreensViewModel = hiltViewModel()
 
+    val appSettings by splashScreenViewModel.appSettings.collectAsStateWithLifecycle()
     val uiState by splashScreenViewModel.uiState.collectAsStateWithLifecycle()
     val updateStatus by setupViewModel.updateStatus.collectAsStateWithLifecycle(UpdateStatus.Fetching)
     val configurationStatus by setupViewModel.configurationStatus.collectAsStateWithLifecycle(Resource.Loading)
 
     var areAllPermissionsGranted by remember { mutableStateOf(context.hasAllPermissionGranted()) }
     var isDoneAnimating by rememberSaveable { mutableStateOf(false) }
-    var showLoadingCircle by rememberSaveable { mutableStateOf(false) }
+    var showLoadingContent by rememberSaveable { mutableStateOf(false) }
+    var showDisclaimer by rememberSaveable { mutableStateOf(false) }
 
     val image = AnimatedImageVector.animatedVectorResource(id = UiCommonR.drawable.flixclusive_animated_tag)
     var atEnd by rememberSaveable { mutableStateOf(false) }
@@ -94,11 +102,18 @@ fun SplashScreen(
             contentAlignment = Alignment.Center
         ) {
             Column(
-                modifier = Modifier.height(300.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .heightIn(min = 300.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
+                val paddingBottom by animateDpAsState(
+                    targetValue = if (!appSettings.isFirstTimeUserLaunch_) 10.dp else 50.dp,
+                    label = ""
+                )
+
                 Box(
-                    modifier = Modifier.padding(bottom = 50.dp)
+                    modifier = Modifier.padding(bottom = paddingBottom)
                 ) {
                     Image(
                         painter = rememberAnimatedVectorPainter(image, atEnd),
@@ -117,7 +132,7 @@ fun SplashScreen(
                 }
 
                 AnimatedVisibility(
-                    visible = showLoadingCircle,
+                    visible = showLoadingContent && !appSettings.isFirstTimeUserLaunch_,
                     enter = scaleIn(),
                     exit = scaleOut()
                 ) {
@@ -128,6 +143,40 @@ fun SplashScreen(
                         )
                     )
                 }
+
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    this@Column.AnimatedVisibility(
+                        visible = showLoadingContent && !showDisclaimer && appSettings.isFirstTimeUserLaunch_,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        PrivacyNotice(
+                            nextStep = {
+                                splashScreenViewModel.updateSettings(
+                                    appSettings.copy(isSendingCrashLogsAutomatically = it)
+                                )
+
+                                showDisclaimer = true
+                            }
+                        )
+                    }
+
+                    this@Column.AnimatedVisibility(
+                        visible = showDisclaimer && appSettings.isFirstTimeUserLaunch_,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        ProvidersDisclaimer(
+                            understood = {
+                                splashScreenViewModel.updateSettings(
+                                    appSettings.copy(isFirstTimeUserLaunch_ = false)
+                                )
+                            }
+                        )
+                    }
+                }
             }
         }
 
@@ -135,7 +184,7 @@ fun SplashScreen(
             if(!isDoneAnimating) {
                 atEnd = true
                 delay(4000) // Wait for animated tag to finish
-                showLoadingCircle = true
+                showLoadingContent = true
                 isDoneAnimating = true
             }
         }
@@ -167,7 +216,7 @@ fun SplashScreen(
         }
         else areAllPermissionsGranted = true
 
-        if(areAllPermissionsGranted && isDoneAnimating) {
+        if(areAllPermissionsGranted && isDoneAnimating && !appSettings.isFirstTimeUserLaunch_) {
             if (updateStatus == UpdateStatus.Outdated) {
                 navigator.openUpdateScreen(
                     newVersion = setupViewModel.newVersion!!,

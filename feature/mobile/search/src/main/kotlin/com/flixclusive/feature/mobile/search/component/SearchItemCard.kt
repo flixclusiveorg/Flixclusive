@@ -18,13 +18,14 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.lightGrayElevated
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.placeholderEffect
 
 
 @Composable
@@ -45,6 +46,7 @@ fun SearchItemCard(
                 imagePath = posterPath,
                 imageSize = if (label != null) "w500" else "w500_filter(negate,000,666)",
                 contentDescription = label,
+                contentScale = if (label != null) ContentScale.FillBounds else ContentScale.Fit,
                 modifier = Modifier
                     .align(Alignment.Center)
                     .ifElse(

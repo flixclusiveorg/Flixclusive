@@ -12,6 +12,7 @@ android {
 dependencies {
     implementation(projects.core.ui.common)
     implementation(projects.core.ui.setup)
+    implementation(projects.core.ui.tv)
     implementation(projects.domain.home)
 
     implementation(libs.accompanist.permissions)
