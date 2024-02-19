@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -28,9 +29,17 @@ internal fun PlayerPipReceiver(
             }
         }
 
-        context.registerReceiver(
-            broadcastReceiver, IntentFilter(action)
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(
+                /* receiver = */ broadcastReceiver,
+                /* filter = */ IntentFilter(action),
+                /* flags = */ Context.RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            context.registerReceiver(
+                broadcastReceiver, IntentFilter(action)
+            )
+        }
 
         onDispose {
             context.unregisterReceiver(broadcastReceiver)
