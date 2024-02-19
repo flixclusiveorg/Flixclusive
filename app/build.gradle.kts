@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.flixclusive.application)
@@ -16,6 +18,14 @@ val applicationName: String = libs.versions.applicationName.get()
 val _applicationId: String = libs.versions.applicationId.get()
 val _versionName = "${versionMajor}.${versionMinor}.${versionPatch}-beta" // TODO: Remove beta
 
+fun Project.getCommitVersion(): String {
+    val byteOut = ByteArrayOutputStream()
+    project.exec {
+        commandLine = "git rev-parse --short HEAD".split(" ")
+        standardOutput = byteOut
+    }
+    return String(byteOut.toByteArray())
+}
 
 android {
     namespace = _applicationId
@@ -51,7 +61,7 @@ android {
             isShrinkResources = false
 
             applicationIdSuffix = ".pre_release"
-            versionNameSuffix = "-PRE_RELEASE"
+            versionNameSuffix = "-PreR-[${getCommitVersion()}]"
 
             resValue("string", "app_name", "$applicationName Pre-Release")
             resValue("string", "application_id", _applicationId + applicationIdSuffix)
