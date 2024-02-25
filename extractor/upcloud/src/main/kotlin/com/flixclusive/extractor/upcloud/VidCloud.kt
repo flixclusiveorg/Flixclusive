@@ -3,13 +3,13 @@ package com.flixclusive.extractor.upcloud
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.coroutines.mapIndexedAsync
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.CryptographyUtil.decryptAes
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.extractor.upcloud.dto.DecryptedSource
 import com.flixclusive.extractor.upcloud.dto.UpCloudEmbedData
 import com.flixclusive.extractor.upcloud.dto.UpCloudEmbedData.Companion.toSubtitle
+import com.flixclusive.extractor.upcloud.dto.VidCloudEmbedDataCustomDeserializer
 import com.flixclusive.extractor.upcloud.util.getKey
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
@@ -58,82 +58,75 @@ class VidCloud(
 
         val responseBody = response.body
             ?.string()
-            ?: throw Exception("Cannot fetch sources")
+            ?: throw Exception("Cannot fetch source")
 
 
         if(responseBody.isBlank())
-            throw Exception("Cannot fetch sources")
+            throw Exception("Cannot fetch source")
 
-        val upCloudEmbedData: UpCloudEmbedData
-
-        try {
-            upCloudEmbedData = fromJson<UpCloudEmbedData>(responseBody)
-        } catch (e: Exception) {
-            debugLog("!! Source could be an array !!")
-            debugLog(responseBody)
-
-            throw Exception("Invalid source type. Possibly an array")
-        }
-
-        var sources = mutableListOf<DecryptedSource>()
-
-        if (upCloudEmbedData.encrypted) {
-            client.request(luckyAnimalImage).execute()
-                .use { keyResponse ->
-                    keyResponse.body?.run {
-                        val key = getKey(byteStream())
-                        sources = fromJson<MutableList<DecryptedSource>>(
-                            decryptAes(upCloudEmbedData.sources, key)
-                        )
+        val upCloudEmbedData = fromJson<UpCloudEmbedData>(
+            json = responseBody,
+            serializer = VidCloudEmbedDataCustomDeserializer {
+                client.request(luckyAnimalImage)
+                    .execute()
+                    .use { keyResponse ->
+                        keyResponse.body?.run {
+                            val key = getKey(byteStream())
+                            fromJson<List<DecryptedSource>>(
+                                decryptAes(it, key)
+                            )
+                        } ?: emptyList()
                     }
-                }
-        }
-
-
-        check(sources.isNotEmpty())
-        onLinkLoaded(
-            SourceLink(
-                url = sources[0].url,
-                name = "${getHost(isAlternative)}: " + "Auto"
-            )
-        )
-
-        asyncCalls(
-            {
-                sources.mapAsync { source ->
-                    client.request(
-                        url = source.url,
-                        headers = options
-                    ).execute().body
-                        ?.string()
-                        ?.let { data ->
-                            val urls = data
-                                .split('\n')
-                                .filter { line -> line.contains(".m3u8") }
-
-                            val qualities = data
-                                .split('\n')
-                                .filter { line -> line.contains("RESOLUTION=") }
-
-                            qualities.mapIndexedAsync { i, s ->
-                                val qualityTag = "${getHost(isAlternative)}: ${s.split('x')[1]}p"
-                                val dataUrl = urls[i]
-
-                                onLinkLoaded(
-                                    SourceLink(
-                                        name = qualityTag,
-                                        url = dataUrl
-                                    )
-                                )
-                            }
-                        }
-                }
-            },
-            {
-                upCloudEmbedData.tracks.mapAsync {
-                    onSubtitleLoaded(it.toSubtitle())
-                }
             }
         )
+
+
+        upCloudEmbedData.run {
+            check(sources.isNotEmpty())
+            onLinkLoaded(
+                SourceLink(
+                    url = sources[0].url,
+                    name = "${getHost(isAlternative)}: " + "Auto"
+                )
+            )
+
+            asyncCalls(
+                {
+                    sources.mapAsync { source ->
+                        client.request(
+                            url = source.url,
+                            headers = options
+                        ).execute().body
+                            ?.string()
+                            ?.let { data ->
+                                val urls = data
+                                    .split('\n')
+                                    .filter { line -> line.contains(".m3u8") }
+
+                                val qualities = data
+                                    .split('\n')
+                                    .filter { line -> line.contains("RESOLUTION=") }
+
+                                qualities.mapIndexedAsync { i, s ->
+                                    val qualityTag = "${getHost(isAlternative)}: ${s.split('x')[1]}p"
+                                    val dataUrl = urls[i]
+
+                                    onLinkLoaded(
+                                        SourceLink(
+                                            name = qualityTag,
+                                            url = dataUrl
+                                        )
+                                    )
+                                }
+                            }
+                    }
+                },
+                {
+                    upCloudEmbedData.tracks.mapAsync {
+                        onSubtitleLoaded(it.toSubtitle())
+                    }
+                }
+            )
+        }
     }
 }

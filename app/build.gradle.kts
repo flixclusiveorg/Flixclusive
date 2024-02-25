@@ -13,10 +13,10 @@ plugins {
 val versionMajor = 1
 val versionMinor = 4
 val versionPatch = 0
-val versionBuild = 0
+val versionBuild = 1
 val applicationName: String = libs.versions.applicationName.get()
 val _applicationId: String = libs.versions.applicationId.get()
-val _versionName = "${versionMajor}.${versionMinor}.${versionPatch}-beta" // TODO: Remove beta
+val _versionName = "${versionMajor}.${versionMinor}.${versionPatch}-beta${versionBuild}" // TODO: Remove beta
 
 fun Project.getCommitVersion(): String {
     val byteOut = ByteArrayOutputStream()
