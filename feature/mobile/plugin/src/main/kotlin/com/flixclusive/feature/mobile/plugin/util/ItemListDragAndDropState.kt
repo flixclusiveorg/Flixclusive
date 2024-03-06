@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.util
+package com.flixclusive.feature.mobile.plugin.util
 
 import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListState

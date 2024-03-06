@@ -10,7 +10,6 @@ import com.flixclusive.extractor.upcloud.dto.DecryptedSource
 import com.flixclusive.extractor.upcloud.dto.UpCloudEmbedData
 import com.flixclusive.extractor.upcloud.dto.UpCloudEmbedData.Companion.toSubtitle
 import com.flixclusive.extractor.upcloud.dto.VidCloudEmbedDataCustomDeserializer
-import com.flixclusive.extractor.upcloud.util.getKey
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.provider.base.extractor.Extractor
@@ -32,7 +31,6 @@ class VidCloud(
 
     override val host: String = "https://rabbitstream.net"
     private val alternateHost: String = "https://dokicloud.one"
-    private val luckyAnimalImage = "https://rabbitstream.net/images/lucky_animal/icon.png"
 
     private fun getHost(isAlternative: Boolean) =
         (if (isAlternative) "DokiCloud" else "Rabbitstream")
@@ -51,8 +49,15 @@ class VidCloud(
             .build()
 
         val hostToUse = if (isAlternative) alternateHost else host
+
+        val key = "NzEKyzYxAg=="
+        val browserVersion = "1878522624"
+        val kId = "ea48b9befe5b27756bf749a11537bf64ea51f2db"
+        val kVersion = "12542"
+
+        val sourceEndpoint = "$hostToUse/ajax/v2/embed-4/getSources?id=$id&v=${kVersion}&h=${kId}&b=${browserVersion}"
         val response = client.request(
-            url = "$hostToUse/ajax/embed-4/getSources?id=$id",
+            url = sourceEndpoint,
             headers = options
         ).execute()
 
@@ -60,26 +65,17 @@ class VidCloud(
             ?.string()
             ?: throw Exception("Cannot fetch source")
 
-
         if(responseBody.isBlank())
             throw Exception("Cannot fetch source")
 
         val upCloudEmbedData = fromJson<UpCloudEmbedData>(
             json = responseBody,
             serializer = VidCloudEmbedDataCustomDeserializer {
-                client.request(luckyAnimalImage)
-                    .execute()
-                    .use { keyResponse ->
-                        keyResponse.body?.run {
-                            val key = getKey(byteStream())
-                            fromJson<List<DecryptedSource>>(
-                                decryptAes(it, key)
-                            )
-                        } ?: emptyList()
-                    }
+                fromJson<List<DecryptedSource>>(
+                    decryptAes(it, key)
+                )
             }
         )
-
 
         upCloudEmbedData.run {
             check(sources.isNotEmpty())

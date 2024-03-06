@@ -38,7 +38,7 @@ internal class VidCloudEmbedDataCustomDeserializer(
         val tracks = obj.get("tracks").asJsonArray.map {
             fromJson<UpCloudEmbedData.UpCloudEmbedSubtitleData>(it)
         }
-        val encrypted = obj.get("encrypted").asBoolean
+        val encrypted = obj.get("t").asInt == 1
         val server = obj.get("server").asInt
 
         val sources = if (encrypted) {

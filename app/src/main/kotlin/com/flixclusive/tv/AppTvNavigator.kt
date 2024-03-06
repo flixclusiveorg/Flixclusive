@@ -67,7 +67,7 @@ internal class AppTvNavigator(
 //    }
 //
 //    override fun openProvidersScreen() {
-//        navController.navigateIfResumed(ProvidersScreenDestination within destination.navGraph())
+//        navController.navigateIfResumed(PluginsScreenDestination within destination.navGraph())
 //    }
 //
 //    override fun openAboutScreen() {

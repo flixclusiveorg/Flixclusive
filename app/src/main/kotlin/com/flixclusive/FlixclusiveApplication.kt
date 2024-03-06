@@ -7,7 +7,7 @@ import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.crash.GlobalCrashHandler
 import com.flixclusive.data.configuration.AppBuild
 import com.flixclusive.data.configuration.AppConfigurationManager
-import com.flixclusive.data.provider.ProviderRepository
+import com.flixclusive.data.provider.PluginManager
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttpClient
 import javax.inject.Inject
@@ -15,13 +15,15 @@ import javax.inject.Inject
 @HiltAndroidApp
 class FlixclusiveApplication : Application(), ImageLoaderFactory {
     @Inject
-    lateinit var providersRepository: ProviderRepository
+    lateinit var pluginManager: PluginManager
     @Inject
     lateinit var appConfigurationManager: AppConfigurationManager
     @Inject
     lateinit var appSettingsManager: AppSettingsManager
     @Inject
     lateinit var client: OkHttpClient
+    @Inject
+    lateinit var scope: OkHttpClient
 
     override fun newImageLoader(): ImageLoader {
         return ImageLoader.Builder(this)
@@ -43,7 +45,8 @@ class FlixclusiveApplication : Application(), ImageLoaderFactory {
                 build = getString(R.string.build).toLong(),
             )
         )
+
+        pluginManager.initialize()
         appSettingsManager.initialize()
-        providersRepository.initialize()
     }
 }

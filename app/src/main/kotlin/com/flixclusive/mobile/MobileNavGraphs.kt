@@ -7,7 +7,7 @@ import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.destinations.HomeScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.preferences.destinations.PreferencesScreenDestination
-import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
+import com.flixclusive.feature.mobile.plugin.destinations.PluginsScreenDestination
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.search.destinations.SearchScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
@@ -62,7 +62,7 @@ internal object MobileNavGraphs {
             AboutScreenDestination,
             FilmScreenDestination,
             GenreScreenDestination,
-            ProvidersScreenDestination,
+            PluginsScreenDestination,
             RecentlyWatchedScreenDestination,
             SettingsScreenDestination,
             UpdateDialogDestination,
