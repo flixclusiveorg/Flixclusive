@@ -3,17 +3,25 @@ package com.flixclusive.provider.base.plugin
 import android.content.Context
 import android.content.res.Resources
 import androidx.compose.runtime.Composable
+import com.flixclusive.gradle.entities.PluginManifest
+import com.flixclusive.provider.base.plugin.settings.PluginSettingsManager
 import okhttp3.OkHttpClient
 
 
 /**
  * Represents a plugin for a provider.
  *
- * @property manifest The manifest information of the plugin.
- * @property SettingsScreen A composable function for opening custom settings, if provided.
  */
 @Suppress("PropertyName")
-abstract class Plugin(var manifest: PluginManifest? = null) {
+abstract class Plugin() {
+    lateinit var settings: PluginSettingsManager
+    private var manifest: PluginManifest? = null
+
+    constructor(manifest: PluginManifest) : this() {
+        this.manifest = manifest
+        settings = PluginSettingsManager(manifest.name)
+    }
+
     /**
      * Resources associated with the plugin, if specified.
      * */
@@ -38,11 +46,11 @@ abstract class Plugin(var manifest: PluginManifest? = null) {
 
 
     /**
-     * Called when your Plugin is unloaded
+     * Called before your Plugin is unloaded
      * @param context Context
      */
     @Throws(Throwable::class)
-    open fun unload(context: Context?) {
+    open fun onUnload(context: Context?) {
         // TODO(Add default value)
     }
 

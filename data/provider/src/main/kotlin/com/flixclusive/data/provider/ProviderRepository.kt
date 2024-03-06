@@ -1,15 +1,26 @@
 package com.flixclusive.data.provider
 
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.provider.base.ProviderData
+import com.flixclusive.provider.base.Provider
+import javax.inject.Inject
+import javax.inject.Singleton
 
-interface ProviderRepository {
-    val providers: SnapshotStateList<ProviderData>
+@Singleton
+class ProviderRepository @Inject constructor() {
+    val providers: HashMap<String, MutableList<Provider>> = hashMapOf()
 
-    fun initialize()
+    fun add(parentPlugin: String, provider: Provider) {
+        if (providers[parentPlugin] == null) {
+            providers[parentPlugin] = mutableListOf(provider)
+        } else {
+            providers[parentPlugin]?.add(provider)
+        }
+    }
 
-    suspend fun swap(appSettings: AppSettings, fromIndex: Int, toIndex: Int)
-
-    suspend fun toggleUsage(appSettings: AppSettings, index: Int)
+    /**
+     *
+     * Removes all providers registered to the given plugin name.
+     * */
+    fun remove(parentPlugin: String) {
+        providers.keys.removeIf { it.equals(parentPlugin, true) }
+    }
 }

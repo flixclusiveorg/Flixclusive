@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider
+package com.flixclusive.feature.mobile.plugin.component
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
@@ -10,9 +10,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
@@ -23,23 +25,35 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.provider.base.ProviderData
+import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.feature.mobile.plugin.R
+import com.flixclusive.gradle.entities.Author
+import com.flixclusive.gradle.entities.Language
+import com.flixclusive.gradle.entities.PluginData
+import com.flixclusive.gradle.entities.PluginType
+import com.flixclusive.gradle.entities.Status
 import com.flixclusive.core.util.R as UtilR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ProviderCard(
-    provider: ProviderData,
+internal fun PluginCard(
+    pluginData: PluginData,
+    enabled: Boolean,
     displacementOffset: Float?,
+    openSettings: () -> Unit,
+    unloadPlugin: () -> Unit,
     onToggleProvider: () -> Unit,
 ) {
     val isBeingDragged = remember(displacementOffset) {
         displacementOffset != null
     }
+    
+    val isNotMaintenance = pluginData.status != Status.Maintenance
 
-    val color = if (isBeingDragged && !provider.isMaintenance) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceVariant
+    val color = if (isBeingDragged && isNotMaintenance) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceVariant
 
     Column(
         modifier = Modifier
@@ -48,13 +62,47 @@ internal fun ProviderCard(
             .fillMaxHeight()
     ) {
         Card(
-            enabled = !provider.isMaintenance,
+            enabled = isNotMaintenance,
+            onClick = onToggleProvider,
             shape = MaterialTheme.shapes.medium,
             colors = CardDefaults.cardColors(
                 containerColor = color,
                 contentColor = contentColorFor(backgroundColor = color)
             ),
-            border = if (isBeingDragged && provider.isMaintenance)
+            border = if (isBeingDragged && !isNotMaintenance)
+                BorderStroke(
+                    width = 2.dp,
+                    color = contentColorFor(color)
+                ) else null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(3.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 15.dp)
+            ) {
+                TopCardContent(pluginData = pluginData)
+
+                Divider(thickness = 0.5.dp)
+
+                BottomCardContent(
+                    pluginData = pluginData,
+                    enabled = enabled,
+                    openSettings = openSettings,
+                    unloadPlugin = unloadPlugin,
+                    toggleUsage = onToggleProvider
+                )
+            }
+        }
+        Card(
+            enabled = isNotMaintenance,
+            shape = MaterialTheme.shapes.medium,
+            colors = CardDefaults.cardColors(
+                containerColor = color,
+                contentColor = contentColorFor(backgroundColor = color)
+            ),
+            border = if (isBeingDragged && !isNotMaintenance)
                 BorderStroke(
                     width = 2.dp,
                     color = contentColorFor(color)
@@ -71,8 +119,8 @@ internal fun ProviderCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Checkbox(
-                    enabled = !provider.isMaintenance,
-                    checked = !provider.isIgnored && !provider.isMaintenance,
+                    enabled = isNotMaintenance,
+                    checked = enabled && isNotMaintenance,
                     onCheckedChange = {
                         onToggleProvider()
                     },
@@ -89,14 +137,14 @@ internal fun ProviderCard(
                         .padding(horizontal = 2.dp, vertical = 8.dp)
                 ) {
                     Text(
-                        text = provider.provider.name,
+                        text = pluginData.name,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Normal
                         ),
                     )
 
-                    if (provider.isMaintenance) {
+                    if (!isNotMaintenance) {
                         Text(
                             text = stringResource(id = UtilR.string.maintenance_all_caps),
                             style = MaterialTheme.typography.bodyLarge.copy(
@@ -116,6 +164,51 @@ internal fun ProviderCard(
                         .padding(2.dp)
                         .padding(end = 5.dp)
                 )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ProviderCardPreview() {
+    val pluginData = PluginData(
+        authors = listOf(Author("FLX")),
+        repositoryUrl = null,
+        buildUrl = null,
+        changelog = null,
+        changelogMedia = null,
+        versionName = "1.0.0",
+        versionCode = 10000,
+        description = null,
+        iconUrl = null,
+        language = Language.Multiple,
+        name = "123Movies",
+        pluginType = PluginType.All,
+        status = Status.Working
+    )
+
+    FlixclusiveTheme {
+        Surface {
+            Card(
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 15.dp)
+                ) {
+                    TopCardContent(pluginData)
+
+                    Divider(thickness = 0.5.dp)
+
+                    BottomCardContent(
+                        pluginData = pluginData,
+                        enabled = true,
+                        openSettings = {},
+                        unloadPlugin = {},
+                        toggleUsage = {}
+                    )
+                }
             }
         }
     }

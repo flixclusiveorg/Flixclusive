@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
+import java.io.Reader
 
 /**
  * Parses the specified JSON string into an object of type [T] using Gson library.
@@ -17,6 +18,11 @@ inline fun <reified T> fromJson(json: String): T {
     return Gson()
         .fromJson(json, object : TypeToken<T>() {}.type)
 }
+
+inline fun <reified T> fromJson(
+    reader: Reader
+): T = Gson()
+    .fromJson(reader, object : TypeToken<T>() {}.type)
 
 /**
  * Parses the specified [JsonElement] into an object of type [T] using Gson library.

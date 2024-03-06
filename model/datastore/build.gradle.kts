@@ -9,4 +9,5 @@ android {
 
 dependencies {
     api(libs.gson)
+    api(projects.provider.base)
 }

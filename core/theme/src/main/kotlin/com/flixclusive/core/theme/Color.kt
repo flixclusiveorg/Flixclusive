@@ -73,7 +73,7 @@ val md_theme_mobile_dark_background = Color(0xFF121212)
 val md_theme_mobile_dark_onBackground = Color(0xFFEAE0E4)
 val md_theme_mobile_dark_surface = Color(0xFF121212)
 val md_theme_mobile_dark_onSurface = Color(0xFFEAE0E4)
-val md_theme_mobile_dark_surfaceVariant = Color(0xFF2B2B2B)
+val md_theme_mobile_dark_surfaceVariant = Color(0xFF282828)
 val md_theme_mobile_dark_onSurfaceVariant = Color(0xFFE7E4EE)
 
 val subtitleColors = mapOf(

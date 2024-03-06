@@ -25,12 +25,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Surface
+import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.core.util.android.getActivity
@@ -131,6 +133,11 @@ fun Consent(
                     contentColor = Color.White.onMediumEmphasis()
                 ),
                 shape = TvButtonDefaults.shape(MaterialTheme.shapes.medium),
+                border = TvButtonDefaults.border(
+                    focusedBorder = Border(
+                        BorderStroke(3.dp, Color.White)
+                    )
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = buttonMinHeight)
@@ -139,6 +146,8 @@ fun Consent(
                 Text(
                     text = buttonLabel ?: stringResource(id = UtilR.string.understood),
                     style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
                 )
             }
         } else {
@@ -158,6 +167,24 @@ fun Consent(
                     style = MaterialTheme.typography.labelLarge,
                 )
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ConsentPreview() {
+    FlixclusiveTheme {
+        Column {
+            Text("FLIXCLUSIVE", fontSize = 30.sp)
+
+            Consent(
+                hasOptInFeature = true,
+                header = stringResource(id = UtilR.string.privacy_notice),
+                consentContent = stringResource(id = UtilR.string.privacy_notice_crash_log_sender),
+                optInLabel = stringResource(id = UtilR.string.privacy_notice_opt_in),
+                goNext = {}
+            )
         }
     }
 }

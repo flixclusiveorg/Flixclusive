@@ -143,6 +143,7 @@
     <string name="sync">Sync</string>
     <string name="sync_subtitles">Sync Subtitles</string>
     <string name="understood">Understood</string>
+    <string name="uninstall">Uninstall</string>
     <string name="unknown_language">Unknown language</string>
     <string name="unlock_label">Unlock</string>
     <string name="update_info">Update information</string>
@@ -159,11 +160,12 @@
 
     <!--  Extra labels with formatting  -->
     <string name="continue_watching_tv_show">Continue Watching S%1$d E%2$d</string>
+    <string name="current_playback_speed_format">Current playback speed: %1$sx</string>
     <string name="episode_runtime_formatter">%1$d Episode</string>
+    <string name="made_by_author_label_format">Made by %1$s</string>
     <string name="season_number_formatter">Season %1$d</string>
     <string name="season_runtime_formatter">%1$d Season</string>
     <string name="seek_seconds_format">%1$s seconds</string>
-    <string name="current_playback_speed_format">Current playback speed: %1$sx</string>
 
     <!--  State messages  -->
     <string name="checking_for_updates">Checking for updates…</string>
@@ -171,6 +173,7 @@
     <string name="default_update_info_message">No additional update information provided.</string>
     <string name="download_completed">Download completed</string>
     <string name="download_in_progress">Downloading</string>
+    <string name="failed_to_load_plugins_msg">Some plugins failed to load. Check the plugins page for more info.</string>
     <string name="fetching_episode_message">Fetching show episode…</string>
     <string name="film_data_fetching">Fetching film details…</string>
     <string name="load_link_job_active_error_message">Still processing the last request…</string>
@@ -192,6 +195,8 @@
     <string name="episode_non_existent_error_message_format">Episode %1$s doesn\'t exist on Season %2$s</string>
     <string name="extracting_from_provider_format">Extracting from %1$s…</string>
     <string name="fetching_from_provider_format">Fetching from %1$s…</string>
+    <string name="invalid_plugin_file_dex_json_msg_format">Found extracted plugin file %s in your plugins folder. DO NOT EXTRACT PLUGIN ZIPS!</string>
+    <string name="invalid_plugin_file_directory_msg_format">Found directory %s in your plugins folder. DO NOT EXTRACT PLUGIN ZIPS!</string>
     <string name="next_episode_on_format">Next episode on %1$d…</string>
     <string name="update_out_now_format">%1$s is out now</string>
 
@@ -228,7 +233,9 @@
     <string name="pause_button">Pause button</string>
     <string name="play_button">Play button</string>
     <string name="play_pause_button_content_description">Play or pause button</string>
+    <string name="plugin_icon_content_desc">Default icon of a provider</string>
     <string name="poster_content_description">A poster of %1$s</string>
+    <string name="provider_settings_icon_content_desc">Provider settings</string>
     <string name="rating_icon">Rating Icon</string>
     <string name="release_player_desc">For seamless playback, turn this off. Though, this is required to free device memory.</string>
     <string name="replay_button">Replay button</string>

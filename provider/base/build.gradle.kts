@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.flixclusive.library)
+    alias(libs.plugins.flixclusive.hilt)
     alias(libs.plugins.flixclusive.testing)
 }
 
@@ -11,6 +12,7 @@ dependencies {
     api(libs.gson)
     api(libs.jsoup)
     api(libs.okhttp)
+    api("com.github.Flixclusive:plugins-gradle:main-SNAPSHOT")
     api(projects.core.util)
     api(projects.model.provider)
 

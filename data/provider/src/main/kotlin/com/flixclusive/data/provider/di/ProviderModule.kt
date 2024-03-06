@@ -1,8 +1,6 @@
 package com.flixclusive.data.provider.di
 
-import com.flixclusive.data.provider.DefaultProviderRepository
 import com.flixclusive.data.provider.DefaultSourceLinksRepository
-import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.SourceLinksRepository
 import dagger.Binds
 import dagger.Module
@@ -13,12 +11,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ProviderModule {
-    @Singleton
-    @Binds
-    internal abstract fun bindsProviderRepository(
-        providerRepository: DefaultProviderRepository,
-    ): ProviderRepository
-
     @Singleton
     @Binds
     internal abstract fun bindsSourceLinksRepository(

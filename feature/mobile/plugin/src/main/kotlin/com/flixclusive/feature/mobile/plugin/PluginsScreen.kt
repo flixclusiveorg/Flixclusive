@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider
+package com.flixclusive.feature.mobile.plugin
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -21,23 +21,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.TopBarWithBackButton
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
-import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
-import com.flixclusive.feature.mobile.provider.util.rememberDragDropListState
+import com.flixclusive.feature.mobile.plugin.component.PluginCard
+import com.flixclusive.feature.mobile.plugin.util.DragAndDropUtils.dragGestureHandler
+import com.flixclusive.feature.mobile.plugin.util.rememberDragDropListState
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
 import com.flixclusive.core.util.R as UtilR
 
 @Destination
 @Composable
-fun ProvidersScreen(
+fun PluginsScreen(
     navigator: GoBackAction
 ) {
-    val viewModel = hiltViewModel<ProvidersScreenViewModel>()
+    val viewModel = hiltViewModel<PluginScreenViewModel>()
+    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
 
     val coroutineScope = rememberCoroutineScope()
     val overscrollJob = remember { mutableStateOf<Job?>(null) }
@@ -79,17 +82,30 @@ fun ProvidersScreen(
                 ),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            itemsIndexed(viewModel.providers) { index, provider ->
+            itemsIndexed(viewModel.pluginDataMap.values.toList()) { index, pluginData ->
+                val enabled = remember(appSettings) {
+                    !appSettings[index].isDisabled
+                }
+
                 val displacementOffset =
                     if (index == dragDropListState.getCurrentIndexOfDraggedListItem()) {
                         dragDropListState.elementDisplacement.takeIf { it != 0f }
                     } else null
 
-                ProviderCard(
-                    provider = provider,
+                PluginCard(
+                    pluginData = pluginData,
+                    enabled = enabled,
                     displacementOffset = displacementOffset,
+                    openSettings = {
+                        /*
+                        * TODO("Navigate to a plugins settings screen, then
+                        *  pass the SettingsScreen() of the pluginData as a parameter")
+                        * */
+                        /*viewModel.plugins[index].SettingsScreen()*/
+                    },
+                    unloadPlugin = { viewModel.uninstallPlugin(pluginData.name) },
                     onToggleProvider = {
-                        viewModel.toggleProvider(index)
+                        viewModel.togglePlugin(index)
                     }
                 )
             }

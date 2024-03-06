@@ -2,9 +2,11 @@ package com.flixclusive.domain.provider
 
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.data.provider.PluginManager
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.SourceLinksRepository
 import com.flixclusive.data.tmdb.TMDBRepository
+import com.flixclusive.gradle.entities.Status
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.provider.SourceData
@@ -33,6 +35,7 @@ typealias FilmKey = String
 @Singleton
 class SourceLinksProviderUseCase @Inject constructor(
     private val sourceLinksRepository: SourceLinksRepository,
+    private val pluginsManager: PluginManager,
     private val providersRepository: ProviderRepository,
     private val tmdbRepository: TMDBRepository,
 ) {
@@ -52,8 +55,13 @@ class SourceLinksProviderUseCase @Inject constructor(
 
      val providers: List<Provider>
         get() = providersRepository.providers
-            .filter { !it.isIgnored && !it.isMaintenance }
-            .map { it.provider }
+            .filterKeys { parentPlugin ->
+                val pluginData = pluginsManager.pluginDataMap[parentPlugin] ?: return@filterKeys false
+
+                pluginData.status != Status.Maintenance
+                && pluginData.status != Status.Down
+            }
+            .flatMap { (_, provider) -> provider.toList() }
 
     /**
      *
