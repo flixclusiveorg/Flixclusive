@@ -14,7 +14,7 @@ import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.provider.base.Provider
+import com.flixclusive.provider.Provider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject

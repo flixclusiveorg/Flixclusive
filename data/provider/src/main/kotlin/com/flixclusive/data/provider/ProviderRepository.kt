@@ -1,6 +1,6 @@
 package com.flixclusive.data.provider
 
-import com.flixclusive.provider.base.Provider
+import com.flixclusive.provider.Provider
 import javax.inject.Inject
 import javax.inject.Singleton
 

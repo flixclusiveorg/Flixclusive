@@ -24,7 +24,7 @@ import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.core.ui.tv.util.hasPressedRight
 import com.flixclusive.feature.tv.player.controls.settings.common.ListContentHolder
 import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.provider.base.Provider
+import com.flixclusive.provider.Provider
 import com.flixclusive.core.util.R as UtilR
 
 @Composable

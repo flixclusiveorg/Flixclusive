@@ -35,7 +35,7 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.provider.base.Provider
+import com.flixclusive.provider.Provider
 
 @OptIn(ExperimentalTvMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable

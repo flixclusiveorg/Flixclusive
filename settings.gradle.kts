@@ -74,13 +74,7 @@ include(":data:user")
 include(":data:watch_history")
 include(":data:watchlist")
 
-include(":extractor:mixdrop")
-include(":extractor:upcloud")
-
-include(":provider:base")
-include(":provider:flixhq")
-include(":provider:lookmovie")
-include(":provider:superstream")
+include(":provider")
 
 include(":core:database")
 include(":core:datastore")

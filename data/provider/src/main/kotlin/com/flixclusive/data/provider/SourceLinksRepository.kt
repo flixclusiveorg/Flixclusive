@@ -4,7 +4,7 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.provider.base.Provider
+import com.flixclusive.provider.Provider
 
 interface SourceLinksRepository {
 

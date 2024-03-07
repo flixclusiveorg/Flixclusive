@@ -16,7 +16,7 @@ import com.flixclusive.data.provider.util.rmrf
 import com.flixclusive.gradle.entities.PluginData
 import com.flixclusive.gradle.entities.PluginManifest
 import com.flixclusive.model.datastore.PluginPreference
-import com.flixclusive.provider.base.plugin.Plugin
+import com.flixclusive.provider.plugin.Plugin
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.CoroutineScope

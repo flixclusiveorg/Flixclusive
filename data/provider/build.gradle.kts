@@ -17,10 +17,7 @@ dependencies {
     api(projects.model.datastore)
     api(projects.model.provider)
     api(projects.model.tmdb)
-    api(projects.provider.base)
+    api(projects.provider)
 
     implementation(libs.okhttp)
-    implementation(projects.provider.flixhq)
-    implementation(projects.provider.lookmovie)
-    implementation(projects.provider.superstream)
 }

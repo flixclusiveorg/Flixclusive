@@ -10,7 +10,7 @@ import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.provider.base.Provider
+import com.flixclusive.provider.Provider
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
