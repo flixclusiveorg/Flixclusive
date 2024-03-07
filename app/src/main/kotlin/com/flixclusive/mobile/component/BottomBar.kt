@@ -173,6 +173,12 @@ private val mobileNavigationItems = listOf(
         label = UtilR.string.search
     ),
     AppNavigationItem(
+        screen = MobileNavGraphs.providers,
+        iconSelected = UiCommonR.drawable.plugin_logo,
+        iconUnselected = UiCommonR.drawable.plugin_logo_fill,
+        label = UtilR.string.providers
+    ),
+    AppNavigationItem(
         screen = MobileNavGraphs.preferences,
         iconSelected = UiCommonR.drawable.settings_filled,
         iconUnselected = UiCommonR.drawable.settings,

@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.plugin.util
+package com.flixclusive.feature.mobile.provider.util
 
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy

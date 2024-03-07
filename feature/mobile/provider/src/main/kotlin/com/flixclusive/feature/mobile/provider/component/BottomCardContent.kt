@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.plugin.component
+package com.flixclusive.feature.mobile.provider.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,10 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.gradle.entities.PluginData
 import com.flixclusive.gradle.entities.Status
@@ -43,19 +40,18 @@ internal fun BottomCardContent(
     Row(
         modifier = Modifier
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = if (pluginData.changelog != null) Arrangement.SpaceBetween else Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "v${pluginData.versionName}",
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Normal,
-                color = LocalContentColor.current.onMediumEmphasis(0.4F),
-                fontSize = 13.sp
+        if (pluginData.changelog != null) {
+            Icon(
+                painter = painterResource(id = UiCommonR.drawable.round_update_24),
+                contentDescription = stringResource(id = UtilR.string.provider_updates_log),
+                tint = LocalContentColor.current.onMediumEmphasis(0.4F),
+                modifier = Modifier
+                    .size(23.dp)
             )
-        )
+        }
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(5.dp),

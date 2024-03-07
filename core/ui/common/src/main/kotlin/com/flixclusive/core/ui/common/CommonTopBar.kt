@@ -24,10 +24,11 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-fun TopBarWithBackButton(
+fun CommonTopBar(
     modifier: Modifier = Modifier,
     headerTitle: String,
     onNavigationIconClick: () -> Unit,
+    endContent: (@Composable () -> Unit)? = null,
 ) {
     Column(
         modifier = Modifier
@@ -61,6 +62,8 @@ fun TopBarWithBackButton(
                     .weight(1F)
                     .padding(start = 15.dp)
             )
+
+            endContent?.invoke()
         }
     }
 }

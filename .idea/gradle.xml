@@ -60,8 +60,8 @@
             <option value="$PROJECT_DIR$/feature/mobile/genre" />
             <option value="$PROJECT_DIR$/feature/mobile/home" />
             <option value="$PROJECT_DIR$/feature/mobile/player" />
-            <option value="$PROJECT_DIR$/feature/mobile/plugin" />
             <option value="$PROJECT_DIR$/feature/mobile/preferences" />
+            <option value="$PROJECT_DIR$/feature/mobile/provider" />
             <option value="$PROJECT_DIR$/feature/mobile/recently-watched" />
             <option value="$PROJECT_DIR$/feature/mobile/search" />
             <option value="$PROJECT_DIR$/feature/mobile/search-expanded" />

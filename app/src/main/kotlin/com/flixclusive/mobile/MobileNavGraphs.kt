@@ -7,7 +7,7 @@ import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.destinations.HomeScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.preferences.destinations.PreferencesScreenDestination
-import com.flixclusive.feature.mobile.plugin.destinations.PluginsScreenDestination
+import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.search.destinations.SearchScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
@@ -52,6 +52,20 @@ internal object MobileNavGraphs {
             .associateBy { it.route }
     }
 
+    val providers = object : NavGraphSpec {
+        override val route = "providers"
+
+        override val startRoute = ProvidersScreenDestination routedIn this
+
+        override val destinationsByRoute = listOf<DestinationSpec<*>>(
+            ProvidersScreenDestination,
+            RepositoryScreenDestination,
+            AddProviderScreenDestination,
+            ProviderSettingsScreenDestination,
+        ).routedIn(this)
+            .associateBy { it.route }
+    }
+
     val preferences = object : NavGraphSpec {
         override val route = "preferences"
 
@@ -62,7 +76,6 @@ internal object MobileNavGraphs {
             AboutScreenDestination,
             FilmScreenDestination,
             GenreScreenDestination,
-            PluginsScreenDestination,
             RecentlyWatchedScreenDestination,
             SettingsScreenDestination,
             UpdateDialogDestination,
@@ -85,7 +98,8 @@ internal object MobileNavGraphs {
         override val nestedNavGraphs = listOf(
             home,
             search,
-            preferences
+            providers,
+            preferences,
         )
     }
 }

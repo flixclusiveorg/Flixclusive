@@ -29,7 +29,6 @@ interface PreferencesScreenNavigator {
     fun openWatchlistScreen()
     fun openRecentlyWatchedScreen()
     fun openSettingsScreen()
-    fun openProvidersScreen()
     fun openAboutScreen()
     fun checkForUpdates()
 }
@@ -57,12 +56,7 @@ fun PreferencesScreen(
                 navigationAction = navigator::openSettingsScreen
             ),
             PreferencesNavigationItem(
-                iconId = UiCommonR.drawable.database_icon,
-                labelId = UtilR.string.providers,
-                navigationAction = navigator::openProvidersScreen
-            ),
-            PreferencesNavigationItem(
-                iconId = R.drawable.round_update_24,
+                iconId = UiCommonR.drawable.round_update_24,
                 labelId = UtilR.string.check_for_updates,
                 navigationAction = navigator::checkForUpdates
             ),

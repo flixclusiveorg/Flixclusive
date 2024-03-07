@@ -86,11 +86,13 @@
     <string name="doh_change_toast_message">Restart is required for this to take effect.</string>
     <string name="episodes">Episodes</string>
     <string name="exit">Exit</string>
+    <string name="export_label">Export</string>
     <string name="film_card_titles">Film card titles</string>
     <string name="film_filter">Film Type</string>
     <string name="genres">Genres</string>
     <string name="github_repository">Github Repository</string>
     <string name="ignore_warning_message">Don\'t warn me anymore.</string>
+    <string name="import_label">Import</string>
     <string name="install">Install</string>
     <string name="lock">Lock</string>
     <string name="maintenance_all_caps">MAINTENANCE</string>
@@ -188,6 +190,7 @@
     <string name="source_data_dialog_state_success">Starting player…</string>
     <string name="source_data_dialog_state_unavailable_default">I\'m sorry, this is not yet watchable</string>
     <string name="unavailable_episode">Episode is not yet available</string>
+    <string name="unknown_plugin_type">Unknown plugin type</string>
     <string name="up_to_date">Version is up to date!</string>
     <string name="watchlist_empty_message">Start adding now!</string>
 
@@ -236,11 +239,13 @@
     <string name="plugin_icon_content_desc">Default icon of a provider</string>
     <string name="poster_content_description">A poster of %1$s</string>
     <string name="provider_settings_icon_content_desc">Provider settings</string>
+    <string name="provider_updates_log">Provider\'s update logs</string>
     <string name="rating_icon">Rating Icon</string>
     <string name="release_player_desc">For seamless playback, turn this off. Though, this is required to free device memory.</string>
     <string name="replay_button">Replay button</string>
     <string name="reset_settings_msg">This will reset all app settings.</string>
     <string name="sample_movie_content_desc">Sample Movie for Subtitle Preview</string>
+    <string name="search_for_providers">Search for providers</string>
     <string name="see_more_btn_content_desc">A vertical see more button icon</string>
     <string name="subtitle_icon_content_desc">Subtitle icon</string>
     <string name="subtitles_background_color_desc">Choose a background color behind the subtitle</string>

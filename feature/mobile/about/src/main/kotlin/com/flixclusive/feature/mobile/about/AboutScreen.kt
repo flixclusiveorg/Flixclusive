@@ -8,7 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.flixclusive.core.ui.common.TopBarWithBackButton
+import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.feature.mobile.about.component.BodyContent
 import com.flixclusive.feature.mobile.about.component.Header
@@ -27,7 +27,7 @@ fun AboutScreen(
         modifier = Modifier
             .verticalScroll(rememberScrollState()),
     ) {
-        TopBarWithBackButton(
+        CommonTopBar(
             headerTitle = stringResource(id = UtilR.string.about),
             onNavigationIconClick = navigator::goBack
         )
