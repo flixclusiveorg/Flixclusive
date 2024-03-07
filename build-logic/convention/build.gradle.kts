@@ -56,10 +56,6 @@ gradlePlugin {
             id = "flixclusive.destinations"
             implementationClass = "DestinationsConventionPlugin"
         }
-        register("flixclusiveProvider") {
-            id = "flixclusive.provider"
-            implementationClass = "ProviderConventionPlugin"
-        }
         register("flixclusiveTesting") {
             id = "flixclusive.testing"
             implementationClass = "TestingConventionPlugin"

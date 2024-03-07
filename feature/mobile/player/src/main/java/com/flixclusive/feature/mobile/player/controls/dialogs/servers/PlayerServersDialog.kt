@@ -25,9 +25,9 @@ import com.flixclusive.feature.mobile.player.controls.common.ListContentHolder
 import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.provider.base.Provider
-import com.flixclusive.provider.base.dto.FilmInfo
-import com.flixclusive.provider.base.dto.SearchResults
+import com.flixclusive.provider.Provider
+import com.flixclusive.provider.dto.FilmInfo
+import com.flixclusive.provider.dto.SearchResults
 import okhttp3.OkHttpClient
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR

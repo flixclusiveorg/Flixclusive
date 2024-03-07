@@ -60,9 +60,9 @@ import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.TMDBEpisode
-import com.flixclusive.provider.base.Provider
-import com.flixclusive.provider.base.dto.FilmInfo
-import com.flixclusive.provider.base.dto.SearchResults
+import com.flixclusive.provider.Provider
+import com.flixclusive.provider.dto.FilmInfo
+import com.flixclusive.provider.dto.SearchResults
 import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient
 import kotlin.math.abs

@@ -37,7 +37,7 @@ import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Season
 import com.flixclusive.model.tmdb.TMDBEpisode
-import com.flixclusive.provider.base.Provider
+import com.flixclusive.provider.Provider
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
 

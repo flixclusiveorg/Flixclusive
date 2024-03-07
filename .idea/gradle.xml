@@ -52,9 +52,6 @@
             <option value="$PROJECT_DIR$/domain/provider" />
             <option value="$PROJECT_DIR$/domain/search" />
             <option value="$PROJECT_DIR$/domain/tmdb" />
-            <option value="$PROJECT_DIR$/extractor" />
-            <option value="$PROJECT_DIR$/extractor/mixdrop" />
-            <option value="$PROJECT_DIR$/extractor/upcloud" />
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/mobile" />
             <option value="$PROJECT_DIR$/feature/mobile/about" />
@@ -85,10 +82,6 @@
             <option value="$PROJECT_DIR$/model/provider" />
             <option value="$PROJECT_DIR$/model/tmdb" />
             <option value="$PROJECT_DIR$/provider" />
-            <option value="$PROJECT_DIR$/provider/base" />
-            <option value="$PROJECT_DIR$/provider/flixhq" />
-            <option value="$PROJECT_DIR$/provider/lookmovie" />
-            <option value="$PROJECT_DIR$/provider/superstream" />
             <option value="$PROJECT_DIR$/service" />
           </set>
         </option>
