@@ -43,7 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.TopBarWithBackButton
+import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
@@ -353,7 +353,7 @@ fun SettingsScreen(
                 enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut()
             ) {
-                TopBarWithBackButton(
+                CommonTopBar(
                     headerTitle = stringResource(id = UtilR.string.settings),
                     onNavigationIconClick = navigator::goBack
                 )

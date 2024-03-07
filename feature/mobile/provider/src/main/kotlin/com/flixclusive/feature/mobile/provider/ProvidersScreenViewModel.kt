@@ -1,5 +1,8 @@
-package com.flixclusive.feature.mobile.plugin
+package com.flixclusive.feature.mobile.provider
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
@@ -13,13 +16,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class PluginScreenViewModel @Inject constructor(
+class ProvidersScreenViewModel @Inject constructor(
     private val pluginManager: PluginManager,
     appSettingsManager: AppSettingsManager,
 ) : ViewModel() {
     val pluginDataMap = pluginManager.pluginDataMap
     val plugins: List<Plugin>
         get() = pluginManager.plugins.values.toList()
+
+    var isSearching by mutableStateOf(false)
 
     val appSettings = appSettingsManager.appSettings
         .data

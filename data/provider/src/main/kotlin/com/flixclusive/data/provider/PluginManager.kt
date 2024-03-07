@@ -64,6 +64,12 @@ class PluginManager @Inject constructor(
 
                 val updaterJsonFile = File(updaterJsonFilePath)
 
+
+                if (!updaterJsonFile.exists()) {
+                    errorLog("Plugin's updater.json could not be found!")
+                    return@forEach
+                }
+
                 val updaterJsonList = updaterJsonMap.getOrPut(updaterJsonFile.absolutePath) {
                     fromJson<List<PluginData>>(updaterJsonFile.reader())
                 }
@@ -77,8 +83,10 @@ class PluginManager @Inject constructor(
                 }
 
                 if (pluginName.endsWith(".flx")) {
-                    pluginDataMap[pluginFile.nameWithoutExtension] = pluginData
-                    loadPlugin(pluginFile)
+                    loadPlugin(
+                        file = pluginFile,
+                        pluginData = pluginData
+                    )
                 } else if (pluginName != "oat") { // Some roms create this
                     if (pluginFile.isDirectory) {
                         context.showToast(
@@ -107,7 +115,7 @@ class PluginManager @Inject constructor(
      * @param client a modified [OkHttpClient] instance
      * @param file   Plugin file
      */
-    suspend fun loadPlugin(file: File) {
+    suspend fun loadPlugin(file: File, pluginData: PluginData) {
         val fileName = file.nameWithoutExtension
         val filePath = file.absolutePath
 
@@ -120,8 +128,11 @@ class PluginManager @Inject constructor(
         }
 
         try {
+            pluginDataMap[fileName] = pluginData
+
             val loader = PathClassLoader(filePath, context.classLoader)
             var manifest: PluginManifest
+            
             loader.getResourceAsStream("manifest.json").use { stream ->
                 if (stream == null) {
                     failedToLoad[file] = "No manifest found"

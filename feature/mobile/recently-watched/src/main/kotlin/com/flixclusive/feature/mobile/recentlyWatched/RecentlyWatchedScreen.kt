@@ -16,7 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.TopBarWithBackButton
+import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
 import com.flixclusive.core.ui.mobile.component.FilmsGridScreen
 import com.flixclusive.model.tmdb.Film
@@ -43,7 +43,7 @@ fun RecentlyWatchedScreen(
         ) {
             Scaffold(
                 topBar = {
-                    TopBarWithBackButton(
+                    CommonTopBar(
                         modifier = Modifier.align(Alignment.TopStart),
                         headerTitle = stringResource(id = UtilR.string.recently_watched),
                         onNavigationIconClick = navigator::goBack

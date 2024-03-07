@@ -96,7 +96,7 @@ dependencies {
     implementation(projects.feature.mobile.home)
     implementation(projects.feature.mobile.player)
     implementation(projects.feature.mobile.preferences)
-    implementation(projects.feature.mobile.plugin)
+    implementation(projects.feature.mobile.provider)
     implementation(projects.feature.mobile.recentlyWatched)
     implementation(projects.feature.mobile.search)
     implementation(projects.feature.mobile.searchExpanded)

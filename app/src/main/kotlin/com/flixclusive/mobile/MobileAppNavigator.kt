@@ -11,7 +11,7 @@ import com.flixclusive.feature.mobile.home.HomeNavigator
 import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.preferences.PreferencesScreenNavigator
-import com.flixclusive.feature.mobile.plugin.destinations.PluginsScreenDestination
+import com.flixclusive.feature.mobile.provider.ProvidersScreenNavigator
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
@@ -35,7 +35,7 @@ internal class MobileAppNavigator(
     private val destination: NavDestination,
     private val navController: NavController,
     private val closeApp: () -> Unit,
-) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator, FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator {
+) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator, FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator, ProvidersScreenNavigator {
 
     override fun goBack() {
         navController.navigateUp()
@@ -72,10 +72,6 @@ internal class MobileAppNavigator(
 
     override fun openSettingsScreen() {
         navController.navigateIfResumed(SettingsScreenDestination within destination.navGraph())
-    }
-
-    override fun openProvidersScreen() {
-        navController.navigateIfResumed(PluginsScreenDestination within destination.navGraph())
     }
 
     override fun openAboutScreen() {
@@ -127,5 +123,13 @@ internal class MobileAppNavigator(
         ) {
             launchSingleTop = true
         }
+    }
+
+    override fun openProviderSettings(pluginName: String) {
+        /*TODO("Not yet implemented")*/
+    }
+
+    override fun openAddProviderScreen() {
+        TODO("Not yet implemented")
     }
 }

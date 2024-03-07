@@ -1,10 +1,11 @@
-package com.flixclusive.feature.mobile.plugin.component
+package com.flixclusive.feature.mobile.provider.component
 
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -31,7 +32,7 @@ import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.plugin.R
+import com.flixclusive.feature.mobile.provider.R
 import com.flixclusive.gradle.entities.PluginData
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
@@ -39,7 +40,8 @@ import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun TopCardContent(
-    pluginData: PluginData
+    pluginData: PluginData,
+    isSearching: Boolean
 ) {
     val context = LocalContext.current
 
@@ -47,6 +49,7 @@ internal fun TopCardContent(
     val iconImage = remember {
         ImageRequest.Builder(context)
             .data(pluginData.iconUrl)
+            .build()
     }
 
     Row(
@@ -55,14 +58,16 @@ internal fun TopCardContent(
         modifier = Modifier
             .padding(vertical = 10.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.round_drag_indicator_24),
-            contentDescription = stringResource(
-                id = UtilR.string.drag_icon_content_desc
-            ),
-            modifier = Modifier
-                .size(30.dp)
-        )
+        if (!isSearching) {
+            Icon(
+                painter = painterResource(id = R.drawable.round_drag_indicator_24),
+                contentDescription = stringResource(
+                    id = UtilR.string.drag_icon_content_desc
+                ),
+                modifier = Modifier
+                    .size(30.dp)
+            )
+        }
 
         Surface(
             shape = MaterialTheme.shapes.small,
@@ -73,27 +78,17 @@ internal fun TopCardContent(
                     .size(60.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (pluginData.iconUrl != null && !errorLoadingIcon) {
-                    AsyncImage(
-                        model = iconImage,
-                        imageLoader = LocalContext.current.imageLoader,
-                        onError = {
-                            errorLoadingIcon = true
-                        },
-                        contentDescription = stringResource(
-                            UtilR.string.plugin_icon_content_desc,
-                        ),
-                        contentScale = ContentScale.Fit
-                    )
-                } else {
-                    Icon(
-                        painter = painterResource(id = UiCommonR.drawable.plugin_logo),
-                        contentDescription = stringResource(id = UtilR.string.plugin_icon_content_desc),
-                        tint = LocalContentColor.current.onMediumEmphasis(),
-                        modifier = Modifier
-                            .size(40.dp)
-                    )
-                }
+                AsyncImage(
+                    model = iconImage,
+                    imageLoader = LocalContext.current.imageLoader,
+                    placeholder = painterResource(id = UiCommonR.drawable.plugin_logo),
+                    onError = { errorLoadingIcon = true },
+                    contentDescription = stringResource(UtilR.string.plugin_icon_content_desc),
+                    alignment = Alignment.Center,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .size(40.dp)
+                )
             }
         }
 
@@ -116,23 +111,42 @@ private fun ProviderDetails(
     Column(
         modifier = modifier
     ) {
-        Text(
-            text = pluginData.name,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Black,
-                fontSize = 18.sp
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(bottom = 2.dp)
-        )
+                .fillMaxWidth()
+        ) {
+            Text(
+                text = pluginData.name,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .padding(bottom = 2.dp)
+            )
+
+
+            Text(
+                text = "v${pluginData.versionName}",
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Normal,
+                    color = LocalContentColor.current.onMediumEmphasis(0.4F),
+                    fontSize = 13.sp
+                )
+            )
+        }
 
         val authors = remember {
             if (pluginData.authors.size == 1) {
                 context.getString(
                     UtilR.string.made_by_author_label_format,
-                    pluginData.authors.firstOrNull() ?: "anon"
+                    pluginData.authors.firstOrNull()?.name ?: "anon"
                 )
             } else {
                 pluginData.authors.take(3).joinToString(", ")
@@ -151,7 +165,7 @@ private fun ProviderDetails(
         )
 
         Text(
-            text = pluginData.pluginType.toString(),
+            text = pluginData.pluginType?.toString() ?: stringResource(UtilR.string.unknown_plugin_type),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.titleMedium.copy(
