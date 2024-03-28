@@ -1,26 +1,26 @@
 package com.flixclusive.data.provider
 
-import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderApi
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ProviderRepository @Inject constructor() {
-    val providers: HashMap<String, MutableList<Provider>> = hashMapOf()
+    val providers: HashMap<String, MutableList<ProviderApi>> = hashMapOf()
 
-    fun add(parentPlugin: String, provider: Provider) {
-        if (providers[parentPlugin] == null) {
-            providers[parentPlugin] = mutableListOf(provider)
+    fun add(providerName: String, providerApi: ProviderApi) {
+        if (providers[providerName] == null) {
+            providers[providerName] = mutableListOf(providerApi)
         } else {
-            providers[parentPlugin]?.add(provider)
+            providers[providerName]?.add(providerApi)
         }
     }
 
     /**
      *
-     * Removes all providers registered to the given plugin name.
+     * Removes all providers registered to the given provider name.
      * */
-    fun remove(parentPlugin: String) {
-        providers.keys.removeIf { it.equals(parentPlugin, true) }
+    fun remove(providerName: String) {
+        providers.keys.removeIf { it.equals(providerName, true) }
     }
 }

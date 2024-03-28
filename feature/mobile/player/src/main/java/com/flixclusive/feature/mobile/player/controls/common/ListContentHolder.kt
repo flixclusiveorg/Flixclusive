@@ -28,7 +28,7 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderApi
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -68,7 +68,7 @@ internal fun <Type> ListContentHolder(
                 val name = when (item) {
                     is String -> item
                     is SourceLink -> item.name
-                    is Provider -> item.name
+                    is ProviderApi -> item.name
                     is Subtitle -> item.language
                     else -> throw ClassFormatError("Invalid content type provided.")
                 }

@@ -24,26 +24,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.gradle.entities.PluginData
+import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.Status
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun BottomCardContent(
-    pluginData: PluginData,
+    providerData: ProviderData,
     enabled: Boolean,
     openSettings: () -> Unit,
-    unloadPlugin: () -> Unit,
+    unloadProvider: () -> Unit,
     toggleUsage: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
-        horizontalArrangement = if (pluginData.changelog != null) Arrangement.SpaceBetween else Arrangement.End,
+        horizontalArrangement = if (providerData.changelog != null) Arrangement.SpaceBetween else Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (pluginData.changelog != null) {
+        if (providerData.changelog != null) {
             Icon(
                 painter = painterResource(id = UiCommonR.drawable.round_update_24),
                 contentDescription = stringResource(id = UtilR.string.provider_updates_log),
@@ -58,7 +58,7 @@ internal fun BottomCardContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedButton(
-                onClick = unloadPlugin,
+                onClick = unloadProvider,
                 modifier = Modifier.size(width = 80.dp, height = 25.dp),
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
@@ -86,14 +86,14 @@ internal fun BottomCardContent(
 
             Switch(
                 checked = enabled,
-                enabled = pluginData.status != Status.Maintenance && pluginData.status != Status.Down,
+                enabled = providerData.status != Status.Maintenance && providerData.status != Status.Down,
                 colors = SwitchDefaults.colors(
-                    disabledCheckedThumbColor = if (pluginData.status == Status.Maintenance)
+                    disabledCheckedThumbColor = if (providerData.status == Status.Maintenance)
                         Color(0xFF331821)
                     else MaterialTheme.colorScheme.surface
                         .onMediumEmphasis(1F)
                         .compositeOver(MaterialTheme.colorScheme.surface),
-                    disabledCheckedTrackColor = if (pluginData.status == Status.Maintenance)
+                    disabledCheckedTrackColor = if (providerData.status == Status.Maintenance)
                         Color(0xFFFC93B7)
                     else MaterialTheme.colorScheme.onSurface
                         .onMediumEmphasis(0.12F)

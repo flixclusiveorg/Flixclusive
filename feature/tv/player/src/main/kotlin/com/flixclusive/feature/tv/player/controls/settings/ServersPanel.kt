@@ -24,7 +24,7 @@ import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.core.ui.tv.util.hasPressedRight
 import com.flixclusive.feature.tv.player.controls.settings.common.ListContentHolder
 import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
@@ -32,13 +32,13 @@ internal fun ServersPanel(
     modifier: Modifier = Modifier,
     state: PlayerUiState,
     servers: List<SourceLink>,
-    providers: List<Provider>,
+    providerApis: List<ProviderApi>,
     onProviderChange: (String) -> Unit,
     onServerChange: (Int) -> Unit,
     hidePanel: () -> Unit,
 ) {
     val selectedSourceIndex = remember(state.selectedProvider) {
-        providers.indexOfFirst { it.name.equals(state.selectedProvider, true) }
+        providerApis.indexOfFirst { it.name.equals(state.selectedProvider, true) }
     }
 
     var isFirstItemFullyFocused by remember { mutableStateOf(true) }
@@ -73,11 +73,11 @@ internal fun ServersPanel(
                     },
                 contentDescription = stringResource(id = UtilR.string.providers),
                 label = stringResource(id = UtilR.string.providers),
-                items = providers,
+                items = providerApis,
                 selectedIndex = selectedSourceIndex,
                 itemState = state.selectedProviderState,
                 onItemClick = {
-                    onProviderChange(providers[it].name)
+                    onProviderChange(providerApis[it].name)
                 }
             )
 

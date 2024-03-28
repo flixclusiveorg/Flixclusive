@@ -6,8 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.data.provider.PluginManager
-import com.flixclusive.provider.plugin.Plugin
+import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.provider.Provider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -17,39 +17,39 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProvidersScreenViewModel @Inject constructor(
-    private val pluginManager: PluginManager,
+    private val providerManager: ProviderManager,
     appSettingsManager: AppSettingsManager,
 ) : ViewModel() {
-    val pluginDataMap = pluginManager.pluginDataMap
-    val plugins: List<Plugin>
-        get() = pluginManager.plugins.values.toList()
+    val providerDataMap = providerManager.providerDataMap
+    val providers: List<Provider>
+        get() = providerManager.providers.values.toList()
 
     var isSearching by mutableStateOf(false)
 
-    val appSettings = appSettingsManager.appSettings
+    val appSettings = appSettingsManager.providerSettings
         .data
-        .map { it.plugins }
+        .map { it.providers }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
-            initialValue = appSettingsManager.localAppSettings.plugins
+            initialValue = appSettingsManager.localProviderSettings.providers
         )
 
     fun onMove(fromIndex: Int, toIndex: Int) {
         viewModelScope.launch {
-            pluginManager.swap(fromIndex, toIndex)
+            providerManager.swap(fromIndex, toIndex)
         }
     }
 
-    fun togglePlugin(index: Int) {
+    fun toggleProvider(index: Int) {
         viewModelScope.launch {
-            pluginManager.toggleUsage(index)
+            providerManager.toggleUsage(index)
         }
     }
 
-    fun uninstallPlugin(name: String) {
+    fun uninstallProvider(name: String) {
         viewModelScope.launch {
-            pluginManager.unloadPlugin(name)
+            providerManager.unloadProvider(name)
         }
     }
 }

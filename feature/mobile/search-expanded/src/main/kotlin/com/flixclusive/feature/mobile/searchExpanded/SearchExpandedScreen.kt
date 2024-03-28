@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -52,12 +53,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.SearchFilter
 import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
 import com.flixclusive.core.ui.common.util.createTextFieldValue
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.SMALL_ERROR
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
 import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.util.shouldPaginate
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.common.ui.isError
@@ -269,9 +270,10 @@ fun SearchBarExpanded(
                 if (isError) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = "Search query should not be empty!",
+                        text = stringResource(UtilR.string.empty_query_error_msg),
                         color = MaterialTheme.colorScheme.error,
                         overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
                         maxLines = 1
                     )
                 }

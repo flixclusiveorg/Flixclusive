@@ -3,37 +3,36 @@ package com.flixclusive.feature.mobile.provider
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
+import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.feature.mobile.provider.component.HeaderButtons
 import com.flixclusive.feature.mobile.provider.component.ProviderCard
+import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
 import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
 import com.flixclusive.feature.mobile.provider.util.rememberDragDropListState
 import com.ramcosta.composedestinations.annotation.Destination
@@ -42,9 +41,9 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 interface ProvidersScreenNavigator : GoBackAction {
-    fun openProviderSettings(pluginName: String)
+    fun openProviderSettings(providerName: String)
 
-    fun openAddProviderScreen()
+    fun openAddRepositoryScreen()
 }
 
 @Destination
@@ -59,80 +58,88 @@ fun ProvidersScreen(
     val overscrollJob = remember { mutableStateOf<Job?>(null) }
     val dragDropListState = rememberDragDropListState(onMove = viewModel::onMove)
     val listState = dragDropListState.getLazyListState()
+    val shouldShowTopBar by listState.isScrollingUp()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        LazyColumn(
-            state = listState,
-            contentPadding = PaddingValues(horizontal = 10.dp),
-            modifier = Modifier
-                .dragGestureHandler(
-                    scope = coroutineScope,
-                    itemListDragAndDropState = dragDropListState,
-                    overscrollJob = overscrollJob,
-                    feedbackLongPress = getFeedbackOnLongPress()
-                ),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 15.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(id = UtilR.string.providers),
-                        style = MaterialTheme.typography.headlineMedium,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1
+    Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
+        topBar = {
+            ProvidersTopBar(
+                isVisible = shouldShowTopBar,
+                onActionClick = { viewModel.isSearching = true }
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = navigator::openAddRepositoryScreen,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                shape = MaterialTheme.shapes.medium,
+                expanded = !shouldShowTopBar,
+                text = {
+                    Text(text = stringResource(UtilR.string.add_provider))
+                },
+                icon = {
+                    Icon(
+                        painter = painterResource(id = UiCommonR.drawable.round_add_24),
+                        contentDescription = stringResource(UtilR.string.add_provider)
                     )
-
-                    IconButton(onClick = { viewModel.isSearching }) {
-                        Icon(
-                            painter = painterResource(id = UiCommonR.drawable.search_outlined),
-                            contentDescription = stringResource(id = UtilR.string.search_for_providers)
-                        )
-                    }
                 }
-            }
-
-            item {
-                HeaderButtons()
-            }
-
-            item {
-                Divider(
-                    thickness = 1.dp,
-                    color = LocalContentColor.current.onMediumEmphasis(0.4F)
-                )
-            }
-
-            itemsIndexed(viewModel.pluginDataMap.values.toList()) { index, pluginData ->
-                val enabled = remember(appSettings) {
-                    !appSettings[index].isDisabled
+            )
+        }
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize()
+        ) {
+            LazyColumn(
+                state = listState,
+                contentPadding = PaddingValues(horizontal = 10.dp),
+                modifier = Modifier
+                    .padding(horizontal = 10.dp)
+                    .dragGestureHandler(
+                        scope = coroutineScope,
+                        itemListDragAndDropState = dragDropListState,
+                        overscrollJob = overscrollJob,
+                        feedbackLongPress = getFeedbackOnLongPress()
+                    ),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                item {
+                    HeaderButtons(
+                        modifier = Modifier
+                            .padding(top = 15.dp, bottom = 10.dp)
+                    )
                 }
 
-                val displacementOffset =
-                    if (index == dragDropListState.getCurrentIndexOfDraggedListItem()) {
-                        dragDropListState.elementDisplacement.takeIf { it != 0f }
-                    } else null
+                item {
+                    Divider(
+                        thickness = 1.dp,
+                        color = LocalContentColor.current.onMediumEmphasis(0.4F)
+                    )
+                }
 
-                ProviderCard(
-                    pluginData = pluginData,
-                    enabled = enabled,
-                    isSearching = viewModel.isSearching,
-                    displacementOffset = displacementOffset,
-                    openSettings = { navigator.openProviderSettings(pluginData.name) },
-                    uninstallProvider = { viewModel.uninstallPlugin(pluginData.name) },
-                    onToggleProvider = {
-                        viewModel.togglePlugin(index)
+                itemsIndexed(viewModel.providerDataMap.values.toList()) { index, providerData ->
+                    val enabled = remember(appSettings) {
+                        !appSettings[index].isDisabled
                     }
-                )
+
+                    val displacementOffset =
+                        if (index == dragDropListState.getCurrentIndexOfDraggedListItem()) {
+                            dragDropListState.elementDisplacement.takeIf { it != 0f }
+                        } else null
+
+                    ProviderCard(
+                        providerData = providerData,
+                        enabled = enabled,
+                        isSearching = viewModel.isSearching,
+                        displacementOffset = displacementOffset,
+                        openSettings = { navigator.openProviderSettings(providerData.name) },
+                        uninstallProvider = { viewModel.uninstallProvider(providerData.name) },
+                        onToggleProvider = {
+                            viewModel.toggleProvider(index)
+                        }
+                    )
+                }
             }
         }
     }

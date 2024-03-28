@@ -86,7 +86,7 @@ class PlayerScreenViewModel @AssistedInject constructor(
      * */
     fun updateAppSettings(newAppSettings: AppSettings) {
         viewModelScope.launch {
-            appSettingsManager.updateData(newAppSettings)
+            appSettingsManager.updateSettings(newAppSettings)
             player.updateAppSettings(newAppSettings)
         }
     }

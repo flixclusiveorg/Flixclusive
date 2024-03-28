@@ -2,7 +2,7 @@ package com.flixclusive.domain.provider
 
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.data.provider.PluginManager
+import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.SourceLinksRepository
 import com.flixclusive.data.tmdb.TMDBRepository
@@ -14,7 +14,7 @@ import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
@@ -35,7 +35,7 @@ typealias FilmKey = String
 @Singleton
 class SourceLinksProviderUseCase @Inject constructor(
     private val sourceLinksRepository: SourceLinksRepository,
-    private val pluginsManager: PluginManager,
+    private val providersManager: ProviderManager,
     private val providersRepository: ProviderRepository,
     private val tmdbRepository: TMDBRepository,
 ) {
@@ -53,13 +53,13 @@ class SourceLinksProviderUseCase @Inject constructor(
         ): FilmKey = "$filmId-${episodeData?.season}:${episodeData?.episode}"
     }
 
-     val providers: List<Provider>
+     val providerApis: List<ProviderApi>
         get() = providersRepository.providers
-            .filterKeys { parentPlugin ->
-                val pluginData = pluginsManager.pluginDataMap[parentPlugin] ?: return@filterKeys false
+            .filterKeys { provider ->
+                val providerData = providersManager.providerDataMap[provider] ?: return@filterKeys false
 
-                pluginData.status != Status.Maintenance
-                && pluginData.status != Status.Down
+                providerData.status != Status.Maintenance
+                && providerData.status != Status.Down
             }
             .flatMap { (_, provider) -> provider.toList() }
 
@@ -149,7 +149,7 @@ class SourceLinksProviderUseCase @Inject constructor(
             val mediaIdToUse = if (needsNewMediaId || mediaId == null) {
                 sourceLinksRepository.getMediaId(
                     film = film,
-                    provider = provider
+                    providerApi = provider
                 )
             } else mediaId
 
@@ -193,7 +193,7 @@ class SourceLinksProviderUseCase @Inject constructor(
                 mediaId = mediaIdToUse,
                 season = episodeToUse?.season,
                 episode = episodeToUse?.episode,
-                provider = provider,
+                providerApi = provider,
                 onSubtitleLoaded = {
                     sourceData.run {
                         if (!cachedSubtitles.contains(it)) {
@@ -302,12 +302,12 @@ class SourceLinksProviderUseCase @Inject constructor(
      * */
     private fun getPrioritizedProvidersList(
         preferredProviderName: String?
-    ): List<Provider> {
+    ): List<ProviderApi> {
         if(preferredProviderName != null) {
-            return providers
+            return providerApis
                 .sortedByDescending { it.name.equals(preferredProviderName, true) }
         }
 
-        return providers
+        return providerApis
     }
 }

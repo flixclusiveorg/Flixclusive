@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.provider.component
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,17 +21,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-internal fun HeaderButtons() {
+internal fun HeaderButtons(
+    modifier: Modifier = Modifier
+) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
     ) {
         CustomButton(
             iconId = UiCommonR.drawable.upload,
@@ -58,9 +61,10 @@ private fun CustomButton(
     Button(
         onClick = { /*TODO*/ },
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.onMediumEmphasis(0.6F),
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
+        contentPadding = PaddingValues(vertical = 15.dp),
         shape = MaterialTheme.shapes.small,
         modifier = modifier,
     ) {
@@ -85,7 +89,9 @@ private fun CustomButton(
 private fun HeaderButtonsPreview() {
     FlixclusiveTheme {
         Surface {
-            HeaderButtons()
+            Row {
+                HeaderButtons()
+            }
         }
     }
 }

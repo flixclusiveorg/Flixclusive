@@ -1,72 +1,82 @@
 package com.flixclusive.provider
 
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.provider.dto.FilmInfo
-import com.flixclusive.provider.dto.SearchResults
-import com.flixclusive.provider.extractor.Extractor
+import android.content.Context
+import android.content.res.Resources
+import androidx.compose.runtime.Composable
+import com.flixclusive.gradle.entities.ProviderManifest
+import com.flixclusive.provider.settings.ProviderSettingsManager
 import okhttp3.OkHttpClient
 
-/**
- * The base class for every provider.
- * @param client The [OkHttpClient] instance used for network requests.
- */
-abstract class Provider(
-    protected val client: OkHttpClient
-) {
-    /**
-     * The name of the provider.
-     */
-    abstract val name: String
+@Suppress("PropertyName")
+abstract class Provider() {
+    lateinit var settings: ProviderSettingsManager
+    private var manifest: ProviderManifest? = null
+
+    constructor(manifest: ProviderManifest) : this() {
+        this.manifest = manifest
+        settings = ProviderSettingsManager(manifest.name)
+    }
 
     /**
-     * The base URL used for network requests. Defaults to an empty string.
-     */
-    protected open val baseUrl: String = ""
+     * Resources associated with the provider, if specified.
+     * */
+    var resources: Resources? = null
+    /**
+     * The filename of the provider.
+     * */
+    var __filename: String? = null
 
     /**
-     * The list of supported extractors, embeds, or servers for this provider instance.
+     * Called when the [Provider] is loaded
+     *
+     * @param context The app's context
+     * @param client The app's global [OkHttpClient] for network requests
      */
-    protected open val supportedExtractors: List<Extractor> = emptyList()
+    @Throws(Throwable::class)
+    open fun getApi(
+        context: Context?,
+        client: OkHttpClient
+    ): ProviderApi {
+        TODO("Return a ProviderApi here")
+    }
+
 
     /**
-     * Performs a search for films based on the provided query.
-     * @param query The search query.
-     * @param page The page number for paginated results. Defaults to 1.
-     * @param filmType The type of film being searched for.
-     * @return a [SearchResults] instance containing the search results.
+     * Called before the [Provider] is unloaded
+     * @param context Context
      */
-    abstract suspend fun search(
-        query: String,
-        page: Int = 1,
-        filmType: FilmType,
-    ): SearchResults
+    @Throws(Throwable::class)
+    open fun onUnload(context: Context?) = Unit
 
     /**
-     * Retrieves detailed information about a film.
-     * @param filmId The ID of the film.
-     * @param filmType The type of film.
-     * @return a [FilmInfo] instance containing the film's information.
-     */
-    abstract suspend fun getFilmInfo(
-        filmId: String,
-        filmType: FilmType,
-    ): FilmInfo
+     *
+     * Get the provider's name
+     *
+     * @return the provider's name
+     * */
+    open fun getName(): String? {
+        return manifest?.name
+    }
 
     /**
-     * Obtains source links for the provided film, season, and episode.
-     * @param filmId The ID of the film.
-     * @param season The season number. Defaults to null if the film is a movie.
-     * @param episode The episode number. Defaults to null if the film is a movie.
-     * @param onLinkLoaded A callback function invoked when a [SourceLink] is loaded.
-     * @param onSubtitleLoaded A callback function invoked when a [Subtitle] is loaded.
-     */
-    abstract suspend fun getSourceLinks(
-        filmId: String,
-        season: Int? = null,
-        episode: Int? = null,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit,
-    )
+     *
+     * The custom settings screen composable to be displayed
+     * when the user clicks the provider. Override this
+     * to have a settings screen.
+     *
+     * #### To enhance code readability, always prefer to extract components by functions
+     * ```
+     * @Composable
+     * override fun SettingsScreen(
+     *      resources: Resources? = this.resources
+     * ) {
+     *      // Create a custom component for code readability
+     *      MyCustomSettingsScreen(resources)
+     * }
+     * ```
+     * */
+    @Composable
+    open fun SettingsScreen(
+        resources: Resources? = this.resources,
+    ) = Unit
 }

@@ -10,7 +10,7 @@ import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderApi
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -23,7 +23,7 @@ class DefaultSourceLinksRepository @Inject constructor(
 
     override suspend fun getSourceLinks(
         mediaId: String,
-        provider: Provider,
+        providerApi: ProviderApi,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
@@ -31,7 +31,7 @@ class DefaultSourceLinksRepository @Inject constructor(
     ): Resource<Unit?> {
         return withContext(ioDispatcher) {
             try {
-                provider.getSourceLinks(
+                providerApi.getSourceLinks(
                     filmId = mediaId,
                     episode = episode,
                     season = season,
@@ -53,7 +53,7 @@ class DefaultSourceLinksRepository @Inject constructor(
 
     override suspend fun getMediaId(
         film: Film?,
-        provider: Provider,
+        providerApi: ProviderApi,
     ): String? {
         return withContext(ioDispatcher) {
             try {
@@ -69,7 +69,7 @@ class DefaultSourceLinksRepository @Inject constructor(
                         return@withContext ""
                     }
 
-                    val searchResponse = provider.search(
+                    val searchResponse = providerApi.search(
                         query = film.title,
                         page = i,
                         filmType = film.filmType
@@ -96,7 +96,7 @@ class DefaultSourceLinksRepository @Inject constructor(
                                 break
                             }
 
-                            val tvShowInfo = provider.getFilmInfo(
+                            val tvShowInfo = providerApi.getFilmInfo(
                                 filmId = result.id!!,
                                 filmType = film.filmType
                             )

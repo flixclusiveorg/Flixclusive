@@ -60,7 +60,7 @@ import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.TMDBEpisode
-import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResults
 import kotlinx.coroutines.delay
@@ -82,7 +82,7 @@ internal fun PlaybackControls(
     isServerPanelOpened: MutableState<Boolean>,
     isVisible: Boolean,
     isTvShow: Boolean,
-    providers: List<Provider>,
+    providerApis: List<ProviderApi>,
     servers: List<SourceLink>,
     stateProvider: () -> PlayerUiState,
     dialogStateProvider: () -> SourceDataState,
@@ -314,7 +314,7 @@ internal fun PlaybackControls(
             ServersPanel(
                 state = state,
                 servers = servers,
-                providers = providers,
+                providerApis = providerApis,
                 onProviderChange = onProviderChange,
                 onServerChange = onServerChange,
                 hidePanel = { isServerPanelOpened.value = false },
@@ -352,7 +352,7 @@ private fun PlaybackControlsPreview() {
     var seekMultiplier by remember { mutableLongStateOf(0L) }
 
     val sources = List(5) {
-        object : Provider(OkHttpClient()) {
+        object : ProviderApi(OkHttpClient()) {
             override val name: String
                 get() = "Provider #$it"
 
@@ -442,7 +442,7 @@ private fun PlaybackControlsPreview() {
 //                        currentEpisodeSelected = TMDBEpisode(episode = 1, season = 1, title = "American Bad Boy"),
                         currentEpisodeSelected = null,
                         servers = servers,
-                        providers = sources,
+                        providerApis = sources,
                         onProviderChange = {},
                         onServerChange = {},
                         modifier = Modifier

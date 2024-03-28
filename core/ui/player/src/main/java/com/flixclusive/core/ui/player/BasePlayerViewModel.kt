@@ -63,7 +63,7 @@ abstract class BasePlayerViewModel(
             episode = _currentSelectedEpisode.value
         )
 
-    val sourceProviders = sourceLinksProvider.providers
+    val sourceProviders = sourceLinksProvider.providerApis
 
     private val _dialogState = MutableStateFlow<SourceDataState>(SourceDataState.Idle)
     val dialogState: StateFlow<SourceDataState> = _dialogState.asStateFlow()
@@ -264,7 +264,7 @@ abstract class BasePlayerViewModel(
 
     fun toggleVideoTimeReverse() {
         viewModelScope.launch {
-            appSettingsManager.updateData(
+            appSettingsManager.updateSettings(
                 appSettings.value.run {
                     copy(isPlayerTimeReversed = !isPlayerTimeReversed)
                 }

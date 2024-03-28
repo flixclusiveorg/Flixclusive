@@ -61,7 +61,7 @@ class SettingsScreenViewModel @Inject constructor(
 
     fun onChangeSettings(newAppSettings: AppSettings) {
         viewModelScope.launch {
-            appSettingsManager.updateData(newAppSettings)
+            appSettingsManager.updateSettings(newAppSettings)
         }
     }
 }

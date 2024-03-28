@@ -4,7 +4,7 @@ import android.util.Base64
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -14,7 +14,7 @@ import org.junit.Before
 import org.junit.Test
 
 abstract class BaseProviderTest {
-    lateinit var sourceProvider: Provider
+    lateinit var sourceProviderApi: ProviderApi
 
     @Before
     open fun setUp(): Unit = runTest {
@@ -43,7 +43,7 @@ abstract class BaseProviderTest {
         season: Int? = null,
         episode: Int? = null,
     ) {
-        val response = sourceProvider.search(
+        val response = sourceProviderApi.search(
             query = title,
             page = 1,
             filmType = type
@@ -51,7 +51,7 @@ abstract class BaseProviderTest {
 
         val filmId = response.results.find {
             val releaseDateToUse = if(it.releaseDate == null) {
-                sourceProvider.getFilmInfo(
+                sourceProviderApi.getFilmInfo(
                     filmId = it.id!!,
                     filmType = it.filmType!!
                 ).yearReleased
@@ -63,7 +63,7 @@ abstract class BaseProviderTest {
 
         val links = mutableSetOf<SourceLink>()
         val subtitles = mutableSetOf<Subtitle>()
-        sourceProvider.getSourceLinks(
+        sourceProviderApi.getSourceLinks(
             filmId = filmId!!,
             season = season,
             episode = episode,
@@ -88,7 +88,7 @@ abstract class BaseProviderTest {
         releaseDate: String,
         type: FilmType,
     ): FilmInfo {
-        val response = sourceProvider.search(
+        val response = sourceProviderApi.search(
             query = title,
             page = 1,
             filmType = type
@@ -96,7 +96,7 @@ abstract class BaseProviderTest {
 
         val filmId = response.results.find {
             val releaseDateToUse = if(it.releaseDate == null) {
-                sourceProvider.getFilmInfo(
+                sourceProviderApi.getFilmInfo(
                     filmId = it.id!!,
                     filmType = it.filmType!!
                 ).yearReleased
@@ -106,7 +106,7 @@ abstract class BaseProviderTest {
         }?.id
         Assert.assertNotNull(filmId)
 
-        return sourceProvider.getFilmInfo(
+        return sourceProviderApi.getFilmInfo(
             filmId = filmId!!,
             filmType = type
         )
@@ -116,7 +116,7 @@ abstract class BaseProviderTest {
     open fun search_for_The_Dark_Knight_2008() = runTest {
         val title = "The Dark Knight"
         val releaseDate = "2008"
-        val response = sourceProvider.search(
+        val response = sourceProviderApi.search(
             query = title,
             page = 1,
             filmType = FilmType.MOVIE

@@ -33,14 +33,14 @@ import coil.imageLoader
 import coil.request.ImageRequest
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.provider.R
-import com.flixclusive.gradle.entities.PluginData
+import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 
 @Composable
 internal fun TopCardContent(
-    pluginData: PluginData,
+    providerData: ProviderData,
     isSearching: Boolean
 ) {
     val context = LocalContext.current
@@ -48,7 +48,7 @@ internal fun TopCardContent(
     var errorLoadingIcon by remember { mutableStateOf(false) }
     val iconImage = remember {
         ImageRequest.Builder(context)
-            .data(pluginData.iconUrl)
+            .data(providerData.iconUrl)
             .build()
     }
 
@@ -81,9 +81,9 @@ internal fun TopCardContent(
                 AsyncImage(
                     model = iconImage,
                     imageLoader = LocalContext.current.imageLoader,
-                    placeholder = painterResource(id = UiCommonR.drawable.plugin_logo),
+                    placeholder = painterResource(id = UiCommonR.drawable.provider_logo),
                     onError = { errorLoadingIcon = true },
-                    contentDescription = stringResource(UtilR.string.plugin_icon_content_desc),
+                    contentDescription = stringResource(UtilR.string.provider_icon_content_desc),
                     alignment = Alignment.Center,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
@@ -93,7 +93,7 @@ internal fun TopCardContent(
         }
 
         ProviderDetails(
-            pluginData = pluginData,
+            providerData = providerData,
             modifier = Modifier
                 .weight(1F)
                 .padding(start = 5.dp)
@@ -103,7 +103,7 @@ internal fun TopCardContent(
 
 @Composable
 private fun ProviderDetails(
-    pluginData: PluginData,
+    providerData: ProviderData,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -118,7 +118,7 @@ private fun ProviderDetails(
                 .fillMaxWidth()
         ) {
             Text(
-                text = pluginData.name,
+                text = providerData.name,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Black,
                     fontSize = 18.sp
@@ -131,7 +131,7 @@ private fun ProviderDetails(
 
 
             Text(
-                text = "v${pluginData.versionName}",
+                text = "v${providerData.versionName}",
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -143,13 +143,13 @@ private fun ProviderDetails(
         }
 
         val authors = remember {
-            if (pluginData.authors.size == 1) {
+            if (providerData.authors.size == 1) {
                 context.getString(
                     UtilR.string.made_by_author_label_format,
-                    pluginData.authors.firstOrNull()?.name ?: "anon"
+                    providerData.authors.firstOrNull()?.name ?: "anon"
                 )
             } else {
-                pluginData.authors.take(3).joinToString(", ")
+                providerData.authors.take(3).joinToString(", ")
             }
         }
 
@@ -165,7 +165,7 @@ private fun ProviderDetails(
         )
 
         Text(
-            text = pluginData.pluginType?.toString() ?: stringResource(UtilR.string.unknown_plugin_type),
+            text = providerData.providerType?.toString() ?: stringResource(UtilR.string.unknown_provider_type),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.titleMedium.copy(
