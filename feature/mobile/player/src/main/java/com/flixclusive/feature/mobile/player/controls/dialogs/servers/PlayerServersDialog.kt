@@ -25,7 +25,7 @@ import com.flixclusive.feature.mobile.player.controls.common.ListContentHolder
 import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResults
 import okhttp3.OkHttpClient
@@ -37,13 +37,13 @@ import com.flixclusive.core.util.R as UtilR
 internal fun PlayerServersDialog(
     state: PlayerUiState,
     servers: List<SourceLink>,
-    providers: List<Provider>,
+    providerApis: List<ProviderApi>,
     onProviderChange: (String) -> Unit,
     onVideoServerChange: (Int, String) -> Unit,
     onDismissSheet: () -> Unit,
 ) {
     val selectedSourceIndex = remember(state.selectedProvider) {
-        providers.indexOfFirst { it.name.equals(state.selectedProvider, true) }
+        providerApis.indexOfFirst { it.name.equals(state.selectedProvider, true) }
     }
 
     BasePlayerDialog(onDismissSheet = onDismissSheet) {
@@ -57,11 +57,11 @@ internal fun PlayerServersDialog(
                 icon = painterResource(id = UiCommonR.drawable.database_icon),
                 contentDescription = stringResource(id = UtilR.string.providers),
                 label = stringResource(id = UtilR.string.providers),
-                items = providers,
+                items = providerApis,
                 selectedIndex = selectedSourceIndex,
                 itemState = state.selectedProviderState,
                 onItemClick = {
-                    onProviderChange(providers[it].name)
+                    onProviderChange(providerApis[it].name)
                 }
             )
 
@@ -104,7 +104,7 @@ internal fun PlayerServersDialog(
 @Composable
 private fun PlayerServersDialogPreview() {
     val sources = List(5) {
-        object : Provider(OkHttpClient()) {
+        object : ProviderApi(OkHttpClient()) {
             override val name: String
                 get() = "Provider #$it"
 
@@ -147,7 +147,7 @@ private fun PlayerServersDialogPreview() {
             PlayerServersDialog(
                 state = PlayerUiState(selectedProvider = sources[0].name),
                 servers = servers,
-                providers = sources,
+                providerApis = sources,
                 onProviderChange = {},
                 onVideoServerChange = { _, _ ->}
             ) {}

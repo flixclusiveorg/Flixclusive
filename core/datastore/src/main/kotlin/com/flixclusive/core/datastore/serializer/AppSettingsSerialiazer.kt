@@ -1,4 +1,4 @@
-package com.flixclusive.core.datastore
+package com.flixclusive.core.datastore.serializer
 
 import androidx.datastore.core.Serializer
 import com.flixclusive.model.datastore.AppSettings

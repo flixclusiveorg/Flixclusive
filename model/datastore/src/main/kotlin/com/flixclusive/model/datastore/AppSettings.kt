@@ -38,7 +38,6 @@ data class AppSettings(
 
     // == internet/others
     val dns: DoHPreference = DoHPreference.None,
-    val plugins: List<PluginPreference> = emptyList(),
     // ==
 
     // == player

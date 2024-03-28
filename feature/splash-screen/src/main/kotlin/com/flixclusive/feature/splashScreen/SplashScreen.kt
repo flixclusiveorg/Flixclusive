@@ -154,9 +154,7 @@ fun SplashScreen(
                     ) {
                         PrivacyNotice(
                             nextStep = {
-                                splashScreenViewModel.updateSettings(
-                                    appSettings.copy(isSendingCrashLogsAutomatically = it)
-                                )
+                                splashScreenViewModel.updateSettings(appSettings.copy(isSendingCrashLogsAutomatically = it))
 
                                 showDisclaimer = true
                             }

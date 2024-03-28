@@ -33,7 +33,7 @@ tasks.register<Jar>("fatJar") {
     }
 }
 
-// Generate the stubs jar for the plugins-system.
+// Generate the stubs jar for the providers-system.
 // Must only be run after the task: bundlePrereleaseClassesToCompileJar or build.
 tasks.register<Jar>("generateStubsJar") {
     archiveBaseName.set("classes")

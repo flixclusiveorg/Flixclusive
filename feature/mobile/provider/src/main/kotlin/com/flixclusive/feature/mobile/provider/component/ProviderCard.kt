@@ -3,8 +3,8 @@ package com.flixclusive.feature.mobile.provider.component
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
@@ -16,6 +16,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -26,14 +27,14 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.gradle.entities.Author
 import com.flixclusive.gradle.entities.Language
-import com.flixclusive.gradle.entities.PluginData
-import com.flixclusive.gradle.entities.PluginType
+import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun ProviderCard(
-    pluginData: PluginData,
+    providerData: ProviderData,
     enabled: Boolean,
     isSearching: Boolean,
     displacementOffset: Float?,
@@ -48,15 +49,15 @@ internal fun ProviderCard(
         displacementOffset != null
     }
     
-    val isNotMaintenance = pluginData.status != Status.Maintenance
+    val isNotMaintenance = providerData.status != Status.Maintenance
 
     val color = if (isBeingDragged && isNotMaintenance && !isSearching) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceVariant
 
-    Column(
+    Box(
         modifier = Modifier
             .graphicsLayer { translationY = if (isSearching) 0F else displacementOffset ?: 0f }
-            .fillMaxWidth()
-            .fillMaxHeight()
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
         Card(
             enabled = isNotMaintenance,
@@ -81,7 +82,7 @@ internal fun ProviderCard(
 
                         clipboardManager.setText(
                             AnnotatedString(
-                                pluginData.repositoryUrl ?: pluginData.buildUrl
+                                providerData.repositoryUrl ?: providerData.buildUrl
                                 ?: return@combinedClickable
                             )
                         )
@@ -94,16 +95,16 @@ internal fun ProviderCard(
             ) {
                 TopCardContent(
                     isSearching = isSearching,
-                    pluginData = pluginData
+                    providerData = providerData
                 )
 
                 Divider(thickness = 0.5.dp)
 
                 BottomCardContent(
-                    pluginData = pluginData,
+                    providerData = providerData,
                     enabled = enabled,
                     openSettings = openSettings,
-                    unloadPlugin = uninstallProvider,
+                    unloadProvider = uninstallProvider,
                     toggleUsage = onToggleProvider
                 )
             }
@@ -114,7 +115,7 @@ internal fun ProviderCard(
 @Preview
 @Composable
 private fun ProviderCardPreview() {
-    val pluginData = PluginData(
+    val providerData = ProviderData(
         authors = listOf(Author("FLX")),
         repositoryUrl = null,
         buildUrl = null,
@@ -126,14 +127,14 @@ private fun ProviderCardPreview() {
         iconUrl = null,
         language = Language.Multiple,
         name = "123Movies",
-        pluginType = PluginType.All,
+        providerType = ProviderType.All,
         status = Status.Working
     )
 
     FlixclusiveTheme {
         Surface {
             ProviderCard(
-                pluginData = pluginData,
+                providerData = providerData,
                 enabled = true,
                 isSearching = false,
                 displacementOffset = null,

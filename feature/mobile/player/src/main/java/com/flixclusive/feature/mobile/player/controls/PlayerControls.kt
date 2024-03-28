@@ -37,7 +37,7 @@ import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Season
 import com.flixclusive.model.tmdb.TMDBEpisode
-import com.flixclusive.provider.Provider
+import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
 
@@ -54,7 +54,7 @@ internal fun PlayerControls(
     watchHistoryItem: WatchHistoryItem?,
     servers: List<SourceLink>,
     isLastEpisode: Boolean,
-    providers: List<Provider>,
+    providerApis: List<ProviderApi>,
     availableSeasons: Int?,
     stateProvider: () -> PlayerUiState,
     seasonDataProvider: () -> Resource<Season?>,
@@ -322,7 +322,7 @@ internal fun PlayerControls(
         PlayerServersDialog(
             state = state,
             servers = servers,
-            providers = providers,
+            providerApis = providerApis,
             onProviderChange = { provider ->
                 onProviderChange(provider)
                 triggerSnackbar(

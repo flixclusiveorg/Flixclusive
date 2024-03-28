@@ -7,7 +7,7 @@ import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.crash.GlobalCrashHandler
 import com.flixclusive.data.configuration.AppBuild
 import com.flixclusive.data.configuration.AppConfigurationManager
-import com.flixclusive.data.provider.PluginManager
+import com.flixclusive.data.provider.ProviderManager
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttpClient
 import javax.inject.Inject
@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltAndroidApp
 class FlixclusiveApplication : Application(), ImageLoaderFactory {
     @Inject
-    lateinit var pluginManager: PluginManager
+    lateinit var providerManager: ProviderManager
     @Inject
     lateinit var appConfigurationManager: AppConfigurationManager
     @Inject
@@ -46,7 +46,7 @@ class FlixclusiveApplication : Application(), ImageLoaderFactory {
             )
         )
 
-        pluginManager.initialize()
+        providerManager.initialize()
         appSettingsManager.initialize()
     }
 }

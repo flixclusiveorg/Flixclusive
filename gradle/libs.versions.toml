@@ -142,7 +142,7 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-dnsoverhttps = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttpDnsoverhttps" }
 
 # Flixclusive
-flixclusive-gradle = { module = "com.github.Flixclusive:plugins-gradle", version.ref = "pluginsGradle" }
+flixclusive-gradle = { module = "com.github.Flixclusive.providers-gradle:providers-gradle", version.ref = "pluginsGradle" }
 
 # Retrofit
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
@@ -165,9 +165,6 @@ test-core = { group = "androidx.test", name = "core", version.ref = "androidxTes
 test-core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "androidxTestCore" }
 test-rules = { group = "androidx.test", name = "rules", version.ref = "androidxTestRules" }
 test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
-
-# Flixclusive plugins entities
-flixclusive-plugins-entities = { group = "com.github.Flixclusive", name = "plugins-entities", version.ref = "pluginsEntities" }
 
 # Dependencies for build-logic
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }

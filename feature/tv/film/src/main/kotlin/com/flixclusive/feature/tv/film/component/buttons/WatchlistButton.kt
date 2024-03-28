@@ -38,7 +38,7 @@ import androidx.tv.material3.OutlinedButtonDefaults
 import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.common.ui.IconResource
-import com.flixclusive.feature.tv.film.R
+import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -69,7 +69,7 @@ internal fun WatchlistButton(
                 UtilR.string.remove_from_watchlist
             )
             !isInWatchlist -> Pair(
-                IconResource.fromDrawableResource(R.drawable.round_add_24),
+                IconResource.fromDrawableResource(UiCommonR.drawable.round_add_24),
                 UtilR.string.add_to_watchlist
             )
             else -> throw IllegalStateException("Invalid state for watchlist button.")

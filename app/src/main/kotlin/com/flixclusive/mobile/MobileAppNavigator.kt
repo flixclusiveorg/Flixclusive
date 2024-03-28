@@ -13,6 +13,8 @@ import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestinatio
 import com.flixclusive.feature.mobile.preferences.PreferencesScreenNavigator
 import com.flixclusive.feature.mobile.provider.ProvidersScreenNavigator
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
+import com.flixclusive.feature.mobile.repository.search.RepositorySearchScreenNavigator
+import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
 import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
@@ -21,6 +23,7 @@ import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestinatio
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
+import com.flixclusive.gradle.entities.Repository
 import com.flixclusive.model.configuration.CategoryItem
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Genre
@@ -35,7 +38,8 @@ internal class MobileAppNavigator(
     private val destination: NavDestination,
     private val navController: NavController,
     private val closeApp: () -> Unit,
-) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator, FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator, ProvidersScreenNavigator {
+) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator, FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator, ProvidersScreenNavigator,
+    RepositorySearchScreenNavigator {
 
     override fun goBack() {
         navController.navigateUp()
@@ -125,11 +129,17 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openProviderSettings(pluginName: String) {
+    override fun openProviderSettings(providerName: String) {
         /*TODO("Not yet implemented")*/
     }
 
-    override fun openAddProviderScreen() {
-        TODO("Not yet implemented")
+    override fun openAddRepositoryScreen() {
+        navController.navigateIfResumed(
+            RepositorySearchScreenDestination within destination.navGraph()
+        )
+    }
+
+    override fun openRepositoryScreen(repository: Repository) {
+        /*TODO("Not yet implemented")*/
     }
 }

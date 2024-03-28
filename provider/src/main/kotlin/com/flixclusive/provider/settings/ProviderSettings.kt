@@ -1,4 +1,4 @@
-package com.flixclusive.provider.plugin.settings
+package com.flixclusive.provider.settings
 
 import com.flixclusive.core.util.log.errorLog
 import com.google.gson.Gson
@@ -16,9 +16,9 @@ import java.math.BigDecimal
  *
  * */
 @Suppress("unused")
-class PluginSettings(plugin: String) {
+class ProviderSettings(provider: String) {
     private val settingsPath = "/settings/"
-    private val settingsFile = "$settingsPath$plugin.json"
+    private val settingsFile = "$settingsPath$provider.json"
     private val cache: MutableMap<String, Any> = HashMap()
     private val gson = Gson()
     private val settings: JSONObject by lazy {

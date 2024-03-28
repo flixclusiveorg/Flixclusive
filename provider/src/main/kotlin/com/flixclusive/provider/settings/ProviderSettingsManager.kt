@@ -1,24 +1,24 @@
-package com.flixclusive.provider.plugin.settings
+package com.flixclusive.provider.settings
 
 import java.lang.reflect.Type
 
 /**
  *
- * Settings manager for [Plugin]
+ * Settings manager for [Provider]
  *
  * @see [Aliucord](https://github.com/Aliucord/Aliucord/blob/main/Aliucord/src/main/java/com/aliucord/api/SettingsAPI.java)
  * */
 @Suppress("unused")
-class PluginSettingsManager(plugin: String) {
-    private var settings: PluginSettings
-    private val pluginName: String
+class ProviderSettingsManager(provider: String) {
+    private var settings: ProviderSettings
+    private val providerName: String
 
     /**
      * Creates a SettingsAPI for the specified plugin
      */
     init {
-        settings = PluginSettings(plugin)
-        pluginName = plugin
+        settings = ProviderSettings(provider)
+        providerName = provider
     }
 
     /**
@@ -28,7 +28,7 @@ class PluginSettingsManager(plugin: String) {
      */
     fun resetSettings(): Boolean {
         val isSuccessful = settings.resetFile()
-        settings = PluginSettings(pluginName)
+        settings = ProviderSettings(providerName)
         return isSuccessful
     }
 

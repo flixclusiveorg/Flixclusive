@@ -438,7 +438,7 @@ fun PlayerScreen(
                 isPlayerSettingsDialogOpened = isPlayerSettingsDialogOpened,
                 isServersDialogOpened = isServersDialogOpened,
                 watchHistoryItem = watchHistoryItem,
-                providers = viewModel.sourceProviders,
+                providerApis = viewModel.sourceProviders,
                 availableSeasons = (args.film as? TvShow)?.totalSeasons,
                 currentEpisodeSelected = currentSelectedEpisode,
                 isLastEpisode = viewModel.isLastEpisode,

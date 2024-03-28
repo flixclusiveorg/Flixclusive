@@ -17,6 +17,9 @@ import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestinatio
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
+import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
+import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
+import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
 import com.ramcosta.composedestinations.dynamic.routedIn
 import com.ramcosta.composedestinations.spec.DestinationSpec
 import com.ramcosta.composedestinations.spec.NavGraphSpec
@@ -59,8 +62,8 @@ internal object MobileNavGraphs {
 
         override val destinationsByRoute = listOf<DestinationSpec<*>>(
             ProvidersScreenDestination,
+            RepositorySearchScreenDestination,
             RepositoryScreenDestination,
-            AddProviderScreenDestination,
             ProviderSettingsScreenDestination,
         ).routedIn(this)
             .associateBy { it.route }

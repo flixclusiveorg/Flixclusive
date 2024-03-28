@@ -72,7 +72,7 @@ internal class SplashScreenViewModel @Inject constructor(
 
     fun updateSettings(newAppSettings: AppSettings) {
         viewModelScope.launch {
-            appSettingsManager.updateData(newAppSettings)
+            appSettingsManager.updateSettings(newAppSettings)
         }
     }
 }

@@ -352,7 +352,7 @@ fun PlayerScreen(
                         isPlaybackSpeedPanelOpened = isPlaybackSpeedPanelOpened,
                         isVisible = viewModel.areControlsVisible,
                         servers = sourceData.cachedLinks,
-                        providers = viewModel.sourceProviders,
+                        providerApis = viewModel.sourceProviders,
                         currentEpisodeSelected = currentEpisodeSelected,
                         stateProvider = { uiState },
                         dialogStateProvider = { dialogState },
