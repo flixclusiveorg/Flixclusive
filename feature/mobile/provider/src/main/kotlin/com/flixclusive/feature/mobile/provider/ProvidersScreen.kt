@@ -28,10 +28,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.mobile.component.provider.InstalledProviderCard
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.feature.mobile.provider.component.HeaderButtons
-import com.flixclusive.feature.mobile.provider.component.ProviderCard
 import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
 import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
 import com.flixclusive.feature.mobile.provider.util.rememberDragDropListState
@@ -128,10 +128,10 @@ fun ProvidersScreen(
                             dragDropListState.elementDisplacement.takeIf { it != 0f }
                         } else null
 
-                    ProviderCard(
+                    InstalledProviderCard(
                         providerData = providerData,
                         enabled = enabled,
-                        isSearching = viewModel.isSearching,
+                        isDraggable = viewModel.isSearching,
                         displacementOffset = displacementOffset,
                         openSettings = { navigator.openProviderSettings(providerData.name) },
                         uninstallProvider = { viewModel.uninstallProvider(providerData.name) },

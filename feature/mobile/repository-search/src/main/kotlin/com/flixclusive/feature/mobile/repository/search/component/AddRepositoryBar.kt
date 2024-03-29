@@ -139,7 +139,6 @@ internal fun AddRepositoryBar(
         ElevatedButton(
             onClick = onAdd,
             shape = MaterialTheme.shapes.extraSmall,
-            colors = ButtonDefaults.elevatedButtonColors(),
             modifier = Modifier
                 .height(50.dp)
                 .fillMaxWidth()

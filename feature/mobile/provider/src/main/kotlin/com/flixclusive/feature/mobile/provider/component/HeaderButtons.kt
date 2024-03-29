@@ -36,6 +36,7 @@ internal fun HeaderButtons(
             .fillMaxWidth()
     ) {
         CustomButton(
+            onClick = { /*TODO*/ },
             iconId = UiCommonR.drawable.upload,
             label = stringResource(id = UtilR.string.import_label),
             modifier = Modifier
@@ -43,6 +44,7 @@ internal fun HeaderButtons(
         )
 
         CustomButton(
+            onClick = { /*TODO*/ },
             iconId = UiCommonR.drawable.download,
             label = stringResource(id = UtilR.string.export_label),
             modifier = Modifier
@@ -55,11 +57,12 @@ internal fun HeaderButtons(
 @Composable
 private fun CustomButton(
     modifier: Modifier = Modifier,
+    onClick: () -> Unit,
     @DrawableRes iconId: Int,
     label: String
 ) {
     Button(
-        onClick = { /*TODO*/ },
+        onClick = onClick,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.onMediumEmphasis(0.6F),
             contentColor = MaterialTheme.colorScheme.onSurface

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,12 +25,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-internal fun RepositorySearchTopBar(
+internal fun RepositoryTopBar(
     isVisible: Boolean,
     onNavigationIconClick: () -> Unit,
 ) {
@@ -63,7 +66,7 @@ internal fun RepositorySearchTopBar(
                 }
 
                 Text(
-                    text = stringResource(id = UtilR.string.add_provider),
+                    text = stringResource(id = UtilR.string.repository),
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.SemiBold
                     ),
@@ -76,10 +79,24 @@ internal fun RepositorySearchTopBar(
 
                 IconButton(onClick = onNavigationIconClick) {
                     Icon(
-                        painter = painterResource(UiCommonR.drawable.left_arrow),
-                        contentDescription = stringResource(com.flixclusive.core.util.R.string.navigate_up)
+                        painter = painterResource(UiCommonR.drawable.search_outlined),
+                        contentDescription = stringResource(com.flixclusive.core.util.R.string.navigate_up),
                     )
                 }
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun RepositoryTopBarPreview() {
+    FlixclusiveTheme {
+        Surface {
+            RepositoryTopBar(
+                isVisible = true
+            ) {
+
             }
         }
     }

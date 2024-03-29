@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.component
+package com.flixclusive.core.ui.mobile.component.provider
 
 
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +32,7 @@ import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.provider.R
+import com.flixclusive.core.ui.mobile.R
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
@@ -41,7 +41,7 @@ import com.flixclusive.core.util.R as UtilR
 @Composable
 internal fun TopCardContent(
     providerData: ProviderData,
-    isSearching: Boolean
+    isDraggable: Boolean
 ) {
     val context = LocalContext.current
 
@@ -54,11 +54,9 @@ internal fun TopCardContent(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier
-            .padding(vertical = 10.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        if (!isSearching) {
+        if (isDraggable) {
             Icon(
                 painter = painterResource(id = R.drawable.round_drag_indicator_24),
                 contentDescription = stringResource(

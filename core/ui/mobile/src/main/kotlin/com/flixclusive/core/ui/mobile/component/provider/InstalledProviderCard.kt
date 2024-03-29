@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.component
+package com.flixclusive.core.ui.mobile.component.provider
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -33,10 +33,10 @@ import com.flixclusive.gradle.entities.Status
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-internal fun ProviderCard(
+fun InstalledProviderCard(
     providerData: ProviderData,
     enabled: Boolean,
-    isSearching: Boolean,
+    isDraggable: Boolean,
     displacementOffset: Float?,
     openSettings: () -> Unit,
     uninstallProvider: () -> Unit,
@@ -51,11 +51,11 @@ internal fun ProviderCard(
     
     val isNotMaintenance = providerData.status != Status.Maintenance
 
-    val color = if (isBeingDragged && isNotMaintenance && !isSearching) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceVariant
+    val color = if (isBeingDragged && isNotMaintenance && !isDraggable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceVariant
 
     Box(
         modifier = Modifier
-            .graphicsLayer { translationY = if (isSearching) 0F else displacementOffset ?: 0f }
+            .graphicsLayer { translationY = if (!isDraggable) 0F else displacementOffset ?: 0f }
             .fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
@@ -94,7 +94,7 @@ internal fun ProviderCard(
                     .padding(horizontal = 15.dp)
             ) {
                 TopCardContent(
-                    isSearching = isSearching,
+                    isDraggable = isDraggable,
                     providerData = providerData
                 )
 
@@ -133,10 +133,10 @@ private fun ProviderCardPreview() {
 
     FlixclusiveTheme {
         Surface {
-            ProviderCard(
+            InstalledProviderCard(
                 providerData = providerData,
                 enabled = true,
-                isSearching = false,
+                isDraggable = true,
                 displacementOffset = null,
                 openSettings = { /*TODO*/ },
                 uninstallProvider = { /*TODO*/ }) {
