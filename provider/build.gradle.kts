@@ -7,12 +7,10 @@ plugins {
 android {
     namespace = "com.flixclusive.provider"
 }
-
 dependencies {
     api(libs.gson)
     api(libs.jsoup)
     api(libs.okhttp)
-    api(libs.flixclusive.gradle)
     api(projects.core.util)
     api(projects.model.provider)
 

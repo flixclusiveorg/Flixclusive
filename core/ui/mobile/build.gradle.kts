@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.model.provider)
     implementation(projects.model.tmdb)
 
+    implementation(libs.coil.compose)
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)

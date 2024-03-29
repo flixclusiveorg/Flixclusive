@@ -10,7 +10,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-internal class RepositorySerializer : KSerializer<Repository> {
+class RepositorySerializer : KSerializer<Repository> {
     private val gson = Gson()
 
     private val delegateSerializer = IntArraySerializer()

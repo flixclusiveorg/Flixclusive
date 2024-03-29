@@ -2,7 +2,6 @@ package com.flixclusive.model.datastore
 
 import com.flixclusive.gradle.entities.Repository
 import com.flixclusive.model.datastore.provider.ProviderPreference
-import com.flixclusive.model.datastore.provider.util.RepositorySerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.InputStream
@@ -15,7 +14,7 @@ import java.io.InputStream
  * */
 @Serializable
 data class AppSettingsProvider(
-    val repositories: List<@Serializable(with = RepositorySerializer::class) Repository> = emptyList(),
+    val repositories: List<Repository> = emptyList(),
     val providers: List<ProviderPreference> = emptyList(),
 ) {
     companion object {
