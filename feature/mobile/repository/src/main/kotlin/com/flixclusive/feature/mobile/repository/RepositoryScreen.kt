@@ -32,6 +32,7 @@ import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCard
+import com.flixclusive.core.ui.mobile.component.provider.ProviderCardPlaceholder
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCardState
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
@@ -132,7 +133,12 @@ fun RepositoryScreen(
                     )
                 }
 
-                if (errorFetchingList) {
+                if (viewModel.uiState.isLoading) {
+                    items(4) {
+                        ProviderCardPlaceholder()
+                    }
+                }
+                else if (errorFetchingList) {
                     item {
                         RetryButton(
                             modifier = Modifier.fillMaxSize(),
