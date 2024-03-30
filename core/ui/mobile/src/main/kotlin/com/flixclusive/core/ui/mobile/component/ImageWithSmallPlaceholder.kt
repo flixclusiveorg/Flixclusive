@@ -34,7 +34,7 @@ fun ImageWithSmallPlaceholder(
     Surface(
         modifier = modifier,
         tonalElevation = 65.dp,
-        shape = CircleShape
+        shape = shape
     ) {
         Box(
             contentAlignment = Alignment.Center

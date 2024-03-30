@@ -2,7 +2,6 @@ package com.flixclusive.core.ui.mobile.component.provider
 
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,16 +10,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -28,11 +22,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.R
+import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
@@ -43,15 +35,6 @@ internal fun TopCardContent(
     providerData: ProviderData,
     isDraggable: Boolean
 ) {
-    val context = LocalContext.current
-
-    var errorLoadingIcon by remember { mutableStateOf(false) }
-    val iconImage = remember {
-        ImageRequest.Builder(context)
-            .data(providerData.iconUrl)
-            .build()
-    }
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -67,28 +50,14 @@ internal fun TopCardContent(
             )
         }
 
-        Surface(
-            shape = MaterialTheme.shapes.small,
-            tonalElevation = 80.dp
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(60.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                AsyncImage(
-                    model = iconImage,
-                    imageLoader = LocalContext.current.imageLoader,
-                    placeholder = painterResource(id = UiCommonR.drawable.provider_logo),
-                    onError = { errorLoadingIcon = true },
-                    contentDescription = stringResource(UtilR.string.provider_icon_content_desc),
-                    alignment = Alignment.Center,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .size(40.dp)
-                )
-            }
-        }
+        ImageWithSmallPlaceholder(
+            modifier = Modifier.size(60.dp),
+            placeholderModifier = Modifier.size(30.dp),
+            urlImage = providerData.iconUrl,
+            placeholderId = UiCommonR.drawable.provider_logo,
+            contentDescId = UtilR.string.provider_icon_content_desc,
+            shape = MaterialTheme.shapes.small
+        )
 
         ProviderDetails(
             providerData = providerData,
