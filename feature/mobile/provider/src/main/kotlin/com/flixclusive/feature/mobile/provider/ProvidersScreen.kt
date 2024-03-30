@@ -16,10 +16,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,12 +62,29 @@ fun ProvidersScreen(
     val listState = dragDropListState.getLazyListState()
     val shouldShowTopBar by listState.isScrollingUp()
 
+    val searchExpanded = rememberSaveable { mutableStateOf(false) }
+
+    val installedProviders by remember {
+        derivedStateOf {
+            val list = viewModel.providerDataMap.values.toList()
+
+            when (viewModel.searchQuery.isNotEmpty()) {
+                true -> list.filter {
+                    it.name.contains(viewModel.searchQuery, true)
+                }
+                false -> list
+            }
+        }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             ProvidersTopBar(
                 isVisible = shouldShowTopBar,
-                onActionClick = { viewModel.isSearching = true }
+                searchQuery = viewModel.searchQuery,
+                onQueryChange = viewModel::onSearchQueryChange,
+                searchExpanded = searchExpanded
             )
         },
         floatingActionButton = {
@@ -85,10 +104,10 @@ fun ProvidersScreen(
                 }
             )
         }
-    ) {
+    ) { padding ->
         Box(
             modifier = Modifier
-                .padding(it)
+                .padding(padding)
                 .fillMaxSize()
         ) {
             LazyColumn(
@@ -118,7 +137,7 @@ fun ProvidersScreen(
                     )
                 }
 
-                itemsIndexed(viewModel.providerDataMap.values.toList()) { index, providerData ->
+                itemsIndexed(installedProviders) { index, providerData ->
                     val enabled = remember(appSettings) {
                         !appSettings[index].isDisabled
                     }
@@ -131,7 +150,7 @@ fun ProvidersScreen(
                     InstalledProviderCard(
                         providerData = providerData,
                         enabled = enabled,
-                        isDraggable = viewModel.isSearching,
+                        isDraggable = !searchExpanded.value,
                         displacementOffset = displacementOffset,
                         openSettings = { navigator.openProviderSettings(providerData.name) },
                         uninstallProvider = { viewModel.uninstallProvider(providerData.name) },

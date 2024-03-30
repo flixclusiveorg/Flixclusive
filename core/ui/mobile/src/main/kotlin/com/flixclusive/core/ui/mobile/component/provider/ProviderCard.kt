@@ -10,6 +10,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -18,10 +19,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.gradle.entities.Author
 import com.flixclusive.gradle.entities.Language
 import com.flixclusive.gradle.entities.ProviderData
@@ -37,6 +40,7 @@ enum class ProviderCardState {
 
 @Composable
 fun ProviderCard(
+    modifier: Modifier = Modifier,
     providerData: ProviderData,
     state: ProviderCardState,
     onClick: () -> Unit,
@@ -45,9 +49,8 @@ fun ProviderCard(
 
     Card(
         shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(3.dp)
     ) {
         Column(
             modifier = Modifier
@@ -66,6 +69,21 @@ fun ProviderCard(
                 modifier = Modifier
                     .padding(vertical = 15.dp)
             )
+
+            providerData.description?.let {
+                Text(
+                    text = it,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Normal,
+                        color = LocalContentColor.current.onMediumEmphasis(),
+                        fontSize = 13.sp
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp)
+                )
+            }
 
             ElevatedButton(
                 onClick = onClick,
@@ -117,7 +135,7 @@ private fun ProviderCardPreview() {
         changelogMedia = null,
         versionName = "1.0.0",
         versionCode = 10000,
-        description = null,
+        description = "lorem ipsum lorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsum",
         iconUrl = null,
         language = Language.Multiple,
         name = "123Movies",

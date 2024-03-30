@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.repository.search.component
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -35,11 +37,20 @@ import com.flixclusive.core.util.R as UtilR
 internal fun RepositoryCard(
     modifier: Modifier = Modifier,
     repository: Repository,
+    isSelected: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val tertiary = MaterialTheme.colorScheme.tertiary
+    val border = remember(isSelected) {
+        when {
+            isSelected -> BorderStroke(2.dp, tertiary)
+            else -> null
+        }
+    }
     Card(
         shape = MaterialTheme.shapes.medium,
+        border = border,
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
@@ -110,6 +121,7 @@ private fun RepositoryCardPreview() {
                     "https://github.com/rhenwinch/providers",
                     ""
                 ),
+                isSelected = true,
                 onClick = {},
                 onLongClick = {},
             )

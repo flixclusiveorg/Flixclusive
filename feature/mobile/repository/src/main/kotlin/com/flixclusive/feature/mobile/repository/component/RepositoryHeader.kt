@@ -116,7 +116,7 @@ fun RepositoryHeader(
 }
 
 @Composable
-private fun CustomOutlineButton(
+internal fun CustomOutlineButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     @DrawableRes iconId: Int,
@@ -128,7 +128,7 @@ private fun CustomOutlineButton(
             contentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8F)
         ),
         border = BorderStroke(
-            width = 0.5.dp,
+            width = 1.dp,
             color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(),
         ),
         contentPadding = PaddingValues(vertical = 15.dp),

@@ -13,6 +13,7 @@ dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.ui.mobile)
     implementation(projects.data.provider)
+    implementation(projects.domain.provider)
 
     implementation(libs.coil.compose)
     implementation(libs.compose.foundation)

@@ -13,6 +13,7 @@ import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestinatio
 import com.flixclusive.feature.mobile.preferences.PreferencesScreenNavigator
 import com.flixclusive.feature.mobile.provider.ProvidersScreenNavigator
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
+import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
 import com.flixclusive.feature.mobile.repository.search.RepositorySearchScreenNavigator
 import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
 import com.flixclusive.feature.mobile.search.SearchScreenNavigator
@@ -140,6 +141,8 @@ internal class MobileAppNavigator(
     }
 
     override fun openRepositoryScreen(repository: Repository) {
-        /*TODO("Not yet implemented")*/
+        navController.navigateIfResumed(
+            RepositoryScreenDestination(repository = repository) within destination.navGraph()
+        )
     }
 }
