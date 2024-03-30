@@ -19,12 +19,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,11 +33,11 @@ import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.repository.search.component.AddRepositoryBar
+import com.flixclusive.feature.mobile.repository.search.component.RemoveAlertDialog
 import com.flixclusive.feature.mobile.repository.search.component.RepositoryCard
 import com.flixclusive.feature.mobile.repository.search.component.RepositorySearchTopBar
 import com.flixclusive.gradle.entities.Repository
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlinx.coroutines.launch
 import com.flixclusive.core.util.R as UtilR
 
 interface RepositorySearchScreenNavigator : GoBackAction {
@@ -51,19 +50,32 @@ fun RepositorySearchScreen(
     navigator: RepositorySearchScreenNavigator
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+
     val viewModel = hiltViewModel<RepositorySearchScreenViewModel>()
     val repositories by viewModel.repositories.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
     val shouldShowTopBar by listState.isScrollingUp()
 
+    val isSelecting = rememberSaveable { mutableStateOf(false) }
+    val isRemoving = rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(isSelecting.value) {
+        if (!isSelecting.value)
+            viewModel.clearSelection()
+        else focusManager.clearFocus()
+    }
+
+    LaunchedEffect(viewModel.selectedRepositories.size) {
+        if (viewModel.selectedRepositories.size == 0)
+            isSelecting.value = false
+    }
+
     val hasQueryBoxError = remember(viewModel.errorMessage.value) {
         mutableStateOf(viewModel.errorMessage.value != null)
     }
 
     val hapticFeedBack = getFeedbackOnLongPress()
-    val scope = rememberCoroutineScope()
-    val clipboardManager = LocalClipboardManager.current
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(viewModel.errorMessage.value) {
         if (viewModel.errorMessage.value != null) {
@@ -87,6 +99,9 @@ fun RepositorySearchScreen(
         topBar = {
             RepositorySearchTopBar(
                 isVisible = shouldShowTopBar,
+                isSelecting = isSelecting,
+                selectCount = viewModel.selectedRepositories.size,
+                onRemoveRepositories = { isRemoving.value = true },
                 onNavigationIconClick = navigator::goBack
             )
         }
@@ -122,22 +137,32 @@ fun RepositorySearchScreen(
                 }
 
                 items(repositories) { repository ->
+                    val isSelected = remember(viewModel.selectedRepositories.size) {
+                        viewModel.selectedRepositories.contains(repository)
+                    }
+
                     RepositoryCard(
                         repository = repository,
+                        isSelected = isSelected,
                         onClick = {
+                            if (isSelecting.value && !isSelected) {
+                                viewModel.selectRepository(repository)
+                                return@RepositoryCard
+                            } else if (isSelecting.value) {
+                                viewModel.unselectRepository(repository)
+                                return@RepositoryCard
+                            }
+
                             navigator.openRepositoryScreen(repository)
                         },
                         onLongClick = {
-                            scope.launch {
-                                hapticFeedBack()
-
-                                clipboardManager.setText(
-                                    AnnotatedString(repository.url)
-                                )
-                                snackbarHostState.showMessage(
-                                    context.getString(UtilR.string.copied_link)
-                                )
+                            if (isSelecting.value) {
+                                return@RepositoryCard
                             }
+
+                            hapticFeedBack()
+                            viewModel.selectRepository(repository)
+                            isSelecting.value = true
                         },
                         modifier = Modifier
                             .padding(vertical = 5.dp)
@@ -145,5 +170,18 @@ fun RepositorySearchScreen(
                 }
             }
         }
+    }
+
+    if (isRemoving.value) {
+        RemoveAlertDialog(
+            confirm = {
+                viewModel.onRemoveRepositories()
+                isRemoving.value = false
+            },
+            cancel = {
+                isSelecting.value = false
+                isRemoving.value = false
+            }
+        )
     }
 }

@@ -12,4 +12,6 @@ dependencies {
     api(projects.data.provider)
     api(projects.data.tmdb)
     api(projects.model.database)
+
+    implementation(projects.core.network)
 }

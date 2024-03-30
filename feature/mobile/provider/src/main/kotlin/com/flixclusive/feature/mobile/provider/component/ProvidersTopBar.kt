@@ -1,46 +1,66 @@
 package com.flixclusive.feature.mobile.provider.component
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.util.createTextFieldValue
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun ProvidersTopBar(
     isVisible: Boolean,
-    onActionClick: () -> Unit,
+    searchExpanded: MutableState<Boolean>,
+    searchQuery: String,
+    onQueryChange: (String) -> Unit,
 ) {
-    val surfaceColor = MaterialTheme.colorScheme.surface
-
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
@@ -48,41 +68,133 @@ internal fun ProvidersTopBar(
     ) {
         Box(
             modifier = Modifier
-                .drawBehind {
-                    drawRect(surfaceColor)
-                },
+                .background(MaterialTheme.colorScheme.surface)
+                .statusBarsPadding()
+                .height(65.dp),
             contentAlignment = Alignment.TopCenter
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .heightIn(min = 65.dp)
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Crossfade(
+                targetState = searchExpanded.value,
+                label = ""
             ) {
-                Text(
-                    text = stringResource(id = UtilR.string.providers),
-                    style = MaterialTheme.typography.headlineMedium,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                    modifier = Modifier
-                        .weight(1F)
-                        .padding(horizontal = 15.dp)
-                )
-
-                IconButton(
-                    onClick = onActionClick
-                ) {
-                    Icon(
-                        painter = painterResource(id = UiCommonR.drawable.search_outlined),
-                        contentDescription = stringResource(id = UtilR.string.search_for_providers)
-                    )
+                when(it) {
+                    true -> {
+                        ExpandedTopBar(
+                            searchQuery = searchQuery,
+                            onQueryChange = onQueryChange,
+                            onCollapseTopBar = { searchExpanded.value = false }
+                        )
+                    }
+                    false -> {
+                        CollapsedTopBar(
+                            onExpandTopBar = { searchExpanded.value = true }
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun CollapsedTopBar(
+    modifier: Modifier = Modifier,
+    onExpandTopBar: () -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp)
+            .padding(bottom = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(id = UtilR.string.providers),
+            style = MaterialTheme.typography.headlineMedium,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+            modifier = Modifier
+                .weight(1F)
+                .padding(horizontal = 15.dp)
+        )
+
+        IconButton(
+            onClick = onExpandTopBar
+        ) {
+            Icon(
+                painter = painterResource(id = UiCommonR.drawable.search_outlined),
+                contentDescription = stringResource(id = UtilR.string.search_for_providers)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExpandedTopBar(
+    modifier: Modifier = Modifier,
+    searchQuery: String,
+    onQueryChange: (String) -> Unit,
+    onCollapseTopBar: () -> Unit,
+) {
+    val focusManager = LocalFocusManager.current
+    val keyboardManager = LocalSoftwareKeyboardController.current
+    val textFieldFocusRequester = remember { FocusRequester() }
+
+    SideEffect {
+        textFieldFocusRequester.requestFocus()
+    }
+
+    var textFieldValue by remember {
+        mutableStateOf(searchQuery.createTextFieldValue())
+    }
+
+    OutlinedTextField(
+        value = textFieldValue,
+        onValueChange = {
+            textFieldValue = it
+            onQueryChange(it.text)
+        },
+        colors = OutlinedTextFieldDefaults.colors(),
+        leadingIcon = {
+            Icon(
+                painter = painterResource(UiCommonR.drawable.search_outlined),
+                contentDescription = stringResource(UtilR.string.search),
+            )
+        },
+        trailingIcon = {
+            IconButton(onClick = onCollapseTopBar) {
+                Icon(
+                    painter = painterResource(UiCommonR.drawable.round_close_24),
+                    contentDescription = stringResource(UtilR.string.close_label)
+                )
+            }
+        },
+        placeholder = {
+            Text(
+                text = stringResource(UtilR.string.search_for_providers),
+                style = MaterialTheme.typography.bodyMedium,
+                color = LocalContentColor.current.onMediumEmphasis(),
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
+            )
+        },
+        textStyle = MaterialTheme.typography.bodyMedium,
+        singleLine = true,
+        modifier = modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .focusRequester(textFieldFocusRequester),
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Search
+        ),
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                focusManager.clearFocus()
+                keyboardManager?.hide()
+            }
+        )
+    )
 }
 
 
@@ -96,7 +208,9 @@ private fun TopBarPreview() {
                 topBar = {
                     ProvidersTopBar(
                         isVisible = true,
-                        onActionClick = {}
+                        searchExpanded = remember { mutableStateOf(false) },
+                        searchQuery = "",
+                        onQueryChange = {}
                     )
                 },
                 floatingActionButton = {

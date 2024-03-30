@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +30,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -55,6 +55,7 @@ internal fun AddRepositoryBar(
     focusRequester: FocusRequester,
     onAdd: () -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val clipboardManager = LocalClipboardManager.current
 
@@ -87,6 +88,7 @@ internal fun AddRepositoryBar(
             textStyle = MaterialTheme.typography.bodySmall,
             keyboardActions = KeyboardActions(
                 onGo = {
+                    focusManager.clearFocus()
                     keyboardController?.hide()
 
                     if(urlQuery.value.isEmpty()) {

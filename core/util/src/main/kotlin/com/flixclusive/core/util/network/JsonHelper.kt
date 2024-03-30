@@ -36,6 +36,10 @@ inline fun <reified T> fromJson(json: JsonElement): T {
         .fromJson(json, object : TypeToken<T>() {}.type)
 }
 
+inline fun <reified T> Gson.fromJson(json: String): T {
+    return fromJson(json, object : TypeToken<T>() {}.type)
+}
+
 /**
  * Parses the specified JSON string into an object of type [T] using Gson library.
  * With additional parameter to add your custom deserializer.

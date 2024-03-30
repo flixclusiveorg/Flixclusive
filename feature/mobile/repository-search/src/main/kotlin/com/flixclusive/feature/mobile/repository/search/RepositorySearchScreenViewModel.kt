@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.repository.search
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,6 +8,7 @@ import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.domain.provider.GetRepositoryUseCase
 import com.flixclusive.feature.mobile.repository.search.util.extractGithubInfoFromLink
+import com.flixclusive.gradle.entities.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,7 +27,9 @@ class RepositorySearchScreenViewModel @Inject constructor(
     val errorMessage = mutableStateOf<Resource.Failure?>(null)
 
     private var addJob: Job? = null
+    private var removeJob: Job? = null
 
+    val selectedRepositories = mutableStateListOf<Repository>()
     val repositories = appSettingsManager.providerSettings
         .data
         .map { it.repositories }
@@ -34,6 +38,18 @@ class RepositorySearchScreenViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = appSettingsManager.localProviderSettings.repositories
         )
+
+    fun selectRepository(repository: Repository) {
+        selectedRepositories.add(repository)
+    }
+
+    fun unselectRepository(repository: Repository) {
+        selectedRepositories.remove(repository)
+    }
+
+    fun clearSelection() {
+        selectedRepositories.clear()
+    }
 
     fun onAddLink() {
         if (addJob?.isActive == true)
@@ -59,6 +75,23 @@ class RepositorySearchScreenViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    fun onRemoveRepositories() {
+        if (removeJob?.isActive == true)
+            return
+
+        removeJob = viewModelScope.launch {
+            appSettingsManager.updateProviderSettings { settings ->
+                val newList = settings.repositories.toMutableList().apply {
+                    removeAll(selectedRepositories)
+                }
+
+                settings.copy(repositories = newList.toList())
+            }
+
+            clearSelection()
         }
     }
 }

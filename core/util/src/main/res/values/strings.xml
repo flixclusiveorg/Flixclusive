@@ -45,6 +45,7 @@
     <string name="failed_to_init_app">Couldn\'t initialize the app.</string>
     <string name="failed_to_initialize_home_items">Failed to initialize home items</string>
     <string name="failed_to_initialize_search_items">Failed to initialize search items</string>
+    <string name="failed_to_load_online_providers">Could not parse online providers.</string>
     <string name="film_data_fetch_failed">Failed to fetch film data</string>
     <string name="invalid_repo_link">Could not parse url link.</string>
     <string name="invalid_repository">Repository does not have `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
@@ -100,6 +101,7 @@
     <string name="ignore_warning_message">Don\'t warn me anymore.</string>
     <string name="import_label">Import</string>
     <string name="install">Install</string>
+    <string name="install_all">Install all</string>
     <string name="load_url">Load URL</string>
     <string name="lock">Lock</string>
     <string name="maintenance_all_caps">MAINTENANCE</string>
@@ -127,6 +129,7 @@
     <string name="release_player">Release player on app minimize</string>
     <string name="remove">Remove</string>
     <string name="remove_from_watchlist">Remove from Watchlist</string>
+    <string name="remove_repositories">Remove repositories</string>
     <string name="repository">Repository</string>
     <string name="reset_settings">Reset settings</string>
     <string name="resize_mode">Resize mode</string>
@@ -178,6 +181,7 @@
     <string name="season_number_formatter">Season %1$d</string>
     <string name="season_runtime_formatter">%1$d Season</string>
     <string name="seek_seconds_format">%1$s seconds</string>
+    <string name="count_selection_format">%1$d selected</string>
 
     <!--  State messages  -->
     <string name="checking_for_updates">Checking for updates…</string>
@@ -194,6 +198,7 @@
     <string name="no_available_sources">No available source providers!</string>
     <string name="offline_message">You\'re offline</string>
     <string name="online_message">Back online</string>
+    <string name="remove_repositories_notice_msg">Are you sure you want to remove the selected repositories?</string>
     <string name="skip_loading_message">Player can be played now!</string>
     <string name="source_data_dialog_state_error_default">Could not initialize video player!</string>
     <string name="source_data_dialog_state_extracting">Extracting video data…</string>
