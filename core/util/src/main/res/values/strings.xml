@@ -73,6 +73,7 @@
     <string name="allow">Allow</string>
     <string name="audio">Audio</string>
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
+    <string name="authors">Authors</string>
     <string name="auto_option">Auto</string>
     <string name="automatic_crash_report">Automatic crash report</string>
     <string name="automatic_crash_report_label">Automatically send the crash data to Flixclusive\'s server.</string>
@@ -227,6 +228,7 @@
     <string name="animated_tag_content_desc">Animated Flixclusive tag</string>
     <string name="audio_and_subtitle_button_desc">An icon for available audio and subtitle for the player</string>
     <string name="audio_icon_content_desc">Audio icon</string>
+    <string name="author_icon_content_desc">Author icon</string>
     <string name="backward_button_content_description">Backward button for the player</string>
     <string name="clear_cache_content_desc">Clear cache</string>
     <string name="clear_text_button">Clear text button</string>

@@ -31,7 +31,6 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.feature.mobile.repository.R
 import com.flixclusive.gradle.entities.Repository
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
@@ -95,7 +94,7 @@ fun RepositoryHeader(
         ) {
             CustomOutlineButton(
                 onClick = { uriHandler.openUri(repository.url) },
-                iconId = R.drawable.web_browser,
+                iconId = UiCommonR.drawable.web_browser,
                 label = stringResource(id = UtilR.string.open_web_icon),
                 modifier = Modifier
                     .weight(1F)
