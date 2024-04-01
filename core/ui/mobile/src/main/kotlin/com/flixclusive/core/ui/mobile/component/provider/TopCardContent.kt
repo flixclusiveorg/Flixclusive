@@ -116,7 +116,9 @@ private fun ProviderDetails(
                     providerData.authors.firstOrNull()?.name ?: "anon"
                 )
             } else {
-                providerData.authors.take(3).joinToString(", ")
+                providerData.authors
+                    .map { it.name }
+                    .take(3).joinToString(", ")
             }
         }
 
