@@ -152,7 +152,7 @@ fun RepositoryScreen(
                     item {
                         CustomOutlineButton(
                             onClick = viewModel::installAll,
-                            iconId = UiCommonR.drawable.round_content_copy_24,
+                            iconId = UiCommonR.drawable.download,
                             label = stringResource(id = UtilR.string.install_all),
                             modifier = Modifier.fillMaxWidth()
                         )
