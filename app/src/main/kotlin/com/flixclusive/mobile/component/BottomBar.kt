@@ -38,6 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flixclusive.AppNavigationItem
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -77,7 +78,7 @@ internal fun BottomBar(
                         strokeWidth = strokeWidth
                     )
                 },
-            horizontalArrangement = Arrangement.spacedBy(55.dp, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             mobileNavigationItems.forEach {
@@ -148,6 +149,8 @@ private fun CustomNavItem(
 
         Text(
             text = stringResource(id = item.label),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.labelSmall.copy(
                 color = contentColor,
                 fontWeight = FontWeight.Medium
