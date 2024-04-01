@@ -107,8 +107,8 @@ fun ProvidersScreen(
     ) { padding ->
         Box(
             modifier = Modifier
-                .padding(padding)
                 .fillMaxSize()
+                .padding(padding)
         ) {
             LazyColumn(
                 state = listState,
