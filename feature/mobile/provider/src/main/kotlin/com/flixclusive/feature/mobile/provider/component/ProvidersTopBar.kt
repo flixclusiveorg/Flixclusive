@@ -69,8 +69,7 @@ internal fun ProvidersTopBar(
         Box(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.surface)
-                .statusBarsPadding()
-                .height(65.dp),
+                .statusBarsPadding(),
             contentAlignment = Alignment.TopCenter
         ) {
             Crossfade(
@@ -82,7 +81,9 @@ internal fun ProvidersTopBar(
                         ExpandedTopBar(
                             searchQuery = searchQuery,
                             onQueryChange = onQueryChange,
-                            onCollapseTopBar = { searchExpanded.value = false }
+                            onCollapseTopBar = { searchExpanded.value = false },
+                            modifier = Modifier
+                                .height(65.dp)
                         )
                     }
                     false -> {
@@ -104,8 +105,7 @@ private fun CollapsedTopBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp)
-            .padding(bottom = 10.dp),
+            .padding(horizontal = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -116,7 +116,7 @@ private fun CollapsedTopBar(
             maxLines = 1,
             modifier = Modifier
                 .weight(1F)
-                .padding(horizontal = 15.dp)
+                .padding(end = 15.dp, start = 5.dp)
         )
 
         IconButton(
