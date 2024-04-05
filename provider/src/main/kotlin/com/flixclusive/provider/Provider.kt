@@ -76,7 +76,5 @@ abstract class Provider() {
      * ```
      * */
     @Composable
-    open fun SettingsScreen(
-        resources: Resources? = this.resources,
-    ) = Unit
+    open fun SettingsScreen() = Unit
 }

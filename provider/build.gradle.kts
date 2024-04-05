@@ -14,7 +14,16 @@ dependencies {
     api(projects.core.util)
     api(projects.model.provider)
 
+    implementation(libs.coil.compose)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.tv.material)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.constraintlayout.compose)
     implementation(libs.coroutines.test)
     implementation(libs.junit)
+    implementation(libs.lifecycle.runtimeCompose)
     implementation(libs.mockk)
 }
