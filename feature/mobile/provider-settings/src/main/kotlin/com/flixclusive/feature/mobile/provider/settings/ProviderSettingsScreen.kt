@@ -79,7 +79,7 @@ fun ProviderSettingsScreen(
                                 }
                         }
 
-                        method?.invoke(viewModel.providerInstance, currentComposer, 0, 0)
+                        method?.invoke(viewModel.providerInstance, currentComposer, 0)
                     }
                 }
             }
