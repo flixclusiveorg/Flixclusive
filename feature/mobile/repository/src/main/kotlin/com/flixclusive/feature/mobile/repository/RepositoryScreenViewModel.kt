@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCardState
 import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.domain.provider.GetOnlineProvidersUseCase
@@ -17,6 +18,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.flixclusive.core.util.R as UtilR
 
 @HiltViewModel
 class RepositoryScreenViewModel @Inject constructor(
@@ -27,6 +29,8 @@ class RepositoryScreenViewModel @Inject constructor(
     val repository = savedStateHandle.navArgs<RepositoryScreenNavArgs>().repository
 
     var uiState by mutableStateOf<Resource<List<ProviderData>>>(Resource.Loading)
+        private set
+    var snackbarError by mutableStateOf<Resource.Failure?>(null)
         private set
 
     var searchQuery by mutableStateOf("")
@@ -79,11 +83,35 @@ class RepositoryScreenViewModel @Inject constructor(
     fun toggleProvider(
         providerData: ProviderData
     ) {
-        val isUninstalling = onlineProviderMap[providerData] == ProviderCardState.Installed
-        TODO("Not yet implemented")
+        viewModelScope.launch {
+            val isUninstalling = onlineProviderMap[providerData] == ProviderCardState.Installed
+
+            if (isUninstalling) {
+                providerManager.unloadProvider(providerData)
+                onlineProviderMap[providerData] = ProviderCardState.NotInstalled
+            } else {
+                onlineProviderMap[providerData] = ProviderCardState.Installing
+                try {
+                    providerManager.loadProvider(
+                        providerData = providerData,
+                        needsDownload = true
+                    )
+                } catch (_: Exception) {
+                    snackbarError = Resource.Failure(UiText.StringResource(UtilR.string.failed_to_load_provider, providerData.name))
+                    onlineProviderMap[providerData] = ProviderCardState.NotInstalled
+                    return@launch
+                }
+
+                onlineProviderMap[providerData] = ProviderCardState.Installed
+            }
+        }
     }
 
     fun onSearchQueryChange(newQuery: String) {
         searchQuery = newQuery
+    }
+
+    fun onConsumeSnackbar() {
+        snackbarError = null
     }
 }

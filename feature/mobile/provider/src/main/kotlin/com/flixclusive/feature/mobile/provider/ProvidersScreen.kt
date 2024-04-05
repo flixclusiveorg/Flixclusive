@@ -37,13 +37,14 @@ import com.flixclusive.feature.mobile.provider.component.HeaderButtons
 import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
 import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
 import com.flixclusive.feature.mobile.provider.util.rememberDragDropListState
+import com.flixclusive.gradle.entities.ProviderData
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 interface ProvidersScreenNavigator : GoBackAction {
-    fun openProviderSettings(providerName: String)
+    fun openProviderSettings(providerData: ProviderData)
 
     fun openAddRepositoryScreen()
 }
@@ -54,7 +55,7 @@ fun ProvidersScreen(
     navigator: ProvidersScreenNavigator
 ) {
     val viewModel = hiltViewModel<ProvidersScreenViewModel>()
-    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val providerSettings by viewModel.providerSettings.collectAsStateWithLifecycle()
 
     val coroutineScope = rememberCoroutineScope()
     val overscrollJob = remember { mutableStateOf<Job?>(null) }
@@ -138,10 +139,6 @@ fun ProvidersScreen(
                 }
 
                 itemsIndexed(installedProviders) { index, providerData ->
-                    val enabled = remember(appSettings) {
-                        !appSettings[index].isDisabled
-                    }
-
                     val displacementOffset =
                         if (index == dragDropListState.getCurrentIndexOfDraggedListItem()) {
                             dragDropListState.elementDisplacement.takeIf { it != 0f }
@@ -149,14 +146,12 @@ fun ProvidersScreen(
 
                     InstalledProviderCard(
                         providerData = providerData,
-                        enabled = enabled,
+                        enabled = !providerSettings[index].isDisabled,
                         isDraggable = !searchExpanded.value,
                         displacementOffset = displacementOffset,
-                        openSettings = { navigator.openProviderSettings(providerData.name) },
-                        uninstallProvider = { viewModel.uninstallProvider(providerData.name) },
-                        onToggleProvider = {
-                            viewModel.toggleProvider(index)
-                        }
+                        openSettings = { navigator.openProviderSettings(providerData) },
+                        uninstallProvider = { viewModel.uninstallProvider(providerData) },
+                        onToggleProvider = { viewModel.toggleProvider(providerData) }
                     )
                 }
             }

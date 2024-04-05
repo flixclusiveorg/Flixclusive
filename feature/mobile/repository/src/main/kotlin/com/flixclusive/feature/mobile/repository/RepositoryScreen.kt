@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -86,6 +87,13 @@ fun RepositoryScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val searchExpanded = rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(viewModel.snackbarError) {
+        if (viewModel.snackbarError?.error != null) {
+            snackbarHostState.showMessage(viewModel.snackbarError!!.error!!.asString(context))
+            viewModel.onConsumeSnackbar()
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),

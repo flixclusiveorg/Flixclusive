@@ -12,6 +12,7 @@ import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.preferences.PreferencesScreenNavigator
 import com.flixclusive.feature.mobile.provider.ProvidersScreenNavigator
+import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
 import com.flixclusive.feature.mobile.repository.search.RepositorySearchScreenNavigator
@@ -24,6 +25,7 @@ import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestinatio
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
+import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.Repository
 import com.flixclusive.model.configuration.CategoryItem
 import com.flixclusive.model.tmdb.Film
@@ -130,8 +132,10 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openProviderSettings(providerName: String) {
-        /*TODO("Not yet implemented")*/
+    override fun openProviderSettings(providerData: ProviderData) {
+        navController.navigateIfResumed(
+            ProviderSettingsScreenDestination(providerData = providerData) within destination.navGraph()
+        )
     }
 
     override fun openAddRepositoryScreen() {

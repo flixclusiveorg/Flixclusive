@@ -18,6 +18,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import com.flixclusive.core.ui.common.util.showToast
+import com.flixclusive.core.util.android.saveTo
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.configuration.AppConfigurationManager
@@ -26,7 +27,6 @@ import com.flixclusive.service.update.util.await
 import com.flixclusive.service.update.util.createChannel
 import com.flixclusive.service.update.util.getUriCompat
 import com.flixclusive.service.update.util.newCachelessCallWithProgress
-import com.flixclusive.service.update.util.saveTo
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -174,6 +174,7 @@ class AppUpdaterService : Service() {
 
             if (response.isSuccessful) {
                 response.body?.source()?.saveTo(apkFile)
+                response.close()
             } else {
                 response.close()
                 throw Exception("Unsuccessful response")

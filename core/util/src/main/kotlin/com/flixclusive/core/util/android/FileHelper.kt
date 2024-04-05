@@ -1,8 +1,9 @@
 package com.flixclusive.core.util.android
 
-import java.io.BufferedInputStream
+import okio.BufferedSource
+import okio.buffer
+import okio.sink
 import java.io.File
-import java.io.InputStream
 import java.io.OutputStream
 
 
@@ -23,15 +24,22 @@ fun getDirectorySize(dir: File): Long {
     return size
 }
 
-/**
- *
- * @see [Cloudstream](https://github.com/recloudstream/cloudstream/blob/809a38507bdfc73262d0dd9e6da8c6cc1028341f/app/src/main/java/com/lagradost/cloudstream3/plugins/RepositoryManager.kt#L201)
- * */
-fun write(stream: InputStream, output: OutputStream) {
-    val input = BufferedInputStream(stream)
-    val dataBuffer = ByteArray(512)
-    var readBytes: Int
-    while (input.read(dataBuffer).also { readBytes = it } != -1) {
-        output.write(dataBuffer, 0, readBytes)
+fun BufferedSource.saveTo(file: File) {
+    try {
+        file.parentFile?.mkdirs()
+        saveTo(file.outputStream())
+    } catch (e: Exception) {
+        close()
+        file.delete()
+        throw e
+    }
+}
+
+fun BufferedSource.saveTo(stream: OutputStream) {
+    use { input ->
+        stream.sink().buffer().use {
+            it.writeAll(input)
+            it.flush()
+        }
     }
 }
