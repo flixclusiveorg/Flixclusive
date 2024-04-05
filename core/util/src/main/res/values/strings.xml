@@ -56,6 +56,7 @@
     <string name="splash_maintenance_message">Sorry for the inconvenience. We\'re performing a quick update. Be back soon!</string>
 
     <!--  Errors with formatting  -->
+    <string name="failed_to_load_provider">Failed to download provider: %1$s</string>
     <string name="failed_to_download_updates">Failed to download updates: %1$s</string>
     <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
     <string name="failed_to_retrieve_provider_message_format">Failed to retrieve provider [%1$s]</string>

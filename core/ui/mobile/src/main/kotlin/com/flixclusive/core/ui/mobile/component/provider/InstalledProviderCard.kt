@@ -1,8 +1,6 @@
 package com.flixclusive.core.ui.mobile.component.provider
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,19 +17,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.gradle.entities.Author
 import com.flixclusive.gradle.entities.Language
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InstalledProviderCard(
     providerData: ProviderData,
@@ -42,14 +37,11 @@ fun InstalledProviderCard(
     uninstallProvider: () -> Unit,
     onToggleProvider: () -> Unit,
 ) {
-    val hapticFeedBack = getFeedbackOnLongPress()
-    val clipboardManager = LocalClipboardManager.current
-
     val isBeingDragged = remember(displacementOffset) {
         displacementOffset != null
     }
     
-    val isNotMaintenance = providerData.status != Status.Maintenance
+    val isNotMaintenance = providerData.status != Status.Maintenance && enabled
 
     val color = if (isBeingDragged && isNotMaintenance && !isDraggable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceVariant
 
@@ -75,30 +67,24 @@ fun InstalledProviderCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(3.dp)
-                .combinedClickable(
-                    onClick = onToggleProvider,
-                    onLongClick = {
-                        hapticFeedBack()
-
-                        clipboardManager.setText(
-                            AnnotatedString(
-                                providerData.repositoryUrl ?: providerData.buildUrl
-                                ?: return@combinedClickable
-                            )
-                        )
-                    },
-                )
         ) {
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 15.dp)
+                    .padding(
+                        horizontal = 15.dp,
+                        vertical = 10.dp
+                    )
             ) {
                 TopCardContent(
                     isDraggable = isDraggable,
-                    providerData = providerData
+                    providerData = providerData,
                 )
 
-                Divider(thickness = 0.5.dp)
+                Divider(
+                    thickness = 0.5.dp,
+                    modifier = Modifier
+                        .padding(top = 15.dp)
+                )
 
                 BottomCardContent(
                     providerData = providerData,

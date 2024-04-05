@@ -13,11 +13,11 @@ import kotlinx.serialization.Serializable
 data class ProviderPreference(
     val name: String,
     val filePath: String,
-    val isDisabled: Boolean = false,
+    val isDisabled: Boolean,
 ) {
     override fun equals(other: Any?): Boolean {
         return when(other) {
-            is ProviderPreference -> name == other.name && filePath == other.filePath
+            is ProviderPreference -> name == other.name && filePath == other.filePath && isDisabled == other.isDisabled
             is String -> filePath == other
             else -> super.equals(other)
         }

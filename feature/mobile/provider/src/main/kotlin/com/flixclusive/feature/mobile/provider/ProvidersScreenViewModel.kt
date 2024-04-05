@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.gradle.entities.ProviderData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -24,12 +25,12 @@ class ProvidersScreenViewModel @Inject constructor(
     var searchQuery by mutableStateOf("")
         private set
 
-    val appSettings = appSettingsManager.providerSettings
+    val providerSettings = appSettingsManager.providerSettings
         .data
         .map { it.providers }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = appSettingsManager.localProviderSettings.providers
         )
 
@@ -43,15 +44,15 @@ class ProvidersScreenViewModel @Inject constructor(
         }
     }
 
-    fun toggleProvider(index: Int) {
+    fun toggleProvider(providerData: ProviderData) {
         viewModelScope.launch {
-            providerManager.toggleUsage(index)
+            providerManager.toggleUsage(providerData)
         }
     }
 
-    fun uninstallProvider(name: String) {
+    fun uninstallProvider(providerData: ProviderData) {
         viewModelScope.launch {
-            providerManager.unloadProvider(name)
+            providerManager.unloadProvider(providerData)
         }
     }
 }
