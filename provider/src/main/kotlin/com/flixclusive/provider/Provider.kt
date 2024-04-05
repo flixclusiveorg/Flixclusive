@@ -67,9 +67,7 @@ abstract class Provider() {
      * #### To enhance code readability, always prefer to extract components by functions
      * ```
      * @Composable
-     * override fun SettingsScreen(
-     *      resources: Resources? = this.resources
-     * ) {
+     * override fun SettingsScreen() {
      *      // Create a custom component for code readability
      *      MyCustomSettingsScreen(resources)
      * }
