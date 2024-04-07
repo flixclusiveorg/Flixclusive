@@ -126,15 +126,6 @@ class ProviderManager @Inject constructor(
         file: File,
         buildUrl: String
     ): Boolean {
-        // TODO("REMOVE THIS")
-        val buildUrl = buildUrl.replace(
-            "your_username",
-            "Flixclusive"
-        ).replace(
-            "myRepository",
-            "providers-template"
-        )
-
         val updaterJsonUrl = replaceLastAfterSlash(buildUrl, "updater.json")
         val updaterJsonFile = File(file.parent!!.plus("/updater.json"))
 
