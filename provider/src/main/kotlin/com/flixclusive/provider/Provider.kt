@@ -8,14 +8,9 @@ import com.flixclusive.provider.settings.ProviderSettingsManager
 import okhttp3.OkHttpClient
 
 @Suppress("PropertyName")
-abstract class Provider() {
+abstract class Provider {
     lateinit var settings: ProviderSettingsManager
-    private var manifest: ProviderManifest? = null
-
-    constructor(manifest: ProviderManifest) : this() {
-        this.manifest = manifest
-        settings = ProviderSettingsManager(manifest.name)
-    }
+    var manifest: ProviderManifest? = null
 
     /**
      * Resources associated with the provider, if specified.

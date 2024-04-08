@@ -1,8 +1,13 @@
 package com.flixclusive.data.provider.util
 
 import android.content.Context
+import com.flixclusive.core.util.android.saveTo
+import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.log.errorLog
+import com.flixclusive.core.util.network.request
 import com.flixclusive.data.provider.PROVIDERS_FOLDER
 import com.flixclusive.gradle.entities.ProviderData
+import okhttp3.OkHttpClient
 import java.io.File
 import java.nio.charset.StandardCharsets
 
@@ -75,5 +80,31 @@ private fun trimFilename(res: StringBuilder, maxBytes: Int = 254) {
         // Insert "..." in the middle
         res.insert(res.length / 2, "...")
     }
+}
+
+internal fun OkHttpClient.downloadFile(
+    file: File,
+    downloadUrl: String
+): Boolean {
+    return safeCall {
+        file.mkdirs()
+
+        if (file.exists()) {
+            file.delete()
+        }
+
+        file.createNewFile()
+
+        val response = request(downloadUrl).execute()
+        if (!response.isSuccessful) {
+            errorLog("Error on download: [${response.code}] ${response.message}")
+            return@safeCall false
+        }
+
+        response.body!!.source().saveTo(file)
+        response.close()
+
+        true
+    } ?: false
 }
 
