@@ -7,22 +7,26 @@ import android.widget.Toast
 import androidx.compose.runtime.mutableStateMapOf
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.core.util.android.saveTo
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
+import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
+import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
+import com.flixclusive.data.provider.util.buildValidFilename
+import com.flixclusive.data.provider.util.downloadFile
 import com.flixclusive.data.provider.util.provideValidProviderPath
 import com.flixclusive.data.provider.util.replaceLastAfterSlash
 import com.flixclusive.data.provider.util.rmrf
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.ProviderManifest
+import com.flixclusive.gradle.entities.Repository.Companion.toValidRepositoryLink
 import com.flixclusive.model.datastore.provider.ProviderPreference
 import com.flixclusive.provider.Provider
+import com.flixclusive.provider.settings.ProviderSettingsManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.CoroutineDispatcher
@@ -59,59 +63,22 @@ class ProviderManager @Inject constructor(
     /** Providers that failed to load for various reasons. Map of file to String or Exception  */
     val failedToLoad: MutableMap<File, Any> = LinkedHashMap()
 
+    /**
+     *
+     * Map of all repository's updater.json files and their contents
+     * */
+    private val updaterJsonMap = HashMap<String, List<ProviderData>>()
+
     fun initialize() {
         scope.launch {
+            initializeLocalProviders()
+
             val providerSettings = appSettingsManager.providerSettings.data.first()
 
-            val updaterJsonMap = HashMap<String, List<ProviderData>>()
-
-
-            providerSettings.providers.forEach { providerPreference ->
+            providerSettings.providers.mapAsync { providerPreference ->
                 val providerFile = File(providerPreference.filePath)
-                val updaterJsonFilePath = providerFile.parent?.plus("/updater.json")
 
-                if (updaterJsonFilePath == null) {
-                    errorLog("Provider's file path must not be null!")
-                    return@launch
-                }
-
-                val updaterJsonFile = File(updaterJsonFilePath)
-
-
-                if (!updaterJsonFile.exists()) {
-                    errorLog("Provider's updater.json could not be found!")
-                    return@forEach
-                }
-
-                val updaterJsonList = updaterJsonMap.getOrPut(updaterJsonFile.absolutePath) {
-                    fromJson<List<ProviderData>>(updaterJsonFile.reader())
-                }
-
-                val providerName = providerFile.name
-                val providerData = updaterJsonList.find { it.name.plus(".flx").equals(providerName, true) }
-
-                if (providerData == null) {
-                    errorLog("Provider cannot be found on the updater.json file!")
-                    return@launch
-                }
-
-                if (providerName.endsWith(".flx")) {
-                    loadProvider(
-                        file = providerFile,
-                        providerData = providerData
-                    )
-                } else if (providerName != "oat") { // Some roms create this
-                    if (providerFile.isDirectory) {
-                        context.showToast(
-                            String.format(context.getString(UtilR.string.invalid_provider_file_directory_msg_format), providerName)
-                        )
-                    } else if (providerName.equals("classes.dex") || providerName.endsWith(".json")) {
-                        context.showToast(
-                            String.format(context.getString(UtilR.string.invalid_provider_file_dex_json_msg_format), providerName)
-                        )
-                    }
-                    rmrf(providerFile)
-                }
+                initializeProvider(providerFile = providerFile)
             }
 
             if (failedToLoad.isNotEmpty())
@@ -119,6 +86,103 @@ class ProviderManager @Inject constructor(
                     message = context.getString(UtilR.string.failed_to_load_providers_msg),
                     duration = Toast.LENGTH_LONG
                 )
+        }
+    }
+
+    private suspend fun initializeLocalProviders() {
+        val localPath = context.getExternalFilesDir(null)?.absolutePath + "/providers/"
+        val localDir = File(localPath)
+
+        if (!localDir.exists()) {
+            val isSuccess = localDir.mkdirs()
+            if (!isSuccess) {
+                warnLog("Failed to create local directories when loading providers.")
+            }
+
+            return
+        }
+
+        val providerSettings = appSettingsManager.providerSettings.data.first()
+        val repositoryFolders = localDir.listFiles()
+
+        repositoryFolders?.mapAsync folderMap@ { folder ->
+            if (!folder.isDirectory)
+                return@folderMap
+
+            val providerFiles = folder.listFiles()
+
+            val updaterJsonFile = File(folder.absolutePath + "/updater.json")
+            if (!updaterJsonFile.exists()) {
+                errorLog("Provider's updater.json could not be found!")
+                return@folderMap
+            }
+
+            val randomProviderFile = fromJson<List<ProviderData>>(updaterJsonFile.reader())
+                .randomOrNull()
+                ?: return@folderMap
+
+            val repository = randomProviderFile.repositoryUrl?.toValidRepositoryLink()
+                ?: return@folderMap
+
+            if (!providerSettings.repositories.contains(repository)) {
+                appSettingsManager.updateProviderSettings {
+                    it.copy(repositories = it.repositories + repository)
+                }
+            }
+
+            providerFiles?.mapAsync filesMap@ { file ->
+                val isUpdaterJson = file.name.equals("updater.json")
+                if (isUpdaterJson || !file.name.endsWith(".flx"))
+                    return@filesMap
+
+                initializeProvider(file)
+            }
+        }
+    }
+
+    private suspend fun initializeProvider(providerFile: File) {
+        val updaterJsonFilePath = providerFile.parent?.plus("/updater.json")
+
+        if (updaterJsonFilePath == null) {
+            errorLog("Provider's file path must not be null!")
+            return
+        }
+
+        val updaterJsonFile = File(updaterJsonFilePath)
+
+        if (!updaterJsonFile.exists()) {
+            errorLog("Provider's updater.json could not be found!")
+            return
+        }
+
+        val updaterJsonList = updaterJsonMap.getOrPut(updaterJsonFile.absolutePath) {
+            fromJson<List<ProviderData>>(updaterJsonFile.reader())
+        }
+
+        val providerName = providerFile.name
+        val providerData = updaterJsonList.find { it.name.plus(".flx").equals(providerName, true) }
+
+        if (providerData == null) {
+            errorLog("Provider cannot be found on the updater.json file!")
+            return
+        }
+
+        if (providerName.endsWith(".flx")) {
+            loadProvider(
+                file = providerFile,
+                providerData = providerData
+            )
+        } else if (providerName != "oat") { // Some roms create this
+            if (providerFile.isDirectory) {
+                context.showToast(
+                    String.format(context.getString(UtilR.string.invalid_provider_file_directory_msg_format), providerName)
+                )
+            } else if (providerName.equals("classes.dex") || providerName.endsWith(".json")) {
+                context.showToast(
+                    String.format(context.getString(UtilR.string.invalid_provider_file_dex_json_msg_format), providerName)
+                )
+            }
+            rmrf(providerFile)
         }
     }
 
@@ -130,44 +194,20 @@ class ProviderManager @Inject constructor(
         val updaterJsonFile = File(file.parent!!.plus("/updater.json"))
 
         // Download provider
-        val isProviderDownloadSuccess = downloadFile(
-            file = file, downloadUrl = buildUrl
-        )
+        val isProviderDownloadSuccess = withContext(ioDispatcher) {
+            client.downloadFile(
+                file = file, downloadUrl = buildUrl
+            )
+        }
 
         // Download updater.json
-        val isUpdaterJsonDownloadSuccess = downloadFile(
-            file = updaterJsonFile, downloadUrl = updaterJsonUrl
-        )
+        val isUpdaterJsonDownloadSuccess = withContext(ioDispatcher) {
+            client.downloadFile(
+                file = updaterJsonFile, downloadUrl = updaterJsonUrl
+            )
+        }
 
         return isProviderDownloadSuccess && isUpdaterJsonDownloadSuccess
-    }
-
-    private suspend fun downloadFile(
-        file: File,
-        downloadUrl: String
-    ): Boolean {
-        return withContext(ioDispatcher) {
-            safeCall {
-                file.mkdirs()
-
-                if (file.exists()) {
-                    file.delete()
-                }
-
-                file.createNewFile()
-
-                val response = client.request(downloadUrl).execute()
-                if (!response.isSuccessful) {
-                    errorLog("Error on download: [${response.code}] ${response.message}")
-                    return@safeCall false
-                }
-
-                response.body!!.source().saveTo(file)
-                response.close()
-
-                true
-            } ?: false
-        }
     }
 
     suspend fun loadProvider(
@@ -233,7 +273,15 @@ class ProviderManager @Inject constructor(
                 return
             }
 
+            val settingsPath = context.getExternalFilesDir(null)
+                ?.absolutePath + "/settings/${buildValidFilename(providerData.repositoryUrl!!)}"
+
             providerInstance.__filename = fileName
+            providerInstance.manifest = manifest
+            providerInstance.settings = ProviderSettingsManager(
+                settingsPath = settingsPath,
+                providerName = providerData.name
+            )
             if (manifest.requiresResources) {
                 // based on https://stackoverflow.com/questions/7483568/dynamic-resource-loading-from-other-apk
                 val assets = AssetManager::class.java.getDeclaredConstructor().newInstance()

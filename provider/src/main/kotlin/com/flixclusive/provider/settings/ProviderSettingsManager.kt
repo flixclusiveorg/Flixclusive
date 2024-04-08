@@ -9,16 +9,17 @@ import java.lang.reflect.Type
  * @see [Aliucord](https://github.com/Aliucord/Aliucord/blob/main/Aliucord/src/main/java/com/aliucord/api/SettingsAPI.java)
  * */
 @Suppress("unused")
-class ProviderSettingsManager(provider: String) {
+class ProviderSettingsManager(
+    private val settingsPath: String,
+    private val providerName: String,
+) {
     private var settings: ProviderSettings
-    private val providerName: String
 
     /**
      * Creates a SettingsAPI for the specified plugin
      */
     init {
-        settings = ProviderSettings(provider)
-        providerName = provider
+        settings = ProviderSettings(settingsPath, providerName)
     }
 
     /**
@@ -28,7 +29,7 @@ class ProviderSettingsManager(provider: String) {
      */
     fun resetSettings(): Boolean {
         val isSuccessful = settings.resetFile()
-        settings = ProviderSettings(providerName)
+        settings = ProviderSettings(settingsPath, providerName)
         return isSuccessful
     }
 

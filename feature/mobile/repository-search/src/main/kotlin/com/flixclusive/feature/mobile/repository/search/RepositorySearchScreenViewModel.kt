@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.domain.provider.GetRepositoryUseCase
-import com.flixclusive.feature.mobile.repository.search.util.extractGithubInfoFromLink
 import com.flixclusive.gradle.entities.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.flixclusive.core.util.R as UtilR
 
 @HiltViewModel
 class RepositorySearchScreenViewModel @Inject constructor(
@@ -56,14 +54,6 @@ class RepositorySearchScreenViewModel @Inject constructor(
             return
 
         addJob = viewModelScope.launch {
-            val (username, repositoryName) = extractGithubInfoFromLink(urlQuery.value) ?: (null to null)
-            val isAlreadyAdded = repositories.value.any { it.owner.equals(username, true) && it.name == repositoryName }
-
-            if (isAlreadyAdded) {
-                errorMessage.value = Resource.Failure(UtilR.string.already_added_repo_error)
-                return@launch
-            }
-
             errorMessage.value = null
 
             when (val repository = getRepositoryUseCase(urlQuery.value)) {

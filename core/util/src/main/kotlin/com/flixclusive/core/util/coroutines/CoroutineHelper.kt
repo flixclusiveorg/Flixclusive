@@ -20,6 +20,10 @@ suspend fun <T, R> Iterable<T>.mapAsync(
     mapper: suspend (T) -> R
 ): List<R> = coroutineScope { map { async { mapper(it) } }.awaitAll() }
 
+suspend fun <T, R> Array<out T>.mapAsync(
+    mapper: suspend (T) -> R
+): List<R> = coroutineScope { map { async { mapper(it) } }.awaitAll() }
+
 /**
  * Asynchronously maps the elements of the iterable with their index using the specified suspending function [mapper].
  * @param mapper The suspending function to apply to each indexed element.

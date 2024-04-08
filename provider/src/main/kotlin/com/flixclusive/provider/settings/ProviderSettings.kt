@@ -16,9 +16,11 @@ import java.math.BigDecimal
  *
  * */
 @Suppress("unused")
-class ProviderSettings(provider: String) {
-    private val settingsPath = "/settings/"
-    private val settingsFile = "$settingsPath$provider.json"
+class ProviderSettings(
+    settingsPath: String,
+    providerName: String,
+) {
+    private val settingsFile = "$settingsPath/$providerName.json"
     private val cache: MutableMap<String, Any> = HashMap()
     private val gson = Gson()
     private val settings: JSONObject by lazy {
@@ -32,7 +34,7 @@ class ProviderSettings(provider: String) {
 
     init {
         val dir = File(settingsPath)
-        if (!dir.exists() && !dir.mkdir()) throw RuntimeException("Failed to create settings dir")
+        if (!dir.exists() && !dir.mkdirs()) throw RuntimeException("Failed to create settings dir")
     }
 
     private fun writeData() {
