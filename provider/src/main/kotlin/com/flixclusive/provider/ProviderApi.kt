@@ -4,6 +4,8 @@ import android.content.Context
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResults
 import com.flixclusive.provider.extractor.Extractor
@@ -80,6 +82,8 @@ abstract class ProviderApi(
 
     open fun getWebView(
         context: Context,
-        callback: WebViewCallback
+        callback: WebViewCallback,
+        film: Film,
+        episode: TMDBEpisode? = null,
     ): FlixclusiveWebView? = null
 }

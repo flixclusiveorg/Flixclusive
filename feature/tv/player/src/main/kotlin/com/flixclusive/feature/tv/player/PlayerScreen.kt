@@ -51,6 +51,7 @@ import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.provider.util.FlixclusiveWebView
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -89,6 +90,7 @@ fun PlayerScreen(
     val scope = rememberCoroutineScope()
 
     var webView: FlixclusiveWebView? by remember { mutableStateOf(null) }
+    var scrapeJob: Job? by remember { mutableStateOf(null) }
 
     var hasLaunchedFromIdle by remember { mutableStateOf(false) }
 
@@ -133,6 +135,10 @@ fun PlayerScreen(
 
     LaunchedEffect(dialogState, isIdle, isPlayerRunning) {
         if (!isPlayerRunning && dialogState is SourceDataState.Success && isIdle && !hasLaunchedFromIdle) {
+            scrapeJob?.cancel()
+            webView?.destroy()
+            webView = null
+
             hasLaunchedFromIdle = true
             onPlayerScreenVisibilityChange(true)
             while (viewModel.player.playbackState == Player.STATE_BUFFERING) {
@@ -153,6 +159,7 @@ fun PlayerScreen(
             SourceDataDialog(
                 state = dialogState,
                 onConsumeDialog = {
+                    scrapeJob?.cancel()
                     if (dialogState !is SourceDataState.Success) {
                         webView?.destroy()
                         webView = null
@@ -166,7 +173,14 @@ fun PlayerScreen(
             if (webView != null) {
                 AndroidView(
                     factory = { _ -> webView!! },
-                    update = { it.startScraping() },
+                    update = {
+                        if (scrapeJob?.isActive == true)
+                            return@AndroidView
+
+                        scrapeJob = scope.launch {
+                            it.startScraping()
+                        }
+                    },
                     modifier = Modifier
                         .height(0.5.dp)
                         .width(0.5.dp)

@@ -22,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -48,6 +49,7 @@ import com.ramcosta.composedestinations.dynamic.within
 import com.ramcosta.composedestinations.navigation.navigate
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import com.ramcosta.composedestinations.utils.startDestination
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 import com.flixclusive.core.util.R as UtilR
@@ -69,6 +71,7 @@ internal fun MobileActivity.MobileApp(
     var fullScreenImageToShow: String? by remember { mutableStateOf(null) }
 
     var webView: FlixclusiveWebView? by remember { mutableStateOf(null) }
+    var scrapeJob: Job? by remember { mutableStateOf(null) }
 
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -85,13 +88,17 @@ internal fun MobileActivity.MobileApp(
 
     val onStartPlayer = {
         viewModel.setPlayerModeState(isInPlayer = true)
+        scrapeJob?.cancel()
+        webView?.destroy()
+        webView = null
+        viewModel.onConsumeSourceDataDialog()
+
         navController.navigateIfResumed(
             PlayerScreenDestination(
                 film = filmToPreview!!,
                 episodeToPlay = episodeToPlay
             )
         )
-        viewModel.onConsumeSourceDataDialog()
     }
 
     LaunchedEffect(sourceData?.cachedLinks?.size, uiState.sourceDataState) {
@@ -240,6 +247,7 @@ internal fun MobileActivity.MobileApp(
                     onSkipExtractingPhase = onStartPlayer,
                     onConsumeDialog = {
                         viewModel.onConsumeSourceDataDialog(isForceClosing = true)
+                        scrapeJob?.cancel()
                         webView?.destroy()
                         webView = null
                         viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
@@ -249,10 +257,18 @@ internal fun MobileActivity.MobileApp(
                 if(webView != null) {
                     AndroidView(
                         factory = { _ -> webView!! },
-                        update = { it.startScraping() },
+                        update = {
+                            if (scrapeJob?.isActive == true)
+                                return@AndroidView
+
+                            scrapeJob = scope.launch {
+                                it.startScraping()
+                            }
+                        },
                         modifier = Modifier
                             .height(0.5.dp)
                             .width(0.5.dp)
+                            .alpha(0F)
                     )
                 }
             }
