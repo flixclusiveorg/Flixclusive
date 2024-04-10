@@ -14,7 +14,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -32,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.SavedStateHandle
@@ -55,10 +58,10 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.ObserveNewLinksAndSubtit
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.ObservePlayerTime
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatPlayerTitle
 import com.flixclusive.core.ui.player.util.updatePiPParams
+import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.mobile.player.controls.PlayerControls
 import com.flixclusive.feature.mobile.player.util.PlayerPipReceiver
-import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.feature.mobile.player.util.percentOfVolume
 import com.flixclusive.feature.mobile.player.util.setBrightness
 import com.flixclusive.model.provider.SourceData
@@ -67,6 +70,7 @@ import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.provider.util.FlixclusiveWebView
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
@@ -121,6 +125,8 @@ fun PlayerScreen(
     val seasonData by viewModel.season.collectAsStateWithLifecycle()
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
+    var webView: FlixclusiveWebView? by remember { mutableStateOf(null) }
+
     val currentPlayerTitle = remember(currentSelectedEpisode) {
         formatPlayerTitle(args.film, currentSelectedEpisode)
     }
@@ -160,7 +166,10 @@ fun PlayerScreen(
     }
 
     fun onEpisodeClick(episode: TMDBEpisode? = null) {
-        viewModel.onEpisodeClick(episodeToWatch = episode)
+        viewModel.onEpisodeClick(
+            episodeToWatch = episode,
+            runWebView = { webView = it }
+        )
     }
 
     LaunchedEffect(currentSelectedEpisode) {
@@ -185,7 +194,7 @@ fun PlayerScreen(
         if (sourceData.mediaId.isEmpty() || sourceData.providerName.isEmpty()) {
             when(args.film) {
                 is TvShow -> onEpisodeClick(args.episodeToPlay)
-                is Movie -> viewModel.loadSourceData()
+                is Movie -> viewModel.loadSourceData(runWebView = { webView = it })
                 else -> throw IllegalStateException("Invalid film instance [${args.film.filmType}]: ${args.film}")
             }
         }
@@ -365,7 +374,9 @@ fun PlayerScreen(
             isLastEpisode = viewModel.isLastEpisode,
             isInPipMode = isInPipMode,
             showSnackbar = viewModel::showSnackbar,
-            onQueueNextEpisode = viewModel::onQueueNextEpisode
+            onQueueNextEpisode = {
+                viewModel.onQueueNextEpisode(runWebView = { webView = it })
+            }
         )
 
         AudioFocusManager(
@@ -448,7 +459,12 @@ fun PlayerScreen(
                 onSnackbarToggle = viewModel::showSnackbar,
                 onSeasonChange = viewModel::onSeasonChange,
                 onVideoServerChange = viewModel::onServerChange,
-                onProviderChange = viewModel::onProviderChange,
+                onProviderChange = { newProvider ->
+                    viewModel.onProviderChange(
+                        newProvider =  newProvider,
+                        runWebView = { webView = it }
+                    )
+                },
                 onResizeModeChange = viewModel::onResizeModeChange,
                 onPanelChange = viewModel::onPanelChange,
                 toggleVideoTimeReverse = viewModel::toggleVideoTimeReverse,
@@ -506,7 +522,7 @@ fun PlayerScreen(
         }
     }
 
-    if (dialogState !is SourceDataState.Idle) {
+    if (dialogState !is SourceDataState.Idle || webView != null) {
         LaunchedEffect(Unit) {
             viewModel.player.run {
                 if (isPlaying) {
@@ -516,15 +532,35 @@ fun PlayerScreen(
             }
         }
 
-        SourceDataDialog(
-            state = dialogState,
-            onConsumeDialog = {
-                viewModel.onConsumePlayerDialog()
+        Box(
+            contentAlignment = Alignment.Center
+        ) {
+            SourceDataDialog(
+                state = dialogState,
+                onConsumeDialog = {
+                    viewModel.onConsumePlayerDialog()
+                    webView?.destroy()
+                    webView = null
 
-                if (viewModel.player.playWhenReady) {
-                    viewModel.player.play()
+                    if (viewModel.player.playWhenReady) {
+                        viewModel.player.play()
+                    }
                 }
+            )
+
+            if (webView != null) {
+                AndroidView(
+                    factory = { _ -> webView!! },
+                    update = { it.startScraping() },
+                    modifier = Modifier
+                        .height(0.5.dp)
+                        .width(0.5.dp)
+                )
             }
-        )
+        }
+    }
+    else {
+        webView?.destroy()
+        webView = null
     }
 }

@@ -1,11 +1,14 @@
 package com.flixclusive.provider
 
+import android.content.Context
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResults
 import com.flixclusive.provider.extractor.Extractor
+import com.flixclusive.provider.util.FlixclusiveWebView
+import com.flixclusive.provider.util.WebViewCallback
 import okhttp3.OkHttpClient
 
 /**
@@ -29,6 +32,11 @@ abstract class ProviderApi(
      * The list of supported extractors, embeds, or servers for this provider instance.
      */
     protected open val supportedExtractors: List<Extractor> = emptyList()
+
+    /**
+     * Whether this provider needs to use a WebView to scrape content
+     * */
+    open val useWebView: Boolean = false
 
     /**
      * Performs a search for films based on the provided query.
@@ -69,4 +77,9 @@ abstract class ProviderApi(
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit,
     )
+
+    open fun getWebView(
+        context: Context,
+        callback: WebViewCallback
+    ): FlixclusiveWebView? = null
 }

@@ -6,7 +6,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -18,9 +20,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
@@ -36,6 +40,7 @@ import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.FilmCoverPreview
 import com.flixclusive.mobile.component.FilmPreviewBottomSheet
 import com.flixclusive.model.provider.SourceDataState
+import com.flixclusive.provider.util.FlixclusiveWebView
 import com.flixclusive.util.AppNavHost
 import com.flixclusive.util.currentScreenAsState
 import com.flixclusive.util.navigateIfResumed
@@ -62,6 +67,8 @@ internal fun MobileActivity.MobileApp(
 
     var hasBeenDisconnected by remember { mutableStateOf(false) }
     var fullScreenImageToShow: String? by remember { mutableStateOf(null) }
+
+    var webView: FlixclusiveWebView? by remember { mutableStateOf(null) }
 
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -166,7 +173,13 @@ internal fun MobileActivity.MobileApp(
             AppNavHost(
                 navController = navController,
                 previewFilm = viewModel::previewFilm,
-                play = viewModel::onPlayClick,
+                play = { film, episode ->
+                    viewModel.onPlayClick(
+                        film = film,
+                        episode = episode,
+                        runWebView = { webView = it }
+                    )
+                },
                 closeApp = {
                     finish()
                     exitProcess(0)
@@ -207,7 +220,7 @@ internal fun MobileActivity.MobileApp(
                 },
                 onDismissRequest = viewModel::onBottomSheetClose,
                 onPlayClick = {
-                    viewModel.onPlayClick()
+                    viewModel.onPlayClick(runWebView = { webView = it })
                     navigateToFilmScreen()
                 },
                 onImageClick = {
@@ -216,19 +229,37 @@ internal fun MobileActivity.MobileApp(
             )
         }
 
-        if (uiState.sourceDataState !is SourceDataState.Idle) {
+        if (uiState.sourceDataState !is SourceDataState.Idle || webView != null) {
             window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            SourceDataDialog(
-                state = uiState.sourceDataState,
-                canSkipExtractingPhase = sourceData?.cachedLinks?.isNotEmpty() == true,
-                onSkipExtractingPhase = onStartPlayer,
-                onConsumeDialog = {
-                    viewModel.onConsumeSourceDataDialog(isForceClosing = true)
-                    viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                SourceDataDialog(
+                    state = uiState.sourceDataState,
+                    canSkipExtractingPhase = sourceData?.cachedLinks?.isNotEmpty() == true,
+                    onSkipExtractingPhase = onStartPlayer,
+                    onConsumeDialog = {
+                        viewModel.onConsumeSourceDataDialog(isForceClosing = true)
+                        webView?.destroy()
+                        webView = null
+                        viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
+                    }
+                )
+
+                if(webView != null) {
+                    AndroidView(
+                        factory = { _ -> webView!! },
+                        update = { it.startScraping() },
+                        modifier = Modifier
+                            .height(0.5.dp)
+                            .width(0.5.dp)
+                    )
                 }
-            )
+            }
         } else {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            webView?.destroy()
+            webView = null
         }
 
         AnimatedVisibility(
