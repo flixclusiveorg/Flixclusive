@@ -1,6 +1,8 @@
 package com.flixclusive.core.ui.mobile.component.provider
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,11 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +28,6 @@ import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InstalledProviderCard(
     providerData: ProviderData,
@@ -37,13 +38,15 @@ fun InstalledProviderCard(
     uninstallProvider: () -> Unit,
     onToggleProvider: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
     val isBeingDragged = remember(displacementOffset) {
         displacementOffset != null
     }
     
     val isNotMaintenance = providerData.status != Status.Maintenance && enabled
 
-    val color = if (isBeingDragged && isNotMaintenance && !isDraggable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceVariant
+    val color = if (isBeingDragged && isNotMaintenance && isDraggable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceVariant
 
     Box(
         modifier = Modifier
@@ -54,12 +57,13 @@ fun InstalledProviderCard(
         Card(
             enabled = isNotMaintenance,
             onClick = onToggleProvider,
+            interactionSource = interactionSource,
             shape = MaterialTheme.shapes.medium,
             colors = CardDefaults.cardColors(
                 containerColor = color,
                 contentColor = contentColorFor(backgroundColor = color)
             ),
-            border = if (isBeingDragged && !isNotMaintenance)
+            border = if (isBeingDragged && isNotMaintenance || pressed)
                 BorderStroke(
                     width = 2.dp,
                     color = contentColorFor(color)
