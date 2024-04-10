@@ -140,7 +140,7 @@ fun ProvidersScreen(
 
                 itemsIndexed(installedProviders) { index, providerData ->
                     val displacementOffset =
-                        if (index == dragDropListState.getCurrentIndexOfDraggedListItem()) {
+                        if (index + 2 == dragDropListState.getCurrentIndexOfDraggedListItem()) {
                             dragDropListState.elementDisplacement.takeIf { it != 0f }
                         } else null
 
