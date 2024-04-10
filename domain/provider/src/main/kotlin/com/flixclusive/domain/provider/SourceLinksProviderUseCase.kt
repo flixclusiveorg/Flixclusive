@@ -1,5 +1,6 @@
 package com.flixclusive.domain.provider
 
+import android.content.Context
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.provider.ProviderManager
@@ -11,10 +12,15 @@ import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.provider.SourceData
 import com.flixclusive.model.provider.SourceDataState
+import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.provider.ProviderApi
+import com.flixclusive.provider.util.FlixclusiveWebView
+import com.flixclusive.provider.util.WebViewCallback
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
@@ -34,6 +40,7 @@ typealias FilmKey = String
 
 @Singleton
 class SourceLinksProviderUseCase @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val sourceLinksRepository: SourceLinksRepository,
     private val providersManager: ProviderManager,
     private val providersRepository: ProviderRepository,
@@ -78,6 +85,7 @@ class SourceLinksProviderUseCase @Inject constructor(
         isChangingProvider: Boolean = false,
         mediaId: String? = null,
         episode: TMDBEpisode? = null,
+        runWebView: (FlixclusiveWebView) -> Unit,
         onSuccess: (TMDBEpisode?) -> Unit,
         onError: (() -> Unit)? = null,
     ): Flow<SourceDataState> = flow {
@@ -142,6 +150,55 @@ class SourceLinksProviderUseCase @Inject constructor(
                 continue
 
             emit(SourceDataState.Fetching(UiText.StringResource(UtilR.string.fetching_from_provider_format, provider.name)))
+
+            if (provider.useWebView) {
+                runWebView(
+                    provider.getWebView(
+                        context = context,
+                        callback = object : WebViewCallback {
+                            val sourceData = getLinks(
+                                filmId = film.id,
+                                episode = episodeToUse
+                            )
+
+                            override suspend fun onError() {
+                                emit(SourceDataState.Error(UiText.StringResource(UtilR.string.default_error)))
+                                onError?.invoke()
+                            }
+
+                            override suspend fun onSuccess(episode: TMDBEpisode?) {
+                                emit(SourceDataState.Success)
+                                onSuccess.invoke(episode)
+                            }
+
+                            override fun onSubtitleLoaded(subtitle: Subtitle) {
+                                sourceData.run {
+                                    if (!cachedSubtitles.contains(subtitle)) {
+                                        if (cachedSourceData != null) {
+                                            cachedSubtitles.add(0, subtitle)
+                                        } else cachedSubtitles.add(subtitle)
+                                    }
+                                }
+                            }
+
+                            override fun onLinkLoaded(link: SourceLink) {
+                                sourceData.run {
+                                    if (!cachedLinks.contains(link)) {
+                                        if (cachedSourceData != null) {
+                                            cachedLinks.add(0, link)
+                                        } else cachedLinks.add(link)
+                                    }
+                                }
+                            }
+
+                            override suspend fun updateDialogState(state: SourceDataState) {
+                                emit(state)
+                            }
+                        },
+                    )!!
+                )
+                return@flow
+            }
 
             val canStopLooping = i == providersList.lastIndex
             val needsNewMediaId = mediaId != null && provider.name != preferredProviderName

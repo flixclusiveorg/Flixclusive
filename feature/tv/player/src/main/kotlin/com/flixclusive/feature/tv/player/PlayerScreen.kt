@@ -10,6 +10,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -20,10 +22,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.tv.material3.ExperimentalTvMaterial3Api
@@ -45,6 +50,7 @@ import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.provider.util.FlixclusiveWebView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -82,6 +88,8 @@ fun PlayerScreen(
     val context = LocalContext.current.getActivity<ComponentActivity>()
     val scope = rememberCoroutineScope()
 
+    var webView: FlixclusiveWebView? by remember { mutableStateOf(null) }
+
     var hasLaunchedFromIdle by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -114,9 +122,12 @@ fun PlayerScreen(
         }
 
         if (episodeToPlay != null) {
-            viewModel.onEpisodeClick(episodeToWatch = episodeToPlay)
+            viewModel.onEpisodeClick(
+                episodeToWatch = episodeToPlay,
+                runWebView = { webView = it }
+            )
         } else {
-            viewModel.loadSourceData()
+            viewModel.loadSourceData(runWebView = { webView = it })
         }
     }
 
@@ -132,19 +143,40 @@ fun PlayerScreen(
     }
 
     if(
-        dialogState !is SourceDataState.Success
-        && dialogState !is SourceDataState.Idle
+        ((dialogState !is SourceDataState.Success
+        && dialogState !is SourceDataState.Idle) || webView != null)
         && isPlayerRunning
     ) {
-        SourceDataDialog(
-            state = dialogState,
-            onConsumeDialog = {
-                if (dialogState !is SourceDataState.Success) {
-                    viewModel.onConsumePlayerDialog()
-                    onBack(true)
+        Box(
+            contentAlignment = Alignment.Center
+        ) {
+            SourceDataDialog(
+                state = dialogState,
+                onConsumeDialog = {
+                    if (dialogState !is SourceDataState.Success) {
+                        webView?.destroy()
+                        webView = null
+
+                        viewModel.onConsumePlayerDialog()
+                        onBack(true)
+                    }
                 }
+            )
+
+            if (webView != null) {
+                AndroidView(
+                    factory = { _ -> webView!! },
+                    update = { it.startScraping() },
+                    modifier = Modifier
+                        .height(0.5.dp)
+                        .width(0.5.dp)
+                )
             }
-        )
+        }
+    }
+    else {
+        webView?.destroy()
+        webView = null
     }
 
     AnimatedVisibility(
@@ -363,7 +395,12 @@ fun PlayerScreen(
                         showControls = { showControls(it) },
                         updateAppSettings = viewModel::updateAppSettings,
                         onServerChange = viewModel::onServerChange,
-                        onProviderChange = viewModel::onProviderChange,
+                        onProviderChange = { newProvider ->
+                            viewModel.onProviderChange(
+                                runWebView = { webView = it },
+                                newProvider = newProvider
+                            )
+                        },
                         onSeekMultiplierChange = {
                             if (it == 0L) {
                                 seekMultiplier = 0L
@@ -380,7 +417,7 @@ fun PlayerScreen(
                                     duration = duration
                                 )
 
-                                viewModel.onEpisodeClick()
+                                viewModel.onEpisodeClick(runWebView = { webView = it })
                             }
                         },
                     )

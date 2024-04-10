@@ -82,7 +82,8 @@ object CryptographyUtil {
             while (generatedLength < keyLength + ivLength) {
 
                 // Digest data (last digest if available, password data, salt if available)
-                if (generatedLength > 0) md.update(generatedData, generatedLength - digestLength, digestLength)
+                if (generatedLength > 0)
+                    md.update(generatedData, generatedLength - digestLength, digestLength)
                 md.update(password)
                 md.update(salt, 0, 8)
                 md.digest(generatedData, generatedLength, digestLength)

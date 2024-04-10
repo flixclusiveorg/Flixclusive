@@ -22,6 +22,7 @@ import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Season
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.provider.util.FlixclusiveWebView
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -177,7 +178,10 @@ abstract class BasePlayerViewModel(
         }
     }
 
-    fun onProviderChange(newProvider: String) {
+    fun onProviderChange(
+        newProvider: String,
+        runWebView: (FlixclusiveWebView) -> Unit
+    ) {
         if (loadLinksFromNewProviderJob?.isActive == true)
             return
 
@@ -206,6 +210,7 @@ abstract class BasePlayerViewModel(
                     resetUiState()
                     resetNextEpisodeQueue()
                 },
+                runWebView = runWebView,
                 onError = {
                     updateProviderSelected(oldSelectedSource)
                     showErrorOnUiCallback(UiText.StringResource(UtilR.string.failed_to_retrieve_provider_message_format))
@@ -381,7 +386,10 @@ abstract class BasePlayerViewModel(
      *
      * @param episodeToWatch The next episode to be played, or null if not available.
      */
-    fun onEpisodeClick(episodeToWatch: TMDBEpisode? = null) {
+    fun onEpisodeClick(
+        episodeToWatch: TMDBEpisode? = null,
+        runWebView: (FlixclusiveWebView) -> Unit
+    ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
             showErrorOnUiCallback(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
             return
@@ -413,7 +421,7 @@ abstract class BasePlayerViewModel(
                 }
             }
 
-            loadSourceData(episode)
+            loadSourceData(episode, runWebView)
         }
     }
 
@@ -424,6 +432,7 @@ abstract class BasePlayerViewModel(
      */
     fun loadSourceData(
         episodeToWatch: TMDBEpisode? = null,
+        runWebView: (FlixclusiveWebView) -> Unit
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
             showErrorOnUiCallback(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
@@ -443,6 +452,7 @@ abstract class BasePlayerViewModel(
                 preferredProviderName = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = episodeToWatch,
+                runWebView = runWebView,
                 onSuccess = { newEpisode ->
                     _currentSelectedEpisode.value = newEpisode
 
@@ -490,7 +500,9 @@ abstract class BasePlayerViewModel(
      *
      * Callback function to silently queue up the next episode
      */
-    fun onQueueNextEpisode() {
+    fun onQueueNextEpisode(
+        runWebView: (FlixclusiveWebView) -> Unit
+    ) {
         if (loadNextLinksJob?.isActive == true || isNextEpisodeLoaded || loadLinksJob?.isActive == true || loadLinksFromNewProviderJob?.isActive == true)
             return
 
@@ -504,6 +516,7 @@ abstract class BasePlayerViewModel(
                 preferredProviderName = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = episode,
+                runWebView = runWebView,
                 onSuccess = { newEpisode ->
                     nextEpisodeToUse = newEpisode
                     isNextEpisodeLoaded = true

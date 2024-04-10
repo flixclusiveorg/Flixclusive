@@ -13,6 +13,7 @@ dependencies {
     api(libs.okhttp)
     api(projects.core.util)
     api(projects.model.provider)
+    api(projects.model.tmdb)
 
     implementation(libs.coil.compose)
     implementation(libs.compose.foundation)
