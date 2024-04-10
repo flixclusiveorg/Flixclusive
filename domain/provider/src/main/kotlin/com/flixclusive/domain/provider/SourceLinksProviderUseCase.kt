@@ -3,6 +3,7 @@ package com.flixclusive.domain.provider
 import android.content.Context
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.SourceLinksRepository
@@ -21,8 +22,10 @@ import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.util.FlixclusiveWebView
 import com.flixclusive.provider.util.WebViewCallback
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.flixclusive.core.util.R as UtilR
@@ -88,16 +91,17 @@ class SourceLinksProviderUseCase @Inject constructor(
         runWebView: (FlixclusiveWebView) -> Unit,
         onSuccess: (TMDBEpisode?) -> Unit,
         onError: (() -> Unit)? = null,
-    ): Flow<SourceDataState> = flow {
+    ): Flow<SourceDataState> = channelFlow {
         val providersList = getPrioritizedProvidersList(preferredProviderName)
 
         if (providersList.isEmpty()) {
             onError?.invoke()
-            return@flow emit(SourceDataState.Unavailable(UtilR.string.no_available_sources))
+            trySend(SourceDataState.Unavailable(UtilR.string.no_available_sources))
+            return@channelFlow
         }
 
         val episodeToUse = if (episode == null && film is TvShow) {
-            emit(SourceDataState.Fetching(UiText.StringResource(UtilR.string.fetching_episode_message)))
+            trySend(SourceDataState.Fetching(UiText.StringResource(UtilR.string.fetching_episode_message)))
 
             when (
                 val episodeFetchResult = getNearestEpisodeToWatch(
@@ -107,13 +111,15 @@ class SourceLinksProviderUseCase @Inject constructor(
             ) {
                 is Resource.Failure -> {
                     onError?.invoke()
-                    return@flow emit(SourceDataState.Error(episodeFetchResult.error))
+                    trySend(SourceDataState.Error(episodeFetchResult.error))
+                    return@channelFlow
                 }
 
                 Resource.Loading -> null
                 is Resource.Success -> episodeFetchResult.data
             }
         } else episode
+
         val cacheKey = getFilmKey(
             filmId = film.id,
             episodeData = episodeToUse
@@ -132,6 +138,12 @@ class SourceLinksProviderUseCase @Inject constructor(
              * If user chose the same film or the [FilmKey] is valid,
              * then just proceed with the same cached link.
              * */
+
+            /**
+             *
+             * If user chose the same film or the [FilmKey] is valid,
+             * then just proceed with the same cached link.
+             * */
             if (
                 data != null
                 && data.cachedLinks.isNotEmpty()
@@ -139,7 +151,8 @@ class SourceLinksProviderUseCase @Inject constructor(
                 || preferredProviderName == null)
             ) {
                 onSuccess(episodeToUse)
-                return@flow emit(SourceDataState.Success)
+                trySend(SourceDataState.Success)
+                return@channelFlow
             }
         }
 
@@ -149,26 +162,36 @@ class SourceLinksProviderUseCase @Inject constructor(
             if (provider.name != preferredProviderName && isChangingProvider)
                 continue
 
-            emit(SourceDataState.Fetching(UiText.StringResource(UtilR.string.fetching_from_provider_format, provider.name)))
+            trySend(SourceDataState.Fetching(UiText.StringResource(UtilR.string.fetching_from_provider_format, provider.name)))
 
             if (provider.useWebView) {
-                runWebView(
+                val sourceData = getLinks(
+                    filmId = film.id,
+                    episode = episodeToUse
+                )
+
+                cache[cacheKey] = sourceData.copy(
+                    mediaId = "${film.id}-WEBVIEW",
+                    providerName = provider.name
+                )
+
+                val webView =
                     provider.getWebView(
+                        film = film,
+                        episode = episodeToUse,
                         context = context,
                         callback = object : WebViewCallback {
-                            val sourceData = getLinks(
-                                filmId = film.id,
-                                episode = episodeToUse
-                            )
-
                             override suspend fun onError() {
-                                emit(SourceDataState.Error(UiText.StringResource(UtilR.string.default_error)))
+                                trySend(SourceDataState.Error(UiText.StringResource(UtilR.string.default_error)))
                                 onError?.invoke()
+                                cancel()
                             }
 
                             override suspend fun onSuccess(episode: TMDBEpisode?) {
-                                emit(SourceDataState.Success)
+                                trySend(SourceDataState.Success)
                                 onSuccess.invoke(episode)
+                                debugLog("Success cancelling now!")
+                                cancel()
                             }
 
                             override fun onSubtitleLoaded(subtitle: Subtitle) {
@@ -192,12 +215,13 @@ class SourceLinksProviderUseCase @Inject constructor(
                             }
 
                             override suspend fun updateDialogState(state: SourceDataState) {
-                                emit(state)
+                                trySend(state)
                             }
                         },
                     )!!
-                )
-                return@flow
+
+                runWebView(webView)
+                awaitCancellation()
             }
 
             val canStopLooping = i == providersList.lastIndex
@@ -213,16 +237,22 @@ class SourceLinksProviderUseCase @Inject constructor(
             if (mediaIdToUse.isNullOrEmpty()) {
                 if (canStopLooping) {
                     onError?.invoke()
-                    return@flow emit(SourceDataState.Unavailable())
+                    trySend(SourceDataState.Unavailable())
+                    return@channelFlow
                 }
 
                 continue
             }
 
-            emit(SourceDataState.Extracting(UiText.StringResource(UtilR.string.extracting_from_provider_format, provider.name)))
+            trySend(SourceDataState.Extracting(UiText.StringResource(UtilR.string.extracting_from_provider_format, provider.name)))
 
             if (cachedSourceData != null) {
                 cachedSourceData.run {
+                    /**
+                     *
+                     * Only clear links since subtitles
+                     * could be used on other provider's [SourceData]
+                     * */
                     /**
                      *
                      * Only clear links since subtitles
@@ -275,19 +305,21 @@ class SourceLinksProviderUseCase @Inject constructor(
                 is Resource.Failure -> {
                     if (canStopLooping) {
                         onError?.invoke()
-                        return@flow emit(SourceDataState.Error(result.error))
+                        trySend(SourceDataState.Error(result.error))
+                        return@channelFlow
                     }
                 }
 
                 Resource.Loading -> Unit
                 is Resource.Success -> {
                     onSuccess(episodeToUse)
-                    return@flow emit(SourceDataState.Success)
+                    trySend(SourceDataState.Success)
+                    return@channelFlow
                 }
             }
         }
 
-        emit(SourceDataState.Unavailable())
+        trySend(SourceDataState.Unavailable())
     }
 
     /**

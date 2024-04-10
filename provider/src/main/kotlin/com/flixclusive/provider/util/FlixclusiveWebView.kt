@@ -1,25 +1,15 @@
 package com.flixclusive.provider.util
 
 import android.content.Context
-import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams
 import android.webkit.WebView
-import com.flixclusive.core.util.network.USER_AGENT
+import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.TMDBEpisode
 
 abstract class FlixclusiveWebView(
-    private val context: Context,
-    private val callback: WebViewCallback
+    filmToScrape: Film,
+    context: Context,
+    callback: WebViewCallback,
+    episodeData: TMDBEpisode? = null,
 ) : WebView(context) {
-    init {
-        settings.javaScriptEnabled = true
-        settings.domStorageEnabled = true
-        settings.userAgentString = USER_AGENT
-
-        layoutParams = LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-        )
-    }
-
-    abstract fun startScraping()
+    abstract suspend fun startScraping()
 }

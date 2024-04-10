@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,7 +73,9 @@ import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.provider.util.FlixclusiveWebView
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 interface PlayerScreenNavigator : GoBackAction {
@@ -125,7 +128,9 @@ fun PlayerScreen(
     val seasonData by viewModel.season.collectAsStateWithLifecycle()
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
+    val scope = rememberCoroutineScope()
     var webView: FlixclusiveWebView? by remember { mutableStateOf(null) }
+    var scrapeJob: Job? by remember { mutableStateOf(null) }
 
     val currentPlayerTitle = remember(currentSelectedEpisode) {
         formatPlayerTitle(args.film, currentSelectedEpisode)
@@ -539,6 +544,7 @@ fun PlayerScreen(
                 state = dialogState,
                 onConsumeDialog = {
                     viewModel.onConsumePlayerDialog()
+                    scrapeJob?.cancel()
                     webView?.destroy()
                     webView = null
 
@@ -551,7 +557,14 @@ fun PlayerScreen(
             if (webView != null) {
                 AndroidView(
                     factory = { _ -> webView!! },
-                    update = { it.startScraping() },
+                    update = {
+                        if (scrapeJob?.isActive == true)
+                            return@AndroidView
+
+                        scrapeJob = scope.launch {
+                            it.startScraping()
+                        }
+                    },
                     modifier = Modifier
                         .height(0.5.dp)
                         .width(0.5.dp)
