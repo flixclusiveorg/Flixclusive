@@ -67,7 +67,7 @@ internal fun ProviderSettingsTopBar(
                 }
 
                 Text(
-                    text = stringResource(id = R.string.repository),
+                    text = stringResource(id = R.string.provider_settings),
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.SemiBold
                     ),
