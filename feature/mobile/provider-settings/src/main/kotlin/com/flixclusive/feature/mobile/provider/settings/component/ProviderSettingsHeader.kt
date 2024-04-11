@@ -5,13 +5,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -50,10 +51,77 @@ internal fun ProviderSettingsHeader(
         HeaderIcon(
             providerData = providerData,
             modifier = Modifier
-                .padding(bottom = 8.dp)
+                .padding(bottom = 10.dp)
         )
 
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = LocalContentColor.current.onMediumEmphasis()
+        )
+
+        ProvidersOtherInfo(providerData = providerData)
+
         AuthorsList(authors = providerData.authors)
+    }
+}
+
+@Composable
+private fun ProvidersOtherInfo(
+    providerData: ProviderData
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        OtherInfoText(
+            title = stringResource(id = UtilR.string.version),
+            subtitle = "v${providerData.versionName}"
+        )
+
+        OtherInfoText(
+            title = stringResource(id = UtilR.string.content),
+            subtitle = providerData.providerType.toString()
+        )
+
+        OtherInfoText(
+            title = stringResource(id = UtilR.string.status),
+            subtitle = providerData.status.toString()
+        )
+    }
+}
+
+@Composable
+private fun OtherInfoText(
+    modifier: Modifier = Modifier,
+    title: String,
+    subtitle: String
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.Black,
+                color = LocalContentColor.current.onMediumEmphasis(0.8F),
+                fontSize = 18.sp
+            )
+        )
+
+        Text(
+            text = subtitle,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Medium,
+                color = LocalContentColor.current.onMediumEmphasis(0.4F),
+                fontSize = 16.sp
+            )
+        )
     }
 }
 
@@ -70,7 +138,7 @@ private fun AuthorsList(
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            Divider(
+            HorizontalDivider(
                 thickness = 1.dp,
                 color = LocalContentColor.current.onMediumEmphasis()
             )
@@ -103,7 +171,7 @@ private fun AuthorsList(
             }
         }
 
-        Divider(
+        HorizontalDivider(
             thickness = 1.dp,
             color = LocalContentColor.current.onMediumEmphasis()
         )
@@ -133,23 +201,12 @@ private fun HeaderIcon(
             text = providerData.name,
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Black,
-                fontSize = 21.sp
+                fontSize = 25.sp
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .padding(top = 12.dp, bottom = 2.dp)
-        )
-
-        Text(
-            text = "v${providerData.versionName}",
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Medium,
-                color = LocalContentColor.current.onMediumEmphasis(0.4F),
-                fontSize = 14.sp
-            )
         )
     }
 }
