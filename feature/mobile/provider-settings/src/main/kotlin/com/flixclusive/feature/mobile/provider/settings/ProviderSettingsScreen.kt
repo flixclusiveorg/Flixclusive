@@ -11,12 +11,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
+import com.flixclusive.feature.mobile.provider.settings.component.ChangeLogsDialog
 import com.flixclusive.feature.mobile.provider.settings.component.ProviderSettingsHeader
 import com.flixclusive.feature.mobile.provider.settings.component.ProviderSettingsTopBar
 import com.flixclusive.gradle.entities.ProviderData
@@ -39,12 +42,16 @@ fun ProviderSettingsScreen(
     val listState = rememberLazyListState()
     val shouldShowTopBar by listState.isScrollingUp()
 
+    var isChangeLogsDialogShown by remember { mutableStateOf(false) }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             ProviderSettingsTopBar(
                 isVisible = shouldShowTopBar,
                 repositoryUrl = args.providerData.repositoryUrl,
+                changeLogs = args.providerData.changelog,
+                openChangeLogs = { isChangeLogsDialogShown = true },
                 onNavigationIconClick = navigator::goBack
             )
         }
@@ -84,5 +91,13 @@ fun ProviderSettingsScreen(
                 }
             }
         }
+    }
+
+    if (isChangeLogsDialogShown) {
+        ChangeLogsDialog(
+            changeLogs = args.providerData.changelog ?: "",
+            changeLogsHeaderImage = args.providerData.changelogMedia,
+            onDismiss = { isChangeLogsDialogShown = false }
+        )
     }
 }
