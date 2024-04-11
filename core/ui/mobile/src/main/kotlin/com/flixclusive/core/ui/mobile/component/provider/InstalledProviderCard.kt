@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
@@ -84,10 +84,10 @@ fun InstalledProviderCard(
                     providerData = providerData,
                 )
 
-                Divider(
-                    thickness = 0.5.dp,
+                HorizontalDivider(
                     modifier = Modifier
-                        .padding(top = 15.dp)
+                        .padding(top = 15.dp),
+                    thickness = 0.5.dp
                 )
 
                 BottomCardContent(
