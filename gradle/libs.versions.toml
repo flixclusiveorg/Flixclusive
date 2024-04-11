@@ -37,6 +37,7 @@ kotlin = "1.9.10"
 ksp = "1.9.10-1.0.13"
 lifecycleRuntime = "2.6.2"
 localbroadcastmanager = "1.1.0"
+markdown = "0.4.1"
 material = "1.11.0"
 material3 = "1.1.2"
 media3 = '1.2.0'
@@ -122,6 +123,8 @@ media3-cast = { group = "androidx.media3", name = "media3-cast", version.ref = "
 media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3" }
 media3-datasource-okhttp = { group = "androidx.media3", name = "media3-datasource-okhttp", version.ref = "media3" }
 
+# Markdown
+markdown = { module = "com.github.jeziellago:compose-markdown", version.ref = "markdown" }
 
 # Hilt
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt"}
