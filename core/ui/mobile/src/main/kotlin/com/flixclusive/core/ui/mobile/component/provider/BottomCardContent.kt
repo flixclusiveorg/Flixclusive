@@ -1,14 +1,16 @@
 package com.flixclusive.core.ui.mobile.component.provider
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
@@ -22,7 +24,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.Status
@@ -43,13 +48,34 @@ internal fun BottomCardContent(
         horizontalArrangement = if (providerData.changelog != null) Arrangement.SpaceBetween else Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (providerData.changelog != null) {
-            Icon(
-                painter = painterResource(id = UiCommonR.drawable.round_update_24),
-                contentDescription = stringResource(id = UtilR.string.provider_updates_log),
-                tint = LocalContentColor.current.onMediumEmphasis(0.4F),
+        val color = when (providerData.status) {
+            Status.Down -> Color(0xFFFF3030)
+            Status.Maintenance -> Color(0xFFFFBF1B)
+            Status.Beta -> Color(0xFF00C4FF)
+            Status.Working -> Color(0xFF00FF04)
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .weight(1F)
+        ) {
+            Box(
                 modifier = Modifier
-                    .size(23.dp)
+                    .background(color, CircleShape)
+                    .size(7.dp)
+            )
+
+            Text(
+                text = providerData.status.toString(),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    color = color.onMediumEmphasis(0.4F),
+                    fontSize = 11.sp
+                )
             )
         }
 
