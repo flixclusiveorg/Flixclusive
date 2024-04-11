@@ -104,7 +104,7 @@ internal fun BottomCardContent(
             ) {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.provider_settings),
-                    contentDescription = stringResource(id = UtilR.string.provider_settings_icon_content_desc),
+                    contentDescription = stringResource(id = UtilR.string.provider_settings),
                     modifier = Modifier
                         .scale(0.8F)
                 )

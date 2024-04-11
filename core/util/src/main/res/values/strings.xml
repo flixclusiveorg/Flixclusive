@@ -82,6 +82,7 @@
     <string name="browse_movie_companies">Top Movie Companies</string>
     <string name="browse_tv_networks">Top TV Networks</string>
     <string name="cancel">Cancel</string>
+    <string name="change_logs">CHANGE LOGS</string>
     <string name="check_for_updates">Check for updates</string>
     <string name="clear_app_cache">Clear app cache</string>
     <string name="close_label">Close</string>
@@ -126,6 +127,7 @@
     <string name="preferred_resize_mode">Preferred resize mode</string>
     <string name="privacy_notice">Privacy notice</string>
     <string name="provider_disclaimer">Providers Disclaimer</string>
+    <string name="provider_settings">Provider Settings</string>
     <string name="rating">Rating</string>
     <string name="release">RELEASE</string>
     <string name="release_player">Release player on app minimize</string>
@@ -231,6 +233,7 @@
     <string name="audio_icon_content_desc">Audio icon</string>
     <string name="author_icon_content_desc">Author icon</string>
     <string name="backward_button_content_description">Backward button for the player</string>
+    <string name="change_logs_image_content_desc">Change logs image logo</string>
     <string name="clear_cache_content_desc">Clear cache</string>
     <string name="clear_text_button">Clear text button</string>
     <string name="copy_button">Copy to clipboard button</string>
@@ -259,7 +262,6 @@
     <string name="play_pause_button_content_description">Play or pause button</string>
     <string name="poster_content_description">A poster of %1$s</string>
     <string name="provider_icon_content_desc">Default icon of a provider</string>
-    <string name="provider_settings_icon_content_desc">Provider settings</string>
     <string name="provider_updates_log">Provider\'s update logs</string>
     <string name="rating_icon">Rating Icon</string>
     <string name="release_player_desc">For seamless playback, turn this off. Though, this is required to free device memory.</string>
