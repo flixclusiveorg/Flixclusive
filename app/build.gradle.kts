@@ -46,24 +46,12 @@ android {
     }
 
     buildTypes {
-        release {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-
         getByName("prerelease") {
             initWith(getByName("release"))
-            isMinifyEnabled = false
-            isShrinkResources = false
-
             applicationIdSuffix = ".pre_release"
-            versionNameSuffix = "-PreR-[${getCommitVersion()}]"
+            versionNameSuffix = "-[${getCommitVersion()}]"
 
-            resValue("string", "app_name", "$applicationName Pre-Release")
+            resValue("string", "app_name", "$applicationName Beta")
             resValue("string", "application_id", _applicationId + applicationIdSuffix)
             resValue("string", "version_name", _versionName + versionNameSuffix)
         }
