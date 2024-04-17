@@ -24,6 +24,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
@@ -50,8 +51,8 @@ import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.provider.util.FlixclusiveWebView
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -88,8 +89,7 @@ fun PlayerScreen(
 
     val context = LocalContext.current.getActivity<ComponentActivity>()
     val scope = rememberCoroutineScope()
-
-    var webView: FlixclusiveWebView? by remember { mutableStateOf(null) }
+    
     var scrapeJob: Job? by remember { mutableStateOf(null) }
 
     var hasLaunchedFromIdle by remember { mutableStateOf(false) }
@@ -126,18 +126,17 @@ fun PlayerScreen(
         if (episodeToPlay != null) {
             viewModel.onEpisodeClick(
                 episodeToWatch = episodeToPlay,
-                runWebView = { webView = it }
+                runWebView = viewModel::onRunWebView
             )
         } else {
-            viewModel.loadSourceData(runWebView = { webView = it })
+            viewModel.loadSourceData(runWebView = viewModel::onRunWebView)
         }
     }
 
     LaunchedEffect(dialogState, isIdle, isPlayerRunning) {
         if (!isPlayerRunning && dialogState is SourceDataState.Success && isIdle && !hasLaunchedFromIdle) {
             scrapeJob?.cancel()
-            webView?.destroy()
-            webView = null
+            viewModel.onDestroyWebView()
 
             hasLaunchedFromIdle = true
             onPlayerScreenVisibilityChange(true)
@@ -150,47 +149,53 @@ fun PlayerScreen(
 
     if(
         ((dialogState !is SourceDataState.Success
-        && dialogState !is SourceDataState.Idle) || webView != null)
+        && dialogState !is SourceDataState.Idle) || viewModel.webView != null)
         && isPlayerRunning
     ) {
         Box(
             contentAlignment = Alignment.Center
         ) {
-            SourceDataDialog(
-                state = dialogState,
-                onConsumeDialog = {
-                    scrapeJob?.cancel()
-                    if (dialogState !is SourceDataState.Success) {
-                        webView?.destroy()
-                        webView = null
+            if (dialogState !is SourceDataState.Success
+                && dialogState !is SourceDataState.Idle) {
+                SourceDataDialog(
+                    state = dialogState,
+                    onConsumeDialog = {
+                        scrapeJob?.cancel()
+                        if (dialogState !is SourceDataState.Success) {
+                            viewModel.onDestroyWebView()
 
-                        viewModel.onConsumePlayerDialog()
-                        onBack(true)
+                            viewModel.onConsumePlayerDialog()
+                            onBack(true)
+                        }
                     }
-                }
-            )
+                )
+            }
 
-            if (webView != null) {
+            if (viewModel.webView != null) {
                 AndroidView(
-                    factory = { _ -> webView!! },
-                    update = {
-                        if (scrapeJob?.isActive == true)
-                            return@AndroidView
+                    factory = { _ ->
+                        viewModel.webView!!.also {
+                            scope.launch {
+                                val shouldPlay = viewModel.player.isPlaying
+                                async { it.startScraping() }
 
-                        scrapeJob = scope.launch {
-                            it.startScraping()
+                                delay(200)
+                                if (shouldPlay) {
+                                    viewModel.player.play()
+                                }
+                            }
                         }
                     },
                     modifier = Modifier
                         .height(0.5.dp)
                         .width(0.5.dp)
+                        .alpha(0F)
                 )
             }
         }
     }
     else {
-        webView?.destroy()
-        webView = null
+        viewModel.onDestroyWebView()
     }
 
     AnimatedVisibility(
@@ -411,7 +416,7 @@ fun PlayerScreen(
                         onServerChange = viewModel::onServerChange,
                         onProviderChange = { newProvider ->
                             viewModel.onProviderChange(
-                                runWebView = { webView = it },
+                                runWebView = viewModel::onRunWebView,
                                 newProvider = newProvider
                             )
                         },
@@ -431,7 +436,7 @@ fun PlayerScreen(
                                     duration = duration
                                 )
 
-                                viewModel.onEpisodeClick(runWebView = { webView = it })
+                                viewModel.onEpisodeClick(runWebView = viewModel::onRunWebView)
                             }
                         },
                     )

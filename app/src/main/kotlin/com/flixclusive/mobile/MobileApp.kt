@@ -49,7 +49,6 @@ import com.ramcosta.composedestinations.dynamic.within
 import com.ramcosta.composedestinations.navigation.navigate
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import com.ramcosta.composedestinations.utils.startDestination
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 import com.flixclusive.core.util.R as UtilR
@@ -71,7 +70,6 @@ internal fun MobileActivity.MobileApp(
     var fullScreenImageToShow: String? by remember { mutableStateOf(null) }
 
     var webView: FlixclusiveWebView? by remember { mutableStateOf(null) }
-    var scrapeJob: Job? by remember { mutableStateOf(null) }
 
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -88,7 +86,6 @@ internal fun MobileActivity.MobileApp(
 
     val onStartPlayer = {
         viewModel.setPlayerModeState(isInPlayer = true)
-        scrapeJob?.cancel()
         webView?.destroy()
         webView = null
         viewModel.onConsumeSourceDataDialog()
@@ -236,7 +233,7 @@ internal fun MobileActivity.MobileApp(
             )
         }
 
-        if (uiState.sourceDataState !is SourceDataState.Idle || webView != null) {
+        if (uiState.sourceDataState !is SourceDataState.Idle && webView != null) {
             window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             Box(
                 contentAlignment = Alignment.Center
@@ -247,7 +244,6 @@ internal fun MobileActivity.MobileApp(
                     onSkipExtractingPhase = onStartPlayer,
                     onConsumeDialog = {
                         viewModel.onConsumeSourceDataDialog(isForceClosing = true)
-                        scrapeJob?.cancel()
                         webView?.destroy()
                         webView = null
                         viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
@@ -256,13 +252,11 @@ internal fun MobileActivity.MobileApp(
 
                 if(webView != null) {
                     AndroidView(
-                        factory = { _ -> webView!! },
-                        update = {
-                            if (scrapeJob?.isActive == true)
-                                return@AndroidView
-
-                            scrapeJob = scope.launch {
-                                it.startScraping()
+                        factory = { _ ->
+                            webView!!.also {
+                                scope.launch {
+                                    it.startScraping()
+                                }
                             }
                         },
                         modifier = Modifier

@@ -140,12 +140,6 @@ class SourceLinksProviderUseCase @Inject constructor(
              * If user chose the same film or the [FilmKey] is valid,
              * then just proceed with the same cached link.
              * */
-
-            /**
-             *
-             * If user chose the same film or the [FilmKey] is valid,
-             * then just proceed with the same cached link.
-             * */
             if (
                 data != null
                 && data.cachedLinks.isNotEmpty()
@@ -186,13 +180,14 @@ class SourceLinksProviderUseCase @Inject constructor(
                             override suspend fun onError() {
                                 trySend(SourceDataState.Error(UiText.StringResource(UtilR.string.default_error)))
                                 onError?.invoke()
+                                debugLog("Destroying WebView...")
                                 cancel()
                             }
 
                             override suspend fun onSuccess(episode: TMDBEpisode?) {
                                 trySend(SourceDataState.Success)
                                 onSuccess.invoke(episode)
-                                debugLog("Success cancelling now!")
+                                debugLog("Destroying WebView...")
                                 cancel()
                             }
 

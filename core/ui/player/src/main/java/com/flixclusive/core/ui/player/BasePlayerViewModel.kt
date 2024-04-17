@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -51,6 +52,8 @@ abstract class BasePlayerViewModel(
 ) : ViewModel() {
     val film = args.film
 
+    var webView: FlixclusiveWebView? by mutableStateOf(null)
+        private set
     val player = FlixclusivePlayerManager(
         client = client,
         context = context,
@@ -124,6 +127,15 @@ abstract class BasePlayerViewModel(
                 selectedProvider = sourceData.providerName,
             )
         }
+    }
+
+    fun onRunWebView(webView: FlixclusiveWebView) {
+        this.webView = webView
+    }
+
+    fun onDestroyWebView() {
+        webView?.destroy()
+        webView = null
     }
 
     /**
@@ -206,7 +218,9 @@ abstract class BasePlayerViewModel(
                 isChangingProvider = true,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = currentSelectedEpisode.value,
-                onSuccess = { _ -> 
+                onSuccess = { _ ->
+                    onDestroyWebView()
+
                     resetUiState()
                     resetNextEpisodeQueue()
                 },
@@ -215,7 +229,11 @@ abstract class BasePlayerViewModel(
                     updateProviderSelected(oldSelectedSource)
                     showErrorOnUiCallback(UiText.StringResource(UtilR.string.failed_to_retrieve_provider_message_format))
                 }
-            ).collect { state ->
+            ).onCompletion {
+                if (it != null) {
+                    onDestroyWebView()
+                }
+            }.collect { state ->
                 when (state) {
                     SourceDataState.Idle,
                     is SourceDataState.Error,
@@ -402,7 +420,7 @@ abstract class BasePlayerViewModel(
         }
 
         viewModelScope.launch {
-            // If there's a queued next episode, stop the video and go next
+            // If there's a queued next episode, skip loading the video and go next
             val isLoadingNextEpisode = episodeToWatch == null
             val hasNextEpisode = getQueuedEpisode()
 
@@ -454,12 +472,18 @@ abstract class BasePlayerViewModel(
                 episode = episodeToWatch,
                 runWebView = runWebView,
                 onSuccess = { newEpisode ->
+                    onDestroyWebView()
+
                     _currentSelectedEpisode.value = newEpisode
 
                     resetUiState()
                     resetNextEpisodeQueue()
                 }
-            ).collect {
+            ).onCompletion {
+                if (it != null) {
+                    onDestroyWebView()
+                }
+            }.collect {
                 _dialogState.value = it
             }
         }
@@ -518,10 +542,16 @@ abstract class BasePlayerViewModel(
                 episode = episode,
                 runWebView = runWebView,
                 onSuccess = { newEpisode ->
+                    onDestroyWebView()
+
                     nextEpisodeToUse = newEpisode
                     isNextEpisodeLoaded = true
                 }
-            ).collect()
+            ).onCompletion {
+                if (it != null) {
+                    onDestroyWebView()
+                }
+            }.collect()
         }
     }
 

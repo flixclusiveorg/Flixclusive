@@ -31,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -71,9 +72,8 @@ import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.provider.util.FlixclusiveWebView
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -129,8 +129,6 @@ fun PlayerScreen(
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
-    var webView: FlixclusiveWebView? by remember { mutableStateOf(null) }
-    var scrapeJob: Job? by remember { mutableStateOf(null) }
 
     val currentPlayerTitle = remember(currentSelectedEpisode) {
         formatPlayerTitle(args.film, currentSelectedEpisode)
@@ -173,7 +171,7 @@ fun PlayerScreen(
     fun onEpisodeClick(episode: TMDBEpisode? = null) {
         viewModel.onEpisodeClick(
             episodeToWatch = episode,
-            runWebView = { webView = it }
+            runWebView = viewModel::onRunWebView
         )
     }
 
@@ -199,7 +197,7 @@ fun PlayerScreen(
         if (sourceData.mediaId.isEmpty() || sourceData.providerName.isEmpty()) {
             when(args.film) {
                 is TvShow -> onEpisodeClick(args.episodeToPlay)
-                is Movie -> viewModel.loadSourceData(runWebView = { webView = it })
+                is Movie -> viewModel.loadSourceData(runWebView = viewModel::onRunWebView)
                 else -> throw IllegalStateException("Invalid film instance [${args.film.filmType}]: ${args.film}")
             }
         }
@@ -380,7 +378,7 @@ fun PlayerScreen(
             isInPipMode = isInPipMode,
             showSnackbar = viewModel::showSnackbar,
             onQueueNextEpisode = {
-                viewModel.onQueueNextEpisode(runWebView = { webView = it })
+                viewModel.onQueueNextEpisode(runWebView = viewModel::onRunWebView)
             }
         )
 
@@ -467,7 +465,7 @@ fun PlayerScreen(
                 onProviderChange = { newProvider ->
                     viewModel.onProviderChange(
                         newProvider =  newProvider,
-                        runWebView = { webView = it }
+                        runWebView = viewModel::onRunWebView
                     )
                 },
                 onResizeModeChange = viewModel::onResizeModeChange,
@@ -527,7 +525,7 @@ fun PlayerScreen(
         }
     }
 
-    if (dialogState !is SourceDataState.Idle || webView != null) {
+    if (dialogState !is SourceDataState.Idle || viewModel.webView != null) {
         LaunchedEffect(Unit) {
             viewModel.player.run {
                 if (isPlaying) {
@@ -540,40 +538,43 @@ fun PlayerScreen(
         Box(
             contentAlignment = Alignment.Center
         ) {
-            SourceDataDialog(
-                state = dialogState,
-                onConsumeDialog = {
-                    viewModel.onConsumePlayerDialog()
-                    scrapeJob?.cancel()
-                    webView?.destroy()
-                    webView = null
+            if (dialogState !is SourceDataState.Idle) {
+                SourceDataDialog(
+                    state = dialogState,
+                    onConsumeDialog = {
+                        viewModel.onDestroyWebView()
+                        viewModel.onConsumePlayerDialog()
 
-                    if (viewModel.player.playWhenReady) {
-                        viewModel.player.play()
+                        if (viewModel.player.playWhenReady) {
+                            viewModel.player.play()
+                        }
                     }
-                }
-            )
+                )
+            }
 
-            if (webView != null) {
+            if (viewModel.webView != null) {
                 AndroidView(
-                    factory = { _ -> webView!! },
-                    update = {
-                        if (scrapeJob?.isActive == true)
-                            return@AndroidView
+                    factory = { _ ->
+                        viewModel.webView!!.also {
+                            scope.launch {
+                                val shouldPlay = viewModel.player.isPlaying
+                                async { it.startScraping() }
 
-                        scrapeJob = scope.launch {
-                            it.startScraping()
+                                delay(200)
+                                if (shouldPlay) {
+                                    viewModel.player.play()
+                                }
+                            }
                         }
                     },
                     modifier = Modifier
                         .height(0.5.dp)
                         .width(0.5.dp)
+                        .alpha(0F)
                 )
             }
         }
-    }
-    else {
-        webView?.destroy()
-        webView = null
+    } else {
+        viewModel.onDestroyWebView()
     }
 }
