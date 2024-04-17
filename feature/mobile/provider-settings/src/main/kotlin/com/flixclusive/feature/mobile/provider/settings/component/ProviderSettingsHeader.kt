@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,6 +32,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.getProviderStatusColor
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
+import com.flixclusive.feature.mobile.provider.settings.util.getFlagFromLanguageCode
 import com.flixclusive.gradle.entities.Author
 import com.flixclusive.gradle.entities.Language
 import com.flixclusive.gradle.entities.ProviderData
@@ -59,66 +59,6 @@ internal fun ProviderSettingsHeader(
 
 
         AuthorsList(authors = providerData.authors)
-    }
-}
-
-@Composable
-private fun ProvidersOtherInfo(
-    providerData: ProviderData
-) {
-    Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        OtherInfoText(
-            title = stringResource(id = UtilR.string.version),
-            subtitle = "v${providerData.versionName}"
-        )
-
-        OtherInfoText(
-            title = stringResource(id = UtilR.string.content),
-            subtitle = providerData.providerType.toString()
-        )
-
-        OtherInfoText(
-            title = stringResource(id = UtilR.string.status),
-            subtitle = providerData.status.toString()
-        )
-    }
-}
-
-@Composable
-private fun OtherInfoText(
-    modifier: Modifier = Modifier,
-    title: String,
-    subtitle: String
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier,
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Black,
-                color = LocalContentColor.current.onMediumEmphasis(0.8F),
-                fontSize = 15.sp
-            )
-        )
-
-        Text(
-            text = subtitle,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Medium,
-                color = LocalContentColor.current.onMediumEmphasis(0.4F),
-                fontSize = 14.sp
-            )
-        )
     }
 }
 
@@ -221,6 +161,8 @@ private fun HeaderIcon(
             text = buildAnnotatedString {
                 withStyle(commonStyle.toSpanStyle()) {
                     append("v${providerData.versionName}")
+                    append(" - ")
+                    append(getFlagFromLanguageCode(providerData.language.languageCode))
                     append(" - ")
                 }
 
