@@ -311,9 +311,7 @@
     </string>
     <string name="disclaimer_provider_message">
         <![CDATA[
-        The app utilizes the services of movie/TV show providers obtained from the internet. It does not host these providers; instead, it utilizes their services. The app assumes no responsibility for the content displayed. Legal issues pertaining to the movies/TV shows should be addressed directly with the respective third-party providers.\n\n
-
-        Please note that while some of the providers will be trusted, others may not be. Users are advised to exercise caution.
+        The app utilizes the services of movie/TV show providers obtained from the internet. It does not host these providers; instead, it utilizes their services. The app assumes no responsibility for the content displayed. Legal issues pertaining to the movies/TV shows should be addressed directly with the respective third-party providers.\n\nPlease note that while some of the providers will be trusted, others may not be. Users are advised to exercise caution.
         ]]>
     </string>
     <string name="privacy_notice_opt_in">Opt-in to crash data collection</string>

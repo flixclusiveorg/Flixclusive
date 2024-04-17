@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +46,7 @@ import com.flixclusive.core.util.R as UtilR
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun Consent(
+    modifier: Modifier = Modifier,
     header: String,
     consentContent: String,
     buttonLabel: String? = null,
@@ -60,15 +61,15 @@ fun Consent(
     var isOptIn by remember { mutableStateOf(true) }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(horizontal = 5.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Divider(
-            thickness = 0.5.dp,
+        HorizontalDivider(
             modifier = Modifier
-                .padding(vertical = 8.dp)
+                .padding(vertical = 8.dp),
+            thickness = 0.5.dp
         )
 
         Text(
