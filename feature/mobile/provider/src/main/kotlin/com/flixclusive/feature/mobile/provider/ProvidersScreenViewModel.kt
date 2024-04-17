@@ -9,6 +9,7 @@ import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.gradle.entities.ProviderData
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -20,7 +21,11 @@ class ProvidersScreenViewModel @Inject constructor(
     private val providerManager: ProviderManager,
     appSettingsManager: AppSettingsManager,
 ) : ViewModel() {
-    val providerDataMap = providerManager.providerDataMap
+    val providerDataList = providerManager.providerDataList
+
+    private var uninstallJob: Job? = null
+    private var toggleJob: Job? = null
+    private var swapJob: Job? = null
 
     var searchQuery by mutableStateOf("")
         private set
@@ -39,20 +44,33 @@ class ProvidersScreenViewModel @Inject constructor(
     }
 
     fun onMove(fromIndex: Int, toIndex: Int) {
-        viewModelScope.launch {
-            providerManager.swap(fromIndex, toIndex)
+        if (swapJob?.isActive == true) {
+            return
+        }
+
+        swapJob = viewModelScope.launch {
+            // Minus 2 since LazyList has initialized headers
+            providerManager.swap(fromIndex - 2, toIndex - 2)
         }
     }
 
     fun toggleProvider(providerData: ProviderData) {
-        viewModelScope.launch {
+        if (toggleJob?.isActive == true) {
+            return
+        }
+
+        toggleJob = viewModelScope.launch {
             providerManager.toggleUsage(providerData)
         }
     }
 
-    fun uninstallProvider(providerData: ProviderData) {
-        viewModelScope.launch {
-            providerManager.unloadProvider(providerData)
+    fun uninstallProvider(index: Int) {
+        if (uninstallJob?.isActive == true) {
+            return
+        }
+
+        uninstallJob = viewModelScope.launch {
+            providerManager.unloadProvider(providerSettings.value[index])
         }
     }
 }

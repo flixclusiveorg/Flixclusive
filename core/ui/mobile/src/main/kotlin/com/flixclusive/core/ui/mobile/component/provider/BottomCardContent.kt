@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -110,14 +109,10 @@ internal fun BottomCardContent(
                 checked = enabled,
                 enabled = providerData.status != Status.Maintenance && providerData.status != Status.Down,
                 colors = SwitchDefaults.colors(
-                    disabledCheckedThumbColor = if (providerData.status == Status.Maintenance)
-                        Color(0xFF331821)
-                    else MaterialTheme.colorScheme.surface
+                    disabledCheckedThumbColor = MaterialTheme.colorScheme.surface
                         .onMediumEmphasis(1F)
                         .compositeOver(MaterialTheme.colorScheme.surface),
-                    disabledCheckedTrackColor = if (providerData.status == Status.Maintenance)
-                        Color(0xFFFC93B7)
-                    else MaterialTheme.colorScheme.onSurface
+                    disabledCheckedTrackColor = MaterialTheme.colorScheme.onSurface
                         .onMediumEmphasis(0.12F)
                         .compositeOver(MaterialTheme.colorScheme.surface),
                 ),

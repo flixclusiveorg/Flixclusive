@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +38,7 @@ import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
 import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
 import com.flixclusive.feature.mobile.provider.util.rememberDragDropListState
 import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.gradle.entities.Status
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -65,15 +66,13 @@ fun ProvidersScreen(
 
     val searchExpanded = rememberSaveable { mutableStateOf(false) }
 
-    val installedProviders by remember {
+    val filteredProviders by remember {
         derivedStateOf {
-            val list = viewModel.providerDataMap.values.toList()
-
             when (viewModel.searchQuery.isNotEmpty()) {
-                true -> list.filter {
+                true -> viewModel.providerDataList.filter {
                     it.name.contains(viewModel.searchQuery, true)
                 }
-                false -> list
+                false -> null
             }
         }
     }
@@ -132,25 +131,29 @@ fun ProvidersScreen(
                 }
 
                 item {
-                    Divider(
+                    HorizontalDivider(
                         thickness = 1.dp,
                         color = LocalContentColor.current.onMediumEmphasis(0.4F)
                     )
                 }
 
-                itemsIndexed(installedProviders) { index, providerData ->
+                itemsIndexed(filteredProviders ?: viewModel.providerDataList) { index, providerData ->
                     val displacementOffset =
                         if (index + 2 == dragDropListState.getCurrentIndexOfDraggedListItem()) {
                             dragDropListState.elementDisplacement.takeIf { it != 0f }
                         } else null
 
+                    val isEnabled = providerData.status != Status.Maintenance
+                        && providerData.status != Status.Down
+                        && (providerSettings.getOrNull(index)?.isDisabled?.not() ?: true)
+
                     InstalledProviderCard(
                         providerData = providerData,
-                        enabled = !providerSettings[index].isDisabled,
+                        enabled = isEnabled,
                         isDraggable = !searchExpanded.value,
                         displacementOffset = displacementOffset,
                         openSettings = { navigator.openProviderSettings(providerData) },
-                        uninstallProvider = { viewModel.uninstallProvider(providerData) },
+                        uninstallProvider = { viewModel.uninstallProvider(index) },
                         onToggleProvider = { viewModel.toggleProvider(providerData) }
                     )
                 }

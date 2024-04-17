@@ -60,7 +60,8 @@ class RepositoryScreenViewModel @Inject constructor(
                     onlineProviders.data!!.forEach { provider ->
                         var providerCardState = ProviderCardState.NotInstalled
 
-                        if (providerManager.providerDataMap[provider.name] != null) {
+                        val isInstalledAlready = providerManager.providerDataList.any { it.name.equals(provider.name, true) }
+                        if (isInstalledAlready) {
                             providerCardState = ProviderCardState.Installed
                         }
 
