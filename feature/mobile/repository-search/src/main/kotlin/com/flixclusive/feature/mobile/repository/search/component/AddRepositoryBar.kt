@@ -139,7 +139,16 @@ internal fun AddRepositoryBar(
         )
 
         ElevatedButton(
-            onClick = onAdd,
+            onClick = {
+                if (urlQuery.value.contains("raw.githubusercontent.com", true)) {
+                    urlQuery.value = parseGithubUrl(urlQuery.value)!!
+                }
+
+                keyboardController?.hide()
+                focusManager.clearFocus()
+
+                onAdd()
+            },
             shape = MaterialTheme.shapes.extraSmall,
             modifier = Modifier
                 .height(50.dp)
