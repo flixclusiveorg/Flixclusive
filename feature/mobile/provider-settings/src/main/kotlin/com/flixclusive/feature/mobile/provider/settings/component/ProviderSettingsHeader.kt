@@ -22,12 +22,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.util.getProviderStatusColor
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.gradle.entities.Author
@@ -54,12 +57,6 @@ internal fun ProviderSettingsHeader(
                 .padding(bottom = 10.dp)
         )
 
-        HorizontalDivider(
-            thickness = 1.dp,
-            color = LocalContentColor.current.onMediumEmphasis()
-        )
-
-        ProvidersOtherInfo(providerData = providerData)
 
         AuthorsList(authors = providerData.authors)
     }
@@ -108,7 +105,7 @@ private fun OtherInfoText(
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Black,
                 color = LocalContentColor.current.onMediumEmphasis(0.8F),
-                fontSize = 18.sp
+                fontSize = 15.sp
             )
         )
 
@@ -119,7 +116,7 @@ private fun OtherInfoText(
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Medium,
                 color = LocalContentColor.current.onMediumEmphasis(0.4F),
-                fontSize = 16.sp
+                fontSize = 14.sp
             )
         )
     }
@@ -183,6 +180,15 @@ private fun HeaderIcon(
     modifier: Modifier = Modifier,
     providerData: ProviderData
 ) {
+    val statusColor = getProviderStatusColor(providerData.status).onMediumEmphasis(0.6F)
+    val contentColor = LocalContentColor.current.onMediumEmphasis(0.4F)
+
+    val commonStyle = MaterialTheme.typography.titleMedium.copy(
+        fontWeight = FontWeight.Medium,
+        color = contentColor,
+        fontSize = 14.sp
+    )
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -206,7 +212,44 @@ private fun HeaderIcon(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
-                .padding(top = 12.dp, bottom = 2.dp)
+                .padding(top = 12.dp)
+        )
+
+        Text(
+            modifier = Modifier
+                .padding(vertical = 2.dp),
+            text = buildAnnotatedString {
+                withStyle(commonStyle.toSpanStyle()) {
+                    append("v${providerData.versionName}")
+                    append(" - ")
+                }
+
+                withStyle(
+                    commonStyle.copy(
+                        color = statusColor
+                    ).toSpanStyle()
+                ) {
+                    append(providerData.status.toString())
+                }
+            },
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Medium,
+                color = contentColor,
+                fontSize = 14.sp
+            )
+        )
+
+        Text(
+            text = providerData.providerType.toString(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Medium,
+                color = contentColor,
+                fontSize = 14.sp
+            )
         )
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.ui.common.util.getProviderStatusColor
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.Status
@@ -48,12 +49,7 @@ internal fun BottomCardContent(
         horizontalArrangement = if (providerData.changelog != null) Arrangement.SpaceBetween else Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val color = when (providerData.status) {
-            Status.Down -> Color(0xFFFF3030)
-            Status.Maintenance -> Color(0xFFFFBF1B)
-            Status.Beta -> Color(0xFF00C4FF)
-            Status.Working -> Color(0xFF00FF04)
-        }
+        val color = getProviderStatusColor(providerData.status)
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
