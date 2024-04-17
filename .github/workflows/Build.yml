@@ -81,13 +81,12 @@ jobs:
           name: "Pre-release build"
           body: |
             ---
-            _NOTE: Android TV is incomplete. Though, you could test it now._
+            _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
             
             ### Changes
             
             ### Known issues
             - TV focus crashes. Compose TV is bugged af; we wait til the new update.
-            - Please don't install the release version of this pre-release tag yet. Providers have been removed for the upcoming versions to prepare for the soon providers system of this app. Thanks!
             
             ---
             ##### The `prerelease` apk is similar to release but for _debugging_ purposes only. Use this if you want to test the latest features without messing up your authentic release data.
