@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -133,11 +133,11 @@ fun RepositoryScreen(
                 }
 
                 item {
-                    Divider(
-                        thickness = 1.dp,
-                        color = LocalContentColor.current.onMediumEmphasis(0.4F),
+                    HorizontalDivider(
                         modifier = Modifier
-                            .padding(vertical = 10.dp)
+                            .padding(vertical = 10.dp),
+                        thickness = 1.dp,
+                        color = LocalContentColor.current.onMediumEmphasis(0.4F)
                     )
                 }
 
@@ -158,10 +158,20 @@ fun RepositoryScreen(
                 }
                 else if (viewModel.onlineProviderMap.isNotEmpty()) {
                     item {
+                        val canInstallAll by remember {
+                            derivedStateOf {
+                                viewModel.onlineProviderMap.any { (_, state) ->
+                                    state == ProviderCardState.NotInstalled
+                                }
+                            }
+                        }
+
                         CustomOutlineButton(
                             onClick = viewModel::installAll,
                             iconId = UiCommonR.drawable.download,
+                            isLoading = viewModel.installAllJob?.isActive == true,
                             label = stringResource(id = UtilR.string.install_all),
+                            enabled = canInstallAll,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -173,9 +183,7 @@ fun RepositoryScreen(
                         ProviderCard(
                             providerData = providerData,
                             state = viewModel.onlineProviderMap[providerData] ?: ProviderCardState.NotInstalled,
-                            onClick = {
-                                viewModel.toggleProvider(providerData)
-                            },
+                            onClick = { viewModel.toggleProvider(providerData) },
                             modifier = Modifier
                                 .padding(vertical = 5.dp)
                                 .animateItemPlacement()

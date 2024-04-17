@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.repository.component
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -119,9 +121,12 @@ internal fun CustomOutlineButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     @DrawableRes iconId: Int,
-    label: String
+    label: String,
+    isLoading: Boolean = false,
+    enabled: Boolean = true,
 ) {
     OutlinedButton(
+        enabled = enabled,
         onClick = onClick,
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8F)
@@ -134,21 +139,39 @@ internal fun CustomOutlineButton(
         shape = MaterialTheme.shapes.small,
         modifier = modifier,
     ) {
-        Icon(
-            painter = painterResource(id = iconId),
-            contentDescription = label,
-            modifier = Modifier
-                .size(20.dp)
-        )
+        AnimatedContent(
+            targetState = isLoading,
+            label = ""
+        ) { state ->
+            if (state) {
+                CircularProgressIndicator(
+                    strokeWidth = 2.dp,
+                    modifier = Modifier
+                        .size(20.dp)
+                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(id = iconId),
+                        contentDescription = label,
+                        modifier = Modifier
+                            .size(20.dp)
+                    )
 
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Medium
-            ),
-            modifier = Modifier
-                .padding(start = 5.dp)
-        )
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        modifier = Modifier
+                            .padding(start = 5.dp)
+                    )
+                }
+
+            }
+        }
     }
 }
 

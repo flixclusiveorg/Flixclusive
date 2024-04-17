@@ -38,6 +38,9 @@ class RepositoryScreenViewModel @Inject constructor(
     val onlineProviderMap = mutableStateMapOf<ProviderData, ProviderCardState>()
 
     private var initJob: Job? = null
+    private var installJob: Job? = null
+    var installAllJob: Job? by mutableStateOf(null)
+        private set
 
     init {
         initialize()
@@ -76,36 +79,55 @@ class RepositoryScreenViewModel @Inject constructor(
     }
 
     fun installAll() {
-        onlineProviderMap.forEach { data, state ->
-            TODO("Not yet implemented")
+        if (installAllJob?.isActive == true) {
+            return
+        }
+
+        installAllJob = viewModelScope.launch {
+            onlineProviderMap.forEach { (data, state) ->
+                if (state == ProviderCardState.Installed)
+                    return@forEach
+
+                if (!installProvider(data)) {
+                    return@launch
+                }
+            }
         }
     }
 
-    fun toggleProvider(
-        providerData: ProviderData
-    ) {
-        viewModelScope.launch {
+    fun toggleProvider(providerData: ProviderData) {
+        if (installJob?.isActive == true) {
+            return
+        }
+
+        installJob = viewModelScope.launch {
             val isUninstalling = onlineProviderMap[providerData] == ProviderCardState.Installed
 
             if (isUninstalling) {
                 providerManager.unloadProvider(providerData)
                 onlineProviderMap[providerData] = ProviderCardState.NotInstalled
             } else {
-                onlineProviderMap[providerData] = ProviderCardState.Installing
-                try {
-                    providerManager.loadProvider(
-                        providerData = providerData,
-                        needsDownload = true
-                    )
-                } catch (_: Exception) {
-                    snackbarError = Resource.Failure(UiText.StringResource(UtilR.string.failed_to_load_provider, providerData.name))
-                    onlineProviderMap[providerData] = ProviderCardState.NotInstalled
-                    return@launch
-                }
-
-                onlineProviderMap[providerData] = ProviderCardState.Installed
+                installProvider(providerData)
             }
         }
+    }
+
+    private suspend fun installProvider(providerData: ProviderData): Boolean {
+        onlineProviderMap[providerData] = ProviderCardState.Installing
+
+        try {
+            providerManager.loadProvider(
+                providerData = providerData,
+                needsDownload = true
+            )
+        } catch (_: Exception) {
+            snackbarError = Resource.Failure(UiText.StringResource(UtilR.string.failed_to_load_provider, providerData.name))
+            onlineProviderMap[providerData] = ProviderCardState.NotInstalled
+            return false
+        }
+
+        onlineProviderMap[providerData] = ProviderCardState.Installed
+        return true
     }
 
     fun onSearchQueryChange(newQuery: String) {
