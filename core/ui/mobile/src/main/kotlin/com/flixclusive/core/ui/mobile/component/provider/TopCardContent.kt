@@ -1,6 +1,7 @@
 package com.flixclusive.core.ui.mobile.component.provider
 
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,15 +40,20 @@ internal fun TopCardContent(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        if (isDraggable) {
-            Icon(
-                painter = painterResource(id = R.drawable.round_drag_indicator_24),
-                contentDescription = stringResource(
-                    id = UtilR.string.drag_icon_content_desc
-                ),
-                modifier = Modifier
-                    .size(30.dp)
-            )
+        AnimatedContent(
+            targetState = isDraggable,
+            label = ""
+        ) { state ->
+            if (state) {
+                Icon(
+                    painter = painterResource(id = R.drawable.round_drag_indicator_24),
+                    contentDescription = stringResource(
+                        id = UtilR.string.drag_icon_content_desc
+                    ),
+                    modifier = Modifier
+                        .size(30.dp)
+                )
+            }
         }
 
         ImageWithSmallPlaceholder(

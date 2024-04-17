@@ -66,7 +66,9 @@ class SourceLinksProviderUseCase @Inject constructor(
      val providerApis: List<ProviderApi>
         get() = providersRepository.providers
             .filterKeys { provider ->
-                val providerData = providersManager.providerDataMap[provider] ?: return@filterKeys false
+                val providerData = providersManager.providerDataList.find {
+                    it.name.equals(provider, true)
+                } ?: return@filterKeys false
 
                 providerData.status != Status.Maintenance
                 && providerData.status != Status.Down

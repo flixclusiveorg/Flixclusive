@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,10 +44,12 @@ fun InstalledProviderCard(
     val isBeingDragged = remember(displacementOffset) {
         displacementOffset != null
     }
-    
-    val isNotMaintenance = providerData.status != Status.Maintenance && enabled
 
-    val color = if (isBeingDragged && isNotMaintenance && isDraggable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceVariant
+    val color = when {
+        isBeingDragged && enabled && isDraggable -> MaterialTheme.colorScheme.tertiary
+        enabled -> Color.Unspecified
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
 
     Box(
         modifier = Modifier
@@ -55,15 +58,23 @@ fun InstalledProviderCard(
         contentAlignment = Alignment.Center
     ) {
         Card(
-            enabled = isNotMaintenance,
-            onClick = onToggleProvider,
+            onClick = {
+                if (providerData.status != Status.Maintenance
+                    && providerData.status != Status.Down) {
+                    onToggleProvider()
+                }
+            },
             interactionSource = interactionSource,
             shape = MaterialTheme.shapes.medium,
             colors = CardDefaults.cardColors(
                 containerColor = color,
-                contentColor = contentColorFor(backgroundColor = color)
+                contentColor = contentColorFor(
+                    backgroundColor = color.copy(
+                        if (!enabled) 0.4F else 1F
+                    )
+                )
             ),
-            border = if (isBeingDragged && isNotMaintenance || pressed)
+            border = if (isBeingDragged && enabled || pressed)
                 BorderStroke(
                     width = 2.dp,
                     color = contentColorFor(color)
