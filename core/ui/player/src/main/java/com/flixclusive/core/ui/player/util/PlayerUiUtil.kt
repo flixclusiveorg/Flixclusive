@@ -289,7 +289,6 @@ object PlayerUiUtil {
                             playbackDelayed = false
                         }
                         playerManager.pause()
-                        playerManager.playWhenReady = false
                     }
                     AudioManager.AUDIOFOCUS_LOSS -> {
                         synchronized(focusLock) {
