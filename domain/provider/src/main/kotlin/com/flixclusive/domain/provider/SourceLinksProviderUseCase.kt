@@ -72,6 +72,7 @@ class SourceLinksProviderUseCase @Inject constructor(
 
                 providerData.status != Status.Maintenance
                 && providerData.status != Status.Down
+                && providersManager.isProviderEnabled(providerData.name)
             }
             .flatMap { (_, provider) -> provider.toList() }
 
@@ -224,22 +225,24 @@ class SourceLinksProviderUseCase @Inject constructor(
             val canStopLooping = i == providersList.lastIndex
             val needsNewMediaId = mediaId != null && provider.name != preferredProviderName
 
-            val mediaIdToUse = if (needsNewMediaId || mediaId == null) {
+            val mediaIdResource = if (needsNewMediaId || mediaId == null) {
                 sourceLinksRepository.getMediaId(
                     film = film,
                     providerApi = provider
                 )
-            } else mediaId
+            } else Resource.Success(mediaId)
 
-            if (mediaIdToUse.isNullOrEmpty()) {
+            if (mediaIdResource is Resource.Failure || mediaIdResource.data.isNullOrBlank()) {
                 if (canStopLooping) {
                     onError?.invoke()
-                    trySend(SourceDataState.Unavailable())
+                    trySend(SourceDataState.Unavailable(mediaIdResource.error))
                     return@channelFlow
                 }
 
                 continue
             }
+
+            val mediaIdToUse = mediaIdResource.data!!
 
             trySend(SourceDataState.Extracting(UiText.StringResource(UtilR.string.extracting_from_provider_format, provider.name)))
 

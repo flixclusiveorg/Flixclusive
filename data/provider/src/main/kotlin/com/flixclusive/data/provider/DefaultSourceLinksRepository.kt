@@ -54,11 +54,11 @@ class DefaultSourceLinksRepository @Inject constructor(
     override suspend fun getMediaId(
         film: Film?,
         providerApi: ProviderApi,
-    ): String? {
+    ): Resource<String?> {
         return withContext(ioDispatcher) {
             try {
                 if (film == null)
-                    return@withContext null
+                    return@withContext Resource.Failure(UtilR.string.default_error)
 
                 var i = 1
                 var id: String? = null
@@ -66,7 +66,7 @@ class DefaultSourceLinksRepository @Inject constructor(
 
                 while (id == null) {
                     if (i > maxPage) {
-                        return@withContext ""
+                        return@withContext Resource.Success(null)
                     }
 
                     val searchResponse = providerApi.search(
@@ -76,7 +76,7 @@ class DefaultSourceLinksRepository @Inject constructor(
                     )
 
                     if (searchResponse.results.isEmpty())
-                        return@withContext ""
+                        return@withContext Resource.Success(null)
 
 
                     for(result in searchResponse.results) {
@@ -119,15 +119,14 @@ class DefaultSourceLinksRepository @Inject constructor(
                     if (searchResponse.hasNextPage) {
                         i++
                     } else if (id.isNullOrEmpty()) {
-                        id = ""
                         break
                     }
                 }
 
-                id
+                Resource.Success(id)
             } catch (e: Exception) {
                 errorLog(e.stackTraceToString())
-                null
+                Resource.Failure(UtilR.string.source_data_dialog_state_unavailable_default)
             }
         }
     }
