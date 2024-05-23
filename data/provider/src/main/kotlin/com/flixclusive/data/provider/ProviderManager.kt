@@ -121,7 +121,7 @@ class ProviderManager @Inject constructor(
             }
 
             val randomProviderFile = fromJson<List<ProviderData>>(updaterJsonFile.reader())
-                .randomOrNull()
+                .firstOrNull()
                 ?: return@folderMap
 
             val repository = randomProviderFile.repositoryUrl?.toValidRepositoryLink()
@@ -132,6 +132,27 @@ class ProviderManager @Inject constructor(
                     it.copy(repositories = it.repositories + repository)
                 }
             }
+
+            folder.listFiles()
+                ?.mapAsync { providerFile ->
+                    val isProviderNotYetLoaded
+                        = providerSettings.providers.any {
+                            it.filePath == providerFile.absolutePath
+                        }.not()
+
+                    if (isProviderNotYetLoaded) {
+                        appSettingsManager.updateProviderSettings {
+                            it.copy(
+                                providers =
+                                    it.providers + ProviderPreference(
+                                        name = providerFile.nameWithoutExtension,
+                                        filePath = providerFile.absolutePath,
+                                        isDisabled = false
+                                    )
+                            )
+                        }
+                    }
+                }
         }
     }
 
