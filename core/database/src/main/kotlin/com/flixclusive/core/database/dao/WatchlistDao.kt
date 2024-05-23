@@ -5,7 +5,6 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
-import com.flixclusive.model.database.UserWithWatchlist
 import com.flixclusive.model.database.WatchlistItem
 import kotlinx.coroutines.flow.Flow
 
@@ -24,10 +23,22 @@ interface WatchlistDao {
     suspend fun getWatchlistItemById(filmId: Int, ownerId: Int): WatchlistItem?
 
     @Transaction
-    @Query("SELECT * FROM User where userId = :ownerId")
-    suspend fun getAllItems(ownerId: Int): UserWithWatchlist?
+    @Query("""
+        SELECT w.* 
+        FROM watchlist as w
+        JOIN User as u 
+        ON w.ownerId = u.userId
+        WHERE userId = :ownerId
+    """)
+    suspend fun getAllItems(ownerId: Int): List<WatchlistItem>
 
     @Transaction
-    @Query("SELECT * FROM User where userId = :ownerId")
-    fun getAllItemsInFlow(ownerId: Int): Flow<UserWithWatchlist?>
+    @Query("""
+        SELECT w.* 
+        FROM watchlist as w
+        JOIN User as u 
+        ON w.ownerId = u.userId
+        WHERE userId = :ownerId
+    """)
+    fun getAllItemsInFlow(ownerId: Int): Flow<List<WatchlistItem>>
 }

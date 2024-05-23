@@ -5,19 +5,32 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.flixclusive.model.database.UserWithWatchHistoryList
 import com.flixclusive.model.database.WatchHistoryItem
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WatchHistoryDao {
     @Transaction
-    @Query("SELECT * FROM User where userId = :ownerId IN (SELECT DISTINCT ownerId FROM watch_history)")
-    fun getAllItemsInFlow(ownerId: Int): Flow<UserWithWatchHistoryList?>
+    @Query("""
+        SELECT wh.* 
+        FROM watch_history AS wh
+        JOIN User AS u 
+        ON wh.ownerId = u.userId 
+        WHERE u.userId = :ownerId
+        ORDER BY wh.dateWatched DESC;
+    """)
+    fun getAllItemsInFlow(ownerId: Int): Flow<List<WatchHistoryItem>>
 
     @Transaction
-    @Query("SELECT * FROM User where userId = :ownerId IN (SELECT DISTINCT ownerId FROM watch_history ORDER BY RANDOM() LIMIT :count)")
-    suspend fun getRandomItems(ownerId: Int, count: Int): UserWithWatchHistoryList?
+    @Query("""
+        SELECT wh.* 
+        FROM watch_history AS wh
+        JOIN User AS u 
+        ON wh.ownerId = u.userId
+        WHERE userId = :ownerId
+        ORDER BY RANDOM() LIMIT :count
+    """)
+    suspend fun getRandomItems(ownerId: Int, count: Int): List<WatchHistoryItem>
 
     @Query("SELECT * FROM watch_history WHERE id = :itemId AND ownerId = :ownerId")
     suspend fun getWatchHistoryItemById(itemId: Int, ownerId: Int): WatchHistoryItem?
