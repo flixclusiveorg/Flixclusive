@@ -134,8 +134,7 @@ private fun HeaderIcon(
         modifier = modifier
     ) {
         ImageWithSmallPlaceholder(
-            modifier = Modifier
-                .size(100.dp),
+            modifier = Modifier.size(100.dp),
             placeholderModifier = Modifier.size(55.dp),
             urlImage = providerData.iconUrl,
             placeholderId = UiCommonR.drawable.provider_logo,

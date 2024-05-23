@@ -447,7 +447,7 @@ class ProviderManager @Inject constructor(
      * @param name Name of the provider
      * @return Whether the provider is enabled
      */
-    private fun isProviderEnabled(name: String): Boolean {
+    fun isProviderEnabled(name: String): Boolean {
         return appSettingsManager
             .localProviderSettings
             .providers

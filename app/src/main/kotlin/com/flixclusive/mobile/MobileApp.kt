@@ -233,7 +233,7 @@ internal fun MobileActivity.MobileApp(
             )
         }
 
-        if (uiState.sourceDataState !is SourceDataState.Idle && webView != null) {
+        if (uiState.sourceDataState !is SourceDataState.Idle) {
             window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             Box(
                 contentAlignment = Alignment.Center

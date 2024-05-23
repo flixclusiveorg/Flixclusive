@@ -20,5 +20,5 @@ interface SourceLinksRepository {
     suspend fun getMediaId(
         film: Film?,
         providerApi: ProviderApi,
-    ): String?
+    ): Resource<String?>
 }
