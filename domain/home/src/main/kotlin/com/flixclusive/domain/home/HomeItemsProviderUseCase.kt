@@ -84,7 +84,7 @@ class HomeItemsProviderUseCase @Inject constructor(
                 getHomeRecommendations(),
                 getUserRecommendations()
             ).onEach { item ->
-                _categories.value = _categories.value + listOf(item)
+                _categories.value += listOf(item)
             }.onCompletion {
                 rowItemsPaginationJobs.addAll(List(_categories.value.size) { null })
                 _rowItems.value = List(_categories.value.size) { emptyList() }
@@ -332,7 +332,7 @@ class HomeItemsProviderUseCase @Inject constructor(
      * Random pauses for humanizing effect
      * */
     private suspend fun humanizer() {
-        delay(Random.nextLong(0, 30))
+        delay(Random.nextLong(0, 100))
     }
 
     private fun updatePagingState(
