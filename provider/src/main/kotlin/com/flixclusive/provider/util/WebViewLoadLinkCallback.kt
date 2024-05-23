@@ -8,8 +8,6 @@ import com.flixclusive.model.tmdb.TMDBEpisode
 interface WebViewCallback {
     suspend fun onSuccess(episode: TMDBEpisode?)
 
-    suspend fun onError()
-
 
     fun onSubtitleLoaded(subtitle: Subtitle)
 

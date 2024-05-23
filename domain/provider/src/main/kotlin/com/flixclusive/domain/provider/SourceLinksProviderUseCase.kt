@@ -22,12 +22,12 @@ import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.util.FlixclusiveWebView
 import com.flixclusive.provider.util.WebViewCallback
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import com.flixclusive.core.util.R as UtilR
 
 /**
@@ -64,17 +64,19 @@ class SourceLinksProviderUseCase @Inject constructor(
     }
 
      val providerApis: List<ProviderApi>
-        get() = providersRepository.providers
-            .filterKeys { provider ->
-                val providerData = providersManager.providerDataList.find {
-                    it.name.equals(provider, true)
-                } ?: return@filterKeys false
+         get() = providersManager
+             .providerDataList
+             .flatMap { data ->
+                 val api = providersRepository.providers.getValue(data.name)
 
-                providerData.status != Status.Maintenance
-                && providerData.status != Status.Down
-                && providersManager.isProviderEnabled(providerData.name)
-            }
-            .flatMap { (_, provider) -> provider.toList() }
+                 if (
+                     data.status != Status.Maintenance
+                     && data.status != Status.Down
+                     && providersManager.isProviderEnabled(data.name)
+                 ) return@flatMap api
+
+                 emptyList()
+             }
 
     /**
      *
@@ -162,64 +164,70 @@ class SourceLinksProviderUseCase @Inject constructor(
             trySend(SourceDataState.Fetching(UiText.StringResource(UtilR.string.fetching_from_provider_format, provider.name)))
 
             if (provider.useWebView) {
-                val sourceData = getLinks(
-                    filmId = film.id,
-                    episode = episodeToUse
-                )
+                val webView: FlixclusiveWebView
+                val shouldContinue = suspendCoroutine { continuation ->
+                    val sourceData = getLinks(
+                        filmId = film.id,
+                        episode = episodeToUse
+                    )
 
-                cache[cacheKey] = sourceData.copy(
-                    mediaId = "${film.id}-WEBVIEW",
-                    providerName = provider.name
-                )
+                    cache[cacheKey] = sourceData.copy(
+                        mediaId = "${film.id}-WEBVIEW",
+                        providerName = provider.name
+                    )
 
-                val webView =
-                    provider.getWebView(
-                        film = film,
-                        episode = episodeToUse,
-                        context = context,
-                        callback = object : WebViewCallback {
-                            override suspend fun onError() {
-                                trySend(SourceDataState.Error(UiText.StringResource(UtilR.string.default_error)))
-                                onError?.invoke()
-                                debugLog("Destroying WebView...")
-                                cancel()
-                            }
+                    webView =
+                        provider.getWebView(
+                            film = film,
+                            episode = episodeToUse,
+                            context = context,
+                            callback = object : WebViewCallback {
+                                override suspend fun onSuccess(episode: TMDBEpisode?) {
+                                    trySend(SourceDataState.Success)
+                                    onSuccess.invoke(episode)
+                                    debugLog("Destroying WebView...")
+                                    continuation.resume(false)
+                                }
 
-                            override suspend fun onSuccess(episode: TMDBEpisode?) {
-                                trySend(SourceDataState.Success)
-                                onSuccess.invoke(episode)
-                                debugLog("Destroying WebView...")
-                                cancel()
-                            }
-
-                            override fun onSubtitleLoaded(subtitle: Subtitle) {
-                                sourceData.run {
-                                    if (!cachedSubtitles.contains(subtitle)) {
-                                        if (cachedSourceData != null) {
-                                            cachedSubtitles.add(0, subtitle)
-                                        } else cachedSubtitles.add(subtitle)
+                                override fun onSubtitleLoaded(subtitle: Subtitle) {
+                                    sourceData.run {
+                                        if (!cachedSubtitles.contains(subtitle)) {
+                                            if (cachedSourceData != null) {
+                                                cachedSubtitles.add(0, subtitle)
+                                            } else cachedSubtitles.add(subtitle)
+                                        }
                                     }
                                 }
-                            }
 
-                            override fun onLinkLoaded(link: SourceLink) {
-                                sourceData.run {
-                                    if (!cachedLinks.contains(link)) {
-                                        if (cachedSourceData != null) {
-                                            cachedLinks.add(0, link)
-                                        } else cachedLinks.add(link)
+                                override fun onLinkLoaded(link: SourceLink) {
+                                    sourceData.run {
+                                        if (!cachedLinks.contains(link)) {
+                                            if (cachedSourceData != null) {
+                                                cachedLinks.add(0, link)
+                                            } else cachedLinks.add(link)
+                                        }
                                     }
                                 }
-                            }
 
-                            override suspend fun updateDialogState(state: SourceDataState) {
-                                trySend(state)
-                            }
-                        },
-                    )!!
+                                override suspend fun updateDialogState(state: SourceDataState) {
+                                    trySend(state)
 
-                runWebView(webView)
-                awaitCancellation()
+                                    if (state is SourceDataState.Error || state is SourceDataState.Unavailable) {
+                                        onError?.invoke()
+                                        debugLog("Destroying WebView...")
+                                        continuation.resume(true)
+                                    }
+                                }
+                            },
+                        )!!
+
+                    runWebView(webView)
+                }
+
+                webView.destroy()
+                if (shouldContinue) {
+                    continue
+                }
             }
 
             val canStopLooping = i == providersList.lastIndex
