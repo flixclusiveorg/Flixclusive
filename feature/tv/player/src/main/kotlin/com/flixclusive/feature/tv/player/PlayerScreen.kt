@@ -90,7 +90,7 @@ fun PlayerScreen(
     val context = LocalContext.current.getActivity<ComponentActivity>()
     val scope = rememberCoroutineScope()
     
-    var scrapeJob: Job? by remember { mutableStateOf(null) }
+    var scrapingJob: Job? by remember { mutableStateOf(null) }
 
     var hasLaunchedFromIdle by remember { mutableStateOf(false) }
 
@@ -135,8 +135,9 @@ fun PlayerScreen(
 
     LaunchedEffect(dialogState, isIdle, isPlayerRunning) {
         if (!isPlayerRunning && dialogState is SourceDataState.Success && isIdle && !hasLaunchedFromIdle) {
-            scrapeJob?.cancel()
             viewModel.onDestroyWebView()
+            scrapingJob?.cancel()
+            scrapingJob = null
 
             hasLaunchedFromIdle = true
             onPlayerScreenVisibilityChange(true)
@@ -160,13 +161,11 @@ fun PlayerScreen(
                 SourceDataDialog(
                     state = dialogState,
                     onConsumeDialog = {
-                        scrapeJob?.cancel()
-                        if (dialogState !is SourceDataState.Success) {
-                            viewModel.onDestroyWebView()
-
-                            viewModel.onConsumePlayerDialog()
-                            onBack(true)
-                        }
+                        viewModel.onDestroyWebView()
+                        scrapingJob?.cancel()
+                        scrapingJob = null
+                        viewModel.onConsumePlayerDialog()
+                        onBack(true)
                     }
                 )
             }
@@ -175,7 +174,7 @@ fun PlayerScreen(
                 AndroidView(
                     factory = { _ ->
                         viewModel.webView!!.also {
-                            scope.launch {
+                            scrapingJob = scope.launch {
                                 val shouldPlay = viewModel.player.isPlaying
                                 async { it.startScraping() }
 
@@ -196,6 +195,8 @@ fun PlayerScreen(
     }
     else {
         viewModel.onDestroyWebView()
+        scrapingJob?.cancel()
+        scrapingJob = null
     }
 
     AnimatedVisibility(
