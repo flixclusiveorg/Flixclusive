@@ -17,6 +17,7 @@ data class FilmImpl(
     override val language: String = "en",
     override val genres: List<Genre> = emptyList(),
     override val isReleased: Boolean = true,
+    override val recommendedTitles: List<Recommendation> = emptyList()
 ) : Film, Serializable
 
 fun Film.toFilmInstance(): FilmImpl {
@@ -32,6 +33,7 @@ fun Film.toFilmInstance(): FilmImpl {
         rating = rating,
         genres = genres,
         language = language,
-        isReleased = isReleased
+        isReleased = isReleased,
+        recommendedTitles = recommendedTitles
     )
 }
