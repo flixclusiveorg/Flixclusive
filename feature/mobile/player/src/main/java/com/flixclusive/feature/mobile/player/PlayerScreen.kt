@@ -73,6 +73,7 @@ import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -129,6 +130,7 @@ fun PlayerScreen(
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
+    var scrapingJob by remember { mutableStateOf<Job?>(null) }
 
     val currentPlayerTitle = remember(currentSelectedEpisode) {
         formatPlayerTitle(args.film, currentSelectedEpisode)
@@ -543,6 +545,8 @@ fun PlayerScreen(
                     state = dialogState,
                     onConsumeDialog = {
                         viewModel.onDestroyWebView()
+                        scrapingJob?.cancel()
+                        scrapingJob = null
                         viewModel.onConsumePlayerDialog()
 
                         if (viewModel.player.playWhenReady) {
@@ -556,7 +560,7 @@ fun PlayerScreen(
                 AndroidView(
                     factory = { _ ->
                         viewModel.webView!!.also {
-                            scope.launch {
+                            scrapingJob = scope.launch {
                                 val shouldPlay = viewModel.player.isPlaying
                                 async { it.startScraping() }
 
@@ -576,5 +580,7 @@ fun PlayerScreen(
         }
     } else {
         viewModel.onDestroyWebView()
+        scrapingJob?.cancel()
+        scrapingJob = null
     }
 }

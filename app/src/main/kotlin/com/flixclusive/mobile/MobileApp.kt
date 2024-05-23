@@ -49,6 +49,7 @@ import com.ramcosta.composedestinations.dynamic.within
 import com.ramcosta.composedestinations.navigation.navigate
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import com.ramcosta.composedestinations.utils.startDestination
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 import com.flixclusive.core.util.R as UtilR
@@ -72,6 +73,8 @@ internal fun MobileActivity.MobileApp(
     var webView: FlixclusiveWebView? by remember { mutableStateOf(null) }
 
     val scope = rememberCoroutineScope()
+    var scrapingJob by remember { mutableStateOf<Job?>(null) }
+
     val snackbarHostState = remember { SnackbarHostState() }
     val skipPartiallyExpanded by remember { mutableStateOf(true) }
     val bottomSheetState = rememberModalBottomSheetState(
@@ -244,6 +247,8 @@ internal fun MobileActivity.MobileApp(
                     onSkipExtractingPhase = onStartPlayer,
                     onConsumeDialog = {
                         viewModel.onConsumeSourceDataDialog(isForceClosing = true)
+                        scrapingJob?.cancel()
+                        scrapingJob = null
                         webView?.destroy()
                         webView = null
                         viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
@@ -254,7 +259,7 @@ internal fun MobileActivity.MobileApp(
                     AndroidView(
                         factory = { _ ->
                             webView!!.also {
-                                scope.launch {
+                                scrapingJob = scope.launch {
                                     it.startScraping()
                                 }
                             }
