@@ -6,7 +6,6 @@ import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.model.database.WatchlistItem
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -32,9 +31,7 @@ internal class DefaultWatchlistRepository @Inject constructor(
 
     override suspend fun getAllItems(ownerId: Int): List<WatchlistItem> = withContext(ioDispatcher) {
         watchlistDao.getAllItems(ownerId)
-            ?.watchlist ?: emptyList()
     }
 
     override fun getAllItemsInFlow(ownerId: Int): Flow<List<WatchlistItem>> = watchlistDao.getAllItemsInFlow(ownerId)
-        .map { it?.watchlist ?: emptyList() }
 }

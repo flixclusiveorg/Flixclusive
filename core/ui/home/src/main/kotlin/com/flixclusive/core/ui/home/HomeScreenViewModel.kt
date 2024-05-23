@@ -32,8 +32,8 @@ private fun filterWatchedFilms(watchHistoryItem: WatchHistoryItem): Boolean {
     if (watchHistoryItem.episodesWatched.isEmpty()) {
         isFinished = false
     } else if(isTvShow) {
-        val nextEpisodeToWatch = getNextEpisodeToWatch(watchHistoryItem)
-        if(nextEpisodeToWatch.first != null)
+        val (nextEpisodeToWatch, _) = getNextEpisodeToWatch(watchHistoryItem)
+        if(nextEpisodeToWatch != null)
             isFinished = false
     } else {
         isFinished = watchHistoryItem.episodesWatched.last().isFinished
