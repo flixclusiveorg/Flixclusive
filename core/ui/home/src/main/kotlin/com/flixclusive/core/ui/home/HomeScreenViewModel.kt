@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -78,13 +79,17 @@ class HomeScreenViewModel @Inject constructor(
 
     val continueWatchingList = watchHistoryRepository
         .getAllItemsInFlow()
-        .onEach { items ->
+        .map { items ->
             items.filterNot(::filterWatchedFilms)
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking { watchHistoryRepository.getAllItemsInFlow().first()  }
+            initialValue = runBlocking {
+                watchHistoryRepository.getAllItemsInFlow()
+                    .first()
+                    .filterNot(::filterWatchedFilms)
+            }
         )
 
     init {
