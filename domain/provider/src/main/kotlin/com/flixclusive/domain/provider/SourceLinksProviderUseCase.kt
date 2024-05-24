@@ -185,7 +185,7 @@ class SourceLinksProviderUseCase @Inject constructor(
                                 override suspend fun onSuccess(episode: TMDBEpisode?) {
                                     trySend(SourceDataState.Success)
                                     onSuccess.invoke(episode)
-                                    debugLog("Destroying WebView...")
+                                    debugLog("Successful scraping. Destroying WebView...")
                                     continuation.resume(false)
                                 }
 
@@ -214,7 +214,7 @@ class SourceLinksProviderUseCase @Inject constructor(
 
                                     if (state is SourceDataState.Error || state is SourceDataState.Unavailable) {
                                         onError?.invoke()
-                                        debugLog("Destroying WebView...")
+                                        debugLog("Unsuccessful scraping. Destroying WebView...")
                                         continuation.resume(true)
                                     }
                                 }
@@ -228,6 +228,8 @@ class SourceLinksProviderUseCase @Inject constructor(
                 if (shouldContinue) {
                     continue
                 }
+
+                break
             }
 
             val canStopLooping = i == providersList.lastIndex
