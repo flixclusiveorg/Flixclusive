@@ -49,6 +49,7 @@ import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.util.android.getDirectorySize
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.feature.mobile.settings.component.PreReleaseUpdatesWarningDialog
 import com.flixclusive.feature.mobile.settings.component.SettingsGroup
 import com.flixclusive.feature.mobile.settings.component.dialog.advanced.AdvancedDialogWrapper
 import com.flixclusive.feature.mobile.settings.component.dialog.player.PlayerDialogWrapper
@@ -80,6 +81,7 @@ fun SettingsScreen(
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
 
     var sizeSummary: String? by remember { mutableStateOf(null) }
+    var isOptingInOnPreReleaseUpdates by remember { mutableStateOf(false) }
 
     fun updateAppCacheSize() {
         sizeSummary = safeCall {
@@ -99,13 +101,19 @@ fun SettingsScreen(
             title = stringResource(UtilR.string.sign_up_prerelease),
             description = stringResource(UtilR.string.signup_prerelease_updates_desc),
             onClick = {
-                viewModel.onChangeSettings(appSettings.copy(isUsingPrereleaseUpdates = !appSettings.isUsingPrereleaseUpdates))
+                if (!appSettings.isUsingPrereleaseUpdates) {
+                    viewModel.onChangeSettings(appSettings.copy(isUsingPrereleaseUpdates = false))
+                } else isOptingInOnPreReleaseUpdates = true
             },
             previewContent = {
                 Switch(
                     checked = appSettings.isUsingPrereleaseUpdates,
                     onCheckedChange = {
-                        viewModel.onChangeSettings(appSettings.copy(isUsingPrereleaseUpdates = it))
+                        if (!it) {
+                            viewModel.onChangeSettings(appSettings.copy(isUsingPrereleaseUpdates = false))
+                        } else {
+                            isOptingInOnPreReleaseUpdates = true
+                        }
                     },
                     modifier = Modifier.scale(0.7F)
                 )
@@ -478,6 +486,16 @@ fun SettingsScreen(
         onChange = viewModel::onChangeSettings,
         onDismissDialog = viewModel::toggleDialog
     )
+
+    if (isOptingInOnPreReleaseUpdates) {
+        PreReleaseUpdatesWarningDialog(
+            onConfirm = {
+                viewModel.onChangeSettings(appSettings.copy(isUsingPrereleaseUpdates = true))
+                isOptingInOnPreReleaseUpdates = false
+            },
+            onDismiss = { isOptingInOnPreReleaseUpdates = false }
+        )
+    }
 }
 
 
