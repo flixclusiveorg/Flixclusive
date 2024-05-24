@@ -84,6 +84,7 @@ jobs:
             _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
             
             ### Changes
+            - No official change logs yet.
             
             ### Known issues
             - TV focus crashes. Compose TV is bugged af; we wait til the new update.
