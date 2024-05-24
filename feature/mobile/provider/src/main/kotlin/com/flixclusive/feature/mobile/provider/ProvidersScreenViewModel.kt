@@ -49,8 +49,7 @@ class ProvidersScreenViewModel @Inject constructor(
         }
 
         swapJob = viewModelScope.launch {
-            // Minus 2 since LazyList has initialized headers
-            providerManager.swap(fromIndex - 2, toIndex - 2)
+            providerManager.swap(fromIndex, toIndex)
         }
     }
 

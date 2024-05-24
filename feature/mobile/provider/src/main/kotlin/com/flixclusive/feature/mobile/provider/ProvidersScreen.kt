@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -29,11 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.navigation.GoBackAction
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.provider.InstalledProviderCard
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
-import com.flixclusive.feature.mobile.provider.component.HeaderButtons
 import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
 import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
 import com.flixclusive.feature.mobile.provider.util.rememberDragDropListState
@@ -57,14 +53,20 @@ fun ProvidersScreen(
 ) {
     val viewModel = hiltViewModel<ProvidersScreenViewModel>()
     val providerSettings by viewModel.providerSettings.collectAsStateWithLifecycle()
+    val searchExpanded = rememberSaveable { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
     val overscrollJob = remember { mutableStateOf<Job?>(null) }
-    val dragDropListState = rememberDragDropListState(onMove = viewModel::onMove)
+    val dragDropListState = rememberDragDropListState(
+        onMove = { fromIndex, toIndex ->
+            if (!searchExpanded.value) {
+                viewModel.onMove(fromIndex, toIndex)
+            }
+        }
+    )
     val listState = dragDropListState.getLazyListState()
     val shouldShowTopBar by listState.isScrollingUp()
 
-    val searchExpanded = rememberSaveable { mutableStateOf(false) }
 
     val filteredProviders by remember {
         derivedStateOf {
@@ -123,23 +125,23 @@ fun ProvidersScreen(
                     ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                item {
-                    HeaderButtons(
-                        modifier = Modifier
-                            .padding(top = 15.dp, bottom = 10.dp)
-                    )
-                }
+//                item {
+//                    HeaderButtons(
+//                        modifier = Modifier
+//                            .padding(top = 15.dp, bottom = 10.dp)
+//                    )
+//                }
+//
+//                item {
+//                    HorizontalDivider(
+//                        thickness = 1.dp,
+//                        color = LocalContentColor.current.onMediumEmphasis(0.4F)
+//                    )
+//                }
 
-                item {
-                    HorizontalDivider(
-                        thickness = 1.dp,
-                        color = LocalContentColor.current.onMediumEmphasis(0.4F)
-                    )
-                }
-
-                itemsIndexed(filteredProviders ?: viewModel.providerDataList) { index, providerData ->
+                itemsIndexed(items = filteredProviders ?: viewModel.providerDataList) { index, providerData ->
                     val displacementOffset =
-                        if (index + 2 == dragDropListState.getCurrentIndexOfDraggedListItem()) {
+                        if (index == dragDropListState.getCurrentIndexOfDraggedListItem()) {
                             dragDropListState.elementDisplacement.takeIf { it != 0f }
                         } else null
 
