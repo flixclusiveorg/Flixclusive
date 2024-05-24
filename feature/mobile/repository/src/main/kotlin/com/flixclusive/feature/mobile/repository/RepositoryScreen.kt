@@ -25,12 +25,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFilter
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.flixclusive.core.ui.common.ProviderUninstallNoticeDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.RetryButton
@@ -42,6 +44,7 @@ import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.repository.component.CustomOutlineButton
 import com.flixclusive.feature.mobile.repository.component.RepositoryHeader
 import com.flixclusive.feature.mobile.repository.component.RepositoryTopBar
+import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.Repository
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
@@ -89,10 +92,11 @@ fun RepositoryScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val searchExpanded = rememberSaveable { mutableStateOf(false) }
+    var providerDataToUninstall by rememberSaveable { mutableStateOf<ProviderData?>(null) }
 
-    LaunchedEffect(viewModel.snackbarError) {
-        if (viewModel.snackbarError?.error != null) {
-            snackbarHostState.showMessage(viewModel.snackbarError!!.error!!.asString(context))
+    LaunchedEffect(viewModel.snackbar) {
+        if (viewModel.snackbar?.error != null) {
+            snackbarHostState.showMessage(viewModel.snackbar!!.error!!.asString(context))
             viewModel.onConsumeSnackbar()
         }
     }
@@ -185,7 +189,13 @@ fun RepositoryScreen(
                         ProviderCard(
                             providerData = providerData,
                             state = viewModel.onlineProviderMap[providerData] ?: ProviderCardState.NotInstalled,
-                            onClick = { viewModel.toggleProvider(providerData) },
+                            onClick = {
+                                if (viewModel.onlineProviderMap[providerData] != ProviderCardState.Installed) {
+                                    viewModel.toggleProvider(providerData)
+                                } else {
+                                    providerDataToUninstall = providerData
+                                }
+                            },
                             modifier = Modifier
                                 .padding(vertical = 5.dp)
                                 .animateItemPlacement()
@@ -198,5 +208,18 @@ fun RepositoryScreen(
                 }
             }
         }
+    }
+
+    if (providerDataToUninstall != null) {
+        val providerData = remember { providerDataToUninstall!! }
+
+        ProviderUninstallNoticeDialog(
+            providerData = providerData,
+            onConfirm = {
+                viewModel.toggleProvider(providerData)
+                providerDataToUninstall = null
+            },
+            onDismiss = { providerDataToUninstall = null }
+        )
     }
 }

@@ -30,7 +30,7 @@ class RepositoryScreenViewModel @Inject constructor(
 
     var uiState by mutableStateOf<Resource<List<ProviderData>>>(Resource.Loading)
         private set
-    var snackbarError by mutableStateOf<Resource.Failure?>(null)
+    var snackbar by mutableStateOf<Resource.Failure?>(null)
         private set
 
     var searchQuery by mutableStateOf("")
@@ -92,6 +92,8 @@ class RepositoryScreenViewModel @Inject constructor(
                     return@launch
                 }
             }
+
+            snackbar = Resource.Failure(UiText.StringResource(UtilR.string.all_providers_installed))
         }
     }
 
@@ -121,7 +123,7 @@ class RepositoryScreenViewModel @Inject constructor(
                 needsDownload = true
             )
         } catch (_: Exception) {
-            snackbarError = Resource.Failure(UiText.StringResource(UtilR.string.failed_to_load_provider, providerData.name))
+            snackbar = Resource.Failure(UiText.StringResource(UtilR.string.failed_to_load_provider, providerData.name))
             onlineProviderMap[providerData] = ProviderCardState.NotInstalled
             return false
         }
@@ -135,6 +137,6 @@ class RepositoryScreenViewModel @Inject constructor(
     }
 
     fun onConsumeSnackbar() {
-        snackbarError = null
+        snackbar = null
     }
 }

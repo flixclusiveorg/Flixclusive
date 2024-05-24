@@ -20,12 +20,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.ui.common.ProviderUninstallNoticeDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.mobile.component.provider.InstalledProviderCard
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
@@ -54,6 +56,7 @@ fun ProvidersScreen(
     val viewModel = hiltViewModel<ProvidersScreenViewModel>()
     val providerSettings by viewModel.providerSettings.collectAsStateWithLifecycle()
     val searchExpanded = rememberSaveable { mutableStateOf(false) }
+    var indexOfProviderToUninstall by rememberSaveable { mutableStateOf<Int?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
     val overscrollJob = remember { mutableStateOf<Job?>(null) }
@@ -155,11 +158,23 @@ fun ProvidersScreen(
                         isDraggable = !searchExpanded.value,
                         displacementOffset = displacementOffset,
                         openSettings = { navigator.openProviderSettings(providerData) },
-                        uninstallProvider = { viewModel.uninstallProvider(index) },
+                        uninstallProvider = { indexOfProviderToUninstall = index },
                         onToggleProvider = { viewModel.toggleProvider(providerData) }
                     )
                 }
             }
         }
+    }
+
+    if (indexOfProviderToUninstall != null) {
+        val providerData = remember { (filteredProviders ?: viewModel.providerDataList)[indexOfProviderToUninstall!!] }
+        ProviderUninstallNoticeDialog(
+            providerData = providerData,
+            onConfirm = {
+                viewModel.uninstallProvider(indexOfProviderToUninstall!!)
+                indexOfProviderToUninstall = null
+            },
+            onDismiss = { indexOfProviderToUninstall = null }
+        )
     }
 }
