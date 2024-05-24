@@ -81,7 +81,7 @@ fun InstalledProviderCard(
                 ) else null,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(3.dp)
+                .padding(vertical = 3.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -141,7 +141,6 @@ private fun ProviderCardPreview() {
                 displacementOffset = null,
                 openSettings = { /*TODO*/ },
                 uninstallProvider = { /*TODO*/ }) {
-
             }
         }
     }
