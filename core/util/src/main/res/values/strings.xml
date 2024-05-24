@@ -54,6 +54,7 @@
     <string name="player_not_initialized">Player has not been initialized</string>
     <string name="splash_default_error_message">An error occurred while initializing the app.</string>
     <string name="splash_maintenance_message">Sorry for the inconvenience. We\'re performing a quick update. Be back soon!</string>
+    <string name="warning_uninstall_message_first_half">Are you sure you want to uninstall</string>
 
     <!--  Errors with formatting  -->
     <string name="failed_to_load_provider">Failed to download provider: %1$s</string>
@@ -176,6 +177,7 @@
     <string name="video_buffer_size_label">The target size to always buffer. Setting this too high could cause device problems.</string>
     <string name="video_cache_size">Player\'s dedicated cache size</string>
     <string name="video_cache_size_label">The dedicated video cache for the player. Always limit the cache if you have limited storage space.</string>
+    <string name="warning">Warning</string>
     <string name="watch">Watch</string>
     <string name="watch_again">Watch Again</string>
     <string name="watchlisted">Added</string>
@@ -191,6 +193,7 @@
     <string name="count_selection_format">%1$d selected</string>
 
     <!--  State messages  -->
+    <string name="all_providers_installed">All providers has been installed!</string>
     <string name="checking_for_updates">Checking for updates…</string>
     <string name="copied_link">Link has been copied</string>
     <string name="copy_stack_trace_message">You could open a github issue and paste this stack trace.</string>
