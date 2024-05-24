@@ -57,7 +57,7 @@ fun RecentlyWatchedScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Start watching now!",
+                        text = stringResource(id = UtilR.string.empty_recently_watched_list_message),
                         textAlign = TextAlign.Center
                     )
                 }
