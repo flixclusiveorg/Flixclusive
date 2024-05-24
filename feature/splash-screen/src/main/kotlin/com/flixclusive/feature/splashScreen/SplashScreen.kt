@@ -81,7 +81,7 @@ fun SplashScreen(
 
     val appSettings by splashScreenViewModel.appSettings.collectAsStateWithLifecycle()
     val uiState by splashScreenViewModel.uiState.collectAsStateWithLifecycle()
-    val updateStatus by setupViewModel.updateStatus.collectAsStateWithLifecycle(UpdateStatus.Fetching)
+    val updateStatus by setupViewModel.updateStatus.collectAsStateWithLifecycle(null)
     val configurationStatus by setupViewModel.configurationStatus.collectAsStateWithLifecycle(
         Resource.Loading
     )
@@ -248,7 +248,7 @@ fun SplashScreen(
             }
         } else areAllPermissionsGranted = true
 
-        if (areAllPermissionsGranted && isDoneAnimating && !appSettings.isFirstTimeUserLaunch_) {
+        if (areAllPermissionsGranted && isDoneAnimating && !appSettings.isFirstTimeUserLaunch_ && updateStatus != null) {
             if (updateStatus == UpdateStatus.Outdated) {
                 navigator.openUpdateScreen(
                     newVersion = setupViewModel.newVersion!!,
@@ -264,7 +264,7 @@ fun SplashScreen(
                     )
                 } else {
                     val errorMessage = if (updateStatus is UpdateStatus.Error)
-                        updateStatus.errorMessage
+                        updateStatus!!.errorMessage
                     else (configurationStatus as Resource.Failure).error
 
                     Pair(

@@ -18,6 +18,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.flixclusive.core.util.R as UtilR
@@ -88,15 +89,15 @@ internal class DefaultAppConfigurationManager @Inject constructor(
         _updateStatus.emit(UpdateStatus.Fetching)
 
         try {
-            val isUsingPrereleaseUpdates = appSettingsManager.localAppSettings.isUsingPrereleaseUpdates
+            val appSettings = appSettingsManager.appSettings.data.first()
+            val isUsingPrereleaseUpdates = appSettings.isUsingPrereleaseUpdates
 
             appConfig = githubRawApiService.getAppConfig()
 
             if(appConfig!!.isMaintenance)
                 return _updateStatus.emit(UpdateStatus.Maintenance)
 
-            // TODO: REMOVE CONDITIONAL COMMENT BELOW
-            if (isUsingPrereleaseUpdates /*&& currentAppBuild?.debug == false*/) {
+            if (isUsingPrereleaseUpdates && currentAppBuild?.debug == false) {
                 val lastCommitObject = githubApiService.getLastCommitObject()
                 val appCommitVersion = currentAppBuild?.commitVersion
                     ?: throw NullPointerException("appCommitVersion should not be null!")
