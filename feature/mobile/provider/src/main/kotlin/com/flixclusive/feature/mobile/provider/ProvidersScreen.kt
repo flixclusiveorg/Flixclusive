@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.provider
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,9 +22,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -115,19 +118,34 @@ fun ProvidersScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            LazyColumn(
-                state = listState,
-                contentPadding = PaddingValues(horizontal = 10.dp),
-                modifier = Modifier
-                    .padding(horizontal = 10.dp)
-                    .dragGestureHandler(
-                        scope = coroutineScope,
-                        itemListDragAndDropState = dragDropListState,
-                        overscrollJob = overscrollJob,
-                        feedbackLongPress = getFeedbackOnLongPress()
-                    ),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
+            AnimatedContent(
+                targetState = viewModel.providerDataList.isEmpty(),
+                label = ""
+            ) { state ->
+                if (state) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(id = UtilR.string.empty_providers_list_message),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        contentPadding = PaddingValues(horizontal = 10.dp),
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp)
+                            .dragGestureHandler(
+                                scope = coroutineScope,
+                                itemListDragAndDropState = dragDropListState,
+                                overscrollJob = overscrollJob,
+                                feedbackLongPress = getFeedbackOnLongPress()
+                            ),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
 //                item {
 //                    HeaderButtons(
 //                        modifier = Modifier
@@ -142,25 +160,27 @@ fun ProvidersScreen(
 //                    )
 //                }
 
-                itemsIndexed(items = filteredProviders ?: viewModel.providerDataList) { index, providerData ->
-                    val displacementOffset =
-                        if (index == dragDropListState.getCurrentIndexOfDraggedListItem()) {
-                            dragDropListState.elementDisplacement.takeIf { it != 0f }
-                        } else null
+                        itemsIndexed(items = filteredProviders ?: viewModel.providerDataList) { index, providerData ->
+                            val displacementOffset =
+                                if (index == dragDropListState.getCurrentIndexOfDraggedListItem()) {
+                                    dragDropListState.elementDisplacement.takeIf { it != 0f }
+                                } else null
 
-                    val isEnabled = providerData.status != Status.Maintenance
-                        && providerData.status != Status.Down
-                        && (providerSettings.getOrNull(index)?.isDisabled?.not() ?: true)
+                            val isEnabled = providerData.status != Status.Maintenance
+                                    && providerData.status != Status.Down
+                                    && (providerSettings.getOrNull(index)?.isDisabled?.not() ?: true)
 
-                    InstalledProviderCard(
-                        providerData = providerData,
-                        enabled = isEnabled,
-                        isDraggable = !searchExpanded.value,
-                        displacementOffset = displacementOffset,
-                        openSettings = { navigator.openProviderSettings(providerData) },
-                        uninstallProvider = { indexOfProviderToUninstall = index },
-                        onToggleProvider = { viewModel.toggleProvider(providerData) }
-                    )
+                            InstalledProviderCard(
+                                providerData = providerData,
+                                enabled = isEnabled,
+                                isDraggable = !searchExpanded.value,
+                                displacementOffset = displacementOffset,
+                                openSettings = { navigator.openProviderSettings(providerData) },
+                                uninstallProvider = { indexOfProviderToUninstall = index },
+                                onToggleProvider = { viewModel.toggleProvider(providerData) }
+                            )
+                        }
+                    }
                 }
             }
         }
