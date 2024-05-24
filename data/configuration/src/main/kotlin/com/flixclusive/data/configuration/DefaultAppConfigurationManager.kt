@@ -109,7 +109,7 @@ internal class DefaultAppConfigurationManager @Inject constructor(
                     val preReleaseInfo = githubApiService.getReleaseNotes(tag = "pre-release")
 
                     appConfig = appConfig!!.copy(
-                        versionName = "PR-$shortenedSha",
+                        versionName = "PR-$shortenedSha \uD83D\uDDFF",
                         updateInfo = preReleaseInfo.releaseNotes,
                         updateUrl = "https://github.com/$GITHUB_USERNAME/$GITHUB_REPOSITORY/releases/download/pre-release/flixclusive-release.apk"
                     )
