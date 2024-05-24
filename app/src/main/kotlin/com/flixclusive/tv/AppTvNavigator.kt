@@ -81,7 +81,8 @@ internal class AppTvNavigator(
     override fun openUpdateScreen(
         newVersion: String,
         updateUrl: String,
-        updateInfo: String?
+        updateInfo: String?,
+        isComingFromSplashScreen: Boolean
     ) {
         navController.navigateIfResumed(
             UpdateScreenDestination(

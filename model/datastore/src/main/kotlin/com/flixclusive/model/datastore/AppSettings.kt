@@ -18,6 +18,7 @@ const val DEFAULT_PLAYER_BUFFER_AMOUNT = 50L
 @Serializable
 data class AppSettings(
     // General
+    val isUsingPrereleaseUpdates: Boolean = false,
     val isShowingFilmCardTitle: Boolean = false,
     val isSendingCrashLogsAutomatically: Boolean = true,
     // ===

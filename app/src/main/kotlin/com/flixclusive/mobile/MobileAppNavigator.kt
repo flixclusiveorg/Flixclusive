@@ -92,13 +92,15 @@ internal class MobileAppNavigator(
     override fun openUpdateScreen(
         newVersion: String,
         updateUrl: String,
-        updateInfo: String?
+        updateInfo: String?,
+        isComingFromSplashScreen: Boolean
     ) {
         navController.navigateIfResumed(
             UpdateScreenDestination(
                 newVersion = newVersion,
                 updateUrl = updateUrl,
-                updateInfo = updateInfo
+                updateInfo = updateInfo,
+                isComingFromSplashScreen = isComingFromSplashScreen
             )
         )
     }

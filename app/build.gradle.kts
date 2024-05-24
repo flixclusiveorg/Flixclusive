@@ -24,7 +24,7 @@ fun Project.getCommitVersion(): String {
         commandLine = "git rev-parse --short HEAD".split(" ")
         standardOutput = byteOut
     }
-    return String(byteOut.toByteArray())
+    return String(byteOut.toByteArray()).trim()
 }
 
 android {
@@ -43,6 +43,7 @@ android {
         resValue("string", "application_id", _applicationId)
         resValue("string", "debug_mode", "false")
         resValue("string", "version_name", _versionName)
+        resValue("string", "commit_version", getCommitVersion())
     }
 
     buildTypes {

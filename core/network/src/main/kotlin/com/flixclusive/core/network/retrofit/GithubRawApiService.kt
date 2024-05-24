@@ -1,14 +1,11 @@
 package com.flixclusive.core.network.retrofit
 
+import com.flixclusive.core.util.common.configuration.GITHUB_CONFIG_REPOSITORY
+import com.flixclusive.core.util.common.configuration.GITHUB_USERNAME
 import com.flixclusive.model.configuration.AppConfig
 import com.flixclusive.model.configuration.HomeCategoriesConfig
-import com.flixclusive.model.configuration.ProviderStatus
 import com.flixclusive.model.configuration.SearchCategoriesConfig
 import retrofit2.http.GET
-
-const val GITHUB_USERNAME = "rhenwinch"
-const val GITHUB_CONFIG_REPOSITORY = "flixclusive-config"
-const val GITHUB_BASE_URL = "https://raw.githubusercontent.com/"
 
 /**
  * 
@@ -16,7 +13,7 @@ const val GITHUB_BASE_URL = "https://raw.githubusercontent.com/"
  * from github using the pre-defined [GITHUB_USERNAME] and [GITHUB_CONFIG_REPOSITORY]
  * 
  * */
-interface FlixclusiveConfigurationService {
+interface GithubRawApiService {
     @GET("$GITHUB_USERNAME/$GITHUB_CONFIG_REPOSITORY/main/home_items_config.json")
     suspend fun getHomeCategoriesConfig(): HomeCategoriesConfig
 

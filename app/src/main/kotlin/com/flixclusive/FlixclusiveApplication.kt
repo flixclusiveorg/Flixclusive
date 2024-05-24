@@ -43,6 +43,7 @@ class FlixclusiveApplication : Application(), ImageLoaderFactory {
                 debug = getString(R.string.debug_mode).toBoolean(),
                 versionName = getString(R.string.version_name),
                 build = getString(R.string.build).toLong(),
+                commitVersion = getString(R.string.commit_version)
             )
         )
 

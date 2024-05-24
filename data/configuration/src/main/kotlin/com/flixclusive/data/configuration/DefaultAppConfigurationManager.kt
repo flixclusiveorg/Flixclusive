@@ -1,8 +1,13 @@
 package com.flixclusive.data.configuration
 
-import com.flixclusive.core.network.retrofit.FlixclusiveConfigurationService
+import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.network.retrofit.GithubApiService
+import com.flixclusive.core.network.retrofit.GithubRawApiService
+import com.flixclusive.core.util.common.configuration.GITHUB_REPOSITORY
+import com.flixclusive.core.util.common.configuration.GITHUB_USERNAME
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.exception.catchInternetRelatedException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.model.configuration.AppConfig
@@ -20,7 +25,9 @@ import com.flixclusive.core.util.R as UtilR
 private const val MAX_RETRIES = 5
 
 internal class DefaultAppConfigurationManager @Inject constructor(
-    private val appConfigService: FlixclusiveConfigurationService,
+    private val githubRawApiService: GithubRawApiService,
+    private val githubApiService: GithubApiService,
+    private val appSettingsManager: AppSettingsManager,
     @ApplicationScope private val scope: CoroutineScope,
 ) : AppConfigurationManager {
 
@@ -54,8 +61,8 @@ internal class DefaultAppConfigurationManager @Inject constructor(
                 try {
                     checkForUpdates()
 
-                    homeCategoriesConfig = appConfigService.getHomeCategoriesConfig()
-                    searchCategoriesConfig = appConfigService.getSearchCategoriesConfig()
+                    homeCategoriesConfig = githubRawApiService.getHomeCategoriesConfig()
+                    searchCategoriesConfig = githubRawApiService.getSearchCategoriesConfig()
 
                     return@launch _configurationStatus.emit(Resource.Success(Unit))
                 } catch (e: Exception) {
@@ -78,23 +85,51 @@ internal class DefaultAppConfigurationManager @Inject constructor(
     }
 
     override suspend fun checkForUpdates() {
+        _updateStatus.emit(UpdateStatus.Fetching)
+
         try {
-            _updateStatus.emit(UpdateStatus.Fetching)
+            val isUsingPrereleaseUpdates = appSettingsManager.localAppSettings.isUsingPrereleaseUpdates
 
-            appConfig = appConfigService.getAppConfig()
-            appConfig?.run {
-                if(isMaintenance)
-                    return _updateStatus.emit(UpdateStatus.Maintenance)
+            appConfig = githubRawApiService.getAppConfig()
 
-                currentAppBuild?.let {
-                    val isNeedingAnUpdate = build != -1L && build > it.build
-                    if(isNeedingAnUpdate) {
-                        return _updateStatus.emit(UpdateStatus.Outdated)
-                    }
+            if(appConfig!!.isMaintenance)
+                return _updateStatus.emit(UpdateStatus.Maintenance)
+
+            // TODO: REMOVE CONDITIONAL COMMENT BELOW
+            if (isUsingPrereleaseUpdates /*&& currentAppBuild?.debug == false*/) {
+                val lastCommitObject = githubApiService.getLastCommitObject()
+                val appCommitVersion = currentAppBuild?.commitVersion
+                    ?: throw NullPointerException("appCommitVersion should not be null!")
+
+
+                val shortenedSha = lastCommitObject.lastCommit.sha.shortenSha()
+                val isNeedingAnUpdate = appCommitVersion != shortenedSha
+
+                if (isNeedingAnUpdate) {
+                    val preReleaseInfo = githubApiService.getReleaseNotes(tag = "pre-release")
+
+                    appConfig = appConfig!!.copy(
+                        versionName = "PR-$shortenedSha",
+                        updateInfo = preReleaseInfo.releaseNotes,
+                        updateUrl = "https://github.com/$GITHUB_USERNAME/$GITHUB_REPOSITORY/releases/download/pre-release/flixclusive-release.apk"
+                    )
+
+                    return _updateStatus.emit(UpdateStatus.Outdated)
+                }
+            } else {
+                val isNeedingAnUpdate = appConfig!!.build != -1L && appConfig!!.build > currentAppBuild!!.build
+
+                if(isNeedingAnUpdate) {
+                    val releaseInfo = githubApiService.getReleaseNotes(tag = appConfig!!.versionName)
+
+                    appConfig = appConfig!!.copy(updateInfo = releaseInfo.releaseNotes)
+                    return _updateStatus.emit(UpdateStatus.Outdated)
                 }
 
                 return _updateStatus.emit(UpdateStatus.UpToDate)
             }
+
+            return _updateStatus.emit(UpdateStatus.Error(UiText.StringResource(UtilR.string.failed_checking_for_updates)))
         } catch (e: Exception) {
             errorLog(e.stackTraceToString())
             val errorMessageId = e.catchInternetRelatedException().error!!
@@ -102,4 +137,7 @@ internal class DefaultAppConfigurationManager @Inject constructor(
             _updateStatus.emit(UpdateStatus.Error(errorMessageId))
         }
     }
+
+    private fun String.shortenSha()
+        = substring(0, 7)
 }

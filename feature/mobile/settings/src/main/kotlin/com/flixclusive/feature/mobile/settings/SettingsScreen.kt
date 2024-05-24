@@ -96,6 +96,22 @@ fun SettingsScreen(
 
     val currentGeneralSettings = listOf(
         SettingsItem(
+            title = stringResource(UtilR.string.sign_up_prerelease),
+            description = stringResource(UtilR.string.signup_prerelease_updates_desc),
+            onClick = {
+                viewModel.onChangeSettings(appSettings.copy(isUsingPrereleaseUpdates = !appSettings.isUsingPrereleaseUpdates))
+            },
+            previewContent = {
+                Switch(
+                    checked = appSettings.isUsingPrereleaseUpdates,
+                    onCheckedChange = {
+                        viewModel.onChangeSettings(appSettings.copy(isUsingPrereleaseUpdates = it))
+                    },
+                    modifier = Modifier.scale(0.7F)
+                )
+            },
+        ),
+        SettingsItem(
             title = stringResource(UtilR.string.film_card_titles),
             description = stringResource(UtilR.string.film_card_titles_label),
             onClick = {

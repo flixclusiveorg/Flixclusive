@@ -25,9 +25,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,24 +45,30 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.imageLoader
+import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.android.installApkActivity
 import com.flixclusive.service.update.AppUpdaterService
 import com.flixclusive.service.update.AppUpdaterService.Companion.startAppUpdater
 import com.ramcosta.composedestinations.annotation.Destination
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.util.R as UtilR
 
 data class UpdateScreenNavArgs(
     val newVersion: String,
     val updateUrl: String,
     val updateInfo: String? = null,
+    val isComingFromSplashScreen: Boolean = false
 )
 
 @Destination(
@@ -77,6 +83,7 @@ fun UpdateScreen(
     val apkUri by AppUpdaterService.installUriLocation.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
 
     val buttonPaddingValues = PaddingValues(horizontal = 5.dp, vertical = 10.dp)
     val brushGradient = Brush.linearGradient(
@@ -97,7 +104,9 @@ fun UpdateScreen(
     }
 
     BackHandler {
-        navigator.openHomeScreen()
+        if (args.isComingFromSplashScreen) {
+            navigator.openHomeScreen()
+        } else navigator.goBack()
     }
 
     Box(
@@ -107,12 +116,12 @@ fun UpdateScreen(
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
+                .verticalScroll(rememberScrollState())
                 .padding(
                     bottom = 20.dp,
                     end = 20.dp,
                     start = 20.dp
                 )
-                .verticalScroll(rememberScrollState())
         ) {
             Image(
                 painter = painterResource(id = R.drawable.flixclusive_tag),
@@ -132,29 +141,23 @@ fun UpdateScreen(
 
             Text(
                 text = stringResource(id = UtilR.string.update_out_now_format, args.newVersion),
+                modifier = Modifier.padding(bottom = 10.dp),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontSize = 25.sp, fontWeight = FontWeight.Bold
                 )
             )
 
-            Divider(
-                modifier = Modifier.padding(top = 15.dp, bottom = 5.dp),
-                thickness = 0.5.dp,
-                color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.3F)
-            )
-
-            Text(
-                text = stringResource(id = UtilR.string.update_info),
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontSize = 16.sp, fontWeight = FontWeight.Medium
+            MarkdownText(
+                markdown = args.updateInfo ?: stringResource(id = UtilR.string.default_update_info_message),
+                isTextSelectable = true,
+                linkColor = Color(0xFF5890FF),
+                fontResource = com.flixclusive.core.theme.R.font.space_grotesk_medium,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = LocalContentColor.current,
                 ),
-            )
-
-            Text(
-                text = args.updateInfo ?: stringResource(id = UtilR.string.default_update_info_message),
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontSize = 16.sp, fontWeight = FontWeight.Normal
-                ),
+                imageLoader = LocalContext.current.imageLoader,
+                onLinkClicked = uriHandler::openUri,
+                modifier = Modifier.fillMaxWidth()
             )
         }
 
@@ -201,7 +204,11 @@ fun UpdateScreen(
                 }
 
                 Button(
-                    onClick = navigator::openHomeScreen,
+                    onClick = {
+                        if (args.isComingFromSplashScreen) {
+                            navigator.openHomeScreen()
+                        } else navigator.goBack()
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
                         contentColor = Color.White.onMediumEmphasis()
@@ -218,7 +225,6 @@ fun UpdateScreen(
                             fontSize = 16.sp
                         ),
                         fontWeight = FontWeight.Normal
-
                     )
                 }
             }
@@ -292,6 +298,32 @@ fun UpdateScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun UpdateScreenPreview() {
+    FlixclusiveTheme {
+        Surface {
+            UpdateScreen(
+                navigator = object: StartHomeScreenAction {
+                    override fun openHomeScreen() {
+                        // Do nothing
+                    }
+
+                    override fun goBack() {
+                        // Do nothing
+                    }
+                },
+                args = UpdateScreenNavArgs(
+                    newVersion = "v1.5.0",
+                    updateUrl = "https://www.google.com",
+                    updateInfo = "## This is an update message" +
+                            "\n\nhahhahaha **HAHAHA PERO**"
+                )
+            )
         }
     }
 }
