@@ -253,7 +253,8 @@ fun SplashScreen(
                 navigator.openUpdateScreen(
                     newVersion = setupViewModel.newVersion!!,
                     updateInfo = setupViewModel.updateInfo,
-                    updateUrl = setupViewModel.updateUrl!!
+                    updateUrl = setupViewModel.updateUrl!!,
+                    isComingFromSplashScreen = true,
                 )
             } else if (updateStatus is UpdateStatus.Error || updateStatus == UpdateStatus.Maintenance || configurationStatus is Resource.Failure) {
                 val (title, description) = if (updateStatus == UpdateStatus.Maintenance) {

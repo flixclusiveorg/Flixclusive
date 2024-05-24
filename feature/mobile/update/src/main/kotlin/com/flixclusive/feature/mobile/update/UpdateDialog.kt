@@ -62,11 +62,10 @@ fun UpdateDialog(
             && viewModel.newVersion != null
         ) {
             navigator.openUpdateScreen(
-                viewModel.updateUrl!!,
-                viewModel.newVersion!!,
-                viewModel.updateInfo
+                newVersion = viewModel.newVersion!!,
+                updateUrl = viewModel.updateUrl!!,
+                updateInfo = viewModel.updateInfo
             )
-            navigator.goBack()
         }
     }
 

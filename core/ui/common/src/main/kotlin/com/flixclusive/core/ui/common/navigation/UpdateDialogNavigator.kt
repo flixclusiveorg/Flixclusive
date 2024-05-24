@@ -6,5 +6,6 @@ interface UpdateDialogNavigator : GoBackAction {
         newVersion: String,
         updateUrl: String,
         updateInfo: String?,
+        isComingFromSplashScreen: Boolean = false
     )
 }

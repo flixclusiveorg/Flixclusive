@@ -1,11 +1,13 @@
 package com.flixclusive.core.network.di
 
-import com.flixclusive.core.network.retrofit.FlixclusiveConfigurationService
-import com.flixclusive.core.network.retrofit.GITHUB_BASE_URL
+import com.flixclusive.core.network.retrofit.GithubApiService
+import com.flixclusive.core.network.retrofit.GithubRawApiService
 import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.core.network.retrofit.TMDB_API_BASE_URL
 import com.flixclusive.core.network.util.PaginatedSearchItemsDeserializer
 import com.flixclusive.core.network.util.SearchItemDeserializer
+import com.flixclusive.core.util.common.configuration.GITHUB_API_BASE_URL
+import com.flixclusive.core.util.common.configuration.GITHUB_RAW_API_BASE_URL
 import com.flixclusive.model.tmdb.TMDBPageResponse
 import com.flixclusive.model.tmdb.TMDBSearchItem
 import com.google.gson.GsonBuilder
@@ -44,13 +46,25 @@ object RetrofitModule {
 
     @Provides
     @Singleton
-    internal fun provideAppConfigService(
+    internal fun provideGithubRawApiService(
         client: OkHttpClient
-    ): FlixclusiveConfigurationService =
+    ): GithubRawApiService =
         Retrofit.Builder()
-            .baseUrl(GITHUB_BASE_URL)
+            .baseUrl(GITHUB_RAW_API_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
-            .create(FlixclusiveConfigurationService::class.java)
+            .create(GithubRawApiService::class.java)
+
+    @Provides
+    @Singleton
+    internal fun provideGithubApiService(
+        client: OkHttpClient
+    ): GithubApiService =
+        Retrofit.Builder()
+            .baseUrl(GITHUB_API_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+            .build()
+            .create(GithubApiService::class.java)
 }

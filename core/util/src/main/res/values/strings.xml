@@ -151,6 +151,7 @@
     <string name="servers">Servers</string>
     <string name="share_button">Share button</string>
     <string name="share_the_app">Share the App!</string>
+    <string name="sign_up_prerelease">Use pre-release updates</string>
     <string name="something_went_wrong">Something went wrong</string>
     <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
     <string name="status">Status</string>
@@ -252,7 +253,7 @@
     <string name="episode_image_content_desc_format">An image of episode %1$s: %2$s</string>
     <string name="episodes_button_desc">An icon for episodes button</string>
     <string name="error_icon_content_desc">Error icon</string>
-    <string name="film_card_titles_label">Show titles on film cards</string>
+    <string name="film_card_titles_label">Show titles on film cards.</string>
     <string name="film_item_content_description">A film\'s backdrop, picture or poster.</string>
     <string name="filter_button">Filter button</string>
     <string name="flixclusive_icon_content_desc">Flixclusive icon</string>
@@ -270,6 +271,7 @@
     <string name="play_button">Play button</string>
     <string name="play_pause_button_content_description">Play or pause button</string>
     <string name="poster_content_description">A poster of %1$s</string>
+    <string name="signup_prerelease_updates_desc">Opt-in on using pre-release updates instead of official ones.</string>
     <string name="provider_icon_content_desc">Default icon of a provider</string>
     <string name="provider_updates_log">Provider\'s update logs</string>
     <string name="rating_icon">Rating Icon</string>

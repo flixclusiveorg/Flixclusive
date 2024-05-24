@@ -27,6 +27,7 @@ data class AppBuild(
     val debug: Boolean,
     val versionName: String,
     val build: Long,
+    val commitVersion: String,
 )
 
 interface AppConfigurationManager {
