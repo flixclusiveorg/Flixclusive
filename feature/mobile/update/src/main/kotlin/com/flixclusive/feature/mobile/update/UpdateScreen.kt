@@ -1,7 +1,8 @@
 package com.flixclusive.feature.mobile.update
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -167,140 +168,144 @@ fun UpdateScreen(
             Spacer(modifier = Modifier.height(50.dp))
         }
 
-        AnimatedVisibility(
-            visible = downloadProgress == null,
-            enter = fadeIn(),
-            exit = fadeOut(),
+        AnimatedContent(
+            label = "",
+            targetState = downloadProgress,
+            transitionSpec = {
+                ContentTransform(
+                    targetContentEnter = fadeIn(),
+                    initialContentExit = fadeOut()
+                )
+            },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                Button(
-                    onClick = {
-                        if (readyToInstall) {
-                            context.startActivity(
-                                installApkActivity(apkUri!!)
+        ) { state ->
+            when (state == null) {
+                true -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surface)
+                            .height(70.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                if (readyToInstall) {
+                                    context.startActivity(
+                                        installApkActivity(apkUri!!)
+                                    )
+                                    navigator.openHomeScreen()
+                                } else context.startAppUpdater(args.updateUrl)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            shape = MaterialTheme.shapes.medium,
+                            modifier = Modifier
+                                .weight(0.5F)
+                                .heightIn(min = 70.dp)
+                                .padding(buttonPaddingValues)
+                        ) {
+                            Text(
+                                text = stringResource(UtilR.string.update_label),
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontSize = 16.sp
+                                ),
+                                fontWeight = FontWeight.Normal
                             )
-                            navigator.openHomeScreen()
-                        } else context.startAppUpdater(args.updateUrl)
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier
-                        .weight(0.5F)
-                        .heightIn(min = 70.dp)
-                        .padding(buttonPaddingValues)
-                ) {
-                    Text(
-                        text = stringResource(UtilR.string.update_label),
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontSize = 16.sp
-                        ),
-                        fontWeight = FontWeight.Normal
-                    )
+                        }
+
+                        Button(
+                            onClick = {
+                                if (args.isComingFromSplashScreen) {
+                                    navigator.openHomeScreen()
+                                } else navigator.goBack()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = Color.White.onMediumEmphasis()
+                            ),
+                            shape = MaterialTheme.shapes.medium,
+                            modifier = Modifier
+                                .weight(0.5F)
+                                .heightIn(min = 70.dp)
+                                .padding(buttonPaddingValues)
+                        ) {
+                            Text(
+                                text = stringResource(UtilR.string.not_now_label),
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontSize = 16.sp
+                                ),
+                                fontWeight = FontWeight.Normal
+                            )
+                        }
+                    }
                 }
-
-                Button(
-                    onClick = {
-                        if (args.isComingFromSplashScreen) {
-                            navigator.openHomeScreen()
-                        } else navigator.goBack()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = Color.White.onMediumEmphasis()
-                    ),
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier
-                        .weight(0.5F)
-                        .heightIn(min = 70.dp)
-                        .padding(buttonPaddingValues)
-                ) {
-                    Text(
-                        text = stringResource(UtilR.string.not_now_label),
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontSize = 16.sp
-                        ),
-                        fontWeight = FontWeight.Normal
-                    )
-                }
-            }
-        }
-
-        AnimatedVisibility(
-            visible = downloadProgress != null,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                var labelToUse = stringResource(UtilR.string.update_label)
-
-                if (readyToInstall) {
-                    labelToUse = stringResource(UtilR.string.install)
-                } else if (downloadProgress != null && downloadProgress!! > -1) {
-                    labelToUse = "$downloadProgress%"
-                }
-
-                Box(
-                    modifier = Modifier
-                        .padding(buttonPaddingValues),
-                ) {
+                false -> {
                     Box(
                         modifier = Modifier
-                            .align(Alignment.Center)
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.primary,
-                                shape = MaterialTheme.shapes.medium
-                            )
-                            .clip(MaterialTheme.shapes.medium)
                             .fillMaxWidth()
-                            .height(55.dp)
-                            .clickable(readyToInstall) {
-                                if (readyToInstall) {
-                                    val installIntent = installApkActivity(apkUri!!)
-                                    context.startActivity(installIntent)
-                                }
-                            }
-                            .drawWithContent {
-                                with(drawContext.canvas.nativeCanvas) {
-                                    val checkPoint = saveLayer(null, null)
-
-                                    drawContent()
-                                    drawRect(
-                                        color = progressColor,
-                                        size = Size(size.width * progressState, size.height),
-                                        blendMode = BlendMode.SrcOut
-                                    )
-                                    restoreToCount(checkPoint)
-                                }
-                            }
+                            .background(MaterialTheme.colorScheme.surface)
+                            .height(70.dp)
                     ) {
-                        Text(
-                            text = labelToUse,
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontSize = 16.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Normal,
+                        var labelToUse = stringResource(UtilR.string.update_label)
+
+                        if (readyToInstall) {
+                            labelToUse = stringResource(UtilR.string.install)
+                        } else if (downloadProgress != null && downloadProgress!! > -1) {
+                            labelToUse = "$downloadProgress%"
+                        }
+
+                        Box(
                             modifier = Modifier
-                                .align(Alignment.Center)
-                        )
+                                .padding(buttonPaddingValues),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .border(
+                                        width = 1.dp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        shape = MaterialTheme.shapes.medium
+                                    )
+                                    .clip(MaterialTheme.shapes.medium)
+                                    .fillMaxWidth()
+                                    .height(50.dp)
+                                    .clickable(readyToInstall) {
+                                        if (readyToInstall) {
+                                            val installIntent = installApkActivity(apkUri!!)
+                                            context.startActivity(installIntent)
+                                        }
+                                    }
+                                    .drawWithContent {
+                                        with(drawContext.canvas.nativeCanvas) {
+                                            val checkPoint = saveLayer(null, null)
+
+                                            drawContent()
+                                            drawRect(
+                                                color = progressColor,
+                                                size = Size(size.width * progressState, size.height),
+                                                blendMode = BlendMode.SrcOut
+                                            )
+                                            restoreToCount(checkPoint)
+                                        }
+                                    }
+                            ) {
+                                Text(
+                                    text = labelToUse,
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontSize = 16.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Normal,
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                )
+                            }
+                        }
                     }
                 }
             }
