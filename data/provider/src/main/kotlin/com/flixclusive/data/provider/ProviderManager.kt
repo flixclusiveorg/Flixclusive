@@ -139,8 +139,11 @@ class ProviderManager @Inject constructor(
                         = providerSettings.providers.any {
                             it.filePath == providerFile.absolutePath
                         }.not()
+                    val isNotUpdaterJsonFile
+                        = !providerFile.name
+                            .equals("updater.json", true)
 
-                    if (isProviderNotYetLoaded) {
+                    if (isProviderNotYetLoaded && isNotUpdaterJsonFile) {
                         appSettingsManager.updateProviderSettings {
                             it.copy(
                                 providers =
@@ -179,7 +182,7 @@ class ProviderManager @Inject constructor(
         val providerData = updaterJsonList.find { it.name.plus(".flx").equals(providerName, true) }
 
         if (providerData == null) {
-            errorLog("Provider cannot be found on the updater.json file!")
+            errorLog("Provider [$providerName] cannot be found on the updater.json file!")
             return
         }
 
@@ -352,9 +355,12 @@ class ProviderManager @Inject constructor(
         val provider = providers[providerData.name]
         val file = context.provideValidProviderPath(providerData)
 
-        if (provider != null && file.exists()) {
-            unloadProvider(provider, file)
+        if (provider == null || !file.exists()) {
+            errorLog("Provider [${providerData.name}] not found. Cannot be unloaded")
+            return
         }
+
+        unloadProvider(provider, file)
     }
 
     /**
@@ -367,9 +373,12 @@ class ProviderManager @Inject constructor(
         val provider = providers[providerPreference.name]
         val file = File(providerPreference.filePath)
 
-        if (provider != null && file.exists()) {
-            unloadProvider(provider, file)
+        if (provider == null || !file.exists()) {
+            errorLog("Provider [${providerPreference.name}] not found. Cannot be unloaded")
+            return
         }
+
+        unloadProvider(provider, file)
     }
 
     private suspend fun unloadProvider(

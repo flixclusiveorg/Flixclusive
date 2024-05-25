@@ -197,7 +197,7 @@
     <string name="count_selection_format">%1$d selected</string>
 
     <!--  State messages  -->
-    <string name="all_providers_installed">All providers has been installed!</string>
+    <string name="all_providers_installed">All providers have been installed!</string>
     <string name="checking_for_updates">Checking for updates…</string>
     <string name="copied_link">Link has been copied</string>
     <string name="copy_stack_trace_message">You could open a github issue and paste this stack trace.</string>
