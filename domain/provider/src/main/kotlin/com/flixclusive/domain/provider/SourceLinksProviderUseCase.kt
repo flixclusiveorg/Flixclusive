@@ -229,7 +229,7 @@ class SourceLinksProviderUseCase @Inject constructor(
                     continue
                 }
 
-                break
+                return@channelFlow
             }
 
             val canStopLooping = i == providersList.lastIndex
