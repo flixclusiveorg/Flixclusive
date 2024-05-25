@@ -249,14 +249,18 @@ fun SplashScreen(
         } else areAllPermissionsGranted = true
 
         if (areAllPermissionsGranted && isDoneAnimating && !appSettings.isFirstTimeUserLaunch_ && updateStatus != null) {
-            if (updateStatus == UpdateStatus.Outdated) {
+            if (updateStatus == UpdateStatus.Outdated && appSettings.isUsingAutoUpdateAppFeature) {
                 navigator.openUpdateScreen(
                     newVersion = setupViewModel.newVersion!!,
                     updateInfo = setupViewModel.updateInfo,
                     updateUrl = setupViewModel.updateUrl!!,
                     isComingFromSplashScreen = true,
                 )
-            } else if (updateStatus is UpdateStatus.Error || updateStatus == UpdateStatus.Maintenance || configurationStatus is Resource.Failure) {
+            } else if (
+               ((updateStatus is UpdateStatus.Error || updateStatus == UpdateStatus.Maintenance) && appSettings.isUsingAutoUpdateAppFeature)
+                || configurationStatus is Resource.Failure
+            )
+            {
                 val (title, description) = if (updateStatus == UpdateStatus.Maintenance) {
                     Pair(
                         stringResource(UtilR.string.splash_maintenance_header),
@@ -278,7 +282,11 @@ fun SplashScreen(
                     description = description,
                     onDismiss = navigator::onExitApplication
                 )
-            } else if ((updateStatus == UpdateStatus.UpToDate || configurationStatus is Resource.Success) && uiState is SplashScreenUiState.Okay) {
+            } else if (
+                (((updateStatus == UpdateStatus.UpToDate) && appSettings.isUsingAutoUpdateAppFeature)
+                    || configurationStatus is Resource.Success)
+                && uiState is SplashScreenUiState.Okay
+            ) {
                 navigator.openHomeScreen()
             }
         }
