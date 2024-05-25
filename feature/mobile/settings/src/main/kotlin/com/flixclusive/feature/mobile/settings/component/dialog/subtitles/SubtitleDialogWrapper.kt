@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.settings.component.dialog.subtitles
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_BACKGROUND_COLOR_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_COLOR_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_EDGE_TYPE_DIALOG
@@ -13,21 +14,23 @@ import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogFontStyle
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogLanguages
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogSize
-import com.flixclusive.model.datastore.AppSettings
+import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
+import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
 
 @Composable
 internal fun SubtitleDialogWrapper(
     openedDialogMap: Map<String, Boolean>,
-    appSettings: AppSettings,
-    onChange: (AppSettings) -> Unit,
     onDismissDialog: (String) -> Unit
 ) {
+    val appSettings by rememberLocalAppSettings()
+    val onChangeSettings by rememberSettingsChanger()
+    
     when {
         openedDialogMap[KEY_SUBTITLE_SIZE_DIALOG] == true -> {
             SubtitleDialogSize(
                 appSettings = appSettings,
                 onChange = {
-                    onChange(appSettings.copy(subtitleSize = it))
+                    onChangeSettings(appSettings.copy(subtitleSize = it))
                 },
                 onDismissRequest = {
                     onDismissDialog(KEY_SUBTITLE_SIZE_DIALOG)
@@ -38,7 +41,7 @@ internal fun SubtitleDialogWrapper(
             SubtitleDialogLanguages(
                 appSettings = appSettings,
                 onChange = {
-                    onChange(appSettings.copy(subtitleLanguage = it.language))
+                    onChangeSettings(appSettings.copy(subtitleLanguage = it.language))
                 },
                 onDismissRequest = {
                     onDismissDialog(KEY_SUBTITLE_LANGUAGE_DIALOG)
@@ -49,7 +52,7 @@ internal fun SubtitleDialogWrapper(
             SubtitleDialogEdgeType(
                 appSettings = appSettings,
                 onChange = {
-                    onChange(appSettings.copy(subtitleEdgeType = it))
+                    onChangeSettings(appSettings.copy(subtitleEdgeType = it))
                 },
                 onDismissRequest = {
                     onDismissDialog(KEY_SUBTITLE_EDGE_TYPE_DIALOG)
@@ -60,7 +63,7 @@ internal fun SubtitleDialogWrapper(
             SubtitleDialogFontStyle(
                 appSettings = appSettings,
                 onChange = {
-                    onChange(appSettings.copy(subtitleFontStyle = it))
+                    onChangeSettings(appSettings.copy(subtitleFontStyle = it))
                 },
                 onDismissRequest = {
                     onDismissDialog(KEY_SUBTITLE_FONT_STYLE_DIALOG)
@@ -71,7 +74,7 @@ internal fun SubtitleDialogWrapper(
             SubtitleDialogFontColor(
                 appSettings = appSettings,
                 onChange = {
-                    onChange(appSettings.copy(subtitleColor = it))
+                    onChangeSettings(appSettings.copy(subtitleColor = it))
                 },
                 onDismissRequest = {
                     onDismissDialog(KEY_SUBTITLE_COLOR_DIALOG)
@@ -82,7 +85,7 @@ internal fun SubtitleDialogWrapper(
             SubtitleDialogFontBackgroundColor(
                 appSettings = appSettings,
                 onChange = {
-                    onChange(appSettings.copy(subtitleBackgroundColor = it))
+                    onChangeSettings(appSettings.copy(subtitleBackgroundColor = it))
                 },
                 onDismissRequest = {
                     onDismissDialog(KEY_SUBTITLE_BACKGROUND_COLOR_DIALOG)
