@@ -7,7 +7,6 @@ import com.flixclusive.core.util.common.configuration.GITHUB_REPOSITORY
 import com.flixclusive.core.util.common.configuration.GITHUB_USERNAME
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.exception.catchInternetRelatedException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.model.configuration.AppConfig
@@ -117,6 +116,8 @@ internal class DefaultAppConfigurationManager @Inject constructor(
 
                     return _updateStatus.emit(UpdateStatus.Outdated)
                 }
+
+                return _updateStatus.emit(UpdateStatus.UpToDate)
             } else {
                 val isNeedingAnUpdate = appConfig!!.build != -1L && appConfig!!.build > currentAppBuild!!.build
 
@@ -129,8 +130,6 @@ internal class DefaultAppConfigurationManager @Inject constructor(
 
                 return _updateStatus.emit(UpdateStatus.UpToDate)
             }
-
-            return _updateStatus.emit(UpdateStatus.Error(UiText.StringResource(UtilR.string.failed_checking_for_updates)))
         } catch (e: Exception) {
             errorLog(e.stackTraceToString())
             val errorMessageId = e.catchInternetRelatedException().error!!
