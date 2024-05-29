@@ -5,7 +5,9 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResults
 import com.flixclusive.provider.extractor.Extractor
@@ -42,20 +44,18 @@ abstract class ProviderApi(
 
     /**
      * Performs a search for films based on the provided query.
-     * @param query The search query.
+     * @param film The [Film] object of the film. It could either be a [Movie] or [TvShow].
      * @param page The page number for paginated results. Defaults to 1.
-     * @param filmType The type of film being searched for.
      * @return a [SearchResults] instance containing the search results.
      */
     abstract suspend fun search(
-        query: String,
+        film: Film,
         page: Int = 1,
-        filmType: FilmType,
     ): SearchResults
 
     /**
      * Retrieves detailed information about a film.
-     * @param filmId The ID of the film.
+     * @param filmId The ID of the film. The ID must come from the [search] method.
      * @param filmType The type of film.
      * @return a [FilmInfo] instance containing the film's information.
      */
@@ -66,7 +66,8 @@ abstract class ProviderApi(
 
     /**
      * Obtains source links for the provided film, season, and episode.
-     * @param filmId The ID of the film.
+     * @param filmId The ID of the film. The ID must come from the [search] method.
+     * @param film The [Film] object of the film. It could either be a [Movie] or [TvShow].
      * @param season The season number. Defaults to null if the film is a movie.
      * @param episode The episode number. Defaults to null if the film is a movie.
      * @param onLinkLoaded A callback function invoked when a [SourceLink] is loaded.
@@ -74,6 +75,7 @@ abstract class ProviderApi(
      */
     abstract suspend fun getSourceLinks(
         filmId: String,
+        film: Film,
         season: Int? = null,
         episode: Int? = null,
         onLinkLoaded: (SourceLink) -> Unit,

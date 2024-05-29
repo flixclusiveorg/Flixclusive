@@ -24,6 +24,7 @@ class DefaultSourceLinksRepository @Inject constructor(
     override suspend fun getSourceLinks(
         mediaId: String,
         providerApi: ProviderApi,
+        film: Film,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
@@ -33,6 +34,7 @@ class DefaultSourceLinksRepository @Inject constructor(
             try {
                 providerApi.getSourceLinks(
                     filmId = mediaId,
+                    film = film,
                     episode = episode,
                     season = season,
                     onLinkLoaded = onLinkLoaded,
@@ -70,9 +72,8 @@ class DefaultSourceLinksRepository @Inject constructor(
                     }
 
                     val searchResponse = providerApi.search(
-                        query = film.title,
                         page = i,
-                        filmType = film.filmType
+                        film = film
                     )
 
                     if (searchResponse.results.isEmpty())
