@@ -29,7 +29,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.core.ui.common.navigation.UpdateDialogNavigator
-import com.flixclusive.core.ui.setup.SetupScreensViewModel
 import com.flixclusive.data.configuration.UpdateStatus
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.spec.DestinationStyle
@@ -48,23 +47,23 @@ object DismissibleDialog : DestinationStyle.Dialog {
 fun UpdateDialog(
     navigator: UpdateDialogNavigator,
 ) {
-    val viewModel = hiltViewModel<SetupScreensViewModel>()
-    val updateStatus by viewModel.updateStatus.collectAsStateWithLifecycle(UpdateStatus.Fetching)
+    val viewModel = hiltViewModel<UpdateFeatureViewModel>()
+    val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle(null)
 
     LaunchedEffect(Unit) {
-        viewModel.checkForUpdates()
+        viewModel.appUpdateCheckerUseCase.checkForUpdates()
     }
 
     LaunchedEffect(updateStatus) {
         if (
             updateStatus == UpdateStatus.Outdated
-            && viewModel.updateUrl != null
-            && viewModel.newVersion != null
+            && viewModel.appUpdateCheckerUseCase.updateUrl != null
+            && viewModel.appUpdateCheckerUseCase.newVersion != null
         ) {
             navigator.openUpdateScreen(
-                newVersion = viewModel.newVersion!!,
-                updateUrl = viewModel.updateUrl!!,
-                updateInfo = viewModel.updateInfo
+                newVersion = viewModel.appUpdateCheckerUseCase.newVersion!!,
+                updateUrl = viewModel.appUpdateCheckerUseCase.updateUrl!!,
+                updateInfo = viewModel.appUpdateCheckerUseCase.updateInfo
             )
         }
     }
@@ -132,7 +131,7 @@ fun UpdateDialog(
                         )
 
                         Text(
-                            text = updateStatus.errorMessage?.asString()
+                            text = updateStatus?.errorMessage?.asString()
                                 ?: stringResource(id = UtilR.string.failed_checking_for_updates),
                             style = MaterialTheme.typography.labelLarge,
                             textAlign = TextAlign.Center

@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.Intent
 import com.flixclusive.service.update.AppUpdaterService.Companion.startAppUpdater
 import com.flixclusive.service.update.AppUpdaterService.Companion.stopAppUpdater
-import com.flixclusive.service.update.util.cancelNotification
+import com.flixclusive.core.util.android.cancelNotification
 
 class AppUpdaterReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {

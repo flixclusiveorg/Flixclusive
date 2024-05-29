@@ -24,7 +24,6 @@ include(":app")
 include(":core:ui:film")
 include(":core:ui:home")
 include(":core:ui:player")
-include(":core:ui:setup")
 // ===========================================================
 
 // Common features
@@ -68,6 +67,7 @@ include(":domain:home")
 include(":domain:provider")
 include(":domain:search")
 include(":domain:tmdb")
+include(":domain:updater")
 
 include(":data:configuration")
 include(":data:network")

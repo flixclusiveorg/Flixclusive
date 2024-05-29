@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets
 
 /**
  *
- * Deletes OAT recursively
+ * Deletes recursively
  * */
 internal fun rmrf(file: File) {
     if (file.isDirectory) {
@@ -23,7 +23,7 @@ internal fun rmrf(file: File) {
     file.delete()
 }
 
-internal fun Context.provideValidProviderPath(
+fun Context.provideValidProviderPath(
     providerData: ProviderData
 ) = File("${filesDir}/$PROVIDERS_FOLDER/${buildValidFilename(providerData.repositoryUrl!!)}/${buildValidFilename(providerData.name)}.flx")
 
@@ -82,7 +82,7 @@ private fun trimFilename(res: StringBuilder, maxBytes: Int = 254) {
     }
 }
 
-internal fun OkHttpClient.downloadFile(
+fun OkHttpClient.downloadFile(
     file: File,
     downloadUrl: String
 ): Boolean {

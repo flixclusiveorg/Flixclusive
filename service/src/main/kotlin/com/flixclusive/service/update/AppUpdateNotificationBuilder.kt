@@ -5,9 +5,9 @@ import android.net.Uri
 import androidx.core.app.NotificationCompat
 import com.flixclusive.core.util.android.installApkActivity
 import com.flixclusive.core.util.android.installApkPendingActivity
+import com.flixclusive.core.util.android.notificationBuilder
+import com.flixclusive.core.util.android.notify
 import com.flixclusive.service.R
-import com.flixclusive.service.update.util.notificationBuilder
-import com.flixclusive.service.update.util.notify
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 

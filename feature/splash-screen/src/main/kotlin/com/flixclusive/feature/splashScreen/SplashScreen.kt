@@ -47,7 +47,6 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
 import com.flixclusive.core.ui.common.navigation.UpdateDialogNavigator
-import com.flixclusive.core.ui.setup.SetupScreensViewModel
 import com.flixclusive.core.util.android.hasAllPermissionGranted
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.data.configuration.UpdateStatus
@@ -76,15 +75,12 @@ fun SplashScreen(
     navigator: SplashScreenNavigator
 ) {
     val context = LocalContext.current
-    val splashScreenViewModel: SplashScreenViewModel = hiltViewModel()
-    val setupViewModel: SetupScreensViewModel = hiltViewModel()
+    val viewModel: SplashScreenViewModel = hiltViewModel()
 
-    val appSettings by splashScreenViewModel.appSettings.collectAsStateWithLifecycle()
-    val uiState by splashScreenViewModel.uiState.collectAsStateWithLifecycle()
-    val updateStatus by setupViewModel.updateStatus.collectAsStateWithLifecycle(null)
-    val configurationStatus by setupViewModel.configurationStatus.collectAsStateWithLifecycle(
-        Resource.Loading
-    )
+    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle(null)
+    val configurationStatus by viewModel.configurationStatus.collectAsStateWithLifecycle(Resource.Loading)
 
     var areAllPermissionsGranted by remember { mutableStateOf(context.hasAllPermissionGranted()) }
     var isDoneAnimating by rememberSaveable { mutableStateOf(false) }
@@ -160,7 +156,7 @@ fun SplashScreen(
                                     false -> {
                                         PrivacyNotice(
                                             nextStep = {
-                                                splashScreenViewModel.updateSettings(
+                                                viewModel.updateSettings(
                                                     appSettings.copy(
                                                         isSendingCrashLogsAutomatically = it
                                                     )
@@ -179,7 +175,7 @@ fun SplashScreen(
                                     true -> {
                                         ProvidersDisclaimer(
                                             understood = {
-                                                splashScreenViewModel.updateSettings(
+                                                viewModel.updateSettings(
                                                     appSettings.copy(isFirstTimeUserLaunch_ = false)
                                                 )
                                             }
@@ -251,9 +247,9 @@ fun SplashScreen(
         if (areAllPermissionsGranted && isDoneAnimating && !appSettings.isFirstTimeUserLaunch_ && updateStatus != null) {
             if (updateStatus == UpdateStatus.Outdated && appSettings.isUsingAutoUpdateAppFeature) {
                 navigator.openUpdateScreen(
-                    newVersion = setupViewModel.newVersion!!,
-                    updateInfo = setupViewModel.updateInfo,
-                    updateUrl = setupViewModel.updateUrl!!,
+                    newVersion = viewModel.appUpdateCheckerUseCase.newVersion!!,
+                    updateInfo = viewModel.appUpdateCheckerUseCase.updateInfo,
+                    updateUrl = viewModel.appUpdateCheckerUseCase.updateUrl!!,
                     isComingFromSplashScreen = true,
                 )
             } else if (

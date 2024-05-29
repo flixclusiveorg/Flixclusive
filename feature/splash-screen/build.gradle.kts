@@ -11,7 +11,7 @@ android {
 
 dependencies {
     implementation(projects.core.ui.common)
-    implementation(projects.core.ui.setup)
+    implementation(projects.domain.updater)
     implementation(projects.core.ui.tv)
     implementation(projects.domain.home)
 

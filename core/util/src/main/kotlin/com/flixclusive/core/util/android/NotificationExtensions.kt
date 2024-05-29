@@ -1,4 +1,4 @@
-package com.flixclusive.service.update.util
+package com.flixclusive.core.util.android
 
 import android.Manifest
 import android.app.Notification
@@ -14,9 +14,7 @@ import androidx.core.app.NotificationManagerCompat.NotificationWithIdAndTag
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.core.content.getSystemService
-import com.flixclusive.service.R
-import com.flixclusive.service.update.CHANNEL_UPDATER_ID
-import com.flixclusive.service.update.CHANNEL_UPDATER_NAME
+import com.flixclusive.core.util.R
 
 val Context.notificationManager: NotificationManager
     get() = getSystemService()!!
@@ -70,10 +68,13 @@ fun Context.notificationBuilder(
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun NotificationManager.createChannel() {
+fun NotificationManager.createChannel(
+    channelId: String,
+    channelName: String
+) {
     val channel = NotificationChannel(
-        CHANNEL_UPDATER_ID,
-        CHANNEL_UPDATER_NAME,
+        channelId,
+        channelName,
         NotificationManager.IMPORTANCE_DEFAULT
     )
 
