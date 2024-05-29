@@ -11,6 +11,7 @@ interface SourceLinksRepository {
     suspend fun getSourceLinks(
         mediaId: String,
         providerApi: ProviderApi,
+        film: Film,
         season: Int? = null,
         episode: Int? = null,
         onLinkLoaded: (SourceLink) -> Unit,

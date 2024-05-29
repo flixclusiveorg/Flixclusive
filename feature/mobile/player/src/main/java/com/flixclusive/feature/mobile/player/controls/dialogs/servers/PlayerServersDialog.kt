@@ -25,6 +25,7 @@ import com.flixclusive.feature.mobile.player.controls.common.ListContentHolder
 import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.tmdb.Film
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResults
@@ -108,11 +109,7 @@ private fun PlayerServersDialogPreview() {
             override val name: String
                 get() = "Provider #$it"
 
-            override suspend fun search(
-                query: String,
-                page: Int,
-                filmType: FilmType
-            ): SearchResults {
+            override suspend fun search(film: Film, page: Int): SearchResults {
                 TODO("Not yet implemented")
             }
 
@@ -122,6 +119,7 @@ private fun PlayerServersDialogPreview() {
 
             override suspend fun getSourceLinks(
                 filmId: String,
+                film: Film,
                 season: Int?,
                 episode: Int?,
                 onLinkLoaded: (SourceLink) -> Unit,
@@ -129,7 +127,6 @@ private fun PlayerServersDialogPreview() {
             ) {
                 TODO("Not yet implemented")
             }
-
         }
     }
 

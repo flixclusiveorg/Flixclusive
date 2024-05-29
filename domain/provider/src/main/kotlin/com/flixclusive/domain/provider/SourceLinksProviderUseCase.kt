@@ -288,6 +288,7 @@ class SourceLinksProviderUseCase @Inject constructor(
 
             val result = sourceLinksRepository.getSourceLinks(
                 mediaId = mediaIdToUse,
+                film = film,
                 season = episodeToUse?.season,
                 episode = episodeToUse?.episode,
                 providerApi = provider,

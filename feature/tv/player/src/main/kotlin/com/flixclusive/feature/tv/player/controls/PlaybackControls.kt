@@ -59,6 +59,7 @@ import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
@@ -356,20 +357,17 @@ private fun PlaybackControlsPreview() {
             override val name: String
                 get() = "Provider #$it"
 
-            override suspend fun search(
-                query: String,
-                page: Int,
-                filmType: FilmType
-            ): SearchResults {
+            override suspend fun getFilmInfo(filmId: String, filmType: FilmType): FilmInfo {
                 TODO("Not yet implemented")
             }
 
-            override suspend fun getFilmInfo(filmId: String, filmType: FilmType): FilmInfo {
+            override suspend fun search(film: Film, page: Int): SearchResults {
                 TODO("Not yet implemented")
             }
 
             override suspend fun getSourceLinks(
                 filmId: String,
+                film: Film,
                 season: Int?,
                 episode: Int?,
                 onLinkLoaded: (SourceLink) -> Unit,
@@ -377,7 +375,6 @@ private fun PlaybackControlsPreview() {
             ) {
                 TODO("Not yet implemented")
             }
-
         }
     }
 
