@@ -99,7 +99,7 @@ class DefaultTMDBRepository @Inject constructor(
         return withContext(ioDispatcher) {
             try {
                 if (query.isEmpty()) {
-                    Resource.Failure("Search query should not be empty!")
+                    return@withContext Resource.Failure("Search query should not be empty!")
                 }
 
                 val response = tmdbApiService.search(
