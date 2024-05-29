@@ -5,11 +5,10 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.core.ui.setup"
+    namespace = "com.flixclusive.domain.updater"
 }
 
 dependencies {
     api(projects.data.configuration)
-
-    implementation(libs.lifecycle.viewModelKtx)
+    implementation(projects.data.provider)
 }

@@ -1,7 +1,6 @@
 package com.flixclusive.service.update
 
 import android.app.ActivityManager
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
@@ -18,13 +17,14 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import com.flixclusive.core.ui.common.util.showToast
+import com.flixclusive.core.util.android.createChannel
+import com.flixclusive.core.util.android.notificationManager
 import com.flixclusive.core.util.android.saveTo
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.service.update.util.ProgressListener
 import com.flixclusive.service.update.util.await
-import com.flixclusive.service.update.util.createChannel
 import com.flixclusive.service.update.util.getUriCompat
 import com.flixclusive.service.update.util.newCachelessCallWithProgress
 import dagger.hilt.android.AndroidEntryPoint
@@ -82,11 +82,13 @@ class AppUpdaterService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notifier = AppUpdateNotificationBuilder(this)
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationManager.createChannel()
+            notificationManager.createChannel(
+                channelId = CHANNEL_UPDATER_ID,
+                channelName = CHANNEL_UPDATER_NAME
+            )
         }
 
         setupWakeLock()

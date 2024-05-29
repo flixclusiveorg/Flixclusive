@@ -1,5 +1,6 @@
 package com.flixclusive.data.provider
 
+import android.R.attr.name
 import android.content.Context
 import android.content.res.AssetManager
 import android.content.res.Resources
@@ -31,6 +32,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,6 +45,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import com.flixclusive.core.util.R as UtilR
 
+
 const val PROVIDERS_FOLDER = "flx_providers"
 
 @Singleton
@@ -51,23 +55,28 @@ class ProviderManager @Inject constructor(
     @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
     private val appSettingsManager: AppSettingsManager,
     private val client: OkHttpClient,
-    private val providersRepository: ProviderRepository,
+    private val providersRepository: ProviderRepository
 ) {
     /** Map containing all loaded providers  */
     val providers: MutableMap<String, Provider> = LinkedHashMap()
-    val classLoaders: MutableMap<PathClassLoader, Provider> = HashMap()
+    private val classLoaders: MutableMap<PathClassLoader, Provider> = HashMap()
 
-    // An observable map of provider data
+    /**
+     * An observable map of provider data
+     */
     val providerDataList = mutableStateListOf<ProviderData>()
 
     /** Providers that failed to load for various reasons. Map of file to String or Exception  */
-    val failedToLoad: MutableMap<File, Any> = LinkedHashMap()
+    private val failedToLoad: MutableMap<File, Any> = LinkedHashMap()
 
     /**
      *
      * Map of all repository's updater.json files and their contents
      * */
     private val updaterJsonMap = HashMap<String, List<ProviderData>>()
+
+    private val _isInitialized = MutableStateFlow(false)
+    val isInitialized = _isInitialized.asStateFlow()
 
     fun initialize() {
         scope.launch {
@@ -86,11 +95,14 @@ class ProviderManager @Inject constructor(
                 initializeProvider(providerFile = file)
             }
 
-            if (failedToLoad.isNotEmpty())
+            if (failedToLoad.isNotEmpty()) {
                 context.showToast(
                     message = context.getString(UtilR.string.failed_to_load_providers_msg),
                     duration = Toast.LENGTH_LONG
                 )
+            }
+
+            _isInitialized.value = true
         }
     }
 
@@ -350,8 +362,12 @@ class ProviderManager @Inject constructor(
      * Unloads a provider
      *
      * @param providerData the [ProviderData] to uninstall/unload
+     * @param unloadOnSettings an optional toggle to also unload the provider from the settings. Default value is *true*
      */
-    suspend fun unloadProvider(providerData: ProviderData) {
+    suspend fun unloadProvider(
+        providerData: ProviderData,
+        unloadOnSettings: Boolean = true
+    ) {
         val provider = providers[providerData.name]
         val file = context.provideValidProviderPath(providerData)
 
@@ -360,7 +376,7 @@ class ProviderManager @Inject constructor(
             return
         }
 
-        unloadProvider(provider, file)
+        unloadProvider(provider, file, unloadOnSettings)
     }
 
     /**
@@ -368,8 +384,12 @@ class ProviderManager @Inject constructor(
      * Unloads a provider based on [ProviderPreference]
      *
      * @param providerPreference the [ProviderPreference] required that contains the file path and provider's name
+     * @param unloadOnSettings an optional toggle to also unload the provider from the settings. Default value is *true*
      * */
-    suspend fun unloadProvider(providerPreference: ProviderPreference) {
+    suspend fun unloadProvider(
+        providerPreference: ProviderPreference,
+        unloadOnSettings: Boolean = true
+    ) {
         val provider = providers[providerPreference.name]
         val file = File(providerPreference.filePath)
 
@@ -378,12 +398,13 @@ class ProviderManager @Inject constructor(
             return
         }
 
-        unloadProvider(provider, file)
+        unloadProvider(provider, file, unloadOnSettings)
     }
 
     private suspend fun unloadProvider(
         provider: Provider,
-        file: File
+        file: File,
+        unloadOnSettings: Boolean
     ) {
         infoLog("Unloading provider: ${provider.getName()}")
         safeCall("Exception while unloading provider: ${provider.getName()}") {
@@ -392,11 +413,25 @@ class ProviderManager @Inject constructor(
             providerDataList.removeIf {
                 it.name.equals(file.nameWithoutExtension, true)
             }
-            classLoaders.values.removeIf { it.getName().equals(provider.getName(), true) }
+            classLoaders.values.removeIf { 
+                it.getName().equals(provider.getName(), true)
+            }
             providersRepository.remove(provider.getName()!!)
             providers.remove(provider.getName())
-            unloadProviderOnSettings(file.absolutePath)
+            if (unloadOnSettings) {
+                unloadProviderOnSettings(file.absolutePath)
+            }
             file.delete()
+            
+            // Delete updater.json file if its the only thing remaining on that folder
+            val parentFolder = file.parentFile!!
+            if (parentFolder.isDirectory && parentFolder.listFiles()?.size == 1) {
+                val lastRemainingFile = parentFolder.listFiles()!![0]
+                
+                if (lastRemainingFile.name.equals("updater.json", true)) {
+                    rmrf(parentFolder)
+                }
+            }
         }
     }
 
@@ -410,8 +445,45 @@ class ProviderManager @Inject constructor(
             it.copy(providers = newList)
         }
     }
+    
+    private suspend fun reloadProviderOnSettings(providerPreference: ProviderPreference) {
+        appSettingsManager.updateProviderSettings {
+            val newList = it.providers.toMutableList()
+            val indexOfProviderToReload = newList.indexOfFirst { savedProviderPreference ->
+                providerPreference.name.equals(savedProviderPreference.name, true)
+                && providerPreference.filePath.equals(savedProviderPreference.filePath, true)
+            }
 
-    suspend fun swap(
+            newList[indexOfProviderToReload] = newList[indexOfProviderToReload].copy(
+                name = providerPreference.name // Need to do this because name changes might occur for some instances.
+            )
+
+            it.copy(providers = newList)
+        }
+    }
+
+    suspend fun reloadProvider(providerData: ProviderData) {
+        if (!providers.containsKey(providerData.name)) throw IllegalArgumentException("No such provider: ${providerData.name}")
+        
+        unloadProvider(
+            providerData = providerData,
+            unloadOnSettings = false
+        )
+        loadProvider(
+            providerData = providerData,
+            needsDownload = true
+        )
+
+        reloadProviderOnSettings(
+            providerPreference = ProviderPreference(
+                name = providerData.name,
+                filePath = context.provideValidProviderPath(providerData).absolutePath,
+                isDisabled = false
+            )
+        )
+    }
+
+    suspend fun swapProvidersOrder(
         fromIndex: Int,
         toIndex: Int
     ) {

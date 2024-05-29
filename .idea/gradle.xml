@@ -35,7 +35,6 @@
             <option value="$PROJECT_DIR$/core/ui/home" />
             <option value="$PROJECT_DIR$/core/ui/mobile" />
             <option value="$PROJECT_DIR$/core/ui/player" />
-            <option value="$PROJECT_DIR$/core/ui/setup" />
             <option value="$PROJECT_DIR$/core/ui/tv" />
             <option value="$PROJECT_DIR$/core/util" />
             <option value="$PROJECT_DIR$/data" />
@@ -52,6 +51,7 @@
             <option value="$PROJECT_DIR$/domain/provider" />
             <option value="$PROJECT_DIR$/domain/search" />
             <option value="$PROJECT_DIR$/domain/tmdb" />
+            <option value="$PROJECT_DIR$/domain/updater" />
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/mobile" />
             <option value="$PROJECT_DIR$/feature/mobile/about" />

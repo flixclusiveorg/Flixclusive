@@ -41,6 +41,7 @@
     <string name="error_on_search">Error while searching</string>
     <string name="fail_sending_error_log">Couldn\'t send error logs to server</string>
     <string name="failed_checking_for_updates">Failed to check for updates</string>
+    <string name="failed_to_auto_update_providers_error_message">Something went wrong while auto updating plugins.</string>
     <string name="failed_to_extract">Failed to extract, try again later</string>
     <string name="failed_to_init_app">Couldn\'t initialize the app.</string>
     <string name="failed_to_initialize_home_items">Failed to initialize home items</string>
@@ -49,6 +50,7 @@
     <string name="film_data_fetch_failed">Failed to fetch film data</string>
     <string name="invalid_repo_link">Could not parse url link.</string>
     <string name="invalid_repository">Repository does not have `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
+    <string name="load_link_job_active_error_message">Still processing the last request…</string>
     <string name="null_player_context_error">Player context should not be null!</string>
     <string name="pagination_error_message">Error while fetching items</string>
     <string name="player_not_initialized">Player has not been initialized</string>
@@ -78,7 +80,8 @@
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
     <string name="authors">Authors</string>
     <string name="auto_option">Auto</string>
-    <string name="auto_update_app">Auto update app</string>
+    <string name="auto_update_app">Auto-update app</string>
+    <string name="auto_update_providers">Auto-update providers</string>
     <string name="automatic_crash_report">Automatic crash report</string>
     <string name="automatic_crash_report_label">Automatically send the crash data to Flixclusive\'s server.</string>
     <string name="browse_categories">Browse Categories</string>
@@ -105,6 +108,7 @@
     <string name="export_label">Export</string>
     <string name="film_card_titles">Film card titles</string>
     <string name="film_filter">Film Type</string>
+    <string name="flixclusive_providers">Flixclusive Providers</string>
     <string name="genres">Genres</string>
     <string name="github_repository">Github Repository</string>
     <string name="ignore_warning_message">Don\'t warn me anymore.</string>
@@ -199,6 +203,7 @@
 
     <!--  State messages  -->
     <string name="all_providers_installed">All providers have been installed!</string>
+    <string name="all_providers_updated">All providers are up to date!</string>
     <string name="checking_for_updates">Checking for updates…</string>
     <string name="copied_link">Link has been copied</string>
     <string name="copy_stack_trace_message">You could open a github issue and paste this stack trace.</string>
@@ -211,7 +216,6 @@
     <string name="failed_to_load_providers_msg">Some providers failed to load. Check the providers page for more info.</string>
     <string name="fetching_episode_message">Fetching show episode…</string>
     <string name="film_data_fetching">Fetching film details…</string>
-    <string name="load_link_job_active_error_message">Still processing the last request…</string>
     <string name="loading_next_episode">Loading next episode…</string>
     <string name="no_available_sources">No available source providers!</string>
     <string name="offline_message">You\'re offline</string>
@@ -236,6 +240,8 @@
     <string name="invalid_provider_file_directory_msg_format">Found directory %s in your providers folder. DO NOT EXTRACT PROVIDER ZIPS!</string>
     <string name="next_episode_on_format">Next episode on %1$d…</string>
     <string name="update_out_now_format">%1$s is out now</string>
+    <string name="updates_out_now_provider_format">Updates for plugins are available: %1$s</string>
+    <string name="providers_updated_format">The following provider(s) have been updated: %1$s</string>
 
     <!--  Content descriptions  -->
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>

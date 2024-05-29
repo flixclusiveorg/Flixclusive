@@ -11,7 +11,7 @@ android {
 
 dependencies {
     implementation(projects.core.ui.mobile)
-    implementation(projects.core.ui.setup)
+    implementation(projects.domain.updater)
     implementation(projects.service)
 
     implementation(libs.coil.compose)

@@ -49,7 +49,7 @@ class ProvidersScreenViewModel @Inject constructor(
         }
 
         swapJob = viewModelScope.launch {
-            providerManager.swap(fromIndex, toIndex)
+            providerManager.swapProvidersOrder(fromIndex, toIndex)
         }
     }
 

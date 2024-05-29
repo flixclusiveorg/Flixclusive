@@ -7,6 +7,8 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.home.MINIMUM_HOME_ITEMS
+import com.flixclusive.domain.updater.AppUpdateCheckerUseCase
+import com.flixclusive.domain.updater.ProviderUpdaterUseCase
 import com.flixclusive.model.datastore.AppSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,18 +31,22 @@ internal sealed class SplashScreenUiState {
 internal class SplashScreenViewModel @Inject constructor(
     homeItemsProviderUseCase: HomeItemsProviderUseCase,
     appConfigurationManager: AppConfigurationManager,
-    private val appSettingsManager: AppSettingsManager
+    private val appSettingsManager: AppSettingsManager,
+    val appUpdateCheckerUseCase: AppUpdateCheckerUseCase,
+    private val providerUpdaterUseCase: ProviderUpdaterUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<SplashScreenUiState>(SplashScreenUiState.Loading)
     val uiState = _uiState.asStateFlow()
+
+    val configurationStatus = appConfigurationManager.configurationStatus
 
     val appSettings = appSettingsManager
         .appSettings
         .data
         .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            appSettingsManager.localAppSettings
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = appSettingsManager.localAppSettings
         )
 
     init {
@@ -66,6 +72,10 @@ internal class SplashScreenViewModel @Inject constructor(
                             }
                         }
                     }
+            }
+
+            launch {
+                providerUpdaterUseCase.checkForUpdates(notify = true)
             }
         }
     }

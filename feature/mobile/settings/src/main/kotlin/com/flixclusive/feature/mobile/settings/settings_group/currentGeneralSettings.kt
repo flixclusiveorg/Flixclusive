@@ -43,6 +43,29 @@ internal fun currentGeneralSettings(
             },
         ),
         SettingsItem(
+            title = stringResource(UtilR.string.auto_update_providers),
+            onClick = {
+                onChangeSettings(
+                    appSettings.copy(
+                        isUsingAutoUpdateProviderFeature = !appSettings.isUsingAutoUpdateProviderFeature
+                    )
+                )
+            },
+            previewContent = {
+                Switch(
+                    checked = appSettings.isUsingAutoUpdateProviderFeature,
+                    onCheckedChange = {
+                        onChangeSettings(
+                            appSettings.copy(
+                                isUsingAutoUpdateProviderFeature = !appSettings.isUsingAutoUpdateProviderFeature
+                            )
+                        )
+                    },
+                    modifier = Modifier.scale(0.7F)
+                )
+            },
+        ),
+        SettingsItem(
             title = stringResource(UtilR.string.sign_up_prerelease),
             description = stringResource(UtilR.string.signup_prerelease_updates_desc),
             onClick = {
