@@ -18,12 +18,14 @@ import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
@@ -164,6 +166,13 @@ class FlixclusivePlayerManager(
     override fun onPlayerError(error: PlaybackException) {
         errorLog(error.stackTraceToString())
 
+        if (error.cause is InvalidResponseCodeException) {
+            val okHttpError = error.cause as InvalidResponseCodeException
+            errorLog("Headers: ${okHttpError.dataSpec.httpRequestHeaders}")
+            errorLog("Url: ${okHttpError.dataSpec.uri}")
+            errorLog("Body: ${String(okHttpError.responseBody)}")
+        }
+
         player?.run {
             prepare()
             playWhenReady = this@FlixclusivePlayerManager.playWhenReady
@@ -249,12 +258,11 @@ class FlixclusivePlayerManager(
         player?.run {
             debugLog("Preparing the player...")
 
-            val mediaSource = cacheFactory.createMediaSource(
-                createMediaItem(
-                    url = link.url,
-                    title = title
-                )
+            val mediaItem = createMediaItem(
+                url = link.url,
+                title = title
             )
+            val mediaSource = cacheFactory.createMediaSource(mediaItem)
 
             setMediaSource(
                 /* mediaSource = */ MergingMediaSource(mediaSource, *createSubtitleSources(subtitles)),
@@ -306,6 +314,11 @@ class FlixclusivePlayerManager(
                 .setDisplayTitle(title)
                 .build()
         )
+        .apply {
+            if (url.endsWith(".txt")) {
+                setMimeType(MimeTypes.APPLICATION_M3U8)
+            }
+        }
         .build()
 
     /**
