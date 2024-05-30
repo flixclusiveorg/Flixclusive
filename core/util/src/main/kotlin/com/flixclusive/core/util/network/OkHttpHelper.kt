@@ -14,7 +14,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 
-const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36"
+const val USER_AGENT = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.3) Gecko/20090912 Gentoo Firefox/3.5.3 FirePHP/0.3"
 /**
  * Enum class representing HTTP request methods.
  * @property requiresBody Indicates whether the HTTP method typically requires a request body or data.
