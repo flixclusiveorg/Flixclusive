@@ -245,7 +245,11 @@ class SourceLinksProviderUseCase @Inject constructor(
             if (mediaIdResource is Resource.Failure || mediaIdResource.data.isNullOrBlank()) {
                 if (canStopLooping) {
                     onError?.invoke()
-                    trySend(SourceDataState.Unavailable(mediaIdResource.error))
+                    trySend(
+                        SourceDataState.Unavailable(
+                            mediaIdResource.error ?: UiText.StringResource(UtilR.string.failed_to_get_media_id_error_msg)
+                        )
+                    )
                     return@channelFlow
                 }
 

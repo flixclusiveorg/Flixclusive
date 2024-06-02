@@ -3,6 +3,7 @@ package com.flixclusive.data.provider
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.exception.catchInternetRelatedException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.CryptographyUtil
@@ -86,7 +87,7 @@ class DefaultSourceLinksRepository @Inject constructor(
                             break
                         }
 
-                        val titleMatches = result.title.equals(film.title, ignoreCase = true)
+                        val titleMatches = result.title.equals(film.title, ignoreCase = true) || result.title?.compareIgnoringSymbols(film.title, ignoreCase = true) == true
                         val filmTypeMatches = result.filmType?.type == film.filmType.type
                         val releaseDateMatches =
                             result.releaseDate == film.dateReleased.split(" ").last()
@@ -127,8 +128,17 @@ class DefaultSourceLinksRepository @Inject constructor(
                 Resource.Success(id)
             } catch (e: Exception) {
                 errorLog(e.stackTraceToString())
-                Resource.Failure(UtilR.string.source_data_dialog_state_unavailable_default)
+                Resource.Failure(UiText.StringValue("Something went wrong fetching the media id: ${e.localizedMessage}"))
             }
         }
+    }
+
+    private fun String.compareIgnoringSymbols(other: String, ignoreCase: Boolean = false): Boolean {
+        val lettersAndNumbersOnlyRegex = Regex("[^A-Za-z0-9 ]")
+
+        val normalizedThis = this.replace(lettersAndNumbersOnlyRegex, "")
+        val normalizedOther = other.replace(lettersAndNumbersOnlyRegex, "")
+
+        return normalizedThis.equals(normalizedOther, ignoreCase = ignoreCase)
     }
 }
