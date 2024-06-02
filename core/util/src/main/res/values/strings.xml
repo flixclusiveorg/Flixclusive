@@ -214,6 +214,7 @@
     <string name="empty_providers_list_message">Start adding providers now!</string>
     <string name="empty_recently_watched_list_message">Start watching now!</string>
     <string name="failed_to_load_providers_msg">Some providers failed to load. Check the providers page for more info.</string>
+    <string name="failed_to_get_media_id_error_msg">Failed to get media id. This might not be available yet.</string>
     <string name="fetching_episode_message">Fetching show episode…</string>
     <string name="film_data_fetching">Fetching film details…</string>
     <string name="loading_next_episode">Loading next episode…</string>
