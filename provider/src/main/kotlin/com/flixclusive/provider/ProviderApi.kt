@@ -30,12 +30,12 @@ abstract class ProviderApi(
     /**
      * The base URL used for network requests. Defaults to an empty string.
      */
-    protected open val baseUrl: String = ""
+    open val baseUrl: String = ""
 
     /**
      * The list of supported extractors, embeds, or servers for this provider instance.
      */
-    protected open val supportedExtractors: List<Extractor> = emptyList()
+    open val supportedExtractors: List<Extractor> = emptyList()
 
     /**
      * Whether this provider needs to use a WebView to scrape content
@@ -48,10 +48,12 @@ abstract class ProviderApi(
      * @param page The page number for paginated results. Defaults to 1.
      * @return a [SearchResults] instance containing the search results.
      */
-    abstract suspend fun search(
+    open suspend fun search(
         film: Film,
         page: Int = 1,
-    ): SearchResults
+    ): SearchResults {
+        TODO("OPTIONAL: Not yet implemented")
+    }
 
     /**
      * Retrieves detailed information about a film.
@@ -59,10 +61,12 @@ abstract class ProviderApi(
      * @param filmType The type of film.
      * @return a [FilmInfo] instance containing the film's information.
      */
-    abstract suspend fun getFilmInfo(
+    open suspend fun getFilmInfo(
         filmId: String,
         filmType: FilmType,
-    ): FilmInfo
+    ): FilmInfo {
+        TODO("OPTIONAL: Not yet implemented")
+    }
 
     /**
      * Obtains source links for the provided film, season, and episode.
