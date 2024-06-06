@@ -45,24 +45,24 @@ class ProviderUpdaterUseCase @Inject constructor(
     // Synchronized to avoid ConcurrentModificationException
     val cachedProviders: MutableMap<String, CachedData> = Collections.synchronizedMap(HashMap())
     val updatedProvidersMap: MutableMap<String, VersionCode> = Collections.synchronizedMap(HashMap())
-    val availableUpdatesMap: MutableList<String> = Collections.synchronizedList(ArrayList())
+    val outdatedProviders: MutableList<String> = Collections.synchronizedList(ArrayList())
 
     private var channelHasBeenInitialized = false
 
     suspend fun checkForUpdates(notify: Boolean) {
         val appSettings = appSettingsManager.appSettings.data.first()
         
-        availableUpdatesMap.clear()
+        outdatedProviders.clear()
         providerManager.providers.forEach { (name, provider) ->
-            if (checkProviderUpdate(provider)) availableUpdatesMap.add(name)
+            if (isProviderOutdated(provider)) outdatedProviders.add(name)
         }
 
-        infoLog("Available updates [${availableUpdatesMap.size}]: ${availableUpdatesMap.joinToString(", ")}")
-        if (!notify || availableUpdatesMap.size == 0)
+        infoLog("Available updates [${outdatedProviders.size}] ${outdatedProviders.joinToString(", ")}")
+        if (!notify || outdatedProviders.size == 0)
             return
 
 
-        val updatableProviders = availableUpdatesMap.joinToString(", ")
+        val updatableProviders = outdatedProviders.joinToString(", ")
 
         val notificationBody = when {
             appSettings.isUsingAutoUpdateProviderFeature -> {
@@ -76,7 +76,7 @@ class ProviderUpdaterUseCase @Inject constructor(
                         updatableProviders)
                 }
             }
-            availableUpdatesMap.size > 0 -> {
+            outdatedProviders.size > 0 -> {
                 context.getString(UtilR.string.updates_out_now_provider_format, updatableProviders)
             }
             else -> context.getString(UtilR.string.all_providers_updated)
@@ -109,7 +109,7 @@ class ProviderUpdaterUseCase @Inject constructor(
         }
     }
 
-    suspend fun checkProviderUpdate(provider: Provider): Boolean {
+    suspend fun isProviderOutdated(provider: Provider): Boolean {
         val manifest = provider.manifest
         if (manifest?.updateUrl == null
             || manifest.updateUrl.equals(""))
@@ -120,11 +120,9 @@ class ProviderUpdaterUseCase @Inject constructor(
                 ?: return false
 
             val updatedVersion = updatedProvidersMap[provider.javaClass.simpleName]
-            val isUpdated = updatedVersion != null && updatedVersion > updateInfo.versionCode
+            val isOutdated = (updatedVersion != null && updatedVersion < updateInfo.versionCode) || manifest.versionCode < updateInfo.versionCode
 
-            if (isUpdated) return false
-
-            return manifest.versionCode > updateInfo.versionCode
+            return isOutdated
         } catch (e: Throwable) {
             e.printStackTrace()
             errorLog("Failed to check update for: " + provider.javaClass.getSimpleName())
@@ -162,7 +160,7 @@ class ProviderUpdaterUseCase @Inject constructor(
 
     suspend fun updateAllProviders(): Int {
         var updateCount = 0
-        for (provider in availableUpdatesMap) {
+        for (provider in outdatedProviders) {
             try {
                 if (updateProvider(provider) && updateCount != -1)
                     updateCount++
@@ -172,7 +170,7 @@ class ProviderUpdaterUseCase @Inject constructor(
             }
         }
 
-        availableUpdatesMap.clear()
+        outdatedProviders.clear()
         checkForUpdates(false)
         return updateCount
     }
