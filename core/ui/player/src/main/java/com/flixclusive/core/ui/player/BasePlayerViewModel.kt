@@ -58,7 +58,13 @@ abstract class BasePlayerViewModel(
         client = client,
         context = context,
         playerCacheManager = playerCacheManager,
-        appSettings = appSettingsManager.localAppSettings
+        appSettings = appSettingsManager.localAppSettings,
+        showErrorCallback = {
+            showErrorSnackbar(
+                message = it,
+                isInternalPlayerError = true
+            )
+        }
     )
 
     val sourceData: SourceData
@@ -176,7 +182,10 @@ abstract class BasePlayerViewModel(
      *
      * @param message the global [UiText] message to be sent and parse by the player
      * */
-    protected abstract fun showErrorOnUiCallback(message: UiText)
+    protected abstract fun showErrorSnackbar(
+        message: UiText,
+        isInternalPlayerError: Boolean = false
+    )
 
     fun onSeasonChange(seasonNumber: Int) {
         if (onSeasonChangeJob?.isActive == true)
@@ -227,7 +236,7 @@ abstract class BasePlayerViewModel(
                 runWebView = runWebView,
                 onError = {
                     updateProviderSelected(oldSelectedSource)
-                    showErrorOnUiCallback(UiText.StringResource(UtilR.string.failed_to_retrieve_provider_message_format))
+                    showErrorSnackbar(UiText.StringResource(UtilR.string.failed_to_retrieve_provider_message_format))
                 }
             ).onCompletion {
                 if (it != null) {
@@ -345,7 +354,7 @@ abstract class BasePlayerViewModel(
      * Obtains the next episode based on the given [TMDBEpisode].
      * It returns null if an error has occured or it can't find the episode to be queried.
      *
-     * @param onError an optional callback if caller wants to call [showErrorOnUiCallback]
+     * @param onError an optional callback if caller wants to call [showErrorSnackbar]
      *
      * */
     private suspend fun TMDBEpisode.getNextEpisode(
@@ -409,7 +418,7 @@ abstract class BasePlayerViewModel(
         runWebView: (FlixclusiveWebView) -> Unit
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
-            showErrorOnUiCallback(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
+            showErrorSnackbar(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
             return
         }
 
@@ -431,7 +440,7 @@ abstract class BasePlayerViewModel(
             var episode = episodeToWatch
             if (isLoadingNextEpisode) {
                 episode = currentSelectedEpisode.value!!.getNextEpisode(
-                    onError = { showErrorOnUiCallback(it) }
+                    onError = { showErrorSnackbar(it) }
                 ).also {
                     if (it == null) {
                         return@launch
@@ -453,7 +462,7 @@ abstract class BasePlayerViewModel(
         runWebView: (FlixclusiveWebView) -> Unit
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
-            showErrorOnUiCallback(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
+            showErrorSnackbar(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
             return
         }
 

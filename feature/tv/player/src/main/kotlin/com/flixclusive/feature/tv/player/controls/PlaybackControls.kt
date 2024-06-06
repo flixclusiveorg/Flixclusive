@@ -399,7 +399,8 @@ private fun PlaybackControlsPreview() {
                             OkHttpClient(),
                             LocalContext.current,
                             PlayerCacheManager(LocalContext.current),
-                            AppSettings()
+                            AppSettings(),
+                            {}
                         )
             ) {
                 Box {

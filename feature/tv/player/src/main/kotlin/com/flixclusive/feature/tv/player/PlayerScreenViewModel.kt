@@ -76,9 +76,10 @@ class PlayerScreenViewModel @AssistedInject constructor(
         }
     }
 
-    override fun showErrorOnUiCallback(message: UiText) {
-
-    }
+    override fun showErrorSnackbar(
+        message: UiText,
+        isInternalPlayerError: Boolean
+    ) {}
 
     /**
      *
