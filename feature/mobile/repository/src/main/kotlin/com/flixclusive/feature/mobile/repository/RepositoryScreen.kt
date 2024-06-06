@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.repository
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +40,7 @@ import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCard
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCardPlaceholder
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCardState
+import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.repository.component.CustomOutlineButton
@@ -87,6 +89,7 @@ fun RepositoryScreen(
 
     val listState = rememberLazyListState()
     val shouldShowTopBar by listState.isScrollingUp()
+    val listIsAtTop by listState.isAtTop()
 
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -115,10 +118,15 @@ fun RepositoryScreen(
                 onNavigationIconClick = navigator::goBack
             )
         }
-    ) {
+    ) { innerPadding ->
+        val topPadding by animateDpAsState(
+            targetValue = if (listIsAtTop) innerPadding.calculateTopPadding() else 0.dp,
+            label = ""
+        )
+
         Box(
             modifier = Modifier
-                .padding(it)
+                .padding(top = topPadding)
                 .fillMaxSize()
         ) {
             LazyColumn(
