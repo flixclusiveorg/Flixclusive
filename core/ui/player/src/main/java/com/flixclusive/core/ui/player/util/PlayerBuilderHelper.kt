@@ -36,7 +36,9 @@ internal fun Context.getRenderers(
     subtitleOffset: Long,
     onTextRendererChange: (CustomTextRenderer) -> Unit,
 ): Array<Renderer> {
-    return DefaultRenderersFactory(this)
+    return DefaultRenderersFactory(this).apply {
+            setEnableDecoderFallback(true)
+        }
         .createRenderers(
             eventHandler,
             videoRendererEventListener,

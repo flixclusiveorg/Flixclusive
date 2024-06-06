@@ -168,7 +168,8 @@ private fun PlaybackSpeedPanelPreview() {
                             OkHttpClient(),
                             LocalContext.current,
                             PlayerCacheManager(LocalContext.current),
-                            AppSettings()
+                            AppSettings(),
+                            {}
                         )
             ) {
                 Box {

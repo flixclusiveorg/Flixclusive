@@ -11,6 +11,7 @@ import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.PlayerSnackbarMessage
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
+import com.flixclusive.core.ui.player.util.PlayerUiUtil
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
@@ -73,11 +74,18 @@ class PlayerScreenViewModel @Inject constructor(
         resetUiState()
     }
 
-    override fun showErrorOnUiCallback(message: UiText) {
+    override fun showErrorSnackbar(
+        message: UiText,
+        isInternalPlayerError: Boolean
+    ) {
         showSnackbar(
             message = message,
             type = PlayerSnackbarMessageType.Error
         )
+
+        if (isInternalPlayerError) {
+            selectNextServer()
+        }
     }
 
     fun showSnackbar(message: UiText, type: PlayerSnackbarMessageType) {
@@ -140,5 +148,22 @@ class PlayerScreenViewModel @Inject constructor(
         SnackbarDuration.Short -> 4000L
         SnackbarDuration.Long -> 10000L
         SnackbarDuration.Indefinite -> Long.MAX_VALUE
+    }
+
+    private fun selectNextServer() {
+        val nextLinkIndex = (uiState.value.selectedSourceLink + 1).takeIf { it <= sourceData.cachedLinks.lastIndex }
+
+        if (nextLinkIndex != null) {
+            val newLink = sourceData.cachedLinks[nextLinkIndex]
+            val currentPlayerTitle = PlayerUiUtil.formatPlayerTitle(film, currentSelectedEpisode.value)
+
+            onServerChange(index = nextLinkIndex)
+            player.prepare(
+                link = newLink,
+                title = currentPlayerTitle,
+                subtitles = sourceData.cachedSubtitles.toList(),
+                initialPlaybackPosition = player.currentPosition
+            )
+        }
     }
 }
