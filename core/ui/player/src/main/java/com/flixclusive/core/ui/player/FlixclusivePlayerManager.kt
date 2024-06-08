@@ -14,7 +14,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastAny
 import androidx.media3.common.C
-import androidx.media3.common.C.TIME_UNSET
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
@@ -26,7 +25,6 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
-import androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
@@ -47,7 +45,7 @@ import com.flixclusive.core.ui.player.util.getLoadControl
 import com.flixclusive.core.ui.player.util.getPreferredSubtitleIndex
 import com.flixclusive.core.ui.player.util.getRenderers
 import com.flixclusive.core.ui.player.util.getSubtitleMimeType
-import com.flixclusive.core.ui.player.util.isDdosProtection
+import com.flixclusive.core.ui.player.util.handleError
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.errorLog
@@ -169,58 +167,15 @@ class FlixclusivePlayerManager(
 
     override fun onPlayerError(error: PlaybackException) {
         errorLog(error.stackTraceToString())
-
-        val isNetworkException =
-            error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
-            || error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
-        when {
-            isNetworkException
-                && player != null
-                && player?.duration != TIME_UNSET -> {
-                player?.run {
-                    seekToDefaultPosition()
-                    prepare()
-                    playWhenReady = this@FlixclusivePlayerManager.playWhenReady
-                }
+        error.handleError(
+            duration = player?.duration,
+            showErrorCallback = showErrorCallback
+        ) {
+            player?.run {
+                seekToDefaultPosition()
+                prepare()
+                playWhenReady = this@FlixclusivePlayerManager.playWhenReady
             }
-
-            error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW -> {
-                // Re-initialize player at the current live window default position.
-                player?.run {
-                    seekToDefaultPosition()
-                    prepare()
-                    playWhenReady = this@FlixclusivePlayerManager.playWhenReady
-                }
-            }
-
-            else -> {
-                var message = error.localizedMessage
-
-                if (error.cause is InvalidResponseCodeException) {
-                    val okHttpError = error.cause as InvalidResponseCodeException
-                    val responseBody = String(okHttpError.responseBody)
-
-                    errorLog(
-                        """
-                            Headers: ${okHttpError.dataSpec.httpRequestHeaders}
-                            Url: ${okHttpError.dataSpec.uri}
-                            Body: $responseBody
-                        """.trimIndent()
-                    )
-
-                    if (responseBody.isDdosProtection())
-                        message = "Anti-DDoS"
-                }
-
-                val errorMessage = UiText.StringValue("PlaybackException [${error.errorCode}]: $message")
-
-                showErrorCallback(errorMessage)
-            }
-        }
-
-        player?.run {
-            prepare()
-            playWhenReady = this@FlixclusivePlayerManager.playWhenReady
         }
     }
 
