@@ -30,11 +30,13 @@ enum class SubtitleSource {
  * @property url The URL of the subtitle.
  * @property language The language of the subtitle.
  * @property type The source type of the subtitle, indicating whether it's online, local, or embedded. Default is [SubtitleSource.ONLINE]
+ * @property customHeaders The custom headers of this link. some requests require custom authorized headers. Default is null
  */
 data class Subtitle(
     val url: String,
     @SerializedName("language", alternate = ["lang"]) val language: String,
     val type: SubtitleSource = ONLINE,
+    val customHeaders: Map<String, String>? = null
 ) : Serializable {
     override fun equals(other: Any?): Boolean {
         return try {
