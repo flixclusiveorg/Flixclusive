@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
+import okhttp3.Response
 import java.io.Reader
 
 /**
@@ -57,4 +58,16 @@ inline fun <reified T> fromJson(
         .registerTypeAdapter(T::class.java, serializer)
         .create()
         .fromJson(json, object : TypeToken<T>() {}.type)
+}
+
+fun <T> Response.fromJson(
+    errorMessage: String = "Response must not be empty."
+): T {
+    val string = body?.string()
+
+    requireNotNull(string) {
+        errorMessage
+    }
+
+    return fromJson(string)
 }
