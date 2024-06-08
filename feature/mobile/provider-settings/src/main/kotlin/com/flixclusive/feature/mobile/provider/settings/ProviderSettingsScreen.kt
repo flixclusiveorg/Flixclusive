@@ -1,13 +1,13 @@
 package com.flixclusive.feature.mobile.provider.settings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.getValue
@@ -44,52 +44,38 @@ fun ProviderSettingsScreen(
 
     var isChangeLogsDialogShown by remember { mutableStateOf(false) }
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0.dp),
-        topBar = {
-            ProviderSettingsTopBar(
-                isVisible = shouldShowTopBar,
-                repositoryUrl = args.providerData.repositoryUrl,
-                changeLogs = args.providerData.changelog,
-                openChangeLogs = { isChangeLogsDialogShown = true },
-                onNavigationIconClick = navigator::goBack
-            )
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-        ) {
-            LazyColumn(
-                state = listState,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .padding(horizontal = 10.dp)
-            ) {
-                item {
-                    ProviderSettingsHeader(providerData = args.providerData)
-                }
+    Column(
+        modifier = Modifier
+            .windowInsetsPadding(WindowInsets(0.dp))
+            .fillMaxSize()
+            .padding(horizontal = 10.dp)
+    ) {
+        ProviderSettingsTopBar(
+            isVisible = shouldShowTopBar,
+            repositoryUrl = args.providerData.repositoryUrl,
+            changeLogs = args.providerData.changelog,
+            openChangeLogs = { isChangeLogsDialogShown = true },
+            onNavigationIconClick = navigator::goBack
+        )
 
-                // This is where the SettingsScreen should go inside the ProviderManifest
-                item {
-                    if (viewModel.providerInstance != null) {
-                        // Need to call the composable with the reflection way bc
-                        // Compose won't let us call it the normal way.
-                        val method = remember {
-                            viewModel.providerInstance::class.java
-                                .declaredMethods
-                                .find {
-                                    it.name.equals("SettingsScreen")
-                                }?.also {
-                                    it.isAccessible = true
-                                }
-                        }
+        ProviderSettingsHeader(providerData = args.providerData)
 
-                        method?.invoke(viewModel.providerInstance, currentComposer, 0)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (viewModel.providerInstance != null) {
+            // Need to call the composable with the reflection way bc
+            // Compose won't let us call it the normal way.
+            val method = remember {
+                viewModel.providerInstance::class.java
+                    .declaredMethods
+                    .find {
+                        it.name.equals("SettingsScreen")
+                    }?.also {
+                        it.isAccessible = true
                     }
-                }
             }
+
+            method?.invoke(viewModel.providerInstance, currentComposer, 0)
         }
     }
 
