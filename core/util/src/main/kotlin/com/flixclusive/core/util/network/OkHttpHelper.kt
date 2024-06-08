@@ -4,6 +4,7 @@ import com.flixclusive.core.util.exception.safeCall
 import okhttp3.Call
 import okhttp3.FormBody
 import okhttp3.Headers
+import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -12,9 +13,46 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import java.net.URL
+import kotlin.random.Random
 
 
 const val USER_AGENT = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.3) Gecko/20090912 Gentoo Firefox/3.5.3 FirePHP/0.3"
+
+private fun getRandomUserAgent(): String {
+    val osPlatforms = listOf(
+        "Windows NT ${Random.nextInt(6, 11)}.0; Win64; x64",
+        "Macintosh; Intel Mac OS X 10_${Random.nextInt(8, 16)}_${Random.nextInt(0, 8)}",
+        "X11; Ubuntu; Linux x86_64",
+        "Linux; Android ${Random.nextInt(7, 12)}",
+        "iPhone; CPU iPhone OS ${Random.nextInt(10, 15)}_${Random.nextInt(0, 6)} like Mac OS X"
+    )
+
+    val browsers = listOf(
+        "Chrome/${Random.nextInt(80, 100)}.0.${Random.nextInt(4000, 5000)}.${Random.nextInt(100, 200)}",
+        "Firefox/${Random.nextInt(70, 90)}.0",
+        "Safari/605.1.${Random.nextInt(10, 30)}",
+        "Edge/${Random.nextInt(16, 20)}.${Random.nextInt(10000, 20000)}"
+    )
+
+    val webKits = listOf(
+        "AppleWebKit/${Random.nextInt(537, 540)}.36 (KHTML, like Gecko)",
+        "AppleWebKit/605.1.${Random.nextInt(10, 30)} (KHTML, like Gecko)"
+    )
+
+    val platform = osPlatforms.random()
+    val browser = browsers.random()
+    val webKit = if (browser.contains("Chrome") || browser.contains("Safari") || browser.contains("Edge")) webKits.random() else ""
+
+    return when {
+        browser.contains("Chrome") -> "Mozilla/5.0 ($platform) $webKit $browser Safari/537.36"
+        browser.contains("Safari") -> "Mozilla/5.0 ($platform) $webKit $browser"
+        browser.contains("Firefox") -> "Mozilla/5.0 ($platform; rv:${browser.split("/")[1]}) Gecko/20100101 $browser"
+        browser.contains("Edge") -> "Mozilla/5.0 ($platform) $webKit Edge/${browser.split("/")[1]}"
+        else -> "Mozilla/5.0 ($platform)"
+    }
+}
+
 /**
  * Enum class representing HTTP request methods.
  * @property requiresBody Indicates whether the HTTP method typically requires a request body or data.
@@ -208,3 +246,19 @@ private fun isJson(test: String): Boolean {
         true
     } ?: false
 }
+
+fun OkHttpClient.request(
+    url: URL,
+    method: HttpMethod = HttpMethod.GET,
+    body: RequestBody? = null,
+    headers: Headers = Headers.headersOf(),
+    userAgent: String = USER_AGENT,
+): Call = request(url.toString(), method, body, headers, userAgent)
+
+fun OkHttpClient.request(
+    url: HttpUrl,
+    method: HttpMethod = HttpMethod.GET,
+    body: RequestBody? = null,
+    headers: Headers = Headers.headersOf(),
+    userAgent: String = USER_AGENT,
+): Call = request(url.toString(), method, body, headers, userAgent)
