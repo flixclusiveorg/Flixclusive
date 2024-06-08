@@ -43,10 +43,11 @@ import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun ProviderSettingsHeader(
+    modifier: Modifier = Modifier,
     providerData: ProviderData
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(top = 16.dp, bottom = 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally

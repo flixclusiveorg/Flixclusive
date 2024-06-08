@@ -2,11 +2,9 @@ package com.flixclusive.feature.mobile.provider.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.currentComposer
@@ -44,21 +42,25 @@ fun ProviderSettingsScreen(
 
     var isChangeLogsDialogShown by remember { mutableStateOf(false) }
 
+    val horizontalPadding = 10.dp
+
     Column(
         modifier = Modifier
-            .windowInsetsPadding(WindowInsets(0.dp))
             .fillMaxSize()
-            .padding(horizontal = 10.dp)
     ) {
         ProviderSettingsTopBar(
             isVisible = shouldShowTopBar,
             repositoryUrl = args.providerData.repositoryUrl,
             changeLogs = args.providerData.changelog,
             openChangeLogs = { isChangeLogsDialogShown = true },
-            onNavigationIconClick = navigator::goBack
+            onNavigationIconClick = navigator::goBack,
+            modifier = Modifier.padding(horizontal = horizontalPadding)
         )
 
-        ProviderSettingsHeader(providerData = args.providerData)
+        ProviderSettingsHeader(
+            providerData = args.providerData,
+            modifier = Modifier.padding(horizontal = horizontalPadding)
+        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
