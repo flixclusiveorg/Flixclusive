@@ -47,6 +47,7 @@ import com.flixclusive.core.ui.player.util.getLoadControl
 import com.flixclusive.core.ui.player.util.getPreferredSubtitleIndex
 import com.flixclusive.core.ui.player.util.getRenderers
 import com.flixclusive.core.ui.player.util.getSubtitleMimeType
+import com.flixclusive.core.ui.player.util.isDdosProtection
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.errorLog
@@ -193,18 +194,25 @@ class FlixclusivePlayerManager(
             }
 
             else -> {
+                var message = error.localizedMessage
+
                 if (error.cause is InvalidResponseCodeException) {
                     val okHttpError = error.cause as InvalidResponseCodeException
+                    val responseBody = String(okHttpError.responseBody)
+
                     errorLog(
                         """
-                        Headers: ${okHttpError.dataSpec.httpRequestHeaders}
-                        Url: ${okHttpError.dataSpec.uri}
-                        Body: ${String(okHttpError.responseBody)}
+                            Headers: ${okHttpError.dataSpec.httpRequestHeaders}
+                            Url: ${okHttpError.dataSpec.uri}
+                            Body: $responseBody
                         """.trimIndent()
                     )
+
+                    if (responseBody.isDdosProtection())
+                        message = "Anti-DDoS"
                 }
 
-                val errorMessage = UiText.StringValue("PlaybackException [${error.errorCode}]: ${error.localizedMessage}")
+                val errorMessage = UiText.StringValue("PlaybackException [${error.errorCode}]: $message")
 
                 showErrorCallback(errorMessage)
             }
