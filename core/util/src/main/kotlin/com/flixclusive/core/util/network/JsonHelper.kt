@@ -60,7 +60,7 @@ inline fun <reified T> fromJson(
         .fromJson(json, object : TypeToken<T>() {}.type)
 }
 
-fun <T> Response.fromJson(
+inline fun <reified T> Response.fromJson(
     errorMessage: String = "Response must not be empty."
 ): T {
     val string = body?.string()
@@ -69,5 +69,5 @@ fun <T> Response.fromJson(
         errorMessage
     }
 
-    return fromJson(string)
+    return fromJson(json = string)
 }
