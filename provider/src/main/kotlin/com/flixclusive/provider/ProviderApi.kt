@@ -10,7 +10,6 @@ import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResults
-import com.flixclusive.provider.extractor.Extractor
 import com.flixclusive.provider.util.FlixclusiveWebView
 import com.flixclusive.provider.util.WebViewCallback
 import okhttp3.OkHttpClient
@@ -31,11 +30,6 @@ abstract class ProviderApi(
      * The base URL used for network requests. Defaults to an empty string.
      */
     open val baseUrl: String = ""
-
-    /**
-     * The list of supported extractors, embeds, or servers for this provider instance.
-     */
-    open val supportedExtractors: List<Extractor> = emptyList()
 
     /**
      * Whether this provider needs to use a WebView to scrape content
