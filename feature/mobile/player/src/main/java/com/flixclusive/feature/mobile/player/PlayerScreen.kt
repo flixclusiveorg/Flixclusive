@@ -146,7 +146,7 @@ fun PlayerScreen(
     var isChangingEpisode by remember { mutableStateOf(false) }
 
     val snackbarBottomPadding by animateDpAsState(
-        targetValue = if (viewModel.areControlsVisible) 100.dp else 0.dp,
+        targetValue = if (viewModel.areControlsVisible && !viewModel.areControlsLocked) 100.dp else 0.dp,
         label = ""
     )
 
