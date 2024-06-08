@@ -29,12 +29,12 @@ enum class SubtitleSource {
  *
  * @property url The URL of the subtitle.
  * @property language The language of the subtitle.
- * @property type The source type of the subtitle, indicating whether it's online, local, or embedded.
+ * @property type The source type of the subtitle, indicating whether it's online, local, or embedded. Default is [SubtitleSource.ONLINE]
  */
 data class Subtitle(
     val url: String,
     @SerializedName("language", alternate = ["lang"]) val language: String,
-    val type: SubtitleSource,
+    val type: SubtitleSource = ONLINE,
 ) : Serializable {
     override fun equals(other: Any?): Boolean {
         return try {
