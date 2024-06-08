@@ -169,8 +169,11 @@ class FlixclusivePlayerManager(
     override fun onPlayerError(error: PlaybackException) {
         errorLog(error.stackTraceToString())
 
-        when {
+        val isNetworkException =
             error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
+            || error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
+        when {
+            isNetworkException
                 && player != null
                 && player?.duration != TIME_UNSET -> {
                 player?.run {
