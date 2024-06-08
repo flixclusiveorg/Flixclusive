@@ -47,8 +47,8 @@ import com.flixclusive.core.ui.player.util.getRenderers
 import com.flixclusive.core.ui.player.util.getSubtitleMimeType
 import com.flixclusive.core.ui.player.util.handleError
 import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.errorLog
+import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.player.CaptionSizePreference.Companion.getDp
@@ -131,7 +131,8 @@ class FlixclusivePlayerManager(
 
     private lateinit var cacheFactory: DefaultMediaSourceFactory
     private val localDataSource: DefaultDataSource.Factory
-    private val onlineDataSource: OkHttpDataSource.Factory
+    private val okHttpDataSource: OkHttpDataSource.Factory
+    private val baseHttpDataSource: DefaultHttpDataSource.Factory
     private var currentTextRenderer: CustomTextRenderer? = null
 
     // == CCs/Audios/Qualities
@@ -141,12 +142,12 @@ class FlixclusivePlayerManager(
     // ==
 
     init {
-        val basicHttpDataSource = DefaultHttpDataSource.Factory()
+        baseHttpDataSource = DefaultHttpDataSource.Factory()
             .setUserAgent(USER_AGENT)
             .setAllowCrossProtocolRedirects(true)
 
-        localDataSource = DefaultDataSource.Factory(context, basicHttpDataSource)
-        onlineDataSource = OkHttpDataSource.Factory(client)
+        localDataSource = DefaultDataSource.Factory(context, baseHttpDataSource)
+        okHttpDataSource = OkHttpDataSource.Factory(client)
             .setUserAgent(USER_AGENT)
     }
 
@@ -191,7 +192,7 @@ class FlixclusivePlayerManager(
 
     fun initialize() {
         if (player == null) {
-            debugLog("Initializing the player...")
+            infoLog("Initializing the player...")
             disableSSLVerification()
 
             val trackSelector = DefaultTrackSelector(context)
@@ -205,7 +206,7 @@ class FlixclusivePlayerManager(
                 cache = playerCacheManager.getCache(
                     preferredDiskCacheSize = appSettings.preferredDiskCacheSize
                 ),
-                onlineDataSource = onlineDataSource
+                onlineDataSource = okHttpDataSource
             )
 
             player = ExoPlayer.Builder(context)
@@ -243,7 +244,7 @@ class FlixclusivePlayerManager(
                 }
         }
 
-        debugLog("Initializing the media session...")
+        infoLog("Initializing the media session...")
         mediaSession = MediaSession
             .Builder(context, player!!)
             .build()
@@ -256,12 +257,16 @@ class FlixclusivePlayerManager(
         initialPlaybackPosition: Long = 0L,
     ) {
         player?.run {
-            debugLog("Preparing the player...")
+            infoLog("Preparing the player...")
 
             val mediaItem = createMediaItem(
                 url = link.url,
                 title = title
             )
+
+            okHttpDataSource.setDefaultRequestProperties(link.customHeaders ?: emptyMap())
+            baseHttpDataSource.setDefaultRequestProperties(link.customHeaders ?: emptyMap())
+
             val mediaSource = cacheFactory.createMediaSource(mediaItem)
 
             setMediaSource(
@@ -278,7 +283,7 @@ class FlixclusivePlayerManager(
         val isFullyReleasingThePlayer = appSettings.shouldReleasePlayer
 
         if (isFullyReleasingThePlayer || isForceReleasing) {
-            debugLog("Releasing the player...")
+            infoLog("Releasing the player...")
             hasBeenInitialized = false
             playerCacheManager.releaseCache()
             player?.removeListener(this@FlixclusivePlayerManager)
@@ -288,7 +293,7 @@ class FlixclusivePlayerManager(
             currentTextRenderer = null
         }
 
-        debugLog("Releasing the media session...")
+        infoLog("Releasing the media session...")
         mediaSession?.release()
         mediaSession = null
     }
@@ -415,7 +420,7 @@ class FlixclusivePlayerManager(
 
             SingleSampleMediaSource.Factory(
                 when (subtitle.type) {
-                    SubtitleSource.ONLINE -> onlineDataSource
+                    SubtitleSource.ONLINE -> okHttpDataSource
                     else -> localDataSource
                 }
             ).createMediaSource(subtitleConfiguration, C.TIME_UNSET)
