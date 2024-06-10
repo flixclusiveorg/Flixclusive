@@ -23,10 +23,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.gradle.entities.Author
-import com.flixclusive.gradle.entities.Language
+import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
 
 @Composable
@@ -35,6 +33,7 @@ fun InstalledProviderCard(
     enabled: Boolean,
     isDraggable: Boolean,
     displacementOffset: Float?,
+    onClick: () -> Unit,
     openSettings: () -> Unit,
     uninstallProvider: () -> Unit,
     onToggleProvider: () -> Unit,
@@ -58,12 +57,7 @@ fun InstalledProviderCard(
         contentAlignment = Alignment.Center
     ) {
         Card(
-            onClick = {
-                if (providerData.status != Status.Maintenance
-                    && providerData.status != Status.Down) {
-                    onToggleProvider()
-                }
-            },
+            onClick = onClick,
             interactionSource = interactionSource,
             shape = MaterialTheme.shapes.medium,
             colors = CardDefaults.cardColors(
@@ -106,7 +100,12 @@ fun InstalledProviderCard(
                     enabled = enabled,
                     openSettings = openSettings,
                     unloadProvider = uninstallProvider,
-                    toggleUsage = onToggleProvider
+                    toggleUsage = {
+                        if (providerData.status != Status.Maintenance
+                            && providerData.status != Status.Down) {
+                            onToggleProvider()
+                        }
+                    }
                 )
             }
         }
@@ -116,21 +115,7 @@ fun InstalledProviderCard(
 @Preview
 @Composable
 private fun ProviderCardPreview() {
-    val providerData = ProviderData(
-        authors = listOf(Author("FLX")),
-        repositoryUrl = null,
-        buildUrl = null,
-        changelog = null,
-        changelogMedia = null,
-        versionName = "1.0.0",
-        versionCode = 10000,
-        description = null,
-        iconUrl = null,
-        language = Language.Multiple,
-        name = "123Movies",
-        providerType = ProviderType.All,
-        status = Status.Working
-    )
+    val providerData = DummyDataForPreview.getDummyProviderData()
 
     FlixclusiveTheme {
         Surface {
@@ -139,9 +124,11 @@ private fun ProviderCardPreview() {
                 enabled = true,
                 isDraggable = true,
                 displacementOffset = null,
-                openSettings = { /*TODO*/ },
-                uninstallProvider = { /*TODO*/ }) {
-            }
+                openSettings = {},
+                uninstallProvider = {},
+                onClick = {},
+                onToggleProvider = {},
+            )
         }
     }
 }

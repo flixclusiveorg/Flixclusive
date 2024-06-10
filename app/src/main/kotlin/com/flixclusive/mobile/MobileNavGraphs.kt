@@ -8,7 +8,11 @@ import com.flixclusive.feature.mobile.home.destinations.HomeScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.preferences.destinations.PreferencesScreenDestination
 import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
+import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
+import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
+import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
+import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
 import com.flixclusive.feature.mobile.search.destinations.SearchScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
@@ -17,9 +21,6 @@ import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestinatio
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
-import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
-import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
-import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
 import com.ramcosta.composedestinations.dynamic.routedIn
 import com.ramcosta.composedestinations.spec.DestinationSpec
 import com.ramcosta.composedestinations.spec.NavGraphSpec
@@ -64,6 +65,7 @@ internal object MobileNavGraphs {
             ProvidersScreenDestination,
             RepositorySearchScreenDestination,
             RepositoryScreenDestination,
+            ProviderInfoScreenDestination,
             ProviderSettingsScreenDestination,
         ).routedIn(this)
             .associateBy { it.route }

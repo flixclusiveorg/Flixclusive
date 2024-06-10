@@ -109,7 +109,14 @@ class ProviderUpdaterUseCase @Inject constructor(
         }
     }
 
-    suspend fun isProviderOutdated(provider: Provider): Boolean {
+    suspend fun isProviderOutdated(providerData: ProviderData): Boolean {
+        val provider = providerManager.providers[providerData.name]
+            ?: return false
+
+        return isProviderOutdated(provider)
+    }
+
+    private suspend fun isProviderOutdated(provider: Provider): Boolean {
         val manifest = provider.manifest
         if (manifest?.updateUrl == null
             || manifest.updateUrl.equals(""))

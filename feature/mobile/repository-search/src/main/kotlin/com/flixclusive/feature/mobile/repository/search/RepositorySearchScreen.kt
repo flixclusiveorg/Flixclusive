@@ -27,7 +27,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.navigation.GoBackAction
+import com.flixclusive.core.ui.common.navigation.RepositorySearchScreenNavigator
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
@@ -36,13 +36,8 @@ import com.flixclusive.feature.mobile.repository.search.component.AddRepositoryB
 import com.flixclusive.feature.mobile.repository.search.component.RemoveAlertDialog
 import com.flixclusive.feature.mobile.repository.search.component.RepositoryCard
 import com.flixclusive.feature.mobile.repository.search.component.RepositorySearchTopBar
-import com.flixclusive.gradle.entities.Repository
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.util.R as UtilR
-
-interface RepositorySearchScreenNavigator : GoBackAction {
-    fun openRepositoryScreen(repository: Repository)
-}
 
 @Destination
 @Composable

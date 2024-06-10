@@ -32,6 +32,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.gradle.entities.Author
 import com.flixclusive.gradle.entities.Language
@@ -152,21 +153,7 @@ fun ProviderUninstallNoticeDialog(
 @Preview
 @Composable
 private fun ProviderUninstallNoticeDialogPreview() {
-    val providerData = ProviderData(
-        authors = listOf(Author("FLX")),
-        repositoryUrl = null,
-        buildUrl = null,
-        changelog = null,
-        changelogMedia = null,
-        versionName = "1.0.0",
-        versionCode = 10000,
-        description = "lorem ipsum lorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsum",
-        iconUrl = null,
-        language = Language.Multiple,
-        name = "123Movies",
-        providerType = ProviderType.All,
-        status = Status.Working
-    )
+    val providerData = DummyDataForPreview.getDummyProviderData()
 
     FlixclusiveTheme {
         Surface {

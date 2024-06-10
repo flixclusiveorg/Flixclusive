@@ -6,12 +6,14 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.feature.mobile.provider.settings"
+    namespace = "com.flixclusive.feature.mobile.provider.info"
 }
 
 dependencies {
+    implementation(projects.core.datastore)
     implementation(projects.core.ui.mobile)
-    implementation(projects.data.provider)
+    implementation(projects.domain.provider)
+    implementation(projects.domain.updater)
 
     implementation(libs.coil.compose)
     implementation(libs.compose.foundation)
