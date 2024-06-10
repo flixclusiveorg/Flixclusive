@@ -24,25 +24,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.gradle.entities.Author
-import com.flixclusive.gradle.entities.Language
 import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.gradle.entities.ProviderType
-import com.flixclusive.gradle.entities.Status
 import com.flixclusive.core.util.R as UtilR
 
-enum class ProviderCardState {
+enum class ProviderInstallationStatus {
     NotInstalled,
     Installing,
     Installed,
+    Outdated
 }
 
 @Composable
 fun ProviderCard(
     modifier: Modifier = Modifier,
     providerData: ProviderData,
-    state: ProviderCardState,
+    status: ProviderInstallationStatus,
     onClick: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -93,17 +91,18 @@ fun ProviderCard(
                     .fillMaxWidth()
             ) {
                 AnimatedContent(
-                    targetState = state,
+                    targetState = status,
                     label = ""
                 ) {
                     val textLabel = remember(it) {
                         when (it) {
-                            ProviderCardState.Installed -> context.getString(UtilR.string.uninstall)
+                            ProviderInstallationStatus.Installed -> context.getString(UtilR.string.uninstall)
+                            ProviderInstallationStatus.Outdated -> context.getString(UtilR.string.update_label)
                             else -> context.getString(UtilR.string.install)
                         }
                     }
 
-                    if (it == ProviderCardState.Installing) {
+                    if (it == ProviderInstallationStatus.Installing) {
                         CircularProgressIndicator(
                             strokeWidth = 2.dp,
                             modifier = Modifier
@@ -127,27 +126,13 @@ fun ProviderCard(
 @Preview
 @Composable
 private fun ProviderCardPreview() {
-    val providerData = ProviderData(
-        authors = listOf(Author("FLX")),
-        repositoryUrl = null,
-        buildUrl = null,
-        changelog = null,
-        changelogMedia = null,
-        versionName = "1.0.0",
-        versionCode = 10000,
-        description = "lorem ipsum lorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsum",
-        iconUrl = null,
-        language = Language.Multiple,
-        name = "123Movies",
-        providerType = ProviderType.All,
-        status = Status.Working
-    )
+    val providerData = DummyDataForPreview.getDummyProviderData()
 
     FlixclusiveTheme {
         Surface {
             ProviderCard(
                 providerData = providerData,
-                state = ProviderCardState.Installed
+                status = ProviderInstallationStatus.Installed
             ) {
 
             }

@@ -47,6 +47,7 @@ import com.flixclusive.core.util.R as UtilR
 
 interface ProvidersScreenNavigator : GoBackAction {
     fun openProviderSettings(providerData: ProviderData)
+    fun openProviderInfo(providerData: ProviderData)
 
     fun openAddRepositoryScreen()
 }
@@ -176,6 +177,7 @@ fun ProvidersScreen(
                                 isDraggable = !searchExpanded.value,
                                 displacementOffset = displacementOffset,
                                 openSettings = { navigator.openProviderSettings(providerData) },
+                                onClick = { navigator.openProviderInfo(providerData) },
                                 uninstallProvider = { indexOfProviderToUninstall = index },
                                 onToggleProvider = { viewModel.toggleProvider(providerData) }
                             )

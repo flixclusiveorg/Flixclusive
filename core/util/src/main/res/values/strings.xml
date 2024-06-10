@@ -41,12 +41,14 @@
     <string name="error_on_search">Error while searching</string>
     <string name="fail_sending_error_log">Couldn\'t send error logs to server</string>
     <string name="failed_checking_for_updates">Failed to check for updates</string>
-    <string name="failed_to_auto_update_providers_error_message">Something went wrong while auto updating plugins.</string>
+    <string name="failed_to_auto_update_providers_error_message">Something went wrong while auto updating providers.</string>
     <string name="failed_to_extract">Failed to extract, try again later</string>
     <string name="failed_to_init_app">Couldn\'t initialize the app.</string>
     <string name="failed_to_initialize_home_items">Failed to initialize home items</string>
     <string name="failed_to_initialize_search_items">Failed to initialize search items</string>
     <string name="failed_to_load_online_providers">Could not parse online providers.</string>
+    <string name="failed_to_update_provider">Failed to update the provider.</string>
+    <string name="null_repository_url_error">No repository url has been given for this provider</string>
     <string name="film_data_fetch_failed">Failed to fetch film data</string>
     <string name="invalid_repo_link">Could not parse url link.</string>
     <string name="invalid_repository">Repository does not have `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
@@ -87,6 +89,7 @@
     <string name="browse_categories">Browse Categories</string>
     <string name="browse_movie_companies">Top Movie Companies</string>
     <string name="browse_tv_networks">Top TV Networks</string>
+    <string name="browse_repository">Browse repository</string>
     <string name="cancel">Cancel</string>
     <string name="opt_in_prerelease">Ok 🗿</string>
     <string name="opt_out_prerelease">Hell nah 😭</string>
@@ -100,6 +103,7 @@
     <string name="continue_watching">Continue Watching</string>
     <string name="copy_link">Copy link</string>
     <string name="debug">DEBUG</string>
+    <string name="description">Description</string>
     <string name="default_label">(default)</string>
     <string name="doh">DNS over HTTPS</string>
     <string name="doh_change_toast_message">Restart is required for this to take effect.</string>
@@ -115,6 +119,8 @@
     <string name="import_label">Import</string>
     <string name="install">Install</string>
     <string name="install_all">Install all</string>
+    <string name="issue_a_bug">Issue a bug</string>
+    <string name="language">Language</string>
     <string name="load_url">Load URL</string>
     <string name="lock">Lock</string>
     <string name="maintenance_all_caps">MAINTENANCE</string>
@@ -173,6 +179,7 @@
     <string name="subtract_sync_offset_message">Subtract if subs are early.</string>
     <string name="sync">Sync</string>
     <string name="sync_subtitles">Sync Subtitles</string>
+    <string name="test_provider">Test provider</string>
     <string name="understood">Understood</string>
     <string name="uninstall">Uninstall</string>
     <string name="unknown_language">Unknown language</string>
@@ -190,6 +197,7 @@
     <string name="watch">Watch</string>
     <string name="watch_again">Watch Again</string>
     <string name="watchlisted">Added</string>
+    <string name="whats_new">What\'s new</string>
 
     <!--  Extra labels with formatting  -->
     <string name="continue_watching_tv_show">Continue Watching S%1$d E%2$d</string>
@@ -219,6 +227,7 @@
     <string name="film_data_fetching">Fetching film details…</string>
     <string name="loading_next_episode">Loading next episode…</string>
     <string name="no_available_sources">No available source providers!</string>
+    <string name="default_description_msg">No description given.</string>
     <string name="offline_message">You\'re offline</string>
     <string name="online_message">Back online</string>
     <string name="remove_repositories_notice_msg">Are you sure you want to remove the selected repositories?</string>

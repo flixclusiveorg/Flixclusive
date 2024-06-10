@@ -2,7 +2,7 @@
  *
  * From CS3
  */
-package com.flixclusive.feature.mobile.provider.settings.util
+package com.flixclusive.feature.mobile.provider.info.util
 
 import com.flixclusive.core.util.exception.safeCall
 

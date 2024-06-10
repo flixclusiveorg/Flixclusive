@@ -2,6 +2,7 @@ package com.flixclusive.mobile
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
+import com.flixclusive.core.ui.common.navigation.RepositorySearchScreenNavigator
 import com.flixclusive.core.ui.common.navigation.UpdateDialogNavigator
 import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
 import com.flixclusive.feature.mobile.film.FilmScreenNavigator
@@ -12,10 +13,11 @@ import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.preferences.PreferencesScreenNavigator
 import com.flixclusive.feature.mobile.provider.ProvidersScreenNavigator
+import com.flixclusive.feature.mobile.provider.info.ProviderInfoNavigator
+import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
-import com.flixclusive.feature.mobile.repository.search.RepositorySearchScreenNavigator
 import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
 import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
@@ -42,7 +44,7 @@ internal class MobileAppNavigator(
     private val navController: NavController,
     private val closeApp: () -> Unit,
 ) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator, FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator, ProvidersScreenNavigator,
-    RepositorySearchScreenNavigator {
+    RepositorySearchScreenNavigator, ProviderInfoNavigator {
 
     override fun goBack() {
         navController.navigateUp()
@@ -149,6 +151,20 @@ internal class MobileAppNavigator(
     override fun openRepositoryScreen(repository: Repository) {
         navController.navigateIfResumed(
             RepositoryScreenDestination(repository = repository) within destination.navGraph()
+        )
+    }
+
+    override fun testProviders(providers: List<ProviderData>) {
+        // TODO("Not yet implemented")
+    }
+
+    override fun seeWhatsNew(providerData: ProviderData) {
+        // TODO("Not yet implemented")
+    }
+
+    override fun openProviderInfo(providerData: ProviderData) {
+        navController.navigateIfResumed(
+            ProviderInfoScreenDestination(providerData = providerData) within destination.navGraph()
         )
     }
 }

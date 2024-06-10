@@ -37,13 +37,13 @@ import com.flixclusive.core.ui.common.ProviderUninstallNoticeDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.RetryButton
+import com.flixclusive.core.ui.mobile.component.provider.ButtonWithCircularProgressIndicator
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCard
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCardPlaceholder
-import com.flixclusive.core.ui.mobile.component.provider.ProviderCardState
+import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
-import com.flixclusive.feature.mobile.repository.component.CustomOutlineButton
 import com.flixclusive.feature.mobile.repository.component.RepositoryHeader
 import com.flixclusive.feature.mobile.repository.component.RepositoryTopBar
 import com.flixclusive.gradle.entities.ProviderData
@@ -175,12 +175,12 @@ fun RepositoryScreen(
                         val canInstallAll by remember {
                             derivedStateOf {
                                 viewModel.onlineProviderMap.any { (_, state) ->
-                                    state == ProviderCardState.NotInstalled
+                                    state == ProviderInstallationStatus.NotInstalled
                                 }
                             }
                         }
 
-                        CustomOutlineButton(
+                        ButtonWithCircularProgressIndicator(
                             onClick = viewModel::installAll,
                             iconId = UiCommonR.drawable.download,
                             isLoading = viewModel.installAllJob?.isActive == true,
@@ -196,10 +196,10 @@ fun RepositoryScreen(
                     ) { providerData ->
                         ProviderCard(
                             providerData = providerData,
-                            state = viewModel.onlineProviderMap[providerData] ?: ProviderCardState.NotInstalled,
+                            status = viewModel.onlineProviderMap[providerData] ?: ProviderInstallationStatus.NotInstalled,
                             onClick = {
-                                if (viewModel.onlineProviderMap[providerData] != ProviderCardState.Installed) {
-                                    viewModel.toggleProvider(providerData)
+                                if (viewModel.onlineProviderMap[providerData] != ProviderInstallationStatus.Installed) {
+                                    viewModel.toggleInstallationStatus(providerData)
                                 } else {
                                     providerDataToUninstall = providerData
                                 }
@@ -224,7 +224,7 @@ fun RepositoryScreen(
         ProviderUninstallNoticeDialog(
             providerData = providerData,
             onConfirm = {
-                viewModel.toggleProvider(providerData)
+                viewModel.toggleInstallationStatus(providerData)
                 providerDataToUninstall = null
             },
             onDismiss = { providerDataToUninstall = null }

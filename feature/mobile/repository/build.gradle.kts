@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.core.ui.mobile)
     implementation(projects.data.provider)
     implementation(projects.domain.provider)
+    implementation(projects.domain.updater)
 
     implementation(libs.coil.compose)
     implementation(libs.compose.foundation)
