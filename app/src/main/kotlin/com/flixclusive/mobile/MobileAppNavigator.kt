@@ -16,6 +16,7 @@ import com.flixclusive.feature.mobile.provider.ProvidersScreenNavigator
 import com.flixclusive.feature.mobile.provider.info.ProviderInfoNavigator
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
+import com.flixclusive.feature.mobile.provider.whats_new.destinations.ProviderWhatsNewScreenDestination
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
 import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
@@ -159,7 +160,9 @@ internal class MobileAppNavigator(
     }
 
     override fun seeWhatsNew(providerData: ProviderData) {
-        // TODO("Not yet implemented")
+        navController.navigateIfResumed(
+            ProviderWhatsNewScreenDestination(providerData = providerData) within destination.navGraph()
+        )
     }
 
     override fun openProviderInfo(providerData: ProviderData) {

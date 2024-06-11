@@ -10,6 +10,7 @@ import com.flixclusive.feature.mobile.preferences.destinations.PreferencesScreen
 import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
+import com.flixclusive.feature.mobile.provider.whats_new.destinations.ProviderWhatsNewScreenDestination
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
 import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
@@ -67,6 +68,7 @@ internal object MobileNavGraphs {
             RepositoryScreenDestination,
             ProviderInfoScreenDestination,
             ProviderSettingsScreenDestination,
+            ProviderWhatsNewScreenDestination,
         ).routedIn(this)
             .associateBy { it.route }
     }
