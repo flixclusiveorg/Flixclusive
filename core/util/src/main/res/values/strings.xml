@@ -239,6 +239,7 @@
     <string name="source_data_dialog_state_unavailable_default">I\'m sorry, this is not yet watchable</string>
     <string name="unavailable_episode">Episode is not yet available</string>
     <string name="unknown_provider_type">Unknown provider type</string>
+    <string name="coming_soon_feature">This feature is coming soon!</string>
     <string name="up_to_date">Version is up to date!</string>
     <string name="watchlist_empty_message">Start adding now!</string>
 

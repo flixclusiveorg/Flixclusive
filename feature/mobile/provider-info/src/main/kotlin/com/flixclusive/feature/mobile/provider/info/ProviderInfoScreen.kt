@@ -159,6 +159,7 @@ fun ProviderInfoScreen(
                             .padding(bottom = 10.dp),
                         providerInstallationStatus = viewModel.providerInstallationStatus,
                         onTestProvider = {
+                            context.showToast(context.getString(UtilR.string.coming_soon_feature))
                             navigator.testProviders(listOf(args.providerData))
                         },
                         onToggleInstallationState = viewModel::toggleInstallation

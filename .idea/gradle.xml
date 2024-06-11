@@ -61,8 +61,11 @@
             <option value="$PROJECT_DIR$/feature/mobile/home" />
             <option value="$PROJECT_DIR$/feature/mobile/player" />
             <option value="$PROJECT_DIR$/feature/mobile/preferences" />
-            <option value="$PROJECT_DIR$/feature/mobile/provider" />
+            <option value="$PROJECT_DIR$/feature/mobile/provider-info" />
+            <option value="$PROJECT_DIR$/feature/mobile/provider-list" />
             <option value="$PROJECT_DIR$/feature/mobile/provider-settings" />
+            <option value="$PROJECT_DIR$/feature/mobile/provider-test" />
+            <option value="$PROJECT_DIR$/feature/mobile/provider-whats-new" />
             <option value="$PROJECT_DIR$/feature/mobile/recently-watched" />
             <option value="$PROJECT_DIR$/feature/mobile/repository" />
             <option value="$PROJECT_DIR$/feature/mobile/repository-search" />
