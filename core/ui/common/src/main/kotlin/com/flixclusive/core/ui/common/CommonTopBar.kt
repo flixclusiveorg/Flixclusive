@@ -2,7 +2,7 @@ package com.flixclusive.core.ui.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +23,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.util.R as UtilR
 
+val COMMON_TOP_BAR_HEIGHT = 65.dp
+
 @Composable
 fun CommonTopBar(
     modifier: Modifier = Modifier,
@@ -30,10 +32,12 @@ fun CommonTopBar(
     onNavigationIconClick: () -> Unit,
     endContent: (@Composable () -> Unit)? = null,
 ) {
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
+            .statusBarsPadding()
+            .height(COMMON_TOP_BAR_HEIGHT),
+        contentAlignment = Alignment.TopCenter
     ) {
         Spacer(modifier = Modifier.statusBarsPadding())
 

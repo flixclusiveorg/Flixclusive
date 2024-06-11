@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.settings
+package com.flixclusive.feature.mobile.provider.test
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +19,7 @@ import com.ramcosta.composedestinations.annotation.Destination
     navArgsDelegate = ProviderInfoScreenNavArgs::class
 )
 @Composable
-fun ProviderSettingsScreen(
+fun ProviderTestScreen(
     navigator: GoBackAction,
     args: ProviderInfoScreenNavArgs
 ) {

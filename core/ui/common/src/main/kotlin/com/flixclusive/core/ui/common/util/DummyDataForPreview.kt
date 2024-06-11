@@ -15,7 +15,12 @@ object DummyDataForPreview {
             authors = List(5) { Author("FLX $it") },
             repositoryUrl = "https://github.com/flixclusive/123Movies",
             buildUrl = "https://raw.githubusercontent.com/Flixclusive/plugins-template/builds/updater.json",
-            changelog = """Test""",
+            changelog = """
+                # v1.0.0
+                
+                - Added new feature
+                - Fixed a bug
+            """.trimIndent(),
             versionName = "1.0.0",
             versionCode = 10000,
             description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
