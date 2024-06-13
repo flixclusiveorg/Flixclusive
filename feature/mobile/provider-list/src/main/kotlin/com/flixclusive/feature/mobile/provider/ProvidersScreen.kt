@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.provider
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,6 +35,7 @@ import com.flixclusive.core.ui.common.ProviderUninstallNoticeDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.mobile.component.provider.InstalledProviderCard
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
+import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
 import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
@@ -73,6 +75,7 @@ fun ProvidersScreen(
     )
     val listState = dragDropListState.getLazyListState()
     val shouldShowTopBar by listState.isScrollingUp()
+    val listIsAtTop by listState.isAtTop()
 
 
     val filteredProviders by remember {
@@ -113,11 +116,16 @@ fun ProvidersScreen(
                 }
             )
         }
-    ) { padding ->
+    ) { innerPadding ->
+        val topPadding by animateDpAsState(
+            targetValue = if (listIsAtTop) innerPadding.calculateTopPadding() else 0.dp,
+            label = ""
+        )
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(top = topPadding)
         ) {
             AnimatedContent(
                 targetState = viewModel.providerDataList.isEmpty(),
