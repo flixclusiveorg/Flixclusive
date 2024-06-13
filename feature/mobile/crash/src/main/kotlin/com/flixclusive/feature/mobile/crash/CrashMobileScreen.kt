@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -77,7 +78,7 @@ fun CrashMobileScreen(
                 )
             )
 
-            Divider(
+            HorizontalDivider(
                 modifier = Modifier.padding(top = 15.dp, bottom = 5.dp),
                 thickness = 0.5.dp,
                 color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.3F)
@@ -91,7 +92,7 @@ fun CrashMobileScreen(
                     ),
                 )
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier.padding(vertical = 5.dp),
                     thickness = 0.5.dp,
                     color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.3F)

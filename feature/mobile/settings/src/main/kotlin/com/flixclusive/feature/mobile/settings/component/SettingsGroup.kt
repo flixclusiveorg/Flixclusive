@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,11 +40,11 @@ internal fun SettingsGroup(
                 )
 
                 if (i < items.lastIndex)
-                    Divider(
-                        color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.15F),
-                        thickness = 0.5.dp,
+                    HorizontalDivider(
                         modifier = Modifier
-                            .padding(horizontal = 10.dp)
+                            .padding(horizontal = 10.dp),
+                        thickness = 0.5.dp,
+                        color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.15F)
                     )
             }
 

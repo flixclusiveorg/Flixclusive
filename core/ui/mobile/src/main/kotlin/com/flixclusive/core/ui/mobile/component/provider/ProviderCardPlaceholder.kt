@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -97,10 +98,10 @@ fun ProviderCardPlaceholder(
                 }
             }
 
-            Divider(
-                thickness = 0.5.dp,
+            HorizontalDivider(
                 modifier = Modifier
-                    .padding(vertical = 15.dp)
+                    .padding(vertical = 15.dp),
+                thickness = 0.5.dp
             )
 
             Column(

@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -316,9 +317,9 @@ private fun ContentTabs(
         TabRow(
             selectedTabIndex = currentTabSelected,
             divider = {
-                Divider(
-                    color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.2F),
-                    thickness = 0.5.dp
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.2F)
                 )
             },
             indicator = {

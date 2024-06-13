@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -123,11 +124,11 @@ fun RepositorySearchScreen(
                 }
 
                 item {
-                    Divider(
-                        thickness = 1.dp,
-                        color = LocalContentColor.current.onMediumEmphasis(0.4F),
+                    HorizontalDivider(
                         modifier = Modifier
-                            .padding(vertical = 10.dp)
+                            .padding(vertical = 10.dp),
+                        thickness = 1.dp,
+                        color = LocalContentColor.current.onMediumEmphasis(0.4F)
                     )
                 }
 
