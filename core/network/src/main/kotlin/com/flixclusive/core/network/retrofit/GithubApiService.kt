@@ -2,8 +2,9 @@ package com.flixclusive.core.network.retrofit
 
 import com.flixclusive.core.util.common.configuration.GITHUB_REPOSITORY
 import com.flixclusive.core.util.common.configuration.GITHUB_USERNAME
-import com.flixclusive.model.configuration.GithubLastCommit
-import com.flixclusive.model.configuration.GithubReleaseNotes
+import com.flixclusive.model.configuration.GithubBranchInfo
+import com.flixclusive.model.configuration.GithubReleaseInfo
+import com.flixclusive.model.configuration.GithubTagInfo
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -15,21 +16,30 @@ interface GithubApiService {
      * Retrieves the last commit object for the given branch.
      *
      * @param branch The branch name. Defaults to "master".
-     * @return A [GithubLastCommit] object.
+     * @return A [GithubBranchInfo] object.
      */
     @GET("repos/$GITHUB_USERNAME/$GITHUB_REPOSITORY/git/refs/heads/{branch}")
     suspend fun getLastCommitObject(
         @Path("branch") branch: String = "master"
-    ): GithubLastCommit
+    ): GithubBranchInfo
 
     /**
      * Retrieves the release notes for the given tag.
      *
      * @param tag The tag name.
-     * @return A [GithubReleaseNotes] object.
+     * @return A [GithubReleaseInfo] object.
      */
     @GET("repos/$GITHUB_USERNAME/$GITHUB_REPOSITORY/releases/tags/{tag}")
-    suspend fun getReleaseNotes(
+    suspend fun getReleaseInfo(
         @Path("tag") tag: String
-    ): GithubReleaseNotes
+    ): GithubReleaseInfo
+
+    /**
+     * Retrieves the release notes for the given tag.
+     *
+     * @param tag The tag name.
+     * @return A [GithubReleaseInfo] object.
+     */
+    @GET("repos/$GITHUB_USERNAME/$GITHUB_REPOSITORY/releases/tags")
+    suspend fun getTagsInfo(): List<GithubTagInfo>
 }

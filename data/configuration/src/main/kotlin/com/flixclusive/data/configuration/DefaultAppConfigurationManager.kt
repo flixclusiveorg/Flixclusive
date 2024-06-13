@@ -101,16 +101,19 @@ internal class DefaultAppConfigurationManager @Inject constructor(
                 val appCommitVersion = currentAppBuild?.commitVersion
                     ?: throw NullPointerException("appCommitVersion should not be null!")
 
+                val preReleaseTag = "pre-release"
+                val preReleaseTagInfo = githubApiService.getTagsInfo().find { it.name == preReleaseTag }
 
                 val shortenedSha = lastCommitObject.lastCommit.sha.shortenSha()
                 val isNeedingAnUpdate = appCommitVersion != shortenedSha
+                    && lastCommitObject.lastCommit.sha == preReleaseTagInfo?.lastCommit?.sha
 
                 if (isNeedingAnUpdate) {
-                    val preReleaseInfo = githubApiService.getReleaseNotes(tag = "pre-release")
+                    val preReleaseReleaseInfo = githubApiService.getReleaseInfo(tag = preReleaseTag)
 
                     appConfig = appConfig!!.copy(
                         versionName = "PR-$shortenedSha \uD83D\uDDFF",
-                        updateInfo = preReleaseInfo.releaseNotes,
+                        updateInfo = preReleaseReleaseInfo.releaseNotes,
                         updateUrl = "https://github.com/$GITHUB_USERNAME/$GITHUB_REPOSITORY/releases/download/pre-release/flixclusive-release.apk"
                     )
 
@@ -122,7 +125,7 @@ internal class DefaultAppConfigurationManager @Inject constructor(
                 val isNeedingAnUpdate = appConfig!!.build != -1L && appConfig!!.build > currentAppBuild!!.build
 
                 if(isNeedingAnUpdate) {
-                    val releaseInfo = githubApiService.getReleaseNotes(tag = appConfig!!.versionName)
+                    val releaseInfo = githubApiService.getReleaseInfo(tag = appConfig!!.versionName)
 
                     appConfig = appConfig!!.copy(updateInfo = releaseInfo.releaseNotes)
                     return _updateStatus.emit(UpdateStatus.Outdated)
