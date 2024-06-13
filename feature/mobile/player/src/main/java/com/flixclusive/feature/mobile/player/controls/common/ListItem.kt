@@ -4,12 +4,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
@@ -32,9 +32,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.applyDropShadow
-import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.ui.common.util.placeholderEffect
+import com.flixclusive.core.ui.player.PlayerProviderState
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
@@ -43,7 +43,7 @@ internal fun ListItem(
     name: String,
     index: Int,
     selectedIndex: Int,
-    itemState: Resource<Any?> = Resource.Success(null),
+    itemState: PlayerProviderState = PlayerProviderState.SELECTED,
     onClick: () -> Unit,
 ) {
     val baseStyle = MaterialTheme.typography.labelLarge
@@ -61,62 +61,59 @@ internal fun ListItem(
         ).applyDropShadow()
     }
 
-    Column(
+    Box(
         modifier = modifier
-            .fillMaxWidth()
-            .height(50.dp)
             .clickable(enabled = index != selectedIndex) {
                 onClick()
-            },
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            }
     ) {
-        Box(
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(15.dp),
             modifier = Modifier
-                .fillMaxWidth(),
-            contentAlignment = Alignment.CenterStart
+                .fillMaxWidth()
+                .padding(10.dp)
         ) {
             if (selectedIndex == index) {
-                when (itemState) {
-                    is Resource.Failure -> Unit
-                    Resource.Loading -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .width(40.dp)
-                                .padding(start = 25.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.onSurface,
-                                strokeWidth = 1.5.dp,
-                                strokeCap = StrokeCap.Round,
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    when (itemState) {
+                        PlayerProviderState.LOADING -> {
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .aspectRatio(1f)
+                                    .padding(end = 5.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    strokeWidth = 1.5.dp,
+                                    strokeCap = StrokeCap.Round,
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                )
+                            }
+                        }
+                        PlayerProviderState.SELECTED -> {
+                            Icon(
+                                imageVector = Icons.Rounded.Check,
+                                contentDescription = stringResource(UtilR.string.check_indicator_content_desc)
                             )
                         }
                     }
-
-                    is Resource.Success -> {
-                        Icon(
-                            imageVector = Icons.Rounded.Check,
-                            contentDescription = stringResource(UtilR.string.check_indicator_content_desc),
-                            modifier = Modifier.padding(start = 25.dp)
-                        )
-                    }
                 }
+            } else {
+                Spacer(
+                    modifier = Modifier.width(25.dp)
+                )
             }
 
             Text(
                 text = name,
                 style = style,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 60.dp)
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
+
 }
 
 @Composable
@@ -143,16 +140,23 @@ private fun SheetItemPlaceholder() {
 
 @Preview
 @Composable
-private fun SheetItemPreview() {
+private fun SheetItemLoadingPreview() {
     FlixclusiveTheme {
         Surface {
-            ListItem(
-                name = "Superstream",
-                index = 0,
-                selectedIndex = 0,
-                itemState = Resource.Loading,
-                onClick = {}
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(15.dp),
+            ) {
+                repeat(3) {
+                    ListItem(
+                        name = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                        index = 0,
+                        selectedIndex = if (it < 2) 0 else 1,
+                        itemState = PlayerProviderState.entries[it % PlayerProviderState.entries.size],
+                        onClick = {}
+                    )
+                }
+            }
+
         }
     }
 }

@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.fadingEdge
-import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.ui.player.PlayerProviderState
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
@@ -39,7 +39,7 @@ internal fun <Type> ListContentHolder(
     label: String,
     items: List<Type>,
     selectedIndex: Int,
-    itemState: Resource<Any?> = Resource.Success(null),
+    itemState: PlayerProviderState = PlayerProviderState.SELECTED,
     onItemClick: (Int) -> Unit,
 ) {
     val listState = rememberLazyListState()
@@ -74,8 +74,6 @@ internal fun <Type> ListContentHolder(
                 }
 
                 ListItem(
-                    modifier = Modifier
-                        .animateItemPlacement(),
                     name = name,
                     index = i,
                     selectedIndex = selectedIndex,

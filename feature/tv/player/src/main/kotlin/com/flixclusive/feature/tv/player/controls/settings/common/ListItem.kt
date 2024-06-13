@@ -37,8 +37,8 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
+import com.flixclusive.core.ui.player.PlayerProviderState
 import com.flixclusive.core.util.R
-import com.flixclusive.core.util.common.resource.Resource
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -47,7 +47,7 @@ internal fun ListItem(
     name: String,
     index: Int,
     selectedIndex: Int,
-    itemState: Resource<Any?>,
+    itemState: PlayerProviderState,
     onClick: () -> Unit,
 ) {
     val baseStyle = MaterialTheme.typography.labelLarge
@@ -90,8 +90,7 @@ internal fun ListItem(
         ) {
             if (selectedIndex == index) {
                 when (itemState) {
-                    is Resource.Failure -> Unit
-                    Resource.Loading -> {
+                    PlayerProviderState.LOADING -> {
                         Box(
                             modifier = Modifier
                                 .fillMaxHeight()
@@ -109,7 +108,7 @@ internal fun ListItem(
                             )
                         }
                     }
-                    is Resource.Success -> {
+                    PlayerProviderState.SELECTED -> {
                         Icon(
                             imageVector = Icons.Rounded.Check,
                             contentDescription = stringResource(R.string.check_indicator_content_desc),
@@ -117,7 +116,7 @@ internal fun ListItem(
                     }
                 }
             } else {
-                Spacer(Modifier.width(if(itemState is Resource.Loading) 35.dp else 20.dp))
+                Spacer(Modifier.width(if(itemState == PlayerProviderState.LOADING) 35.dp else 20.dp))
             }
 
             Text(
@@ -164,7 +163,7 @@ private fun SheetItemPreview() {
                 name = "Superstream",
                 index = 0,
                 selectedIndex = 0,
-                itemState = Resource.Loading,
+                itemState = PlayerProviderState.LOADING,
                 onClick = {}
             )
         }

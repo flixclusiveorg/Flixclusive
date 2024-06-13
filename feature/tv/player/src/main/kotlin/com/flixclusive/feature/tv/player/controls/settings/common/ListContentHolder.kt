@@ -29,9 +29,9 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.player.PlayerProviderState
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
-import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
@@ -45,7 +45,7 @@ internal fun <Type> ListContentHolder(
     label: String,
     items: List<Type>,
     selectedIndex: Int,
-    itemState: Resource<Any?> = Resource.Success(null),
+    itemState: PlayerProviderState = PlayerProviderState.SELECTED,
     initializeFocus: Boolean = false,
     onItemClick: (Int) -> Unit,
 ) {
