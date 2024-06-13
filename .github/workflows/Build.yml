@@ -87,13 +87,15 @@ jobs:
           default-commit-type: 📝 Other Changes
           semver: false
 
-      - name: Delete old pre-release
-        uses: cb80/delrel@latest
+      - name: Update old pre-release tag
+        uses: jay2610/delete-older-releases@1.4.0
         with:
-          tag: pre-release
-          token: ${{ secrets.GITHUB_TOKEN }}
+          keep_latest: 0
+          delete_type: 'prerelease'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload pre-release
+      - name: Upload new pre-release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: pre-release
