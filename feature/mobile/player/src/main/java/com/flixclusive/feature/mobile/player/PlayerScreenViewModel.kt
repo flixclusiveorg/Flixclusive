@@ -11,6 +11,7 @@ import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.PlayerSnackbarMessage
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
+import com.flixclusive.core.ui.player.util.PlayerUiUtil
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
@@ -91,10 +92,13 @@ class PlayerScreenViewModel @Inject constructor(
         val itemIndexInQueue = snackbarQueue.indexOfFirst {
             it.type == type
         }
-        val isSameTypeAlreadyQueued = itemIndexInQueue != -1
 
-        if (!isSameTypeAlreadyQueued) {
-            snackbarJobs[type.ordinal] = viewModelScope.launch {
+        val isErrorType = type == PlayerSnackbarMessageType.Error
+        val shouldQueue = itemIndexInQueue == -1
+                || isErrorType
+
+        if (shouldQueue) {
+            val job = viewModelScope.launch {
                 val data = PlayerSnackbarMessage(message, type)
                 snackbarQueue.add(data)
 
@@ -104,6 +108,17 @@ class PlayerScreenViewModel @Inject constructor(
                 delay(data.duration.toLong())
                 snackbarQueue.remove(data)
             }
+
+            if (isErrorType) {
+                var index = PlayerSnackbarMessageType.entries.size
+                while (snackbarJobs.getOrNull(index)?.isActive == true && snackbarJobs.getOrNull(index) != null) {
+                    index++
+                }
+                snackbarJobs.add(index, job)
+            } else {
+                snackbarJobs[type.ordinal] = job
+            }
+
             return
         }
 
@@ -119,9 +134,8 @@ class PlayerScreenViewModel @Inject constructor(
                         snackbarQueue.indexOfFirst { it.type == type } // Have to call this everytime to be cautious of other snackbar item changes :<
 
                     val itemInQueue = snackbarQueue[currentIndex]
-                    snackbarQueue[currentIndex] = itemInQueue.copy(
-                        message = message
-                    )
+                    snackbarQueue[currentIndex] = itemInQueue
+                        .copy(message = message)
 
                     delay(itemInQueue.duration.toLong())
                     snackbarQueue.remove(snackbarQueue[currentIndex])
@@ -150,10 +164,19 @@ class PlayerScreenViewModel @Inject constructor(
     }
 
     private fun selectNextServer() {
-        
         val nextLinkIndex = (uiState.value.selectedSourceLink + 1).takeIf { it <= sourceData.cachedLinks.lastIndex }
+
         if (nextLinkIndex != null) {
+            val newLink = sourceData.cachedLinks[nextLinkIndex]
+            val currentPlayerTitle = PlayerUiUtil.formatPlayerTitle(film, currentSelectedEpisode.value)
+
             onServerChange(index = nextLinkIndex)
+            player.prepare(
+                link = newLink,
+                title = currentPlayerTitle,
+                subtitles = sourceData.cachedSubtitles.toList(),
+                initialPlaybackPosition = player.currentPosition
+            )
         }
     }
 }
