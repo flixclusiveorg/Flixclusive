@@ -47,16 +47,6 @@ android {
     }
 
     buildTypes {
-        getByName("prerelease") {
-            initWith(getByName("release"))
-            applicationIdSuffix = ".pre_release"
-            versionNameSuffix = "-[${getCommitVersion()}]"
-
-            resValue("string", "app_name", "$applicationName Beta")
-            resValue("string", "application_id", _applicationId + applicationIdSuffix)
-            resValue("string", "version_name", _versionName + versionNameSuffix)
-        }
-
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-DEBUG"
