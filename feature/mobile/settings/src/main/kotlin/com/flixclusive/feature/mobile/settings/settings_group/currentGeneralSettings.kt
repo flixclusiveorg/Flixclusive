@@ -70,8 +70,8 @@ internal fun currentGeneralSettings(
             description = stringResource(UtilR.string.signup_prerelease_updates_desc),
             onClick = {
                 if (!appSettings.isUsingPrereleaseUpdates) {
-                    onChangeSettings(appSettings.copy(isUsingPrereleaseUpdates = false))
-                } else onUsePrereleaseUpdatesChange(true)
+                    onUsePrereleaseUpdatesChange(true)
+                } else onChangeSettings(appSettings.copy(isUsingPrereleaseUpdates = false))
             },
             previewContent = {
                 Switch(
