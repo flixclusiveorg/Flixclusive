@@ -82,7 +82,7 @@
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
     <string name="authors">Authors</string>
     <string name="auto_option">Auto</string>
-    <string name="auto_update_app">Auto-update app</string>
+    <string name="notify_about_new_app_updates">Notify about new app updates</string>
     <string name="auto_update_providers">Auto-update providers</string>
     <string name="automatic_crash_report">Automatic crash report</string>
     <string name="automatic_crash_report_label">Automatically send the crash data to Flixclusive\'s server.</string>

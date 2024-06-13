@@ -20,7 +20,7 @@ internal fun currentGeneralSettings(
 
     return listOf(
         SettingsItem(
-            title = stringResource(UtilR.string.auto_update_app),
+            title = stringResource(UtilR.string.notify_about_new_app_updates),
             onClick = {
                 onChangeSettings(
                     appSettings.copy(
