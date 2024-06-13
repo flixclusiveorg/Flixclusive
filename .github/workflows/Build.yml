@@ -57,12 +57,8 @@ jobs:
         run: |
           set -e
           mv app/build/outputs/apk/release/app-release-unsigned-signed.apk flixclusive-release.apk
-
-      - name: Delete old pre-release
-        uses: cb80/delrel@latest
-        with:
-          tag: pre-release
-          token: ${{ secrets.GITHUB_TOKEN }}
+          sha=`sha256sum flixclusive-release.apk | awk '{ print $1 }'`
+          echo "RELEASE_SHA=$sha" >> $GITHUB_ENV
 
       - name: Get soon-latest version
         run: |
@@ -70,6 +66,32 @@ jobs:
           version=$(.github/parse_version.sh)
           echo "Version: $version"
           echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Generate changelogs
+        uses: ardalanamini/auto-changelog@v4
+        id: changelog
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          commit-types: |
+            feat: ✨ New Features
+            fix: 🐛 Bug Fixes
+            build: 🛠️ Build System & Dependencies
+            perf: 🚀 Performance Improvements
+            docs: 📚 Documentation
+            test: 🧪 Tests
+            refactor: 🔄 Refactors
+            chore: 🧹 Chores
+            ci: ⚙️ CI
+            style: 🎨 Code Style
+            revert: ⏪ Reverts
+          default-commit-type: 📝 Other Changes
+          semver: false
+
+      - name: Delete old pre-release
+        uses: cb80/delrel@latest
+        with:
+          tag: pre-release
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload pre-release
         uses: softprops/action-gh-release@v2
@@ -81,16 +103,21 @@ jobs:
             
             ---
             
-            ## Known issues
+            ## 🐞 Known issues
             - TV focus crashes. Compose TV is bugged af; we wait til the new update.
             
+            ${{ steps.changelog.outputs.changelog }}
             ---
+            
+            ### Checksums
 
+            | Variant | SHA-256 |
+            | ------- | ------- |
+            | release | ${{ env.RELEASE_SHA }} |
           files: |
             flixclusive-release.apk
             app/build/classes.jar
           draft: false
           prerelease: true
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
