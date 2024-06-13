@@ -49,6 +49,7 @@ class SourceLinksProviderUseCase @Inject constructor(
     private val providersRepository: ProviderRepository,
     private val tmdbRepository: TMDBRepository,
 ) {
+    private val defaultErrorMessage = UiText.StringResource(UtilR.string.source_data_dialog_state_error_default)
 
     companion object {
         /**
@@ -95,13 +96,15 @@ class SourceLinksProviderUseCase @Inject constructor(
         episode: TMDBEpisode? = null,
         runWebView: (FlixclusiveWebView) -> Unit,
         onSuccess: (TMDBEpisode?) -> Unit,
-        onError: (() -> Unit)? = null,
+        onError: ((UiText) -> Unit)? = null,
     ): Flow<SourceDataState> = channelFlow {
         val providersList = getPrioritizedProvidersList(preferredProviderName)
 
         if (providersList.isEmpty()) {
-            onError?.invoke()
-            trySend(SourceDataState.Unavailable(UtilR.string.no_available_sources))
+            val emptySourcesErrorId = UtilR.string.no_available_sources
+
+            onError?.invoke(UiText.StringResource(emptySourcesErrorId))
+            trySend(SourceDataState.Unavailable(emptySourcesErrorId))
             return@channelFlow
         }
 
@@ -115,11 +118,10 @@ class SourceLinksProviderUseCase @Inject constructor(
                 )
             ) {
                 is Resource.Failure -> {
-                    onError?.invoke()
+                    onError?.invoke(episodeFetchResult.error ?: UiText.StringResource(UtilR.string.unavailable_episode))
                     trySend(SourceDataState.Error(episodeFetchResult.error))
                     return@channelFlow
                 }
-
                 Resource.Loading -> null
                 is Resource.Success -> episodeFetchResult.data
             }
@@ -213,7 +215,7 @@ class SourceLinksProviderUseCase @Inject constructor(
                                     trySend(state)
 
                                     if (state is SourceDataState.Error || state is SourceDataState.Unavailable) {
-                                        onError?.invoke()
+                                        onError?.invoke(state.message)
                                         debugLog("Unsuccessful scraping. Destroying WebView...")
                                         continuation.resume(true)
                                     }
@@ -232,7 +234,7 @@ class SourceLinksProviderUseCase @Inject constructor(
                 return@channelFlow
             }
 
-            val canStopLooping = i == providersList.lastIndex
+            val canStopLooping = i == providersList.lastIndex || isChangingProvider
             val needsNewMediaId = mediaId != null && provider.name != preferredProviderName
 
             val mediaIdResource = if (needsNewMediaId || mediaId == null) {
@@ -244,7 +246,10 @@ class SourceLinksProviderUseCase @Inject constructor(
 
             if (mediaIdResource is Resource.Failure || mediaIdResource.data.isNullOrBlank()) {
                 if (canStopLooping) {
-                    onError?.invoke()
+                    val error = mediaIdResource.error
+                        ?: UiText.StringResource(UtilR.string.blank_media_id_error_message)
+
+                    onError?.invoke(error)
                     trySend(
                         SourceDataState.Unavailable(
                             mediaIdResource.error ?: UiText.StringResource(UtilR.string.failed_to_get_media_id_error_msg)
@@ -262,11 +267,6 @@ class SourceLinksProviderUseCase @Inject constructor(
 
             if (cachedSourceData != null) {
                 cachedSourceData.run {
-                    /**
-                     *
-                     * Only clear links since subtitles
-                     * could be used on other provider's [SourceData]
-                     * */
                     /**
                      *
                      * Only clear links since subtitles
@@ -319,12 +319,11 @@ class SourceLinksProviderUseCase @Inject constructor(
             when (result) {
                 is Resource.Failure -> {
                     if (canStopLooping) {
-                        onError?.invoke()
+                        onError?.invoke(result.error ?: defaultErrorMessage)
                         trySend(SourceDataState.Error(result.error))
                         return@channelFlow
                     }
                 }
-
                 Resource.Loading -> Unit
                 is Resource.Success -> {
                     onSuccess(episodeToUse)

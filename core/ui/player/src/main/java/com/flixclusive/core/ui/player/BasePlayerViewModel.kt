@@ -236,7 +236,7 @@ abstract class BasePlayerViewModel(
                 runWebView = runWebView,
                 onError = {
                     updateProviderSelected(oldSelectedSource)
-                    showErrorSnackbar(UiText.StringResource(UtilR.string.failed_to_retrieve_provider_message_format))
+                    showErrorSnackbar(it)
                 }
             ).onCompletion {
                 if (it != null) {

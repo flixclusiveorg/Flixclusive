@@ -249,17 +249,21 @@ class DefaultTMDBRepository @Inject constructor(
         seasonNumber: Int,
         episodeNumber: Int,
     ): Resource<TMDBEpisode?> {
-        return withContext(ioDispatcher) {
-            val season = getSeason(id, seasonNumber)
+        return try {
+            withContext(ioDispatcher) {
+                val season = getSeason(id, seasonNumber)
 
-            if (season is Resource.Failure)
-                return@withContext Resource.Failure(season.error)
+                if (season is Resource.Failure)
+                    return@withContext Resource.Failure(season.error)
 
-            val episodeId = season.data!!.episodes.find {
-                it.season == seasonNumber
-                        && it.episode == episodeNumber
+                val episodeId = season.data!!.episodes.find {
+                    it.season == seasonNumber
+                            && it.episode == episodeNumber
+                }
+                Resource.Success(episodeId)
             }
-            Resource.Success(episodeId)
+        } catch (e: Exception) {
+            e.catchInternetRelatedException()
         }
     }
 
