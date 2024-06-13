@@ -27,6 +27,7 @@
 
     <!--  Errors  -->
     <string name="already_added_repo_error">Repository has already been added!</string>
+    <string name="blank_media_id_error_message">Could not find media id from the provider</string>
     <string name="connection_failed">Connection failure</string>
     <string name="connection_timeout">Connection timeout</string>
     <string name="decryption_error">Decryption of data failed, try again later</string>
@@ -65,7 +66,7 @@
     <string name="failed_to_load_provider">Failed to download provider: %1$s</string>
     <string name="failed_to_download_updates">Failed to download updates: %1$s</string>
     <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
-    <string name="failed_to_retrieve_provider_message_format">Failed to retrieve provider [%1$s]</string>
+    <string name="failed_to_fetch_media_id_message">Something went wrong fetching the media id: %1$s</string>
 
     <!--  Film/Filter types  -->
     <string name="all">All</string>

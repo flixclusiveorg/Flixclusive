@@ -128,7 +128,7 @@ class DefaultSourceLinksRepository @Inject constructor(
                 Resource.Success(id)
             } catch (e: Exception) {
                 errorLog(e.stackTraceToString())
-                Resource.Failure(UiText.StringValue("Something went wrong fetching the media id: ${e.localizedMessage}"))
+                Resource.Failure(UiText.StringResource(UtilR.string.failed_to_fetch_media_id_message, e.localizedMessage ?: ""))
             }
         }
     }
