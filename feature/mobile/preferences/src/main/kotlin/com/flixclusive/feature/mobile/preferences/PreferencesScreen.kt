@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -100,11 +101,11 @@ fun PreferencesScreen(
             )
 
             if (i < items.lastIndex)
-                Divider(
-                    color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.3F),
-                    thickness = 1.dp,
+                HorizontalDivider(
                     modifier = Modifier
-                        .padding(horizontal = 25.dp)
+                        .padding(horizontal = 25.dp),
+                    thickness = 1.dp,
+                    color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.3F)
                 )
         }
     }

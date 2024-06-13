@@ -10,6 +10,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -62,10 +63,10 @@ fun ProviderCard(
                 providerData = providerData
             )
 
-            Divider(
-                thickness = 0.5.dp,
+            HorizontalDivider(
                 modifier = Modifier
-                    .padding(vertical = 15.dp)
+                    .padding(vertical = 15.dp),
+                thickness = 0.5.dp
             )
 
             providerData.description?.let {

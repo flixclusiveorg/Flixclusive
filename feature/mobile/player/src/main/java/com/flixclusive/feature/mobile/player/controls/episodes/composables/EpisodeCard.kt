@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
@@ -182,7 +183,7 @@ internal fun EpisodeCard(
             )
         }
 
-        Divider(
+        HorizontalDivider(
             thickness = 0.5.dp,
             color = LocalContentColor.current.onMediumEmphasis()
         )
@@ -237,7 +238,7 @@ internal fun EpisodeCardPlaceholder(
                 .placeholderEffect()
         )
 
-        Divider(
+        HorizontalDivider(
             thickness = 0.5.dp,
             color = LocalContentColor.current.onMediumEmphasis()
         )

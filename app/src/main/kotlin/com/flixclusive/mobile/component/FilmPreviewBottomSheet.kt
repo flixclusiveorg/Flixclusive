@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -216,12 +216,12 @@ fun FilmPreviewBottomSheet(
                 }
             }
 
-            Divider(
-                thickness = 1.dp,
+            HorizontalDivider(
                 modifier = Modifier
                     .constrainAs(divider) {
                         bottom.linkTo(clickMoreButton.top)
-                    }
+                    },
+                thickness = 1.dp
             )
 
             Row(
