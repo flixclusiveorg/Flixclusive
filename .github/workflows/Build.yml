@@ -67,6 +67,11 @@ jobs:
           echo "Version: $version"
           echo "VERSION=$version" >> $GITHUB_ENV
 
+      - name: Update old pre-release tag
+        uses: EndBug/latest-tag@latest
+        with:
+          tag-name: pre-release
+
       - name: Generate changelogs
         uses: ardalanamini/auto-changelog@v4
         id: changelog
@@ -86,14 +91,6 @@ jobs:
             revert: ⏪ Reverts
           default-commit-type: 📝 Other Changes
           semver: false
-
-      - name: Update old pre-release tag
-        uses: jay2610/delete-older-releases@1.4.0
-        with:
-          keep_latest: 0
-          delete_type: 'prerelease'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload new pre-release
         uses: softprops/action-gh-release@v2
