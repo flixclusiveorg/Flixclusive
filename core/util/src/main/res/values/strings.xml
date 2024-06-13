@@ -140,6 +140,7 @@
     <string name="play">Play</string>
     <string name="playback_speed">Playback speed</string>
     <string name="popular">Popular</string>
+    <string name="pre_release">PRE-RELEASE</string>
     <string name="preferred_quality">Preferred quality</string>
     <string name="preferred_resize_mode">Preferred resize mode</string>
     <string name="privacy_notice">Privacy notice</string>

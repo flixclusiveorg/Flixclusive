@@ -31,9 +31,17 @@ import com.flixclusive.core.util.R as UtilR
 internal fun Header(
     appName: String,
     versionName: String,
+    commitVersion: String,
     isInDebugMode: Boolean,
+    isOnPreRelease: Boolean,
 ) {
     val appNameUppercase = remember { appName.uppercase() }
+    val version = versionName + (if (isOnPreRelease) "-[$commitVersion]" else "")
+    val mode = when {
+        isInDebugMode -> stringResource(id =  UtilR.string.debug)
+        isOnPreRelease -> stringResource(id =  UtilR.string.pre_release)
+        else -> stringResource(id =  UtilR.string.release)
+    }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(
@@ -75,7 +83,7 @@ internal fun Header(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = versionName,
+                        text = version,
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontSize = 13.sp
                         ),
@@ -92,7 +100,7 @@ internal fun Header(
                     )
 
                     Text(
-                        text = if (isInDebugMode) stringResource(id =  UtilR.string.debug) else stringResource(id =  UtilR.string.release),
+                        text = mode,
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontSize = 13.sp
                         ),
