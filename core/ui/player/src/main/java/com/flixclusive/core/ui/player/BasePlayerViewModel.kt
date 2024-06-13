@@ -248,11 +248,11 @@ abstract class BasePlayerViewModel(
                     is SourceDataState.Error,
                     is SourceDataState.Unavailable,
                     SourceDataState.Success -> _uiState.update {
-                        it.copy(selectedProviderState = Resource.Success(null))
+                        it.copy(selectedProviderState = PlayerProviderState.SELECTED)
                     }
 
                     is SourceDataState.Extracting, is SourceDataState.Fetching -> _uiState.update {
-                        it.copy(selectedProviderState = Resource.Loading)
+                        it.copy(selectedProviderState = PlayerProviderState.LOADING)
                     }
                 }
             }

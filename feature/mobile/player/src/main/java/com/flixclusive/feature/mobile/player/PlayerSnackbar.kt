@@ -6,7 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +37,10 @@ internal fun PlayerSnackbar(
     val type = messageData.type
 
     val snackbarShape = RoundedCornerShape(15)
+    val borderColor = when (messageData.type) {
+        PlayerSnackbarMessageType.Error -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.primary
+    }
 
     Box(
         modifier = modifier
@@ -47,33 +51,29 @@ internal fun PlayerSnackbar(
     ) {
         Row(
             modifier = Modifier
-                .height(50.dp)
+                .heightIn(50.dp)
                 .background(
                     color = Color.Black.copy(0.50F),
                     shape = snackbarShape
                 )
                 .border(
                     width = 1.dp,
-                    color = (
-                            if (messageData.type == PlayerSnackbarMessageType.Error)
-                                MaterialTheme.colorScheme.error
-                            else
-                                MaterialTheme.colorScheme.primary)
-                        .copy(0.5F),
+                    color = borderColor.copy(0.5F),
                     shape = snackbarShape
-                ),
+                )
+                .padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(15.dp)
         ) {
             Text(
                 text = message.asString(),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Normal,
                 color = Color.White,
-                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
-                    .padding(horizontal = 10.dp)
+                    .weight(weight = 0.9F, fill = false)
+                    .padding(vertical = 8.dp)
             )
 
             if (type != PlayerSnackbarMessageType.Episode) {
@@ -83,7 +83,6 @@ internal fun PlayerSnackbar(
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     modifier = Modifier
-                        .padding(horizontal = 20.dp, vertical = 3.dp)
                         .clickable {
                             onDismissMessage()
                         }
@@ -100,7 +99,7 @@ private fun PlayerSnackbarPreview() {
         Surface {
             PlayerSnackbar(
                 messageData = PlayerSnackbarMessage(
-                    message = UiText.StringValue("[Local] Attack.On.Titatasdas/as.da.sd.asd.asd.assrt"),
+                    message = UiText.StringValue("[Local] Attack.On.Titatasda.srt"),
                     type = PlayerSnackbarMessageType.Subtitle
                 )
             ) {

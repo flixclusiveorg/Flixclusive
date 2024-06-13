@@ -1,11 +1,15 @@
 package com.flixclusive.core.ui.player
 
-import com.flixclusive.core.util.common.resource.Resource
+enum class PlayerProviderState {
+    LOADING,
+    SELECTED
+}
+
 
 data class PlayerUiState(
     val selectedSourceLink: Int = 0,
     val selectedProvider: String? = null,
-    val selectedProviderState: Resource<Any?> = Resource.Success(null),
+    val selectedProviderState: PlayerProviderState = PlayerProviderState.SELECTED,
     val selectedResizeMode: Int = 0,
     val lastOpenedPanel: Int = 0,
     val screenBrightness: Float = 1F,
