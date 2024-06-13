@@ -37,9 +37,9 @@ jobs:
       - name: Build release artifacts
         uses: gradle/gradle-command-action@v2
         with:
-          arguments: :app:assembleRelease assemblePrerelease bundlePrereleaseClassesToCompileJar fatJar
+          arguments: assembleRelease bundleReleaseClassesToCompileJar
 
-      - name: Generate plugins stubs
+      - name: Generate class stubs
         uses: gradle/gradle-command-action@v2
         with:
           arguments: generateStubsJar
@@ -53,58 +53,44 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Sign pre-release APK
-        uses: r0adkll/sign-android-release@v1
-        with:
-          releaseDirectory: app/build/outputs/apk/prerelease
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-
       - name: Clean up build artifacts
         run: |
           set -e
           mv app/build/outputs/apk/release/app-release-unsigned-signed.apk flixclusive-release.apk
-          sha=`sha256sum flixclusive-release.apk | awk '{ print $1 }'`
-          echo "RELEASE_SHA=$sha" >> $GITHUB_ENV
-          
-          mv app/build/outputs/apk/prerelease/app-prerelease-unsigned-signed.apk flixclusive-prerelease.apk
-          sha=`sha256sum flixclusive-prerelease.apk | awk '{ print $1 }'`
-          echo "PRERELEASE_SHA=$sha" >> $GITHUB_ENV
-          
 
-      - name: Create Pre-release
-        uses: softprops/action-gh-release@v1
+      - name: Delete old pre-release
+        uses: cb80/delrel@latest
         with:
-          tag_name: "pre-release"
-          name: "Pre-release build"
+          tag: pre-release
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get soon-latest version
+        run: |
+          chmod +x .github/parse_version.sh
+          version=$(.github/parse_version.sh)
+          echo "Version: $version"
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Upload pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: pre-release
+          name: Pre-release for v${{ env.VERSION }}
           body: |
+            ##### _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
+            
             ---
-            _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
             
-            ### Changes
-            - No official change logs yet.
-            
-            ### Known issues
+            ## Known issues
             - TV focus crashes. Compose TV is bugged af; we wait til the new update.
             
             ---
-            ##### The `prerelease` apk is similar to release but for _debugging_ purposes only. Use this if you want to test the latest features without messing up your authentic release data.
-            ---
-            
-            ### Checksums
 
-            | Variant | SHA-256 |
-            | ------- | ------- |
-            | release | ${{ env.RELEASE_SHA }} |
-            | pre-release | ${{ env.PRERELEASE_SHA }} |
           files: |
             flixclusive-release.apk
-            flixclusive-prerelease.apk
-            app/build/libs/fat-sources.jar
             app/build/classes.jar
           draft: false
           prerelease: true
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
