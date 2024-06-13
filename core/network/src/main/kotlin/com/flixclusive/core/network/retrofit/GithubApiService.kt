@@ -40,6 +40,6 @@ interface GithubApiService {
      * @param tag The tag name.
      * @return A [GithubReleaseInfo] object.
      */
-    @GET("repos/$GITHUB_USERNAME/$GITHUB_REPOSITORY/releases/tags")
+    @GET("repos/$GITHUB_USERNAME/$GITHUB_REPOSITORY/tags")
     suspend fun getTagsInfo(): List<GithubTagInfo>
 }
