@@ -67,30 +67,25 @@ jobs:
           echo "Version: $version"
           echo "VERSION=$version" >> $GITHUB_ENV
 
+      - name: Generate changelogs
+        id: changelog
+        uses: requarks/changelog-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fromTag: ${{ github.ref_name }}
+          toTag: pre-release
+          excludeTypes: ''
+          writeToFile: false
+
+      - name: Delete old pre-release
+        uses: cb80/delrel@latest
+        with:
+          tag: pre-release
+
       - name: Update old pre-release tag
         uses: EndBug/latest-tag@latest
         with:
-          tag-name: pre-release
-
-      - name: Generate changelogs
-        uses: ardalanamini/auto-changelog@v4
-        id: changelog
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          commit-types: |
-            feat: ✨ New Features
-            fix: 🐛 Bug Fixes
-            build: 🛠️ Build System & Dependencies
-            perf: 🚀 Performance Improvements
-            docs: 📚 Documentation
-            test: 🧪 Tests
-            refactor: 🔄 Refactors
-            chore: 🧹 Chores
-            ci: ⚙️ CI
-            style: 🎨 Code Style
-            revert: ⏪ Reverts
-          default-commit-type: 📝 Other Changes
-          semver: false
+          ref: pre-release
 
       - name: Upload new pre-release
         uses: softprops/action-gh-release@v2
@@ -102,10 +97,10 @@ jobs:
             
             ---
             
-            ## 🐞 Known issues
+            ### 🐞 Known issues
             - TV focus crashes. Compose TV is bugged af; we wait til the new update.
             
-            ${{ steps.changelog.outputs.changelog }}
+            ${{ steps.changelog.outputs.changes }}
             ---
             
             ### Checksums
