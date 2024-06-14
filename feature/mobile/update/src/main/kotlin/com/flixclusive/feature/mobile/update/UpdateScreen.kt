@@ -63,6 +63,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.android.installApkActivity
+import com.flixclusive.feature.mobile.update.util.fromGitmoji
 import com.flixclusive.service.update.AppUpdaterService
 import com.flixclusive.service.update.AppUpdaterService.Companion.startAppUpdater
 import com.ramcosta.composedestinations.annotation.Destination
@@ -153,7 +154,7 @@ fun UpdateScreen(
             )
 
             MarkdownText(
-                markdown = args.updateInfo ?: stringResource(id = UtilR.string.default_update_info_message),
+                markdown = args.updateInfo?.fromGitmoji() ?: stringResource(id = UtilR.string.default_update_info_message),
                 isTextSelectable = true,
                 linkColor = Color(0xFF5890FF),
                 fontResource = com.flixclusive.core.theme.R.font.space_grotesk_medium,
