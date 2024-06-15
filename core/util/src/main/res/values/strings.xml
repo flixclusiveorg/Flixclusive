@@ -67,6 +67,7 @@
     <string name="failed_to_download_updates">Failed to download updates: %1$s</string>
     <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
     <string name="failed_to_fetch_media_id_message">Something went wrong fetching the media id: %1$s</string>
+    <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
 
     <!--  Film/Filter types  -->
     <string name="all">All</string>

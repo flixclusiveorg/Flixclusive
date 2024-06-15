@@ -4,6 +4,7 @@ import android.content.Context
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.log.debugLog
+import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.SourceLinksRepository
@@ -165,6 +166,7 @@ class SourceLinksProviderUseCase @Inject constructor(
 
             trySend(SourceDataState.Fetching(UiText.StringResource(UtilR.string.fetching_from_provider_format, provider.name)))
 
+            var linksLoaded = 0
             if (provider.useWebView) {
                 val webView: FlixclusiveWebView
                 val shouldContinue = suspendCoroutine { continuation ->
@@ -185,9 +187,14 @@ class SourceLinksProviderUseCase @Inject constructor(
                             context = context,
                             callback = object : WebViewCallback {
                                 override suspend fun onSuccess(episode: TMDBEpisode?) {
+                                    if (linksLoaded == 0) {
+                                        trySend(SourceDataState.Error(getNoLinksMessage(provider.name)))
+                                        return
+                                    }
+
                                     trySend(SourceDataState.Success)
                                     onSuccess.invoke(episode)
-                                    debugLog("Successful scraping. Destroying WebView...")
+                                    infoLog("Successful scraping. Destroying WebView...")
                                     continuation.resume(false)
                                 }
 
@@ -203,6 +210,11 @@ class SourceLinksProviderUseCase @Inject constructor(
 
                                 override fun onLinkLoaded(link: SourceLink) {
                                     sourceData.run {
+                                        if (link.url.isBlank()) {
+                                            return@onLinkLoaded
+                                        }
+
+                                        linksLoaded++
                                         if (!cachedLinks.contains(link)) {
                                             if (cachedSourceData != null) {
                                                 cachedLinks.add(0, link)
@@ -309,6 +321,11 @@ class SourceLinksProviderUseCase @Inject constructor(
                 },
                 onLinkLoaded = {
                     sourceData.run {
+                        if (it.url.isBlank()) {
+                            return@getSourceLinks
+                        }
+
+                        linksLoaded++
                         if (!cachedLinks.contains(it)) {
                             cachedLinks.add(it)
                         }
@@ -316,16 +333,19 @@ class SourceLinksProviderUseCase @Inject constructor(
                 }
             )
 
-            when (result) {
-                is Resource.Failure -> {
+            when {
+                result is Resource.Failure || linksLoaded == 0 -> {
                     if (canStopLooping) {
-                        onError?.invoke(result.error ?: defaultErrorMessage)
-                        trySend(SourceDataState.Error(result.error))
+                        val error = if (linksLoaded == 0) {
+                            getNoLinksMessage(provider.name)
+                        } else defaultErrorMessage
+
+                        onError?.invoke(result.error ?: error)
+                        trySend(SourceDataState.Error(result.error ?: error))
                         return@channelFlow
                     }
                 }
-                Resource.Loading -> Unit
-                is Resource.Success -> {
+                result is Resource.Success -> {
                     onSuccess(episodeToUse)
                     trySend(SourceDataState.Success)
                     return@channelFlow
@@ -413,4 +433,8 @@ class SourceLinksProviderUseCase @Inject constructor(
 
         return providerApis
     }
+
+    private fun getNoLinksMessage(
+        providerName: String
+    ) = UiText.StringResource(UtilR.string.no_links_loaded_format_message, providerName)
 }
