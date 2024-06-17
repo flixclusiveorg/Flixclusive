@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -149,9 +149,9 @@ fun FilmScreen(
 
                         filmTabs
                     }
-                    val (currentTabSelected, onTabChange) = remember { mutableStateOf(filmTabs.firstOrNull()) }
+                    val (currentTabSelected, onTabChange) = rememberSaveable { mutableStateOf(filmTabs.firstOrNull()) }
 
-                    val catalogueToUse = remember(currentTabSelected) {
+                    val catalogueToUse = rememberSaveable(currentTabSelected) {
                         when (currentTabSelected) {
                             FilmTab.MoreLikeThis -> film.recommendedTitles
                             FilmTab.Collections -> (film as Movie).collection!!.films
