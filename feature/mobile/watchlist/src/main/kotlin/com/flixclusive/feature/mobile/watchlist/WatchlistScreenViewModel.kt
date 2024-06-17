@@ -25,7 +25,9 @@ class WatchlistScreenViewModel @Inject constructor(
 
     val items = watchlistRepository
         .getAllItemsInFlow()
-        .mapLatest { list -> list.map { it.film } }
+        .mapLatest { list ->
+            list.map { it.film }
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

@@ -29,6 +29,7 @@ interface WatchlistDao {
         JOIN User as u 
         ON w.ownerId = u.userId
         WHERE userId = :ownerId
+        ORDER BY w.addedOn DESC;
     """)
     suspend fun getAllItems(ownerId: Int): List<WatchlistItem>
 
@@ -39,6 +40,7 @@ interface WatchlistDao {
         JOIN User as u 
         ON w.ownerId = u.userId
         WHERE userId = :ownerId
+        ORDER BY w.addedOn DESC;
     """)
     fun getAllItemsInFlow(ownerId: Int): Flow<List<WatchlistItem>>
 }

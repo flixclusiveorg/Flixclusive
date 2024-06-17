@@ -4,7 +4,6 @@ import androidx.room.TypeConverter
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.model.database.EpisodeWatched
 import com.google.gson.Gson
-import java.util.Date
 
 internal class WatchHistoryItemConverter {
     private val gson = Gson()
@@ -27,15 +26,5 @@ internal class WatchHistoryItemConverter {
     @TypeConverter
     fun toEpisodeLimitsMap(json: String): Map<Int, Int> {
         return fromJson<Map<Int, Int>>(json)
-    }
-
-    @TypeConverter
-    fun fromDate(value: Date): Long {
-        return value.time
-    }
-
-    @TypeConverter
-    fun toDate(value: Long): Date {
-        return Date(value)
     }
 }

@@ -9,6 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.database.dao.WatchHistoryDao
 import com.flixclusive.core.database.dao.WatchlistDao
+import com.flixclusive.core.database.util.DateConverter
 import com.flixclusive.core.database.util.FilmDataConverter
 import com.flixclusive.core.database.util.WatchHistoryItemConverter
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
@@ -24,9 +25,9 @@ const val APP_DATABASE = "app_database"
 
 @Database(
     entities = [WatchHistoryItem::class, WatchlistItem::class, User::class],
-    version = 2
+    version = 3
 )
-@TypeConverters(FilmDataConverter::class, WatchHistoryItemConverter::class)
+@TypeConverters(FilmDataConverter::class, WatchHistoryItemConverter::class, DateConverter::class)
 internal abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun watchlistDao(): WatchlistDao
@@ -50,7 +51,10 @@ internal abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     APP_DATABASE
                 )
-                    .addMigrations(DatabaseMigrations.Schema1to2())
+                    .addMigrations(
+                        DatabaseMigrations.Schema1to2(),
+                        DatabaseMigrations.Schema2to3()
+                    )
                     .addCallback(
                         object: Callback() {
                             private fun prepopulateUsers() {
