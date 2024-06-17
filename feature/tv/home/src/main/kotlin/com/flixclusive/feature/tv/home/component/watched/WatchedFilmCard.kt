@@ -315,7 +315,7 @@ private fun CardOverview(
                     }
                 }
 
-                add(film.dateReleased)
+                film.parsedReleaseDate?.let(::add)
             }
         }
             .toList()

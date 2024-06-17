@@ -4,12 +4,16 @@ import com.flixclusive.core.network.retrofit.GithubApiService
 import com.flixclusive.core.network.retrofit.GithubRawApiService
 import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.core.network.retrofit.TMDB_API_BASE_URL
+import com.flixclusive.core.network.util.FilmSearchItemDeserializer
 import com.flixclusive.core.network.util.PaginatedSearchItemsDeserializer
-import com.flixclusive.core.network.util.SearchItemDeserializer
+import com.flixclusive.core.network.util.TMDBMovieDeserializer
+import com.flixclusive.core.network.util.TMDBTvShowDeserializer
 import com.flixclusive.core.util.common.configuration.GITHUB_API_BASE_URL
 import com.flixclusive.core.util.common.configuration.GITHUB_RAW_API_BASE_URL
-import com.flixclusive.model.tmdb.TMDBPageResponse
-import com.flixclusive.model.tmdb.TMDBSearchItem
+import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flixclusive.model.tmdb.Movie
+import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.model.tmdb.TvShow
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
@@ -29,11 +33,13 @@ object RetrofitModule {
     internal fun provideTMDBApiService(
         client: OkHttpClient
     ): TMDBApiService {
-        val tmdbPageResponse = TMDBPageResponse<TMDBSearchItem>()
+        val searchResponseData = SearchResponseData<FilmSearchItem>()
 
         val gson = GsonBuilder()
-            .registerTypeAdapter(TMDBSearchItem::class.java, SearchItemDeserializer())
-            .registerTypeAdapter(tmdbPageResponse::class.java, PaginatedSearchItemsDeserializer())
+            .registerTypeAdapter(FilmSearchItem::class.java, FilmSearchItemDeserializer())
+            .registerTypeAdapter(Movie::class.java, TMDBMovieDeserializer())
+            .registerTypeAdapter(TvShow::class.java, TMDBTvShowDeserializer())
+            .registerTypeAdapter(searchResponseData::class.java, PaginatedSearchItemsDeserializer())
             .create()
 
         return Retrofit.Builder()

@@ -24,7 +24,7 @@ import com.flixclusive.ROOT
 import com.flixclusive.mobile.MobileAppNavigator
 import com.flixclusive.mobile.MobileNavGraphs
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.tv.AppTvNavigator
 import com.flixclusive.tv.TvNavGraphs
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
@@ -100,7 +100,7 @@ internal fun AppNavHost(
     isTv: Boolean = false,
     closeApp: () -> Unit,
     previewFilm: (Film) -> Unit = {},
-    play: (Film, TMDBEpisode?) -> Unit = { _, _ -> },
+    play: (Film, Episode?) -> Unit = { _, _ -> },
 ) {
     DestinationsNavHost(
         engine = rememberAnimatedNavHostEngine(

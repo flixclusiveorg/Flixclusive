@@ -35,7 +35,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.util.shouldPaginate
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.domain.home.PaginationStateInfo
-import com.flixclusive.model.configuration.HomeCategoryItem
+import com.flixclusive.model.tmdb.category.HomeCategory
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.core.ui.mobile.R as UiMobileR
 import com.flixclusive.core.util.R as UtilR
@@ -43,7 +43,7 @@ import com.flixclusive.core.util.R as UtilR
 @Composable
 internal fun HomeFilmsRow(
     modifier: Modifier = Modifier,
-    categoryItem: HomeCategoryItem,
+    categoryItem: HomeCategory,
     paginationState: PaginationStateInfo,
     showCardTitle: Boolean,
     films: List<Film>,
@@ -67,7 +67,7 @@ internal fun HomeFilmsRow(
                     || paginationState.pagingState == PagingState.ERROR)
         ) {
             paginate(
-                categoryItem.query,
+                categoryItem.url,
                 paginationState.currentPage
             )
         }

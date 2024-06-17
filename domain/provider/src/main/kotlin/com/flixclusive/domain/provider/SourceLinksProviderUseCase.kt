@@ -5,8 +5,8 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.infoLog
+import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderManager
-import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.SourceLinksRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.gradle.entities.Status
@@ -16,9 +16,9 @@ import com.flixclusive.model.provider.SourceData
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.util.FlixclusiveWebView
 import com.flixclusive.provider.util.WebViewCallback
@@ -47,7 +47,7 @@ class SourceLinksProviderUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
     private val sourceLinksRepository: SourceLinksRepository,
     private val providersManager: ProviderManager,
-    private val providersRepository: ProviderRepository,
+    private val providerApiRepository: ProviderApiRepository,
     private val tmdbRepository: TMDBRepository,
 ) {
     private val defaultErrorMessage = UiText.StringResource(UtilR.string.source_data_dialog_state_error_default)
@@ -60,24 +60,24 @@ class SourceLinksProviderUseCase @Inject constructor(
          *
          * */
         fun getFilmKey(
-            filmId: Int,
-            episodeData: TMDBEpisode?,
-        ): FilmKey = "$filmId-${episodeData?.season}:${episodeData?.episode}"
+            filmId: String,
+            episodeData: Episode?,
+        ): FilmKey = "$filmId-${episodeData?.season}:${episodeData?.number}"
     }
 
      val providerApis: List<ProviderApi>
          get() = providersManager
              .providerDataList
-             .flatMap { data ->
-                 val api = providersRepository.providers.getValue(data.name)
+             .mapNotNull { data ->
+                 val api = providerApiRepository.apiMap[data.name]
 
                  if (
                      data.status != Status.Maintenance
                      && data.status != Status.Down
                      && providersManager.isProviderEnabled(data.name)
-                 ) return@flatMap api
+                 ) return@mapNotNull api
 
-                 emptyList()
+                 null
              }
 
     /**
@@ -89,14 +89,13 @@ class SourceLinksProviderUseCase @Inject constructor(
     private val cache = HashMap<FilmKey, SourceData>()
 
     fun loadLinks(
-        film: Film,
+        film: FilmDetails,
         watchHistoryItem: WatchHistoryItem?,
         preferredProviderName: String? = null,
-        isChangingProvider: Boolean = false,
-        mediaId: String? = null,
-        episode: TMDBEpisode? = null,
+        watchId: String? = null,
+        episode: Episode? = null,
         runWebView: (FlixclusiveWebView) -> Unit,
-        onSuccess: (TMDBEpisode?) -> Unit,
+        onSuccess: (Episode?) -> Unit,
         onError: ((UiText) -> Unit)? = null,
     ): Flow<SourceDataState> = channelFlow {
         val providersList = getPrioritizedProvidersList(preferredProviderName)
@@ -129,13 +128,13 @@ class SourceLinksProviderUseCase @Inject constructor(
         } else episode
 
         val cacheKey = getFilmKey(
-            filmId = film.id,
+            filmId = film.identifier,
             episodeData = episodeToUse
         )
 
         val cachedSourceData = cache[cacheKey].also { data ->
             val isNewFilm = cache.keys.none {
-                it.contains(film.id.toString(), true)
+                it.contains(film.identifier, true)
             }
             if(data == null && isNewFilm) {
                 return@also cache.clear()
@@ -161,7 +160,11 @@ class SourceLinksProviderUseCase @Inject constructor(
         for (i in providersList.indices) {
             val provider = providersList[i]
 
-            if (provider.name != preferredProviderName && isChangingProvider)
+            val isChangingProvider = preferredProviderName != null
+
+            val isNotTheFilmProvider = !film.providerName.equals(provider.name, true) && !film.isFromTmdb
+
+            if ((isChangingProvider && provider.name != preferredProviderName) || isNotTheFilmProvider)
                 continue
 
             trySend(SourceDataState.Fetching(UiText.StringResource(UtilR.string.fetching_from_provider_format, provider.name)))
@@ -171,12 +174,12 @@ class SourceLinksProviderUseCase @Inject constructor(
                 val webView: FlixclusiveWebView
                 val shouldContinue = suspendCoroutine { continuation ->
                     val sourceData = getLinks(
-                        filmId = film.id,
+                        filmId = film.identifier,
                         episode = episodeToUse
                     )
 
                     cache[cacheKey] = sourceData.copy(
-                        mediaId = "${film.id}-WEBVIEW",
+                        watchId = "${film.identifier}-WEBVIEW",
                         providerName = provider.name
                     )
 
@@ -186,7 +189,7 @@ class SourceLinksProviderUseCase @Inject constructor(
                             episode = episodeToUse,
                             context = context,
                             callback = object : WebViewCallback {
-                                override suspend fun onSuccess(episode: TMDBEpisode?) {
+                                override suspend fun onSuccess(episode: Episode?) {
                                     if (linksLoaded == 0) {
                                         trySend(SourceDataState.Error(getNoLinksMessage(provider.name)))
                                         return
@@ -247,33 +250,30 @@ class SourceLinksProviderUseCase @Inject constructor(
             }
 
             val canStopLooping = i == providersList.lastIndex || isChangingProvider
-            val needsNewMediaId = mediaId != null && provider.name != preferredProviderName
+            val needsNewWatchId = watchId == null && film.isFromTmdb
 
-            val mediaIdResource = if (needsNewMediaId || mediaId == null) {
-                sourceLinksRepository.getMediaId(
+            val watchIdResource = when {
+                needsNewWatchId -> sourceLinksRepository.getWatchId(
                     film = film,
                     providerApi = provider
                 )
-            } else Resource.Success(mediaId)
+                else -> Resource.Success(film.identifier)
+            }
 
-            if (mediaIdResource is Resource.Failure || mediaIdResource.data.isNullOrBlank()) {
+            if (watchIdResource is Resource.Failure || watchIdResource.data.isNullOrBlank()) {
                 if (canStopLooping) {
-                    val error = mediaIdResource.error
+                    val error = watchIdResource.error
                         ?: UiText.StringResource(UtilR.string.blank_media_id_error_message)
 
                     onError?.invoke(error)
-                    trySend(
-                        SourceDataState.Unavailable(
-                            mediaIdResource.error ?: UiText.StringResource(UtilR.string.failed_to_get_media_id_error_msg)
-                        )
-                    )
+                    trySend(SourceDataState.Unavailable(error))
                     return@channelFlow
                 }
 
                 continue
             }
 
-            val mediaIdToUse = mediaIdResource.data!!
+            val watchIdToUse = watchIdResource.data!!
 
             trySend(SourceDataState.Extracting(UiText.StringResource(UtilR.string.extracting_from_provider_format, provider.name)))
 
@@ -286,27 +286,27 @@ class SourceLinksProviderUseCase @Inject constructor(
                      * */
                     cachedLinks.clear()
                     cache[cacheKey] = copy(
-                        mediaId = mediaIdToUse,
+                        watchId = watchIdToUse,
                         providerName = provider.name
                     )
                 }
             } else {
                 cache[cacheKey] = SourceData(
-                    mediaId = mediaIdToUse,
+                    watchId = watchIdToUse,
                     providerName = provider.name
                 )
             }
 
             val sourceData = getLinks(
-                filmId = film.id,
+                filmId = film.identifier,
                 episode = episodeToUse
             )
 
             val result = sourceLinksRepository.getSourceLinks(
-                mediaId = mediaIdToUse,
                 film = film,
+                watchId = watchIdToUse,
                 season = episodeToUse?.season,
-                episode = episodeToUse?.episode,
+                episode = episodeToUse?.number,
                 providerApi = provider,
                 onSubtitleLoaded = {
                     sourceData.run {
@@ -336,12 +336,13 @@ class SourceLinksProviderUseCase @Inject constructor(
             when {
                 result is Resource.Failure || linksLoaded == 0 -> {
                     if (canStopLooping) {
-                        val error = if (linksLoaded == 0) {
-                            getNoLinksMessage(provider.name)
-                        } else defaultErrorMessage
+                        val error = result.error ?: when (linksLoaded) {
+                            0 -> getNoLinksMessage(provider.name)
+                            else -> defaultErrorMessage
+                        }
 
-                        onError?.invoke(result.error ?: error)
-                        trySend(SourceDataState.Error(result.error ?: error))
+                        onError?.invoke(error)
+                        trySend(SourceDataState.Error(error))
                         return@channelFlow
                     }
                 }
@@ -360,27 +361,27 @@ class SourceLinksProviderUseCase @Inject constructor(
      *
      *
      * @param filmId id of the film to fetch
-     * @param episode [TMDBEpisode] of the film if it is a tv show
+     * @param episode [Episode] of the film if it is a tv show
      *
      * @return [SourceData] of the cached film if it exists. Returns a default value if it is null
      * */
     fun getLinks(
-        filmId: Int,
-        episode: TMDBEpisode?,
+        filmId: String,
+        episode: Episode?,
     ) = cache.getOrElse(getFilmKey(filmId, episode)) {
         SourceData()
     }
 
     /**
      *
-     * Obtains the [TMDBEpisode] data of the nearest
+     * Obtains the [Episode] data of the nearest
      * episode to be watched by the user
      *
      * */
     private suspend fun getNearestEpisodeToWatch(
         film: TvShow,
         watchHistoryItem: WatchHistoryItem?,
-    ): Resource<TMDBEpisode?> {
+    ): Resource<Episode?> {
         val isNewlyWatchShow =
             watchHistoryItem == null || watchHistoryItem.episodesWatched.isEmpty()
 
@@ -401,7 +402,7 @@ class SourceLinksProviderUseCase @Inject constructor(
         }
 
         val episodeFromApiService = tmdbRepository.getEpisode(
-            id = film.id,
+            id = film.tmdbId ?: return Resource.Failure(UtilR.string.invalid_tmdb_id),
             seasonNumber = seasonNumber,
             episodeNumber = episodeNumber
         )

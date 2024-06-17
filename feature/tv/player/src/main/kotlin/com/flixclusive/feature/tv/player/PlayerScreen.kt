@@ -49,7 +49,7 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.tv.player.controls.PlaybackControls
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.model.tmdb.TvShow
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -60,19 +60,19 @@ private const val PLAYER_SCREEN_DELAY = 800
 
 private fun isSameEpisode(
     film: Film,
-    currentEpisode: TMDBEpisode?,
-    episodeToPlay: TMDBEpisode?
+    currentEpisode: Episode?,
+    episodeToPlay: Episode?
 ) = film is TvShow
         && currentEpisode != null
         && episodeToPlay != null
-        && currentEpisode.episodeId == episodeToPlay.episodeId
+        && currentEpisode.id == episodeToPlay.id
 
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun PlayerScreen(
     film: Film,
-    episodeToPlay: TMDBEpisode?,
+    episodeToPlay: Episode?,
     isPlayerRunning: Boolean,
     isIdle: Boolean,
     isOverviewShown: Boolean,
@@ -227,7 +227,7 @@ fun PlayerScreen(
             val lastSeason = watchHistoryItem?.seasons
             val lastEpisode = watchHistoryItem?.episodes?.get(lastSeason)
 
-            currentEpisodeSelected?.season == lastSeason && currentEpisodeSelected?.episode == lastEpisode
+            currentEpisodeSelected?.season == lastSeason && currentEpisodeSelected?.number == lastEpisode
         }
 
         val player = viewModel.player

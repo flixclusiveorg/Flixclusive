@@ -43,13 +43,13 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderApi
 import com.flixclusive.core.ui.player.FlixclusivePlayerManager
 import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatMinSec
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
-import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.tv.player.controls.settings.AudioAndSubtitlesPanel
 import com.flixclusive.feature.tv.player.controls.settings.PlaybackSpeedPanel
 import com.flixclusive.feature.tv.player.controls.settings.ServersPanel
@@ -58,12 +58,8 @@ import com.flixclusive.feature.tv.player.controls.settings.SubtitleSyncPanel
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.dto.FilmInfo
-import com.flixclusive.provider.dto.SearchResults
 import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient
 import kotlin.math.abs
@@ -75,7 +71,7 @@ import com.flixclusive.core.util.R as UtilR
 internal fun PlaybackControls(
     modifier: Modifier = Modifier,
     appSettings: AppSettings,
-    currentEpisodeSelected: TMDBEpisode?,
+    currentEpisodeSelected: Episode?,
     isSubtitleStylePanelOpened: MutableState<Boolean>,
     isSyncSubtitlesPanelOpened: MutableState<Boolean>,
     isAudioAndSubtitlesPanelOpened: MutableState<Boolean>,
@@ -351,32 +347,7 @@ private fun slideTransition(
 @Composable
 private fun PlaybackControlsPreview() {
     var seekMultiplier by remember { mutableLongStateOf(0L) }
-
-    val sources = List(5) {
-        object : ProviderApi(OkHttpClient()) {
-            override val name: String
-                get() = "Provider #$it"
-
-            override suspend fun getFilmInfo(filmId: String, filmType: FilmType): FilmInfo {
-                TODO("Not yet implemented")
-            }
-
-            override suspend fun search(film: Film, page: Int): SearchResults {
-                TODO("Not yet implemented")
-            }
-
-            override suspend fun getSourceLinks(
-                filmId: String,
-                film: Film,
-                season: Int?,
-                episode: Int?,
-                onLinkLoaded: (SourceLink) -> Unit,
-                onSubtitleLoaded: (Subtitle) -> Unit
-            ) {
-                TODO("Not yet implemented")
-            }
-        }
-    }
+    val sources = getDummyProviderApi()
 
     val serverNames = listOf("ServerA", "ServerB", "ServerC", "ServerD", "ServerE")
     val serverUrls = listOf("http://serverA.com", "http://serverB.com", "http://serverC.com", "http://serverD.com", "http://serverE.com")

@@ -61,7 +61,7 @@ fun FilmOverview(
                 add(formatMinutes(film.runtime).asString(context))
             }
 
-            add(film.dateReleased)
+            film.parsedReleaseDate?.let(::add)
         }.toList()
             .filterNot { it.isEmpty() }
     }

@@ -15,7 +15,8 @@ import com.flixclusive.domain.tmdb.FilmProviderUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.model.database.toWatchlistItem
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.Season
+import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.common.tv.Season
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,7 +28,7 @@ import kotlinx.coroutines.launch
 import com.flixclusive.core.util.R as UtilR
 
 abstract class BaseFilmScreenViewModel(
-    film: Film,
+    private val partiallyDetailedFilm: Film,
     watchHistoryRepository: WatchHistoryRepository,
     private val seasonProvider: SeasonProviderUseCase,
     private val filmProvider: FilmProviderUseCase,
@@ -42,8 +43,7 @@ abstract class BaseFilmScreenViewModel(
             initialValue = appSettingsManager.localAppSettings
         )
 
-    private val filmId: Int = film.id
-    private val filmType: FilmType = film.filmType
+    private val filmId: String = partiallyDetailedFilm.identifier
 
     private var initializeJob: Job? = null
     private var onSeasonChangeJob: Job? = null
@@ -69,29 +69,24 @@ abstract class BaseFilmScreenViewModel(
     var selectedSeasonNumber by mutableIntStateOf(value = 1)
 
     init {
-        initializeData(
-            filmId = filmId,
-            filmType = filmType
-        )
+        initializeData(film = partiallyDetailedFilm)
     }
 
-    fun initializeData(
-        filmId: Int = this.filmId,
-        filmType: FilmType = this.filmType
-    ) {
-        val isSameFilm = filmId == _film.value?.id && _uiState.value.errorMessage == null && !_uiState.value.isLoading
+    fun initializeData(film: Film = partiallyDetailedFilm) {
+        val isSameFilm = filmId == _film.value?.identifier && _uiState.value.errorMessage == null && !_uiState.value.isLoading
 
         if(initializeJob?.isActive == true || isSameFilm)
             return
 
         initializeJob = viewModelScope.launch {
-            _uiState.update { FilmUiState() }
+            if (film is FilmDetails) {
+                film.onInitializeSuccess()
+                return@launch
+            }
 
+            _uiState.update { FilmUiState() }
             when(
-                val result = filmProvider(
-                    id = filmId,
-                    type = filmType,
-                )
+                val result = filmProvider(partiallyDetailedFilm = film)
             ) {
                 is Resource.Failure -> {
                     _uiState.update {
@@ -102,35 +97,35 @@ abstract class BaseFilmScreenViewModel(
                     }
                 }
                 Resource.Loading -> Unit
-                is Resource.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = null
-                        )
-                    }
-
-                    result.data?.run {
-                        _film.update { this }
-                        isFilmInWatchlist()
-
-                        if(filmType == FilmType.TV_SHOW) {
-                            val seasonToInitialize =
-                                if (watchHistoryItem.value?.episodesWatched.isNullOrEmpty()) 1
-                                else watchHistoryItem.value!!.episodesWatched.last().seasonNumber!!
-
-                            onSeasonChange(seasonToInitialize) // Initialize first season
-                        }
-                    }
-                }
+                is Resource.Success -> result.data?.onInitializeSuccess()
             }
+        }
+    }
+
+    private suspend fun Film.onInitializeSuccess() {
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                errorMessage = null
+            )
+        }
+
+        _film.update { this@onInitializeSuccess }
+        isFilmInWatchlist()
+
+        if(filmType == FilmType.TV_SHOW) {
+            val seasonToInitialize =
+                if (watchHistoryItem.value?.episodesWatched.isNullOrEmpty()) 1
+                else watchHistoryItem.value!!.episodesWatched.last().seasonNumber!!
+
+            onSeasonChange(seasonToInitialize) // Initialize first season
         }
     }
 
     private suspend fun isFilmInWatchlist() {
         _film.value?.let { film ->
             _uiState.update {
-                it.copy(isFilmInWatchlist = toggleWatchlistStatusUseCase.isInWatchlist(film.id))
+                it.copy(isFilmInWatchlist = toggleWatchlistStatusUseCase.isInWatchlist(film.identifier))
             }
         }
     }
@@ -142,7 +137,7 @@ abstract class BaseFilmScreenViewModel(
         onSeasonChangeJob = viewModelScope.launch {
             selectedSeasonNumber = seasonNumber
 
-            seasonProvider.asFlow(id = _film.value!!.id, seasonNumber = seasonNumber)
+            seasonProvider.asFlow(id = _film.value!!.identifier, seasonNumber = seasonNumber)
                 .collectLatest {
                     _currentSeasonSelected.value = it
                 }

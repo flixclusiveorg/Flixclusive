@@ -12,7 +12,7 @@ android {
 dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.ui.mobile)
-    implementation(projects.data.tmdb)
+    implementation(projects.domain.category)
     implementation(projects.model.configuration)
 
     implementation(libs.compose.foundation)

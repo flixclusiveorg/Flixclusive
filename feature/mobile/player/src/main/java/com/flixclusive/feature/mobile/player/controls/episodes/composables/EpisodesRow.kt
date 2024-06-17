@@ -22,18 +22,18 @@ import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.tmdb.Season
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.model.tmdb.common.tv.Episode
 
 @Composable
 internal fun EpisodesRow(
     modifier: Modifier = Modifier,
     seasonData: Resource<Season?>,
     selectedSeason: Int,
-    currentEpisodeSelected: TMDBEpisode,
+    currentEpisodeSelected: Episode,
     watchHistoryItem: WatchHistoryItem?,
     onSeasonChange: (Int) -> Unit,
-    onEpisodeClick: (TMDBEpisode) -> Unit,
+    onEpisodeClick: (Episode) -> Unit,
     onClose: () -> Unit,
 ) {
     val listFade = Brush.horizontalGradient(
@@ -52,7 +52,7 @@ internal fun EpisodesRow(
                 && seasonData.data?.episodes?.contains(currentEpisodeSelected) == true
             ) {
                 listState.animateScrollToItem(
-                    index = currentEpisodeSelected.episode - 1
+                    index = currentEpisodeSelected.number - 1
                 )
             } else listState.animateScrollToItem(0)
         }

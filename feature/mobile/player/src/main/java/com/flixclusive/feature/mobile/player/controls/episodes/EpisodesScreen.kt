@@ -33,8 +33,8 @@ import com.flixclusive.feature.mobile.player.controls.common.EnlargedTouchableBu
 import com.flixclusive.feature.mobile.player.controls.episodes.composables.EpisodesRow
 import com.flixclusive.feature.mobile.player.controls.episodes.composables.SeasonsRow
 import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.tmdb.Season
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.tmdb.common.tv.Season
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
@@ -43,14 +43,14 @@ internal fun EpisodesScreen(
     modifier: Modifier = Modifier,
     seasonData: Resource<Season?>,
     availableSeasons: Int,
-    currentEpisodeSelected: TMDBEpisode,
+    currentEpisodeSelected: Episode,
     watchHistoryItem: WatchHistoryItem?,
     onSeasonChange: (Int) -> Unit,
-    onEpisodeClick: (TMDBEpisode) -> Unit,
+    onEpisodeClick: (Episode) -> Unit,
     onClose: () -> Unit,
 ) {
     var selectedSeason by remember {
-        mutableIntStateOf(seasonData.data?.seasonNumber ?: currentEpisodeSelected.season)
+        mutableIntStateOf(seasonData.data?.number ?: currentEpisodeSelected.season)
     }
 
     Box(
@@ -88,7 +88,7 @@ internal fun EpisodesScreen(
                     Resource.Loading -> Unit
                     is Resource.Success -> {
                         Text(
-                            text = seasonData.data?.name ?: "Season ${seasonData.data?.seasonNumber}",
+                            text = seasonData.data?.name ?: "Season ${seasonData.data?.number}",
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 22.sp
@@ -128,12 +128,12 @@ internal fun EpisodesScreen(
 )
 @Composable
 private fun EpisodesScreenPreview() {
-    val sampleTMDBEpisode = remember {
-        TMDBEpisode(
-            episode = 1,
+    val sampleEpisode = remember {
+        Episode(
+            number = 1,
             season = 1,
             title = "Sample Title",
-            description = "A car explodes in the middle of the city and kills a person. The cause of the explosion is unknown. Cha Jae Hwan, a detective from the Violent Crimes Unit, notices something strange at the scene. Eugene Hathaway, an FBI agent on duty in Korea, helps him take another look. Later, Jae Hwan chases after a suspect, and in the end, he gets faced with a dark figure.",
+            overview = "A car explodes in the middle of the city and kills a person. The cause of the explosion is unknown. Cha Jae Hwan, a detective from the Violent Crimes Unit, notices something strange at the scene. Eugene Hathaway, an FBI agent on duty in Korea, helps him take another look. Later, Jae Hwan chases after a suspect, and in the end, he gets faced with a dark figure.",
             image = "/eDXV3upl9iXqOtYaNuzAfZvmfTU.jpg"
         )
     }
@@ -141,12 +141,11 @@ private fun EpisodesScreenPreview() {
     val seasonData = remember {
         Resource.Success(
             Season(
-                seasonNumber = 1,
+                number = 1,
                 name = "Wano Arc",
                 episodes = List(8) {
-                    sampleTMDBEpisode
+                    sampleEpisode
                 },
-                isReleased = true
             )
         )
     }
@@ -169,7 +168,7 @@ private fun EpisodesScreenPreview() {
                 EpisodesScreen(
                     seasonData = seasonData,
                     availableSeasons = 8,
-                    currentEpisodeSelected = TMDBEpisode(),
+                    currentEpisodeSelected = Episode(),
                     watchHistoryItem = WatchHistoryItem(),
                     onSeasonChange = {},
                     onEpisodeClick = {},

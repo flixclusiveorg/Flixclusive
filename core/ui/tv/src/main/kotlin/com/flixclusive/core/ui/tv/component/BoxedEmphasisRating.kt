@@ -20,7 +20,7 @@ import com.flixclusive.core.util.film.formatRating
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun BoxedEmphasisRating(
-    rating: Double,
+    rating: Double?,
     containerColor: Color = MaterialTheme.colorScheme.tertiary,
     contentColor: Color = MaterialTheme.colorScheme.onTertiary,
     boxShape: Shape = FilmCardShape

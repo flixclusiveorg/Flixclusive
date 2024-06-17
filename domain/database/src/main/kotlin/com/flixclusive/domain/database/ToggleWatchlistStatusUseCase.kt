@@ -7,7 +7,7 @@ import javax.inject.Inject
 class ToggleWatchlistStatusUseCase @Inject constructor(
     private val watchlistRepository: WatchlistRepository,
 ) {
-    suspend fun isInWatchlist(id: Int): Boolean =
+    suspend fun isInWatchlist(id: String): Boolean =
         watchlistRepository.getWatchlistItemById(id) != null
 
     suspend operator fun invoke(watchlistItem: WatchlistItem): Boolean {

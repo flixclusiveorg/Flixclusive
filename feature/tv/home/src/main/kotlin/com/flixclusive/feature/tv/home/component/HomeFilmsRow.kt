@@ -32,7 +32,7 @@ import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.home.PaginationStateInfo
-import com.flixclusive.model.configuration.HomeCategoryItem
+import com.flixclusive.model.tmdb.category.HomeCategory
 import com.flixclusive.model.tmdb.Film
 
 internal const val HOME_FOCUS_KEY_FORMAT = "row=%d, column=%d"
@@ -41,7 +41,7 @@ internal const val HOME_FOCUS_KEY_FORMAT = "row=%d, column=%d"
 @Composable
 internal fun HomeFilmsRow(
     modifier: Modifier = Modifier,
-    categoryItem: HomeCategoryItem,
+    categoryItem: HomeCategory,
     paginationState: PaginationStateInfo,
     films: List<Film>,
     rowIndex: Int,
@@ -80,7 +80,7 @@ internal fun HomeFilmsRow(
             || films.isEmpty())
         ) {
             paginate(
-                categoryItem.query,
+                categoryItem.url,
                 paginationState.currentPage
             )
         }

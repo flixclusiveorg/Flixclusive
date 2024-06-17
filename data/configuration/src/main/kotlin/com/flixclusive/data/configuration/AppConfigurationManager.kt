@@ -3,8 +3,8 @@ package com.flixclusive.data.configuration
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.model.configuration.AppConfig
-import com.flixclusive.model.configuration.HomeCategoriesConfig
-import com.flixclusive.model.configuration.SearchCategoriesConfig
+import com.flixclusive.model.tmdb.category.HomeCategoriesData
+import com.flixclusive.model.tmdb.category.SearchCategoriesData
 import kotlinx.coroutines.flow.SharedFlow
 
 sealed class UpdateStatus(
@@ -41,8 +41,8 @@ interface AppConfigurationManager {
      * */
     val currentAppBuild: AppBuild?
 
-    var homeCategoriesConfig: HomeCategoriesConfig?
-    var searchCategoriesConfig: SearchCategoriesConfig?
+    var homeCategoriesData: HomeCategoriesData?
+    var searchCategoriesData: SearchCategoriesData?
     var appConfig: AppConfig?
 
     fun initialize(appBuild: AppBuild? = null)

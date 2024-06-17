@@ -167,7 +167,7 @@ class FlixclusivePlayerManager(
     }
 
     override fun onPlayerError(error: PlaybackException) {
-        errorLog(error.stackTraceToString())
+        errorLog(error)
         error.handleError(
             duration = player?.duration,
             showErrorCallback = showErrorCallback

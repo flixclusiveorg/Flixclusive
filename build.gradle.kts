@@ -16,23 +16,45 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.room) apply false
+    alias(libs.plugins.dokka) apply false
     id("com.osacky.doctor") version "0.9.1"
 }
 
-// Generate the stubs jar for the providers-system.
-// Must only be run after the task: bundleReleaseClassesToCompileJar or build.
-tasks.register<Jar>("generateStubsJar") {
-    archiveBaseName.set("classes")
-    archiveClassifier.set("")
-    destinationDirectory.set(File("app/build"))
+// Generate a mf FAT AHH JAR!
+tasks.register<Jar>("fatJar") {
+    archiveBaseName.set("provider-stubs")
+    archiveClassifier.set("sources")
+    destinationDirectory.set(File("build/stubs"))
 
     subprojects.forEach { project ->
         if (project.subprojects.size == 0) {
             val projectPath = "." + project.path.replace(":", "/")
-            val appJar = File("${projectPath}/build/intermediates/compile_app_classes_jar/release/classes.jar")
+            from("$projectPath/src/main/kotlin", "$projectPath/src/main/java")
+        }
+    }
+}
 
-            if (appJar.exists()) {
-                from(zipTree(appJar)) {
+/**
+ *
+ * Generate the stubs jar for the providers-system.
+ *
+ * Must only be run after the tasks:
+ * - assembleRelease; and
+ * - bundleReleaseClassesToCompileJar.
+ * */
+tasks.register<Jar>("generateStubsJar") {
+    archiveBaseName.set("classes")
+    archiveClassifier.set("")
+    destinationDirectory.set(File("build/stubs"))
+    dependsOn("fatJar")
+
+    subprojects.forEach { project ->
+        if (project.subprojects.size == 0) {
+            val projectPath = "." + project.path.replace(":", "/")
+            val classesJar = File("${projectPath}/build/intermediates/compile_app_classes_jar/release/classes.jar")
+
+            if (classesJar.exists()) {
+                from(zipTree(classesJar)) {
                     duplicatesStrategy = DuplicatesStrategy.INCLUDE
                 }
             }
@@ -52,3 +74,4 @@ tasks.register<Jar>("generateStubsJar") {
         }
     }
 }
+

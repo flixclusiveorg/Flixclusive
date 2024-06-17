@@ -2,22 +2,22 @@ package com.flixclusive.model.database
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.flixclusive.model.tmdb.DBFilm
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.FilmImpl
 import com.flixclusive.model.tmdb.toFilmInstance
 import java.util.Date
 
 @Entity(tableName = "watchlist")
 data class WatchlistItem(
-    @PrimaryKey val id: Int = 0,
+    @PrimaryKey val id: String = "",
     val ownerId: Int = 1,
     val addedOn: Date = Date(),
-    val film: FilmImpl = FilmImpl()
+    val film: DBFilm = DBFilm()
 )
 
 fun Film.toWatchlistItem(): WatchlistItem {
     return WatchlistItem(
-        id = id,
+        id = identifier,
         film = this.toFilmInstance()
     )
 }

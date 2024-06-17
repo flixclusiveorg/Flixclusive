@@ -73,8 +73,8 @@ import com.flixclusive.feature.tv.film.component.episodes.EpisodesPanel
 import com.flixclusive.feature.tv.player.PlayerScreen
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
@@ -101,7 +101,7 @@ fun FilmScreen(
     val film by viewModel.film.collectAsStateWithLifecycle()
     val currentSeasonSelected by viewModel.currentSeasonSelected.collectAsStateWithLifecycle()
 
-    var episodeToPlay: TMDBEpisode? by remember { mutableStateOf(null) }
+    var episodeToPlay: Episode? by remember { mutableStateOf(null) }
 
     var isPlayerRunning by remember { mutableStateOf(args.startPlayerAutomatically) }
     var isEpisodesPanelOpen by remember { mutableStateOf(false) }
@@ -250,10 +250,7 @@ fun FilmScreen(
 
                 DisposableEffect(LocalLifecycleOwner.current) {
                     isIdle = true
-                    viewModel.initializeData(
-                        filmId = args.film.id,
-                        filmType = args.film.filmType
-                    )
+                    viewModel.initializeData()
 
                     lastItemFocusedMap.getOrPut(currentRoute) {
                         PLAY_BUTTON_KEY
@@ -349,10 +346,7 @@ fun FilmScreen(
                                         },
                                         onFilmClick = { newFilm ->
                                             isPlayerRunning = false
-                                            viewModel.initializeData(
-                                                filmId = newFilm.id,
-                                                filmType = newFilm.filmType
-                                            )
+                                            viewModel.initializeData(film = newFilm)
                                         }
                                     )
                                 }
@@ -360,7 +354,7 @@ fun FilmScreen(
                         }
                     }
 
-                    if (film?.recommendedTitles?.isNotEmpty() == true) {
+                    if (film?.recommendations?.isNotEmpty() == true) {
                         item {
                             Box(
                                 modifier = Modifier
@@ -370,7 +364,7 @@ fun FilmScreen(
                                     )
                             ) {
                                 FilmsRow(
-                                    films = film!!.recommendedTitles,
+                                    films = film!!.recommendations,
                                     hasFocus = otherFilmsHasFocus,
                                     label = UiText.StringResource(UtilR.string.other_films_message),
                                     iconId = R.drawable.round_dashboard_24,

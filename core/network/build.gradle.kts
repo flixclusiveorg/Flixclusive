@@ -13,6 +13,7 @@ dependencies {
     api(libs.retrofit)
 
     implementation(libs.conscrypt)
+    implementation(libs.mockk)
     implementation(libs.retrofit.gson)
     implementation(projects.core.datastore)
     implementation(projects.core.util)

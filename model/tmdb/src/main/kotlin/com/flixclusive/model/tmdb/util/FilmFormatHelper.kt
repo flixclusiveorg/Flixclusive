@@ -33,7 +33,7 @@ internal fun formatDate(dateString: String?): String {
     } ?: "No release date"
 }
 
-internal fun formatAirDates(
+fun formatAirDates(
     firstAirDate: String,
     lastAirDate: String,
     inProduction: Boolean?,

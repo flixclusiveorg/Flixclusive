@@ -10,6 +10,7 @@ import com.flixclusive.core.util.network.CryptographyUtil
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.provider.ProviderApi
 import com.google.gson.JsonSyntaxException
@@ -23,9 +24,9 @@ class DefaultSourceLinksRepository @Inject constructor(
 ) : SourceLinksRepository {
 
     override suspend fun getSourceLinks(
-        mediaId: String,
         providerApi: ProviderApi,
-        film: Film,
+        watchId: String,
+        film: FilmDetails,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
@@ -34,7 +35,7 @@ class DefaultSourceLinksRepository @Inject constructor(
         return withContext(ioDispatcher) {
             try {
                 providerApi.getSourceLinks(
-                    filmId = mediaId,
+                    watchId = watchId,
                     film = film,
                     episode = episode,
                     season = season,
@@ -44,7 +45,7 @@ class DefaultSourceLinksRepository @Inject constructor(
 
                 return@withContext Resource.Success(Unit)
             } catch (e: Exception) {
-                errorLog(e.stackTraceToString())
+                errorLog(e)
                 return@withContext when (e) {
                     is CryptographyUtil.DecryptionException -> Resource.Failure(UtilR.string.decryption_error)
                     is JsonSyntaxException -> Resource.Failure(UtilR.string.failed_to_extract)
@@ -54,8 +55,15 @@ class DefaultSourceLinksRepository @Inject constructor(
         }
     }
 
-    override suspend fun getMediaId(
-        film: Film?,
+    /**
+     *
+     * Method to be called if a [Film] directly
+     * comes from TMDB Meta Provider. This method
+     * obtains the watch id of the film based on the
+     * given [ProviderApi]
+     * */
+    override suspend fun getWatchId(
+        film: FilmDetails?,
         providerApi: ProviderApi,
     ): Resource<String?> {
         return withContext(ioDispatcher) {
@@ -64,81 +72,118 @@ class DefaultSourceLinksRepository @Inject constructor(
                     return@withContext Resource.Failure(UtilR.string.default_error)
 
                 var i = 1
-                var id: String? = null
+                var watchId: String? = null
                 val maxPage = 3
 
-                while (id == null) {
+                while (watchId == null) {
                     if (i > maxPage) {
                         return@withContext Resource.Success(null)
                     }
 
                     val searchResponse = providerApi.search(
-                        page = i,
-                        film = film
+                        title = film.title,
+                        id = film.identifier,
+                        imdbId = film.imdbId,
+                        tmdbId = film.tmdbId,
+                        page = i
                     )
 
                     if (searchResponse.results.isEmpty())
                         return@withContext Resource.Success(null)
 
 
-                    for(result in searchResponse.results) {
-                        if(result.tmdbId == film.id) {
-                            id = result.id
+                    for (item in searchResponse.results) {
+                        val respectiveId = item.getRespectiveId(film)
+                        if (respectiveId != null) {
+                            watchId = respectiveId
                             break
                         }
 
-                        val titleMatches = result.title.equals(film.title, ignoreCase = true) || result.title?.compareIgnoringSymbols(film.title, ignoreCase = true) == true
-                        val filmTypeMatches = result.filmType?.type == film.filmType.type
-                        val releaseDateMatches =
-                            result.releaseDate == film.dateReleased.split(" ").last()
+                        val filmTypeMatches = item.filmType.type == film.filmType.type
+                        val titleMatches = item.title.titleMatches(film.title)
+                        val releaseDateMatches = item.dateMatches(film)
+                        val yearReleaseMatches = item.yearMatches(film)
 
                         if (titleMatches && filmTypeMatches && film is TvShow) {
-                            if (film.seasons.size == result.seasons || releaseDateMatches) {
-                                id = result.id
+                            if (yearReleaseMatches || releaseDateMatches) {
+                                watchId = item.identifier
                                 break
                             }
 
-                            val tvShowInfo = providerApi.getFilmInfo(
-                                filmId = result.id!!,
-                                filmType = film.filmType
-                            )
-
-                            val tvReleaseDateMatches = tvShowInfo.yearReleased == film.dateReleased.split("-").first()
-                            val seasonCountMatches = film.seasons.size == tvShowInfo.seasons
-
-                            if (tvReleaseDateMatches || seasonCountMatches) {
-                                id = result.id
+                            val tvShowInfo = providerApi.getFilmDetails(film = item)
+                            
+                            if (
+                                tvShowInfo.yearMatches(film) 
+                                || film.seasonCountMatches(tvShowInfo)
+                            ) {
+                                watchId = item.identifier
                                 break
                             }
                         }
 
-                        if (titleMatches && filmTypeMatches && releaseDateMatches) {
-                            id = result.id
+                        if (titleMatches && filmTypeMatches && (yearReleaseMatches || releaseDateMatches)) {
+                            watchId = item.identifier
                             break
                         }
                     }
 
                     if (searchResponse.hasNextPage) {
                         i++
-                    } else if (id.isNullOrEmpty()) {
+                    } else if (watchId.isNullOrEmpty()) {
                         break
                     }
                 }
 
-                Resource.Success(id)
+                Resource.Success(watchId)
             } catch (e: Exception) {
-                errorLog(e.stackTraceToString())
-                Resource.Failure(UiText.StringResource(UtilR.string.failed_to_fetch_media_id_message, e.localizedMessage ?: ""))
+                errorLog(e)
+                Resource.Failure(
+                    UiText.StringResource(
+                        UtilR.string.failed_to_fetch_media_id_message,
+                        e.localizedMessage ?: "UNKNOWN ERR"
+                    )
+                )
             }
         }
     }
 
-    private fun String.compareIgnoringSymbols(other: String, ignoreCase: Boolean = false): Boolean {
+    private fun String.compareIgnoringSymbols(other: String?): Boolean {
         val lettersAndNumbersOnlyRegex = Regex("[^A-Za-z0-9 ]")
 
         val normalizedThis = this.replace(lettersAndNumbersOnlyRegex, "")
-        val normalizedOther = other.replace(lettersAndNumbersOnlyRegex, "")
+        val normalizedOther = other?.replace(lettersAndNumbersOnlyRegex, "")
 
-        return normalizedThis.equals(normalizedOther, ignoreCase = ignoreCase)
+        return normalizedThis.equals(normalizedOther, ignoreCase = true)
+    }
+
+    private fun Film.yearMatches(other: Film)
+        = when {
+            other.year == null || this.year == null -> false
+            else -> this.year == other.year
+        }
+
+    private fun Film.dateMatches(other: Film)
+        = when {
+            other.releaseDate.isNullOrBlank() || this.releaseDate.isNullOrBlank() -> false
+            else -> releaseDate.equals(other.releaseDate, true)
+        }
+
+    private fun String.titleMatches(other: String?)
+        = when {
+            other.isNullOrBlank() || isNullOrBlank() -> false
+            else -> equals(other, true) || compareIgnoringSymbols(other)
+        }
+
+    private fun TvShow.seasonCountMatches(other: FilmDetails)
+        = this.seasons.size == (other as TvShow).totalSeasons
+    
+    private fun Film.getRespectiveId(other: Film): String? {
+        return when {
+            id == other.id -> return id
+            tmdbId == other.tmdbId -> return tmdbId?.toString()
+            imdbId == other.imdbId -> return imdbId
+            identifier == other.identifier -> return identifier
+            else -> null
+        }
     }
 }

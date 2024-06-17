@@ -42,16 +42,16 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun EpisodeCard(
     modifier: Modifier = Modifier,
-    episode: TMDBEpisode,
+    episode: Episode,
     watchHistoryItem: WatchHistoryItem?,
-    onEpisodeClick: (TMDBEpisode) -> Unit
+    onEpisodeClick: (Episode) -> Unit
 ) {
     val context = LocalContext.current
     val cardColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.6F)
@@ -63,7 +63,7 @@ internal fun EpisodeCard(
         val episodeProgress = watchHistoryItem
             .episodesWatched
             .find {
-                it.episodeId == episode.episodeId
+                it.episodeId == episode.id
             }
 
         mutableStateOf(
@@ -107,7 +107,7 @@ internal fun EpisodeCard(
                 imageLoader = LocalContext.current.imageLoader,
                 contentDescription = stringResource(
                     UtilR.string.episode_image_content_desc,
-                    episode.episode,
+                    episode.number,
                     episode.title
                 ),
                 placeholder = painterResource(R.drawable.movie_placeholder),
@@ -150,7 +150,7 @@ internal fun EpisodeCard(
                     modifier = Modifier.weight(1F)
                 ) {
                     Text(
-                        text = "Episode ${episode.episode}",
+                        text = "Episode ${episode.number}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.onMediumEmphasis(),
                         modifier = Modifier

@@ -4,7 +4,7 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
-import com.flixclusive.model.tmdb.Season
+import com.flixclusive.model.tmdb.common.tv.Season
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 import com.flixclusive.core.util.R as UtilR
@@ -13,10 +13,15 @@ class SeasonProviderUseCase @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     private val watchHistoryRepository: WatchHistoryRepository,
 )  {
-     fun asFlow(id: Int, seasonNumber: Int) = flow {
+     fun asFlow(id: String, seasonNumber: Int) = flow {
         emit(Resource.Loading)
 
-        when(val result = tmdbRepository.getSeason(id = id, seasonNumber = seasonNumber)) {
+        when(
+            val result = tmdbRepository.getSeason(
+                id = id.toInt(),
+                seasonNumber = seasonNumber
+            )
+        ) {
             is Resource.Failure -> emit(
                 Resource.Failure(
                     UiText.StringResource(UtilR.string.failed_to_fetch_season_message)
@@ -40,8 +45,13 @@ class SeasonProviderUseCase @Inject constructor(
         }
     }
 
-    suspend operator fun invoke(id: Int, seasonNumber: Int): Resource<Season> {
-        return when(val result = tmdbRepository.getSeason(id = id, seasonNumber = seasonNumber)) {
+    suspend operator fun invoke(id: String, seasonNumber: Int): Resource<Season> {
+        return when(
+            val result = tmdbRepository.getSeason(
+                id = id.toInt(),
+                seasonNumber = seasonNumber
+            )
+        ) {
             is Resource.Failure -> Resource.Failure(
                 UiText.StringResource(UtilR.string.failed_to_fetch_season_message)
             )

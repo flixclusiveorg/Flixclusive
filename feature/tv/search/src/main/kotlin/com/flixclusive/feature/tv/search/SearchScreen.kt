@@ -103,7 +103,7 @@ fun SearchScreen(
         lastSearchedQuery = viewModel.searchQuery
     }
 
-    LaunchedEffect(viewModel.selectedCategory?.query) {
+    LaunchedEffect(viewModel.selectedCategory?.url) {
         safeCall { listState.scrollToItem(0) }
         viewModel.onSearch()
     }
@@ -161,14 +161,14 @@ fun SearchScreen(
                             itemsIndexed(categories.data ?: emptyList()) { i, item ->
                                 SuggestionBlock(
                                     suggestion = item.name,
-                                    isSelected = item.query == viewModel.selectedCategory?.query,
+                                    isSelected = item.url == viewModel.selectedCategory?.url,
                                     onClick = { viewModel.onCategoryChange(item) },
                                     modifier = Modifier
                                         .ifElse(
                                             condition = i == 0,
                                             ifTrueModifier = focusRestorersModifiers.childModifier
                                         )
-                                        .focusOnMount(itemKey = "category=${item.query}")
+                                        .focusOnMount(itemKey = "category=${item.url}")
                                         .focusProperties {
                                             right = filtersGroupFocusRequester
                                         }

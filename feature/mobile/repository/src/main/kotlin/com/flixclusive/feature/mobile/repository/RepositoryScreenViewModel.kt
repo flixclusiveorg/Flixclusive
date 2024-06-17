@@ -81,7 +81,7 @@ class RepositoryScreenViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                errorLog(e.stackTraceToString())
+                errorLog(e)
                 uiState = Resource.Failure(e.localizedMessage)
             }
         }

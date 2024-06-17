@@ -20,7 +20,7 @@ class FilmScreenViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     appSettingsManager: AppSettingsManager
 ) : BaseFilmScreenViewModel(
-    film = savedStateHandle.navArgs<FilmScreenNavArgs>().film,
+    partiallyDetailedFilm = savedStateHandle.navArgs<FilmScreenNavArgs>().film,
     watchHistoryRepository = watchHistoryRepository,
     seasonProvider = seasonProvider,
     filmProvider = filmProvider,

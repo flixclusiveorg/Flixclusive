@@ -1,7 +1,8 @@
 package com.flixclusive.core.network.util
 
-import com.flixclusive.model.tmdb.TMDBPageResponse
-import com.flixclusive.model.tmdb.TMDBSearchItem
+import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flixclusive.model.tmdb.SearchResponseData
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -9,41 +10,48 @@ import com.google.gson.JsonObject
 import java.lang.reflect.Type
 
 
-class PaginatedSearchItemsDeserializer : JsonDeserializer<TMDBPageResponse<TMDBSearchItem>> {
+internal class PaginatedSearchItemsDeserializer : JsonDeserializer<SearchResponseData<FilmSearchItem>> {
     override fun deserialize(
         json: JsonElement?,
         typeOfT: Type?,
         context: JsonDeserializationContext?,
-    ): TMDBPageResponse<TMDBSearchItem> {
-        // Get the JsonObject from the JsonElement or create a new one if it's null
-        val jsonObject = json?.asJsonObject ?: JsonObject()
+    ): SearchResponseData<FilmSearchItem> {
+        val jsonObject = json?.asJsonObject
+            ?: JsonObject()
 
-        // Get the page, total pages, and total results counts from the JsonObject
         val page = jsonObject.get("page").asInt
         val totalPages = jsonObject.get("total_pages").asInt
-        val totalResults = jsonObject.get("total_results").asInt
 
         // Get the results JsonArray from the JsonObject
         val resultsJsonArray = jsonObject.getAsJsonArray("results")
 
         // Create an empty list to hold the results
-        val results = mutableListOf<TMDBSearchItem>()
+        val results = mutableListOf<FilmSearchItem>()
 
-        // Loop through the results JsonArray and deserialize each result into a TMDBSearchItem
+        // Loop through the results JsonArray and deserialize each result into a FilmSearchItem
         // (in this case, a TvShowTMDBSearchItem) and add it to the results list
-        for (resultJson in resultsJsonArray) {
-            context?.deserialize<TMDBSearchItem>(
-                /* json = */ resultJson,
-                /* typeOfT = */ TMDBSearchItem::class.java,
+        resultsJsonArray.forEach {
+            if (it.isPerson()) {
+                return@forEach
+            }
+
+            context?.deserialize<FilmSearchItem>(
+                /* json = */ it,
+                /* typeOfT = */ FilmSearchItem::class.java,
             )?.let(results::add)
         }
 
         // Create and return a new TMDBPageResponse object with the currentPage, results, total pages, and total results counts
-        return TMDBPageResponse(
+        return SearchResponseData(
             page = page,
             results = results,
-            totalPages = totalPages,
-            totalResults = totalResults,
+            totalPages = totalPages
         )
+    }
+
+    private fun JsonElement.isPerson(): Boolean {
+        return safeCall {
+            asJsonObject.get("media_type").asString.equals("person", true)
+        } ?: false
     }
 }

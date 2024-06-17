@@ -2,8 +2,8 @@ package com.flixclusive.model.database
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.flixclusive.model.tmdb.DBFilm
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.FilmImpl
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.toFilmInstance
 import java.io.Serializable
@@ -11,17 +11,17 @@ import java.util.Date
 
 @Entity(tableName = "watch_history")
 data class WatchHistoryItem(
-    @PrimaryKey val id: Int = 0,
+    @PrimaryKey val id: String = "",
     val ownerId: Int = 1,
     val seasons: Int? = null,
     val episodes: Map<Int, Int> = emptyMap(),
     val episodesWatched: List<EpisodeWatched> = emptyList(),
     val dateWatched: Date = Date(),
-    val film: FilmImpl = FilmImpl()
+    val film: DBFilm = DBFilm()
 ) : Serializable
 
 data class EpisodeWatched(
-    val episodeId: Int = 0,
+    val episodeId: String = "",
     val seasonNumber: Int? = null,
     val episodeNumber: Int? = null,
     val watchTime: Long = 0,
@@ -37,7 +37,7 @@ fun Film.toWatchHistoryItem(): WatchHistoryItem {
     }
 
     return WatchHistoryItem(
-        id = id,
+        id = identifier,
         seasons = seasonCount,
         film = this.toFilmInstance()
     )

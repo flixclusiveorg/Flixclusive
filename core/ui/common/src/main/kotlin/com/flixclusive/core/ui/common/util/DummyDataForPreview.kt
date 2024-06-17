@@ -7,6 +7,11 @@ import com.flixclusive.gradle.entities.Language
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
+import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.provider.ProviderApi
+import okhttp3.OkHttpClient
 
 object DummyDataForPreview {
     @Composable
@@ -30,5 +35,24 @@ object DummyDataForPreview {
             providerType = ProviderType.All,
             status = Status.Working
         )
+    }
+
+    @Composable
+    fun getDummyProviderApi() = remember {
+        List<ProviderApi>(5) {
+            object : ProviderApi(OkHttpClient()) {
+                override val name: String
+                    get() = "FLX $it"
+
+                override suspend fun getSourceLinks(
+                    watchId: String,
+                    film: FilmDetails,
+                    season: Int?,
+                    episode: Int?,
+                    onLinkLoaded: (SourceLink) -> Unit,
+                    onSubtitleLoaded: (Subtitle) -> Unit
+                ) = Unit
+            }
+        }
     }
 }

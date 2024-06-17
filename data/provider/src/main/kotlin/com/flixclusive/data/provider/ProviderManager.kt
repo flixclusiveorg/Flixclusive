@@ -55,7 +55,7 @@ class ProviderManager @Inject constructor(
     @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
     private val appSettingsManager: AppSettingsManager,
     private val client: OkHttpClient,
-    private val providersRepository: ProviderRepository
+    private val providersRepository: ProviderApiRepository
 ) {
     /** Map containing all loaded providers  */
     val providers: MutableMap<String, Provider> = LinkedHashMap()

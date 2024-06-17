@@ -17,19 +17,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderApi
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.PlayerUiState
-import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.mobile.player.controls.common.BasePlayerDialog
 import com.flixclusive.feature.mobile.player.controls.common.ListContentHolder
 import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
 import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.tmdb.Film
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.dto.FilmInfo
-import com.flixclusive.provider.dto.SearchResults
-import okhttp3.OkHttpClient
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
@@ -104,31 +99,7 @@ internal fun PlayerServersDialog(
 )
 @Composable
 private fun PlayerServersDialogPreview() {
-    val sources = List(5) {
-        object : ProviderApi(OkHttpClient()) {
-            override val name: String
-                get() = "Provider #$it"
-
-            override suspend fun search(film: Film, page: Int): SearchResults {
-                TODO("Not yet implemented")
-            }
-
-            override suspend fun getFilmInfo(filmId: String, filmType: FilmType): FilmInfo {
-                TODO("Not yet implemented")
-            }
-
-            override suspend fun getSourceLinks(
-                filmId: String,
-                film: Film,
-                season: Int?,
-                episode: Int?,
-                onLinkLoaded: (SourceLink) -> Unit,
-                onSubtitleLoaded: (Subtitle) -> Unit
-            ) {
-                TODO("Not yet implemented")
-            }
-        }
-    }
+    val sources = getDummyProviderApi()
 
     val serverNames = listOf("ServerA", "ServerB", "ServerC", "ServerD", "ServerE")
     val serverUrls = listOf("http://serverA.com", "http://serverB.com", "http://serverC.com", "http://serverD.com", "http://serverE.com")

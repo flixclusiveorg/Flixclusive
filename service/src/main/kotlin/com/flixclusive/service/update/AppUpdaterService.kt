@@ -190,7 +190,7 @@ class AppUpdaterService : Service() {
             sendDownloadProgress(100)
             notifier.promptInstall(uri)
         } catch (e: Exception) {
-            errorLog(e.stackTraceToString())
+            errorLog(e)
             if (e is CancellationException ||
                 (e is StreamResetException && e.errorCode == ErrorCode.CANCEL)
             ) {

@@ -83,7 +83,7 @@ internal fun HomeHeader(
         contentAlignment = Alignment.Center
     ) {
         if(filmInfo.isEmpty())
-            filmInfo = "${formatRating(film.rating).asString()} | ${film.dateReleased}"
+            filmInfo = "${formatRating(film.rating).asString()} | ${film.parsedReleaseDate}"
 
         if(posterImage == null)
             posterImage = context.buildImageUrl(

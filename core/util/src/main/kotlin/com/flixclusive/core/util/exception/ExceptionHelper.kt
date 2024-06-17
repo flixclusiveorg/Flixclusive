@@ -16,14 +16,15 @@ import javax.net.ssl.SSLException
  */
 fun Exception.catchInternetRelatedException(): Resource.Failure {
     val defaultMessage = localizedMessage ?: message ?: "Unknown error occurred"
-    errorLog(message = defaultMessage)
 
     return when (this) {
         is SocketTimeoutException -> Resource.Failure(R.string.connection_timeout)
         is ConnectException, is UnknownHostException -> Resource.Failure(R.string.connection_failed)
         is HttpException -> {
-            val errorMessage = "HTTP error: code ${code()}"
+            val errorMessage = "HTTP Code: ${code()}"
             errorLog(errorMessage)
+            errorLog("Headers: ${this.response()?.headers()}")
+            errorLog("Body: ${this.response()?.errorBody()?.string()}")
             Resource.Failure(errorMessage)
         }
         is SSLException -> {

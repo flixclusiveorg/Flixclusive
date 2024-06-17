@@ -51,8 +51,8 @@ import com.flixclusive.core.ui.tv.component.FilmCardShape
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
-import com.flixclusive.core.ui.tv.util.hasPressedLeft
 import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
+import com.flixclusive.core.ui.tv.util.hasPressedLeft
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.model.tmdb.Film
 
@@ -155,7 +155,7 @@ internal fun FilmsRow(
                                     },
                                 film = film,
                                 onClick = {
-                                    if (currentFilm.id != it.id) {
+                                    if (currentFilm.identifier != it.identifier) {
                                         onFilmClick(it)
                                     }
                                 }

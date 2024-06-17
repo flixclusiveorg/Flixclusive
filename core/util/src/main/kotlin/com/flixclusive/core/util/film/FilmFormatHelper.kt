@@ -16,12 +16,17 @@ fun formatMinutes(totalMinutes: Int?): UiText {
     return UiText.StringValue((hoursText + minutesText).trim())
 }
 
-fun formatRating(number: Double): UiText {
+fun formatRating(number: Double?): UiText {
+    val noRatingsMessage = UiText.StringResource(R.string.no_ratings)
+
+    if (number == null)
+        return noRatingsMessage
+
     val ratings = if (number % 1 == 0.0) {
         String.format("%.1f", number)
     } else {
         String.format("%.2f", number)
     }
     
-    return if(ratings == "0.0") UiText.StringResource(R.string.no_ratings) else UiText.StringValue(ratings)
+    return if(ratings == "0.0") noRatingsMessage else UiText.StringValue(ratings)
 }

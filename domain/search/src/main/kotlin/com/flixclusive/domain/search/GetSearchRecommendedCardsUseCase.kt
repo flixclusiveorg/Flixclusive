@@ -5,7 +5,7 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.model.configuration.SearchCategoryItem
+import com.flixclusive.model.tmdb.category.SearchCategory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -28,13 +28,13 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
 ) {
     private val usedPosterPaths = mutableSetOf<String>()
 
-    private val _tvShowNetworkCards = MutableStateFlow<List<SearchCategoryItem>>(emptyList())
+    private val _tvShowNetworkCards = MutableStateFlow<List<SearchCategory>>(emptyList())
     val tvShowNetworkCards = _tvShowNetworkCards.asStateFlow()
     
-    private val _movieCompanyCards = MutableStateFlow<List<SearchCategoryItem>>(emptyList())
+    private val _movieCompanyCards = MutableStateFlow<List<SearchCategory>>(emptyList())
     val movieCompanyCards = _movieCompanyCards.asStateFlow()
 
-    private val _cards = MutableStateFlow<Resource<List<SearchCategoryItem>>>(Resource.Loading)
+    private val _cards = MutableStateFlow<Resource<List<SearchCategory>>>(Resource.Loading)
     val cards = _cards.asStateFlow()
 
     private var initializationJob: Job? = null
@@ -45,7 +45,7 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
     }
 
     operator fun invoke() {
-        val isAlreadyInitialized = configurationManager.searchCategoriesConfig?.run {
+        val isAlreadyInitialized = configurationManager.searchCategoriesData?.run {
             (type.size + genres.size) == _cards.value.data?.size
         } ?: false
 
@@ -53,16 +53,17 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
             return
 
         initializationJob = scope.launch {
-            var newList = emptyList<SearchCategoryItem>()
+            var newList = emptyList<SearchCategory>()
 
-            configurationManager.searchCategoriesConfig?.run {
+            configurationManager.searchCategoriesData?.run {
                 val defaultErrorMessage = Resource.Failure(UtilR.string.failed_to_initialize_search_items)
 
                 _cards.value = Resource.Loading
-                _tvShowNetworkCards.value = configurationManager.searchCategoriesConfig?.networks?.shuffled() ?: return@launch _cards.emit(defaultErrorMessage)
-                _movieCompanyCards.value = configurationManager.searchCategoriesConfig?.companies?.shuffled() ?: return@launch _cards.emit(defaultErrorMessage)
+                _tvShowNetworkCards.value = configurationManager.searchCategoriesData?.networks?.shuffled() ?: return@launch _cards.emit(defaultErrorMessage)
+                _movieCompanyCards.value = configurationManager.searchCategoriesData?.companies?.shuffled() ?: return@launch _cards.emit(defaultErrorMessage)
 
                 (type + genres).map { item ->
+
                     // If item is reality shows,
                     // then use only its page 1.
                     val randomPage = max(1, Random.nextInt(1, 3000) % 5)
@@ -70,7 +71,7 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
 
                     when (
                         val result = tmdbRepository.paginateConfigItems(
-                            url = item.query, page = pageToUse
+                            url = item.url, page = pageToUse
                         )
                     ) {
                         is Resource.Failure -> {

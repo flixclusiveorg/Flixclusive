@@ -2,10 +2,10 @@ package com.flixclusive.provider.settings
 
 import com.flixclusive.core.util.log.errorLog
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import java.lang.reflect.Type
 import java.math.BigDecimal
 
 /**
@@ -15,15 +15,15 @@ import java.math.BigDecimal
  * @see [Aliucord](https://github.com/Aliucord/Aliucord/blob/main/Aliucord/src/main/java/com/aliucord/SettingsUtilsJSON.kt)
  *
  * */
-@Suppress("unused")
+@Suppress("unused", "KDocUnresolvedReference", "SpellCheckingInspection")
 class ProviderSettings(
     settingsPath: String,
     providerName: String,
 ) {
     private val settingsFile = "$settingsPath/$providerName.json"
-    private val cache: MutableMap<String, Any> = HashMap()
-    private val gson = Gson()
-    private val settings: JSONObject by lazy {
+    val gson = Gson()
+    val cache: MutableMap<String, Any> = HashMap()
+    val settings: JSONObject by lazy {
         val file = File(settingsFile)
         if (file.exists()) {
             val read = file.readText()
@@ -100,10 +100,10 @@ class ProviderSettings(
     /**
      * Get a boolean from the preferences
      * @param key Key of the value
-     * @param defValue Default value
-     * @return Value if found, else the defValue
+     * @param defaultValue Default value
+     * @return Value if found, else the defaultValue
      */
-    fun getBool(key: String, defValue: Boolean) = if (settings.has(key)) settings.getBoolean(key) else defValue
+    fun getBool(key: String, defaultValue: Boolean) = if (settings.has(key)) settings.getBoolean(key) else defaultValue
 
     /**
      * Set a boolean item
@@ -115,11 +115,11 @@ class ProviderSettings(
     /**
      * Get an int from the preferences
      * @param key Key of the value
-     * @param defValue Default value
-     * @return Value if found, else the defValue
+     * @param defaultValue Default value
+     * @return Value if found, else the defaultValue
      */
-    fun getInt(key: String, defValue: Int) =
-        if (settings.has(key)) settings.getInt(key) else defValue
+    fun getInt(key: String, defaultValue: Int) =
+        if (settings.has(key)) settings.getInt(key) else defaultValue
 
     @Synchronized
     private fun putObject(key: String, value: Any?) {
@@ -137,11 +137,11 @@ class ProviderSettings(
     /**
      * Get a float from the preferences
      * @param key Key of the value
-     * @param defValue Default value
-     * @return Value if found, else the defValue
+     * @param defaultValue Default value
+     * @return Value if found, else the defaultValue
      */
-    fun getFloat(key: String, defValue: Float) =
-        if (settings.has(key)) BigDecimal.valueOf(settings.getDouble(key)).toFloat() else defValue
+    fun getFloat(key: String, defaultValue: Float) =
+        if (settings.has(key)) BigDecimal.valueOf(settings.getDouble(key)).toFloat() else defaultValue
 
     /**
      * Set a float item
@@ -153,10 +153,10 @@ class ProviderSettings(
     /**
      * Get a long from the preferences
      * @param key Key of the value
-     * @param defValue Default value
-     * @return Value if found, else the defValue
+     * @param defaultValue Default value
+     * @return Value if found, else the defaultValue
      */
-    fun getLong(key: String, defValue: Long) = if (settings.has(key)) settings.getLong(key) else defValue
+    fun getLong(key: String, defaultValue: Long) = if (settings.has(key)) settings.getLong(key) else defaultValue
 
     /**
      * Set a long item
@@ -168,11 +168,11 @@ class ProviderSettings(
     /**
      * Get a [String] from the preferences
      * @param key Key of the value
-     * @param defValue Default value
-     * @return Value if found, else the defValue
+     * @param defaultValue Default value
+     * @return Value if found, else the defaultValue
      */
-    fun getString(key: String, defValue: String?) =
-        if (settings.has(key)) settings.getString(key) else defValue
+    fun getString(key: String, defaultValue: String?) =
+        if (settings.has(key)) settings.getString(key) else defaultValue
 
     /**
      * Set a [String] item
@@ -184,11 +184,11 @@ class ProviderSettings(
     /**
      * Get a [JSONObject] item
      * @param key Key of the item
-     * @param defValue Default value
-     * @return Value if found, else the defValue
+     * @param defaultValue Default value
+     * @return Value if found, else the defaultValue
      */
-    fun getJSONObject(key: String, defValue: JSONObject?) =
-        if (settings.has(key)) settings.getJSONObject(key) else defValue
+    fun getJSONObject(key: String, defaultValue: JSONObject?) =
+        if (settings.has(key)) settings.getJSONObject(key) else defaultValue
 
     /**
      * Set a [JSONObject] item
@@ -200,27 +200,27 @@ class ProviderSettings(
     /**
      * Get an [Object] from the preferences
      * @param key Key of the value
-     * @param defValue Default value
-     * @return Value if found, else the defValue
+     * @param defaultValue Default value
+     *
+     * @return Value if found, else the defaultValue
      */
-    fun <T> getObject(key: String, defValue: T): T = getObject(key, defValue, defValue!!::class.java)
-
-    /**
-     * Get an [Object] from the preferences
-     * @param key Key of the value
-     * @param defValue Default value
-     * @param type Type of the object
-     * @return Value if found, else the defValue
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun <T> getObject(key: String, defValue: T, type: Type?): T {
+    inline fun <reified T> getObject(
+        key: String,
+        defaultValue: T? = null
+    ): T? {
         val cached = cache[key]
         if (cached != null) try {
             return cached as T
-        } catch (ignored: Throwable) {
+        } catch (ignored: Throwable) { }
+
+        val t: T? = when {
+            settings.has(key) -> gson.fromJson(
+                /* json = */ settings.getString(key),
+                /* typeOfT = */ object : TypeToken<T>() {}.type
+            )
+            else -> null
         }
-        val t: T? = if (settings.has(key)) gson.fromJson(settings.getString(key), type) else null
-        return t ?: defValue
+        return t ?: defaultValue
     }
 
     /**

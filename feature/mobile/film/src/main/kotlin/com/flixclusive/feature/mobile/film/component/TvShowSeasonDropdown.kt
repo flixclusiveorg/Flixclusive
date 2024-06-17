@@ -30,7 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.flixclusive.feature.mobile.film.R
-import com.flixclusive.model.tmdb.Season
+import com.flixclusive.model.tmdb.common.tv.Season
 
 @Composable
 internal fun TvShowSeasonDropdown(
@@ -119,18 +119,18 @@ fun SeasonDropdownMenu(
             seasons.forEach { season ->
                 DropdownMenuItem(
                     onClick = {
-                        onSeasonChange(season.seasonNumber)
+                        onSeasonChange(season.number)
                         onDropdownStateChange(false)
                     },
-                    enabled = season.seasonNumber != selectedSeason,
+                    enabled = season.number != selectedSeason,
                     colors = MenuDefaults.itemColors(
                         textColor = Color.White,
                         disabledTextColor = Color.White
                     ),
                     text = {
                         Text(
-                            text = "Season ${season.seasonNumber}",
-                            fontWeight = if(selectedSeason == season.seasonNumber) {
+                            text = "Season ${season.number}",
+                            fontWeight = if(selectedSeason == season.number) {
                                 FontWeight.Medium
                             } else FontWeight.Light
                         )

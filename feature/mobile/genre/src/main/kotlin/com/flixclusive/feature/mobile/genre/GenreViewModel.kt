@@ -15,7 +15,7 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.film.FilmType.Companion.toFilmType
 import com.flixclusive.data.tmdb.SortOptions
 import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.model.tmdb.TMDBSearchItem
+import com.flixclusive.model.tmdb.FilmSearchItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -38,7 +38,7 @@ class GenreViewModel @Inject constructor(
 
     private val genreArgs = savedStateHandle.navArgs<GenreScreenNavArgs>()
     val filmTypeCouldBeBoth = genreArgs.genre.mediaType == "all"
-    val films = mutableStateListOf<TMDBSearchItem>()
+    val films = mutableStateListOf<FilmSearchItem>()
 
     private var page by mutableIntStateOf(1)
     private var maxPage by mutableIntStateOf(1)

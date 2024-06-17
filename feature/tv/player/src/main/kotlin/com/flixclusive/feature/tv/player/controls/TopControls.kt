@@ -41,7 +41,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.util.getGlowRadialGradient
 import com.flixclusive.core.ui.tv.util.glowOnFocus
 import com.flixclusive.core.ui.tv.util.useLocalDirectionalFocusRequester
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
 
@@ -53,7 +53,7 @@ internal fun TopControls(
     modifier: Modifier = Modifier,
     isTvShow: Boolean,
     isLastEpisode: Boolean = false,
-    currentEpisodeSelected: TMDBEpisode?,
+    currentEpisodeSelected: Episode?,
     title: String,
     showControls: () -> Unit,
     onNavigationIconClick: () -> Unit,
@@ -230,7 +230,7 @@ internal fun TopControls(
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = titleStyle.toSpanStyle()) {
-                            append("S${currentEpisodeSelected.season} E${currentEpisodeSelected.episode}:\n")
+                            append("S${currentEpisodeSelected.season} E${currentEpisodeSelected.number}:\n")
                         }
                         withStyle(
                             style = titleStyle.copy(

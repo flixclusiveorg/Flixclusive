@@ -21,4 +21,5 @@ dependencies {
     }
 
     implementation(projects.core.util)
+    implementation(projects.model.tmdb)
 }

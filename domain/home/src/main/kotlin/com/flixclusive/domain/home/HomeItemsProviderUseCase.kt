@@ -9,10 +9,10 @@ import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
-import com.flixclusive.model.configuration.HomeCategoryItem
 import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.TMDBSearchItem
+import com.flixclusive.model.tmdb.category.HomeCategory
 import com.flixclusive.model.tmdb.util.formatGenreIds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -52,7 +52,7 @@ class HomeItemsProviderUseCase @Inject constructor(
     private val _headerItem = MutableStateFlow<Film?>(null)
 
     val headerItem = _headerItem.asStateFlow()
-    private val _categories = MutableStateFlow<List<HomeCategoryItem>>(emptyList())
+    private val _categories = MutableStateFlow<List<HomeCategory>>(emptyList())
     private val _rowItems = MutableStateFlow<List<List<Film>>>(emptyList())
     private val _rowItemsPagingState = MutableStateFlow<List<PaginationStateInfo>>(emptyList())
 
@@ -66,7 +66,7 @@ class HomeItemsProviderUseCase @Inject constructor(
     val rowItemsPagingState = _rowItemsPagingState.asStateFlow()
 
     operator fun invoke() {
-        if(initializeJob?.isActive == true)
+        if (initializeJob?.isActive == true)
             return
 
         initializeJob = scope.launch {
@@ -99,7 +99,7 @@ class HomeItemsProviderUseCase @Inject constructor(
                 _categories.value.mapIndexedAsync { i, item ->
                     getHomeItems(
                         index = i,
-                        query = item.query,
+                        query = item.url,
                         page = 1,
                     )
                 }
@@ -132,6 +132,7 @@ class HomeItemsProviderUseCase @Inject constructor(
                     }
                 )
             }
+
             Resource.Loading -> Unit
             is Resource.Success -> {
                 result.data!!.run {
@@ -170,16 +171,13 @@ class HomeItemsProviderUseCase @Inject constructor(
     }
 
     /**
-     * 
+     *
      * Obtains the information of the focused film.
      * This is used for the immersive carousel on android TV
      * */
     suspend fun getFocusedFilm(film: Film) {
         _headerItem.update {
-            filmProviderUseCase(
-                id = film.id,
-                type = film.filmType
-            ).data
+            filmProviderUseCase(partiallyDetailedFilm = film).data
         }
     }
 
@@ -189,80 +187,56 @@ class HomeItemsProviderUseCase @Inject constructor(
      * @return a state whether the call was successfull or not.
      * */
     private suspend fun getHeaderItem(): Resource<Unit> {
-        var headerItemToUse: TMDBSearchItem? = null
-        var lastResponse: Resource<Unit> = Resource.Failure(UtilR.string.failed_to_initialize_home_items)
+        var headerItemToUse: FilmSearchItem? = null
+        var lastResponse: Resource<Unit> =
+            Resource.Failure(UtilR.string.failed_to_initialize_home_items)
 
-        retry@ for(i in 0..5) {
-            headerItemToUse = rowItems.value.randomOrNull()?.randomOrNull() as TMDBSearchItem?
+        retry@ for (i in 0..5) {
+            headerItemToUse = rowItems.value.randomOrNull()?.randomOrNull() as FilmSearchItem?
 
-            if(headerItemToUse == null)
+            if (headerItemToUse == null)
                 continue
 
-            val imageResponse = tmdbRepository.getImages(
+            val logo = tmdbRepository.getLogo(
                 mediaType = headerItemToUse.filmType.type,
-                id = headerItemToUse.id
+                id = headerItemToUse.tmdbId ?: continue
             )
 
-            if (imageResponse is Resource.Failure) {
-                lastResponse = imageResponse
+            if (logo is Resource.Failure) {
+                lastResponse = logo
                 continue
             }
 
-            if (imageResponse.data?.logos != null) {
-                val logos = imageResponse.data!!.logos
+            if (logo.data != null) {
+                val logoToUse = logo.data
 
-                if (logos.isEmpty()) {
-                    continue
-                }
+                val newGenres = formatGenreIds(
+                    genreIds = headerItemToUse.genreIds,
+                    genresList = configurationProvider
+                        .searchCategoriesData!!.genres.map {
+                            val mediaType = when (headerItemToUse!!.filmType) {
+                                FilmType.MOVIE -> it.mediaType
+                                FilmType.TV_SHOW -> FilmType.TV_SHOW.type
+                            }
 
-                val logoToUse = logos[0].filePath.replace("svg", "png")
+                            Genre(
+                                id = it.id,
+                                name = it.name,
+                                mediaType = mediaType
+                            )
+                        }
+                ) + headerItemToUse.genres
 
-                when (headerItemToUse) {
-                    is TMDBSearchItem.MovieTMDBSearchItem -> {
-                        val newGenres = formatGenreIds(
-                            genreIds = headerItemToUse.genreIds,
-                            genresList = configurationProvider
-                                .searchCategoriesConfig!!.genres.map {
-                                    Genre(
-                                        id = it.id,
-                                        name = it.name,
-                                        mediaType = it.mediaType
-                                    )
-                                }
-                        ) + headerItemToUse.genres
-
-                        headerItemToUse = headerItemToUse.copy(
-                            logoImage = logoToUse,
-                            genres = newGenres
-                        )
-                        break
-                    }
-                    is TMDBSearchItem.TvShowTMDBSearchItem -> {
-                        val newGenres = formatGenreIds(
-                            genreIds = headerItemToUse.genreIds,
-                            genresList = configurationProvider
-                                .searchCategoriesConfig!!.genres.map {
-                                    Genre(
-                                        id = it.id,
-                                        name = it.name,
-                                        mediaType = FilmType.TV_SHOW.type
-                                    )
-                                }
-                        ) + headerItemToUse.genres
-
-                        headerItemToUse = headerItemToUse.copy(
-                            logoImage = logoToUse,
-                            genres = newGenres
-                        )
-                        break
-                    }
-                }
+                headerItemToUse = headerItemToUse.copy(
+                    logoImage = logoToUse,
+                    genres = newGenres
+                )
             }
         }
 
         _headerItem.value = headerItemToUse
-        
-        return when(headerItemToUse) {
+
+        return when (headerItemToUse) {
             null -> lastResponse
             else -> Resource.Success(Unit)
         }
@@ -271,7 +245,7 @@ class HomeItemsProviderUseCase @Inject constructor(
     private suspend fun getHomeRecommendations() = flow {
         val usedCategories = mutableListOf<String>()
 
-        val config = configurationProvider.homeCategoriesConfig!!
+        val config = configurationProvider.homeCategoriesData!!
 
         val combinedMovieAndTvShowConfig = config.tv + config.movie
         val combinedConfig = config.all + combinedMovieAndTvShowConfig
@@ -311,14 +285,14 @@ class HomeItemsProviderUseCase @Inject constructor(
 
         if (randomWatchedFilms.isNotEmpty()) {
             randomWatchedFilms.forEach { item ->
-                if (item.film.recommendedTitles.size >= 10) {
+                if (item.film.recommendations.size >= 10) {
                     emit(
-                        HomeCategoryItem(
+                        HomeCategory(
                             name = "If you liked ${item.film.title}",
                             mediaType = item.film.filmType.type,
                             required = false,
                             canPaginate = true,
-                            query = "${item.film.filmType.type}/${item.id}/recommendations?language=en-US"
+                            url = "${item.film.filmType.type}/${item.id}/recommendations?language=en-US"
                         )
                     )
                     humanizer()

@@ -29,7 +29,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.feature.mobile.player.controls.common.EnlargedTouchableButton
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
@@ -37,7 +37,7 @@ import com.flixclusive.core.util.R as UtilR
 @Composable
 internal fun TopControls(
     modifier: Modifier = Modifier,
-    currentEpisodeSelected: TMDBEpisode?,
+    currentEpisodeSelected: Episode?,
     onNavigationIconClick: () -> Unit,
     onPlayerSettingsClick: () -> Unit,
     onServersClick: () -> Unit,
@@ -77,7 +77,7 @@ internal fun TopControls(
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = titleStyle.toSpanStyle()) {
-                            append("S${currentEpisodeSelected.season} E${currentEpisodeSelected.episode}: ")
+                            append("S${currentEpisodeSelected.season} E${currentEpisodeSelected.number}: ")
                         }
                         withStyle(
                             style = titleStyle.copy(
@@ -160,9 +160,9 @@ private fun TopControlsPreview() {
                     modifier = Modifier
                         .border(1.dp, Color.Green)
                         .align(Alignment.TopCenter),
-                    currentEpisodeSelected = TMDBEpisode(
+                    currentEpisodeSelected = Episode(
                         title = "Should've kissed you!",
-                        episode = 10,
+                        number = 10,
                         season = 2
                     ),
                     onNavigationIconClick = {},

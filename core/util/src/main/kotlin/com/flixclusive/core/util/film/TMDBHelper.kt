@@ -60,3 +60,8 @@ fun String.replaceTypeInUrl(type: String): String {
 
     return this
 }
+
+fun String.extractYear(): Int? {
+    val yearPattern = """\b(\d{4})\b""".toRegex()
+    return yearPattern.find(this)?.value?.toIntOrNull()
+}

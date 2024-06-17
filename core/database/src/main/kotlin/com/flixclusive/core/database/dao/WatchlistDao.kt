@@ -17,10 +17,10 @@ interface WatchlistDao {
     suspend fun delete(item: WatchlistItem)
 
     @Query("DELETE FROM watchlist WHERE id = :itemId AND ownerId = :ownerId")
-    suspend fun deleteById(itemId: Int, ownerId: Int)
+    suspend fun deleteById(itemId: String, ownerId: Int)
 
-    @Query("SELECT * FROM watchlist WHERE id = :filmId AND ownerId = :ownerId")
-    suspend fun getWatchlistItemById(filmId: Int, ownerId: Int): WatchlistItem?
+    @Query("SELECT * FROM watchlist WHERE id = :itemId AND ownerId = :ownerId")
+    suspend fun getWatchlistItemById(itemId: String, ownerId: Int): WatchlistItem?
 
     @Transaction
     @Query("""

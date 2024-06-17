@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -40,11 +39,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.FilmCover
-import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.model.database.EpisodeWatched
 import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import kotlin.random.Random
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
@@ -52,12 +51,12 @@ import com.flixclusive.core.util.R as UtilR
 @Composable
 internal fun EpisodeCard(
     modifier: Modifier = Modifier,
-    data: TMDBEpisode,
+    data: Episode,
     watchHistoryItem: WatchHistoryItem?,
-    currentEpisodeSelected: TMDBEpisode,
-    onEpisodeClick: (TMDBEpisode) -> Unit,
+    currentEpisodeSelected: Episode,
+    onEpisodeClick: (Episode) -> Unit,
 ) {
-    val title = remember { "${data.episode}. ${data.title}" }
+    val title = remember { "${data.number}. ${data.title}" }
 
     val cardEmphasisColor = MaterialTheme.colorScheme.primary
     val progressEmphasisColor = MaterialTheme.colorScheme.tertiary
@@ -70,7 +69,7 @@ internal fun EpisodeCard(
         val episodeProgress = watchHistoryItem
             .episodesWatched
             .find {
-                it.episodeId == data.episodeId
+                it.episodeId == data.id
             }
 
         when {
@@ -114,7 +113,7 @@ internal fun EpisodeCard(
                 imageSize = "w227_and_h127_bestv2",
                 contentDescription = stringResource(
                     UtilR.string.episode_image_content_desc_format,
-                    data.episode,
+                    data.number,
                     data.title
                 ),
                 modifier = Modifier
@@ -194,7 +193,7 @@ internal fun EpisodeCard(
                 .fillMaxWidth()
         ) {
             Text(
-                text = data.description,
+                text = data.overview,
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 10.sp,
                     lineHeight = 15.sp,
@@ -265,7 +264,7 @@ private fun EpisodeCardPreview() {
     val sampleWatchHistoryItem = WatchHistoryItem(
         episodesWatched = listOf(
             EpisodeWatched(
-                0,
+                "",
                 seasonNumber = 1,
                 episodeNumber = 1,
                 watchTime = 50000L,
@@ -274,11 +273,11 @@ private fun EpisodeCardPreview() {
             )
         )
     )
-    val sampleTMDBEpisode = TMDBEpisode(
-        episode = 1,
+    val sampleEpisode = Episode(
+        number = 1,
         season = 1,
         title = "Sample Title",
-        description = "A car explodes in the middle of the city and kills a person. The cause of the explosion is unknown. Cha Jae Hwan, a detective from the Violent Crimes Unit, notices something strange at the scene. Eugene Hathaway, an FBI agent on duty in Korea, helps him take another look. Later, Jae Hwan chases after a suspect, and in the end, he gets faced with a dark figure.",
+        overview = "A car explodes in the middle of the city and kills a person. The cause of the explosion is unknown. Cha Jae Hwan, a detective from the Violent Crimes Unit, notices something strange at the scene. Eugene Hathaway, an FBI agent on duty in Korea, helps him take another look. Later, Jae Hwan chases after a suspect, and in the end, he gets faced with a dark figure.",
         image = "/eDXV3upl9iXqOtYaNuzAfZvmfTU.jpg"
     )
 
@@ -286,9 +285,9 @@ private fun EpisodeCardPreview() {
         Surface {
             Row {
                 EpisodeCard(
-                    data = sampleTMDBEpisode,
+                    data = sampleEpisode,
                     watchHistoryItem = sampleWatchHistoryItem,
-                    currentEpisodeSelected = TMDBEpisode(),
+                    currentEpisodeSelected = Episode(),
                     onEpisodeClick = { _ -> }
                 )
 

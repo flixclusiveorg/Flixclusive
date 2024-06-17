@@ -13,9 +13,9 @@ import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.film.replaceTypeInUrl
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.domain.search.GetSearchRecommendedCardsUseCase
-import com.flixclusive.model.configuration.SearchCategoryItem
-import com.flixclusive.model.tmdb.TMDBPageResponse
-import com.flixclusive.model.tmdb.TMDBSearchItem
+import com.flixclusive.model.tmdb.category.SearchCategory
+import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.model.tmdb.FilmSearchItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,7 +29,7 @@ class SearchScreenViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     private val getSearchRecommendedCardsUseCase: GetSearchRecommendedCardsUseCase
 ) : ViewModel() {
-    val searchResults = mutableStateListOf<TMDBSearchItem>()
+    val searchResults = mutableStateListOf<FilmSearchItem>()
     val searchSuggestions = mutableStateListOf<String>()
 
     private var searchingJob: Job? = null
@@ -46,7 +46,7 @@ class SearchScreenViewModel @Inject constructor(
 
     var searchQuery by mutableStateOf("")
         private set
-    var selectedCategory: SearchCategoryItem? by mutableStateOf(null)
+    var selectedCategory: SearchCategory? by mutableStateOf(null)
         private set
     var isError by mutableStateOf(false)
         private set
@@ -102,7 +102,7 @@ class SearchScreenViewModel @Inject constructor(
         searchQuery = query
     }
 
-    fun onCategoryChange(item: SearchCategoryItem) {
+    fun onCategoryChange(item: SearchCategory) {
         selectedCategory = item
     }
 
@@ -115,8 +115,8 @@ class SearchScreenViewModel @Inject constructor(
     }
 
     private fun loadItems(
-        callResponse: Resource<TMDBPageResponse<TMDBSearchItem>>,
-        onSuccess: TMDBPageResponse<TMDBSearchItem>.() -> Unit
+        callResponse: Resource<SearchResponseData<FilmSearchItem>>,
+        onSuccess: SearchResponseData<FilmSearchItem>.() -> Unit
     ) {
         if (page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE))
             return
@@ -177,8 +177,8 @@ class SearchScreenViewModel @Inject constructor(
         viewModelScope.launch {
             val filmTypeCouldBeBoth = selectedCategory!!.mediaType == "all"
             val urlQuery = if(filmTypeCouldBeBoth && currentFilterSelected != SearchFilter.ALL) {
-                selectedCategory!!.query.replaceTypeInUrl(currentFilterSelected.type)
-            } else selectedCategory!!.query
+                selectedCategory!!.url.replaceTypeInUrl(currentFilterSelected.type)
+            } else selectedCategory!!.url
 
 
             loadItems(

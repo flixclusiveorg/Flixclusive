@@ -46,6 +46,7 @@
             <option value="$PROJECT_DIR$/data/watch_history" />
             <option value="$PROJECT_DIR$/data/watchlist" />
             <option value="$PROJECT_DIR$/domain" />
+            <option value="$PROJECT_DIR$/domain/category" />
             <option value="$PROJECT_DIR$/domain/database" />
             <option value="$PROJECT_DIR$/domain/home" />
             <option value="$PROJECT_DIR$/domain/provider" />

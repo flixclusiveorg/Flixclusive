@@ -48,7 +48,7 @@ import com.flixclusive.model.provider.SourceData
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -73,14 +73,14 @@ object PlayerUiUtil {
 
     fun formatPlayerTitle(
         film: Film,
-        episode: TMDBEpisode? = null
+        episode: Episode? = null
     ): String {
         return when(film.filmType) {
             FilmType.MOVIE -> film.title
             FilmType.TV_SHOW -> String.format(
                 FILM_TV_SHOW_TITLE_FORMAT,
                 episode!!.season,
-                episode.episode,
+                episode.number,
                 episode.title
             )
         }

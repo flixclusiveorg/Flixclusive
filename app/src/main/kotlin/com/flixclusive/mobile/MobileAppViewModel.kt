@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.ui.mobile.KeyEventHandler
 import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.util.InternetMonitor
 import com.flixclusive.data.watch_history.WatchHistoryRepository
@@ -18,9 +17,8 @@ import com.flixclusive.model.database.toWatchlistItem
 import com.flixclusive.model.provider.SourceData
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TMDBEpisode
-import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.model.tmdb.toFilmInstance
 import com.flixclusive.provider.util.FlixclusiveWebView
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -66,14 +64,14 @@ internal class MobileAppViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MobileAppUiState())
     val uiState: StateFlow<MobileAppUiState> = _uiState.asStateFlow()
 
-    private val _episodeToPlay = MutableStateFlow<TMDBEpisode?>(null)
+    private val _episodeToPlay = MutableStateFlow<Episode?>(null)
     val episodeToPlay = _episodeToPlay.asStateFlow()
 
     private val _filmToPreview = MutableStateFlow<Film?>(null)
     val filmToPreview = _filmToPreview.asStateFlow()
 
     val loadedSourceData: SourceData?
-        get() = _filmToPreview.value?.id?.let {
+        get() = _filmToPreview.value?.identifier?.let {
             sourceLinksProvider.getLinks(
                 filmId = it,
                 episode = _episodeToPlay.value,
@@ -82,7 +80,7 @@ internal class MobileAppViewModel @Inject constructor(
 
     fun initializeConfigsIfNull() {
         configurationManager.run {
-            if(homeCategoriesConfig == null || searchCategoriesConfig == null || appConfig == null) {
+            if(homeCategoriesData == null || searchCategoriesData == null || appConfig == null) {
                 initialize()
             }
         }
@@ -93,8 +91,8 @@ internal class MobileAppViewModel @Inject constructor(
             return
 
         onFilmLongClickJob = viewModelScope.launch {
-            val isInWatchlist = watchlistRepository.getWatchlistItemById(film.id) != null
-            val isInWatchHistory = watchHistoryRepository.getWatchHistoryItemById(film.id) != null
+            val isInWatchlist = watchlistRepository.getWatchlistItemById(film.identifier) != null
+            val isInWatchHistory = watchHistoryRepository.getWatchHistoryItemById(film.identifier) != null
 
             _filmToPreview.update { film }
             _uiState.update {
@@ -122,7 +120,7 @@ internal class MobileAppViewModel @Inject constructor(
             _filmToPreview.value?.let { film ->
                 val isInWatchlist = _uiState.value.isLongClickedFilmInWatchlist
                 if(isInWatchlist) {
-                    watchlistRepository.removeById(film.id)
+                    watchlistRepository.removeById(film.identifier)
                 } else {
                     watchlistRepository.insert(film.toWatchlistItem())
                 }
@@ -147,7 +145,7 @@ internal class MobileAppViewModel @Inject constructor(
                         it.copy(isLongClickedFilmInWatchHistory = false)
                     }
 
-                    watchHistoryRepository.deleteById(film.id)
+                    watchHistoryRepository.deleteById(film.identifier)
                 }
             }
         }
@@ -155,7 +153,7 @@ internal class MobileAppViewModel @Inject constructor(
 
     fun onPlayClick(
         film: Film? = null,
-        episode: TMDBEpisode? = null,
+        episode: Episode? = null,
         runWebView: (FlixclusiveWebView) -> Unit,
     ) {
         if(onPlayClickJob?.isActive == true)
@@ -166,22 +164,22 @@ internal class MobileAppViewModel @Inject constructor(
 
             var filmToShow = film ?: _filmToPreview.value ?: return@launch
 
-            val response = filmToShow.run {
-                when {
-                    filmType == FilmType.MOVIE && this !is Movie || filmType == FilmType.TV_SHOW && this !is TvShow -> {
-                        filmProviderUseCase(id, filmType)
-                    }
-                    else -> Resource.Success(this)
+            val response = when {
+                filmToShow !is FilmDetails -> {
+                    filmProviderUseCase(partiallyDetailedFilm = filmToShow)
                 }
+                else -> Resource.Success(filmToShow)
             }
 
+            val errorFetchingFilm = SourceDataState.Error(UtilR.string.film_data_fetch_failed)
             if(response !is Resource.Success) {
-                return@launch updateVideoDataDialogState(SourceDataState.Error(UtilR.string.film_data_fetch_failed))
+                return@launch updateVideoDataDialogState(errorFetchingFilm)
             }
 
-            filmToShow = response.data ?: return@launch updateVideoDataDialogState(SourceDataState.Unavailable())
+            filmToShow = response.data
+                ?: return@launch updateVideoDataDialogState(errorFetchingFilm)
 
-            val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(filmToShow.id)
+            val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(filmToShow.identifier)
                 ?.copy(film = filmToShow.toFilmInstance())
                 ?.also { item ->
                     viewModelScope.launch {

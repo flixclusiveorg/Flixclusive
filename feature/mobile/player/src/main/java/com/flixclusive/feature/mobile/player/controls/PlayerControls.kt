@@ -35,8 +35,8 @@ import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.tmdb.Season
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
@@ -58,7 +58,7 @@ internal fun PlayerControls(
     availableSeasons: Int?,
     stateProvider: () -> PlayerUiState,
     seasonDataProvider: () -> Resource<Season?>,
-    currentEpisodeSelected: TMDBEpisode?,
+    currentEpisodeSelected: Episode?,
     onBrightnessChange: (Float) -> Unit,
     onVolumeChange: (Float) -> Unit,
     showControls: (Boolean) -> Unit,
@@ -70,7 +70,7 @@ internal fun PlayerControls(
     onVideoServerChange: (Int) -> Unit,
     onResizeModeChange: (Int) -> Unit,
     onPanelChange: (Int) -> Unit,
-    onEpisodeClick: (TMDBEpisode?) -> Unit,
+    onEpisodeClick: (Episode?) -> Unit,
     addSubtitle: (Subtitle) -> Unit,
     toggleVideoTimeReverse: () -> Unit,
 ) {

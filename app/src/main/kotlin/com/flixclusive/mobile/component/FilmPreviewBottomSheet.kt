@@ -143,7 +143,7 @@ fun FilmPreviewBottomSheet(
                     )
 
                     Text(
-                        text = "${formatRating(film.rating).asString()} | ${film.dateReleased}",
+                        text = "${formatRating(film.rating).asString()} | ${film.parsedReleaseDate}",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Normal
                     )

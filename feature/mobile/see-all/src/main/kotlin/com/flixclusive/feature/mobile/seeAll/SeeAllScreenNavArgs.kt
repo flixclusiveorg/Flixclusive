@@ -1,8 +1,8 @@
 package com.flixclusive.feature.mobile.seeAll
 
-import com.flixclusive.model.configuration.CategoryItem
+import com.flixclusive.model.tmdb.category.Category
 
 
 data class SeeAllScreenNavArgs(
-    val item: CategoryItem
+    val item: Category
 )

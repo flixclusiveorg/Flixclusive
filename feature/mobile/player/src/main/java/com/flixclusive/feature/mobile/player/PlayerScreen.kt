@@ -70,8 +70,8 @@ import com.flixclusive.model.provider.SourceData
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -101,7 +101,7 @@ interface PlayerScreenNavigator : GoBackAction {
      * */
     fun onEpisodeChange(
         film: Film,
-        episodeToPlay: TMDBEpisode
+        episodeToPlay: Episode
     )
 }
 
@@ -170,7 +170,7 @@ fun PlayerScreen(
         }
     }
 
-    fun onEpisodeClick(episode: TMDBEpisode? = null) {
+    fun onEpisodeClick(episode: Episode? = null) {
         viewModel.onEpisodeClick(
             episodeToWatch = episode,
             runWebView = viewModel::onRunWebView
@@ -196,7 +196,7 @@ fun PlayerScreen(
      *
      * */
     LaunchedEffect(Unit) {
-        if (sourceData.mediaId.isEmpty() || sourceData.providerName.isEmpty()) {
+        if (sourceData.watchId.isEmpty() || sourceData.providerName.isEmpty()) {
             when(args.film) {
                 is TvShow -> onEpisodeClick(args.episodeToPlay)
                 is Movie -> viewModel.loadSourceData(runWebView = viewModel::onRunWebView)
@@ -248,7 +248,7 @@ fun PlayerScreen(
                     // Find film's audio language
                     viewModel.run {
                         if (!player.hasBeenInitialized) {
-                            player.onAudioChange(language = film.language)
+                            player.onAudioChange(language = film.language ?: return@run)
                         }
                     }
                 }

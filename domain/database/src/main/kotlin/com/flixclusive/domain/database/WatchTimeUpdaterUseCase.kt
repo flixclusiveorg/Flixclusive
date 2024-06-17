@@ -4,7 +4,7 @@ import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.model.database.EpisodeWatched
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.isFinishedWatching
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import java.util.Date
 import javax.inject.Inject
 
@@ -15,7 +15,7 @@ class WatchTimeUpdaterUseCase @Inject constructor(
         watchHistoryItem: WatchHistoryItem,
         currentTime: Long,
         totalDuration: Long,
-        currentSelectedEpisode: TMDBEpisode?,
+        currentSelectedEpisode: Episode?,
     ): WatchHistoryItem {
         val minute = 60000
         val isLessThanAMinute = currentTime <= minute
@@ -34,7 +34,7 @@ class WatchTimeUpdaterUseCase @Inject constructor(
 
             val episodeWatchedIndex = watchHistoryItem.episodesWatched.indexOfFirst {
                 it.seasonNumber == currentSelectedEpisode!!.season
-                && it.episodeNumber == currentSelectedEpisode.episode
+                && it.episodeNumber == currentSelectedEpisode.number
             }
 
             val isEpisodeWatchedAlready = episodeWatchedIndex != -1
@@ -49,10 +49,10 @@ class WatchTimeUpdaterUseCase @Inject constructor(
                     )
                 )
             } else {
-                val currentSelectedEpisodeId = currentSelectedEpisode!!.episodeId
+                val currentSelectedEpisodeId = currentSelectedEpisode!!.id
                 val episodeToAdd = EpisodeWatched(
                     episodeId = currentSelectedEpisodeId,
-                    episodeNumber = currentSelectedEpisode.episode,
+                    episodeNumber = currentSelectedEpisode.number,
                     seasonNumber = currentSelectedEpisode.season,
                     watchTime = currentTime,
                     durationTime = totalDuration,
