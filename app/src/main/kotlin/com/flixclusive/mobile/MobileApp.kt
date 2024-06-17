@@ -112,7 +112,14 @@ internal fun MobileActivity.MobileApp(
     }
 
     LaunchedEffect(currentSelectedScreen) {
-        viewModel.setPlayerModeState(isInPlayer = currentSelectedScreen == PlayerScreenDestination)
+        val isPlayerScreen = currentSelectedScreen == PlayerScreenDestination
+        val isGoingBackFromPlayerScreen = uiState.isOnPlayerScreen && !isPlayerScreen
+
+        if (isGoingBackFromPlayerScreen) {
+            viewModel.onConsumeSourceDataDialog(isForceClosing = true)
+        }
+
+        viewModel.setPlayerModeState(isInPlayer = isPlayerScreen)
     }
 
     LaunchedEffect(isConnectedAtNetwork) {
@@ -201,7 +208,7 @@ internal fun MobileActivity.MobileApp(
         }
     }
 
-    if(!uiState.isInPlayer) {
+    if(!uiState.isOnPlayerScreen) {
         if(uiState.isShowingBottomSheetCard && filmToPreview != null) {
             val navigateToFilmScreen = {
                 navController.navigateIfResumed(

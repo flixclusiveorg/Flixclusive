@@ -69,7 +69,7 @@ class MobileActivity : ComponentActivity() {
 
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-            && viewModel.uiState.value.isInPlayer
+            && viewModel.uiState.value.isOnPlayerScreen
             && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
         ) {
             // Force pip mode for player
@@ -97,7 +97,7 @@ class MobileActivity : ComponentActivity() {
         // Re-call this if ever a random window/dialog
         // from a another app pops up on the screen while
         // player is running
-        if (hasFocus && viewModel.uiState.value.isInPlayer) {
+        if (hasFocus && viewModel.uiState.value.isOnPlayerScreen) {
             toggleSystemBars(isVisible = false)
         }
     }

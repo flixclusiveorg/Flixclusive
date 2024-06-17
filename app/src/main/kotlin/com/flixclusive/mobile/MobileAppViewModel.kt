@@ -220,7 +220,7 @@ internal class MobileAppViewModel @Inject constructor(
     }
 
     fun setPlayerModeState(isInPlayer: Boolean) {
-        _uiState.update { it.copy(isInPlayer = isInPlayer) }
+        _uiState.update { it.copy(isOnPlayerScreen = isInPlayer) }
     }
 }
 
