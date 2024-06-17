@@ -33,14 +33,14 @@ interface WatchHistoryDao {
     suspend fun getRandomItems(ownerId: Int, count: Int): List<WatchHistoryItem>
 
     @Query("SELECT * FROM watch_history WHERE id = :itemId AND ownerId = :ownerId")
-    suspend fun getWatchHistoryItemById(itemId: Int, ownerId: Int): WatchHistoryItem?
+    suspend fun getWatchHistoryItemById(itemId: String, ownerId: Int): WatchHistoryItem?
 
     @Query("SELECT * FROM watch_history WHERE id = :itemId AND ownerId = :ownerId")
-    fun getWatchHistoryItemByIdInFlow(itemId: Int, ownerId: Int): Flow<WatchHistoryItem?>
+    fun getWatchHistoryItemByIdInFlow(itemId: String, ownerId: Int): Flow<WatchHistoryItem?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: WatchHistoryItem)
 
     @Query("DELETE FROM watch_history WHERE id = :itemId AND ownerId = :ownerId")
-    suspend fun deleteById(itemId: Int, ownerId: Int)
+    suspend fun deleteById(itemId: String, ownerId: Int)
 }

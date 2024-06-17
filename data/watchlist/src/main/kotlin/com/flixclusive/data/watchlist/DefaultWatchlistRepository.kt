@@ -21,12 +21,12 @@ internal class DefaultWatchlistRepository @Inject constructor(
         watchlistDao.delete(item)
     }
 
-    override suspend fun removeById(itemId: Int, ownerId: Int) = withContext(ioDispatcher) {
+    override suspend fun removeById(itemId: String, ownerId: Int) = withContext(ioDispatcher) {
         watchlistDao.deleteById(itemId, ownerId)
     }
 
-    override suspend fun getWatchlistItemById(filmId: Int, ownerId: Int): WatchlistItem? = withContext(ioDispatcher) {
-        watchlistDao.getWatchlistItemById(filmId, ownerId)
+    override suspend fun getWatchlistItemById(itemId: String, ownerId: Int): WatchlistItem? = withContext(ioDispatcher) {
+        watchlistDao.getWatchlistItemById(itemId, ownerId)
     }
 
     override suspend fun getAllItems(ownerId: Int): List<WatchlistItem> = withContext(ioDispatcher) {

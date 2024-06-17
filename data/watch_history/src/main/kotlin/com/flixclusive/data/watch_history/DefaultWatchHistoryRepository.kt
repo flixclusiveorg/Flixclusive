@@ -17,11 +17,11 @@ internal class DefaultWatchHistoryRepository @Inject constructor(
     override fun getAllItemsInFlow(ownerId: Int): Flow<List<WatchHistoryItem>> = watchHistoryDao
         .getAllItemsInFlow(ownerId)
 
-    override suspend fun getWatchHistoryItemById(itemId: Int, ownerId: Int): WatchHistoryItem? = withContext(ioDispatcher) {
+    override suspend fun getWatchHistoryItemById(itemId: String, ownerId: Int): WatchHistoryItem? = withContext(ioDispatcher) {
         watchHistoryDao.getWatchHistoryItemById(itemId, ownerId)
     }
 
-    override fun getWatchHistoryItemByIdInFlow(itemId: Int, ownerId: Int): Flow<WatchHistoryItem?> {
+    override fun getWatchHistoryItemByIdInFlow(itemId: String, ownerId: Int): Flow<WatchHistoryItem?> {
         return watchHistoryDao.getWatchHistoryItemByIdInFlow(itemId, ownerId)
     }
 
@@ -33,7 +33,7 @@ internal class DefaultWatchHistoryRepository @Inject constructor(
         watchHistoryDao.insert(item)
     }
 
-    override suspend fun deleteById(itemId: Int, ownerId: Int) = withContext(ioDispatcher) {
+    override suspend fun deleteById(itemId: String, ownerId: Int) = withContext(ioDispatcher) {
         watchHistoryDao.deleteById(itemId, ownerId)
     }
 }

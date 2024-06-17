@@ -66,6 +66,7 @@ include(":model:provider")
 include(":model:tmdb")
 
 include(":domain:database")
+include(":domain:category")
 include(":domain:home")
 include(":domain:provider")
 include(":domain:search")

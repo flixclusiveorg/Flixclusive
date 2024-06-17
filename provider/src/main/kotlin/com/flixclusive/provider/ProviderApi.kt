@@ -1,15 +1,16 @@
 package com.flixclusive.provider
 
 import android.content.Context
-import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.provider.dto.FilmInfo
-import com.flixclusive.provider.dto.SearchResults
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.util.FlixclusiveWebView
 import com.flixclusive.provider.util.WebViewCallback
 import okhttp3.OkHttpClient
@@ -36,35 +37,57 @@ abstract class ProviderApi(
      * */
     open val useWebView: Boolean = false
 
+    /** This provider's own catalogs */
+    open val catalogs: List<ProviderCatalog>? = null
+
     /**
-     * Performs a search for films based on the provided query.
-     * @param film The [Film] object of the film. It could either be a [Movie] or [TvShow].
+     * Obtains a list of [Film] items from the provider's catalog.
+     *
+     * @param catalog The [ProviderCatalog] to load.
      * @param page The page number for paginated results. Defaults to 1.
-     * @return a [SearchResults] instance containing the search results.
+     * @return A list of [FilmSearchItem] objects representing the films in the catalog.
+     * By default, returns an empty list.
+     */
+    open suspend fun getCatalogItems(
+        catalog: ProviderCatalog,
+        page: Int = 1
+    ): SearchResponseData<FilmSearchItem> {
+        TODO("OPTIONAL: Not yet implemented")
+    }
+
+    /**
+     * Searches for films based on the provided criteria.
+     *
+     * @param title The title of the film to search for.
+     * @param id The ID of the film to search for (optional).
+     * @param tmdbId The TMDB ID of the film to search for (optional).
+     * @param imdbId The IMDB ID of the film to search for (optional).
+     * @param page The page number of the search results (optional, defaults to 1).
+     *
+     * @return A [SearchResponseData] object containing the search results.
      */
     open suspend fun search(
-        film: Film,
+        title: String,
         page: Int = 1,
-    ): SearchResults {
+        id: String? = null,
+        imdbId: String? = null,
+        tmdbId: Int? = null,
+    ): SearchResponseData<FilmSearchItem> {
         TODO("OPTIONAL: Not yet implemented")
     }
 
     /**
      * Retrieves detailed information about a film.
-     * @param filmId The ID of the film. The ID must come from the [search] method.
-     * @param filmType The type of film.
-     * @return a [FilmInfo] instance containing the film's information.
+     * @param film The [Film] object of the film to retrieve details for.
+     * @return a [FilmDetails] instance containing the film's information. It could either be a [Movie] or [TvShow].
      */
-    open suspend fun getFilmInfo(
-        filmId: String,
-        filmType: FilmType,
-    ): FilmInfo {
+    open suspend fun getFilmDetails(film: Film): FilmDetails {
         TODO("OPTIONAL: Not yet implemented")
     }
 
     /**
      * Obtains source links for the provided film, season, and episode.
-     * @param filmId The ID of the film. The ID must come from the [search] method.
+     * @param watchId The unique watch identifier for the film.
      * @param film The [Film] object of the film. It could either be a [Movie] or [TvShow].
      * @param season The season number. Defaults to null if the film is a movie.
      * @param episode The episode number. Defaults to null if the film is a movie.
@@ -72,8 +95,8 @@ abstract class ProviderApi(
      * @param onSubtitleLoaded A callback function invoked when a [Subtitle] is loaded.
      */
     abstract suspend fun getSourceLinks(
-        filmId: String,
-        film: Film,
+        watchId: String,
+        film: FilmDetails,
         season: Int? = null,
         episode: Int? = null,
         onLinkLoaded: (SourceLink) -> Unit,
@@ -83,7 +106,7 @@ abstract class ProviderApi(
     open fun getWebView(
         context: Context,
         callback: WebViewCallback,
-        film: Film,
-        episode: TMDBEpisode? = null,
+        film: FilmDetails,
+        episode: Episode? = null,
     ): FlixclusiveWebView? = null
 }

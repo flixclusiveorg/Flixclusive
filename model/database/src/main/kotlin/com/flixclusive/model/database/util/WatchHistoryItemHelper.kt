@@ -2,7 +2,7 @@ package com.flixclusive.model.database.util
 
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 
 private const val FINISHED_WATCHING_THRESHOLD = 95L
 
@@ -76,7 +76,7 @@ fun calculateRemainingTime(amount: Long, percentage: Double): Long {
 
 fun getSavedTimeForFilm(
     watchHistoryItem: WatchHistoryItem,
-    episodeToWatch: TMDBEpisode?
+    episodeToWatch: Episode?
 ): Pair<Long, Long> {
     if(watchHistoryItem.episodesWatched.isEmpty())
         return 0L to 0L
@@ -86,7 +86,7 @@ fun getSavedTimeForFilm(
         isTvShow -> {
             watchHistoryItem.episodesWatched.find {
                 it.seasonNumber == episodeToWatch?.season
-                        && it.episodeNumber == episodeToWatch?.episode
+                        && it.episodeNumber == episodeToWatch?.number
             }?.let {
                 if (it.isFinished) 0L to 0L
                 else it.watchTime to it.durationTime

@@ -22,14 +22,14 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.model.configuration.SearchCategoryItem
+import com.flixclusive.model.tmdb.category.SearchCategory
 
 @Composable
 fun SearchItemRow(
-    list: List<SearchCategoryItem>,
+    list: List<SearchCategory>,
     showItemNames: Boolean,
     rowTitle: UiText,
-    onClick: (SearchCategoryItem) -> Unit
+    onClick: (SearchCategory) -> Unit
 ) {
     Box {
         AnimatedVisibility(

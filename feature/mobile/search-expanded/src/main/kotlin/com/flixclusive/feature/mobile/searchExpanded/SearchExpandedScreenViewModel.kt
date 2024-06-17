@@ -12,7 +12,7 @@ import com.flixclusive.core.ui.common.SearchFilter
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.model.tmdb.TMDBSearchItem
+import com.flixclusive.model.tmdb.FilmSearchItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,7 +33,7 @@ class SearchExpandedScreenViewModel @Inject constructor(
             initialValue = appSettingsManager.localAppSettings
         )
 
-    val searchResults = mutableStateListOf<TMDBSearchItem>()
+    val searchResults = mutableStateListOf<FilmSearchItem>()
 
     private var searchingJob: Job? = null
     private var onChangeFilterJob: Job? = null

@@ -63,10 +63,11 @@ import com.flixclusive.feature.mobile.film.component.FilmScreenButtons
 import com.flixclusive.feature.mobile.film.component.FilmScreenHeader
 import com.flixclusive.feature.mobile.film.component.TvShowSeasonDropdown
 import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.FilmReleaseStatus
 import com.flixclusive.model.tmdb.Genre
 import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.util.R as UtilR
 
@@ -88,7 +89,7 @@ interface FilmScreenNavigator : CommonScreenNavigator {
 fun FilmScreen(
     navigator: FilmScreenNavigator,
     previewFilm: (Film) -> Unit,
-    play: (Film, TMDBEpisode?) -> Unit,
+    play: (Film, Episode?) -> Unit,
 ) {
     val viewModel: FilmScreenViewModel = hiltViewModel()
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
@@ -139,7 +140,7 @@ fun FilmScreen(
                             filmTabs.add(FilmTab.Episodes)
                         }
 
-                        if (film.recommendedTitles.isNotEmpty()) {
+                        if (film.recommendations.isNotEmpty()) {
                             filmTabs.add(FilmTab.MoreLikeThis)
                         }
 
@@ -153,7 +154,7 @@ fun FilmScreen(
 
                     val catalogueToUse = rememberSaveable(currentTabSelected) {
                         when (currentTabSelected) {
-                            FilmTab.MoreLikeThis -> film.recommendedTitles
+                            FilmTab.MoreLikeThis -> film.recommendations
                             FilmTab.Collections -> (film as Movie).collection!!.films
                             else -> emptyList()
                         }
@@ -177,7 +178,7 @@ fun FilmScreen(
                                     .padding(horizontal = 15.dp)
                                     .padding(top = 20.dp),
                                 isInWatchlist = state.isFilmInWatchlist,
-                                isReleased = film.isReleased,
+                                isReleased = film.releaseStatus == FilmReleaseStatus.RELEASED,
                                 watchHistoryItem = watchHistoryItem,
                                 onPlayClick = {
                                     play(film, null)
@@ -274,7 +275,7 @@ fun FilmScreen(
                         } else {
                             items(
                                 items = catalogueToUse,
-                                key = { film -> film.id }
+                                key = { film -> film.identifier }
                             ) { film ->
                                 FilmCard(
                                     modifier = Modifier

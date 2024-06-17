@@ -34,10 +34,10 @@ import com.flixclusive.core.ui.home.HomeScreenViewModel
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.configuration.CategoryItem
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.category.Category
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import com.flixclusive.core.util.R as UtilR
@@ -45,7 +45,7 @@ import com.flixclusive.core.util.R as UtilR
 
 interface HomeNavigator : CommonScreenNavigator {
     fun openGenreScreen(genre: Genre)
-    fun openSeeAllScreen(item: CategoryItem)
+    fun openSeeAllScreen(item: Category)
 }
 
 @Destination
@@ -53,7 +53,7 @@ interface HomeNavigator : CommonScreenNavigator {
 fun HomeScreen(
     navigator: HomeNavigator,
     previewFilm: (Film) -> Unit,
-    play: (Film, TMDBEpisode?) -> Unit,
+    play: (Film, Episode?) -> Unit,
 ) {
     val viewModel: HomeScreenViewModel = hiltViewModel()
     val scope = rememberCoroutineScope()

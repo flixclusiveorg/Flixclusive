@@ -39,10 +39,10 @@ jobs:
         with:
           arguments: assembleRelease bundleReleaseClassesToCompileJar
 
-      - name: Generate class stubs
-        uses: gradle/gradle-command-action@v2
-        with:
-          arguments: generateStubsJar
+      - name: Generate provider stubs
+        run: |
+          chmod +x .github/create_provider_stubs.sh
+          .github/create_provider_stubs.sh
 
       - name: Sign release APK
         uses: r0adkll/sign-android-release@v1
@@ -110,7 +110,7 @@ jobs:
             | release | ${{ env.RELEASE_SHA }} |
           files: |
             flixclusive-release.apk
-            app/build/classes.jar
+            build/stubs/provider-stubs.aar
           draft: false
           prerelease: true
         env:

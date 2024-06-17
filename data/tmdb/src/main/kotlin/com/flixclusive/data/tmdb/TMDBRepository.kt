@@ -1,15 +1,14 @@
 package com.flixclusive.data.tmdb
 
-import com.flixclusive.core.network.retrofit.dto.common.TMDBImagesResponseDto
 import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.Genre
 import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.Season
+import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.TMDBCollection
-import com.flixclusive.model.tmdb.TMDBEpisode
-import com.flixclusive.model.tmdb.TMDBPageResponse
-import com.flixclusive.model.tmdb.TMDBSearchItem
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.tmdb.common.tv.Season
 
 enum class SortOptions {
     POPULARITY,
@@ -36,7 +35,7 @@ interface TMDBRepository {
         mediaType: String = "all",
         timeWindow: String = "week",
         page: Int
-    ): Resource<TMDBPageResponse<TMDBSearchItem>>
+    ): Resource<SearchResponseData<FilmSearchItem>>
 
     suspend fun discoverFilms(
         mediaType: String,
@@ -45,24 +44,24 @@ interface TMDBRepository {
         withCompanies: List<Int>? = null,
         withGenres: List<Genre>? = null,
         sortBy: SortOptions = SortOptions.RATED
-    ): Resource<TMDBPageResponse<TMDBSearchItem>>
+    ): Resource<SearchResponseData<FilmSearchItem>>
 
     suspend fun search(
         mediaType: String,
         query: String,
         page: Int,
-    ): Resource<TMDBPageResponse<TMDBSearchItem>>
+    ): Resource<SearchResponseData<FilmSearchItem>>
 
-    suspend fun getImages(
+    suspend fun getLogo(
         mediaType: String,
         id: Int,
-    ): Resource<TMDBImagesResponseDto>
+    ): Resource<String>
 
     suspend fun getEpisode(
         id: Int,
         seasonNumber: Int,
         episodeNumber: Int,
-    ): Resource<TMDBEpisode?>
+    ): Resource<Episode?>
 
     suspend fun getCollection(id: Int): Resource<TMDBCollection>
 
@@ -70,5 +69,5 @@ interface TMDBRepository {
     * A GET request function for custom queries from
     * the HomeCategoriesConfig item
     */
-    suspend fun paginateConfigItems(url: String, page: Int): Resource<TMDBPageResponse<TMDBSearchItem>>
+    suspend fun paginateConfigItems(url: String, page: Int): Resource<SearchResponseData<FilmSearchItem>>
 }

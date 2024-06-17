@@ -13,5 +13,6 @@ dependencies {
     api(projects.core.util)
     api(projects.model.configuration)
 
+    implementation(libs.mockk)
     implementation(projects.core.network)
 }

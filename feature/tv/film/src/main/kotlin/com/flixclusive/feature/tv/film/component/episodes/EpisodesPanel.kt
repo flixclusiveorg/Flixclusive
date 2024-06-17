@@ -55,8 +55,8 @@ import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.tmdb.Season
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.model.tmdb.TvShow
 
 private const val EPISODES_PANEL_FOCUS_KEY_FORMAT = "row=%d, column=%d"
@@ -67,7 +67,7 @@ internal fun EpisodesPanel(
     currentSelectedSeasonNumber: Int,
     currentSelectedSeason: Resource<Season>,
     onSeasonChange: (Int) -> Unit,
-    onEpisodeClick: (TMDBEpisode) -> Unit,
+    onEpisodeClick: (Episode) -> Unit,
     onHidePanel: () -> Unit,
 ) {
     val episodesListState = rememberTvLazyListState()
@@ -151,10 +151,10 @@ internal fun EpisodesPanel(
                     val currentFocusPosition = remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 0, i) }
 
                     SeasonBlock(
-                        seasonNumber = season.seasonNumber,
+                        seasonNumber = season.number,
                         currentSelectedSeasonNumber = currentSelectedSeasonNumber,
                         onSeasonChange = {
-                            onSeasonChange(season.seasonNumber)
+                            onSeasonChange(season.number)
                         },
                         modifier = Modifier
                             .focusOnMount(itemKey = currentFocusPosition)
@@ -214,7 +214,7 @@ internal fun EpisodesPanel(
 
             if (currentSelectedSeason is Resource.Success) {
                 itemsIndexed(currentSelectedSeason.data!!.episodes) { i, episode ->
-                    val currentFocusPosition = remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 1, episode.episode) }
+                    val currentFocusPosition = remember { String.format(EPISODES_PANEL_FOCUS_KEY_FORMAT, 1, episode.number) }
 
                     EpisodeCard(
                         episode = episode,

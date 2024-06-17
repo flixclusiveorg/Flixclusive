@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -20,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,12 +36,10 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.imageLoader
-import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.theme.starColor
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.formatTvRuntime
@@ -157,7 +153,7 @@ internal fun FilmScreenHeader(
                     text = buildAnnotatedString {
                         val separator = " | "
                         withStyle(
-                            style = SpanStyle(fontSize = 12.sp, )
+                            style = SpanStyle(fontSize = 12.sp)
                         ) {
                             append(formatRating(film.rating).asString(context))
 
@@ -176,7 +172,7 @@ internal fun FilmScreenHeader(
                                 append(separator)
                             }
 
-                            append(film.dateReleased)
+                            append(film.parsedReleaseDate)
                         }
                     },
                     style = MaterialTheme.typography.labelMedium,
@@ -207,32 +203,6 @@ internal fun FilmScreenHeader(
                     )
                 }
             }
-        }
-    }
-}
-
-
-@Preview
-@Composable
-private fun FilmScreenHeaderPreview() {
-    val film = TvShow(
-        title = "Dream 9 Toriko & One Piece & Dragon Ball Z Super Collaboration Special!",
-        genres = listOf(
-            Genre(-1, "HEHEHEH"),
-            Genre(-2, "AHAHAHA"),
-            Genre(-3, "SDSADSADSA"),
-            Genre(-3, "SDSADSADSA"),
-            Genre(-3, "SDSADSADSA"),
-            Genre(-3, "SDSADSADSA"),
-        )
-    )
-
-    FlixclusiveTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            FilmScreenHeader(onNavigateClick = { /*TODO*/ }, onGenreClick = {}, film = film)
         }
     }
 }

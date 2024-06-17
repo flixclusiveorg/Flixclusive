@@ -52,7 +52,7 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManag
 import com.flixclusive.feature.mobile.player.R
 import com.flixclusive.feature.mobile.player.controls.common.slider.CustomSlider
 import com.flixclusive.feature.mobile.player.controls.common.slider.CustomSliderDefaults
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.player.R as PlayerR
@@ -69,7 +69,7 @@ internal fun BottomControls(
     showControls: (Boolean) -> Unit,
     toggleVideoTimeReverse: () -> Unit,
     onEpisodesClick: () -> Unit,
-    onNextEpisodeClick: (TMDBEpisode?) -> Unit,
+    onNextEpisodeClick: (Episode?) -> Unit,
     onLockClick: () -> Unit,
     onAudioAndDisplayClick: () -> Unit,
 ) {

@@ -18,7 +18,7 @@ class GlobalCrashHandler(
         try {
             val softwareInfo = getSoftwareInfo()
             val errorMessage = exception.stackTraceToString()
-            errorLog(errorMessage)
+            errorLog(exception)
             errorLog(softwareInfo)
 
             val intent = Intent(context, CrashActivity::class.java).apply {

@@ -2,7 +2,20 @@ package com.flixclusive.provider
 
 import android.content.Context
 import android.content.res.Resources
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.flixclusive.core.util.R as UtilR
 import com.flixclusive.gradle.entities.ProviderManifest
 import com.flixclusive.provider.settings.ProviderSettingsManager
 import okhttp3.OkHttpClient
@@ -69,5 +82,21 @@ abstract class Provider {
      * ```
      * */
     @Composable
-    open fun SettingsScreen() = Unit
+    open fun SettingsScreen() {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(UtilR.string.non_configurable_provider_message),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Black
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            )
+        }
+    }
 }

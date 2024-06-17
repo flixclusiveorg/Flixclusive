@@ -19,9 +19,10 @@ import com.flixclusive.model.database.toWatchHistoryItem
 import com.flixclusive.model.database.util.getSavedTimeForFilm
 import com.flixclusive.model.provider.SourceData
 import com.flixclusive.model.provider.SourceDataState
-import com.flixclusive.model.tmdb.Season
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.tmdb.common.tv.Season
 import com.flixclusive.provider.util.FlixclusiveWebView
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,7 +70,7 @@ abstract class BasePlayerViewModel(
 
     val sourceData: SourceData
         get() = sourceLinksProvider.getLinks(
-            filmId = film.id,
+            filmId = film.identifier,
             episode = _currentSelectedEpisode.value
         )
 
@@ -94,17 +95,17 @@ abstract class BasePlayerViewModel(
      * For the next episode to
      * seamlessly watch tv shows
      * */
-    private var nextEpisodeToUse: TMDBEpisode? by mutableStateOf(null)
+    private var nextEpisodeToUse: Episode? by mutableStateOf(null)
     private var isNextEpisodeLoaded = false
     var isLastEpisode by mutableStateOf(false)
         private set
 
     val watchHistoryItem = watchHistoryRepository
-        .getWatchHistoryItemByIdInFlow(film.id)
+        .getWatchHistoryItemByIdInFlow(film.identifier)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking { watchHistoryRepository.getWatchHistoryItemById(film.id) ?: film.toWatchHistoryItem() }
+            initialValue = runBlocking { watchHistoryRepository.getWatchHistoryItemById(film.identifier) ?: film.toWatchHistoryItem() }
         )
 
     val appSettings = appSettingsManager.appSettings
@@ -152,7 +153,7 @@ abstract class BasePlayerViewModel(
      *
      * @return A pair of time in [Long] format - Pair(watchTime, durationTime)
      * */
-    fun getSavedTimeForSourceData(episode: TMDBEpisode? = null): Pair<Long, Long> {
+    fun getSavedTimeForSourceData(episode: Episode? = null): Pair<Long, Long> {
         val episodeToUse = episode ?: currentSelectedEpisode.value
 
         val watchHistoryItemToUse = watchHistoryItem.value ?: return 0L to 0L
@@ -166,14 +167,14 @@ abstract class BasePlayerViewModel(
     }
 
     private fun checkIfLastEpisode(
-        episodeToCheck: TMDBEpisode?,
+        episodeToCheck: Episode?,
         watchHistoryItem: WatchHistoryItem?,
     ): Boolean {
         val episode = episodeToCheck ?: return false
         val lastSeason = watchHistoryItem?.seasons
         val lastEpisode = watchHistoryItem?.episodes?.get(lastSeason)
 
-        return episode.season == lastSeason && episode.episode == lastEpisode
+        return episode.season == lastSeason && episode.number == lastEpisode
     }
 
     /**
@@ -193,7 +194,7 @@ abstract class BasePlayerViewModel(
 
         onSeasonChangeJob = viewModelScope.launch {
             seasonProviderUseCase.asFlow(
-                id = film.id,
+                id = film.identifier,
                 seasonNumber = seasonNumber
             ).collectLatest { _season.value = it }
         }
@@ -222,9 +223,8 @@ abstract class BasePlayerViewModel(
             updateProviderSelected(newProvider)
 
             sourceLinksProvider.loadLinks(
-                film = film,
+                film = film as FilmDetails,
                 preferredProviderName = newProvider,
-                isChangingProvider = true,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = currentSelectedEpisode.value,
                 onSuccess = { _ ->
@@ -336,7 +336,7 @@ abstract class BasePlayerViewModel(
      * */
     private suspend fun fetchSeasonIfNeeded(seasonNumber: Int): Resource<Season?> {
         var currentLoadedSeasonNumber = _season.value
-        if (currentLoadedSeasonNumber.data?.seasonNumber != seasonNumber) {
+        if (currentLoadedSeasonNumber.data?.number != seasonNumber) {
             _season.update {
                 fetchSeasonFromMetaProvider(
                     seasonNumber = seasonNumber
@@ -351,19 +351,19 @@ abstract class BasePlayerViewModel(
 
     /**
      *
-     * Obtains the next episode based on the given [TMDBEpisode].
+     * Obtains the next episode based on the given [Episode].
      * It returns null if an error has occured or it can't find the episode to be queried.
      *
      * @param onError an optional callback if caller wants to call [showErrorSnackbar]
      *
      * */
-    private suspend fun TMDBEpisode.getNextEpisode(
+    private suspend fun Episode.getNextEpisode(
         onError: ((UiText) -> Unit)? = null,
-    ): TMDBEpisode? {
-        val nextEpisode: TMDBEpisode?
+    ): Episode? {
+        val nextEpisode: Episode?
 
         val episodeSeasonNumber = this.season
-        val episodeNumber = this.episode
+        val episodeNumber = this.number
 
         val seasonToUse = fetchSeasonIfNeeded(episodeSeasonNumber)
 
@@ -375,15 +375,15 @@ abstract class BasePlayerViewModel(
         val episodesList = seasonToUse.data!!.episodes
         val nextEpisodeNumberToWatch = episodeNumber + 1
 
-        if (episodesList.last().episode == nextEpisodeNumberToWatch)
+        if (episodesList.last().number == nextEpisodeNumberToWatch)
             return episodesList.last()
 
-        val isThereANextEpisode = episodesList.last().episode > nextEpisodeNumberToWatch
-        val isThereANextSeason = seasonToUse.data!!.seasonNumber + 1 <= (film as TvShow).totalSeasons
+        val isThereANextEpisode = episodesList.last().number > nextEpisodeNumberToWatch
+        val isThereANextSeason = seasonToUse.data!!.number + 1 <= (film as TvShow).totalSeasons
 
         nextEpisode = if (isThereANextEpisode) {
             episodesList.firstOrNull {
-                it.episode == nextEpisodeNumberToWatch
+                it.number == nextEpisodeNumberToWatch
             }
         } else if (isThereANextSeason) {
             fetchSeasonIfNeeded(seasonNumber = episodeSeasonNumber + 1).run {
@@ -400,7 +400,7 @@ abstract class BasePlayerViewModel(
                 UiText.StringResource(
                     UtilR.string.episode_non_existent_error_message_format,
                     nextEpisodeNumberToWatch,
-                    seasonToUse.data!!.seasonNumber
+                    seasonToUse.data!!.number
                 )
             )
         }
@@ -414,7 +414,7 @@ abstract class BasePlayerViewModel(
      * @param episodeToWatch The next episode to be played, or null if not available.
      */
     fun onEpisodeClick(
-        episodeToWatch: TMDBEpisode? = null,
+        episodeToWatch: Episode? = null,
         runWebView: (FlixclusiveWebView) -> Unit
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
@@ -458,7 +458,7 @@ abstract class BasePlayerViewModel(
      * @param episodeToWatch an optional parameter for the episode to watch if film to be watched is a [TvShow]
      */
     fun loadSourceData(
-        episodeToWatch: TMDBEpisode? = null,
+        episodeToWatch: Episode? = null,
         runWebView: (FlixclusiveWebView) -> Unit
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
@@ -474,8 +474,8 @@ abstract class BasePlayerViewModel(
 
         loadLinksJob = viewModelScope.launch {
             sourceLinksProvider.loadLinks(
-                film = film,
-                mediaId = sourceData.mediaId,
+                film = film as FilmDetails,
+                watchId = sourceData.watchId,
                 preferredProviderName = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = episodeToWatch,
@@ -544,8 +544,8 @@ abstract class BasePlayerViewModel(
                 .getNextEpisode()
 
             sourceLinksProvider.loadLinks(
-                film = film,
-                mediaId = sourceData.mediaId,
+                film = film as FilmDetails,
+                watchId = sourceData.watchId,
                 preferredProviderName = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = episode,
@@ -574,5 +574,5 @@ abstract class BasePlayerViewModel(
      *
      * */
     protected suspend fun fetchSeasonFromMetaProvider(seasonNumber: Int)
-        = seasonProviderUseCase(id = film.id, seasonNumber = seasonNumber)
+        = seasonProviderUseCase(id = film.identifier, seasonNumber = seasonNumber)
 }

@@ -5,10 +5,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class TMDBCollection(
-    @SerializedName("backdrop_path") val backdropPath: String?,
     val id: Int,
+    val overview: String? = null,
+    @SerializedName("parts") val films: List<FilmSearchItem>,
+    @SerializedName("backdrop_path") val backdropPath: String?,
     @SerializedName("name") val collectionName: String,
-    val overview: String?,
-    @SerializedName("parts") val films: List<TMDBSearchItem>,
     @SerializedName("poster_path") val posterPath: String?
 ) : java.io.Serializable

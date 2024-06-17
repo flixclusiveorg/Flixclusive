@@ -45,13 +45,13 @@ import coil.imageLoader
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun EpisodeCard(
     modifier: Modifier = Modifier,
-    episode: TMDBEpisode,
+    episode: Episode,
     onEpisodeClick: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -106,7 +106,7 @@ internal fun EpisodeCard(
                     imageLoader = LocalContext.current.imageLoader,
                     contentDescription = stringResource(
                         UtilR.string.episode_image_content_desc,
-                        episode.episode,
+                        episode.number,
                         episode.title
                     ),
                     contentScale = ContentScale.Crop,
@@ -132,7 +132,7 @@ internal fun EpisodeCard(
                     contentAlignment = Alignment.BottomStart
                 ) {
                     Text(
-                        text = "S${episode.season} E${episode.episode}",
+                        text = "S${episode.season} E${episode.number}",
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(
                             start = 8.dp,
@@ -159,7 +159,7 @@ internal fun EpisodeCard(
                         modifier = Modifier.weight(1F)
                     ) {
                         Text(
-                            text = "Episode ${episode.episode}",
+                            text = "Episode ${episode.number}",
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Medium
                             ),

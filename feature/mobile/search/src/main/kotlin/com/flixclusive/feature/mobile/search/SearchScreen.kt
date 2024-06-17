@@ -40,7 +40,7 @@ import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.feature.mobile.search.component.SearchItemCard
 import com.flixclusive.feature.mobile.search.component.SearchItemCardPlaceholderWithText
 import com.flixclusive.feature.mobile.search.component.SearchItemRow
-import com.flixclusive.model.configuration.CategoryItem
+import com.flixclusive.model.tmdb.category.Category
 import com.flixclusive.model.tmdb.Genre
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -49,7 +49,7 @@ import com.flixclusive.core.util.R as UtilR
 interface SearchScreenNavigator {
     fun openSearchExpandedScreen()
 
-    fun openSeeAllScreen(item: CategoryItem)
+    fun openSeeAllScreen(item: Category)
 
     fun openGenreScreen(genre: Genre)
 }

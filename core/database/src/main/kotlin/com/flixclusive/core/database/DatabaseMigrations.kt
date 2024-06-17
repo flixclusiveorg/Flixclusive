@@ -24,4 +24,19 @@ internal object DatabaseMigrations {
             db.execSQL("ALTER TABLE `watchlist` ADD COLUMN addedOn INTEGER NOT NULL DEFAULT $timeToday")
         }
     }
+
+    class Schema3to4 : Migration(startVersion = 3, endVersion = 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Edit `id` column to be string data type
+            db.updateIdColumnToStringDataType("`watchlist`")
+            db.updateIdColumnToStringDataType("`watch_history`")
+        }
+
+        private fun SupportSQLiteDatabase.updateIdColumnToStringDataType(tableName: String) {
+            execSQL("ALTER TABLE $tableName ADD COLUMN _id TEXT")
+            execSQL("UPDATE $tableName SET _id = CAST(id as TEXT)")
+            execSQL("ALTER TABLE $tableName DROP COLUMN id")
+            execSQL("ALTER TABLE $tableName RENAME COLUMN _id TO id")
+        }
+    }
 }

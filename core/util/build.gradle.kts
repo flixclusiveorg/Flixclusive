@@ -15,6 +15,8 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.gson)
     implementation(libs.jsoup)
+    implementation(libs.junit)
+    implementation(libs.mockk)
     implementation(libs.okhttp.dnsoverhttps)
     implementation(libs.retrofit)
 }

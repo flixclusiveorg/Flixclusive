@@ -10,8 +10,8 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.exception.catchInternetRelatedException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.model.configuration.AppConfig
-import com.flixclusive.model.configuration.HomeCategoriesConfig
-import com.flixclusive.model.configuration.SearchCategoriesConfig
+import com.flixclusive.model.tmdb.category.HomeCategoriesData
+import com.flixclusive.model.tmdb.category.SearchCategoriesData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -43,8 +43,8 @@ internal class DefaultAppConfigurationManager @Inject constructor(
         private set
 
     override var appConfig: AppConfig? = null
-    override var homeCategoriesConfig: HomeCategoriesConfig? = null
-    override var searchCategoriesConfig: SearchCategoriesConfig? = null
+    override var homeCategoriesData: HomeCategoriesData? = null
+    override var searchCategoriesData: SearchCategoriesData? = null
 
     override fun initialize(appBuild: AppBuild?) {
         if(fetchJob?.isActive == true)
@@ -61,12 +61,12 @@ internal class DefaultAppConfigurationManager @Inject constructor(
                 try {
                     checkForUpdates()
 
-                    homeCategoriesConfig = githubRawApiService.getHomeCategoriesConfig()
-                    searchCategoriesConfig = githubRawApiService.getSearchCategoriesConfig()
+                    homeCategoriesData = githubRawApiService.getHomeCategoriesConfig()
+                    searchCategoriesData = githubRawApiService.getSearchCategoriesConfig()
 
                     return@launch _configurationStatus.emit(Resource.Success(Unit))
                 } catch (e: Exception) {
-                    errorLog(e.stackTraceToString())
+                    errorLog(e)
 
                     if (i == MAX_RETRIES) {
                         val errorMessageId = e.catchInternetRelatedException().error!!
@@ -134,7 +134,7 @@ internal class DefaultAppConfigurationManager @Inject constructor(
                 return _updateStatus.emit(UpdateStatus.UpToDate)
             }
         } catch (e: Exception) {
-            errorLog(e.stackTraceToString())
+            errorLog(e)
             val errorMessageId = e.catchInternetRelatedException().error!!
 
             _updateStatus.emit(UpdateStatus.Error(errorMessageId))

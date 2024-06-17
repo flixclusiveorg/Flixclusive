@@ -30,10 +30,10 @@ import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDest
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.Repository
-import com.flixclusive.model.configuration.CategoryItem
+import com.flixclusive.model.tmdb.category.Category
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.util.navGraph
 import com.flixclusive.util.navigateIfResumed
 import com.ramcosta.composedestinations.dynamic.within
@@ -55,7 +55,7 @@ internal class MobileAppNavigator(
         navController.navigateIfResumed(SearchExpandedScreenDestination within destination.navGraph())
     }
 
-    override fun openSeeAllScreen(item: CategoryItem) {
+    override fun openSeeAllScreen(item: Category) {
         navController.navigateIfResumed(SeeAllScreenDestination(item = item) within destination.navGraph())
     }
 
@@ -125,7 +125,7 @@ internal class MobileAppNavigator(
 
     override fun onEpisodeChange(
         film: Film,
-        episodeToPlay: TMDBEpisode
+        episodeToPlay: Episode
     ) {
         navController.navigate(
             PlayerScreenDestination(

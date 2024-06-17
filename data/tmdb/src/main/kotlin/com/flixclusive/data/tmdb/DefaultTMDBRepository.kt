@@ -1,36 +1,31 @@
 package com.flixclusive.data.tmdb
 
 import com.flixclusive.core.network.retrofit.TMDBApiService
-import com.flixclusive.core.network.retrofit.dto.common.TMDBImagesResponseDto
-import com.flixclusive.core.network.retrofit.dto.toMovie
-import com.flixclusive.core.network.retrofit.dto.toTvShow
-import com.flixclusive.core.network.retrofit.dto.tv.toSeason
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.exception.catchInternetRelatedException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.configuration.AppConfigurationManager
-import com.flixclusive.data.tmdb.util.filterOutUnreleasedFilms
-import com.flixclusive.data.tmdb.util.filterOutUnreleasedSeasons
-import com.flixclusive.data.tmdb.util.filterOutZeroSeasons
+import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.Genre
 import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.Season
+import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.TMDBCollection
-import com.flixclusive.model.tmdb.TMDBEpisode
-import com.flixclusive.model.tmdb.TMDBPageResponse
-import com.flixclusive.model.tmdb.TMDBSearchItem
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.model.tmdb.util.TMDB_API_BASE_URL
+import com.flixclusive.model.tmdb.util.filterOutUnreleasedFilms
+import com.flixclusive.model.tmdb.util.filterOutUnreleasedSeasons
+import com.flixclusive.model.tmdb.util.filterOutZeroSeasons
 import com.flixclusive.model.tmdb.util.formatGenreIds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import javax.inject.Inject
 
-private const val TMDB_API_BASE_URL = "https://api.themoviedb.org/3/"
-
-class DefaultTMDBRepository @Inject constructor(
+internal class DefaultTMDBRepository @Inject constructor(
     private val tmdbApiService: TMDBApiService,
     private val configurationProvider: AppConfigurationManager,
     @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
@@ -42,7 +37,7 @@ class DefaultTMDBRepository @Inject constructor(
         mediaType: String,
         timeWindow: String,
         page: Int,
-    ): Resource<TMDBPageResponse<TMDBSearchItem>> {
+    ): Resource<SearchResponseData<FilmSearchItem>> {
         return withContext(ioDispatcher) {
             try {
                 val response = tmdbApiService.getTrending(
@@ -66,7 +61,7 @@ class DefaultTMDBRepository @Inject constructor(
         withCompanies: List<Int>?,
         withGenres: List<Genre>?,
         sortBy: SortOptions,
-    ): Resource<TMDBPageResponse<TMDBSearchItem>> {
+    ): Resource<SearchResponseData<FilmSearchItem>> {
         return withContext(ioDispatcher) {
             try {
                 val sortOption = when (sortBy) {
@@ -95,7 +90,7 @@ class DefaultTMDBRepository @Inject constructor(
         mediaType: String,
         query: String,
         page: Int,
-    ): Resource<TMDBPageResponse<TMDBSearchItem>> {
+    ): Resource<SearchResponseData<FilmSearchItem>> {
         return withContext(ioDispatcher) {
             try {
                 if (query.isEmpty()) {
@@ -116,19 +111,22 @@ class DefaultTMDBRepository @Inject constructor(
         }
     }
 
-    override suspend fun getImages(
+    override suspend fun getLogo(
         mediaType: String,
         id: Int,
-    ): Resource<TMDBImagesResponseDto> {
+    ): Resource<String> {
         return withContext(ioDispatcher) {
             try {
-                val response = tmdbApiService.getImages(
+                val response =  tmdbApiService.getImages(
                     mediaType = mediaType,
                     apiKey = tmdbApiKey,
                     id = id
                 )
 
-                Resource.Success(response)
+                val logo = response.logos!!.first()
+                    .filePath.replace("svg", "png")
+
+                Resource.Success(logo)
             } catch (e: Exception) {
                 e.catchInternetRelatedException()
             }
@@ -142,8 +140,8 @@ class DefaultTMDBRepository @Inject constructor(
                     id = id, apiKey = tmdbApiKey
                 )
 
-                val collection: TMDBCollection? = if (movie.belongsToCollection != null) {
-                    val collection = getCollection(id = movie.belongsToCollection!!.id)
+                val collection: TMDBCollection? = if (movie.collection != null) {
+                    val collection = getCollection(id = movie.collection!!.id)
 
                     if (collection !is Resource.Success)
                         throw Exception("Error fetching collection of ${movie.title} [${movie.id}]")
@@ -151,13 +149,10 @@ class DefaultTMDBRepository @Inject constructor(
                     collection.data
                 } else null
 
-                val filteredRecommendations = movie.recommendations.results
-                    .filterOutUnreleasedFilms()
-
                 val newGenres = formatGenreIds(
                     genreIds = movie.genres.map { it.id },
                     genresList = configurationProvider
-                        .searchCategoriesConfig!!.genres.map {
+                        .searchCategoriesData!!.genres.map {
                             Genre(
                                 id = it.id,
                                 name = it.name,
@@ -168,17 +163,11 @@ class DefaultTMDBRepository @Inject constructor(
 
                 Resource.Success(
                     movie.copy(
-                        recommendations = movie.recommendations.copy(
-                            results = filteredRecommendations
-                        ),
-                        genres = newGenres
-                    )
-                        .toMovie()
-                        .copy(
-                            collection = collection?.run {
-                                copy(films = films.filterOutUnreleasedFilms())
+                        genres = newGenres,
+                        collection = collection?.run {
+                            copy(films = films.filterOutUnreleasedFilms())
                             }
-                        )
+                    )
                 )
             } catch (e: Exception) {
                 e.catchInternetRelatedException()
@@ -193,9 +182,6 @@ class DefaultTMDBRepository @Inject constructor(
                     id = id, apiKey = tmdbApiKey
                 )
 
-                val filteredRecommendations = tvShow.recommendations.results
-                    .filterOutUnreleasedFilms()
-
                 val filteredSeasons = tvShow.seasons
                     .filterOutZeroSeasons()
                     .filterOutUnreleasedSeasons()
@@ -203,7 +189,7 @@ class DefaultTMDBRepository @Inject constructor(
                 val newGenres = formatGenreIds(
                     genreIds = tvShow.genres.map { it.id },
                     genresList = configurationProvider
-                        .searchCategoriesConfig!!.genres.map {
+                        .searchCategoriesData!!.genres.map {
                             Genre(
                                 id = it.id,
                                 name = it.name,
@@ -215,12 +201,9 @@ class DefaultTMDBRepository @Inject constructor(
                 Resource.Success(
                     tvShow.copy(
                         seasons = filteredSeasons,
-                        numberOfSeasons = filteredSeasons.size,
-                        recommendations = tvShow.recommendations.copy(
-                            results = filteredRecommendations
-                        ),
+                        totalSeasons = filteredSeasons.size,
                         genres = newGenres
-                    ).toTvShow()
+                    )
                 )
             } catch (e: Exception) {
                 e.catchInternetRelatedException()
@@ -235,9 +218,7 @@ class DefaultTMDBRepository @Inject constructor(
                     id = id, seasonNumber = seasonNumber, apiKey = tmdbApiKey
                 )
 
-                Resource.Success(
-                    season.toSeason()
-                )
+                Resource.Success(season)
             } catch (e: Exception) {
                 e.catchInternetRelatedException()
             }
@@ -248,7 +229,7 @@ class DefaultTMDBRepository @Inject constructor(
         id: Int,
         seasonNumber: Int,
         episodeNumber: Int,
-    ): Resource<TMDBEpisode?> {
+    ): Resource<Episode?> {
         return try {
             withContext(ioDispatcher) {
                 val season = getSeason(id, seasonNumber)
@@ -258,7 +239,7 @@ class DefaultTMDBRepository @Inject constructor(
 
                 val episodeId = season.data!!.episodes.find {
                     it.season == seasonNumber
-                            && it.episode == episodeNumber
+                            && it.number == episodeNumber
                 }
                 Resource.Success(episodeId)
             }
@@ -284,18 +265,19 @@ class DefaultTMDBRepository @Inject constructor(
     override suspend fun paginateConfigItems(
         url: String,
         page: Int,
-    ): Resource<TMDBPageResponse<TMDBSearchItem>> {
+    ): Resource<SearchResponseData<FilmSearchItem>> {
         return withContext(ioDispatcher) {
             val fullUrl = "$TMDB_API_BASE_URL$url&page=$page&api_key=$tmdbApiKey"
 
             try {
-                Resource.Success(tmdbApiService.get(fullUrl))
+                val response = tmdbApiService.get(fullUrl)
+                Resource.Success(response)
             } catch (e: HttpException) {
                 errorLog("Http Error (${e.code()}) on URL[$fullUrl]: ${e.response()}")
-                errorLog(e.stackTraceToString())
+                errorLog(e)
                 Resource.Failure(e.message ?: "Unknown error occurred")
             } catch (e: Exception) {
-                errorLog(e.stackTraceToString())
+                errorLog(e)
                 Resource.Failure(e.message ?: "Unknown error occurred")
             }
         }

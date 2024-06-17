@@ -1,6 +1,6 @@
 package com.flixclusive.provider.settings
 
-import java.lang.reflect.Type
+import com.flixclusive.provider.Provider
 
 /**
  *
@@ -8,12 +8,15 @@ import java.lang.reflect.Type
  *
  * @see [Aliucord](https://github.com/Aliucord/Aliucord/blob/main/Aliucord/src/main/java/com/aliucord/api/SettingsAPI.java)
  * */
-@Suppress("unused")
+@Suppress("unused", "MemberVisibilityCanBePrivate", "KDocUnresolvedReference",
+    "SpellCheckingInspection"
+)
 class ProviderSettingsManager(
     private val settingsPath: String,
     private val providerName: String,
 ) {
-    private var settings: ProviderSettings
+    var settings: ProviderSettings
+        private set
 
     /**
      * Creates a SettingsAPI for the specified plugin
@@ -72,7 +75,7 @@ class ProviderSettingsManager(
     }
 
     /**
-     * Reads a [boolean] from the settings.
+     * Reads a [Boolean] from the settings.
      * @param key Key of the setting.
      * @param defValue Default value of the setting.
      * @return Stored value, or default value if it doesn't exist.
@@ -82,7 +85,7 @@ class ProviderSettingsManager(
     }
 
     /**
-     * Writes a [boolean] to the settings.
+     * Writes a [Boolean] to the settings.
      * @param key Key of the setting.
      * @param val Value of the setting.
      */
@@ -91,7 +94,7 @@ class ProviderSettingsManager(
     }
 
     /**
-     * Gets an [int] stored in the settings.
+     * Gets an [Int] stored in the settings.
      * @param key Key of the setting.
      * @param defValue Default value of the setting.
      * @return Stored value, or default value if it doesn't exist.
@@ -101,7 +104,7 @@ class ProviderSettingsManager(
     }
 
     /**
-     * Writes an [int] to the settings.
+     * Writes an [Int] to the settings.
      * @param key Key of the setting.
      * @param val Value of the setting.
      */
@@ -110,7 +113,7 @@ class ProviderSettingsManager(
     }
 
     /**
-     * Gets a [float] stored in the settings.
+     * Gets a [Float] stored in the settings.
      * @param key Key of the setting.
      * @param defValue Default value of the setting.
      * @return Stored value, or default value if it doesn't exist.
@@ -120,7 +123,7 @@ class ProviderSettingsManager(
     }
 
     /**
-     * Writes a [float] to the settings.
+     * Writes a [Float] to the settings.
      * @param key Key of the setting.
      * @param val Value of the setting.
      */
@@ -129,7 +132,7 @@ class ProviderSettingsManager(
     }
 
     /**
-     * Gets a [long] stored in the settings.
+     * Gets a [Long] stored in the settings.
      * @param key Key of the setting.
      * @param defValue Default value of the setting.
      * @return Stored value, or default value if it doesn't exist.
@@ -139,7 +142,7 @@ class ProviderSettingsManager(
     }
 
     /**
-     * Writes a [long] to the settings.
+     * Writes a [Long] to the settings.
      * @param key Key of the setting.
      * @param val Value of the setting.
      */
@@ -172,19 +175,11 @@ class ProviderSettingsManager(
      * @param defValue Default value of the setting.
      * @return Stored value, or default value if it doesn't exist.
      */
-    fun <T> getObject(key: String, defValue: T): T {
+    inline fun <reified T> getObject(
+        key: String,
+        defValue: T? = null
+    ): T? {
         return settings.getObject(key, defValue)
-    }
-
-    /**
-     * Gets an [Object] stored in the settings.
-     * @param key Key of the setting.
-     * @param defValue Default value of the setting.
-     * @param type [Object] representing the data type.
-     * @return Stored value, or default value if it doesn't exist.
-     */
-    fun <T> getObject(key: String, defValue: T, type: Type?): T {
-        return settings.getObject(key, defValue, type)
     }
 
     /**

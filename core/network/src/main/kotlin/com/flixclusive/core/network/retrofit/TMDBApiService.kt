@@ -1,12 +1,12 @@
 package com.flixclusive.core.network.retrofit
 
-import com.flixclusive.core.network.retrofit.dto.TMDBMovieDto
-import com.flixclusive.core.network.retrofit.dto.TMDBTvShowDto
-import com.flixclusive.core.network.retrofit.dto.common.TMDBImagesResponseDto
-import com.flixclusive.core.network.retrofit.dto.tv.TMDBSeasonDto
+import com.flixclusive.core.network.retrofit.dto.TMDBImagesResponseDto
+import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flixclusive.model.tmdb.Movie
+import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.TMDBCollection
-import com.flixclusive.model.tmdb.TMDBPageResponse
-import com.flixclusive.model.tmdb.TMDBSearchItem
+import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.common.tv.Season
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -16,6 +16,7 @@ import java.util.Date
 import java.util.Locale
 
 const val TMDB_API_BASE_URL = "https://api.themoviedb.org/3/"
+const val TMDB_APPEND_TO_RESPONSE = "images,recommendations,external_ids,credits"
 
 interface TMDBApiService {
     @GET("movie/{id}")
@@ -23,20 +24,20 @@ interface TMDBApiService {
         @Path("id") id: Int,
         @Query("api_key") apiKey: String,
         @Query("language") language: String = "en-US",
-        @Query("append_to_response") appendToResponse: String = "images,recommendations",
+        @Query("append_to_response") appendToResponse: String = TMDB_APPEND_TO_RESPONSE,
         @Query("page") page: Int = 1,
         @Query("include_image_language") includeImageLanguage: String = "en"
-    ): TMDBMovieDto
+    ): Movie
 
     @GET("tv/{id}")
     suspend fun getTvShow(
         @Path("id") id: Int,
         @Query("api_key") apiKey: String,
         @Query("language") language: String = "en-US",
-        @Query("append_to_response") appendToResponse: String = "images,recommendations",
+        @Query("append_to_response") appendToResponse: String = TMDB_APPEND_TO_RESPONSE,
         @Query("page") page: Int = 1,
         @Query("include_image_language") includeImageLanguage: String = "en"
-    ): TMDBTvShowDto
+    ): TvShow
 
     @GET("tv/{id}/season/{season_number}")
     suspend fun getSeason(
@@ -44,7 +45,7 @@ interface TMDBApiService {
         @Path("season_number") seasonNumber: Int,
         @Query("api_key") apiKey: String,
         @Query("language") language: String = "en-US",
-    ): TMDBSeasonDto
+    ): Season
 
     @GET("trending/{media_type}/{time_window}")
     suspend fun getTrending(
@@ -53,7 +54,7 @@ interface TMDBApiService {
         @Query("api_key") apiKey: String,
         @Query("page") page: Int,
         @Query("region") region: String = "US",
-    ): TMDBPageResponse<TMDBSearchItem>
+    ): SearchResponseData<FilmSearchItem>
 
     @GET("discover/{media_type}")
     suspend fun discoverFilms(
@@ -67,11 +68,11 @@ interface TMDBApiService {
         @Query("without_genres") withoutGenres: String = "10763", // news genre
         @Query("release_date.lte") releasedDate: String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date()),
         @Query("with_original_language") withOriginalLanguage: String = "en",
-    ): TMDBPageResponse<TMDBSearchItem>
+    ): SearchResponseData<FilmSearchItem>
 
 
     @GET
-    suspend fun get(@Url url: String): TMDBPageResponse<TMDBSearchItem>
+    suspend fun get(@Url url: String): SearchResponseData<FilmSearchItem>
 
     @GET("search/{media_type}")
     suspend fun search(
@@ -82,7 +83,7 @@ interface TMDBApiService {
         @Query("language") language: String = "en-US",
         @Query("include_adult") includeAdult: Boolean = false,
         @Query("region") region: String = "US"
-    ): TMDBPageResponse<TMDBSearchItem>
+    ): SearchResponseData<FilmSearchItem>
 
 
     @GET("{media_type}/{id}/images")
