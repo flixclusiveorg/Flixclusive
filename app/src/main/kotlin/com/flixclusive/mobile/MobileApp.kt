@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -141,8 +142,13 @@ internal fun MobileActivity.MobileApp(
         && currentSelectedScreen != UpdateScreenDestination
     }
 
+    val windowInsets = when (currentSelectedScreen) {
+        SplashScreenDestination -> WindowInsets.systemBars
+        else -> WindowInsets(0.dp)
+    }
+
     Scaffold(
-        contentWindowInsets = WindowInsets(0.dp),
+        contentWindowInsets = windowInsets,
         snackbarHost = {
            if (!viewModel.isInPipMode) {
                InternetMonitorSnackbar(hostState = snackbarHostState)
