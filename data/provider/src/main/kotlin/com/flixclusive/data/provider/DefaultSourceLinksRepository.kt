@@ -179,10 +179,10 @@ class DefaultSourceLinksRepository @Inject constructor(
     
     private fun Film.getRespectiveId(other: Film): String? {
         return when {
-            id == other.id -> return id
-            tmdbId == other.tmdbId -> return tmdbId?.toString()
-            imdbId == other.imdbId -> return imdbId
-            identifier == other.identifier -> return identifier
+            id == other.id -> identifier
+            tmdbId == other.tmdbId -> identifier
+            imdbId == other.imdbId -> identifier
+            identifier == other.identifier -> identifier
             else -> null
         }
     }
