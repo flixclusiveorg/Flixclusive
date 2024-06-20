@@ -25,7 +25,8 @@ const val APP_DATABASE = "app_database"
 
 @Database(
     entities = [WatchHistoryItem::class, WatchlistItem::class, User::class],
-    version = 4
+    version = 4,
+    exportSchema = true
 )
 @TypeConverters(FilmDataConverter::class, WatchHistoryItemConverter::class, DateConverter::class)
 internal abstract class AppDatabase : RoomDatabase() {
