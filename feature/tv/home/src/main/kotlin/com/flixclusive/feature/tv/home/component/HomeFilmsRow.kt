@@ -27,13 +27,13 @@ import com.flixclusive.core.ui.tv.component.FilmPadding
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.focusOnMount
-import com.flixclusive.core.ui.tv.util.shouldPaginate
 import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
+import com.flixclusive.core.ui.tv.util.shouldPaginate
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.home.PaginationStateInfo
-import com.flixclusive.model.tmdb.category.HomeCategory
 import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.category.Category
 
 internal const val HOME_FOCUS_KEY_FORMAT = "row=%d, column=%d"
 
@@ -41,13 +41,13 @@ internal const val HOME_FOCUS_KEY_FORMAT = "row=%d, column=%d"
 @Composable
 internal fun HomeFilmsRow(
     modifier: Modifier = Modifier,
-    categoryItem: HomeCategory,
+    categoryItem: Category,
     paginationState: PaginationStateInfo,
     films: List<Film>,
     rowIndex: Int,
     onFilmClick: (film: Film) -> Unit,
     onFocusedFilmChange: (film: Film) -> Unit,
-    paginate: (query: String, page: Int) -> Unit,
+    paginate: (page: Int) -> Unit,
 ) {
     val focusRestorers = createInitialFocusRestorerModifiers()
 
@@ -79,10 +79,7 @@ internal fun HomeFilmsRow(
             || paginationState.pagingState == PagingState.ERROR
             || films.isEmpty())
         ) {
-            paginate(
-                categoryItem.url,
-                paginationState.currentPage
-            )
+            paginate(paginationState.currentPage)
         }
     }
 

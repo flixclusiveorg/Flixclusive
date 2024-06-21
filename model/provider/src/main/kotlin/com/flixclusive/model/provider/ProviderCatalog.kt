@@ -7,5 +7,6 @@ import kotlinx.serialization.Serializable
 data class ProviderCatalog(
     override val name: String,
     override val url: String,
+    override val canPaginate: Boolean,
     val providerName: String,
 ) : Category()

@@ -29,27 +29,27 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
 import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.util.shouldPaginate
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.domain.home.PaginationStateInfo
-import com.flixclusive.model.tmdb.category.HomeCategory
 import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.category.Category
 import com.flixclusive.core.ui.mobile.R as UiMobileR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun HomeFilmsRow(
     modifier: Modifier = Modifier,
-    categoryItem: HomeCategory,
+    categoryItem: Category,
     paginationState: PaginationStateInfo,
     showCardTitle: Boolean,
     films: List<Film>,
     onFilmClick: (Film) -> Unit,
     onFilmLongClick: (Film) -> Unit,
-    paginate: (query: String, page: Int) -> Unit,
+    paginate: (page: Int) -> Unit,
     onSeeAllClick: () -> Unit
 ) {
     val listState = rememberLazyListState()
@@ -66,10 +66,7 @@ internal fun HomeFilmsRow(
             && (paginationState.pagingState == PagingState.IDLE
                     || paginationState.pagingState == PagingState.ERROR)
         ) {
-            paginate(
-                categoryItem.url,
-                paginationState.currentPage
-            )
+            paginate(paginationState.currentPage)
         }
     }
 
