@@ -1,9 +1,13 @@
 package com.flixclusive.core.database.util
 
 import androidx.room.TypeConverter
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.model.tmdb.DBFilm
 import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonElement
+import com.google.gson.JsonParser
 
 internal class FilmDataConverter {
     private val gson = Gson()
@@ -15,6 +19,27 @@ internal class FilmDataConverter {
 
     @TypeConverter
     fun toFilmData(filmDataString: String): DBFilm {
-        return fromJson<DBFilm>(filmDataString)
+        val json = JsonParser.parseString(filmDataString)
+        safeCall { json.migrateToSchema4() }
+
+        return fromJson<DBFilm>(json)
+    }
+
+    private fun JsonElement.migrateToSchema4() {
+        val json = asJsonObject
+
+        val releaseDate = json.get("dateReleased").asString
+        json.addProperty("releaseDate", releaseDate)
+
+        val tmdbId = json.get("id").asInt
+        json.addProperty("tmdbId", tmdbId)
+        json.addProperty("id", "")
+
+        val runtime = json.get("runtime").asJsonPrimitive
+        if (!runtime.isJsonNull && runtime.isString) {
+            json.remove("runtime")
+        }
+
+        json.add("recommendations", JsonArray())
     }
 }
