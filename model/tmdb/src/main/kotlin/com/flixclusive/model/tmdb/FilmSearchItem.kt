@@ -14,6 +14,7 @@ import kotlinx.serialization.Serializable
  * @property filmType The type of the film. Defaults to [FilmType.MOVIE]. For more, see [FilmType].
  * @property backdropImage The URL of the film's backdrop image.
  * @property tmdbId The TMDB ID of the film.
+ * @property imdbId The IMDB ID of the film.
  * @property rating The rating of the film. Defaults to 0.0.
  * @property language The language of the film.
  * @property adult Whether the film is marked as adult. Defaults to false.
@@ -23,6 +24,7 @@ import kotlinx.serialization.Serializable
  * @property logoImage The URL of the film's logo image.
  * @property genres A list of genres associated with the film.
  * @property genreIds A list of genre IDs associated with the film.
+ * @property customProperties A map of custom properties associated with the film. Add any properties that your response/resource needs. Also, serialize the value of the property to string.
  *
  * @see Film
  */
@@ -46,6 +48,7 @@ data class FilmSearchItem(
     override val year: Int? = null,
     override val logoImage: String? = null,
     override val genres: List<Genre> = emptyList(),
+    override val customProperties: Map<String, String?> = emptyMap(),
     val voteCount: Int = 0,
     val genreIds: List<Int> = emptyList(),
 ) : Film()
