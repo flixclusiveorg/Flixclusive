@@ -1,15 +1,12 @@
 package com.flixclusive.model.tmdb
 
 import com.flixclusive.core.util.film.FilmType
-import kotlinx.serialization.SerialName
 import java.io.Serializable
 
 data class DBFilm(
-    @SerialName("_id")
     override val id: String? = null,
     override val providerName: String? = null,
     override val imdbId: String? = null,
-    @SerialName("id")
     override val tmdbId: Int? = null,
     override val language: String? = null,
     override val adult: Boolean = false,
@@ -19,10 +16,10 @@ data class DBFilm(
     override val posterImage: String? = null,
     override val overview: String? = null,
     override val homePage: String? = null,
-    @SerialName("dateReleased") override val releaseDate: String? = null,
+    override val releaseDate: String? = null,
     override val logoImage: String? = null,
     override val year: Int? = null,
-    @SerialName("recommendedTitles") override val recommendations: List<FilmSearchItem> = emptyList(),
+    override val recommendations: List<FilmSearchItem> = emptyList(),
     override val filmType: FilmType = FilmType.MOVIE,
     override val rating: Double? = null
 ) : Film(), Serializable
