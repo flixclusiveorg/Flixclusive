@@ -46,5 +46,6 @@ data class FilmSearchItem(
     override val year: Int? = null,
     override val logoImage: String? = null,
     override val genres: List<Genre> = emptyList(),
+    val voteCount: Int = 0,
     val genreIds: List<Int> = emptyList(),
 ) : Film()
