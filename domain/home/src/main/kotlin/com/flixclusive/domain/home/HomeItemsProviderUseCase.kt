@@ -4,16 +4,16 @@ import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.coroutines.mapIndexedAsync
-import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.Genre
+import com.flixclusive.model.tmdb.Movie
+import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.category.HomeCategory
-import com.flixclusive.model.tmdb.util.formatGenreIds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -187,56 +187,52 @@ class HomeItemsProviderUseCase @Inject constructor(
      * @return a state whether the call was successfull or not.
      * */
     private suspend fun getHeaderItem(): Resource<Unit> {
-        var headerItemToUse: FilmSearchItem? = null
+        var headerItem: Film? = null
+        val traversedFilms = mutableMapOf<String, String>()
         var lastResponse: Resource<Unit> =
             Resource.Failure(UtilR.string.failed_to_initialize_home_items)
 
-        retry@ for (i in 0..5) {
-            headerItemToUse = rowItems.value.randomOrNull()?.randomOrNull() as FilmSearchItem?
+        for (i in 0..5) {
+            headerItem = null
 
-            if (headerItemToUse == null)
-                continue
+            while (headerItem == null || headerItem.isNotPopular) {
+                if (traversedFilms.contains(headerItem?.identifier)) {
+                    headerItem = null
+                    continue
+                }
 
-            val logo = tmdbRepository.getLogo(
-                mediaType = headerItemToUse.filmType.type,
-                id = headerItemToUse.tmdbId ?: continue
-            )
+                headerItem = (rowItems.value
+                    .randomOrNull()
+                    ?.randomOrNull() as FilmSearchItem?)
+                    ?.also {
+                        traversedFilms[it.identifier] = it.title
+                    }
 
-            if (logo is Resource.Failure) {
-                lastResponse = logo
+            }
+
+            val response = filmProviderUseCase(partiallyDetailedFilm = headerItem)
+            if (response is Resource.Failure) {
+                lastResponse = response
                 continue
             }
 
-            if (logo.data != null) {
-                val logoToUse = logo.data
+            response.data?.let {
+                val genres = it.genres.plus(headerItem?.genres ?: emptyList())
 
-                val newGenres = formatGenreIds(
-                    genreIds = headerItemToUse.genreIds,
-                    genresList = configurationProvider
-                        .searchCategoriesData!!.genres.map {
-                            val mediaType = when (headerItemToUse!!.filmType) {
-                                FilmType.MOVIE -> it.mediaType
-                                FilmType.TV_SHOW -> FilmType.TV_SHOW.type
-                            }
-
-                            Genre(
-                                id = it.id,
-                                name = it.name,
-                                mediaType = mediaType
-                            )
-                        }
-                ) + headerItemToUse.genres
-
-                headerItemToUse = headerItemToUse.copy(
-                    logoImage = logoToUse,
-                    genres = newGenres
-                )
+                headerItem = when (it) {
+                    is Movie -> it.copy(genres = genres)
+                    is TvShow -> it.copy(genres = genres)
+                    else -> null
+                }
             }
+
+            if (headerItem == null)
+                continue
         }
 
-        _headerItem.value = headerItemToUse
+        _headerItem.value = headerItem
 
-        return when (headerItemToUse) {
+        return when (headerItem) {
             null -> lastResponse
             else -> Resource.Success(Unit)
         }
@@ -318,4 +314,11 @@ class HomeItemsProviderUseCase @Inject constructor(
 
         _rowItemsPagingState.value = newList.toList()
     }
+
+    private val Film?.isNotPopular: Boolean
+        get() = safeCall {
+            (this as? FilmSearchItem)?.run {
+                return@run isFromTmdb && voteCount < 200
+            }!!
+        } ?: false
 }

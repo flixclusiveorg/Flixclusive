@@ -19,6 +19,7 @@ internal data class TMDBSearchItem(
     @SerializedName("media_type") val mediaType: String? = null,
     @SerializedName("release_date", alternate = ["first_air_date"]) val releaseDate: String? = null,
     @SerializedName("vote_average") val rating: Double? = null,
+    @SerializedName("vote_count") val voteCount: Int = 0,
     @SerializedName("id") val tmdbId: Int,
     val adult: Boolean = false,
     val overview: String? = null,
@@ -31,6 +32,7 @@ internal fun TMDBSearchItem.toFilmSearchItem(filmType: FilmType): FilmSearchItem
     }
 
     return FilmSearchItem(
+        id = null,
         backdropImage = backdropImage,
         providerName = DEFAULT_FILM_SOURCE_NAME,
         genreIds = genreIds,
@@ -44,7 +46,7 @@ internal fun TMDBSearchItem.toFilmSearchItem(filmType: FilmType): FilmSearchItem
         overview = overview,
         releaseDate = releaseDate,
         filmType = filmType,
-        id = null,
+        voteCount = voteCount,
         year = releaseDate?.extractYear(),
         genres = listOf(
             Genre(
