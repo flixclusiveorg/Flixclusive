@@ -167,7 +167,12 @@ fun FilmScreen(
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             FilmScreenHeader(
                                 film = film,
-                                onGenreClick = navigator::openGenreScreen,
+                                onGenreClick = {
+                                    if (it.id == -1)
+                                        return@FilmScreenHeader
+
+                                    navigator.openGenreScreen(it)
+                                },
                                 onNavigateClick = navigator::goBack
                             )
                         }
