@@ -27,8 +27,17 @@ sealed class Resource<out T>(
      */
     class Failure(error: UiText?) : Resource<Nothing>(error = error, isLoading = false) {
         constructor(@StringRes errorId: Int) : this(UiText.StringResource(errorId))
+        constructor(error: Throwable?) : this(
+            when (error) {
+                null -> null
+                else -> UiText.StringValue(error.localizedMessage ?: error.message ?: error.stackTraceToString())
+            }
+        )
         constructor(error: String?) : this(
-            if(error.isNullOrEmpty()) null else UiText.StringValue(error)
+            when {
+                error.isNullOrEmpty() -> null
+                else -> UiText.StringValue(error)
+            }
         )
     }
 
