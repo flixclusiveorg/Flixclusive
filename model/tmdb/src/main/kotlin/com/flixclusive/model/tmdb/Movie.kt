@@ -29,6 +29,7 @@ import kotlinx.serialization.Serializable
  * @property imdbId The IMDB ID of the TV show.
  * @property cast The cast of the TV show.
  * @property recommendations The recommendations of the TV show.
+ * @property customProperties A map of custom properties associated with the film. Add any properties that your response/resource needs. Also, serialize the value of the property to string.
  *
  * @see FilmDetails
  * @see Film
@@ -57,6 +58,7 @@ data class Movie(
     override val year: Int? = null,
     override val genres: List<Genre> = emptyList(),
     override val cast: List<Person> = emptyList(),
+    override val customProperties: Map<String, String?> = emptyMap(),
 
     // == Custom fields ==
     /** The movies collection this movie belongs to. */

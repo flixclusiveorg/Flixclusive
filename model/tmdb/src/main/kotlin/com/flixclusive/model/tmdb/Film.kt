@@ -61,6 +61,7 @@ enum class FilmReleaseStatus {
  * @property releaseStatus The release status of the film. See [FilmReleaseStatus].
  * @property identifier A unique identifier for the film. It could either be [id], [tmdbId], [imdbId], or [title] in the following sequential order.
  * @property year The year of the film's release, extracted from the release date.
+ * @property customProperties A map of custom properties associated with the film. Add any properties that your response/resource needs. Also, serialize the value of the property to string.
  *
  * @see FilmDetails
  * @see FilmSearchItem
@@ -114,6 +115,8 @@ abstract class Film : java.io.Serializable {
     val isFromTmdb: Boolean
         get() = this.tmdbId != null || providerName.equals(DEFAULT_FILM_SOURCE_NAME, ignoreCase = true)
 
+    open val customProperties: Map<String, String?>
+        get() = emptyMap()
 }
 
 

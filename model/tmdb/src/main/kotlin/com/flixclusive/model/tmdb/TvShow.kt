@@ -32,6 +32,7 @@ import kotlinx.serialization.Serializable
  * @property filmType The type of the TV show.
  * @property parsedReleaseDate The parsed release date of the TV show.
  * @property releaseStatus The release status of the TV show.
+ * @property customProperties A map of custom properties associated with the film. Add any properties that your response/resource needs. Also, serialize the value of the property to string.
  *
  * @see FilmDetails
  * @see Film
@@ -60,6 +61,7 @@ data class TvShow(
     override val year: Int? = null,
     override val genres: List<Genre> = emptyList(),
     override val cast: List<Person> = emptyList(),
+    override val customProperties: Map<String, String?> = emptyMap(),
 
     // == Custom fields ==
     val networks: List<Company> = emptyList(),
