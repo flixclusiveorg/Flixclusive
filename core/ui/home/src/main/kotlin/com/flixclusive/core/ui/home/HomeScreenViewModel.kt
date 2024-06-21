@@ -13,6 +13,7 @@ import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.category.Category
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect
@@ -124,7 +125,7 @@ class HomeScreenViewModel @Inject constructor(
     }
 
     fun onPaginateFilms(
-        query: String,
+        category: Category,
         page: Int,
         index: Int
     ) {
@@ -133,10 +134,10 @@ class HomeScreenViewModel @Inject constructor(
                 return
 
             rowItemsPaginationJobs[index] = viewModelScope.launch {
-                homeItemsProviderUseCase.getHomeItems(
-                    query = query,
+                homeItemsProviderUseCase.getCategoryItems(
+                    category = category,
                     index = index,
-                    page = page,
+                    page = page
                 )
             }
         }

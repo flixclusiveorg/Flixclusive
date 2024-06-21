@@ -125,9 +125,7 @@ fun HomeScreen(
 
                 itemsIndexed(
                     items = homeCategories,
-                    key = { _, item ->
-                        item.name
-                    }
+                    key = { _, item -> item.name }
                 ) { i, item ->
                     HomeFilmsRow(
                         categoryItem = item,
@@ -136,11 +134,11 @@ fun HomeScreen(
                         onFilmClick = navigator::openFilmScreen,
                         showCardTitle = appSettings.isShowingFilmCardTitle,
                         onFilmLongClick = previewFilm,
-                        paginate = { query, page ->
+                        paginate = {
                             viewModel.onPaginateFilms(
-                                query = query,
-                                page = page,
-                                index = i
+                                category = item,
+                                index = i,
+                                page = it
                             )
                         },
                         onSeeAllClick = {

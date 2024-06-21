@@ -6,13 +6,16 @@ import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.coroutines.mapIndexedAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.configuration.AppConfigurationManager
-import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
+import com.flixclusive.domain.category.CategoryItemsProviderUseCase
+import com.flixclusive.domain.provider.SourceLinksProviderUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
+import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.category.Category
 import com.flixclusive.model.tmdb.category.HomeCategory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -32,8 +35,8 @@ import kotlin.random.Random
 import com.flixclusive.core.util.R as UtilR
 
 const val MINIMUM_HOME_ITEMS = 15
-private const val MAXIMUM_HOME_ITEMS = 28
-private const val HOME_MAX_PAGE = 5
+internal const val MAXIMUM_HOME_ITEMS = 28
+internal const val HOME_MAX_PAGE = 5
 
 data class PaginationStateInfo(
     val canPaginate: Boolean,
@@ -43,16 +46,17 @@ data class PaginationStateInfo(
 
 @Singleton
 class HomeItemsProviderUseCase @Inject constructor(
-    private val tmdbRepository: TMDBRepository,
     private val filmProviderUseCase: FilmProviderUseCase,
     private val watchHistoryRepository: WatchHistoryRepository,
     private val configurationProvider: AppConfigurationManager,
+    private val sourceLinksProvider: SourceLinksProviderUseCase,
+    private val categoryItemsProviderUseCase: CategoryItemsProviderUseCase,
     @ApplicationScope private val scope: CoroutineScope,
 ) {
     private val _headerItem = MutableStateFlow<Film?>(null)
 
     val headerItem = _headerItem.asStateFlow()
-    private val _categories = MutableStateFlow<List<HomeCategory>>(emptyList())
+    private val _categories = MutableStateFlow<List<Category>>(emptyList())
     private val _rowItems = MutableStateFlow<List<List<Film>>>(emptyList())
     private val _rowItemsPagingState = MutableStateFlow<List<PaginationStateInfo>>(emptyList())
 
@@ -86,6 +90,10 @@ class HomeItemsProviderUseCase @Inject constructor(
             ).onEach { item ->
                 _categories.value += listOf(item)
             }.onCompletion {
+                if (it != null) {
+                    _initializationStatus.value = Resource.Failure(it)
+                }
+
                 rowItemsPaginationJobs.addAll(List(_categories.value.size) { null })
                 _rowItems.value = List(_categories.value.size) { emptyList() }
                 _rowItemsPagingState.value = _categories.value.map { item ->
@@ -97,30 +105,26 @@ class HomeItemsProviderUseCase @Inject constructor(
                 }
 
                 _categories.value.mapIndexedAsync { i, item ->
-                    getHomeItems(
+                    getCategoryItems(
+                        category = item,
                         index = i,
-                        query = item.url,
                         page = 1,
                     )
                 }
 
-                /**
-                 * Since [getHeaderItem] is the only method that calls to an api service,
-                 * [isInitialized] depends on it whether if [getHeaderItem] was successful or not.
-                 * */
                 _initializationStatus.value = getHeaderItem()
             }.collect()
         }
     }
 
-    suspend fun getHomeItems(
+    suspend fun getCategoryItems(
+        category: Category,
         index: Int,
-        query: String,
         page: Int,
     ) {
         when (
-            val result = tmdbRepository.paginateConfigItems(
-                url = query,
+            val result = categoryItemsProviderUseCase(
+                category = category,
                 page = page
             )
         ) {
@@ -132,7 +136,6 @@ class HomeItemsProviderUseCase @Inject constructor(
                     }
                 )
             }
-
             Resource.Loading -> Unit
             is Resource.Success -> {
                 result.data!!.run {
@@ -184,7 +187,10 @@ class HomeItemsProviderUseCase @Inject constructor(
     /**
      * Obtains the home header item for mobile.
      *
-     * @return a state whether the call was successfull or not.
+     * Since [getHeaderItem] is the only method that calls to an api service,
+     * [isInitialized] depends on it whether if [getHeaderItem] was successful or not.
+     *
+     * @return a state whether the call was successfully or not.
      * */
     private suspend fun getHeaderItem(): Resource<Unit> {
         var headerItem: Film? = null
@@ -241,26 +247,27 @@ class HomeItemsProviderUseCase @Inject constructor(
     private suspend fun getHomeRecommendations() = flow {
         val usedCategories = mutableListOf<String>()
 
-        val config = configurationProvider.homeCategoriesData!!
+        val tmdbCategories = configurationProvider.homeCategoriesData!!
 
-        val combinedMovieAndTvShowConfig = config.tv + config.movie
-        val combinedConfig = config.all + combinedMovieAndTvShowConfig
+        val allCategories = tmdbCategories.tv + tmdbCategories.movie + getProviderCatalogs()
+        val allTmdbCategories = tmdbCategories.all + tmdbCategories.tv + tmdbCategories.movie
 
         var countOfItemsToFetch = Random.nextInt(MINIMUM_HOME_ITEMS, MAXIMUM_HOME_ITEMS)
         var i = 0
         while (i < countOfItemsToFetch) {
             val shouldEmitRequiredCategories = Random.nextBoolean()
+            var item = allCategories.random()
 
-            val item = if (shouldEmitRequiredCategories) {
-                val requiredRecommendation = combinedConfig.find {
+            if (shouldEmitRequiredCategories) {
+                val requiredRecommendation = allTmdbCategories.find {
                     !usedCategories.contains(it.name) && it.required
                 }
 
                 if (requiredRecommendation != null) {
                     countOfItemsToFetch++
-                    requiredRecommendation
-                } else combinedMovieAndTvShowConfig.random()
-            } else combinedMovieAndTvShowConfig.random()
+                    item = requiredRecommendation
+                }
+            }
 
             if (usedCategories.contains(item.name))
                 continue
@@ -272,6 +279,16 @@ class HomeItemsProviderUseCase @Inject constructor(
         }
     }
 
+    private fun getProviderCatalogs(): List<ProviderCatalog> {
+        val provideWithCatalogs: List<ProviderCatalog>
+            = sourceLinksProvider.providerApis
+                .mapNotNull { it.catalogs }
+                .filter { it.isNotEmpty() }
+                .flatten()
+
+        return provideWithCatalogs
+    }
+
     private fun getUserRecommendations(userId: Int = 1) = flow {
         val randomWatchedFilms =
             watchHistoryRepository.getRandomWatchHistoryItems(
@@ -279,16 +296,16 @@ class HomeItemsProviderUseCase @Inject constructor(
                 count = Random.nextInt(1, 4)
             )
 
-        if (randomWatchedFilms.isNotEmpty()) {
-            randomWatchedFilms.forEach { item ->
-                if (item.film.recommendations.size >= 10) {
+        randomWatchedFilms.forEach { item ->
+            with(item.film) {
+                if (recommendations.size >= 10 && isFromTmdb) {
                     emit(
                         HomeCategory(
-                            name = "If you liked ${item.film.title}",
-                            mediaType = item.film.filmType.type,
+                            name = "If you liked $title",
+                            mediaType = filmType.type,
                             required = false,
                             canPaginate = true,
-                            url = "${item.film.filmType.type}/${item.id}/recommendations?language=en-US"
+                            url = "${filmType.type}/${item.id}/recommendations?language=en-US"
                         )
                     )
                     humanizer()

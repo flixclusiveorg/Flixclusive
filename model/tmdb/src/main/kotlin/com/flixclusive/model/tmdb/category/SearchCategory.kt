@@ -13,10 +13,11 @@ import java.io.Serializable
  */
 @kotlinx.serialization.Serializable
 data class SearchCategory(
-    @SerializedName("poster_path") val posterPath: String? = null,
     @SerializedName("type") override val mediaType: String,
-    override val name: String,
     @SerializedName("query") override val url: String,
+    @SerializedName("poster_path") val posterPath: String? = null,
+    override val name: String,
+    override val canPaginate: Boolean = false,
     val id: Int,
 ) : Serializable, Category() {
     override fun equals(other: Any?): Boolean {

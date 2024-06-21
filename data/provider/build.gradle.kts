@@ -12,6 +12,7 @@ android {
 dependencies {
     api(libs.compose.runtime)
     api(projects.core.datastore)
+    api(projects.core.network)
     api(projects.core.ui.common)
     api(projects.core.util)
     api(projects.model.datastore)
@@ -20,4 +21,5 @@ dependencies {
     api(projects.provider)
 
     implementation(libs.okhttp)
+    implementation(libs.mockk)
 }

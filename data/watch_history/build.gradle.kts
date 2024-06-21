@@ -13,4 +13,5 @@ dependencies {
     api(projects.model.database)
 
     implementation(projects.core.database)
+    implementation(libs.mockk)
 }

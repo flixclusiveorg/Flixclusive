@@ -225,9 +225,9 @@ fun HomeScreen(
                                     onFocusedFilmChange = { film ->
                                         focusedFilm = film
                                     },
-                                    paginate = { query, page ->
+                                    paginate = { page ->
                                         viewModel.onPaginateFilms(
-                                            query = query,
+                                            category = category,
                                             page = page,
                                             index = i
                                         )

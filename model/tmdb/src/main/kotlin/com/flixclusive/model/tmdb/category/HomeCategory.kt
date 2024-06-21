@@ -16,7 +16,7 @@ data class HomeCategory(
     @SerializedName("query") override val url: String,
     @SerializedName("type") override val mediaType: String,
     override val name: String,
-    val canPaginate: Boolean,
+    override val canPaginate: Boolean,
     val required: Boolean,
 ) : Category()
 
