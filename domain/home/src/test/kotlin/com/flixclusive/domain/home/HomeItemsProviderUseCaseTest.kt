@@ -13,19 +13,22 @@ class HomeItemsProviderUseCaseTest {
     @get:Rule
     val rule = LogRule()
 
-    private val scope = TestScope(UnconfinedTestDispatcher())
+    private val dispatcher = UnconfinedTestDispatcher()
+    private val scope = TestScope()
 
     private lateinit var homeItemsProviderUseCase: HomeItemsProviderUseCase
 
     @Before
     fun setUp() {
-        homeItemsProviderUseCase = getMockHomeItemsProviderUseCase(scope = scope)
+        homeItemsProviderUseCase = getMockHomeItemsProviderUseCase(
+            scope = scope,
+            dispatcher = dispatcher
+        )
     }
 
     @Test
     fun `Get home items`() = scope.runTest {
         homeItemsProviderUseCase()
-
-        println(homeItemsProviderUseCase._rowItems.value)
+        println(homeItemsProviderUseCase.rowItems.value)
     }
 }

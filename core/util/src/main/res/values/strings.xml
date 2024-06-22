@@ -65,12 +65,13 @@
     <string name="warning_use_prerelease_updates">Pre-release versions may be unstable and may contain bugs or other issues. Please use at your own risk.</string>
 
     <!--  Errors with formatting  -->
-    <string name="failed_to_load_provider">Failed to download provider: %1$s</string>
     <string name="failed_to_download_updates">Failed to download updates: %1$s</string>
-    <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
-    <string name="failed_to_fetch_media_id_message">Something went wrong fetching the media id: %1$s</string>
-    <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
     <string name="failed_to_fetch_catalog_items_format_message">Failed to fetch catalog items: %1$s</string>
+    <string name="failed_to_fetch_data_message">Failed to fetch data:\n%1$s</string>
+    <string name="failed_to_fetch_media_id_message">Something went wrong fetching the media id: %1$s</string>
+    <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
+    <string name="failed_to_load_provider">Failed to download provider: %1$s</string>
+    <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
 
     <!--  Film/Filter types  -->
     <string name="all">All</string>
@@ -139,6 +140,7 @@
     <string name="no_cache_limit_label">No cache limit (plz dont)</string>
     <string name="no_ratings">No ratings</string>
     <string name="no_runtime">No runtime</string>
+    <string name="no_release_date">"No release date"</string>
     <string name="none_label">None</string>
     <string name="not_now_label">Not now</string>
     <string name="off_subtitles">Off</string>

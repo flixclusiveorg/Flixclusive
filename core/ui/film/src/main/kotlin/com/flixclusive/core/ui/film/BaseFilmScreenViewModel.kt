@@ -16,6 +16,7 @@ import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.model.database.toWatchlistItem
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Season
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,9 +74,11 @@ abstract class BaseFilmScreenViewModel(
     }
 
     fun initializeData(film: Film = partiallyDetailedFilm) {
-        val isSameFilm = filmId == _film.value?.identifier && _uiState.value.errorMessage == null && !_uiState.value.isLoading
+        val isSameFilm = filmId == _film.value?.identifier
+                && _uiState.value.errorMessage == null
+                && !_uiState.value.isLoading
 
-        if(initializeJob?.isActive == true || isSameFilm)
+        if (initializeJob?.isActive == true || isSameFilm)
             return
 
         initializeJob = viewModelScope.launch {
@@ -85,17 +88,19 @@ abstract class BaseFilmScreenViewModel(
             }
 
             _uiState.update { FilmUiState() }
-            when(
+            when (
                 val result = filmProvider(partiallyDetailedFilm = film)
             ) {
                 is Resource.Failure -> {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = result.error ?: UiText.StringResource(UtilR.string.error_film_message)
+                            errorMessage = result.error
+                                ?: UiText.StringResource(UtilR.string.error_film_message)
                         )
                     }
                 }
+
                 Resource.Loading -> Unit
                 is Resource.Success -> result.data?.onInitializeSuccess()
             }
@@ -113,7 +118,7 @@ abstract class BaseFilmScreenViewModel(
         _film.update { this@onInitializeSuccess }
         isFilmInWatchlist()
 
-        if(filmType == FilmType.TV_SHOW) {
+        if (filmType == FilmType.TV_SHOW) {
             val seasonToInitialize =
                 if (watchHistoryItem.value?.episodesWatched.isNullOrEmpty()) 1
                 else watchHistoryItem.value!!.episodesWatched.last().seasonNumber!!
@@ -131,21 +136,33 @@ abstract class BaseFilmScreenViewModel(
     }
 
     fun onSeasonChange(seasonNumber: Int) {
-        if(onSeasonChangeJob?.isActive == true || selectedSeasonNumber == seasonNumber && _currentSeasonSelected.value is Resource.Success)
+        if (onSeasonChangeJob?.isActive == true || selectedSeasonNumber == seasonNumber && _currentSeasonSelected.value is Resource.Success)
             return
 
         onSeasonChangeJob = viewModelScope.launch {
-            selectedSeasonNumber = seasonNumber
+            if (_film.value?.isFromTmdb != true) {
+                selectedSeasonNumber = seasonNumber
+                val tvShow = _film.value as TvShow
+                val season = tvShow.seasons
+                    .find { it.number == seasonNumber }
 
-            seasonProvider.asFlow(id = _film.value!!.identifier, seasonNumber = seasonNumber)
-                .collectLatest {
-                    _currentSeasonSelected.value = it
-                }
+                if (season != null)
+                    _currentSeasonSelected.value = Resource.Success(season)
+
+                return@launch
+            }
+
+            seasonProvider.asFlow(
+                id = _film.value!!.identifier,
+                seasonNumber = seasonNumber
+            ).collectLatest {
+                _currentSeasonSelected.value = it
+            }
         }
     }
 
     fun onWatchlistButtonClick() {
-        if(onWatchlistClickJob?.isActive == true)
+        if (onWatchlistClickJob?.isActive == true)
             return
 
         onWatchlistClickJob = viewModelScope.launch {

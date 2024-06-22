@@ -12,4 +12,5 @@ android {
 dependencies {
     api(projects.data.tmdb)
     api(projects.data.watchHistory)
+    api(projects.data.provider)
 }

@@ -15,12 +15,7 @@ import java.util.regex.Pattern
  * @param dateString The date string to check. It should be in the format "yyyy-MM-dd" or "MMMM d, yyyy".
  * @return `true` if the date is in the future, `false` otherwise.
  */
-fun isDateInFuture(
-    dateString: String?
-): Boolean {
-    if(dateString == null || dateString == "No release date" || dateString.isEmpty())
-        return true
-
+fun isDateInFuture(dateString: String): Boolean {
     val locale = Locale.US
 
     val format = if(dateString.contains(",")) {
