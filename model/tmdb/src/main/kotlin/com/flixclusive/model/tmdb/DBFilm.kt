@@ -21,7 +21,8 @@ data class DBFilm(
     override val year: Int? = null,
     override val recommendations: List<FilmSearchItem> = emptyList(),
     override val filmType: FilmType = FilmType.MOVIE,
-    override val rating: Double? = null
+    override val rating: Double? = null,
+    override val customProperties: Map<String, String?> = emptyMap(),
 ) : Film(), Serializable
 
 fun Film.toFilmInstance(): DBFilm {
@@ -43,6 +44,7 @@ fun Film.toFilmInstance(): DBFilm {
         year = year,
         runtime = runtime,
         homePage = homePage,
-        providerName = providerName
+        providerName = providerName,
+        customProperties = customProperties
     )
 }
