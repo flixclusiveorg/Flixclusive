@@ -56,3 +56,7 @@ inline fun <T> safeCall(message: String? = null, unsafeCall: () -> T?): T? {
         null
     }
 }
+
+
+val Exception.actualMessage: String
+    get() = localizedMessage ?: message ?: "UNKNOWN ERR"
