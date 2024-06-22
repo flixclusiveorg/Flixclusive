@@ -25,9 +25,9 @@ fun Context.buildImageUrl(
                     matchResult.value.replace(originalString, imageSize)
                 }
                 replacedUrl
-            } else {
+            } else if (imagePath.startsWith("/")) {
                 "$TMDB_IMAGE_BASE_URL$imageSize$imagePath"
-            }
+            } else imagePath
         )
     }
 
