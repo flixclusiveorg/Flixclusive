@@ -90,16 +90,14 @@ abstract class ProviderApi(
      * Obtains source links for the provided film, season, and episode.
      * @param watchId The unique watch identifier for the film.
      * @param film The [Film] object of the film. It could either be a [Movie] or [TvShow].
-     * @param season The season number. Defaults to null if the film is a movie.
-     * @param episode The episode number. Defaults to null if the film is a movie.
+     * @param episode The [Episode] object of the episode. Defaults to null for movies.
      * @param onLinkLoaded A callback function invoked when a [SourceLink] is loaded.
      * @param onSubtitleLoaded A callback function invoked when a [Subtitle] is loaded.
      */
     abstract suspend fun getSourceLinks(
         watchId: String,
         film: FilmDetails,
-        season: Int? = null,
-        episode: Int? = null,
+        episode: Episode? = null,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit,
     )

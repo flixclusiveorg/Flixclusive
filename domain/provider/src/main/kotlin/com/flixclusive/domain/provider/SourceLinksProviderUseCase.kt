@@ -305,8 +305,7 @@ class SourceLinksProviderUseCase @Inject constructor(
             val result = sourceLinksRepository.getSourceLinks(
                 film = film,
                 watchId = watchIdToUse,
-                season = episodeToUse?.season,
-                episode = episodeToUse?.number,
+                episodeData = episodeToUse,
                 providerApi = provider,
                 onSubtitleLoaded = {
                     sourceData.run {
