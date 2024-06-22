@@ -13,6 +13,7 @@ import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -28,8 +29,7 @@ class DefaultSourceLinksRepository @Inject constructor(
         providerApi: ProviderApi,
         watchId: String,
         film: FilmDetails,
-        season: Int?,
-        episode: Int?,
+        episodeData: Episode?,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit,
     ): Resource<Unit?> {
@@ -38,8 +38,7 @@ class DefaultSourceLinksRepository @Inject constructor(
                 providerApi.getSourceLinks(
                     watchId = watchId,
                     film = film,
-                    episode = episode,
-                    season = season,
+                    episode = episodeData,
                     onLinkLoaded = onLinkLoaded,
                     onSubtitleLoaded = onSubtitleLoaded
                 )

@@ -4,6 +4,7 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 
 interface SourceLinksRepository {
@@ -12,8 +13,7 @@ interface SourceLinksRepository {
         providerApi: ProviderApi,
         watchId: String,
         film: FilmDetails,
-        season: Int? = null,
-        episode: Int? = null,
+        episodeData: Episode?,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit,
     ): Resource<Unit?>

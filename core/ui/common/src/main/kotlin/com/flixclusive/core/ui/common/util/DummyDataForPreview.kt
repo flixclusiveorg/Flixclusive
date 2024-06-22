@@ -10,6 +10,7 @@ import com.flixclusive.gradle.entities.Status
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import okhttp3.OkHttpClient
 
@@ -47,8 +48,7 @@ object DummyDataForPreview {
                 override suspend fun getSourceLinks(
                     watchId: String,
                     film: FilmDetails,
-                    season: Int?,
-                    episode: Int?,
+                    episode: Episode?,
                     onLinkLoaded: (SourceLink) -> Unit,
                     onSubtitleLoaded: (Subtitle) -> Unit
                 ) = Unit
