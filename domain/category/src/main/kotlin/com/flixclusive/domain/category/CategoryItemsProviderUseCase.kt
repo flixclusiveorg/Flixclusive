@@ -1,5 +1,7 @@
 package com.flixclusive.domain.category
 
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers
+import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.log.errorLog
@@ -10,6 +12,8 @@ import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.category.Category
 import com.flixclusive.provider.ProviderApi
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.flixclusive.core.util.R as UtilR
@@ -18,6 +22,7 @@ import com.flixclusive.core.util.R as UtilR
 class CategoryItemsProviderUseCase @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     private val providerApiRepository: ProviderApiRepository,
+    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher
 ) {
     suspend operator fun invoke(
         category: Category,
@@ -27,10 +32,12 @@ class CategoryItemsProviderUseCase @Inject constructor(
             is ProviderCatalog -> {
                 return try {
                     val api = category.providerApi!!
-                    val items = api.getCatalogItems(
-                        page = page,
-                        catalog = category
-                    )
+                    val items = withContext(ioDispatcher) {
+                        api.getCatalogItems(
+                            page = page,
+                            catalog = category
+                        )
+                    }
 
                     Resource.Success(items)
                 } catch (e: Exception) {
