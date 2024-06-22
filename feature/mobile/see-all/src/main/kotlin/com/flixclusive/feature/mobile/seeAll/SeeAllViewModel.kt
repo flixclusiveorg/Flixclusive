@@ -45,6 +45,7 @@ class SeeAllViewModel @Inject constructor(
     var category: Category = args.item
     val films = mutableStateListOf<FilmSearchItem>()
     val isMediaTypeDefault = category.mediaType == DEFAULT_CATEGORY_MEDIA_TYPE
+    val isProviderCatalog = category is ProviderCatalog
 
     private var page by mutableIntStateOf(1)
     private var maxPage by mutableIntStateOf(1)

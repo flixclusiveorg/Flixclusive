@@ -42,7 +42,11 @@ fun SeeAllScreen(
     FilmsGridScreen(
         listState =  listState,
         pagingState = viewModel.pagingState,
-        currentFilter = if(viewModel.isMediaTypeDefault) viewModel.currentFilterSelected else null,
+        currentFilter = when {
+            viewModel.isProviderCatalog -> null
+            viewModel.isMediaTypeDefault -> viewModel.currentFilterSelected
+            else -> null
+        },
         isShowingFilmCardTitle = appSettings.isShowingFilmCardTitle,
         screenTitle = viewModel.category.name,
         films = viewModel.films,
