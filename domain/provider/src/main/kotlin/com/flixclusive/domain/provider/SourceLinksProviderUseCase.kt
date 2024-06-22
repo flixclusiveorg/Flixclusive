@@ -162,9 +162,7 @@ class SourceLinksProviderUseCase @Inject constructor(
 
             val isChangingProvider = preferredProviderName != null
 
-            val isNotTheFilmProvider = !film.providerName.equals(provider.name, true) && !film.isFromTmdb
-
-            if ((isChangingProvider && provider.name != preferredProviderName) || isNotTheFilmProvider)
+            if ((isChangingProvider && provider.name != preferredProviderName))
                 continue
 
             trySend(SourceDataState.Fetching(UiText.StringResource(UtilR.string.fetching_from_provider_format, provider.name)))
@@ -250,7 +248,9 @@ class SourceLinksProviderUseCase @Inject constructor(
             }
 
             val canStopLooping = i == providersList.lastIndex || isChangingProvider
-            val needsNewWatchId = watchId == null && film.isFromTmdb
+
+            val isNotTheFilmProvider = !film.providerName.equals(provider.name, true) && !film.isFromTmdb
+            val needsNewWatchId = watchId == null && (film.isFromTmdb || isNotTheFilmProvider)
 
             val watchIdResource = when {
                 needsNewWatchId -> sourceLinksRepository.getWatchId(
