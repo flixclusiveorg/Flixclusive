@@ -38,7 +38,8 @@ abstract class ProviderApi(
     open val useWebView: Boolean = false
 
     /** This provider's own catalogs */
-    open val catalogs: List<ProviderCatalog>? = null
+    open val catalogs: List<ProviderCatalog>
+        get() = emptyList()
 
     /**
      * Obtains a list of [Film] items from the provider's catalog.

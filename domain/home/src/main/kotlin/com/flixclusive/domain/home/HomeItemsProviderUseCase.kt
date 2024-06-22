@@ -31,11 +31,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.min
 import kotlin.random.Random
 import com.flixclusive.core.util.R as UtilR
 
-const val MINIMUM_HOME_ITEMS = 15
-internal const val MAXIMUM_HOME_ITEMS = 28
+const val PREFERRED_MINIMUM_HOME_ITEMS = 15
+internal const val PREFERRED_MAXIMUM_HOME_ITEMS = 28
 internal const val HOME_MAX_PAGE = 5
 
 data class PaginationStateInfo(
@@ -252,9 +253,20 @@ class HomeItemsProviderUseCase @Inject constructor(
         val allCategories = tmdbCategories.tv + tmdbCategories.movie + getProviderCatalogs()
         val allTmdbCategories = tmdbCategories.all + tmdbCategories.tv + tmdbCategories.movie
 
-        var countOfItemsToFetch = Random.nextInt(MINIMUM_HOME_ITEMS, MAXIMUM_HOME_ITEMS)
+        val maxPossibleSize = allCategories.size + tmdbCategories.all.size
+
+        val minItemsToFetch = min(maxPossibleSize, PREFERRED_MINIMUM_HOME_ITEMS)
+        val maxItemsToFetch = min(maxPossibleSize, PREFERRED_MAXIMUM_HOME_ITEMS)
+
+        var countOfItemsToFetch = safeCall {
+            Random.nextInt(minItemsToFetch, maxItemsToFetch)
+        } ?: maxPossibleSize
         var i = 0
         while (i < countOfItemsToFetch) {
+            if (i >= maxItemsToFetch) {
+                break
+            }
+
             val shouldEmitRequiredCategories = Random.nextBoolean()
             var item = allCategories.random()
 
@@ -263,9 +275,12 @@ class HomeItemsProviderUseCase @Inject constructor(
                     !usedCategories.contains(it.name) && it.required
                 }
 
-                if (requiredRecommendation != null) {
-                    countOfItemsToFetch++
-                    item = requiredRecommendation
+                when {
+                    requiredRecommendation != null -> {
+                        countOfItemsToFetch++
+                        item = requiredRecommendation
+                    }
+                    item is ProviderCatalog -> countOfItemsToFetch++
                 }
             }
 
@@ -282,9 +297,7 @@ class HomeItemsProviderUseCase @Inject constructor(
     private fun getProviderCatalogs(): List<ProviderCatalog> {
         val provideWithCatalogs: List<ProviderCatalog>
             = sourceLinksProvider.providerApis
-                .mapNotNull { it.catalogs }
-                .filter { it.isNotEmpty() }
-                .flatten()
+                .flatMap { it.catalogs }
 
         return provideWithCatalogs
     }

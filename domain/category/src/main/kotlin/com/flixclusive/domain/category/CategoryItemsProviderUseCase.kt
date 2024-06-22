@@ -2,6 +2,7 @@ package com.flixclusive.domain.category
 
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.model.provider.ProviderCatalog
@@ -33,6 +34,7 @@ class CategoryItemsProviderUseCase @Inject constructor(
 
                     Resource.Success(items)
                 } catch (e: Exception) {
+                    errorLog(e)
                     Resource.Failure(UiText.StringResource(UtilR.string.failed_to_fetch_catalog_items_format_message, e.localizedMessage ?: "UNKNOWN ERR"))
                 }
             }
@@ -44,5 +46,5 @@ class CategoryItemsProviderUseCase @Inject constructor(
     }
 
     private val ProviderCatalog.providerApi: ProviderApi?
-        get() = providerApiRepository.apiMap[name]
+        get() = providerApiRepository.apiMap[providerName]
 }

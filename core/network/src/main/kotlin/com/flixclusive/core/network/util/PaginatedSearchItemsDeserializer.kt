@@ -1,6 +1,5 @@
 package com.flixclusive.core.network.util
 
-import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.google.gson.JsonDeserializationContext
@@ -50,8 +49,10 @@ internal class PaginatedSearchItemsDeserializer : JsonDeserializer<SearchRespons
     }
 
     private fun JsonElement.isPerson(): Boolean {
-        return safeCall {
+        return try {
             asJsonObject.get("media_type").asString.equals("person", true)
-        } ?: false
+        } catch (_: Exception) {
+            false
+        }
     }
 }
