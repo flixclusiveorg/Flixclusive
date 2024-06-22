@@ -10,6 +10,7 @@ import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.SourceLinksProviderUseCase
@@ -97,7 +98,7 @@ abstract class BasePlayerViewModel(
      * */
     private var nextEpisodeToUse: Episode? by mutableStateOf(null)
     private var isNextEpisodeLoaded = false
-    var isLastEpisode by mutableStateOf(false)
+    var isLastEpisode by mutableStateOf(film.filmType == FilmType.MOVIE)
         private set
 
     val watchHistoryItem = watchHistoryRepository
@@ -158,7 +159,10 @@ abstract class BasePlayerViewModel(
 
         val watchHistoryItemToUse = watchHistoryItem.value ?: return 0L to 0L
 
-        isLastEpisode = checkIfLastEpisode(episodeToUse, watchHistoryItemToUse)
+        isLastEpisode = checkIfLastEpisode(
+            episodeToCheck = episodeToUse,
+            watchHistoryItem = watchHistoryItemToUse
+        )
 
         return getSavedTimeForFilm(
             watchHistoryItemToUse,
@@ -170,7 +174,7 @@ abstract class BasePlayerViewModel(
         episodeToCheck: Episode?,
         watchHistoryItem: WatchHistoryItem?,
     ): Boolean {
-        val episode = episodeToCheck ?: return false
+        val episode = episodeToCheck ?: return true
         val lastSeason = watchHistoryItem?.seasons
         val lastEpisode = watchHistoryItem?.episodes?.get(lastSeason)
 
@@ -193,6 +197,17 @@ abstract class BasePlayerViewModel(
             return
 
         onSeasonChangeJob = viewModelScope.launch {
+            if (!film.isFromTmdb) {
+                val tvShow = film as TvShow
+                val season = tvShow.seasons
+                    .find { it.number == seasonNumber }
+
+                if (season != null)
+                    _season.value = Resource.Success(season)
+
+                return@launch
+            }
+
             seasonProviderUseCase.asFlow(
                 id = film.identifier,
                 seasonNumber = seasonNumber
