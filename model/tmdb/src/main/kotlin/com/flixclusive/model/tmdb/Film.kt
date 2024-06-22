@@ -81,6 +81,7 @@ abstract class Film : java.io.Serializable {
     abstract val homePage: String?
     abstract val releaseDate: String?
     abstract val year: Int?
+    abstract val customProperties: Map<String, String?>
 
     open val recommendations: List<FilmSearchItem>
         get() = emptyList()
@@ -104,7 +105,7 @@ abstract class Film : java.io.Serializable {
     open val releaseStatus: FilmReleaseStatus
         get() = safeCall {
             when {
-                !isDateInFuture(releaseDate) -> RELEASED
+                !isDateInFuture(releaseDate!!) -> RELEASED
                 else -> COMING_SOON
             }
         } ?: UNKNOWN
@@ -114,9 +115,6 @@ abstract class Film : java.io.Serializable {
 
     val isFromTmdb: Boolean
         get() = this.tmdbId != null || providerName.equals(DEFAULT_FILM_SOURCE_NAME, ignoreCase = true)
-
-    open val customProperties: Map<String, String?>
-        get() = emptyMap()
 }
 
 

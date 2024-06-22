@@ -172,7 +172,7 @@ internal fun FilmScreenHeader(
                                 append(separator)
                             }
 
-                            append(film.parsedReleaseDate)
+                            append(film.parsedReleaseDate ?: "No release date")
                         }
                     },
                     style = MaterialTheme.typography.labelMedium,

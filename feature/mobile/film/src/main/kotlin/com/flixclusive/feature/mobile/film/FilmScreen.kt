@@ -63,7 +63,6 @@ import com.flixclusive.feature.mobile.film.component.FilmScreenButtons
 import com.flixclusive.feature.mobile.film.component.FilmScreenHeader
 import com.flixclusive.feature.mobile.film.component.TvShowSeasonDropdown
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.FilmReleaseStatus
 import com.flixclusive.model.tmdb.Genre
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TvShow
@@ -183,7 +182,7 @@ fun FilmScreen(
                                     .padding(horizontal = 15.dp)
                                     .padding(top = 20.dp),
                                 isInWatchlist = state.isFilmInWatchlist,
-                                isReleased = film.releaseStatus == FilmReleaseStatus.RELEASED,
+                                releaseStatus = film.releaseStatus,
                                 watchHistoryItem = watchHistoryItem,
                                 onPlayClick = {
                                     play(film, null)

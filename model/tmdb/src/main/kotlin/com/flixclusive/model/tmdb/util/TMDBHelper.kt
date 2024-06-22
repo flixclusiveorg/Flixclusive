@@ -18,6 +18,6 @@ fun List<Season>.filterOutZeroSeasons()
 
 fun List<FilmSearchItem>.filterOutUnreleasedFilms()
     = filterNot {
-        safeCall { isDateInFuture(it.parsedReleaseDate) } ?: false
+        safeCall { isDateInFuture(it.parsedReleaseDate!!) } ?: false
             || it.posterImage.isNullOrEmpty()
     }
