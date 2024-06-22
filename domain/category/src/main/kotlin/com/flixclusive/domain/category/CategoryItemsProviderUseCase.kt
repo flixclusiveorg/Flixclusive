@@ -4,6 +4,7 @@ import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.tmdb.TMDBRepository
@@ -42,7 +43,7 @@ class CategoryItemsProviderUseCase @Inject constructor(
                     Resource.Success(items)
                 } catch (e: Exception) {
                     errorLog(e)
-                    Resource.Failure(UiText.StringResource(UtilR.string.failed_to_fetch_catalog_items_format_message, e.localizedMessage ?: "UNKNOWN ERR"))
+                    Resource.Failure(UiText.StringResource(UtilR.string.failed_to_fetch_catalog_items_format_message, e.actualMessage))
                 }
             }
             else -> tmdbRepository.paginateConfigItems(

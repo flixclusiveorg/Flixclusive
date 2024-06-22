@@ -4,6 +4,7 @@ import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.exception.catchInternetRelatedException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.configuration.AppConfigurationManager
@@ -275,10 +276,10 @@ internal class DefaultTMDBRepository @Inject constructor(
             } catch (e: HttpException) {
                 errorLog("Http Error (${e.code()}) on URL[$fullUrl]: ${e.response()}")
                 errorLog(e)
-                Resource.Failure(e.message ?: "Unknown error occurred")
+                Resource.Failure(e.actualMessage)
             } catch (e: Exception) {
                 errorLog(e)
-                Resource.Failure(e.message ?: "Unknown error occurred")
+                Resource.Failure(e.actualMessage)
             }
         }
     }

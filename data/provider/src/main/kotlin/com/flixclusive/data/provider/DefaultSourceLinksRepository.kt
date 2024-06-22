@@ -4,6 +4,7 @@ import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.exception.catchInternetRelatedException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.CryptographyUtil
@@ -140,7 +141,7 @@ class DefaultSourceLinksRepository @Inject constructor(
                 Resource.Failure(
                     UiText.StringResource(
                         UtilR.string.failed_to_fetch_media_id_message,
-                        e.localizedMessage ?: "UNKNOWN ERR"
+                        e.actualMessage
                     )
                 )
             }
