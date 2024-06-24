@@ -254,6 +254,7 @@ class HomeItemsProviderUseCase @Inject constructor(
             getUserRecommendations() +
             filteredTmdbCategories +
             providerCatalogs).shuffled()
+            .distinctBy { it.name }
             .sortedByDescending {
                 val isTrendingCategory = it is HomeCategory && it.url.contains("trending/all")
                 isTrendingCategory
