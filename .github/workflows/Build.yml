@@ -128,13 +128,13 @@ jobs:
       - name: Backup pre-release on archives branch
         run: |
           mkdir -p $GITHUB_WORKSPACE/archives/${{ env.VERSION }}
-          cp flixclusive-release.apk $GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }}.apk
+          cp flixclusive-release.apk "$GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }} $(date +"%Y-%m-%d").apk"
 
-      - name: Push pre-release apk archives
+      - name: Push pre-release apk to archives branch
         run: |
           cd $GITHUB_WORKSPACE/archives
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
-          git add $GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }}.apk
-          git commit -m "Archive PR-${{ env.SHORT_SHA }}" || exit 0
+          git add "$GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }} $(date +"%Y-%m-%d").apk"
+          git commit -m "Archive PR-${{ env.SHORT_SHA }} $(date +"%Y-%m-%d")" || exit 0
           git push
