@@ -4,10 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -75,7 +74,9 @@ fun SeasonDropdownMenu(
     onSeasonChange: (Int) -> Unit,
     onDropdownStateChange: (Boolean) -> Unit,
 ) {
-    val selectedSeason = remember(selectedSeasonProvider()) { selectedSeasonProvider() }
+    val selectedSeason = remember(selectedSeasonProvider()) {
+        selectedSeasonProvider() - 1
+    }
 
     Box(
         contentAlignment = Alignment.CenterStart,
@@ -89,18 +90,21 @@ fun SeasonDropdownMenu(
     ) {
         Row(
             modifier = Modifier
-                .widthIn(115.dp)
                 .height(40.dp)
-                .drawBehind { drawRect(Color.Transparent) }
                 .clickable(onClick = { onDropdownStateChange(true) }),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp)
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Season $selectedSeason",
+                text = seasons[selectedSeason].name,
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier
                     .padding(start = 15.dp)
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .padding(horizontal = 2.dp)
             )
 
             Icon(
@@ -129,7 +133,7 @@ fun SeasonDropdownMenu(
                     ),
                     text = {
                         Text(
-                            text = "Season ${season.number}",
+                            text = season.name,
                             fontWeight = if(selectedSeason == season.number) {
                                 FontWeight.Medium
                             } else FontWeight.Light
