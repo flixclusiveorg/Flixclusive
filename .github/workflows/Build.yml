@@ -21,6 +21,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: "archives"
+          path: "archives"
+
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v1
 
@@ -115,3 +121,20 @@ jobs:
           prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get short SHA
+        run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+
+      - name: Backup pre-release on archives branch
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/archives/${{ env.VERSION }}
+          cp flixclusive-release.apk $GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }}.apk
+
+      - name: Push pre-release apk archives
+        run: |
+          cd $GITHUB_WORKSPACE/archives
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add $GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }}.apk
+          git commit -m "Archive PR-${{ env.SHORT_SHA }}" || exit 0
+          git push
