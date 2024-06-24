@@ -244,6 +244,7 @@ fun HomeScreenContentLoadingScreen(
                             FilmCardPlaceholder(
                                 modifier = Modifier
                                     .width(135.dp)
+                                    .padding(3.dp)
                             )
                         }
                     }

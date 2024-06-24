@@ -30,8 +30,10 @@ enum class FilmCover(val ratio: Float) {
         modifier: Modifier = Modifier,
         imagePath: String?,
         imageSize: String,
+        showPlaceholder: Boolean = true,
         contentScale: ContentScale = ContentScale.FillBounds,
         contentDescription: String? = null,
+        onSuccess: (() -> Unit)? = null,
         onClick: (() -> Unit)? = null,
         onLongClick: (() -> Unit)? = null,
     ) {
@@ -45,7 +47,7 @@ enum class FilmCover(val ratio: Float) {
             )
         }
 
-        val imagePlaceholder = if(ratio == Poster.ratio) painterResource(id = R.drawable.movie_placeholder) else null
+        val imagePlaceholder = if(showPlaceholder) painterResource(id = R.drawable.movie_placeholder) else null
 
         AsyncImage(
             model = painter,
@@ -54,6 +56,7 @@ enum class FilmCover(val ratio: Float) {
             error = imagePlaceholder,
             contentScale = contentScale,
             contentDescription = contentDescription ?: stringResource(id = UtilR.string.film_item_content_description),
+            onSuccess = { onSuccess?.invoke() },
             modifier = modifier
                 .aspectRatio(ratio)
                 .clip(MaterialTheme.shapes.extraSmall)

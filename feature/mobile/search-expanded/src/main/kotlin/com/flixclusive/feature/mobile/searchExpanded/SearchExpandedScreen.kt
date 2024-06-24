@@ -145,7 +145,7 @@ fun SearchExpandedScreen(
                 FilmCard(
                     modifier = Modifier.fillMaxSize(),
                     film = film,
-                    shouldShowTitle = appSettings.isShowingFilmCardTitle,
+                    isShowingTitle = appSettings.isShowingFilmCardTitle,
                     onClick = navigator::openFilmScreen,
                     onLongClick = previewFilm
                 )
@@ -155,8 +155,9 @@ fun SearchExpandedScreen(
                 items(20) {
                     FilmCardPlaceholder(
                         modifier = Modifier
-                            .fillMaxSize(),
-                        shouldShowTitle = appSettings.isShowingFilmCardTitle
+                            .fillMaxSize()
+                            .padding(3.dp),
+                        isShowingTitle = appSettings.isShowingFilmCardTitle
                     )
                 }
             }

@@ -2,6 +2,7 @@ package com.flixclusive.core.ui.common.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.gradle.entities.Author
 import com.flixclusive.gradle.entities.Language
 import com.flixclusive.gradle.entities.ProviderData
@@ -9,7 +10,9 @@ import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import okhttp3.OkHttpClient
@@ -54,5 +57,17 @@ object DummyDataForPreview {
                 ) = Unit
             }
         }
+    }
+
+    @Composable
+    fun getDummyFilm() = remember {
+        FilmSearchItem(
+            id = null,
+            title = "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+            posterImage = "https://image.tmdb.org/t/p/w500/t9XkeE7HzOsdQcDDDapDYh8Rrmt.jpg",
+            providerName = DEFAULT_FILM_SOURCE_NAME,
+            filmType = FilmType.MOVIE,
+            homePage = null
+        )
     }
 }
