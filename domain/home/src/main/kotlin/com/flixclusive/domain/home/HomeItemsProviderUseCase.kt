@@ -5,6 +5,7 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.coroutines.mapIndexedAsync
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.category.CategoryItemsProviderUseCase
@@ -93,6 +94,8 @@ class HomeItemsProviderUseCase @Inject constructor(
             }.onCompletion {
                 if (it != null) {
                     _initializationStatus.value = Resource.Failure(it)
+                    errorLog(it)
+                    return@onCompletion
                 }
 
                 rowItemsPaginationJobs.addAll(List(_categories.value.size) { null })
@@ -202,19 +205,13 @@ class HomeItemsProviderUseCase @Inject constructor(
         for (i in 0..5) {
             headerItem = null
 
-            while (headerItem == null || headerItem.isNotPopular) {
-                if (traversedFilms.contains(headerItem?.identifier)) {
-                    headerItem = null
-                    continue
-                }
-
+            while (headerItem == null || headerItem.isNotPopular || traversedFilms.contains(headerItem.identifier)) {
                 headerItem = (rowItems.value
                     .randomOrNull()
                     ?.randomOrNull() as FilmSearchItem?)
                     ?.also {
                         traversedFilms[it.identifier] = it.title
                     }
-
             }
 
             val response = filmProviderUseCase(partiallyDetailedFilm = headerItem)
@@ -294,13 +291,14 @@ class HomeItemsProviderUseCase @Inject constructor(
         }
     }
 
-    private fun getProviderCatalogs(): List<ProviderCatalog> {
-        val provideWithCatalogs: List<ProviderCatalog>
-            = sourceLinksProvider.providerApis
-                .flatMap { it.catalogs }
-
-        return provideWithCatalogs
-    }
+    private fun getProviderCatalogs()
+        = sourceLinksProvider.providerApis
+            .flatMap {
+                // In case some shitty code
+                // might occur in the future here.
+                safeCall { it.catalogs }
+                    ?: emptyList()
+            }
 
     private fun getUserRecommendations(userId: Int = 1) = flow {
         val randomWatchedFilms =
