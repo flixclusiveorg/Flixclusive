@@ -47,6 +47,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
 import com.flixclusive.core.ui.common.navigation.UpdateDialogNavigator
+import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.util.android.hasAllPermissionGranted
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.data.configuration.UpdateStatus
@@ -84,7 +85,6 @@ fun SplashScreen(
 
     var areAllPermissionsGranted by remember { mutableStateOf(context.hasAllPermissionGranted()) }
     var isDoneAnimating by rememberSaveable { mutableStateOf(false) }
-    var showLoadingContent by rememberSaveable { mutableStateOf(false) }
     var showDisclaimer by rememberSaveable { mutableStateOf(false) }
 
     val localDensity = LocalDensity.current
@@ -135,12 +135,12 @@ fun SplashScreen(
             }
 
             AnimatedContent(
-                targetState = appSettings.isFirstTimeUserLaunch_ && showLoadingContent,
+                targetState = appSettings.isFirstTimeUserLaunch_,
                 contentAlignment = Alignment.TopCenter,
                 label = ""
             ) { state ->
-                when (state) {
-                    true -> {
+                when {
+                    state && isDoneAnimating -> {
                         Box(
                             contentAlignment = Alignment.TopCenter,
                             modifier = Modifier
@@ -185,12 +185,15 @@ fun SplashScreen(
                             }
                         }
                     }
-                    false -> {
+                    isDoneAnimating -> {
                         Box(
                             contentAlignment = Alignment.TopCenter,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(disclaimerHeightDp)
+                                .ifElse(
+                                    condition = disclaimerHeightDp > 0.dp,
+                                    ifTrueModifier = Modifier.height(disclaimerHeightDp)
+                                )
                         ) {
                             GradientCircularProgressIndicator(
                                 colors = listOf(
@@ -213,7 +216,6 @@ fun SplashScreen(
             if (!isDoneAnimating) {
                 atEnd = true
                 delay(4000) // Wait for animated tag to finish
-                showLoadingContent = true
                 isDoneAnimating = true
             }
         }
