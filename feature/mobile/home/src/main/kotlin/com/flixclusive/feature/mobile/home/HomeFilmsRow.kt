@@ -119,7 +119,7 @@ internal fun HomeFilmsRow(
                     FilmCard(
                         modifier = Modifier
                             .width(135.dp),
-                        shouldShowTitle = showCardTitle,
+                        isShowingTitle = showCardTitle,
                         film = film,
                         onClick = onFilmClick,
                         onLongClick = { onFilmLongClick(film) }
@@ -137,6 +137,7 @@ internal fun HomeFilmsRow(
                             modifier = Modifier
                                 .width(135.dp)
                                 .fillMaxHeight()
+                                .padding(3.dp)
                         )
                     }
                 }

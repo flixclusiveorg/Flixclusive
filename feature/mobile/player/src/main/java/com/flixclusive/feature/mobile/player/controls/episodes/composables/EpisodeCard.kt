@@ -111,6 +111,7 @@ internal fun EpisodeCard(
             FilmCover.Backdrop(
                 imagePath = data.image,
                 imageSize = "w227_and_h127_bestv2",
+                showPlaceholder = false,
                 contentDescription = stringResource(
                     UtilR.string.episode_image_content_desc_format,
                     data.number,

@@ -46,6 +46,7 @@ fun SearchItemCard(
                 imagePath = posterPath,
                 imageSize = if (label != null) "w500" else "w500_filter(negate,000,666)",
                 contentDescription = label,
+                showPlaceholder = false,
                 contentScale = if (label != null) ContentScale.FillBounds else ContentScale.Fit,
                 modifier = Modifier
                     .align(Alignment.Center)

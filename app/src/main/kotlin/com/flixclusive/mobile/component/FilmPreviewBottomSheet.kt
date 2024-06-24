@@ -98,6 +98,7 @@ fun FilmPreviewBottomSheet(
             FilmCover.Poster(
                 imagePath = film.posterImage,
                 imageSize = "w300",
+                showPlaceholder = false,
                 onClick = {
                     if (film.posterImage != null) {
                         onImageClick(film.posterImage)

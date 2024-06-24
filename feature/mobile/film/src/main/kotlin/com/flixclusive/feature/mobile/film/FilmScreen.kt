@@ -285,7 +285,7 @@ fun FilmScreen(
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .animateItemPlacement(),
-                                    shouldShowTitle = appSettings.isShowingFilmCardTitle,
+                                    isShowingTitle = appSettings.isShowingFilmCardTitle,
                                     film = film,
                                     onClick = navigator::openFilmScreen,
                                     onLongClick = previewFilm

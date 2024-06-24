@@ -88,6 +88,7 @@ fun FilmCard(
                 FilmCover.Poster(
                     imagePath = film.posterImage,
                     imageSize = "w300",
+                    showPlaceholder = false,
                     onClick = { onClick(film) },
                     modifier = Modifier
                         .size(filmCardWidth, filmCardHeight)

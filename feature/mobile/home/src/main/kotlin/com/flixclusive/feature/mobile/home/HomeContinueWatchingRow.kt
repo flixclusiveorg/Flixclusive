@@ -160,6 +160,7 @@ private fun ContinueWatchingCard(
         ) {
             FilmCover.Poster(
                 imagePath = film.posterImage,
+                showPlaceholder = false,
                 imageSize = "w300"
             )
 

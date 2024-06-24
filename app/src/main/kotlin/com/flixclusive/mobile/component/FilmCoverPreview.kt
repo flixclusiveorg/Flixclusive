@@ -1,7 +1,7 @@
 package com.flixclusive.mobile.component
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,12 +13,13 @@ fun FilmCoverPreview(
     imagePath: String,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    BasicAlertDialog(
         onDismissRequest = onDismiss
     ) {
         FilmCover.Poster(
             imagePath = imagePath,
             imageSize = "original",
+            showPlaceholder = true,
             modifier = Modifier
                 .fillMaxWidth()
         )

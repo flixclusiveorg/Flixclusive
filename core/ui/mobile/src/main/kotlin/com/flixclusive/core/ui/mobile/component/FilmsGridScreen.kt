@@ -142,7 +142,7 @@ fun FilmsGridScreen(
                 FilmCard(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    shouldShowTitle = isShowingFilmCardTitle,
+                    isShowingTitle = isShowingFilmCardTitle,
                     film = film,
                     onClick = onFilmClick,
                     onLongClick = onFilmLongClick
@@ -153,6 +153,7 @@ fun FilmsGridScreen(
                 items(20) {
                     FilmCardPlaceholder(
                         modifier = Modifier
+                            .padding(3.dp)
                             .fillMaxSize()
                     )
                 }
