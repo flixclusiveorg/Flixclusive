@@ -66,7 +66,7 @@ internal class SplashScreenViewModel @Inject constructor(
                     }.collectLatest { (items, status) ->
                         _uiState.update {
                             when {
-                                status is Resource.Success && items.size >= PREFERRED_MINIMUM_HOME_ITEMS -> SplashScreenUiState.Okay
+                                items.size >= PREFERRED_MINIMUM_HOME_ITEMS -> SplashScreenUiState.Okay
                                 status is Resource.Failure -> SplashScreenUiState.Failure
                                 else -> it
                             }
