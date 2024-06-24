@@ -1,7 +1,6 @@
 package com.flixclusive.core.database.util
 
 import androidx.room.TypeConverter
-import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.model.tmdb.DBFilm
 import com.google.gson.Gson
@@ -20,7 +19,8 @@ internal class FilmDataConverter {
     @TypeConverter
     fun toFilmData(filmDataString: String): DBFilm {
         val json = JsonParser.parseString(filmDataString)
-        safeCall { json.migrateToSchema4() }
+        try { json.migrateToSchema4() }
+        catch (_: Exception) {}
 
         return fromJson<DBFilm>(json)
     }
