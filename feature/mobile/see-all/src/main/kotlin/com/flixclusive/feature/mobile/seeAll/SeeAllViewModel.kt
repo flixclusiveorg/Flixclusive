@@ -79,7 +79,7 @@ class SeeAllViewModel @Inject constructor(
                 else -> PagingState.PAGINATING
             }
 
-            category = category.parseCorrectTmdbUrl()
+            val category = category.parseCorrectTmdbUrl()
 
             when (
                 val result = categoryItemsProviderUseCase(
