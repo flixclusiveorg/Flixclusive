@@ -3,15 +3,12 @@ package com.flixclusive.domain.home
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
-import com.flixclusive.core.util.coroutines.mapIndexedAsync
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.category.CategoryItemsProviderUseCase
 import com.flixclusive.domain.provider.SourceLinksProviderUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
-import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.Movie
@@ -20,19 +17,12 @@ import com.flixclusive.model.tmdb.category.Category
 import com.flixclusive.model.tmdb.category.HomeCategory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.min
 import kotlin.random.Random
 import com.flixclusive.core.util.R as UtilR
 
@@ -78,46 +68,21 @@ class HomeItemsProviderUseCase @Inject constructor(
         initializeJob = scope.launch {
             _initializationStatus.value = Resource.Loading
 
-            // Reset all state
-            _headerItem.value = null
-            _categories.value = emptyList()
-            _rowItems.value = emptyList()
-            _rowItemsPagingState.value = emptyList()
+            val allCategories = getHomeRecommendations()
+            
+            _categories.value = allCategories
             rowItemsPaginationJobs.clear()
+            rowItemsPaginationJobs.addAll(List(allCategories.size) { null })
+            _rowItems.value = List(allCategories.size) { emptyList() }
+            _rowItemsPagingState.value = _categories.value.map { item ->
+                PaginationStateInfo(
+                    canPaginate = item.canPaginate,
+                    pagingState = if (!item.canPaginate) PagingState.PAGINATING_EXHAUST else PagingState.IDLE,
+                    currentPage = 1
+                )
+            }
 
-            // Async call these for humanization purposes
-            merge(
-                getHomeRecommendations(),
-                getUserRecommendations()
-            ).onEach { item ->
-                _categories.value += listOf(item)
-            }.onCompletion {
-                if (it != null) {
-                    _initializationStatus.value = Resource.Failure(it)
-                    errorLog(it)
-                    return@onCompletion
-                }
-
-                rowItemsPaginationJobs.addAll(List(_categories.value.size) { null })
-                _rowItems.value = List(_categories.value.size) { emptyList() }
-                _rowItemsPagingState.value = _categories.value.map { item ->
-                    PaginationStateInfo(
-                        canPaginate = item.canPaginate,
-                        pagingState = if (!item.canPaginate) PagingState.PAGINATING_EXHAUST else PagingState.IDLE,
-                        currentPage = 1
-                    )
-                }
-
-                _categories.value.mapIndexedAsync { i, item ->
-                    getCategoryItems(
-                        category = item,
-                        index = i,
-                        page = 1,
-                    )
-                }
-
-                _initializationStatus.value = getHeaderItem()
-            }.collect()
+            _initializationStatus.value = getHeaderItem()
         }
     }
 
@@ -144,22 +109,25 @@ class HomeItemsProviderUseCase @Inject constructor(
             is Resource.Success -> {
                 result.data!!.run {
                     val maxPage = minOf(HOME_MAX_PAGE, totalPages)
-                    val canPaginate = results.size == 20 && page < maxPage
+                    val canPaginate = results.size == 20 && page < maxPage && category.canPaginate
 
-                    val newFilmsList = _rowItems.value[index].toMutableList()
+                    val filmsMap = _rowItems.value[index]
+                        .associateByTo(mutableMapOf()) { it.identifier }
+                    val existingFilms = filmsMap.keys.toHashSet()
 
                     if (page == 1) {
-                        newFilmsList.clear()
+                        filmsMap.clear()
+                        existingFilms.clear()
                     }
 
-                    newFilmsList.addAll(
-                        results.filter { item ->
-                            !newFilmsList.contains(item)
+                    results.forEach { item ->
+                        if (existingFilms.add(item.identifier)) {
+                            filmsMap[item.identifier] = item
                         }
-                    )
+                    }
 
                     val newList = _rowItems.value.toMutableList()
-                    newList[index] = newFilmsList.toList()
+                    newList[index] = filmsMap.values.toList()
                     _rowItems.value = newList.toList()
 
                     updatePagingState(
@@ -198,20 +166,49 @@ class HomeItemsProviderUseCase @Inject constructor(
      * */
     private suspend fun getHeaderItem(): Resource<Unit> {
         var headerItem: Film? = null
+        val traversedCategories = mutableMapOf<Int, Category>()
         val traversedFilms = mutableMapOf<String, String>()
         var lastResponse: Resource<Unit> =
             Resource.Failure(UtilR.string.failed_to_initialize_home_items)
 
         for (i in 0..5) {
             headerItem = null
+            var attempts = 0
 
-            while (headerItem == null || headerItem.isNotPopular || traversedFilms.contains(headerItem.identifier)) {
-                headerItem = (rowItems.value
-                    .randomOrNull()
-                    ?.randomOrNull() as FilmSearchItem?)
-                    ?.also {
-                        traversedFilms[it.identifier] = it.title
-                    }
+            while (
+                (headerItem == null
+                || headerItem.isNotPopular)
+                && attempts < HOME_MAX_PAGE
+            ) {
+                val randomIndex = Random.nextInt(_categories.value.size)
+                val category = _categories.value[randomIndex]
+
+                if (!traversedCategories.containsKey(randomIndex)) {
+                    getCategoryItems(
+                        category = category,
+                        index = randomIndex,
+                        page = 1
+                    )
+                }
+
+                traversedCategories[randomIndex] = category
+
+                headerItem = rowItems.value[randomIndex].randomOrNull()
+
+                if (traversedFilms.containsKey(headerItem?.identifier)) {
+                    headerItem = null
+                    continue
+                }
+
+                headerItem?.let {
+                    traversedFilms[it.identifier] = it.title
+                }
+
+                attempts++
+            }
+
+            if (headerItem == null || headerItem.isNotPopular) {
+                continue
             }
 
             val response = filmProviderUseCase(partiallyDetailedFilm = headerItem)
@@ -221,7 +218,9 @@ class HomeItemsProviderUseCase @Inject constructor(
             }
 
             response.data?.let {
-                val genres = it.genres.plus(headerItem?.genres ?: emptyList())
+                val genres = it.genres.plus(
+                    elements = headerItem?.genres ?: emptyList()
+                )
 
                 headerItem = when (it) {
                     is Movie -> it.copy(genres = genres)
@@ -229,9 +228,6 @@ class HomeItemsProviderUseCase @Inject constructor(
                     else -> null
                 }
             }
-
-            if (headerItem == null)
-                continue
         }
 
         _headerItem.value = headerItem
@@ -242,95 +238,56 @@ class HomeItemsProviderUseCase @Inject constructor(
         }
     }
 
-    private suspend fun getHomeRecommendations() = flow {
-        val usedCategories = mutableListOf<String>()
-
+    private suspend fun getHomeRecommendations(): List<Category> {
         val tmdbCategories = configurationProvider.homeCategoriesData!!
 
-        val allCategories = tmdbCategories.tv + tmdbCategories.movie + getProviderCatalogs()
         val allTmdbCategories = tmdbCategories.all + tmdbCategories.tv + tmdbCategories.movie
+        val providerCatalogs = getProviderCatalogs()
+        val requiredCategories = allTmdbCategories.filter { it.required }
 
-        val maxPossibleSize = allCategories.size + tmdbCategories.all.size
-
-        val minItemsToFetch = min(maxPossibleSize, PREFERRED_MINIMUM_HOME_ITEMS)
-        val maxItemsToFetch = min(maxPossibleSize, PREFERRED_MAXIMUM_HOME_ITEMS)
-
-        var countOfItemsToFetch = safeCall {
-            Random.nextInt(minItemsToFetch, maxItemsToFetch)
-        } ?: maxPossibleSize
-        var i = 0
-        while (i < countOfItemsToFetch) {
-            if (i >= maxItemsToFetch) {
-                break
+        val countOfItemsToFetch = Random.nextInt(PREFERRED_MINIMUM_HOME_ITEMS, PREFERRED_MAXIMUM_HOME_ITEMS)
+        val filteredTmdbCategories = allTmdbCategories
+            .filterNot { it.required }
+            .shuffled().take(countOfItemsToFetch)
+        
+        return (requiredCategories +
+            getUserRecommendations() +
+            filteredTmdbCategories +
+            providerCatalogs).shuffled()
+            .sortedByDescending {
+                val isTrendingCategory = it is HomeCategory && it.url.contains("trending/all")
+                isTrendingCategory
             }
-
-            val shouldEmitRequiredCategories = Random.nextBoolean()
-            var item = allCategories.random()
-
-            if (shouldEmitRequiredCategories) {
-                val requiredRecommendation = allTmdbCategories.find {
-                    !usedCategories.contains(it.name) && it.required
-                }
-
-                when {
-                    requiredRecommendation != null -> {
-                        countOfItemsToFetch++
-                        item = requiredRecommendation
-                    }
-                    item is ProviderCatalog -> countOfItemsToFetch++
-                }
-            }
-
-            if (usedCategories.contains(item.name))
-                continue
-
-            emit(item)
-            i++
-            usedCategories.add(item.name)
-            humanizer()
-        }
     }
 
-    private fun getProviderCatalogs()
-        = sourceLinksProvider.providerApis
-            .flatMap {
-                // In case some shitty code
-                // might occur in the future here.
-                safeCall { it.catalogs }
-                    ?: emptyList()
-            }
+    private fun getProviderCatalogs() = sourceLinksProvider.providerApis
+        .flatMap {
+            // In case some shitty code
+            // might occur in the future here.
+            safeCall { it.catalogs }
+                ?: emptyList()
+        }
 
-    private fun getUserRecommendations(userId: Int = 1) = flow {
+    private suspend fun getUserRecommendations(userId: Int = 1): List<HomeCategory> {
         val randomWatchedFilms =
             watchHistoryRepository.getRandomWatchHistoryItems(
                 ownerId = userId,
                 count = Random.nextInt(1, 4)
             )
 
-        randomWatchedFilms.forEach { item ->
+        return randomWatchedFilms.mapNotNull { item ->
             with(item.film) {
                 if (recommendations.size >= 10 && isFromTmdb) {
-                    emit(
-                        HomeCategory(
-                            name = "If you liked $title",
-                            mediaType = filmType.type,
-                            required = false,
-                            canPaginate = true,
-                            url = "${filmType.type}/${item.id}/recommendations?language=en-US"
-                        )
+                    HomeCategory(
+                        name = "If you liked $title",
+                        mediaType = filmType.type,
+                        required = false,
+                        canPaginate = true,
+                        url = "${filmType.type}/${item.id}/recommendations?language=en-US"
                     )
-                    humanizer()
-                }
+                } else null
             }
         }
-    }
-
-    /**
-     *
-     * Random pauses for humanizing effect
-     * */
-    private suspend fun humanizer() {
-        delay(Random.nextLong(0, 100))
     }
 
     private fun updatePagingState(
@@ -346,7 +303,7 @@ class HomeItemsProviderUseCase @Inject constructor(
     private val Film?.isNotPopular: Boolean
         get() = safeCall {
             (this as? FilmSearchItem)?.run {
-                return@run isFromTmdb && voteCount < 200
+                return@run isFromTmdb && voteCount < 250
             }!!
         } ?: false
 }
