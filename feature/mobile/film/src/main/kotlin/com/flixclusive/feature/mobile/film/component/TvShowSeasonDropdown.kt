@@ -16,6 +16,7 @@ import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -26,24 +27,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun TvShowSeasonDropdown(
     modifier: Modifier = Modifier,
     seasons: List<Season>,
-    selectedSeasonProvider: () -> Int,
+    selectedSeason: Int,
     onSeasonChange: (Int) -> Unit,
 ) {
     var dropdownIcon by remember { mutableIntStateOf(R.drawable.down_arrow) }
-    var isDropdownExpanded by remember { mutableStateOf(false) }
-    val selectedSeason = remember(selectedSeasonProvider()) { selectedSeasonProvider() }
+    val isDropdownExpanded = remember { mutableStateOf(false) }
 
-    LaunchedEffect(key1 = isDropdownExpanded) {
-        dropdownIcon = when(isDropdownExpanded) {
+    LaunchedEffect(key1 = isDropdownExpanded.value) {
+        dropdownIcon = when(isDropdownExpanded.value) {
             true -> R.drawable.up_arrow
             false -> R.drawable.down_arrow
         }
@@ -52,30 +55,30 @@ internal fun TvShowSeasonDropdown(
     SeasonDropdownMenu(
         modifier = modifier,
         seasons = seasons,
-        dropdownIconProvider = { dropdownIcon },
-        isDropdownExpandedProvider = { isDropdownExpanded },
-        selectedSeasonProvider = { selectedSeason },
+        dropdownIcon = dropdownIcon,
+        isDropdownExpanded = isDropdownExpanded,
+        selectedSeason = selectedSeason,
         onSeasonChange = {
             if(it != selectedSeason) {
                 onSeasonChange(it)
             }
         },
-        onDropdownStateChange = { isDropdownExpanded = it }
     )
 }
 
 @Composable
-fun SeasonDropdownMenu(
+private fun SeasonDropdownMenu(
     modifier: Modifier = Modifier,
     seasons: List<Season>,
-    dropdownIconProvider: () -> Int,
-    isDropdownExpandedProvider: () -> Boolean,
-    selectedSeasonProvider: () -> Int,
+    dropdownIcon: Int,
+    isDropdownExpanded: MutableState<Boolean>,
+    selectedSeason: Int,
     onSeasonChange: (Int) -> Unit,
-    onDropdownStateChange: (Boolean) -> Unit,
 ) {
-    val selectedSeason = remember(selectedSeasonProvider()) {
-        selectedSeasonProvider() - 1
+    val currentSeasonName = remember(selectedSeason) {
+        seasons.getOrNull(selectedSeason - 1)?.name?.run {
+            UiText.StringValue(this)
+        } ?: UiText.StringResource(UtilR.string.unknown_season)
     }
 
     Box(
@@ -91,12 +94,12 @@ fun SeasonDropdownMenu(
         Row(
             modifier = Modifier
                 .height(40.dp)
-                .clickable(onClick = { onDropdownStateChange(true) }),
+                .clickable(onClick = { isDropdownExpanded.value = true }),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = seasons[selectedSeason].name,
+                text = currentSeasonName.asString(),
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier
                     .padding(start = 15.dp)
@@ -104,42 +107,51 @@ fun SeasonDropdownMenu(
 
             Spacer(
                 modifier = Modifier
-                    .padding(horizontal = 2.dp)
+                    .padding(
+                        horizontal = when {
+                            seasons.isNotEmpty() -> 2.dp
+                            else -> 7.dp
+                        }
+                    )
             )
 
-            Icon(
-                painter = painterResource(dropdownIconProvider()),
-                contentDescription = "A down arrow for dropdown menu",
-                modifier = Modifier
-                    .scale(0.6F)
-                    .padding(end = 15.dp)
-            )
+            if (seasons.isNotEmpty()) {
+                Icon(
+                    painter = painterResource(dropdownIcon),
+                    contentDescription = stringResource(UtilR.string.down_arrow_season_dropdown_content_desc),
+                    modifier = Modifier
+                        .scale(0.6F)
+                        .padding(end = 15.dp)
+                )
+            }
         }
 
-        DropdownMenu(
-            expanded = isDropdownExpandedProvider(),
-            onDismissRequest = { onDropdownStateChange(false) },
-        ) {
-            seasons.forEach { season ->
-                DropdownMenuItem(
-                    onClick = {
-                        onSeasonChange(season.number)
-                        onDropdownStateChange(false)
-                    },
-                    enabled = season.number != selectedSeason,
-                    colors = MenuDefaults.itemColors(
-                        textColor = Color.White,
-                        disabledTextColor = Color.White
-                    ),
-                    text = {
-                        Text(
-                            text = season.name,
-                            fontWeight = if(selectedSeason == season.number) {
-                                FontWeight.Medium
-                            } else FontWeight.Light
-                        )
-                    }
-                )
+        if (seasons.isNotEmpty()) {
+            DropdownMenu(
+                expanded = isDropdownExpanded.value,
+                onDismissRequest = { isDropdownExpanded.value = false },
+            ) {
+                seasons.forEach { season ->
+                    DropdownMenuItem(
+                        onClick = {
+                            onSeasonChange(season.number)
+                            isDropdownExpanded.value = false
+                        },
+                        enabled = season.number != selectedSeason,
+                        colors = MenuDefaults.itemColors(
+                            textColor = Color.White,
+                            disabledTextColor = Color.White
+                        ),
+                        text = {
+                            Text(
+                                text = season.name,
+                                fontWeight = if(selectedSeason == season.number) {
+                                    FontWeight.Medium
+                                } else FontWeight.Light
+                            )
+                        }
+                    )
+                }
             }
         }
     }

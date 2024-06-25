@@ -215,7 +215,8 @@ fun FilmScreen(
                             }
                         }
 
-                        val isTvShowAndIsTabSelected = film.filmType == FilmType.TV_SHOW && currentTabSelected == FilmTab.Episodes
+                        val isTvShowAndIsTabSelected = film.filmType == FilmType.TV_SHOW
+                                && currentTabSelected == FilmTab.Episodes
                         if (isTvShowAndIsTabSelected) {
                             val tvShow = film as TvShow
                             item(span = { GridItemSpan(maxLineSpan) }) {
@@ -223,7 +224,7 @@ fun FilmScreen(
                                     modifier = Modifier
                                         .padding(vertical = 5.dp),
                                     seasons = tvShow.seasons,
-                                    selectedSeasonProvider = { viewModel.selectedSeasonNumber },
+                                    selectedSeason = viewModel.selectedSeasonNumber,
                                     onSeasonChange = {
                                         viewModel.onSeasonChange(it)
                                     }

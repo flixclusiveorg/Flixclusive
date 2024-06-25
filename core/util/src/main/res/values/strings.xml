@@ -61,6 +61,7 @@
     <string name="player_not_initialized">Player has not been initialized</string>
     <string name="splash_default_error_message">An error occurred while initializing the app.</string>
     <string name="splash_maintenance_message">Sorry for the inconvenience. We\'re performing a quick update. Be back soon!</string>
+    <string name="unknown_season">Unknown season</string>
     <string name="warning_uninstall_message_first_half">Are you sure you want to uninstall</string>
     <string name="warning_use_prerelease_updates">Pre-release versions may be unstable and may contain bugs or other issues. Please use at your own risk.</string>
 
@@ -283,6 +284,7 @@
     <string name="copy_button">Copy to clipboard button</string>
     <string name="dns_label">Configure this if your ISP blocks you from watching.</string>
     <string name="drag_icon_content_desc">Drag indicator for provider card</string>
+    <string name="down_arrow_season_dropdown_content_desc">A down arrow for dropdown menu</string>
     <string name="episode_image_content_desc">An image of episode %1$s: %2$s</string>
     <string name="episode_image_content_desc_format">An image of episode %1$s: %2$s</string>
     <string name="episodes_button_desc">An icon for episodes button</string>
