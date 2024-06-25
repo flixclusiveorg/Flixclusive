@@ -140,8 +140,9 @@ abstract class BaseFilmScreenViewModel(
             return
 
         onSeasonChangeJob = viewModelScope.launch {
+            selectedSeasonNumber = seasonNumber
+
             if (_film.value?.isFromTmdb != true) {
-                selectedSeasonNumber = seasonNumber
                 val tvShow = _film.value as TvShow
                 val season = tvShow.seasons
                     .find { it.number == seasonNumber }
