@@ -51,6 +51,7 @@ import com.flixclusive.core.ui.mobile.rememberPipMode
 import com.flixclusive.core.ui.mobile.util.toggleSystemBars
 import com.flixclusive.core.ui.player.PLAYER_CONTROL_VISIBILITY_TIMEOUT
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
+import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.util.ACTION_PIP_CONTROL
 import com.flixclusive.core.ui.player.util.PLAYER_PIP_EVENT
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.AudioFocusManager
@@ -78,6 +79,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import kotlin.random.Random
 
 interface PlayerScreenNavigator : GoBackAction {
     /**
@@ -512,7 +514,11 @@ fun PlayerScreen(
                     ) {
                         items(
                             items = viewModel.snackbarQueue,
-                            key = { data -> data.type }
+                            key = { data ->
+                                if (data.type == PlayerSnackbarMessageType.Error) {
+                                    data.type.ordinal + Random.nextInt()
+                                } else data.type.ordinal
+                            }
                         ) { data ->
                             PlayerSnackbar(
                                 messageData = data,
