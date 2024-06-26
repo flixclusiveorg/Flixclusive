@@ -257,7 +257,7 @@ class SourceLinksProviderUseCase @Inject constructor(
                     film = film,
                     providerApi = provider
                 )
-                else -> Resource.Success(film.identifier)
+                else -> Resource.Success(watchId ?: film.identifier)
             }
 
             if (watchIdResource is Resource.Failure || watchIdResource.data.isNullOrBlank()) {
