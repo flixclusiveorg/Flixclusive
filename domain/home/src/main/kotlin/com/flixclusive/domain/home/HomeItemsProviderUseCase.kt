@@ -9,6 +9,7 @@ import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.category.CategoryItemsProviderUseCase
 import com.flixclusive.domain.provider.SourceLinksProviderUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
+import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.Movie
@@ -182,6 +183,11 @@ class HomeItemsProviderUseCase @Inject constructor(
             ) {
                 val randomIndex = Random.nextInt(_categories.value.size)
                 val category = _categories.value[randomIndex]
+
+                if (category is ProviderCatalog) {
+                    traversedCategories[randomIndex] = category
+                    continue
+                }
 
                 if (!traversedCategories.containsKey(randomIndex)) {
                     getCategoryItems(
