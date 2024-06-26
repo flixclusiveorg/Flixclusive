@@ -4,6 +4,7 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
+import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Season
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
@@ -12,25 +13,32 @@ import com.flixclusive.core.util.R as UtilR
 class SeasonProviderUseCase @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     private val watchHistoryRepository: WatchHistoryRepository,
-)  {
-     fun asFlow(id: String, seasonNumber: Int) = flow {
+) {
+    fun asFlow(tvShow: TvShow, seasonNumber: Int) = flow {
         emit(Resource.Loading)
 
-        when(
+        val noSeasonFoundError = Resource.Failure(UiText.StringResource(UtilR.string.failed_to_fetch_season_message))
+
+        if (!tvShow.isFromTmdb) {
+            val season = tvShow.seasons
+                .find { it.number == seasonNumber }
+
+            if (season != null)
+               return@flow emit(Resource.Success(season))
+
+            return@flow emit(noSeasonFoundError)
+        }
+
+        when (
             val result = tmdbRepository.getSeason(
-                id = id.toInt(),
+                id = tvShow.tmdbId!!,
                 seasonNumber = seasonNumber
             )
         ) {
-            is Resource.Failure -> emit(
-                Resource.Failure(
-                    UiText.StringResource(UtilR.string.failed_to_fetch_season_message)
-                )
-            )
+            is Resource.Failure -> emit(noSeasonFoundError)
             Resource.Loading -> Unit
             is Resource.Success -> {
-                val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(id)
-
+                val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(tvShow.identifier)
                 watchHistoryItem?.let { item ->
                     result.data?.episodes?.size?.let {
                         val newEpisodesMap = item.episodes.toMutableMap()
@@ -46,7 +54,7 @@ class SeasonProviderUseCase @Inject constructor(
     }
 
     suspend operator fun invoke(id: String, seasonNumber: Int): Resource<Season> {
-        return when(
+        return when (
             val result = tmdbRepository.getSeason(
                 id = id.toInt(),
                 seasonNumber = seasonNumber
@@ -55,6 +63,7 @@ class SeasonProviderUseCase @Inject constructor(
             is Resource.Failure -> Resource.Failure(
                 UiText.StringResource(UtilR.string.failed_to_fetch_season_message)
             )
+
             is Resource.Success -> {
                 val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(id)
 
@@ -69,6 +78,7 @@ class SeasonProviderUseCase @Inject constructor(
 
                 result
             }
+
             else -> result
         }
     }
