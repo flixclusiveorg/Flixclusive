@@ -242,7 +242,7 @@ class HomeItemsProviderUseCase @Inject constructor(
         val tmdbCategories = configurationProvider.homeCategoriesData!!
 
         val allTmdbCategories = tmdbCategories.all + tmdbCategories.tv + tmdbCategories.movie
-        val providerCatalogs = getProviderCatalogs()
+        val providerCatalogs = getProvidersCatalogs()
         val requiredCategories = allTmdbCategories.filter { it.required }
 
         val countOfItemsToFetch = Random.nextInt(PREFERRED_MINIMUM_HOME_ITEMS, PREFERRED_MAXIMUM_HOME_ITEMS)
@@ -261,13 +261,14 @@ class HomeItemsProviderUseCase @Inject constructor(
             }
     }
 
-    private fun getProviderCatalogs() = sourceLinksProvider.providerApis
-        .flatMap {
-            // In case some shitty code
-            // might occur in the future here.
-            safeCall { it.catalogs }
-                ?: emptyList()
-        }
+    private fun getProvidersCatalogs()
+        = sourceLinksProvider.providerApis
+            .flatMap {
+                // In case some shitty code
+                // might occur in the future here.
+                safeCall { it.catalogs }
+                    ?: emptyList()
+            }
 
     private suspend fun getUserRecommendations(userId: Int = 1): List<HomeCategory> {
         val randomWatchedFilms =
