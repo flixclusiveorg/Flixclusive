@@ -589,5 +589,8 @@ abstract class BasePlayerViewModel(
      *
      * */
     protected suspend fun fetchSeasonFromMetaProvider(seasonNumber: Int)
-        = seasonProviderUseCase(id = film.identifier, seasonNumber = seasonNumber)
+        = seasonProviderUseCase(
+            tvShow = film as TvShow,
+            seasonNumber = seasonNumber
+        )
 }
