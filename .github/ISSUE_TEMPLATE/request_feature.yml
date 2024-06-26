@@ -2,7 +2,7 @@
 
 name: ⭐ Feature request
 description: Suggest a feature to improve Flixclusive
-labels: [Feature request]
+labels: [ enhancement ]
 body:
 
   - type: textarea
