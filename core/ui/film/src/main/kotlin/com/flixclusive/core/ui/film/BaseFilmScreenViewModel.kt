@@ -100,7 +100,6 @@ abstract class BaseFilmScreenViewModel(
                         )
                     }
                 }
-
                 Resource.Loading -> Unit
                 is Resource.Success -> result.data?.onInitializeSuccess()
             }
@@ -119,11 +118,13 @@ abstract class BaseFilmScreenViewModel(
         isFilmInWatchlist()
 
         if (filmType == FilmType.TV_SHOW) {
-            val seasonToInitialize =
-                if (watchHistoryItem.value?.episodesWatched.isNullOrEmpty()) 1
-                else watchHistoryItem.value!!.episodesWatched.last().seasonNumber!!
+            var seasonToInitialize = watchHistoryItem.value?.episodesWatched?.lastOrNull()?.seasonNumber
 
-            onSeasonChange(seasonToInitialize) // Initialize first season
+            if (seasonToInitialize == null) {
+                seasonToInitialize = (_film.value as TvShow).seasons.firstOrNull()?.number ?: 1
+            }
+
+            onSeasonChange(seasonToInitialize)
         }
     }
 
@@ -142,7 +143,7 @@ abstract class BaseFilmScreenViewModel(
         onSeasonChangeJob = viewModelScope.launch {
             selectedSeasonNumber = seasonNumber
 
-            if (_film.value?.isFromTmdb != true) {
+            if (_film.value?.isFromTmdb == false) {
                 val tvShow = _film.value as TvShow
                 val season = tvShow.seasons
                     .find { it.number == seasonNumber }

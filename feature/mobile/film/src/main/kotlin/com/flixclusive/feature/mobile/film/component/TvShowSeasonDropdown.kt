@@ -76,9 +76,9 @@ private fun SeasonDropdownMenu(
     onSeasonChange: (Int) -> Unit,
 ) {
     val currentSeasonName = remember(selectedSeason) {
-        seasons.getOrNull(selectedSeason - 1)?.name?.run {
-            UiText.StringValue(this)
-        } ?: UiText.StringResource(UtilR.string.unknown_season)
+        seasons.find { it.number == selectedSeason }
+            ?.name?.run { UiText.StringValue(this) }
+            ?: UiText.StringResource(UtilR.string.unknown_season)
     }
 
     Box(
