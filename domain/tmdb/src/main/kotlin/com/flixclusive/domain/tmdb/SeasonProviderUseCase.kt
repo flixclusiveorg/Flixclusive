@@ -53,20 +53,27 @@ class SeasonProviderUseCase @Inject constructor(
         }
     }
 
-    suspend operator fun invoke(id: String, seasonNumber: Int): Resource<Season> {
+    suspend operator fun invoke(tvShow: TvShow, seasonNumber: Int): Resource<Season> {
+        val noSeasonFoundError = Resource.Failure(UiText.StringResource(UtilR.string.failed_to_fetch_season_message))
+
+        if (!tvShow.isFromTmdb) {
+            val season = tvShow.seasons
+                .find { it.number == seasonNumber }
+
+            if (season != null)
+                return Resource.Success(season)
+
+            return noSeasonFoundError
+        }
+
         return when (
             val result = tmdbRepository.getSeason(
-                id = id.toInt(),
+                id = tvShow.tmdbId!!,
                 seasonNumber = seasonNumber
             )
         ) {
-            is Resource.Failure -> Resource.Failure(
-                UiText.StringResource(UtilR.string.failed_to_fetch_season_message)
-            )
-
             is Resource.Success -> {
-                val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(id)
-
+                val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(tvShow.identifier)
                 watchHistoryItem?.let { item ->
                     result.data?.episodes?.size?.let {
                         val newEpisodesMap = item.episodes.toMutableMap()
@@ -78,8 +85,7 @@ class SeasonProviderUseCase @Inject constructor(
 
                 result
             }
-
-            else -> result
+            else -> noSeasonFoundError
         }
     }
 }
