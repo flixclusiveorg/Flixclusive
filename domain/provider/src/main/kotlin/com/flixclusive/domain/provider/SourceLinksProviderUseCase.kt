@@ -3,7 +3,6 @@ package com.flixclusive.domain.provider
 import android.content.Context
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderManager
@@ -189,7 +188,7 @@ class SourceLinksProviderUseCase @Inject constructor(
                             callback = object : WebViewCallback {
                                 override suspend fun onSuccess(episode: Episode?) {
                                     if (linksLoaded == 0) {
-                                        trySend(SourceDataState.Error(getNoLinksMessage(provider.name)))
+                                        trySend(SourceDataState.Error(provider.name.getNoLinksMessage))
                                         return
                                     }
 
@@ -229,7 +228,7 @@ class SourceLinksProviderUseCase @Inject constructor(
 
                                     if (state is SourceDataState.Error || state is SourceDataState.Unavailable) {
                                         onError?.invoke(state.message)
-                                        debugLog("Unsuccessful scraping. Destroying WebView...")
+                                        infoLog("Unsuccessful scraping. Destroying WebView...")
                                         continuation.resume(true)
                                     }
                                 }
@@ -336,7 +335,7 @@ class SourceLinksProviderUseCase @Inject constructor(
                 result is Resource.Failure || linksLoaded == 0 -> {
                     if (canStopLooping) {
                         val error = result.error ?: when (linksLoaded) {
-                            0 -> getNoLinksMessage(provider.name)
+                            0 -> provider.name.getNoLinksMessage
                             else -> defaultErrorMessage
                         }
 
@@ -400,20 +399,43 @@ class SourceLinksProviderUseCase @Inject constructor(
             episodeNumber = nextEpisode ?: 1
         }
 
-        val episodeFromApiService = tmdbRepository.getEpisode(
-            id = film.tmdbId ?: return Resource.Failure(UtilR.string.invalid_tmdb_id),
+        return if (film.isFromTmdb) {
+            getEpisodeFromTmdb(
+                tmdbId = film.tmdbId,
+                seasonNumber = seasonNumber,
+                episodeNumber = episodeNumber
+            )
+        } else {
+            val episode = film.seasons.find {
+                it.number == seasonNumber
+            }?.episodes?.find {
+                it.number == episodeNumber
+            }
+
+            if (episode == null) {
+                return Resource.Failure(UtilR.string.unavailable_episode)
+            }
+
+            Resource.Success(episode)
+        }
+    }
+
+    private suspend fun getEpisodeFromTmdb(
+        tmdbId: Int?,
+        seasonNumber: Int,
+        episodeNumber: Int,
+    ): Resource<Episode?> {
+        return tmdbRepository.getEpisode(
+            id = tmdbId ?: return Resource.Failure(UtilR.string.invalid_tmdb_id),
             seasonNumber = seasonNumber,
             episodeNumber = episodeNumber
-        )
-
-        if (episodeFromApiService is Resource.Failure) {
-            return episodeFromApiService
+        ).also {
+            if (it is Resource.Failure) {
+                return it
+            } else if (it is Resource.Success && it.data == null) {
+                return Resource.Failure(UtilR.string.unavailable_episode)
+            }
         }
-        else if (episodeFromApiService is Resource.Success && episodeFromApiService.data == null) {
-            return Resource.Failure(UtilR.string.unavailable_episode)
-        }
-
-        return episodeFromApiService
     }
 
 
@@ -434,7 +456,6 @@ class SourceLinksProviderUseCase @Inject constructor(
         return providerApis
     }
 
-    private fun getNoLinksMessage(
-        providerName: String
-    ) = UiText.StringResource(UtilR.string.no_links_loaded_format_message, providerName)
+    val String.getNoLinksMessage
+        get() = UiText.StringResource(UtilR.string.no_links_loaded_format_message, this)
 }
