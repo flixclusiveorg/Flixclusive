@@ -20,7 +20,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.theme.lightGrayElevated
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.ifElse
@@ -29,9 +31,10 @@ import com.flixclusive.core.ui.common.util.placeholderEffect
 
 
 @Composable
-fun SearchItemCard(
-    posterPath: String?,
+internal fun SearchItemCard(
+    image: String?,
     label: String? = null,
+    isProviderCatalog: Boolean = false,
     onClick: () -> Unit,
 ) {
     Surface(
@@ -43,15 +46,15 @@ fun SearchItemCard(
     ) {
         Box {
             FilmCover.Backdrop(
-                imagePath = posterPath,
+                imagePath = image,
                 imageSize = if (label != null) "w500" else "w500_filter(negate,000,666)",
                 contentDescription = label,
                 showPlaceholder = false,
-                contentScale = if (label != null) ContentScale.FillBounds else ContentScale.Fit,
+                contentScale = if (label != null && !isProviderCatalog) ContentScale.FillBounds else ContentScale.Fit,
                 modifier = Modifier
                     .align(Alignment.Center)
                     .ifElse(
-                        condition = label == null,
+                        condition = label == null || isProviderCatalog,
                         ifTrueModifier = Modifier
                             .height(80.dp)
                             .padding(10.dp)
@@ -87,7 +90,7 @@ fun SearchItemCard(
 }
 
 @Composable
-fun SearchItemCardPlaceholderWithText() {
+internal fun SearchItemCardPlaceholderWithText() {
     Box(
         modifier = Modifier
             .height(130.dp)
@@ -116,6 +119,18 @@ fun SearchItemCardPlaceholderWithText() {
                         drawRect(lightGrayElevated)
                     }
             )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun SearchItemCardPreview() {
+    FlixclusiveTheme {
+        Surface {
+            SearchItemCard(image = null) {
+
+            }
         }
     }
 }

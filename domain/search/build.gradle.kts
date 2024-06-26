@@ -11,4 +11,5 @@ android {
 dependencies {
     api(projects.data.configuration)
     api(projects.data.tmdb)
+    api(projects.domain.provider)
 }

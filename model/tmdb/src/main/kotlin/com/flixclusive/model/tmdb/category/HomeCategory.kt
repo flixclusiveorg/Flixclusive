@@ -17,6 +17,7 @@ data class HomeCategory(
     @SerializedName("type") override val mediaType: String,
     override val name: String,
     override val canPaginate: Boolean,
+    override val image: String? = null,
     val required: Boolean,
 ) : Category()
 

@@ -3,8 +3,11 @@ package com.flixclusive.domain.search
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.tmdb.TMDBRepository
+import com.flixclusive.domain.provider.SourceLinksProviderUseCase
+import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.tmdb.category.SearchCategory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -25,11 +28,21 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
     @ApplicationScope private val scope: CoroutineScope,
     private val tmdbRepository: TMDBRepository,
     private val configurationManager: AppConfigurationManager,
+    private val sourceLinksProvider: SourceLinksProviderUseCase,
 ) {
     private val usedPosterPaths = mutableSetOf<String>()
 
     private val _tvShowNetworkCards = MutableStateFlow<List<SearchCategory>>(emptyList())
     val tvShowNetworkCards = _tvShowNetworkCards.asStateFlow()
+
+    val providersCatalogsCards: List<ProviderCatalog>
+        get() = sourceLinksProvider.providerApis
+            .flatMap {
+                // In case some shitty code
+                // might occur in the future here.
+                safeCall { it.catalogs }
+                    ?: emptyList()
+            }
     
     private val _movieCompanyCards = MutableStateFlow<List<SearchCategory>>(emptyList())
     val movieCompanyCards = _movieCompanyCards.asStateFlow()
@@ -59,11 +72,12 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
                 val defaultErrorMessage = Resource.Failure(UtilR.string.failed_to_initialize_search_items)
 
                 _cards.value = Resource.Loading
-                _tvShowNetworkCards.value = configurationManager.searchCategoriesData?.networks?.shuffled() ?: return@launch _cards.emit(defaultErrorMessage)
-                _movieCompanyCards.value = configurationManager.searchCategoriesData?.companies?.shuffled() ?: return@launch _cards.emit(defaultErrorMessage)
+                _tvShowNetworkCards.value = configurationManager.searchCategoriesData?.networks?.shuffled()
+                    ?: return@launch _cards.emit(defaultErrorMessage)
+                _movieCompanyCards.value = configurationManager.searchCategoriesData?.companies?.shuffled()
+                    ?: return@launch _cards.emit(defaultErrorMessage)
 
                 (type + genres).map { item ->
-
                     // If item is reality shows,
                     // then use only its page 1.
                     val randomPage = max(1, Random.nextInt(1, 3000) % 5)
@@ -93,7 +107,7 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
                                     imageToUse = results.random().backdropImage
                                 }
 
-                                newList = newList + item.copy(posterPath = imageToUse)
+                                newList = newList + item.copy(image = imageToUse)
                                 usedPosterPaths.add(imageToUse)
 
                                 _cards.emit(Resource.Success(newList))

@@ -16,20 +16,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.model.tmdb.category.SearchCategory
+import com.flixclusive.model.provider.ProviderCatalog
+import com.flixclusive.model.tmdb.category.Category
 
 @Composable
-fun SearchItemRow(
-    list: List<SearchCategory>,
+internal fun SearchItemRow(
+    list: List<Category>,
     showItemNames: Boolean,
     rowTitle: UiText,
-    onClick: (SearchCategory) -> Unit
+    onClick: (Category) -> Unit
 ) {
     Box {
         AnimatedVisibility(
@@ -59,10 +61,19 @@ fun SearchItemRow(
                     modifier = Modifier
                         .padding(bottom = 5.dp)
                 ) {
-                    items(list) {
+                    items(
+                        list,
+                        key = { item -> item.url }
+                    ) {
+                        val isProviderCatalog = it is ProviderCatalog
+                        val name = remember(showItemNames) {
+                            if(showItemNames || isProviderCatalog) it.name else null
+                        }
+
                         SearchItemCard(
-                            label = if(showItemNames) it.name else null,
-                            posterPath = it.posterPath,
+                            label = name,
+                            image = it.image,
+                            isProviderCatalog = isProviderCatalog,
                             onClick = {
                                 onClick(it)
                             }

@@ -22,7 +22,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -40,8 +42,8 @@ import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.feature.mobile.search.component.SearchItemCard
 import com.flixclusive.feature.mobile.search.component.SearchItemCardPlaceholderWithText
 import com.flixclusive.feature.mobile.search.component.SearchItemRow
-import com.flixclusive.model.tmdb.category.Category
 import com.flixclusive.model.tmdb.Genre
+import com.flixclusive.model.tmdb.category.Category
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
@@ -64,6 +66,9 @@ fun SearchScreen(
     val tvShowNetworkCards by viewModel.tvShowNetworkCards.collectAsStateWithLifecycle()
     val movieCompanyCards by viewModel.movieCompanyCards.collectAsStateWithLifecycle()
     val genreCards by viewModel.genreCards.collectAsStateWithLifecycle()
+    val providersCatalogsCards by remember {
+        derivedStateOf { viewModel.providersCatalogsCards }
+    }
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 180.dp),
@@ -72,6 +77,17 @@ fun SearchScreen(
             SearchBarHeader(
                 onSearchBarClick = navigator::openSearchExpandedScreen
             )
+        }
+
+        if (providersCatalogsCards.isNotEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                SearchItemRow(
+                    list = providersCatalogsCards,
+                    showItemNames = false,
+                    rowTitle = UiText.StringResource(UtilR.string.browse_providers_catalogs),
+                    onClick = navigator::openSeeAllScreen
+                )
+            }
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
@@ -120,7 +136,7 @@ fun SearchScreen(
         } else {
             items(genreCards.data!!) {
                 SearchItemCard(
-                    posterPath = it.posterPath,
+                    image = it.image,
                     label = it.name,
                     onClick = {
                         // If item is not a genre but a film type instead
@@ -133,7 +149,7 @@ fun SearchScreen(
                             genre = Genre(
                                 id = it.id,
                                 name = it.name,
-                                posterPath = it.posterPath,
+                                posterPath = it.image,
                                 mediaType = it.mediaType
                             )
                         )

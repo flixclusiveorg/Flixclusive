@@ -18,6 +18,7 @@ class SearchScreenViewModel @Inject constructor(
 ) : ViewModel() {
     val genreCards = getSearchRecommendedCardsUseCase.cards
     val tvShowNetworkCards = getSearchRecommendedCardsUseCase.tvShowNetworkCards
+    val providersCatalogsCards = getSearchRecommendedCardsUseCase.providersCatalogsCards
     val movieCompanyCards = getSearchRecommendedCardsUseCase.movieCompanyCards
 
     init {
