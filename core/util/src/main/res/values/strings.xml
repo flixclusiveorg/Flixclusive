@@ -93,9 +93,10 @@
     <string name="auto_update_providers">Auto-update providers</string>
     <string name="automatic_crash_report">Automatic crash report</string>
     <string name="automatic_crash_report_label">Automatically send the crash data to Flixclusive\'s server.</string>
-    <string name="browse_categories">Browse Categories</string>
-    <string name="browse_movie_companies">Top Movie Companies</string>
-    <string name="browse_tv_networks">Top TV Networks</string>
+    <string name="browse_categories">Browse categories</string>
+    <string name="browse_movie_companies">Top movie companies</string>
+    <string name="browse_tv_networks">Top TV networks</string>
+    <string name="browse_providers_catalogs">Your providers\' catalogs</string>
     <string name="browse_repository">Browse repository</string>
     <string name="cancel">Cancel</string>
     <string name="opt_in_prerelease">Ok 🗿</string>
@@ -172,7 +173,7 @@
     <string name="sample_subtitle_text">ROSE: I\'m flying!</string>
     <string name="save">Save</string>
     <string name="search_repository_url_suggestion">Paste a repository URL</string>
-    <string name="search_suggestion">Try Searching \"Iron Man\"…</string>
+    <string name="search_suggestion">Try searching \"Iron Man\"…</string>
     <string name="see_all">See all</string>
     <string name="seek_length_label">Player seek length</string>
     <string name="servers">Servers</string>
