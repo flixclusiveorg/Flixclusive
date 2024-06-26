@@ -1,6 +1,5 @@
 package com.flixclusive.model.tmdb.util
 
-import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.isDateInFuture
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.common.tv.Season
@@ -18,6 +17,9 @@ fun List<Season>.filterOutZeroSeasons()
 
 fun List<FilmSearchItem>.filterOutUnreleasedFilms()
     = filterNot {
-        safeCall { isDateInFuture(it.parsedReleaseDate!!) } ?: false
-            || it.posterImage.isNullOrEmpty()
+        try {
+            isDateInFuture(it.parsedReleaseDate!!)
+        } catch (_: Exception) {
+            false
+        } || it.posterImage.isNullOrEmpty()
     }
