@@ -143,19 +143,8 @@ abstract class BaseFilmScreenViewModel(
         onSeasonChangeJob = viewModelScope.launch {
             selectedSeasonNumber = seasonNumber
 
-            if (_film.value?.isFromTmdb == false) {
-                val tvShow = _film.value as TvShow
-                val season = tvShow.seasons
-                    .find { it.number == seasonNumber }
-
-                if (season != null)
-                    _currentSeasonSelected.value = Resource.Success(season)
-
-                return@launch
-            }
-
             seasonProvider.asFlow(
-                id = _film.value!!.identifier,
+                tvShow = _film.value as TvShow,
                 seasonNumber = seasonNumber
             ).collectLatest {
                 _currentSeasonSelected.value = it

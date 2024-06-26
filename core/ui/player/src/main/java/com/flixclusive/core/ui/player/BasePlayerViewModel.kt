@@ -209,7 +209,7 @@ abstract class BasePlayerViewModel(
             }
 
             seasonProviderUseCase.asFlow(
-                id = film.identifier,
+                tvShow = film as TvShow,
                 seasonNumber = seasonNumber
             ).collectLatest { _season.value = it }
         }
