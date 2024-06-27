@@ -1,11 +1,30 @@
-# Flixclusive
+![Flixclusive logo](https://i.imgur.com/tizcKbi.png)
 
-![Flixclusive Logo](docs/logo.png?raw=true)
+An ad-free TV show and movie player application. Explore newly released and exclusive films from the app's extensive and diverse database of movies and shows.
 
-**DISCLAIMER**: The app utilizes the services of movie/TV show providers obtained from the internet. It does not host these providers; instead, it _utilizes_ their services. Flixclusive assumes no responsibility for the content displayed. Legal issues pertaining to the movies/TV shows should be addressed directly with the respective third-party providers.
+<div>
+  <table>
+    <tr>
+      <td>CI Build</td>
+      <td><a href="https://github.com/rhenwinch/Flixclusive/actions/workflows/Build.yml"><img src="https://img.shields.io/github/actions/workflow/status/rhenwinch/Flixclusive/Build.yml?label=CI+Build&style=for-the-badge" alt="CI"></a></td>
+    </tr>
+    <tr>
+      <td>Pre-release</td>
+      <td><a href="https://github.com/rhenwinch/Flixclusive/releases/pre-release"><img src="https://img.shields.io/github/downloads/rhenwinch/Flixclusive/pre-release/total?style=for-the-badge" alt="pre-release build"></a></td>
+    </tr>
+    <tr>
+      <td>Stable</td>
+      <td><a href="https://github.com/rhenwinch/Flixclusive/releases/latest"><img src="https://img.shields.io/github/release/rhenwinch/Flixclusive.svg?maxAge=3600&label=download&style=for-the-badge" alt="stable release"></a></td>
+    </tr>
+    <tr>
+      <td>Discord</td>
+      <td><a href="https://discord.gg/7yPSPveReu"><img src="https://img.shields.io/discord/1255770492049162240?label=discord&labelColor=7289da&color=2c2f33&style=for-the-badge" alt="Discord"></a></td>
+    </tr>
+  </table>
+</div>
 
-A modern streaming service app that provides users with a convenient way to play and watch the latest movies and TV shows available on the internet. With a user-friendly interface and a vast collection of content, Flixclusive aims to deliver an exceptional streaming experience to its users.
-
+## Disclaimer
+The app does not host and contain movies and tv shows streaming links. Flixclusive assumes no responsibility for the content displayed. Legal issues pertaining to the movies/TV shows should be addressed directly with the respective third-party providers.
 
 ## Screenshot
 ![Screenshot 1](/docs/flixclusive.gif?raw=true)
@@ -15,15 +34,6 @@ A modern streaming service app that provides users with a convenient way to play
 - **A badly needed add-ons/plugins system for providers**
 - **Android TV Support**
 - **Offline Viewing**
-
-## Features
-
-- **Extensive Library**: Access a wide range of movies and TV shows from various genres, including action, drama, comedy, thriller, and more.
-- **Search and Discover**: Easily search for your favorite movies or TV shows using keywords or browse through curated collections to discover new content.
-- **Personalized Recommendations**: Receive tailored recommendations based on your viewing history, and preferences to help you discover new content that suits your taste.
-- **Continue Watching**: Seamlessly pick up where you left off and resume watching from any device.
-- **High-Quality Streaming**: Experience high-definition streaming with adaptive streaming technology that adjusts video quality based on your internet connection.
-- **Subtitle Selections**: Choose from a wide variety of subtitle options in different languages to enhance your viewing experience.
 
 ## License
 The Flixclusive app is licensed under the [MIT License](LICENSE). Feel free to modify and distribute it according to your needs.
