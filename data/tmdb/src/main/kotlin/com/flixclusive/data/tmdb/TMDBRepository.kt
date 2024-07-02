@@ -47,7 +47,6 @@ interface TMDBRepository {
     ): Resource<SearchResponseData<FilmSearchItem>>
 
     suspend fun search(
-        mediaType: String,
         query: String,
         page: Int,
     ): Resource<SearchResponseData<FilmSearchItem>>

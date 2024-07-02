@@ -88,7 +88,6 @@ internal class DefaultTMDBRepository @Inject constructor(
     }
 
     override suspend fun search(
-        mediaType: String,
         query: String,
         page: Int,
     ): Resource<SearchResponseData<FilmSearchItem>> {
@@ -99,7 +98,7 @@ internal class DefaultTMDBRepository @Inject constructor(
                 }
 
                 val response = tmdbApiService.search(
-                    mediaType = mediaType,
+                    mediaType = "multi", // TODO: Dynamically change this again
                     apiKey = tmdbApiKey,
                     page = page,
                     query = query
