@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-    - name: ⚠️ Extension Issue
+    - name: ⚠️ Provider Issue
       url: https://github.com/Flixclusive/flx-providers/issues
-      about: If you have troubles with a extension or want to propose new extension source, please open an issue in the Flixclusive extension repository instead
+      about: If you have troubles with a provider or want to propose a new provider, please open an issue in the Flixclusive provider repository instead
