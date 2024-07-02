@@ -43,8 +43,8 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.repository.search.R
 import com.flixclusive.feature.mobile.repository.search.util.parseGithubUrl
+import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
@@ -130,7 +130,7 @@ internal fun AddRepositoryBar(
                         }
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.outline_close_square),
+                            painter = painterResource(UiCommonR.drawable.outline_close_square),
                             contentDescription = stringResource(UtilR.string.clear_text_button)
                         )
                     }
