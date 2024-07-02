@@ -39,5 +39,10 @@ The app does not host and contain movies and tv shows streaming links. Flixclusi
 - **Android TV Support**
 - **Offline Viewing**
 
+## Contributors
+<a href="https://github.com/rhenwinch/Flixclusive/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=rhenwinch/Flixclusive"  alt="Contributors"/>
+</a>
+
 ## License
 The Flixclusive app is licensed under the [MIT License](LICENSE). Feel free to modify and distribute it according to your needs.
