@@ -1,13 +1,14 @@
 package com.flixclusive.domain.search
 
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.configuration.AppConfigurationManager
+import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.domain.provider.SourceLinksProviderUseCase
-import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.tmdb.category.SearchCategory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -28,21 +29,22 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
     @ApplicationScope private val scope: CoroutineScope,
     private val tmdbRepository: TMDBRepository,
     private val configurationManager: AppConfigurationManager,
-    private val sourceLinksProvider: SourceLinksProviderUseCase,
+    private val providerManager: ProviderManager,
 ) {
     private val usedPosterPaths = mutableSetOf<String>()
 
     private val _tvShowNetworkCards = MutableStateFlow<List<SearchCategory>>(emptyList())
     val tvShowNetworkCards = _tvShowNetworkCards.asStateFlow()
 
-    val providersCatalogsCards: List<ProviderCatalog>
-        get() = sourceLinksProvider.providerApis
+    val providersCatalogsCards by derivedStateOf {
+        providerManager.workingApis
             .flatMap {
                 // In case some shitty code
                 // might occur in the future here.
                 safeCall { it.catalogs }
                     ?: emptyList()
             }
+    }
     
     private val _movieCompanyCards = MutableStateFlow<List<SearchCategory>>(emptyList())
     val movieCompanyCards = _movieCompanyCards.asStateFlow()

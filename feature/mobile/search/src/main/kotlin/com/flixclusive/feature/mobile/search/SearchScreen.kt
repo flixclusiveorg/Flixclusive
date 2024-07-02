@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -184,11 +183,7 @@ private fun SearchBarHeader(
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = TextFieldDefaults.MinHeight)
                 .padding(horizontal = 15.dp)
-                .graphicsLayer {
-                    shadowElevation = 8.dp.toPx()
-                    shape = RoundedCornerShape(55)
-                    clip = true
-                }
+                .clip(MaterialTheme.shapes.small)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .clickable { onSearchBarClick() }
         ) {
@@ -199,7 +194,7 @@ private fun SearchBarHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    painter = painterResource(id = UiCommonR.drawable.search),
+                    painter = painterResource(id = UiCommonR.drawable.search_outlined),
                     contentDescription = stringResource(id = UtilR.string.search)
                 )
 

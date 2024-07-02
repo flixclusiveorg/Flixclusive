@@ -8,5 +8,7 @@ enum class PagingState {
     IDLE
 }
 
-fun PagingState.isLoading() = this == PagingState.LOADING || this == PagingState.PAGINATING
-fun PagingState.isError() = this == PagingState.ERROR || this == PagingState.PAGINATING_EXHAUST
+val PagingState.isLoading
+    get() = this == PagingState.LOADING || this == PagingState.PAGINATING
+val PagingState.isError
+    get() = this == PagingState.ERROR || this == PagingState.PAGINATING_EXHAUST

@@ -4,11 +4,9 @@ import android.content.Context
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.log.infoLog
-import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.provider.SourceLinksRepository
 import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.gradle.entities.Status
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.provider.SourceData
@@ -45,9 +43,8 @@ typealias FilmKey = String
 class SourceLinksProviderUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
     private val sourceLinksRepository: SourceLinksRepository,
-    private val providersManager: ProviderManager,
-    private val providerApiRepository: ProviderApiRepository,
     private val tmdbRepository: TMDBRepository,
+    providersManager: ProviderManager,
 ) {
     private val defaultErrorMessage = UiText.StringResource(UtilR.string.source_data_dialog_state_error_default)
 
@@ -64,20 +61,7 @@ class SourceLinksProviderUseCase @Inject constructor(
         ): FilmKey = "$filmId-${episodeData?.season}:${episodeData?.number}"
     }
 
-     val providerApis: List<ProviderApi>
-         get() = providersManager
-             .providerDataList
-             .mapNotNull { data ->
-                 val api = providerApiRepository.apiMap[data.name]
-
-                 if (
-                     data.status != Status.Maintenance
-                     && data.status != Status.Down
-                     && providersManager.isProviderEnabled(data.name)
-                 ) return@mapNotNull api
-
-                 null
-             }
+     val providerApis = providersManager.workingApis
 
     /**
      *
