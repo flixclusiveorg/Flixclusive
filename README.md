@@ -30,7 +30,7 @@ An ad-free TV show and movie player application. Explore newly released and excl
 ## Disclaimer
 The app does not host and contain movies and tv shows streaming links. Flixclusive assumes no responsibility for the content displayed. Legal issues pertaining to the movies/TV shows should be addressed directly with the respective third-party providers.
 
-## Screenshot
+## Screenshot (Outdated)
 ![Screenshot 1](/docs/flixclusive.gif?raw=true)
 ![Screenshot 2](/docs/flixclusive-player.gif?raw=true)
 
