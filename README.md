@@ -9,12 +9,16 @@ An ad-free TV show and movie player application. Explore newly released and excl
       <td><a href="https://github.com/rhenwinch/Flixclusive/actions/workflows/Build.yml"><img src="https://img.shields.io/github/actions/workflow/status/rhenwinch/Flixclusive/Build.yml?label=CI+Build&style=for-the-badge" alt="CI"></a></td>
     </tr>
     <tr>
+      <td>Sonar Quality Gate</td>
+      <td><a href="https://sonarcloud.io/summary/overall?id=rhenwinch_Flixclusive"><img src="https://img.shields.io/sonar/quality_gate/rhenwinch_Flixclusive?server=https%3A%2F%2Fsonarcloud.io&style=for-the-badge" alt="Sonar quality gate"></a></td>
+    </tr>
+    <tr>
       <td>Pre-release</td>
       <td><a href="https://github.com/rhenwinch/Flixclusive/releases/pre-release"><img src="https://img.shields.io/github/downloads/rhenwinch/Flixclusive/pre-release/total?style=for-the-badge" alt="pre-release build"></a></td>
     </tr>
     <tr>
       <td>Stable</td>
-      <td><a href="https://github.com/rhenwinch/Flixclusive/releases/latest"><img src="https://img.shields.io/github/release/rhenwinch/Flixclusive.svg?maxAge=3600&label=download&style=for-the-badge" alt="stable release"></a></td>
+      <td><a href="https://github.com/rhenwinch/Flixclusive/releases/latest"><img src="https://img.shields.io/github/downloads/rhenwinch/Flixclusive/latest/total?style=for-the-badge" alt="stable release"></a></td>
     </tr>
     <tr>
       <td>Discord</td>
