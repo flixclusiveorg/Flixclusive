@@ -1,5 +1,7 @@
 package com.flixclusive.data.provider.di
 
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.flixclusive.core.network.di.TestRetrofitModule.getMockTMDBApiService
 import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.data.provider.ProviderApiRepository
@@ -19,8 +21,8 @@ object TestProviderDataModule {
         }
     }
 
-    fun getMockProviderApiMap(): HashMap<String, ProviderApi> {
-        val apiMap = HashMap<String, ProviderApi>()
+    fun getMockProviderApiMap(): SnapshotStateMap<String, ProviderApi> {
+        val apiMap = mutableStateMapOf<String, ProviderApi>()
 
         repeat(5) {
             val providerName = "TheMovieDB-$it"

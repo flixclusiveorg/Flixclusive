@@ -1,10 +1,11 @@
 package com.flixclusive.data.provider
 
-import android.R.attr.name
 import android.content.Context
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.widget.Toast
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.common.util.showToast
@@ -25,6 +26,7 @@ import com.flixclusive.data.provider.util.rmrf
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.ProviderManifest
 import com.flixclusive.gradle.entities.Repository.Companion.toValidRepositoryLink
+import com.flixclusive.gradle.entities.Status
 import com.flixclusive.model.datastore.provider.ProviderPreference
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.settings.ProviderSettingsManager
@@ -32,8 +34,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,7 +55,7 @@ class ProviderManager @Inject constructor(
     @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
     private val appSettingsManager: AppSettingsManager,
     private val client: OkHttpClient,
-    private val providersRepository: ProviderApiRepository
+    private val providerApiRepository: ProviderApiRepository
 ) {
     /** Map containing all loaded providers  */
     val providers: MutableMap<String, Provider> = LinkedHashMap()
@@ -75,8 +75,20 @@ class ProviderManager @Inject constructor(
      * */
     private val updaterJsonMap = HashMap<String, List<ProviderData>>()
 
-    private val _isInitialized = MutableStateFlow(false)
-    val isInitialized = _isInitialized.asStateFlow()
+    val workingApis by derivedStateOf {
+        providerDataList
+            .mapNotNull { data ->
+                val api = providerApiRepository.apiMap[data.name]
+
+                if (
+                    data.status != Status.Maintenance
+                    && data.status != Status.Down
+                    && isProviderEnabled(data.name)
+                ) return@mapNotNull api
+
+                null
+            }
+    }
 
     fun initialize() {
         scope.launch {
@@ -101,8 +113,6 @@ class ProviderManager @Inject constructor(
                     duration = Toast.LENGTH_LONG
                 )
             }
-
-            _isInitialized.value = true
         }
     }
 
@@ -328,11 +338,14 @@ class ProviderManager @Inject constructor(
             providers[name] = providerInstance
             classLoaders[loader] = providerInstance
 
-            val api = providerInstance.getApi(context, client)
-            providersRepository.add(
-                providerName = providerData.name,
-                providerApi = api
-            )
+            if (providerPreference?.isDisabled == false) {
+                val api = providerInstance.getApi(context, client)
+
+                providerApiRepository.add(
+                    providerName = providerData.name,
+                    providerApi = api
+                )
+            }
 
             if (providerPreference == null) {
                 loadProviderOnSettings(
@@ -416,7 +429,7 @@ class ProviderManager @Inject constructor(
             classLoaders.values.removeIf { 
                 it.getName().equals(provider.getName(), true)
             }
-            providersRepository.remove(provider.getName()!!)
+            providerApiRepository.remove(provider.getName()!!)
             providers.remove(provider.getName())
             if (unloadOnSettings) {
                 unloadProviderOnSettings(file.absolutePath)
@@ -510,12 +523,27 @@ class ProviderManager @Inject constructor(
     /**
      * Toggles a provider. If it is enabled, it will be disabled and vice versa.
      *
-     * @param name Name of the provider to toggle
+     * @param providerData The data of the provider to toggle
      */
     suspend fun toggleUsage(providerData: ProviderData) {
+        val isProviderEnabled = isProviderEnabled(providerData.name)
+
+        if (isProviderEnabled) {
+            providerApiRepository.remove(providerData.name)
+        } else {
+            providers[providerData.name]
+                ?.getApi(context, client)
+                ?.let {
+                    providerApiRepository.add(
+                        providerName = providerData.name,
+                        providerApi = it
+                    )
+                }
+        }
+        
         toggleUsageOnSettings(
             name = providerData.name,
-            isDisabled = isProviderEnabled(providerData.name)
+            isDisabled = isProviderEnabled
         )
     }
 

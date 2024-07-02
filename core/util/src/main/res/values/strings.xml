@@ -126,6 +126,7 @@
     <string name="gender_male">Male</string>
     <string name="gender_non_binary">Non-binary</string>
     <string name="genres">Genres</string>
+    <string name="get_search_results_from">Get search results from:</string>
     <string name="github_repository">Github Repository</string>
     <string name="ignore_warning_message">Don\'t warn me anymore.</string>
     <string name="import_label">Import</string>

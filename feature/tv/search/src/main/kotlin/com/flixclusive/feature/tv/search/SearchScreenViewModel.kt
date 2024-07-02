@@ -13,9 +13,9 @@ import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.film.replaceTypeInUrl
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.domain.search.GetSearchRecommendedCardsUseCase
-import com.flixclusive.model.tmdb.category.SearchCategory
-import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.model.tmdb.category.SearchCategory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
@@ -144,7 +144,6 @@ class SearchScreenViewModel @Inject constructor(
         viewModelScope.launch {
             loadItems(
                 callResponse = tmdbRepository.search(
-                    mediaType = currentFilterSelected.type,
                     page = page,
                     query = searchQuery
                 ),
