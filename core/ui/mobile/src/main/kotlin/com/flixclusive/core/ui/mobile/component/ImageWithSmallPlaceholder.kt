@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -72,7 +71,6 @@ fun ImageWithSmallPlaceholder(
                         .build(),
                     imageLoader = LocalContext.current.imageLoader,
                     contentDescription = stringResource(id = contentDescId),
-                    contentScale = ContentScale.Crop,
                     onState = { isSuccess = it is AsyncImagePainter.State.Success },
                     modifier = Modifier
                         .fillMaxSize()
