@@ -125,16 +125,20 @@ jobs:
       - name: Get short SHA
         run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
 
+      - name: Get current date and time for archive purposes
+        run: |
+          echo "ARCHIVE_DATE=$(date +"%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
+
       - name: Backup pre-release on archives branch
         run: |
           mkdir -p $GITHUB_WORKSPACE/archives/${{ env.VERSION }}
-          cp flixclusive-release.apk "$GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }} $(date +"%Y-%m-%d").apk"
+          cp flixclusive-release.apk "$GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }} ${{ env.ARCHIVE_DATE }}.apk"
 
       - name: Push pre-release apk to archives branch
         run: |
           cd $GITHUB_WORKSPACE/archives
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
-          git add "$GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }} $(date +"%Y-%m-%d %H:%M:%S").apk"
+          git add "$GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }} ${{ env.ARCHIVE_DATE }}.apk"
           git commit -m "Archive PR-${{ env.SHORT_SHA }} $(date +"%Y-%m-%d")" || exit 0
           git push
