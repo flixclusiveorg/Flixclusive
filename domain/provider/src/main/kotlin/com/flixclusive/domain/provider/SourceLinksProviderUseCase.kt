@@ -117,14 +117,6 @@ class SourceLinksProviderUseCase @Inject constructor(
         )
 
         val cachedSourceData = cache[cacheKey].also { data ->
-            val isNewFilm = cache.keys.none {
-                it.contains(film.identifier, true)
-            }
-
-            if(data == null && isNewFilm) {
-                return@also cache.clear()
-            }
-
             /**
              *
              * If user chose the same film or the [FilmKey] is valid,
