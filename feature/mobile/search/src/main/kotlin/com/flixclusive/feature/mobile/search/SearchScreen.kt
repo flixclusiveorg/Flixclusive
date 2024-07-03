@@ -21,9 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,9 +63,7 @@ fun SearchScreen(
     val tvShowNetworkCards by viewModel.tvShowNetworkCards.collectAsStateWithLifecycle()
     val movieCompanyCards by viewModel.movieCompanyCards.collectAsStateWithLifecycle()
     val genreCards by viewModel.genreCards.collectAsStateWithLifecycle()
-    val providersCatalogsCards by remember {
-        derivedStateOf { viewModel.providersCatalogsCards }
-    }
+    val providersCatalogsCards by viewModel.providersCatalogsCards.collectAsStateWithLifecycle(initialValue = emptyList())
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 180.dp),

@@ -28,7 +28,7 @@ class AppSettingsManager @Inject constructor(
     var localProviderSettings: AppSettingsProvider = AppSettingsProvider()
         private set
 
-    fun initialize() {
+    init {
         scope.launch {
             localAppSettings = appSettings.data.first()
             localProviderSettings = providerSettings.data.first()

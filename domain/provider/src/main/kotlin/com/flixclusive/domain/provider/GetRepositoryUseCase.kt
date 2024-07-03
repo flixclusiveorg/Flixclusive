@@ -10,7 +10,7 @@ import com.flixclusive.domain.provider.util.isProviderBranchValid
 import com.flixclusive.gradle.entities.Repository
 import com.flixclusive.gradle.entities.Repository.Companion.toValidRepositoryLink
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -37,7 +37,7 @@ class GetRepositoryUseCase @Inject constructor(
     suspend operator fun invoke(url: String): Resource<Repository> {
         return withContext(ioDispatcher) {
             safeCall {
-                val repositories = appSettingsManager.providerSettings.data.map { it.repositories }.first()
+                val repositories = appSettingsManager.providerSettings.data.map { it.repositories }.last()
                 val (username, repositoryName) = extractGithubInfoFromLink(url) ?: (null to null)
 
                 val isAlreadyAdded = repositories.any { it.owner.equals(username, true) && it.name == repositoryName }

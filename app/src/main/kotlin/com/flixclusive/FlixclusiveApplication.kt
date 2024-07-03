@@ -48,6 +48,5 @@ class FlixclusiveApplication : Application(), ImageLoaderFactory {
         )
 
         providerManager.initialize()
-        appSettingsManager.initialize()
     }
 }

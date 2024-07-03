@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.ui.mobile.KeyEventHandler
 import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.util.InternetMonitor
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.data.watchlist.WatchlistRepository
@@ -38,7 +37,6 @@ import com.flixclusive.core.util.R as UtilR
 
 @HiltViewModel
 internal class MobileAppViewModel @Inject constructor(
-    private val configurationManager: AppConfigurationManager,
     private val filmProviderUseCase: FilmProviderUseCase,
     private val sourceLinksProvider: SourceLinksProviderUseCase,
     private val watchHistoryRepository: WatchHistoryRepository,
@@ -77,14 +75,6 @@ internal class MobileAppViewModel @Inject constructor(
                 episode = _episodeToPlay.value,
             )
         }
-
-    fun initializeConfigsIfNull() {
-        configurationManager.run {
-            if(homeCategoriesData == null || searchCategoriesData == null || appConfig == null) {
-                initialize()
-            }
-        }
-    }
 
     fun previewFilm(film: Film) {
         if(onFilmLongClickJob?.isActive == true)

@@ -25,6 +25,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -164,7 +165,8 @@ class SearchExpandedScreenViewModel @Inject constructor(
         } else {
             try {
                 val result = withContext(ioDispatcher) {
-                    providers[selectedProviderIndex - 1].search(
+                    val apis = providers.first()
+                    apis[selectedProviderIndex - 1].search(
                         page = page,
                         title = searchQuery,
                     )

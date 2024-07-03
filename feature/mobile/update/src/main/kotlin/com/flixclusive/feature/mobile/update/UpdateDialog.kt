@@ -48,7 +48,7 @@ fun UpdateDialog(
     navigator: UpdateDialogNavigator,
 ) {
     val viewModel = hiltViewModel<UpdateFeatureViewModel>()
-    val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle(null)
+    val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.appUpdateCheckerUseCase.checkForUpdates()

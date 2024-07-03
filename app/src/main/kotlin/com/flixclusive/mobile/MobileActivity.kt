@@ -59,11 +59,6 @@ class MobileActivity : ComponentActivity() {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
     }
 
-    override fun onStart() {
-        super.onStart()
-        viewModel.initializeConfigsIfNull()
-    }
-
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
 

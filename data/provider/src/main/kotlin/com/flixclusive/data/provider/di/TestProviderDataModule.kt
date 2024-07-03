@@ -5,6 +5,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.flixclusive.core.network.di.TestRetrofitModule.getMockTMDBApiService
 import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.data.provider.ProviderApiRepository
+import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.provider.ProviderApi
 import io.mockk.coEvery
@@ -19,6 +20,10 @@ object TestProviderDataModule {
         return mockk<ProviderApiRepository> {
             every { this@mockk.apiMap } returns apiMap
         }
+    }
+
+    fun getMockProviderManager(): ProviderManager {
+        return mockk<ProviderManager>()
     }
 
     fun getMockProviderApiMap(): SnapshotStateMap<String, ProviderApi> {

@@ -20,6 +20,8 @@ import com.flixclusive.provider.Provider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import java.util.Collections
@@ -50,7 +52,9 @@ class ProviderUpdaterUseCase @Inject constructor(
     private var channelHasBeenInitialized = false
 
     suspend fun checkForUpdates(notify: Boolean) {
-        val appSettings = appSettingsManager.appSettings.data.first()
+        val appSettings = appSettingsManager.appSettings.data.run {
+            lastOrNull() ?: first()
+        }
         
         outdatedProviders.clear()
         providerManager.providers.forEach { (name, provider) ->
