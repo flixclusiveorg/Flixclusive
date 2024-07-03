@@ -36,7 +36,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-internal fun SearchProviderCard(
+internal fun SearchProviderBlock(
     modifier: Modifier = Modifier,
     providerData: ProviderData,
     isSelected: Boolean,
@@ -111,7 +111,7 @@ internal fun SearchProviderCard(
 private fun ProviderCardPreview() {
     FlixclusiveTheme {
         Surface {
-            SearchProviderCard(
+            SearchProviderBlock(
                 providerData = getDummyProviderData(),
                 isSelected = true,
                 onClick = {}

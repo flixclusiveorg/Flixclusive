@@ -71,7 +71,7 @@ internal fun SearchProvidersView(
                     iconUrl = "https://i.imgur.com/qd6zqII.png"
                 )
 
-            SearchProviderCard(
+            SearchProviderBlock(
                 providerData = tmdbProviderData,
                 isSelected = viewModel.selectedProviderIndex == 0,
                 onClick = {
@@ -81,7 +81,7 @@ internal fun SearchProvidersView(
         }
 
         itemsIndexed(viewModel.providerDataList) { i, item ->
-            SearchProviderCard(
+            SearchProviderBlock(
                 providerData = item,
                 isSelected = viewModel.selectedProviderIndex == i + 1,
                 onClick = {
