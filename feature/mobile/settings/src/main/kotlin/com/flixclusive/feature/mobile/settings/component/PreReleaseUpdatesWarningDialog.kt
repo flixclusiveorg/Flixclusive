@@ -66,7 +66,7 @@ internal fun PreReleaseUpdatesWarningDialog(
                     Text(
                         text = stringResource(UtilR.string.warning_use_prerelease_updates),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(),
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -81,7 +81,7 @@ internal fun PreReleaseUpdatesWarningDialog(
                         Button(
                             onClick = onConfirm,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = warningColor.onMediumEmphasis(),
+                                containerColor = warningColor,
                                 contentColor = Color.Black
                             ),
                             shape = MaterialTheme.shapes.medium,

@@ -34,11 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.gradle.entities.Author
-import com.flixclusive.gradle.entities.Language
 import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.gradle.entities.ProviderType
-import com.flixclusive.gradle.entities.Status
 import com.flixclusive.core.util.R as UtilR
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,7 +87,7 @@ fun ProviderUninstallNoticeDialog(
                             append("?")
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(),
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -128,7 +124,7 @@ fun ProviderUninstallNoticeDialog(
                             onClick = onDismiss,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.onMediumEmphasis()
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             shape = MaterialTheme.shapes.medium,
                             modifier = Modifier
