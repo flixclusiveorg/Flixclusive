@@ -88,7 +88,10 @@ fun CommonNoticeDialog(
                         verticalAlignment = Alignment.Bottom
                     ) {
                         Button(
-                            onClick = onConfirm,
+                            onClick = {
+                                onConfirm()
+                                onDismiss()
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
                                 contentColor = Color.Black

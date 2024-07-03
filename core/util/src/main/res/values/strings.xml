@@ -99,6 +99,7 @@
     <string name="browse_providers_catalogs">Your providers\' catalogs</string>
     <string name="browse_repository">Browse repository</string>
     <string name="cancel">Cancel</string>
+    <string name="delete_search_history_item">Delete search history item</string>
     <string name="opt_in_prerelease">Ok 🗿</string>
     <string name="opt_out_prerelease">Hell nah 😭</string>
     <string name="change_logs">CHANGE LOGS</string>
@@ -174,6 +175,7 @@
     <string name="sample_subtitle_text">ROSE: I\'m flying!</string>
     <string name="save">Save</string>
     <string name="search_repository_url_suggestion">Paste a repository URL</string>
+    <string name="search_history">Your search history</string>
     <string name="search_suggestion">Try searching \"Iron Man\"…</string>
     <string name="see_all">See all</string>
     <string name="seek_length_label">Player seek length</string>
@@ -284,6 +286,7 @@
     <string name="clear_cache_content_desc">Clear cache</string>
     <string name="clear_text_button">Clear text button</string>
     <string name="copy_button">Copy to clipboard button</string>
+    <string name="delete_search_history_item_message">Are you sure you want to delete this search history item?</string>
     <string name="dns_label">Configure this if your ISP blocks you from watching.</string>
     <string name="drag_icon_content_desc">Drag indicator for provider card</string>
     <string name="down_arrow_season_dropdown_content_desc">A down arrow for dropdown menu</string>
@@ -319,6 +322,7 @@
     <string name="reset_settings_msg">This will reset all app settings.</string>
     <string name="sample_movie_content_desc">Sample Movie for Subtitle Preview</string>
     <string name="search_for_providers">Search for providers</string>
+    <string name="search_history_icon">An icon for search history</string>
     <string name="see_more_btn_content_desc">A vertical see more button icon</string>
     <string name="subtitle_icon_content_desc">Subtitle icon</string>
     <string name="subtitles_background_color_desc">Choose a background color behind the subtitle</string>
@@ -336,6 +340,7 @@
     <string name="quality_snackbar_message">Quality set to %1$s</string>
     <string name="server_snackbar_message">Server set to %1$s</string>
     <string name="subtitle_snackbar_message">Subtitle set to %1$s</string>
+    <string name="use_search_history_item_icon">An icon to use a search history item</string>
 
     <!--  Share app message  -->
     <string name="share_message">Watch all latest and exclusive films at:\n\n%1$s</string>

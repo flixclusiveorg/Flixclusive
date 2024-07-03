@@ -29,6 +29,7 @@ import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchBarInput
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchFilmsGridView
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchProvidersView
+import com.flixclusive.feature.mobile.searchExpanded.component.SearchSearchHistoryView
 import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.tmdb.Film
 import com.ramcosta.composedestinations.annotation.Destination
@@ -124,7 +125,10 @@ fun SearchExpandedScreen(
 
             when (viewType) {
                 SearchItemViewType.SearchHistory -> {
-                    /*TODO()*/
+                    SearchSearchHistoryView(
+                        modifier = modifier,
+                        viewModel = viewModel,
+                    )
                 }
                 SearchItemViewType.Providers -> {
                     SearchProvidersView(
