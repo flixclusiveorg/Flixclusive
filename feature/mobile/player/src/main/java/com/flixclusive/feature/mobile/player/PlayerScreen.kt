@@ -5,7 +5,6 @@ import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
-import android.provider.Settings
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.annotation.OptIn
@@ -65,6 +64,7 @@ import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.mobile.player.controls.PlayerControls
 import com.flixclusive.feature.mobile.player.util.PlayerPipReceiver
+import com.flixclusive.feature.mobile.player.util.getBrightness
 import com.flixclusive.feature.mobile.player.util.percentOfVolume
 import com.flixclusive.feature.mobile.player.util.setBrightness
 import com.flixclusive.model.provider.SourceData
@@ -277,12 +277,7 @@ fun PlayerScreen(
             context.toggleSystemBars(isVisible = false)
 
             // Initialize brightness
-            val userDefaultBrightnessLevel = Settings.System.getInt(
-                context.contentResolver,
-                Settings.System.SCREEN_BRIGHTNESS,
-                -1
-            ) / 255F
-
+            val userDefaultBrightnessLevel = context.getBrightness()
             viewModel.updateScreenBrightness(userDefaultBrightnessLevel)
 
             // Initialize volume level
