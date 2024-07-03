@@ -67,8 +67,7 @@ internal fun SearchBarInput(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     var isError by remember { mutableStateOf(false) }
-    var lastSearchedQuery by remember { mutableStateOf(searchQuery) }
-    var textFieldValue by remember {
+    var textFieldValue by remember(searchQuery) {
         mutableStateOf(searchQuery.createTextFieldValue())
     }
 
@@ -80,8 +79,8 @@ internal fun SearchBarInput(
         focusRequester.requestFocus()
     }
 
-    LaunchedEffect(searchQuery, lastSearchedQuery) {
-        val userIsTypingNewQuery = searchQuery != lastSearchedQuery
+    LaunchedEffect(textFieldValue.text, searchQuery) {
+        val userIsTypingNewQuery = textFieldValue.text != searchQuery
 
         if(userIsTypingNewQuery) {
             currentViewType.value = SearchItemViewType.SearchHistory
@@ -102,7 +101,6 @@ internal fun SearchBarInput(
             value = textFieldValue,
             onValueChange = {
                 textFieldValue = it
-                onQueryChange(textFieldValue.text)
                 isError = false
             },
             singleLine = true,
@@ -111,10 +109,10 @@ internal fun SearchBarInput(
                 onSearch = {
                     keyboardController?.hide()
 
-                    if(searchQuery.isEmpty())
+                    if(textFieldValue.text.isEmpty())
                         isError = true
 
-                    lastSearchedQuery = searchQuery // Update last searched query to avoid re-searching again with the LaunchedEffect scope
+                    onQueryChange(textFieldValue.text)
                     onSearch()
                 }
             ),
@@ -162,10 +160,7 @@ internal fun SearchBarInput(
                     exit = scaleOut(),
                 ) {
                     IconButton(
-                        onClick = {
-                            textFieldValue = "".createTextFieldValue()
-                            onQueryChange("")
-                        }
+                        onClick = { textFieldValue = "".createTextFieldValue() }
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.outline_close_square),

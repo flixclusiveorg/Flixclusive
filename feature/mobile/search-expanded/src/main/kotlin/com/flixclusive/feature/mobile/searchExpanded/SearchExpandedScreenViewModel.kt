@@ -17,8 +17,10 @@ import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.gradle.entities.Status
+import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,8 +35,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchExpandedScreenViewModel @Inject constructor(
-    private val tmdbRepository: TMDBRepository,
     @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
+    private val tmdbRepository: TMDBRepository,
+    private val searchHistoryRepository: SearchHistoryRepository,
     providerManager: ProviderManager,
     appSettingsManager: AppSettingsManager
 ) : ViewModel() {
@@ -50,6 +53,13 @@ class SearchExpandedScreenViewModel @Inject constructor(
             null
         }
     }
+
+    val searchHistory = searchHistoryRepository.getAllItemsInFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     val appSettings = appSettingsManager.appSettings
         .data
@@ -93,6 +103,13 @@ class SearchExpandedScreenViewModel @Inject constructor(
             searchResults.clear()
 
             currentViewType.value = SearchItemViewType.Films
+
+            if (searchQuery.isNotEmpty()) {
+                searchHistoryRepository.insert(
+                    SearchHistory(query = searchQuery)
+                )
+            }
+
             paginateItems()
         }
     }
@@ -180,6 +197,12 @@ class SearchExpandedScreenViewModel @Inject constructor(
                         error = it.error
                     }
             }
+        }
+    }
+
+    fun deleteSearchHistoryItem(item: SearchHistory) {
+        viewModelScope.launch {
+            searchHistoryRepository.remove(id = item.id)
         }
     }
 }

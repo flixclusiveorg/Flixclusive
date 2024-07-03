@@ -6,13 +6,19 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.database.dao.WatchHistoryDao
 import com.flixclusive.core.database.dao.WatchlistDao
+import com.flixclusive.core.database.migration.Schema1to2
+import com.flixclusive.core.database.migration.Schema2to3
+import com.flixclusive.core.database.migration.Schema3to4
+import com.flixclusive.core.database.migration.Schema4to5
 import com.flixclusive.core.database.util.DateConverter
 import com.flixclusive.core.database.util.FilmDataConverter
 import com.flixclusive.core.database.util.WatchHistoryItemConverter
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
+import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.model.database.User
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.WatchlistItem
@@ -21,11 +27,11 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 
-const val APP_DATABASE = "app_database"
+private const val APP_DATABASE = "app_database"
 
 @Database(
-    entities = [WatchHistoryItem::class, WatchlistItem::class, User::class],
-    version = 4,
+    entities = [WatchHistoryItem::class, WatchlistItem::class, User::class, SearchHistory::class],
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(FilmDataConverter::class, WatchHistoryItemConverter::class, DateConverter::class)
@@ -33,6 +39,7 @@ internal abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun watchlistDao(): WatchlistDao
     abstract fun watchHistoryDao(): WatchHistoryDao
+    abstract fun searchHistoryDao(): SearchHistoryDao
 
     companion object {
         @Volatile
@@ -53,9 +60,10 @@ internal abstract class AppDatabase : RoomDatabase() {
                     APP_DATABASE
                 )
                     .addMigrations(
-                        DatabaseMigrations.Schema1to2(),
-                        DatabaseMigrations.Schema2to3(),
-                        DatabaseMigrations.Schema3to4(),
+                        Schema1to2(),
+                        Schema2to3(),
+                        Schema3to4(),
+                        Schema4to5(),
                     )
                     .addCallback(
                         object: Callback() {
@@ -91,7 +99,7 @@ internal abstract class AppDatabase : RoomDatabase() {
 
         /**
          *
-         * This would be deleted on soon updates.
+         * For ancient Flixclusive versions lol
          *
          * */
         private fun Context.updateOldDatabase() {

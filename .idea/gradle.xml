@@ -41,6 +41,7 @@
             <option value="$PROJECT_DIR$/data/configuration" />
             <option value="$PROJECT_DIR$/data/network" />
             <option value="$PROJECT_DIR$/data/provider" />
+            <option value="$PROJECT_DIR$/data/search_history" />
             <option value="$PROJECT_DIR$/data/tmdb" />
             <option value="$PROJECT_DIR$/data/user" />
             <option value="$PROJECT_DIR$/data/watch_history" />

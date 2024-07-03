@@ -1,6 +1,7 @@
 package com.flixclusive.core.database.di
 
 import com.flixclusive.core.database.AppDatabase
+import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.database.dao.WatchHistoryDao
 import com.flixclusive.core.database.dao.WatchlistDao
@@ -26,4 +27,9 @@ internal object DaoModule {
     fun providesWatchHistoryDao(
         database: AppDatabase,
     ): WatchHistoryDao = database.watchHistoryDao()
+
+    @Provides
+    fun providesSearchHistoryDao(
+        database: AppDatabase,
+    ): SearchHistoryDao = database.searchHistoryDao()
 }
