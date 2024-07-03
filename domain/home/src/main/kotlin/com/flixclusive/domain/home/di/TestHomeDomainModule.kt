@@ -1,10 +1,10 @@
 package com.flixclusive.domain.home.di
 
 import com.flixclusive.data.configuration.di.test.TestAppConfigurationModule.getMockAppConfigurationManager
+import com.flixclusive.data.provider.di.TestProviderDataModule.getMockProviderManager
 import com.flixclusive.data.watch_history.di.TestWatchHistoryDataModule.getMockWatchHistoryRepository
 import com.flixclusive.domain.category.di.TestCategoryDomainModule.getMockCategoryItemsProviderUseCase
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
-import com.flixclusive.domain.provider.di.TestProviderDomainModule.getMockSourceLinksProviderUseCase
 import com.flixclusive.domain.tmdb.test.TestTmdbDomainModule.getMockFilmProviderUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -15,12 +15,12 @@ object TestHomeDomainModule {
         dispatcher: CoroutineDispatcher,
     ): HomeItemsProviderUseCase {
         return HomeItemsProviderUseCase(
-            scope = scope,
             filmProviderUseCase = getMockFilmProviderUseCase(dispatcher = dispatcher),
-            configurationProvider = getMockAppConfigurationManager(),
             watchHistoryRepository = getMockWatchHistoryRepository(),
-            sourceLinksProvider = getMockSourceLinksProviderUseCase(),
+            configurationProvider = getMockAppConfigurationManager(),
             categoryItemsProviderUseCase = getMockCategoryItemsProviderUseCase(),
+            providerManager = getMockProviderManager(),
+            scope = scope,
         )
     }
 }

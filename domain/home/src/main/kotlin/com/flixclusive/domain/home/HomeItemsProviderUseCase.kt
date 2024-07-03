@@ -5,9 +5,9 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.configuration.AppConfigurationManager
+import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.category.CategoryItemsProviderUseCase
-import com.flixclusive.domain.provider.SourceLinksProviderUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
 import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.tmdb.Film
@@ -20,6 +20,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -42,25 +46,49 @@ class HomeItemsProviderUseCase @Inject constructor(
     private val filmProviderUseCase: FilmProviderUseCase,
     private val watchHistoryRepository: WatchHistoryRepository,
     private val configurationProvider: AppConfigurationManager,
-    private val sourceLinksProvider: SourceLinksProviderUseCase,
     private val categoryItemsProviderUseCase: CategoryItemsProviderUseCase,
+    providerManager: ProviderManager,
     @ApplicationScope private val scope: CoroutineScope,
 ) {
     private val _headerItem = MutableStateFlow<Film?>(null)
-
-    val headerItem = _headerItem.asStateFlow()
     private val _categories = MutableStateFlow<List<Category>>(emptyList())
     private val _rowItems = MutableStateFlow<List<List<Film>>>(emptyList())
     private val _rowItemsPagingState = MutableStateFlow<List<PaginationStateInfo>>(emptyList())
 
     private val _initializationStatus = MutableStateFlow<Resource<Unit>>(Resource.Loading)
     val initializationStatus = _initializationStatus.asStateFlow()
+
     private var initializeJob: Job? = null
     val rowItemsPaginationJobs = mutableListOf<Job?>()
 
+    val headerItem = _headerItem.asStateFlow()
     val categories = _categories.asStateFlow()
     val rowItems = _rowItems.asStateFlow()
     val rowItemsPagingState = _rowItemsPagingState.asStateFlow()
+
+    private var providerCatalogs: List<ProviderCatalog> = emptyList()
+
+    init {
+        val providerCatalogs = providerManager.workingApis
+            .map { list ->
+                list.flatMap { it.catalogs }
+            }.distinctUntilChanged()
+
+        scope.launch {
+            configurationProvider.configurationStatus
+                .combine(providerCatalogs) { configurationStatus, catalogs ->
+                    configurationStatus to catalogs
+                }.collectLatest { (configurationStatus, catalogs) ->
+                    if (configurationStatus is Resource.Success) {
+                        this@HomeItemsProviderUseCase.providerCatalogs = catalogs
+
+                        // Force initialize the home items
+                        initializeJob?.cancel()
+                        invoke()
+                    }
+                }
+        }
+    }
 
     operator fun invoke() {
         if (initializeJob?.isActive == true)
@@ -248,7 +276,6 @@ class HomeItemsProviderUseCase @Inject constructor(
         val tmdbCategories = configurationProvider.homeCategoriesData!!
 
         val allTmdbCategories = tmdbCategories.all + tmdbCategories.tv + tmdbCategories.movie
-        val providerCatalogs = getProvidersCatalogs()
         val requiredCategories = allTmdbCategories.filter { it.required }
 
         val countOfItemsToFetch = Random.nextInt(PREFERRED_MINIMUM_HOME_ITEMS, PREFERRED_MAXIMUM_HOME_ITEMS)
@@ -266,15 +293,6 @@ class HomeItemsProviderUseCase @Inject constructor(
                 isTrendingCategory
             }
     }
-
-    private fun getProvidersCatalogs()
-        = sourceLinksProvider.providerApis
-            .flatMap {
-                // In case some shitty code
-                // might occur in the future here.
-                safeCall { it.catalogs }
-                    ?: emptyList()
-            }
 
     private suspend fun getUserRecommendations(userId: Int = 1): List<HomeCategory> {
         val randomWatchedFilms =

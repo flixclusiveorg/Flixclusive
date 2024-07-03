@@ -4,9 +4,8 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.widget.Toast
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshotFlow
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers
@@ -14,6 +13,7 @@ import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
@@ -75,7 +75,7 @@ class ProviderManager @Inject constructor(
      * */
     private val updaterJsonMap = HashMap<String, List<ProviderData>>()
 
-    val workingApis by derivedStateOf {
+    val workingApis = snapshotFlow {
         providerDataList
             .mapNotNull { data ->
                 val api = providerApiRepository.apiMap[data.name]
@@ -84,6 +84,7 @@ class ProviderManager @Inject constructor(
                     data.status != Status.Maintenance
                     && data.status != Status.Down
                     && isProviderEnabled(data.name)
+                    && api != null
                 ) return@mapNotNull api
 
                 null
@@ -274,9 +275,10 @@ class ProviderManager @Inject constructor(
     /**
      * Loads a provider
      *
-     * @param file          Provider file
-     * @param providerData    The provider information
+     * @param file              Provider file
+     * @param providerData      The provider information
      */
+    @Suppress("DEPRECATION", "UNCHECKED_CAST")
     private suspend fun loadProvider(file: File, providerData: ProviderData) {
         val fileName = file.nameWithoutExtension
         val filePath = file.absolutePath
@@ -527,6 +529,10 @@ class ProviderManager @Inject constructor(
      */
     suspend fun toggleUsage(providerData: ProviderData) {
         val isProviderEnabled = isProviderEnabled(providerData.name)
+        toggleUsageOnSettings(
+            name = providerData.name,
+            isDisabled = isProviderEnabled
+        )
 
         if (isProviderEnabled) {
             providerApiRepository.remove(providerData.name)
@@ -540,11 +546,6 @@ class ProviderManager @Inject constructor(
                     )
                 }
         }
-        
-        toggleUsageOnSettings(
-            name = providerData.name,
-            isDisabled = isProviderEnabled
-        )
     }
 
     private suspend fun toggleUsageOnSettings(

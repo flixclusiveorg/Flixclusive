@@ -49,8 +49,8 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.tv.player.controls.PlaybackControls
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.common.tv.Episode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -205,6 +205,7 @@ fun PlayerScreen(
         exit = fadeOut(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY))
     ) {
         val sourceData = viewModel.sourceData
+        val sourceProviders by viewModel.sourceProviders.collectAsStateWithLifecycle(initialValue = emptyList())
 
         val currentPlayerTitle = remember(currentEpisodeSelected) {
             formatPlayerTitle(film, currentEpisodeSelected)
@@ -404,7 +405,7 @@ fun PlayerScreen(
                         isPlaybackSpeedPanelOpened = isPlaybackSpeedPanelOpened,
                         isVisible = viewModel.areControlsVisible,
                         servers = sourceData.cachedLinks,
-                        providerApis = viewModel.sourceProviders,
+                        providerApis = sourceProviders,
                         currentEpisodeSelected = currentEpisodeSelected,
                         stateProvider = { uiState },
                         dialogStateProvider = { dialogState },

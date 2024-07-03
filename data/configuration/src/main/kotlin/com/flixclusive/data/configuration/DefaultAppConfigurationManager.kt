@@ -15,9 +15,11 @@ import com.flixclusive.model.tmdb.category.SearchCategoriesData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.flixclusive.core.util.R as UtilR
@@ -33,11 +35,11 @@ internal class DefaultAppConfigurationManager @Inject constructor(
 
     private var fetchJob: Job? = null
 
-    private val _configurationStatus = MutableSharedFlow<Resource<Unit>>(replay = 1)
-    override val configurationStatus = _configurationStatus.asSharedFlow()
+    private val _configurationStatus = MutableStateFlow<Resource<Unit>>(Resource.Loading)
+    override val configurationStatus = _configurationStatus.asStateFlow()
 
-    private val _updateStatus = MutableSharedFlow<UpdateStatus>(replay = 1)
-    override val updateStatus = _updateStatus.asSharedFlow()
+    private val _updateStatus = MutableStateFlow<UpdateStatus>(UpdateStatus.Fetching)
+    override val updateStatus = _updateStatus.asStateFlow()
 
     override var currentAppBuild: AppBuild? = null
         private set
@@ -45,6 +47,19 @@ internal class DefaultAppConfigurationManager @Inject constructor(
     override var appConfig: AppConfig? = null
     override var homeCategoriesData: HomeCategoriesData? = null
     override var searchCategoriesData: SearchCategoriesData? = null
+
+    private val Resource<Unit>.needsToInitialize: Boolean
+        get() = (this is Resource.Success
+            && (appConfig == null || homeCategoriesData == null || searchCategoriesData == null))
+
+    init {
+        scope.launch {
+            _configurationStatus.collectLatest {
+                if(it.needsToInitialize)
+                    initialize(currentAppBuild)
+            }
+        }
+    }
 
     override fun initialize(appBuild: AppBuild?) {
         if(fetchJob?.isActive == true)
@@ -56,7 +71,7 @@ internal class DefaultAppConfigurationManager @Inject constructor(
         fetchJob = scope.launch {
             val retryDelay = 3000L
             for (i in 0..MAX_RETRIES) {
-                _configurationStatus.emit(Resource.Loading)
+                _configurationStatus.update { Resource.Loading }
 
                 try {
                     checkForUpdates()
@@ -64,28 +79,28 @@ internal class DefaultAppConfigurationManager @Inject constructor(
                     homeCategoriesData = githubRawApiService.getHomeCategoriesConfig()
                     searchCategoriesData = githubRawApiService.getSearchCategoriesConfig()
 
-                    return@launch _configurationStatus.emit(Resource.Success(Unit))
+                    return@launch _configurationStatus.update { Resource.Success(Unit) }
                 } catch (e: Exception) {
                     errorLog(e)
 
                     if (i == MAX_RETRIES) {
                         val errorMessageId = e.catchInternetRelatedException().error!!
 
-                        return@launch _configurationStatus.emit(Resource.Failure(errorMessageId))
+                        return@launch _configurationStatus.update { Resource.Failure(errorMessageId) }
                     }
                 }
 
                 delay(retryDelay)
             }
 
-            _configurationStatus.emit(
+            _configurationStatus.update {
                 Resource.Failure(UtilR.string.failed_to_init_app)
-            )
+            }
         }
     }
 
     override suspend fun checkForUpdates() {
-        _updateStatus.emit(UpdateStatus.Fetching)
+        _updateStatus.update { UpdateStatus.Fetching }
 
         try {
             val appSettings = appSettingsManager.appSettings.data.first()
@@ -94,7 +109,7 @@ internal class DefaultAppConfigurationManager @Inject constructor(
             appConfig = githubRawApiService.getAppConfig()
 
             if(appConfig!!.isMaintenance)
-                return _updateStatus.emit(UpdateStatus.Maintenance)
+                return _updateStatus.update { UpdateStatus.Maintenance }
 
             if (isUsingPrereleaseUpdates && currentAppBuild?.debug == false) {
                 val lastCommitObject = githubApiService.getLastCommitObject()
@@ -117,10 +132,12 @@ internal class DefaultAppConfigurationManager @Inject constructor(
                         updateUrl = "https://github.com/$GITHUB_USERNAME/$GITHUB_REPOSITORY/releases/download/pre-release/flixclusive-release.apk"
                     )
 
-                    return _updateStatus.emit(UpdateStatus.Outdated)
+                    _updateStatus.update { UpdateStatus.Outdated }
+                    return
                 }
 
-                return _updateStatus.emit(UpdateStatus.UpToDate)
+                _updateStatus.update { UpdateStatus.UpToDate }
+                return
             } else {
                 val isNeedingAnUpdate = appConfig!!.build != -1L && appConfig!!.build > currentAppBuild!!.build
 
@@ -128,16 +145,16 @@ internal class DefaultAppConfigurationManager @Inject constructor(
                     val releaseInfo = githubApiService.getReleaseInfo(tag = appConfig!!.versionName)
 
                     appConfig = appConfig!!.copy(updateInfo = releaseInfo.releaseNotes)
-                    return _updateStatus.emit(UpdateStatus.Outdated)
+                    return _updateStatus.update { UpdateStatus.Outdated }
                 }
 
-                return _updateStatus.emit(UpdateStatus.UpToDate)
+                return _updateStatus.update { UpdateStatus.UpToDate }
             }
         } catch (e: Exception) {
             errorLog(e)
             val errorMessageId = e.catchInternetRelatedException().error!!
 
-            _updateStatus.emit(UpdateStatus.Error(errorMessageId))
+            _updateStatus.update { UpdateStatus.Error(errorMessageId) }
         }
     }
 

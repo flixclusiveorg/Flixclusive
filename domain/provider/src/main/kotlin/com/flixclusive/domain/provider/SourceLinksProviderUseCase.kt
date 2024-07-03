@@ -22,6 +22,7 @@ import com.flixclusive.provider.util.WebViewCallback
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -61,7 +62,7 @@ class SourceLinksProviderUseCase @Inject constructor(
         ): FilmKey = "$filmId-${episodeData?.season}:${episodeData?.number}"
     }
 
-     val providerApis = providersManager.workingApis
+    val providerApis: Flow<List<ProviderApi>> = providersManager.workingApis
 
     /**
      *
@@ -119,6 +120,7 @@ class SourceLinksProviderUseCase @Inject constructor(
             val isNewFilm = cache.keys.none {
                 it.contains(film.identifier, true)
             }
+
             if(data == null && isNewFilm) {
                 return@also cache.clear()
             }
@@ -429,15 +431,15 @@ class SourceLinksProviderUseCase @Inject constructor(
      * available that prioritizes the
      * given provider and puts it on top of the list
      * */
-    private fun getPrioritizedProvidersList(
+    private suspend fun getPrioritizedProvidersList(
         preferredProviderName: String?
     ): List<ProviderApi> {
         if(preferredProviderName != null) {
-            return providerApis
+            return providerApis.first()
                 .sortedByDescending { it.name.equals(preferredProviderName, true) }
         }
 
-        return providerApis
+        return providerApis.first()
     }
 
     val String.getNoLinksMessage

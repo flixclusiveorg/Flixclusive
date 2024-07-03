@@ -87,16 +87,13 @@ interface PlayerScreenNavigator : GoBackAction {
      * There will be cases where the system will kill
      * the app's process mercilessly if it's never put as an exclusion
      * in the **ignore battery optimization list**.
-     * <br/>
      *
      * When the user comes back to the app after a long while,
      * it will scrape back the old data that were saved from [SavedStateHandle].
-     * <br/>
      *
      * This action should trigger the `savedStateHandle` to
      * update its values based on [PlayerScreenNavArgs] - since that is where
      * the args are saved on.
-     * <br/>
      *
      * So whenever the user comes back to the app, the last episode the user
      * was on would be re-used.
@@ -128,6 +125,7 @@ fun PlayerScreen(
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
 
     val sourceData = viewModel.sourceData
+    val sourceProviders by viewModel.sourceProviders.collectAsStateWithLifecycle(initialValue = emptyList())
     val seasonData by viewModel.season.collectAsStateWithLifecycle()
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
@@ -456,7 +454,7 @@ fun PlayerScreen(
                 isPlayerSettingsDialogOpened = isPlayerSettingsDialogOpened,
                 isServersDialogOpened = isServersDialogOpened,
                 watchHistoryItem = watchHistoryItem,
-                providerApis = viewModel.sourceProviders,
+                providerApis = sourceProviders,
                 availableSeasons = (args.film as? TvShow)?.totalSeasons,
                 currentEpisodeSelected = currentSelectedEpisode,
                 isLastEpisode = viewModel.isLastEpisode,

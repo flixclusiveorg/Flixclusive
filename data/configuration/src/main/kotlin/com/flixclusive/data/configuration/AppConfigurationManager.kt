@@ -5,7 +5,7 @@ import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.model.configuration.AppConfig
 import com.flixclusive.model.tmdb.category.HomeCategoriesData
 import com.flixclusive.model.tmdb.category.SearchCategoriesData
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 
 sealed class UpdateStatus(
     val errorMessage: UiText? = null
@@ -31,12 +31,12 @@ data class AppBuild(
 )
 
 interface AppConfigurationManager {
-    val configurationStatus: SharedFlow<Resource<Unit>>
-    val updateStatus: SharedFlow<UpdateStatus>
+    val configurationStatus: StateFlow<Resource<Unit>>
+    val updateStatus: StateFlow<UpdateStatus>
 
     /**
      *
-     * Current [BuildConfig] of this app
+     * Current BuildConfig of this app
      *
      * */
     val currentAppBuild: AppBuild?

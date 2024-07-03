@@ -80,8 +80,8 @@ fun SplashScreen(
 
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle(null)
-    val configurationStatus by viewModel.configurationStatus.collectAsStateWithLifecycle(Resource.Loading)
+    val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle()
+    val configurationStatus by viewModel.configurationStatus.collectAsStateWithLifecycle()
 
     var areAllPermissionsGranted by remember { mutableStateOf(context.hasAllPermissionGranted()) }
     var isDoneAnimating by rememberSaveable { mutableStateOf(false) }
@@ -246,7 +246,7 @@ fun SplashScreen(
             }
         } else areAllPermissionsGranted = true
 
-        if (areAllPermissionsGranted && isDoneAnimating && !appSettings.isFirstTimeUserLaunch_ && updateStatus != null) {
+        if (areAllPermissionsGranted && isDoneAnimating && !appSettings.isFirstTimeUserLaunch_) {
             if (updateStatus == UpdateStatus.Outdated && appSettings.isUsingAutoUpdateAppFeature) {
                 navigator.openUpdateScreen(
                     newVersion = viewModel.appUpdateCheckerUseCase.newVersion!!,
@@ -266,7 +266,7 @@ fun SplashScreen(
                     )
                 } else {
                     val errorMessage = if (updateStatus is UpdateStatus.Error)
-                        updateStatus!!.errorMessage
+                        updateStatus.errorMessage
                     else (configurationStatus as Resource.Failure).error
 
                     Pair(

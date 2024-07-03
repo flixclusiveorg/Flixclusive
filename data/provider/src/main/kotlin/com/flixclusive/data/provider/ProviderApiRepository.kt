@@ -10,11 +10,7 @@ class ProviderApiRepository @Inject constructor() {
     val apiMap = mutableStateMapOf<String, ProviderApi>()
 
     fun add(providerName: String, providerApi: ProviderApi) {
-        if (apiMap[providerName] == null) {
-            apiMap[providerName] = providerApi
-        } else {
-            apiMap[providerName] = providerApi
-        }
+        apiMap[providerName] = providerApi
     }
 
     /**
@@ -22,6 +18,6 @@ class ProviderApiRepository @Inject constructor() {
      * Removes all providers registered to the given provider name.
      * */
     fun remove(providerName: String) {
-        apiMap.keys.removeIf { it.equals(providerName, true) }
+        apiMap.remove(providerName)
     }
 }
