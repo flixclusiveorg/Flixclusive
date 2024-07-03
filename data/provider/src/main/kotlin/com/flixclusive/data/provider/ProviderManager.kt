@@ -13,7 +13,6 @@ import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
@@ -283,7 +282,7 @@ class ProviderManager @Inject constructor(
         val fileName = file.nameWithoutExtension
         val filePath = file.absolutePath
 
-        val providerPreference = getProviderPreference(fileName)
+        var providerPreference = getProviderPreference(fileName)
 
         infoLog("Loading provider: $fileName")
 
@@ -314,7 +313,6 @@ class ProviderManager @Inject constructor(
                 return
             }
 
-            providerDataList.add(providerData)
 
             val settingsPath = context.getExternalFilesDir(null)
                 ?.absolutePath + "/settings/${buildValidFilename(providerData.repositoryUrl!!)}"
@@ -340,7 +338,17 @@ class ProviderManager @Inject constructor(
             providers[name] = providerInstance
             classLoaders[loader] = providerInstance
 
-            if (providerPreference?.isDisabled == false) {
+            if (providerPreference == null) {
+                providerPreference = ProviderPreference(
+                    name = fileName,
+                    filePath = filePath,
+                    isDisabled = false
+                )
+
+                loadProviderOnSettings(providerPreference)
+            }
+
+            if (!providerPreference.isDisabled) {
                 val api = providerInstance.getApi(context, client)
 
                 providerApiRepository.add(
@@ -349,15 +357,7 @@ class ProviderManager @Inject constructor(
                 )
             }
 
-            if (providerPreference == null) {
-                loadProviderOnSettings(
-                    ProviderPreference(
-                        name = fileName,
-                        filePath = filePath,
-                        isDisabled = false
-                    )
-                )
-            }
+            providerDataList.add(providerData)
         } catch (e: Throwable) {
             failedToLoad[file] = e
             errorLog("Failed to load provider $fileName: ${e.localizedMessage}")
@@ -583,6 +583,6 @@ class ProviderManager @Inject constructor(
             .localProviderSettings
             .providers
             .find { it.name.contains(name, true) }
-            ?.isDisabled?.not() ?: false
+            ?.isDisabled?.not() ?: true
     }
 }
