@@ -6,13 +6,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_BUFFER_LENGTH_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_BUFFER_SIZE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_DISK_CACHE_DIALOG
 import com.flixclusive.feature.mobile.settings.SettingsItem
 import kotlinx.coroutines.launch
+import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
@@ -50,7 +50,7 @@ internal fun currentCacheSettings(
             },
             previewContent = {
                 Icon(
-                    painter = painterResource(id = R.drawable.delete),
+                    painter = painterResource(id = UiCommonR.drawable.broom_clean),
                     contentDescription = stringResource(
                         id = UtilR.string.clear_cache_content_desc
                     )
