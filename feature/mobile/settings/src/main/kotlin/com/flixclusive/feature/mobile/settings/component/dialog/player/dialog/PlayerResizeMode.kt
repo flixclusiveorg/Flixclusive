@@ -9,7 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +28,7 @@ internal fun PlayerResizeMode(
     onChange: (Int) -> Unit,
     onDismissRequest: () -> Unit
 ) {
-    val (selectedOption, onOptionSelected) = remember { mutableStateOf(appSettings.preferredResizeMode) }
+    val (selectedOption, onOptionSelected) = remember { mutableIntStateOf(appSettings.preferredResizeMode) }
 
     BaseSettingsDialog(
         title = stringResource(id = UtilR.string.preferred_resize_mode),
@@ -36,7 +36,7 @@ internal fun PlayerResizeMode(
     ) {
         Column {
             ResizeMode.entries.forEach {
-                val isSelected = it.mode == selectedOption
+                val isSelected = it.ordinal == selectedOption
 
                 Row(
                     modifier = Modifier
@@ -44,8 +44,8 @@ internal fun PlayerResizeMode(
                         .selectable(
                             selected = isSelected,
                             onClick = {
-                                onOptionSelected(it.mode)
-                                onChange(it.mode)
+                                onOptionSelected(it.ordinal)
+                                onChange(it.ordinal)
                             }
                         ),
                     horizontalArrangement = Arrangement.spacedBy(space = 10.dp),
@@ -54,8 +54,8 @@ internal fun PlayerResizeMode(
                     RadioButton(
                         selected = isSelected,
                         onClick = {
-                            onOptionSelected(it.mode)
-                            onChange(it.mode)
+                            onOptionSelected(it.ordinal)
+                            onChange(it.ordinal)
                         }
                     )
 

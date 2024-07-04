@@ -3,6 +3,7 @@ package com.flixclusive.feature.mobile.settings.settings_group
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
@@ -19,6 +20,10 @@ import com.flixclusive.core.util.R as UtilR
 internal fun currentVideoPlayerSettings(): List<SettingsItem> {
     val appSettings by rememberLocalAppSettings()
     val onChangeSettings by rememberSettingsChanger()
+
+    val selectedResizeMode = remember(appSettings.preferredResizeMode) {
+        ResizeMode.entries.find { it.ordinal == appSettings.preferredResizeMode }.toString()
+    }
 
     return listOf(
         SettingsItem(
@@ -59,7 +64,7 @@ internal fun currentVideoPlayerSettings(): List<SettingsItem> {
         ),
         SettingsItem(
             title = stringResource(UtilR.string.preferred_resize_mode),
-            description = ResizeMode.entries.find { it.mode == appSettings.preferredResizeMode }.toString(),
+            description = selectedResizeMode,
             dialogKey = KEY_PLAYER_RESIZE_MODE_DIALOG,
         ),
         SettingsItem(

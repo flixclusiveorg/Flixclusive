@@ -44,6 +44,7 @@ import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.database.util.calculateRemainingTime
 import com.flixclusive.model.database.util.isTimeInRangeOfThreshold
+import com.flixclusive.model.datastore.player.ResizeMode
 import com.flixclusive.model.provider.SourceData
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
@@ -193,9 +194,9 @@ object PlayerUiUtil {
         modifier: Modifier = Modifier,
         areControlsVisible: Boolean,
         isSubtitlesVisible: Boolean,
+        resizeMode: Int,
         isInTv: Boolean = false,
         isInPipMode: Boolean = false,
-        resizeMode: Int = AspectRatioFrameLayout.RESIZE_MODE_FIT,
     ) {
         val playerManager by rememberLocalPlayerManager()
 
@@ -211,7 +212,11 @@ object PlayerUiUtil {
                     root.isFocusable = false
 
                     playerView.run {
-                        this@run.resizeMode = resizeMode
+                        this@run.resizeMode = when (resizeMode) {
+                            ResizeMode.Fill.ordinal -> ResizeMode.Fill.mode
+                            ResizeMode.Zoom.ordinal -> ResizeMode.Zoom.mode
+                            else -> ResizeMode.Fit.mode
+                        }
                         this@run.player = playerManager.player
 
                         // Show the controls forever
