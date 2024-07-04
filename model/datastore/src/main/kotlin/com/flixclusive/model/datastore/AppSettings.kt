@@ -55,7 +55,7 @@ data class AppSettings(
     /**
      * 1080p is the default value
      * */
-    val preferredQuality: PlayerQuality = PlayerQuality._1080p,
+    val preferredQuality: PlayerQuality = PlayerQuality.Quality1080p,
     /**
      * Fit screen is the default value for resize mode
      * */
