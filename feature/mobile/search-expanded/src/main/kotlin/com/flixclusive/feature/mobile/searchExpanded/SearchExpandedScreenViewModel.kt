@@ -85,6 +85,8 @@ class SearchExpandedScreenViewModel @Inject constructor(
     var error by mutableStateOf<UiText?>(null)
         private set
 
+    var lastQuerySearched by mutableStateOf("")
+        private set
     var searchQuery by mutableStateOf("")
         private set
 
@@ -102,6 +104,7 @@ class SearchExpandedScreenViewModel @Inject constructor(
             pagingState = PagingState.IDLE
             searchResults.clear()
 
+            lastQuerySearched = searchQuery
             currentViewType.value = SearchItemViewType.Films
 
             if (searchQuery.isNotEmpty()) {
