@@ -132,8 +132,8 @@ fun SearchExpandedScreen(
                 }
                 SearchItemViewType.Providers -> {
                     SearchProvidersView(
-                        viewModel = viewModel,
                         modifier = modifier,
+                        viewModel = viewModel,
                     )
                 }
                 SearchItemViewType.Films -> {

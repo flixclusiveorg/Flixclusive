@@ -30,6 +30,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +68,7 @@ internal fun SearchBarInput(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     var isError by remember { mutableStateOf(false) }
+    var lastQuerySearched by rememberSaveable { mutableStateOf(searchQuery) }
     var textFieldValue by remember(searchQuery) {
         mutableStateOf(searchQuery.createTextFieldValue())
     }
@@ -79,10 +81,10 @@ internal fun SearchBarInput(
         focusRequester.requestFocus()
     }
 
-    LaunchedEffect(textFieldValue.text, searchQuery) {
-        val userIsTypingNewQuery = textFieldValue.text != searchQuery
+    LaunchedEffect(searchQuery, lastQuerySearched) {
+        val isTypingNewQuery = searchQuery != lastQuerySearched
 
-        if(userIsTypingNewQuery) {
+        if (isTypingNewQuery) {
             currentViewType.value = SearchItemViewType.SearchHistory
         }
     }
@@ -101,7 +103,9 @@ internal fun SearchBarInput(
             value = textFieldValue,
             onValueChange = {
                 textFieldValue = it
+
                 isError = false
+                onQueryChange(it.text)
             },
             singleLine = true,
             textStyle = MaterialTheme.typography.bodyMedium,
@@ -109,10 +113,13 @@ internal fun SearchBarInput(
                 onSearch = {
                     keyboardController?.hide()
 
-                    if(textFieldValue.text.isEmpty())
+                    if(textFieldValue.text.isEmpty()) {
                         isError = true
+                    } else {
+                        currentViewType.value = SearchItemViewType.Films
+                    }
 
-                    onQueryChange(textFieldValue.text)
+                    lastQuerySearched = textFieldValue.text
                     onSearch()
                 }
             ),
@@ -155,12 +162,12 @@ internal fun SearchBarInput(
             },
             trailingIcon = {
                 this@Column.AnimatedVisibility(
-                    visible = searchQuery.isNotEmpty(),
+                    visible = textFieldValue.text.isNotEmpty(),
                     enter = scaleIn(),
                     exit = scaleOut(),
                 ) {
                     IconButton(
-                        onClick = { textFieldValue = "".createTextFieldValue() }
+                        onClick = { onQueryChange("") }
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.outline_close_square),
