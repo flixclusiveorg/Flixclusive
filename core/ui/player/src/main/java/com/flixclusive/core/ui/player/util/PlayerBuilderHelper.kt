@@ -10,6 +10,7 @@ import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
 import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.audio.AudioRendererEventListener
 import androidx.media3.exoplayer.metadata.MetadataOutput
@@ -38,6 +39,7 @@ internal fun Context.getRenderers(
 ): Array<Renderer> {
     return DefaultRenderersFactory(this).apply {
             setEnableDecoderFallback(true)
+            setExtensionRendererMode(EXTENSION_RENDERER_MODE_ON)
         }
         .createRenderers(
             eventHandler,

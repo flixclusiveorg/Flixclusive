@@ -24,7 +24,9 @@ dependencies {
     implementation(libs.compose.ui.util)
     implementation(libs.compose.viewbinding)
     implementation(libs.lifecycle.viewModelKtx)
+    implementation(libs.media3.ffmpeg)
     // implementation(libs.media3.cast)
+
     api(libs.media3.common)
     api(libs.media3.datasource.okhttp)
     api(libs.media3.exoplayer)
