@@ -2,7 +2,6 @@ package com.flixclusive.feature.mobile.searchExpanded
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -41,7 +40,6 @@ internal enum class SearchItemViewType {
     Films;
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Destination
 @Composable
 fun SearchExpandedScreen(
@@ -77,6 +75,7 @@ fun SearchExpandedScreen(
         topBar = {
             SearchBarInput(
                 searchQuery = viewModel.searchQuery,
+                lastQuerySearched = viewModel.lastQuerySearched,
                 currentViewType = viewModel.currentViewType,
                 selectedProvider = selectedProvider,
                 onSearch = {

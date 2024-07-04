@@ -30,7 +30,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,7 +58,8 @@ import com.flixclusive.core.util.R as UtilR
 internal fun SearchBarInput(
     currentViewType: MutableState<SearchItemViewType>,
     selectedProvider: String,
-    searchQuery: String = "",
+    searchQuery: String,
+    lastQuerySearched: String,
     onSearch: () -> Unit,
     onNavigationIconClick: () -> Unit,
     onChangeProvider: (Int) -> Unit,
@@ -68,7 +68,6 @@ internal fun SearchBarInput(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     var isError by remember { mutableStateOf(false) }
-    var lastQuerySearched by rememberSaveable { mutableStateOf(searchQuery) }
     var textFieldValue by remember(searchQuery) {
         mutableStateOf(searchQuery.createTextFieldValue())
     }
@@ -119,7 +118,6 @@ internal fun SearchBarInput(
                         currentViewType.value = SearchItemViewType.Films
                     }
 
-                    lastQuerySearched = textFieldValue.text
                     onSearch()
                 }
             ),
@@ -220,6 +218,7 @@ private fun SearchBarExpandedPreview() {
         Surface {
             SearchBarInput(
                 searchQuery = "Star Wars",
+                lastQuerySearched = "Iron Man",
                 onSearch = {},
                 onNavigationIconClick = {},
                 onQueryChange = {},
