@@ -9,7 +9,6 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
-import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
 import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.audio.AudioRendererEventListener
@@ -20,6 +19,7 @@ import androidx.media3.exoplayer.text.TextRenderer
 import androidx.media3.exoplayer.video.VideoRendererEventListener
 import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
 import com.flixclusive.core.util.network.SSLTrustManager
+import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
 import java.security.SecureRandom
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
@@ -37,7 +37,7 @@ internal fun Context.getRenderers(
     subtitleOffset: Long,
     onTextRendererChange: (CustomTextRenderer) -> Unit,
 ): Array<Renderer> {
-    return DefaultRenderersFactory(this).apply {
+    return NextRenderersFactory(this).apply {
             setEnableDecoderFallback(true)
             setExtensionRendererMode(EXTENSION_RENDERER_MODE_ON)
         }
