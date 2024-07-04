@@ -60,7 +60,7 @@ internal fun PlayerQuality(
                     )
 
                     Text(
-                        text = it.qualityName,
+                        text = it.qualityName.asString(),
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontSize = 16.sp,
                             fontWeight = if(isSelected) FontWeight.Medium else FontWeight.Normal

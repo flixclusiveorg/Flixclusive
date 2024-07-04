@@ -59,7 +59,7 @@ internal fun currentVideoPlayerSettings(): List<SettingsItem> {
         ),
         SettingsItem(
             title = stringResource(UtilR.string.preferred_quality),
-            description = appSettings.preferredQuality.qualityName,
+            description = appSettings.preferredQuality.qualityName.asString(),
             dialogKey = KEY_PLAYER_QUALITY_DIALOG,
         ),
         SettingsItem(

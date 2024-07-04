@@ -18,6 +18,7 @@ import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.toWatchHistoryItem
 import com.flixclusive.model.database.util.getSavedTimeForFilm
+import com.flixclusive.model.datastore.player.PlayerQuality.Companion.getIndexOfPreferredQuality
 import com.flixclusive.model.provider.SourceData
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.FilmDetails
@@ -124,16 +125,13 @@ abstract class BasePlayerViewModel(
 
     open fun resetUiState() {
         _uiState.update {
-            val preferredServer = appSettings.value.preferredQuality
+            val preferredQuality = appSettings.value.preferredQuality
             val preferredResizeMode = appSettings.value.preferredResizeMode
-
-            val indexOfPreferredServer = sourceData.cachedLinks.indexOfFirst { server ->
-                server.name.contains(preferredServer.qualityName, true)
-                || server.name.equals(preferredServer.qualityName, true)
-            }
+            val indexOfPreferredServer = sourceData.cachedLinks
+                .getIndexOfPreferredQuality(preferredQuality = preferredQuality)
 
             it.copy(
-                selectedSourceLink = max(indexOfPreferredServer, 0),
+                selectedSourceLink = indexOfPreferredServer,
                 selectedResizeMode = preferredResizeMode,
                 selectedProvider = sourceData.providerName
             )
@@ -302,10 +300,8 @@ abstract class BasePlayerViewModel(
     }
 
     fun onServerChange(index: Int? = null) {
-        val indexToUse = index ?: sourceData.cachedLinks.indexOfFirst {
-            it.name.contains(appSettings.value.preferredQuality.qualityName, true)
-            || it.name.equals(appSettings.value.preferredQuality.qualityName, true)
-        }
+        val preferredQuality = appSettings.value.preferredQuality
+        val indexToUse = index ?: sourceData.cachedLinks.getIndexOfPreferredQuality(preferredQuality = preferredQuality)
 
         _uiState.update {
             it.copy(selectedSourceLink = max(indexToUse, 0))
