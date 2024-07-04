@@ -146,7 +146,9 @@ internal class DefaultTMDBRepository @Inject constructor(
                     if (collection !is Resource.Success)
                         throw Exception("Error fetching collection of ${movie.title} [${movie.id}]")
 
-                    collection.data
+                    collection.data?.also { data ->
+                        data.films.sortedWith(nullsLast(compareBy { it.year }))
+                    }
                 } else null
 
                 val newGenres = formatGenreIds(
@@ -166,7 +168,7 @@ internal class DefaultTMDBRepository @Inject constructor(
                         genres = newGenres,
                         collection = collection?.run {
                             copy(films = films.filterOutUnreleasedFilms())
-                            }
+                        }
                     )
                 )
             } catch (e: Exception) {
