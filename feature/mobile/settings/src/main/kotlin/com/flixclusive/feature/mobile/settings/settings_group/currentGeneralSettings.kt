@@ -1,24 +1,52 @@
 package com.flixclusive.feature.mobile.settings.settings_group
 
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.flixclusive.core.ui.common.util.showToast
+import com.flixclusive.feature.mobile.settings.KEY_SEARCH_HISTORY_NOTICE_DIALOG
 import com.flixclusive.feature.mobile.settings.SettingsItem
 import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
+import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun currentGeneralSettings(
-    onUsePrereleaseUpdatesChange: (Boolean) -> Unit,
+    searchHistoryCount: Int,
+    onUsePrereleaseUpdatesChange: (Boolean) -> Unit
 ): List<SettingsItem> {
+    val context = LocalContext.current
     val appSettings by rememberLocalAppSettings()
     val onChangeSettings by rememberSettingsChanger()
 
+    val clearSearchHistory = if (searchHistoryCount == 0) {
+        {
+            context.showToast(context.getString(UtilR.string.error_search_history_is_already_cleared))
+        }
+    } else null
+
     return listOf(
+        SettingsItem(
+            title = stringResource(UtilR.string.clear_search_history),
+            description = stringResource(UtilR.string.search_history_item_count_format, searchHistoryCount),
+            onClick = clearSearchHistory,
+            dialogKey = KEY_SEARCH_HISTORY_NOTICE_DIALOG,
+            previewContent = {
+                Icon(
+                    painter = painterResource(id = UiCommonR.drawable.broom_clean),
+                    contentDescription = stringResource(
+                        id = UtilR.string.clear_cache_content_desc
+                    )
+                )
+            }
+        ),
         SettingsItem(
             title = stringResource(UtilR.string.notify_about_new_app_updates),
             onClick = {

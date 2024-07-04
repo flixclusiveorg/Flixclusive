@@ -9,4 +9,6 @@ interface SearchHistoryRepository {
     suspend fun remove(id: Int, ownerId: Int = 1)
 
     fun getAllItemsInFlow(ownerId: Int = 1): Flow<List<SearchHistory>>
+
+    suspend fun clearAll(ownerId: Int = 1)
 }

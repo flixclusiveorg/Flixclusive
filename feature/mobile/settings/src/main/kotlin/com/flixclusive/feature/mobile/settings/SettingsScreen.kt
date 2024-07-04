@@ -40,6 +40,7 @@ import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.settings.component.PreReleaseUpdatesWarningDialog
 import com.flixclusive.feature.mobile.settings.component.SettingsGroup
 import com.flixclusive.feature.mobile.settings.component.dialog.advanced.AdvancedDialogWrapper
+import com.flixclusive.feature.mobile.settings.component.dialog.general.GeneralDialogWrapper
 import com.flixclusive.feature.mobile.settings.component.dialog.player.PlayerDialogWrapper
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.SubtitleDialogWrapper
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.SubtitlePreview
@@ -65,6 +66,7 @@ fun SettingsScreen(
 
     val viewModel = hiltViewModel<SettingsScreenViewModel>()
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val searchHistoryCount by viewModel.searchHistoryCount.collectAsStateWithLifecycle()
 
     var sizeSummary: String? by remember { mutableStateOf(null) }
     val (isOptingInOnPreReleaseUpdates, onUsePrereleaseUpdatesChange) = remember { mutableStateOf(false) }
@@ -83,9 +85,10 @@ fun SettingsScreen(
     }
 
     val onSettingsItemClock = { item: SettingsItem ->
-        if(item.onClick != null) {
-            item.onClick.invoke()
-        } else viewModel.toggleDialog(item.dialogKey!!)
+        when {
+            item.onClick != null -> item.onClick.invoke()
+            else -> viewModel.toggleDialog(item.dialogKey!!)
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -125,7 +128,10 @@ fun SettingsScreen(
             ) {
                 item {
                     SettingsGroup(
-                        items = currentGeneralSettings(onUsePrereleaseUpdatesChange),
+                        items = currentGeneralSettings(
+                            searchHistoryCount = searchHistoryCount,
+                            onUsePrereleaseUpdatesChange = onUsePrereleaseUpdatesChange
+                        ),
                         onItemClick = onSettingsItemClock
                     )
                 }
@@ -133,11 +139,7 @@ fun SettingsScreen(
                 item {
                     SettingsGroup(
                         items = currentUiSettings(),
-                        onItemClick = { item ->
-                            if(item.onClick != null) {
-                                item.onClick.invoke()
-                            } else viewModel.toggleDialog(item.dialogKey!!)
-                        }
+                        onItemClick = onSettingsItemClock
                     )
                 }
 
@@ -190,6 +192,8 @@ fun SettingsScreen(
                 }
             }
         }
+
+        GeneralDialogWrapper(viewModel)
 
         SubtitleDialogWrapper(
             openedDialogMap = viewModel.openedDialogMap,

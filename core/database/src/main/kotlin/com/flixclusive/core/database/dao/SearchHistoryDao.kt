@@ -17,4 +17,7 @@ interface SearchHistoryDao {
 
     @Query("DELETE FROM search_history WHERE id = :id AND ownerId = :ownerId")
     suspend fun deleteById(ownerId: Int, id: Int)
+
+    @Query("DELETE FROM search_history WHERE ownerId = :ownerId")
+    suspend fun clearAll(ownerId: Int)
 }

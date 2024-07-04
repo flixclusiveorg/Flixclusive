@@ -4,9 +4,11 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.model.datastore.AppSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,11 +27,20 @@ internal const val KEY_PLAYER_BUFFER_LENGTH_DIALOG = "isPlayerBufferLengthOpen"
 internal const val KEY_PLAYER_BUFFER_SIZE_DIALOG = "isPlayerBufferSizeDialogOpen"
 internal const val KEY_PLAYER_DISK_CACHE_DIALOG = "isPlayerDiskCacheDialogOpen"
 internal const val KEY_DOH_DIALOG = "isDoHDialogOpen"
+internal const val KEY_SEARCH_HISTORY_NOTICE_DIALOG = "isSearchHistoryNoticeDialogOpen"
 
 @HiltViewModel
 class SettingsScreenViewModel @Inject constructor(
     private val appSettingsManager: AppSettingsManager,
+    private val searchHistoryRepository: SearchHistoryRepository
 ) : ViewModel() {
+    val searchHistoryCount = searchHistoryRepository.getAllItemsInFlow()
+        .map { it.size }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
+        )
 
     val openedDialogMap = mutableStateMapOf(
         KEY_PREFERRED_SERVER_DIALOG to false,
@@ -46,6 +57,7 @@ class SettingsScreenViewModel @Inject constructor(
         KEY_PLAYER_DISK_CACHE_DIALOG to false,
         KEY_PLAYER_BUFFER_SIZE_DIALOG to false,
         KEY_PLAYER_BUFFER_LENGTH_DIALOG to false,
+        KEY_SEARCH_HISTORY_NOTICE_DIALOG to false,
     )
 
     val appSettings = appSettingsManager.appSettings.data
@@ -62,6 +74,12 @@ class SettingsScreenViewModel @Inject constructor(
     fun onChangeSettings(newAppSettings: AppSettings) {
         viewModelScope.launch {
             appSettingsManager.updateSettings(newAppSettings)
+        }
+    }
+
+    fun clearSearchHistory() {
+        viewModelScope.launch {
+            searchHistoryRepository.clearAll()
         }
     }
 }
