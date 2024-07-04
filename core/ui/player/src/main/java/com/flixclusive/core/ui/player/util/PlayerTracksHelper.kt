@@ -23,14 +23,17 @@ internal fun getSubtitleMimeType(subtitle: Subtitle): String? {
     }
 }
 
-internal fun List<Subtitle>.getPreferredSubtitleIndex(langCode: String): Int {
-    val locale = Locale(langCode)
+internal fun <T> List<T>.getIndexOfPreferredLanguage(
+    preferredLanguage: String,
+    languageExtractor: (T) -> String
+): Int {
+    val locale = Locale(preferredLanguage)
 
-    val index = indexOfFirst {
-        val preferredLocale = Locale(it.language)
+    val index = indexOfFirst { item ->
+        val preferredLocale = Locale(languageExtractor(item))
 
-        it.language.equals(langCode, ignoreCase = true)
-        || preferredLocale.displayLanguage.contains(locale.displayLanguage, true)
+        languageExtractor(item).equals(preferredLanguage, ignoreCase = true)
+            || preferredLocale.displayLanguage.contains(locale.displayLanguage, true)
     }
 
     return max(index, 0)

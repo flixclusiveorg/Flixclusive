@@ -41,8 +41,8 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.availablePlaybackSpeeds
 import com.flixclusive.core.ui.player.util.addOffSubtitle
 import com.flixclusive.core.ui.player.util.disableSSLVerification
 import com.flixclusive.core.ui.player.util.getCacheFactory
+import com.flixclusive.core.ui.player.util.getIndexOfPreferredLanguage
 import com.flixclusive.core.ui.player.util.getLoadControl
-import com.flixclusive.core.ui.player.util.getPreferredSubtitleIndex
 import com.flixclusive.core.ui.player.util.getRenderers
 import com.flixclusive.core.ui.player.util.getSubtitleMimeType
 import com.flixclusive.core.ui.player.util.handleError
@@ -132,8 +132,10 @@ class FlixclusivePlayerManager(
     private lateinit var cacheFactory: DefaultMediaSourceFactory
     private val localDataSource: DefaultDataSource.Factory
     private val okHttpDataSource: OkHttpDataSource.Factory
-    private val baseHttpDataSource: DefaultHttpDataSource.Factory
     private var currentTextRenderer: CustomTextRenderer? = null
+    private val baseHttpDataSource = DefaultHttpDataSource.Factory()
+        .setUserAgent(USER_AGENT)
+        .setAllowCrossProtocolRedirects(true)
 
     // == CCs/Audios/Qualities
     private val audioTrackGroups: MutableList<Tracks.Group?> = mutableListOf()
@@ -142,10 +144,6 @@ class FlixclusivePlayerManager(
     // ==
 
     init {
-        baseHttpDataSource = DefaultHttpDataSource.Factory()
-            .setUserAgent(USER_AGENT)
-            .setAllowCrossProtocolRedirects(true)
-
         localDataSource = DefaultDataSource.Factory(context, baseHttpDataSource)
         okHttpDataSource = OkHttpDataSource.Factory(client)
             .setUserAgent(USER_AGENT)
@@ -186,8 +184,16 @@ class FlixclusivePlayerManager(
 
         selectedSubtitleIndex = when {
             !appSettings.isSubtitleEnabled -> 0 // == Off subtitles
-            else -> availableSubtitles.getPreferredSubtitleIndex(preferredSubtitleLanguage)
+            else -> availableSubtitles.getIndexOfPreferredLanguage(
+                preferredLanguage = preferredSubtitleLanguage,
+                languageExtractor = { it.language }
+            )
         }
+
+        selectedAudio = availableAudios.getIndexOfPreferredLanguage(
+            preferredLanguage = preferredSubtitleLanguage,
+            languageExtractor = { it }
+        )
     }
 
     fun initialize() {
