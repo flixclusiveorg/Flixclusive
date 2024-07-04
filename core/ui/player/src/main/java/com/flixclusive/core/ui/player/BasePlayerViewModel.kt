@@ -125,6 +125,8 @@ abstract class BasePlayerViewModel(
     open fun resetUiState() {
         _uiState.update {
             val preferredServer = appSettings.value.preferredQuality
+            val preferredResizeMode = appSettings.value.preferredResizeMode
+
             val indexOfPreferredServer = sourceData.cachedLinks.indexOfFirst { server ->
                 server.name.contains(preferredServer.qualityName, true)
                 || server.name.equals(preferredServer.qualityName, true)
@@ -132,7 +134,8 @@ abstract class BasePlayerViewModel(
 
             it.copy(
                 selectedSourceLink = max(indexOfPreferredServer, 0),
-                selectedProvider = sourceData.providerName,
+                selectedResizeMode = preferredResizeMode,
+                selectedProvider = sourceData.providerName
             )
         }
     }
