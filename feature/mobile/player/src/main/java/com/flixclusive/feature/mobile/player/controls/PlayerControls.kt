@@ -32,6 +32,7 @@ import com.flixclusive.feature.mobile.player.controls.episodes.EpisodesScreen
 import com.flixclusive.feature.mobile.player.controls.gestures.GestureDirection
 import com.flixclusive.feature.mobile.player.controls.gestures.SeekerAndSliderGestures
 import com.flixclusive.feature.mobile.player.util.rememberBrightnessManager
+import com.flixclusive.feature.mobile.player.util.rememberVolumeManager
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceLink
@@ -80,12 +81,13 @@ internal fun PlayerControls(
     val seasonData by rememberUpdatedState(seasonDataProvider())
     
     val brightnessManager = rememberBrightnessManager()
+    val volumeManager = rememberVolumeManager()
 
-    val volumeIconId = remember(state.volume) {
+    val volumeIconId = remember(volumeManager.volumePercentage) {
         when {
-            state.volume > 0.8F -> R.drawable.volume_up_black_24dp
-            state.volume < 0.4F && state.volume > 0F -> R.drawable.volume_down_black_24dp
-            state.volume == 0F -> R.drawable.volume_off_black_24dp
+            volumeManager.volumePercentage > 0.8F -> R.drawable.volume_up_black_24dp
+            volumeManager.volumePercentage < 0.4F && volumeManager.volumePercentage > 0F -> R.drawable.volume_down_black_24dp
+            volumeManager.volumePercentage == 0F -> R.drawable.volume_off_black_24dp
             else -> R.drawable.volume_up_black_24dp
         }
     }
@@ -163,10 +165,10 @@ internal fun PlayerControls(
                     areControlsVisible = isVisible,
                     seekerIconId = PlayerR.drawable.round_keyboard_double_arrow_right_24,
                     seekAction = player::seekForward,
-                    sliderValue = state.volume,
-                    sliderValueRange = 0F..1F,
+                    sliderValue = volumeManager.volumePercentage,
+                    sliderValueRange = 0F..volumeManager.maxVolume,
                     sliderIconId = volumeIconId,
-                    slideAction = {},
+                    slideAction = volumeManager::setVolume,
                     showControls = showControls
                 )
             }
@@ -176,7 +178,6 @@ internal fun PlayerControls(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-
                 Box(
                     modifier = Modifier
                         .fillMaxSize()

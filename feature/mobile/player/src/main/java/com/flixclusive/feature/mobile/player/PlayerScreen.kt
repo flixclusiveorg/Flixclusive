@@ -65,6 +65,7 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.mobile.player.controls.PlayerControls
 import com.flixclusive.feature.mobile.player.util.BrightnessManager
 import com.flixclusive.feature.mobile.player.util.LocalBrightnessManager
+import com.flixclusive.feature.mobile.player.util.LocalVolumeManager
 import com.flixclusive.feature.mobile.player.util.PlayerPipReceiver
 import com.flixclusive.feature.mobile.player.util.VolumeManager
 import com.flixclusive.model.provider.SourceData
@@ -211,6 +212,7 @@ fun PlayerScreen(
     CompositionLocalProvider(
         LocalPlayerManager provides viewModel.player,
         LocalBrightnessManager provides brightnessManager,
+        LocalVolumeManager provides volumeManager,
     ) {
         PlayerPipReceiver(
             action = ACTION_PIP_CONTROL,
