@@ -4,7 +4,11 @@ import android.media.AudioManager
 import android.media.audiofx.LoudnessEnhancer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 
 internal val LocalVolumeManager = compositionLocalOf<VolumeManager> {
     error("VolumeManager not provided")
@@ -33,17 +37,19 @@ class VolumeManager(private val audioManager: AudioManager) {
     private val maxStreamVolume
         get() = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
 
-    private var currentVolume = currentStreamVolume.toFloat()
+    var currentVolume by mutableFloatStateOf(currentStreamVolume.toFloat())
+        private set
+    val currentVolumePercentage by derivedStateOf {
+        (currentVolume / maxStreamVolume.toFloat())
+            .coerceIn(0F, 1F)
+    }
     val maxVolume
         get() = maxStreamVolume
             .times(loudnessEnhancer?.let { 2 } ?: 1)
             .toFloat()
 
-    val currentLoudnessGain
+    private val currentLoudnessGain
         get() = (currentVolume - maxStreamVolume) * (MAX_VOLUME_BOOST / maxStreamVolume)
-    val volumePercentage
-        get() = (currentVolume / maxStreamVolume.toFloat())
-            .coerceIn(0F, 1F)
 
     fun setVolume(volume: Float) {
         currentVolume = volume.coerceIn(0F, maxVolume)
