@@ -1,6 +1,7 @@
 package com.flixclusive.domain.provider
 
 import android.content.Context
+import androidx.compose.runtime.mutableStateMapOf
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.log.infoLog
@@ -70,14 +71,7 @@ class SourceLinksProviderUseCase @Inject constructor(
      * because some providers have timeouts on their links
      *
      * */
-    private val cache = HashMap<FilmKey, SourceData>()
-
-    val cacheSize: Int
-        get() = cache.size
-
-    fun clearCache() {
-        cache.clear()
-    }
+    val cache = mutableStateMapOf<FilmKey, SourceData>()
 
     fun loadLinks(
         film: FilmDetails,
