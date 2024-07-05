@@ -79,30 +79,27 @@ internal fun ListItem(
                 ) {
                     when (itemState) {
                         PlayerProviderState.LOADING -> {
-                            Box(
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                strokeWidth = 1.5.dp,
+                                strokeCap = StrokeCap.Round,
                                 modifier = Modifier
-                                    .padding(end = 5.dp)
-                            ) {
-                                CircularProgressIndicator(
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    strokeWidth = 1.5.dp,
-                                    strokeCap = StrokeCap.Round,
-                                    modifier = Modifier
-                                        .size(20.dp)
-                                )
-                            }
+                                    .size(18.dp)
+                            )
                         }
                         PlayerProviderState.SELECTED -> {
                             Icon(
                                 imageVector = Icons.Rounded.Check,
-                                contentDescription = stringResource(UtilR.string.check_indicator_content_desc)
+                                contentDescription = stringResource(UtilR.string.check_indicator_content_desc),
+                                modifier = Modifier
+                                    .size(18.dp)
                             )
                         }
                     }
                 }
             } else {
                 Spacer(
-                    modifier = Modifier.width(25.dp)
+                    modifier = Modifier.width(18.dp)
                 )
             }
 
@@ -148,7 +145,7 @@ private fun SheetItemLoadingPreview() {
             ) {
                 repeat(3) {
                     ListItem(
-                        name = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                        name = "FLX",
                         index = 0,
                         selectedIndex = if (it < 2) 0 else 1,
                         itemState = PlayerProviderState.entries[it % PlayerProviderState.entries.size],
