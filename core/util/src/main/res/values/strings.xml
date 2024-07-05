@@ -101,6 +101,7 @@
     <string name="change_logs">CHANGE LOGS</string>
     <string name="check_for_updates">Check for updates</string>
     <string name="clear_app_cache">Clear app cache</string>
+    <string name="clear_cache_links">Clear cached links</string>
     <string name="clear_search_history">Clear search history</string>
     <string name="close_label">Close</string>
     <string name="collections">Collections</string>
@@ -223,7 +224,6 @@
     <string name="current_playback_speed_format">Current playback speed: %1$sx</string>
     <string name="episode_runtime_formatter">%1$d Episode</string>
     <string name="made_by_author_label_format">Made by %1$s</string>
-    <string name="search_history_item_count_format">You have %1$d search history items</string>
     <string name="season_number_formatter">Season %1$d</string>
     <string name="season_runtime_formatter">%1$d Season</string>
     <string name="seek_seconds_format">%1$s seconds</string>
@@ -334,6 +334,8 @@
     <string name="sample_movie_content_desc">Sample Movie for Subtitle Preview</string>
     <string name="search_for_providers">Search for providers</string>
     <string name="search_history_icon">An icon for search history</string>
+    <string name="search_history_item_count_format">You have %1$d search history items</string>
+    <string name="cache_links_item_count">You have %1$d cached links</string>
     <string name="see_more_btn_content_desc">A vertical see more button icon</string>
     <string name="server_snackbar_message">Server set to %1$s</string>
     <string name="signup_prerelease_updates_desc">Opt-in on using pre-release updates instead of official ones.</string>

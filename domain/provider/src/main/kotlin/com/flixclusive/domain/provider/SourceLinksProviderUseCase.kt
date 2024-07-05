@@ -72,6 +72,13 @@ class SourceLinksProviderUseCase @Inject constructor(
      * */
     private val cache = HashMap<FilmKey, SourceData>()
 
+    val cacheSize: Int
+        get() = cache.size
+
+    fun clearCache() {
+        cache.clear()
+    }
+
     fun loadLinks(
         film: FilmDetails,
         watchHistoryItem: WatchHistoryItem?,

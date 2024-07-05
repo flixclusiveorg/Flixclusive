@@ -145,7 +145,10 @@ fun SettingsScreen(
 
                 item {
                     SettingsGroup(
-                        items = currentVideoPlayerSettings(),
+                        items = currentVideoPlayerSettings(
+                            cacheLinksSize = viewModel.cacheLinksSize,
+                            clearCacheLinks = viewModel::clearCacheLinks
+                        ),
                         onItemClick = onSettingsItemClock
                     )
                 }

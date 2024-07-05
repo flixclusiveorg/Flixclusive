@@ -13,6 +13,7 @@ dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.ui.mobile)
     implementation(projects.data.searchHistory)
+    implementation(projects.domain.provider)
 
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)

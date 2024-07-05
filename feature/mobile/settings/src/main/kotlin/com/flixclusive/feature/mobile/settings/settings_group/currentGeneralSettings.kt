@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.settings.settings_group
 
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -9,6 +10,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.feature.mobile.settings.KEY_SEARCH_HISTORY_NOTICE_DIALOG
 import com.flixclusive.feature.mobile.settings.SettingsItem
@@ -41,9 +43,8 @@ internal fun currentGeneralSettings(
             previewContent = {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.broom_clean),
-                    contentDescription = stringResource(
-                        id = UtilR.string.clear_cache_content_desc
-                    )
+                    contentDescription = stringResource(id = UtilR.string.clear_cache_content_desc),
+                    tint = LocalContentColor.current.onMediumEmphasis(0.8F)
                 )
             }
         ),
