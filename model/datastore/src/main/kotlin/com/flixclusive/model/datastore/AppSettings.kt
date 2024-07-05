@@ -66,10 +66,6 @@ data class AppSettings(
     // ==
 ) {
     companion object {
-        val possibleAvailableSeekIncrementMs = listOf(
-            5L, 10L, 30L
-        )
-
         fun parseFrom(input: InputStream): AppSettings {
             return Json.decodeFromString(
                 deserializer = serializer(),
