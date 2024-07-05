@@ -36,7 +36,9 @@ internal fun PlayerSettingsPanel(
                     index = i,
                     selectedIndex = selected,
                     onClick = {
-                        onClick?.invoke(i, item)
+                        if (i != selected) {
+                            onClick?.invoke(i, item)
+                        }
                     }
                 )
             }
