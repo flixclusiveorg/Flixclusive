@@ -52,7 +52,7 @@ enum class PlayerQuality(
     companion object {
         fun List<SourceLink>.getIndexOfPreferredQuality(preferredQuality: PlayerQuality): Int {
             val preferredQualityIndex = indexOfFirst {
-                preferredQuality.regex.matches(it.name) || preferredQuality.regex.matches(it.url)
+                preferredQuality.regex.containsMatchIn(it)
             }
 
 
@@ -62,11 +62,15 @@ enum class PlayerQuality(
 
             return entries.firstNotNullOfOrNull { quality ->
                 val index = indexOfFirst {
-                    quality.regex.matches(it.name) || quality.regex.matches(it.url)
+                    quality.regex.containsMatchIn(it)
                 }
 
                 if (index != -1) index else null
             } ?: 0
+        }
+
+        private fun Regex.containsMatchIn(link: SourceLink): Boolean {
+            return containsMatchIn(link.name) || containsMatchIn(link.url)
         }
     }
 }
