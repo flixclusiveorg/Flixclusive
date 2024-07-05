@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.feature.mobile.settings.KEY_DECODER_PRIORITY_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_BUFFER_LENGTH_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_BUFFER_SIZE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_DISK_CACHE_DIALOG
@@ -16,7 +17,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-internal fun currentCacheSettings(
+internal fun currentAdvancedPlayerSettings(
     sizeSummary: String?,
     updateAppCacheSize: () -> Unit,
 ): List<SettingsItem> {
@@ -24,6 +25,11 @@ internal fun currentCacheSettings(
     val context = LocalContext.current
 
     return listOf(
+        SettingsItem(
+            title = stringResource(UtilR.string.decoder_priority),
+            description = stringResource(UtilR.string.decoder_priority_description),
+            dialogKey = KEY_DECODER_PRIORITY_DIALOG,
+        ),
         SettingsItem(
             title = stringResource(UtilR.string.video_cache_size),
             description = stringResource(UtilR.string.video_cache_size_label),
