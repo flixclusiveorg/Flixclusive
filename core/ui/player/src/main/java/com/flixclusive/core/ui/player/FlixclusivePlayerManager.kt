@@ -2,6 +2,7 @@ package com.flixclusive.core.ui.player
 
 import android.content.Context
 import android.graphics.Color
+import android.media.audiofx.LoudnessEnhancer
 import android.net.Uri
 import android.util.TypedValue
 import androidx.annotation.OptIn
@@ -38,6 +39,7 @@ import androidx.media3.ui.SubtitleView
 import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.availablePlaybackSpeeds
+import com.flixclusive.core.ui.player.util.VolumeManager
 import com.flixclusive.core.ui.player.util.addOffSubtitle
 import com.flixclusive.core.ui.player.util.disableSSLVerification
 import com.flixclusive.core.ui.player.util.getCacheFactory
@@ -47,6 +49,7 @@ import com.flixclusive.core.ui.player.util.getRenderers
 import com.flixclusive.core.ui.player.util.getSubtitleMimeType
 import com.flixclusive.core.ui.player.util.handleError
 import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.USER_AGENT
@@ -129,6 +132,8 @@ class FlixclusivePlayerManager(
     val displayTitle: String
         get() = (player?.mediaMetadata?.displayTitle ?: "").toString()
 
+    val volumeManager = VolumeManager(context)
+
     private lateinit var cacheFactory: DefaultMediaSourceFactory
     private val localDataSource: DefaultDataSource.Factory
     private val okHttpDataSource: OkHttpDataSource.Factory
@@ -196,6 +201,15 @@ class FlixclusivePlayerManager(
         )
     }
 
+    override fun onAudioSessionIdChanged(audioSessionId: Int) {
+        super.onAudioSessionIdChanged(audioSessionId)
+        volumeManager.loudnessEnhancer?.release()
+
+        safeCall {
+            volumeManager.loudnessEnhancer = LoudnessEnhancer(audioSessionId)
+        }
+    }
+
     fun initialize() {
         if (player == null) {
             infoLog("Initializing the player...")
@@ -254,6 +268,13 @@ class FlixclusivePlayerManager(
         mediaSession = MediaSession
             .Builder(context, player!!)
             .build()
+
+        if (appSettings.isUsingVolumeBoost) {
+            infoLog("Initializing the volume booster...")
+            safeCall {
+                volumeManager.loudnessEnhancer = LoudnessEnhancer(player!!.audioSessionId)
+            }
+        }
     }
 
     fun prepare(
