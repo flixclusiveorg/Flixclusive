@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.settings.component.dialog.player
 
+import android.text.format.Formatter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -7,7 +8,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import com.flixclusive.core.util.R
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.settings.KEY_AUDIO_LANGUAGE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_DECODER_PRIORITY_DIALOG
@@ -17,17 +17,21 @@ import com.flixclusive.feature.mobile.settings.KEY_PLAYER_DISK_CACHE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_QUALITY_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_RESIZE_MODE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG
+import com.flixclusive.feature.mobile.settings.component.dialog.CommonSettingsDialog
 import com.flixclusive.feature.mobile.settings.component.dialog.LanguageDialog
-import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerBufferLength
-import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerBufferSize
-import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerDecoderPriority
-import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerDiskCacheSize
-import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerQuality
-import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerResizeMode
-import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerSeekLength
+import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.availableSeekIncrementMs
+import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.playerBufferLengths
+import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.playerBufferSizes
+import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.playerCacheSizes
 import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
+import com.flixclusive.model.datastore.DEFAULT_PLAYER_BUFFER_AMOUNT
+import com.flixclusive.model.datastore.DEFAULT_PLAYER_CACHE_SIZE_AMOUNT
+import com.flixclusive.model.datastore.player.DecoderPriority
+import com.flixclusive.model.datastore.player.PlayerQuality
+import com.flixclusive.model.datastore.player.ResizeMode
 import kotlinx.coroutines.launch
+import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun PlayerDialogWrapper(
@@ -42,8 +46,13 @@ internal fun PlayerDialogWrapper(
 
     when {
         openedDialogMap[KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG] == true -> {
-            PlayerSeekLength(
-                appSettings = appSettings,
+            CommonSettingsDialog(
+                label = stringResource(id = UtilR.string.preferred_quality),
+                options = availableSeekIncrementMs,
+                selectedOption = remember { mutableStateOf(appSettings.preferredSeekAmount) },
+                optionLabelExtractor = {
+                    stringResource(UtilR.string.seek_seconds_format, it.div(1000))
+                },
                 onChange = {
                     onChangeSettings(appSettings.copy(preferredSeekAmount = it))
                 },
@@ -53,8 +62,11 @@ internal fun PlayerDialogWrapper(
             )
         }
         openedDialogMap[KEY_PLAYER_QUALITY_DIALOG] == true -> {
-            PlayerQuality(
-                appSettings = appSettings,
+            CommonSettingsDialog(
+                label = stringResource(id = UtilR.string.preferred_quality),
+                options = PlayerQuality.entries,
+                selectedOption = remember { mutableStateOf(appSettings.preferredQuality) },
+                optionLabelExtractor = { it.qualityName.asString() },
                 onChange = {
                     onChangeSettings(appSettings.copy(preferredQuality = it))
                 },
@@ -64,8 +76,11 @@ internal fun PlayerDialogWrapper(
             )
         }
         openedDialogMap[KEY_PLAYER_RESIZE_MODE_DIALOG] == true -> {
-            PlayerResizeMode(
-                appSettings = appSettings,
+            CommonSettingsDialog(
+                label = stringResource(id = UtilR.string.preferred_resize_mode),
+                options = remember { ResizeMode.entries.map { it.ordinal } },
+                selectedOption = remember { mutableStateOf(appSettings.preferredResizeMode) },
+                optionLabelExtractor = { ResizeMode.entries[it].toString() },
                 onChange = {
                     onChangeSettings(appSettings.copy(preferredResizeMode = it))
                 },
@@ -75,14 +90,25 @@ internal fun PlayerDialogWrapper(
             )
         }
         openedDialogMap[KEY_PLAYER_DISK_CACHE_DIALOG] == true -> {
-            PlayerDiskCacheSize(
-                appSettings = appSettings,
+            CommonSettingsDialog(
+                label = stringResource(id = UtilR.string.video_cache_size),
+                options = playerCacheSizes,
+                selectedOption = remember { mutableStateOf(appSettings.preferredDiskCacheSize) },
+                optionLabelExtractor = {
+                    when (it) {
+                        0L -> context.getString(UtilR.string.none_label)
+                        -1L -> context.getString(UtilR.string.no_cache_limit_label)
+                        else -> Formatter.formatShortFileSize(
+                            /* context = */ context,
+                            /* sizeBytes = */ it * 1000L * 1000L
+                        ) + if(it == DEFAULT_PLAYER_CACHE_SIZE_AMOUNT) " " + context.getString(UtilR.string.default_label) else ""
+                    }
+                },
                 onChange = {
                     val isTheSameItem = it == appSettings.preferredDiskCacheSize
 
-                    // If cache is set to `None`, then clear the current cache
-
                     if(!isTheSameItem) {
+                        // If cache is set to `None`, then clear the current cache
                         if(it == 0L) {
                             safeCall {
                                 scope.launch { context.cacheDir.deleteRecursively() }
@@ -98,8 +124,18 @@ internal fun PlayerDialogWrapper(
             )
         }
         openedDialogMap[KEY_PLAYER_BUFFER_SIZE_DIALOG] == true -> {
-            PlayerBufferSize(
-                appSettings = appSettings,
+            CommonSettingsDialog(
+                label = stringResource(id = UtilR.string.video_buffer_size),
+                options = playerBufferSizes,
+                selectedOption = remember { mutableStateOf(appSettings.preferredBufferCacheSize) },
+                optionLabelExtractor = {
+                    if (it == -1L)
+                        context.getString(UtilR.string.auto_option)
+                    else Formatter.formatShortFileSize(
+                        /* context = */ context,
+                        /* sizeBytes = */ it * 1000L * 1000L
+                    )
+                },
                 onChange = {
                     onChangeSettings(appSettings.copy(preferredBufferCacheSize = it))
                 },
@@ -109,8 +145,16 @@ internal fun PlayerDialogWrapper(
             )
         }
         openedDialogMap[KEY_PLAYER_BUFFER_LENGTH_DIALOG] == true -> {
-            PlayerBufferLength(
-                appSettings = appSettings,
+            CommonSettingsDialog(
+                label = stringResource(id = UtilR.string.video_buffer_max_length),
+                options = playerBufferLengths.keys.toList(),
+                selectedOption = remember { mutableStateOf(appSettings.preferredVideoBufferMs) },
+                optionLabelExtractor = {
+                    playerBufferLengths[it] + when (it) {
+                        DEFAULT_PLAYER_BUFFER_AMOUNT -> context.getString(UtilR.string.default_label)
+                        else -> ""
+                    }
+                },
                 onChange = {
                     onChangeSettings(appSettings.copy(preferredVideoBufferMs = it))
                 },
@@ -123,7 +167,7 @@ internal fun PlayerDialogWrapper(
             LanguageDialog(
                 appSettings = appSettings,
                 selectedOption = remember { mutableStateOf(appSettings.preferredAudioLanguage) },
-                label = stringResource(id = R.string.preferred_audio_language),
+                label = stringResource(id = UtilR.string.preferred_audio_language),
                 onChange = {
                     onChangeSettings(appSettings.copy(preferredAudioLanguage = it.language))
                 },
@@ -133,8 +177,11 @@ internal fun PlayerDialogWrapper(
             )
         }
         openedDialogMap[KEY_DECODER_PRIORITY_DIALOG] == true -> {
-            PlayerDecoderPriority(
-                appSettings = appSettings,
+            CommonSettingsDialog(
+                label = stringResource(id = UtilR.string.decoder_priority),
+                options = DecoderPriority.entries,
+                selectedOption = remember { mutableStateOf(appSettings.decoderPriority) },
+                optionLabelExtractor = { it.toUiText().asString() },
                 onChange = {
                     onChangeSettings(appSettings.copy(decoderPriority = it))
                 },
