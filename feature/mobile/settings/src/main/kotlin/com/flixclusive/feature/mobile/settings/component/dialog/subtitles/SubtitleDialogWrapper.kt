@@ -2,17 +2,21 @@ package com.flixclusive.feature.mobile.settings.component.dialog.subtitles
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
+import com.flixclusive.core.util.R
 import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_BACKGROUND_COLOR_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_COLOR_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_EDGE_TYPE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_FONT_STYLE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_LANGUAGE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_SIZE_DIALOG
+import com.flixclusive.feature.mobile.settings.component.dialog.LanguageDialog
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogEdgeType
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogFontBackgroundColor
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogFontColor
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogFontStyle
-import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogLanguages
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogSize
 import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
@@ -38,8 +42,10 @@ internal fun SubtitleDialogWrapper(
             )
         }
         openedDialogMap[KEY_SUBTITLE_LANGUAGE_DIALOG] == true -> {
-            SubtitleDialogLanguages(
+            LanguageDialog(
                 appSettings = appSettings,
+                selectedOption = remember { mutableStateOf(appSettings.subtitleLanguage) },
+                label = stringResource(id = R.string.subtitles_language),
                 onChange = {
                     onChangeSettings(appSettings.copy(subtitleLanguage = it.language))
                 },

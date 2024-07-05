@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog
+package com.flixclusive.feature.mobile.settings.component.dialog
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -13,11 +13,10 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,16 +24,15 @@ import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.Subtit
 import com.flixclusive.model.datastore.AppSettings
 import java.util.Locale
 import kotlin.math.max
-import com.flixclusive.core.util.R as UtilR
 
 @Composable
-internal fun SubtitleDialogLanguages(
+internal fun LanguageDialog(
     appSettings: AppSettings,
+    label: String,
+    selectedOption: MutableState<String>,
     onChange: (Locale) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    val (selectedOption, onOptionSelected) = remember { mutableStateOf(appSettings.subtitleLanguage) }
-
     val listState = rememberLazyListState()
 
     val languages = remember {
@@ -44,7 +42,7 @@ internal fun SubtitleDialogLanguages(
 
     LaunchedEffect(Unit) {
         val indexOfSelected = languages.indexOfFirst {
-            it.language == appSettings.subtitleLanguage
+            it.language == selectedOption.value
         }
 
         listState.animateScrollToItem(max(indexOfSelected, 0))
@@ -52,7 +50,7 @@ internal fun SubtitleDialogLanguages(
 
     SubtitleSettingsDialog(
         appSettings = appSettings,
-        title = stringResource(id = UtilR.string.subtitles_language),
+        title = label,
         onDismissRequest = onDismissRequest,
         hidePreview = true,
     ) {
@@ -62,7 +60,7 @@ internal fun SubtitleDialogLanguages(
                 .heightIn(max = 400.dp)
         ) {
             items(languages) {
-                val isSelected = it.language == selectedOption
+                val isSelected = it.language == selectedOption.value
                     
                 Row(
                     modifier = Modifier
@@ -70,7 +68,7 @@ internal fun SubtitleDialogLanguages(
                         .selectable(
                             selected = isSelected,
                             onClick = {
-                                onOptionSelected(it.language)
+                                selectedOption.value = it.language
                                 onChange(it)
                             }
                         ),
@@ -80,7 +78,7 @@ internal fun SubtitleDialogLanguages(
                     RadioButton(
                         selected = isSelected,
                         onClick = {
-                            onOptionSelected(it.language)
+                            selectedOption.value = it.language
                             onChange(it)
                         }
                     )

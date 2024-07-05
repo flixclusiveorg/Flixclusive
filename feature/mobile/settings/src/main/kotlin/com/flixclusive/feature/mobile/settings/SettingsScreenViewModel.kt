@@ -28,6 +28,7 @@ internal const val KEY_PLAYER_BUFFER_SIZE_DIALOG = "isPlayerBufferSizeDialogOpen
 internal const val KEY_PLAYER_DISK_CACHE_DIALOG = "isPlayerDiskCacheDialogOpen"
 internal const val KEY_DOH_DIALOG = "isDoHDialogOpen"
 internal const val KEY_SEARCH_HISTORY_NOTICE_DIALOG = "isSearchHistoryNoticeDialogOpen"
+internal const val KEY_AUDIO_LANGUAGE_DIALOG = "isAudioLanguageDialogOpen"
 
 @HiltViewModel
 class SettingsScreenViewModel @Inject constructor(
@@ -58,6 +59,7 @@ class SettingsScreenViewModel @Inject constructor(
         KEY_PLAYER_BUFFER_SIZE_DIALOG to false,
         KEY_PLAYER_BUFFER_LENGTH_DIALOG to false,
         KEY_SEARCH_HISTORY_NOTICE_DIALOG to false,
+        KEY_AUDIO_LANGUAGE_DIALOG to false,
     )
 
     val appSettings = appSettingsManager.appSettings.data
