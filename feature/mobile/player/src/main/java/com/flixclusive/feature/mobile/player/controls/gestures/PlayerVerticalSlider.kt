@@ -45,6 +45,7 @@ internal fun PlayerVerticalSlider(
     @DrawableRes iconId: Int,
     value: Float,
     onValueChange: (Float) -> Unit,
+    valueRange: ClosedFloatingPointRange<Float>,
 ) {
     val sliderColors = SliderDefaults.colors(
         thumbColor = Color.White,
@@ -92,6 +93,7 @@ internal fun PlayerVerticalSlider(
                         }
                     }
                     .width(120.dp),
+                valueRange = valueRange,
                 value = value,
                 onValueChange = onValueChange,
                 colors = sliderColors,
@@ -129,7 +131,8 @@ private fun VerticalSliderPreview() {
                     isVisible = true,
                     iconId = sliderIconId,
                     value = value,
-                    onValueChange = onValueChange
+                    onValueChange = onValueChange,
+                    valueRange = 0F..1F
                 )
 
                 PlayerVerticalSlider(
@@ -143,7 +146,8 @@ private fun VerticalSliderPreview() {
                     isVisible = true,
                     iconId = sliderIconId,
                     value = value,
-                    onValueChange = onValueChange
+                    onValueChange = onValueChange,
+                    valueRange = 0F..1F
                 )
             }
         }

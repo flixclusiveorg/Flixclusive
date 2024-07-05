@@ -11,7 +11,5 @@ data class PlayerUiState(
     val selectedProvider: String? = null,
     val selectedProviderState: PlayerProviderState = PlayerProviderState.SELECTED,
     val selectedResizeMode: Int = 0,
-    val lastOpenedPanel: Int = 0,
-    val screenBrightness: Float = 1F,
-    val volume: Float = 0F
+    val lastOpenedPanel: Int = 0
 )

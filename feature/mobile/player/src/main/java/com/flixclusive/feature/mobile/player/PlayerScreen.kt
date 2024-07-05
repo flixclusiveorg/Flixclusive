@@ -63,10 +63,10 @@ import com.flixclusive.core.ui.player.util.updatePiPParams
 import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.mobile.player.controls.PlayerControls
+import com.flixclusive.feature.mobile.player.util.BrightnessManager
+import com.flixclusive.feature.mobile.player.util.LocalBrightnessManager
 import com.flixclusive.feature.mobile.player.util.PlayerPipReceiver
-import com.flixclusive.feature.mobile.player.util.getBrightness
-import com.flixclusive.feature.mobile.player.util.percentOfVolume
-import com.flixclusive.feature.mobile.player.util.setBrightness
+import com.flixclusive.feature.mobile.player.util.VolumeManager
 import com.flixclusive.model.provider.SourceData
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
@@ -78,7 +78,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 import kotlin.random.Random
 
 interface PlayerScreenNavigator : GoBackAction {
@@ -116,7 +115,11 @@ fun PlayerScreen(
     val isInPipMode by rememberPipMode()
 
     val context = LocalContext.current.getActivity<ComponentActivity>()
-    val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
+    val brightnessManager = remember { BrightnessManager(context) }
+    val volumeManager = remember {
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        VolumeManager(audioManager)
+    }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
@@ -205,7 +208,10 @@ fun PlayerScreen(
         }
     }
 
-    CompositionLocalProvider(LocalPlayerManager provides viewModel.player) {
+    CompositionLocalProvider(
+        LocalPlayerManager provides viewModel.player,
+        LocalBrightnessManager provides brightnessManager,
+    ) {
         PlayerPipReceiver(
             action = ACTION_PIP_CONTROL,
             onReceive = { broadcastIntent ->
@@ -277,18 +283,14 @@ fun PlayerScreen(
             context.toggleSystemBars(isVisible = false)
 
             // Initialize brightness
-            val userDefaultBrightnessLevel = context.getBrightness()
-            viewModel.updateScreenBrightness(userDefaultBrightnessLevel)
-
-            // Initialize volume level
-            viewModel.updateVolume(context.percentOfVolume())
+            val userDefaultBrightnessLevel = brightnessManager.currentBrightness
 
             onDispose {
                 // Lock the screen to landscape only if we're just changing
                 // episodes. This is really bad code bruh.
                 if (!isChangingEpisode) {
                     context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                    context.setBrightness(userDefaultBrightnessLevel)
+                    brightnessManager.setBrightness(userDefaultBrightnessLevel)
                     context.toggleSystemBars(isVisible = true)
                 }
 
@@ -297,29 +299,13 @@ fun PlayerScreen(
         }
 
         ListenKeyEvents { code, _ ->
-            val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-
             when (code) {
                 KeyEvent.KEYCODE_VOLUME_UP -> {
-                    val newVolume = currentVolume + 1F
-
-                    audioManager.setStreamVolume(
-                        /* streamType = */ AudioManager.STREAM_MUSIC,
-                        /* index = */ newVolume.roundToInt(),
-                        /* flags = */ 0
-                    )
-                    viewModel.updateVolume((newVolume / maxVolume).coerceIn(0F, 1F))
+                    volumeManager.increaseVolume()
                     true
                 }
                 KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                    val newVolume = currentVolume - 1F
-                    audioManager.setStreamVolume(
-                        /* streamType = */ AudioManager.STREAM_MUSIC,
-                        /* index = */ newVolume.roundToInt(),
-                        /* flags = */ 0
-                    )
-                    viewModel.updateVolume((newVolume / maxVolume).coerceIn(0F, 1F))
+                    volumeManager.decreaseVolume()
                     true
                 }
                 else -> false
@@ -395,9 +381,8 @@ fun PlayerScreen(
                 resizeMode = uiState.selectedResizeMode,
                 onInitialize = {
                     viewModel.run {
-                        val (currentPosition, _) = getSavedTimeForSourceData(
-                            currentSelectedEpisode
-                        )
+                        val (currentPosition, _)
+                            = getSavedTimeForSourceData(currentSelectedEpisode)
 
                         player.initialize()
                         sourceData.run {
@@ -470,18 +455,6 @@ fun PlayerScreen(
                 toggleVideoTimeReverse = viewModel::toggleVideoTimeReverse,
                 showControls = { showControls(it) },
                 toggleControlLock = { viewModel.areControlsLocked = it },
-                onBrightnessChange = {
-                    context.setBrightness(it)
-                    viewModel.updateScreenBrightness(it)
-                },
-                onVolumeChange = {
-                    viewModel.player.run {
-                        val newVolume = (it * 15).roundToInt()
-
-                        setDeviceVolume(newVolume)
-                        viewModel.updateVolume(it)
-                    }
-                },
                 addSubtitle = { sourceData.cachedSubtitles.add(index = 0, element = it) },
                 onEpisodeClick = {
                     viewModel.run {
