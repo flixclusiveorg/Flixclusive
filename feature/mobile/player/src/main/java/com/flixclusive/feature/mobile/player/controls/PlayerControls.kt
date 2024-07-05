@@ -31,12 +31,13 @@ import com.flixclusive.feature.mobile.player.controls.dialogs.settings.PlayerSet
 import com.flixclusive.feature.mobile.player.controls.episodes.EpisodesScreen
 import com.flixclusive.feature.mobile.player.controls.gestures.GestureDirection
 import com.flixclusive.feature.mobile.player.controls.gestures.SeekerAndSliderGestures
+import com.flixclusive.feature.mobile.player.util.rememberBrightnessManager
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.tmdb.common.tv.Season
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.tmdb.common.tv.Season
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
@@ -59,8 +60,6 @@ internal fun PlayerControls(
     stateProvider: () -> PlayerUiState,
     seasonDataProvider: () -> Resource<Season?>,
     currentEpisodeSelected: Episode?,
-    onBrightnessChange: (Float) -> Unit,
-    onVolumeChange: (Float) -> Unit,
     showControls: (Boolean) -> Unit,
     toggleControlLock: (Boolean) -> Unit,
     onBack: () -> Unit,
@@ -79,6 +78,8 @@ internal fun PlayerControls(
     val isVisible by rememberUpdatedState(visibilityProvider())
     val state by rememberUpdatedState(stateProvider())
     val seasonData by rememberUpdatedState(seasonDataProvider())
+    
+    val brightnessManager = rememberBrightnessManager()
 
     val volumeIconId = remember(state.volume) {
         when {
@@ -146,9 +147,10 @@ internal fun PlayerControls(
                     areControlsVisible = isVisible,
                     seekerIconId = PlayerR.drawable.round_keyboard_double_arrow_left_24,
                     seekAction = player::seekBack,
-                    sliderValue = state.screenBrightness,
+                    sliderValue = brightnessManager.currentBrightness,
+                    sliderValueRange = 0F..brightnessManager.maxBrightness,
                     sliderIconId = R.drawable.round_wb_sunny_24,
-                    slideAction = onBrightnessChange,
+                    slideAction = brightnessManager::setBrightness,
                     showControls = showControls
                 )
 
@@ -162,8 +164,9 @@ internal fun PlayerControls(
                     seekerIconId = PlayerR.drawable.round_keyboard_double_arrow_right_24,
                     seekAction = player::seekForward,
                     sliderValue = state.volume,
+                    sliderValueRange = 0F..1F,
                     sliderIconId = volumeIconId,
-                    slideAction = onVolumeChange,
+                    slideAction = {},
                     showControls = showControls
                 )
             }

@@ -287,18 +287,6 @@ abstract class BasePlayerViewModel(
         _dialogState.update { SourceDataState.Idle }
     }
 
-    fun updateVolume(strength: Float) {
-        _uiState.update {
-            it.copy(volume = strength)
-        }
-    }
-
-    fun updateScreenBrightness(strength: Float) {
-        _uiState.update {
-            it.copy(screenBrightness = strength)
-        }
-    }
-
     fun onServerChange(index: Int? = null) {
         val preferredQuality = appSettings.value.preferredQuality
         val indexToUse = index ?: sourceData.cachedLinks.getIndexOfPreferredQuality(preferredQuality = preferredQuality)

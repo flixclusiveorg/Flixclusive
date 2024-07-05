@@ -77,6 +77,7 @@ internal fun SeekerAndSliderGestures(
     seekAction: () -> Unit,
     slideAction: (Float) -> Unit,
     showControls: (Boolean) -> Unit,
+    sliderValueRange: ClosedFloatingPointRange<Float> = 0F..1F,
 ) {
     val playerManager by rememberLocalPlayerManager()
 
@@ -270,6 +271,7 @@ internal fun SeekerAndSliderGestures(
             isVisible = isVisible || isSliderVisible,
             iconId = sliderIconId,
             value = sliderValue,
+            valueRange = sliderValueRange,
             onValueChange = {
                 if (sliderVisibilityTimeout?.isActive == true) {
                     sliderVisibilityTimeout = sliderVisibilityTimeout!!.run {
