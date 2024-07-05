@@ -62,7 +62,7 @@ internal fun currentVideoPlayerSettings(): List<SettingsItem> {
         SettingsItem(
             title = stringResource(UtilR.string.volume_booster),
             onClick = {
-                onChangeSettings(appSettings.copy(isPlayerTimeReversed = !appSettings.isUsingVolumeBoost))
+                onChangeSettings(appSettings.copy(isUsingVolumeBoost = !appSettings.isUsingVolumeBoost))
             },
             previewContent = {
                 Switch(
