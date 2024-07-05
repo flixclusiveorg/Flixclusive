@@ -244,6 +244,7 @@ class FlixclusivePlayerManager(
                             textRendererOutput = textRendererOutput,
                             metadataRendererOutput = metadataRendererOutput,
                             subtitleOffset = subtitleOffset,
+                            decoderPriority = appSettings.decoderPriority,
                             onTextRendererChange = {
                                 currentTextRenderer = it
                             }

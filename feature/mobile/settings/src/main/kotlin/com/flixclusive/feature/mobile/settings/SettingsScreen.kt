@@ -44,7 +44,7 @@ import com.flixclusive.feature.mobile.settings.component.dialog.general.GeneralD
 import com.flixclusive.feature.mobile.settings.component.dialog.player.PlayerDialogWrapper
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.SubtitleDialogWrapper
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.SubtitlePreview
-import com.flixclusive.feature.mobile.settings.settings_group.currentCacheSettings
+import com.flixclusive.feature.mobile.settings.settings_group.currentAdvancedPlayerSettings
 import com.flixclusive.feature.mobile.settings.settings_group.currentGeneralSettings
 import com.flixclusive.feature.mobile.settings.settings_group.currentNetworkSettings
 import com.flixclusive.feature.mobile.settings.settings_group.currentSubtitlesSettings
@@ -179,7 +179,7 @@ fun SettingsScreen(
 
                 item {
                     SettingsGroup(
-                        items = currentCacheSettings(
+                        items = currentAdvancedPlayerSettings(
                             sizeSummary = sizeSummary,
                             updateAppCacheSize = { updateAppCacheSize() }
                         ),

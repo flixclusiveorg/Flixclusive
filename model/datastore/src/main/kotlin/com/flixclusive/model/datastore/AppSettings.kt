@@ -5,6 +5,7 @@ import com.flixclusive.model.datastore.network.DoHPreference
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionSizePreference
 import com.flixclusive.model.datastore.player.CaptionStylePreference
+import com.flixclusive.model.datastore.player.DecoderPriority
 import com.flixclusive.model.datastore.player.PlayerQuality
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -47,40 +48,21 @@ data class AppSettings(
     // ==
 
     // == player
-    /**
-     * Default value should always be true!
-     * */
     val shouldReleasePlayer: Boolean = true,
     val isPlayerTimeReversed: Boolean = true,
     val isUsingVolumeBoost: Boolean = false,
     val preferredAudioLanguage: String = "en",
-    /**
-     * 1080p is the default value
-     * */
-    val preferredQuality: PlayerQuality = PlayerQuality.Quality1080p,
-    /**
-     * Fit screen is the default value for resize mode
-     * */
-    val preferredResizeMode: Int = 0, // Fit
-    /**
-     * 50s = Default
-     * */
+    /** Unset = -1 = Default */
+    val preferredBufferCacheSize: Long = -1,
+    /** Fit = Default */
+    val preferredResizeMode: Int = 0,
+    /** 50s = Default */
     val preferredDiskCacheSize: Long = DEFAULT_PLAYER_CACHE_SIZE_AMOUNT,
-    val preferredBufferCacheSize: Long = -1, // Unset
-    /**
-     * 10s = Default
-     * */
+    /** 10s = Default */
     val preferredVideoBufferMs: Long = DEFAULT_PLAYER_BUFFER_AMOUNT,
-    /**
-     * Fit screen is the default value for resize mode
-     * */
     val preferredSeekAmount: Long = DEFAULT_PLAYER_SEEK_AMOUNT,
-    /**
-     *
-     * required for cache warnings, when [preferredDiskCacheSize]
-     * is set to -1, which means there is no limit set for caching.
-     * */
-    val shouldNotifyAboutCache: Boolean = true,
+    val preferredQuality: PlayerQuality = PlayerQuality.Quality1080p,
+    val decoderPriority: DecoderPriority = DecoderPriority.PREFER_DEVICE,
     // ==
 ) {
     companion object {

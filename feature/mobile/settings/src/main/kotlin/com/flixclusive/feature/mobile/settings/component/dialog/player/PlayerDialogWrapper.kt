@@ -10,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import com.flixclusive.core.util.R
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.settings.KEY_AUDIO_LANGUAGE_DIALOG
+import com.flixclusive.feature.mobile.settings.KEY_DECODER_PRIORITY_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_BUFFER_LENGTH_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_BUFFER_SIZE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_DISK_CACHE_DIALOG
@@ -19,6 +20,7 @@ import com.flixclusive.feature.mobile.settings.KEY_PLAYER_SEEK_INCREMENT_MS_DIAL
 import com.flixclusive.feature.mobile.settings.component.dialog.LanguageDialog
 import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerBufferLength
 import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerBufferSize
+import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerDecoderPriority
 import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerDiskCacheSize
 import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerQuality
 import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerResizeMode
@@ -87,12 +89,7 @@ internal fun PlayerDialogWrapper(
                             }
                         }
 
-                        onChangeSettings(
-                            appSettings.copy(
-                                preferredDiskCacheSize = it,
-                                shouldNotifyAboutCache = true
-                            )
-                        )
+                        onChangeSettings(appSettings.copy(preferredDiskCacheSize = it))
                     }
                 },
                 onDismissRequest = {
@@ -132,6 +129,17 @@ internal fun PlayerDialogWrapper(
                 },
                 onDismissRequest = {
                     onDismissDialog(KEY_AUDIO_LANGUAGE_DIALOG)
+                }
+            )
+        }
+        openedDialogMap[KEY_DECODER_PRIORITY_DIALOG] == true -> {
+            PlayerDecoderPriority(
+                appSettings = appSettings,
+                onChange = {
+                    onChangeSettings(appSettings.copy(decoderPriority = it))
+                },
+                onDismissRequest = {
+                    onDismissDialog(KEY_DECODER_PRIORITY_DIALOG)
                 }
             )
         }
