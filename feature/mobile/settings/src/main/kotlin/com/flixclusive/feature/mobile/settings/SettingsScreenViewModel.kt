@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.data.search_history.SearchHistoryRepository
+import com.flixclusive.domain.provider.SourceLinksProviderUseCase
 import com.flixclusive.model.datastore.AppSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,7 +35,8 @@ internal const val KEY_DECODER_PRIORITY_DIALOG = "isDecoderPriorityDialogOpen"
 @HiltViewModel
 class SettingsScreenViewModel @Inject constructor(
     private val appSettingsManager: AppSettingsManager,
-    private val searchHistoryRepository: SearchHistoryRepository
+    private val searchHistoryRepository: SearchHistoryRepository,
+    private val sourceLinksProvider: SourceLinksProviderUseCase
 ) : ViewModel() {
     val searchHistoryCount = searchHistoryRepository.getAllItemsInFlow()
         .map { it.size }
@@ -71,6 +73,8 @@ class SettingsScreenViewModel @Inject constructor(
             appSettingsManager.localAppSettings
         )
 
+    val cacheLinksSize = sourceLinksProvider.cacheSize
+
     fun toggleDialog(dialogKey: String) {
         openedDialogMap[dialogKey] = !openedDialogMap[dialogKey]!!
     }
@@ -85,5 +89,9 @@ class SettingsScreenViewModel @Inject constructor(
         viewModelScope.launch {
             searchHistoryRepository.clearAll()
         }
+    }
+
+    fun clearCacheLinks() {
+        sourceLinksProvider.clearCache()
     }
 }

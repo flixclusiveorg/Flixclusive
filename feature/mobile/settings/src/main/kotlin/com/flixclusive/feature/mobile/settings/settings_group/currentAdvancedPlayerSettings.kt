@@ -1,11 +1,13 @@
 package com.flixclusive.feature.mobile.settings.settings_group
 
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.settings.KEY_DECODER_PRIORITY_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_BUFFER_LENGTH_DIALOG
@@ -57,9 +59,8 @@ internal fun currentAdvancedPlayerSettings(
             previewContent = {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.broom_clean),
-                    contentDescription = stringResource(
-                        id = UtilR.string.clear_cache_content_desc
-                    )
+                    contentDescription = stringResource(id = UtilR.string.clear_cache_content_desc),
+                    tint = LocalContentColor.current.onMediumEmphasis(0.8F)
                 )
             }
         ),

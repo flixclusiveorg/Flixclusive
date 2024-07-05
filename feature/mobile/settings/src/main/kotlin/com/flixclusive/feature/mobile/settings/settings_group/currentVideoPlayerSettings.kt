@@ -1,12 +1,17 @@
 package com.flixclusive.feature.mobile.settings.settings_group
 
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.flixclusive.core.ui.common.R as UiCommonR
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.settings.KEY_AUDIO_LANGUAGE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_QUALITY_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_RESIZE_MODE_DIALOG
@@ -19,7 +24,10 @@ import java.util.Locale
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-internal fun currentVideoPlayerSettings(): List<SettingsItem> {
+internal fun currentVideoPlayerSettings(
+    cacheLinksSize: Int,
+    clearCacheLinks: () -> Unit
+): List<SettingsItem> {
     val appSettings by rememberLocalAppSettings()
     val onChangeSettings by rememberSettingsChanger()
 
@@ -71,6 +79,18 @@ internal fun currentVideoPlayerSettings(): List<SettingsItem> {
                         onChangeSettings(appSettings.copy(isUsingVolumeBoost = !appSettings.isUsingVolumeBoost))
                     },
                     modifier = Modifier.scale(0.7F)
+                )
+            }
+        ),
+        SettingsItem(
+            title = stringResource(UtilR.string.clear_cache_links),
+            description = stringResource(UtilR.string.cache_links_item_count, cacheLinksSize),
+            onClick = clearCacheLinks,
+            previewContent = {
+                Icon(
+                    painter = painterResource(id = UiCommonR.drawable.database_icon),
+                    contentDescription = stringResource(id = UtilR.string.clear_cache_content_desc),
+                    tint = LocalContentColor.current.onMediumEmphasis(0.8F)
                 )
             }
         ),
