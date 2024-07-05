@@ -2,15 +2,21 @@ package com.flixclusive.feature.mobile.settings.component.dialog.player
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.flixclusive.core.util.R
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.feature.mobile.settings.KEY_AUDIO_LANGUAGE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_BUFFER_LENGTH_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_BUFFER_SIZE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_DISK_CACHE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_QUALITY_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_RESIZE_MODE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG
+import com.flixclusive.feature.mobile.settings.component.dialog.LanguageDialog
 import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerBufferLength
 import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerBufferSize
 import com.flixclusive.feature.mobile.settings.component.dialog.player.dialog.PlayerDiskCacheSize
@@ -113,6 +119,19 @@ internal fun PlayerDialogWrapper(
                 },
                 onDismissRequest = {
                     onDismissDialog(KEY_PLAYER_BUFFER_LENGTH_DIALOG)
+                }
+            )
+        }
+        openedDialogMap[KEY_AUDIO_LANGUAGE_DIALOG] == true -> {
+            LanguageDialog(
+                appSettings = appSettings,
+                selectedOption = remember { mutableStateOf(appSettings.preferredAudioLanguage) },
+                label = stringResource(id = R.string.preferred_audio_language),
+                onChange = {
+                    onChangeSettings(appSettings.copy(preferredAudioLanguage = it.language))
+                },
+                onDismissRequest = {
+                    onDismissDialog(KEY_AUDIO_LANGUAGE_DIALOG)
                 }
             )
         }

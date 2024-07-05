@@ -196,7 +196,7 @@ class FlixclusivePlayerManager(
         }
 
         selectedAudio = availableAudios.getIndexOfPreferredLanguage(
-            preferredLanguage = preferredSubtitleLanguage,
+            preferredLanguage = appSettings.preferredAudioLanguage,
             languageExtractor = { it }
         )
     }

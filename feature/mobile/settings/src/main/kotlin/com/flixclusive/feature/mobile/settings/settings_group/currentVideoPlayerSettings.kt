@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
+import com.flixclusive.feature.mobile.settings.KEY_AUDIO_LANGUAGE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_QUALITY_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_RESIZE_MODE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG
@@ -14,6 +15,7 @@ import com.flixclusive.feature.mobile.settings.SettingsItem
 import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
 import com.flixclusive.model.datastore.player.ResizeMode
+import java.util.Locale
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
@@ -71,6 +73,11 @@ internal fun currentVideoPlayerSettings(): List<SettingsItem> {
                     modifier = Modifier.scale(0.7F)
                 )
             }
+        ),
+        SettingsItem(
+            title = stringResource(UtilR.string.preferred_audio_language),
+            description = Locale(appSettings.preferredAudioLanguage).displayLanguage,
+            dialogKey = KEY_AUDIO_LANGUAGE_DIALOG,
         ),
         SettingsItem(
             title = stringResource(UtilR.string.preferred_quality),
