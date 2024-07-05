@@ -1,8 +1,6 @@
 package com.flixclusive.feature.mobile.player
 
-import android.content.Context
 import android.content.pm.ActivityInfo
-import android.media.AudioManager
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.view.KeyEvent
@@ -65,9 +63,7 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.mobile.player.controls.PlayerControls
 import com.flixclusive.feature.mobile.player.util.BrightnessManager
 import com.flixclusive.feature.mobile.player.util.LocalBrightnessManager
-import com.flixclusive.feature.mobile.player.util.LocalVolumeManager
 import com.flixclusive.feature.mobile.player.util.PlayerPipReceiver
-import com.flixclusive.feature.mobile.player.util.VolumeManager
 import com.flixclusive.model.provider.SourceData
 import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.Film
@@ -117,10 +113,6 @@ fun PlayerScreen(
 
     val context = LocalContext.current.getActivity<ComponentActivity>()
     val brightnessManager = remember { BrightnessManager(context) }
-    val volumeManager = remember {
-        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        VolumeManager(audioManager)
-    }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
@@ -211,8 +203,7 @@ fun PlayerScreen(
 
     CompositionLocalProvider(
         LocalPlayerManager provides viewModel.player,
-        LocalBrightnessManager provides brightnessManager,
-        LocalVolumeManager provides volumeManager,
+        LocalBrightnessManager provides brightnessManager
     ) {
         PlayerPipReceiver(
             action = ACTION_PIP_CONTROL,
@@ -303,11 +294,11 @@ fun PlayerScreen(
         ListenKeyEvents { code, _ ->
             when (code) {
                 KeyEvent.KEYCODE_VOLUME_UP -> {
-                    volumeManager.increaseVolume()
+                    viewModel.player.volumeManager.increaseVolume()
                     true
                 }
                 KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                    volumeManager.decreaseVolume()
+                    viewModel.player.volumeManager.decreaseVolume()
                     true
                 }
                 else -> false

@@ -205,6 +205,7 @@
     <string name="unlock_label">Unlock</string>
     <string name="update_info">Update information</string>
     <string name="update_label">Update</string>
+    <string name="volume_booster">Volume booster</string>
     <string name="version">Version</string>
     <string name="video_buffer_max_length">Maximum time to buffer</string>
     <string name="video_buffer_max_length_desc">The default maximum duration of media that the player will attempt to ensure is buffered at all times.</string>

@@ -32,7 +32,6 @@ import com.flixclusive.feature.mobile.player.controls.episodes.EpisodesScreen
 import com.flixclusive.feature.mobile.player.controls.gestures.GestureDirection
 import com.flixclusive.feature.mobile.player.controls.gestures.SeekerAndSliderGestures
 import com.flixclusive.feature.mobile.player.util.rememberBrightnessManager
-import com.flixclusive.feature.mobile.player.util.rememberVolumeManager
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.provider.SourceLink
@@ -81,10 +80,9 @@ internal fun PlayerControls(
     val seasonData by rememberUpdatedState(seasonDataProvider())
     
     val brightnessManager = rememberBrightnessManager()
-    val volumeManager = rememberVolumeManager()
 
-    val volumeIconId = remember(volumeManager.currentVolume) {
-        volumeManager.run {
+    val volumeIconId = remember(player.volumeManager.currentVolume) {
+        player.volumeManager.run {
             when {
                 currentVolumePercentage > 0.8F -> R.drawable.volume_up_black_24dp
                 currentVolumePercentage < 0.4F && currentVolumePercentage > 0F -> R.drawable.volume_down_black_24dp
@@ -167,10 +165,10 @@ internal fun PlayerControls(
                     areControlsVisible = isVisible,
                     seekerIconId = PlayerR.drawable.round_keyboard_double_arrow_right_24,
                     seekAction = player::seekForward,
-                    sliderValue = volumeManager.currentVolume,
-                    sliderValueRange = 0F..volumeManager.maxVolume,
+                    sliderValue = player.volumeManager.currentVolume,
+                    sliderValueRange = 0F..player.volumeManager.maxVolume,
                     sliderIconId = volumeIconId,
-                    slideAction = volumeManager::setVolume,
+                    slideAction = player.volumeManager::setVolume,
                     showControls = showControls
                 )
             }

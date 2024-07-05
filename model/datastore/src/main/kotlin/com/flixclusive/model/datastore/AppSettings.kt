@@ -52,6 +52,7 @@ data class AppSettings(
      * */
     val shouldReleasePlayer: Boolean = true,
     val isPlayerTimeReversed: Boolean = true,
+    val isUsingVolumeBoost: Boolean = false,
     /**
      * 1080p is the default value
      * */

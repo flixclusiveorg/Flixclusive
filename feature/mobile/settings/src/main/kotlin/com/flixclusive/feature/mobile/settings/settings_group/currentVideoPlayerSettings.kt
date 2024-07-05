@@ -58,6 +58,21 @@ internal fun currentVideoPlayerSettings(): List<SettingsItem> {
             }
         ),
         SettingsItem(
+            title = stringResource(UtilR.string.volume_booster),
+            onClick = {
+                onChangeSettings(appSettings.copy(isPlayerTimeReversed = !appSettings.isUsingVolumeBoost))
+            },
+            previewContent = {
+                Switch(
+                    checked = appSettings.isUsingVolumeBoost,
+                    onCheckedChange = {
+                        onChangeSettings(appSettings.copy(isUsingVolumeBoost = !appSettings.isUsingVolumeBoost))
+                    },
+                    modifier = Modifier.scale(0.7F)
+                )
+            }
+        ),
+        SettingsItem(
             title = stringResource(UtilR.string.preferred_quality),
             description = appSettings.preferredQuality.qualityName.asString(),
             dialogKey = KEY_PLAYER_QUALITY_DIALOG,

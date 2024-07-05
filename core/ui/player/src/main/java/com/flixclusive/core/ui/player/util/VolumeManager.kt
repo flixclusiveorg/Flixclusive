@@ -1,24 +1,16 @@
-package com.flixclusive.feature.mobile.player.util
+package com.flixclusive.core.ui.player.util
 
+import android.content.Context
 import android.media.AudioManager
 import android.media.audiofx.LoudnessEnhancer
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 
-internal val LocalVolumeManager = compositionLocalOf<VolumeManager> {
-    error("VolumeManager not provided")
-}
+class VolumeManager(context: Context) {
+    private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
-@Composable
-internal fun rememberVolumeManager()
-    = rememberUpdatedState(LocalVolumeManager.current).value
-
-class VolumeManager(private val audioManager: AudioManager) {
     var loudnessEnhancer: LoudnessEnhancer? = null
         set(value) {
             if (currentVolume > maxStreamVolume) {
