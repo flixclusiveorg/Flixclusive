@@ -83,12 +83,14 @@ internal fun PlayerControls(
     val brightnessManager = rememberBrightnessManager()
     val volumeManager = rememberVolumeManager()
 
-    val volumeIconId = remember(volumeManager.volumePercentage) {
-        when {
-            volumeManager.volumePercentage > 0.8F -> R.drawable.volume_up_black_24dp
-            volumeManager.volumePercentage < 0.4F && volumeManager.volumePercentage > 0F -> R.drawable.volume_down_black_24dp
-            volumeManager.volumePercentage == 0F -> R.drawable.volume_off_black_24dp
-            else -> R.drawable.volume_up_black_24dp
+    val volumeIconId = remember(volumeManager.currentVolume) {
+        volumeManager.run {
+            when {
+                currentVolumePercentage > 0.8F -> R.drawable.volume_up_black_24dp
+                currentVolumePercentage < 0.4F && currentVolumePercentage > 0F -> R.drawable.volume_down_black_24dp
+                currentVolumePercentage == 0F -> R.drawable.volume_off_black_24dp
+                else -> R.drawable.volume_up_black_24dp
+            }
         }
     }
 
@@ -165,7 +167,7 @@ internal fun PlayerControls(
                     areControlsVisible = isVisible,
                     seekerIconId = PlayerR.drawable.round_keyboard_double_arrow_right_24,
                     seekAction = player::seekForward,
-                    sliderValue = volumeManager.volumePercentage,
+                    sliderValue = volumeManager.currentVolume,
                     sliderValueRange = 0F..volumeManager.maxVolume,
                     sliderIconId = volumeIconId,
                     slideAction = volumeManager::setVolume,
