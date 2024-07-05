@@ -184,11 +184,7 @@ internal fun SeekerAndSliderGestures(
 
                             seekAction()
 
-                            interactionSource.emit(
-                                PressInteraction.Release(
-                                    press
-                                )
-                            )
+                            interactionSource.emit(PressInteraction.Release(press))
                             delay(SEEK_ANIMATION_DELAY)
                             isSeeking = false
 
@@ -229,8 +225,6 @@ internal fun SeekerAndSliderGestures(
 
                             // Minus it because Y is inverted
                             value = max(value - verticalAddition, 0F)
-                                .coerceIn(0F, 1F)
-
                             slideAction(value)
                         }
                     )

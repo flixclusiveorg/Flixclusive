@@ -558,10 +558,6 @@ class FlixclusivePlayerManager(
         player?.pause()
     }
 
-    fun setDeviceVolume(volume: Int) {
-        player?.setDeviceVolume(volume, 0)
-    }
-
     fun seekTo(position: Long) {
         player?.seekTo(position)
     }
