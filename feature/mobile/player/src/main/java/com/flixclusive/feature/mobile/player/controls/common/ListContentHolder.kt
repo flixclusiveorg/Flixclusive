@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.player.controls.common
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,17 +19,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.fadingEdge
+import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.player.PlayerProviderState
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.provider.ProviderApi
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun <Type> ListContentHolder(
     modifier: Modifier = Modifier,
@@ -42,6 +43,9 @@ internal fun <Type> ListContentHolder(
     itemState: PlayerProviderState = PlayerProviderState.SELECTED,
     onItemClick: (Int) -> Unit,
 ) {
+    val clipboardManager = LocalClipboardManager.current
+    val hapticFeedback = getFeedbackOnLongPress()
+
     val listState = rememberLazyListState()
     val listBottomFade = Brush.verticalGradient(
         0.15F to Color.Transparent,
@@ -79,7 +83,23 @@ internal fun <Type> ListContentHolder(
                     selectedIndex = selectedIndex,
                     itemState = itemState,
                     onClick = {
-                        onItemClick(i)
+                        if (i != selectedIndex) {
+                            onItemClick(i)
+                        }
+                    },
+                    onLongClick = {
+                        if (item is SourceLink) {
+                            hapticFeedback()
+                            clipboardManager.setText(
+                                AnnotatedString(
+                                    """
+                                        Source name: ${item.name}
+                                        Source link: ${item.url}
+                                        Source headers: ${item.customHeaders}
+                                    """.trimIndent()
+                                )
+                            )
+                        }
                     }
                 )
             }

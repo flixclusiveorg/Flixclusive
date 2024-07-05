@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.player.controls.common
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,7 @@ import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.player.PlayerProviderState
 import com.flixclusive.core.util.R as UtilR
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ListItem(
     modifier: Modifier = Modifier,
@@ -45,6 +47,7 @@ internal fun ListItem(
     selectedIndex: Int,
     itemState: PlayerProviderState = PlayerProviderState.SELECTED,
     onClick: () -> Unit,
+    onLongClick: () -> Unit = {}
 ) {
     val baseStyle = MaterialTheme.typography.labelLarge
     val unselectedColor = LocalContentColor.current.onMediumEmphasis()
@@ -63,9 +66,10 @@ internal fun ListItem(
 
     Box(
         modifier = modifier
-            .clickable(enabled = index != selectedIndex) {
-                onClick()
-            }
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(15.dp),
@@ -149,7 +153,8 @@ private fun SheetItemLoadingPreview() {
                         index = 0,
                         selectedIndex = if (it < 2) 0 else 1,
                         itemState = PlayerProviderState.entries[it % PlayerProviderState.entries.size],
-                        onClick = {}
+                        onClick = {},
+                        onLongClick = {}
                     )
                 }
             }
