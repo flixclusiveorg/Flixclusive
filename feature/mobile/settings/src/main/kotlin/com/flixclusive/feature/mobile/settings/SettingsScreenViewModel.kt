@@ -1,5 +1,7 @@
 package com.flixclusive.feature.mobile.settings
 
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -73,7 +75,9 @@ class SettingsScreenViewModel @Inject constructor(
             appSettingsManager.localAppSettings
         )
 
-    val cacheLinksSize = sourceLinksProvider.cacheSize
+    val cacheLinksSize by derivedStateOf {
+        sourceLinksProvider.cache.size
+    }
 
     fun toggleDialog(dialogKey: String) {
         openedDialogMap[dialogKey] = !openedDialogMap[dialogKey]!!
@@ -92,6 +96,6 @@ class SettingsScreenViewModel @Inject constructor(
     }
 
     fun clearCacheLinks() {
-        sourceLinksProvider.clearCache()
+        sourceLinksProvider.cache.clear()
     }
 }
