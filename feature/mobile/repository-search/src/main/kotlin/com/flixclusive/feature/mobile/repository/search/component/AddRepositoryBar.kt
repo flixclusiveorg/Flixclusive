@@ -141,7 +141,14 @@ internal fun AddRepositoryBar(
         ElevatedButton(
             onClick = {
                 if (urlQuery.value.contains("raw.githubusercontent.com", true)) {
-                    urlQuery.value = parseGithubUrl(urlQuery.value)!!
+                    val parsedGithubUrl = parseGithubUrl(urlQuery.value)
+
+                    if (parsedGithubUrl == null) {
+                        isError.value = true
+                        return@ElevatedButton
+                    }
+
+                    urlQuery.value = parsedGithubUrl
                 }
 
                 keyboardController?.hide()
