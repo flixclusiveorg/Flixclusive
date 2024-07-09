@@ -70,7 +70,7 @@ internal fun AudioAndSubtitlesPanel(
                 contentDescription = stringResource(id = com.flixclusive.core.util.R.string.audio_icon_content_desc),
                 label = stringResource(id = com.flixclusive.core.util.R.string.audio),
                 items = player.availableAudios,
-                selectedIndex = player.selectedAudio,
+                selectedIndex = player.selectedAudioIndex,
                 onItemClick = player::onAudioChange
             )
 

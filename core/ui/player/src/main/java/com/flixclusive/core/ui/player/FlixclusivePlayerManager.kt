@@ -119,7 +119,7 @@ class FlixclusivePlayerManager(
 
     var playbackSpeed by mutableFloatStateOf(1F)
         private set
-    var selectedAudio by mutableIntStateOf(0)
+    var selectedAudioIndex by mutableIntStateOf(0)
         private set
     var selectedSubtitleIndex by mutableIntStateOf(0)
         private set
@@ -127,6 +127,7 @@ class FlixclusivePlayerManager(
         private set
     var playWhenReady by mutableStateOf(true)
 
+    private var preferredAudioLanguage = appSettings.preferredAudioLanguage
     var preferredSubtitleLanguage = appSettings.subtitleLanguage
 
     val displayTitle: String
@@ -195,8 +196,8 @@ class FlixclusivePlayerManager(
             )
         }
 
-        selectedAudio = availableAudios.getIndexOfPreferredLanguage(
-            preferredLanguage = appSettings.preferredAudioLanguage,
+        selectedAudioIndex = availableAudios.getIndexOfPreferredLanguage(
+            preferredLanguage = preferredAudioLanguage,
             languageExtractor = { it }
         )
     }
@@ -328,10 +329,24 @@ class FlixclusivePlayerManager(
 
     private fun onReady() {
         player?.run {
+            extractAudios()
+            extractEmbeddedSubtitles()
+
+            selectedSubtitleIndex = when {
+                !appSettings.isSubtitleEnabled -> 0 // == Off subtitles
+                else -> availableSubtitles.getIndexOfPreferredLanguage(
+                    preferredLanguage = preferredSubtitleLanguage,
+                    languageExtractor = { it.language }
+                )
+            }
+            selectedAudioIndex = availableAudios.getIndexOfPreferredLanguage(
+                preferredLanguage = preferredAudioLanguage,
+                languageExtractor = { it }
+            )
             setPlaybackSpeed(playbackSpeed)
             currentTextRenderer?.setRenderOffsetMs(offset = subtitleOffset)
             onSubtitleChange(index = selectedSubtitleIndex)
-            onAudioChange(index = selectedAudio)
+            onAudioChange(index = selectedAudioIndex)
 
             hasBeenInitialized = true
         }
@@ -492,19 +507,20 @@ class FlixclusivePlayerManager(
      * @param index The index of the selected audio track.
      */
     fun onAudioChange(index: Int) {
-        selectedAudio = index
+        selectedAudioIndex = index
 
-        audioTrackGroups.getOrNull(selectedAudio)?.let { group ->
-            player?.run {
-                trackSelectionParameters =
-                    trackSelectionParameters.buildUpon()
-                        .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
-                        .setPreferredAudioLanguage(
-                            group.getTrackFormat(0).language
-                                ?: Locale.US.language
-                        )
-                        .build()
-            }
+        val audioTrack = audioTrackGroups.getOrNull(selectedAudioIndex)
+            ?.getTrackFormat(0)
+            ?.language
+            ?: return
+
+        preferredAudioLanguage = audioTrack
+        player?.run {
+            trackSelectionParameters =
+                trackSelectionParameters.buildUpon()
+                    .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
+                    .setPreferredAudioLanguage(preferredAudioLanguage)
+                    .build()
         }
     }
 
