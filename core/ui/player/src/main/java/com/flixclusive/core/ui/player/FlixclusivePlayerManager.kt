@@ -95,10 +95,10 @@ enum class PlayerEvents {
 @OptIn(UnstableApi::class)
 class FlixclusivePlayerManager(
     client: OkHttpClient,
+    private var appSettings: AppSettings,
     private val context: Context,
     private val playerCacheManager: PlayerCacheManager,
-    private var appSettings: AppSettings,
-    private var showErrorCallback: (message: UiText) -> Unit
+    private val showErrorCallback: (message: UiText) -> Unit
 ) : Player.Listener {
     private var mediaSession: MediaSession? = null
     var player: ExoPlayer? by mutableStateOf(null)

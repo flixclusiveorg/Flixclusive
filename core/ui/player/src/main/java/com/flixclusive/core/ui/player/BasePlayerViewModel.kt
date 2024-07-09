@@ -291,6 +291,11 @@ abstract class BasePlayerViewModel(
         val preferredQuality = appSettings.value.preferredQuality
         val indexToUse = index ?: sourceData.cachedLinks.getIndexOfPreferredQuality(preferredQuality = preferredQuality)
 
+        updateWatchHistory(
+            currentTime = player.currentPosition,
+            duration = player.duration
+        )
+
         _uiState.update {
             it.copy(selectedSourceLink = max(indexToUse, 0))
         }
