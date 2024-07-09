@@ -51,14 +51,13 @@ class PlayerScreenViewModel @Inject constructor(
     val snackbarQueue = mutableStateListOf<PlayerSnackbarMessage>()
 
     // =====================================
-
     private var snackbarJobs: MutableList<Job?> =
         MutableList(PlayerSnackbarMessageType.entries.size) { null }
 
     init {
         viewModelScope.launch {
             currentSelectedEpisode.collectLatest {
-                if(it?.season != null) {
+                if (it?.season != null) {
                     val seasonCount = (film as TvShow).totalSeasons
                     if (it.season != seasonCount) {
                         // Save episodes count of last season
@@ -81,6 +80,11 @@ class PlayerScreenViewModel @Inject constructor(
         showSnackbar(
             message = message,
             type = PlayerSnackbarMessageType.Error
+        )
+
+        updateWatchHistory(
+            currentTime = player.currentPosition,
+            duration = player.duration
         )
 
         if (isInternalPlayerError) {
