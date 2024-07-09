@@ -2,7 +2,7 @@
 
 name: 🐞 Issue report
 description: Report an issue in Flixclusive
-labels: [Bug]
+labels: [ bug ]
 body:
 
   - type: textarea
@@ -90,9 +90,11 @@ body:
       label: Acknowledgements
       description: Please read carefully! Reading comprehension is rare nowadays.
       options:
+        - label: I am ***fully confident*** that this issue is related solely to the app and not to any provider.
+          required: true
         - label: I have searched the existing issues and this is a new ticket, **NOT** a duplicate or related to another open or closed issue.
           required: true
         - label: I have written a short but informative title.
           required: true
-        - label: I have updated the app to the **[latest version](https://github.com/rhenwinch/Flixclusive/releases/latest)**.
+        - label: I have updated the app to the **[pre-release version](https://github.com/rhenwinch/Flixclusive/releases/tag/pre-release)**.
           required: true
