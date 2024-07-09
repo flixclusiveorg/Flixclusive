@@ -52,6 +52,7 @@ import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.common.tv.Episode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import com.flixclusive.core.util.R as UtilR
 
@@ -76,9 +77,14 @@ object PlayerUiUtil {
         film: Film,
         episode: Episode? = null
     ): String {
+        if (episode == null && film.filmType == FilmType.TV_SHOW) {
+            return film.title
+        }
+
         return when(film.filmType) {
             FilmType.MOVIE -> film.title
             FilmType.TV_SHOW -> String.format(
+                Locale.ROOT,
                 FILM_TV_SHOW_TITLE_FORMAT,
                 episode!!.season,
                 episode.number,
