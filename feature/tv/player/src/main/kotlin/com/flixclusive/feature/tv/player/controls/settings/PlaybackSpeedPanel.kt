@@ -165,11 +165,11 @@ private fun PlaybackSpeedPanelPreview() {
             CompositionLocalProvider(
                 PlayerUiUtil.LocalPlayerManager provides
                         FlixclusivePlayerManager(
-                            OkHttpClient(),
-                            LocalContext.current,
-                            PlayerCacheManager(LocalContext.current),
-                            AppSettings(),
-                            {}
+                            client = OkHttpClient(),
+                            appSettings = AppSettings(),
+                            context = LocalContext.current,
+                            playerCacheManager = PlayerCacheManager(LocalContext.current),
+                            showErrorCallback = {}
                         )
             ) {
                 Box {

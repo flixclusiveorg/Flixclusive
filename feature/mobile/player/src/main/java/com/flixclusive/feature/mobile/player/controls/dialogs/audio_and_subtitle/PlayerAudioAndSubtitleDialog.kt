@@ -93,7 +93,7 @@ internal fun PlayerAudioAndSubtitleDialog(
                 contentDescription = stringResource(id = UtilR.string.audio_icon_content_desc),
                 label = stringResource(id = UtilR.string.audio),
                 items = player.availableAudios,
-                selectedIndex = player.selectedAudio,
+                selectedIndex = player.selectedAudioIndex,
                 onItemClick = {
                     player.run {
                         onAudioChange(it)
