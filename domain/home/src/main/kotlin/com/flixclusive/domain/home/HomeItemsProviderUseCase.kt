@@ -97,21 +97,27 @@ class HomeItemsProviderUseCase @Inject constructor(
         initializeJob = scope.launch {
             _initializationStatus.value = Resource.Loading
 
-            val allCategories = getHomeRecommendations()
-            
-            _categories.value = allCategories
-            rowItemsPaginationJobs.clear()
-            rowItemsPaginationJobs.addAll(List(allCategories.size) { null })
-            _rowItems.value = List(allCategories.size) { emptyList() }
-            _rowItemsPagingState.value = _categories.value.map { item ->
-                PaginationStateInfo(
-                    canPaginate = item.canPaginate,
-                    pagingState = if (!item.canPaginate) PagingState.PAGINATING_EXHAUST else PagingState.IDLE,
-                    currentPage = 1
-                )
-            }
+            try {
+                val allCategories = getHomeRecommendations()
 
-            _initializationStatus.value = getHeaderItem()
+                _categories.value = allCategories
+                rowItemsPaginationJobs.clear()
+                rowItemsPaginationJobs.addAll(List(allCategories.size) { null })
+                _rowItems.value = List(allCategories.size) { emptyList() }
+                _rowItemsPagingState.value = _categories.value.map { item ->
+                    PaginationStateInfo(
+                        canPaginate = item.canPaginate,
+                        pagingState = if (!item.canPaginate) PagingState.PAGINATING_EXHAUST else PagingState.IDLE,
+                        currentPage = 1
+                    )
+                }
+
+                _initializationStatus.value = getHeaderItem()
+            } catch (e: NullPointerException) {
+                configurationProvider.initialize()
+            } catch (e: Exception) {
+                _initializationStatus.value = Resource.Failure(e)
+            }
         }
     }
 
