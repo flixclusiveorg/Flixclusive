@@ -21,4 +21,4 @@ body:
     attributes:
       label: Other details
       placeholder: |
-        Additional details and attachments.
+        Additional details and attachments (please don't issue bugs here, create a new one).
