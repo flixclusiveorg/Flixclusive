@@ -100,9 +100,7 @@ internal fun SeekerAndSliderGestures(
     val currentShowControls by rememberUpdatedState(showControls)
 
     var isSliderVisible by remember { mutableStateOf(false) }
-    var value by remember {
-        mutableFloatStateOf(sliderValue)
-    }
+    var value by remember { mutableFloatStateOf(sliderValue) }
     var isSeekerIconVisible by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -223,7 +221,7 @@ internal fun SeekerAndSliderGestures(
                             change.consume()
 
                             val verticalAddition =
-                                dragAmount * DRAG_MULTIPLIER / screenHeightPx.toFloat()
+                                dragAmount * (DRAG_MULTIPLIER * sliderValueRange.endInclusive) / screenHeightPx.toFloat()
 
                             if (sliderVisibilityTimeout?.isActive == true) {
                                 sliderVisibilityTimeout = sliderVisibilityTimeout!!.run {
