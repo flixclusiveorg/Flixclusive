@@ -16,7 +16,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
@@ -45,9 +45,10 @@ import com.flixclusive.core.util.R as UtilR
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 internal fun PlayerControls(
-    visibilityProvider: () -> Boolean,
+    isVisible: Boolean,
     appSettings: AppSettings,
     areControlsLocked: Boolean,
+    isDoubleTapping: MutableState<Boolean>,
     isEpisodesSheetOpened: MutableState<Boolean>,
     isAudiosAndSubtitlesDialogOpened: MutableState<Boolean>,
     isPlayerSettingsDialogOpened: MutableState<Boolean>,
@@ -57,11 +58,11 @@ internal fun PlayerControls(
     isLastEpisode: Boolean,
     providerApis: List<ProviderApi>,
     availableSeasons: Int?,
-    stateProvider: () -> PlayerUiState,
-    seasonDataProvider: () -> Resource<Season?>,
+    state: PlayerUiState,
+    seasonData: Resource<Season?>,
     currentEpisodeSelected: Episode?,
     showControls: (Boolean) -> Unit,
-    toggleControlLock: (Boolean) -> Unit,
+    lockControls: (Boolean) -> Unit,
     onBack: () -> Unit,
     onSnackbarToggle: (UiText, PlayerSnackbarMessageType) -> Unit,
     onSeasonChange: (Int) -> Unit,
@@ -74,12 +75,9 @@ internal fun PlayerControls(
     toggleVideoTimeReverse: () -> Unit,
 ) {
     val player by rememberLocalPlayerManager()
-
-    val isVisible by rememberUpdatedState(visibilityProvider())
-    val state by rememberUpdatedState(stateProvider())
-    val seasonData by rememberUpdatedState(seasonDataProvider())
-    
     val brightnessManager = rememberBrightnessManager()
+
+    var isDoubleTapping by remember { mutableStateOf(false) }
 
     val volumeIconId = remember(player.volumeManager.currentVolume) {
         player.volumeManager.run {
@@ -128,7 +126,7 @@ internal fun PlayerControls(
     LockControls(
         areControlsVisible = isVisible,
         shouldLockControls = areControlsLocked,
-        onVisibilityChange = { toggleControlLock(it) },
+        onVisibilityChange = { lockControls(it) },
         showPlaybackControls = showControls
     )
 
@@ -148,7 +146,10 @@ internal fun PlayerControls(
                     direction = GestureDirection.Left,
                     areControlsVisible = isVisible,
                     seekerIconId = PlayerR.drawable.round_keyboard_double_arrow_left_24,
-                    seekAction = player::seekBack,
+                    seekAction = {
+                        isDoubleTapping = true
+                        player.seekBack()
+                    },
                     sliderValue = brightnessManager.currentBrightness,
                     sliderValueRange = 0F..brightnessManager.maxBrightness,
                     sliderIconId = R.drawable.round_wb_sunny_24,
@@ -243,7 +244,7 @@ internal fun PlayerControls(
                         onNextEpisodeClick = onEpisodeClick,
                         toggleVideoTimeReverse = toggleVideoTimeReverse,
                         onLockClick = {
-                            toggleControlLock(true)
+                            lockControls(true)
                             showControls(true)
                         }
                     )
