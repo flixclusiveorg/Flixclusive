@@ -152,13 +152,13 @@ fun PlayerScreen(
                 || isPlayerSettingsDialogOpened.value
                 || isAudiosAndSubtitlesDialogOpened.value
                 || isServersDialogOpened.value
+                || isDoubleTapping.value
 
         val isLoading = (!viewModel.player.hasBeenInitialized
                 || !viewModel.player.isPlaying
                 || viewModel.player.playbackState == Player.STATE_BUFFERING
                 || viewModel.player.playbackState == Player.STATE_ENDED)
                 && !viewModel.areControlsLocked
-                && !isDoubleTapping.value
 
         controlTimeoutVisibility = when {
             !isShowing || areSomeSheetsOpened -> 0
@@ -345,6 +345,7 @@ fun PlayerScreen(
             isPlayerSettingsDialogOpened.value,
             isAudiosAndSubtitlesDialogOpened.value,
             isServersDialogOpened.value,
+            isDoubleTapping.value
         ) {
             showControls(true)
         }

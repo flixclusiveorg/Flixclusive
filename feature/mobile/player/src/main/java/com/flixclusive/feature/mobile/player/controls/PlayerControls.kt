@@ -16,7 +16,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
@@ -76,8 +75,6 @@ internal fun PlayerControls(
 ) {
     val player by rememberLocalPlayerManager()
     val brightnessManager = rememberBrightnessManager()
-
-    var isDoubleTapping by remember { mutableStateOf(false) }
 
     val volumeIconId = remember(player.volumeManager.currentVolume) {
         player.volumeManager.run {
@@ -144,12 +141,10 @@ internal fun PlayerControls(
                         .align(Alignment.CenterStart)
                         .fillMaxHeight(0.85F),
                     direction = GestureDirection.Left,
+                    isDoubleTapping = isDoubleTapping,
                     areControlsVisible = isVisible,
                     seekerIconId = PlayerR.drawable.round_keyboard_double_arrow_left_24,
-                    seekAction = {
-                        isDoubleTapping = true
-                        player.seekBack()
-                    },
+                    seekAction = player::seekBack,
                     sliderValue = brightnessManager.currentBrightness,
                     sliderValueRange = 0F..brightnessManager.maxBrightness,
                     sliderIconId = R.drawable.round_wb_sunny_24,
@@ -163,6 +158,7 @@ internal fun PlayerControls(
                         .align(Alignment.CenterEnd)
                         .fillMaxHeight(0.85F),
                     direction = GestureDirection.Right,
+                    isDoubleTapping = isDoubleTapping,
                     areControlsVisible = isVisible,
                     seekerIconId = PlayerR.drawable.round_keyboard_double_arrow_right_24,
                     seekAction = player::seekForward,
