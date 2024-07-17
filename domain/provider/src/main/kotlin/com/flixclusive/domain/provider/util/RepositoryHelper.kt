@@ -5,9 +5,7 @@ import okhttp3.OkHttpClient
 import java.util.regex.Pattern
 
 fun extractGithubInfoFromLink(url: String): Pair<String?, String?>? {
-    val pattern = Pattern.compile(
-        "https://(github\\.com|raw\\.githubusercontent\\.com)/(?<username>[^/]+)/(?<repository>[^/]+)(.*?)(?!\\n)"
-    )
+    val pattern = Pattern.compile("https://(github\\.com|raw\\.githubusercontent\\.com)/([^/]+)/([^/]+)(.*?)(?!\\n)")
     val matcher = pattern.matcher(url)
 
     if (matcher.matches()) {
