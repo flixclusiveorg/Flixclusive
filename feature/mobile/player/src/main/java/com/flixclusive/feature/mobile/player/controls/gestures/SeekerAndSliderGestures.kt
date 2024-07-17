@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -71,6 +72,7 @@ internal fun SeekerAndSliderGestures(
     modifier: Modifier = Modifier,
     direction: GestureDirection,
     areControlsVisible: Boolean,
+    isDoubleTapping: MutableState<Boolean>,
     sliderValue: Float,
     @DrawableRes seekerIconId: Int,
     @DrawableRes sliderIconId: Int,
@@ -101,7 +103,7 @@ internal fun SeekerAndSliderGestures(
     var value by remember {
         mutableFloatStateOf(sliderValue)
     }
-    var isSeeking by remember { mutableStateOf(false) }
+    var isSeekerIconVisible by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
 
     val scope = rememberCoroutineScope()
@@ -153,6 +155,14 @@ internal fun SeekerAndSliderGestures(
         }
     }
 
+    LaunchedEffect(isSeekerIconVisible) {
+        if (isDoubleTapping.value) {
+            delay(SEEK_ANIMATION_DELAY.
+            times(1.5).toLong())
+            isDoubleTapping.value = false
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth(0.45F)
@@ -171,23 +181,24 @@ internal fun SeekerAndSliderGestures(
                     },
                     onDoubleTap = { offset ->
                         scope.launch {
+                            isDoubleTapping.value = true
                             var shouldShowControls = false
-                            if (areControlsVisible) {
+                            if (isVisible) {
                                 currentShowControls(false)
                                 shouldShowControls = true
                             }
 
                             val press = PressInteraction.Press(offset)
 
-                            isSeeking = true
+                            isSeekerIconVisible = true
                             interactionSource.emit(press)
 
                             seekAction()
 
                             interactionSource.emit(PressInteraction.Release(press))
                             delay(SEEK_ANIMATION_DELAY)
-                            isSeeking = false
 
+                            isSeekerIconVisible = false
                             currentShowControls(shouldShowControls)
                         }
                     }
@@ -233,7 +244,7 @@ internal fun SeekerAndSliderGestures(
             .then(modifier),
     ) {
         AnimatedVisibility(
-            visible = isSeeking,
+            visible = isSeekerIconVisible,
             enter = slideInHorizontally(
                 initialOffsetX = { it * if (direction == GestureDirection.Left) 1 else -1 },
                 animationSpec = tween(durationMillis = 500)
@@ -307,6 +318,7 @@ private fun SeekerAndSliderGesturesPreview() {
             SeekerAndSliderGestures(
                 direction = GestureDirection.Left,
                 areControlsVisible = areControlsVisible,
+                isDoubleTapping = remember { mutableStateOf(false) },
                 sliderValue = sliderValue,
                 seekerIconId = R.drawable.round_wb_sunny_24,
                 sliderIconId = R.drawable.round_wb_sunny_24,
