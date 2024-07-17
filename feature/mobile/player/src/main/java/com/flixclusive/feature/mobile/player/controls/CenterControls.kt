@@ -18,7 +18,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -52,6 +54,30 @@ internal fun CenterControls(
         else -> PlayerR.drawable.replay_30_black_24dp to PlayerR.drawable.forward_30_black_24dp
     }
 
+    val isPaused by remember {
+        derivedStateOf {
+            !player.isPlaying && player.playbackState != STATE_ENDED && player.playbackState != STATE_BUFFERING
+        }
+    }
+
+    val isPlaying by remember {
+        derivedStateOf {
+            player.isPlaying && player.playbackState != STATE_BUFFERING && player.playbackState != STATE_ENDED
+        }
+    }
+
+    val isDone by remember {
+        derivedStateOf {
+            !player.isPlaying && player.playbackState == STATE_ENDED
+        }
+    }
+
+    val isBuffering by remember {
+        derivedStateOf {
+            player.playbackState == STATE_BUFFERING
+        }
+    }
+
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -60,7 +86,6 @@ internal fun CenterControls(
             alignment = Alignment.CenterHorizontally
         )
     ) {
-
         CenterControlsButtons(
             drawableId = replaySeekIcon,
             contentDescriptionId = UtilR.string.backward_button_content_description,
@@ -81,30 +106,29 @@ internal fun CenterControls(
                     drawRect(buttonColor)
                 }
                 .clickable(
-                    enabled = player.playbackState != STATE_BUFFERING
+                    enabled = !isBuffering
                 ) {
-                    player.run {
-                        playWhenReady = when {
-                            isPlaying -> {
-                                pause()
-                                false
-                            }
-                            !isPlaying && playbackState == STATE_ENDED -> {
-                                seekTo(0)
-                                true
-                            }
-                            else -> {
-                                play()
-                                true
-                            }
+                    when {
+                        player.isPlaying -> {
+                            player.pause()
+                            player.playWhenReady = false
                         }
-                        showControls(true)
+                        !player.isPlaying && player.playbackState == STATE_ENDED -> {
+                            player.seekTo(0)
+                            player.playWhenReady = true
+                        }
+                        else -> {
+                            player.play()
+                            player.playWhenReady = true
+                        }
                     }
+
+                    showControls(true)
                 },
             contentAlignment = Alignment.Center
         ) {
             this@Row.AnimatedVisibility(
-                visible = player.playbackState == STATE_BUFFERING,
+                visible = isBuffering,
                 enter = scaleIn(),
                 exit = scaleOut()
             ) {
@@ -117,7 +141,7 @@ internal fun CenterControls(
             }
 
             this@Row.AnimatedVisibility(
-                visible = !player.isPlaying && player.playbackState != STATE_ENDED && player.playbackState != STATE_BUFFERING,
+                visible = isPaused,
                 enter = slideInHorizontally { it } + fadeIn(),
                 exit = fadeOut() + scaleOut()
             ) {
@@ -131,7 +155,7 @@ internal fun CenterControls(
             }
 
             this@Row.AnimatedVisibility(
-                visible = player.isPlaying && player.playbackState != STATE_BUFFERING && player.playbackState != STATE_ENDED,
+                visible = isPlaying,
                 enter = slideInHorizontally { it } + fadeIn(),
                 exit = fadeOut() + scaleOut()
             ) {
@@ -145,7 +169,7 @@ internal fun CenterControls(
             }
 
             this@Row.AnimatedVisibility(
-                visible = !player.isPlaying && player.playbackState == STATE_ENDED,
+                visible = isDone,
                 enter = scaleIn(),
                 exit = scaleOut()
             ) {

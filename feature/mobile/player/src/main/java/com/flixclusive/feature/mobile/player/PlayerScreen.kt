@@ -138,6 +138,7 @@ fun PlayerScreen(
     val isAudiosAndSubtitlesDialogOpened = remember { mutableStateOf(false) }
     val isPlayerSettingsDialogOpened = remember { mutableStateOf(false) }
     val isServersDialogOpened = remember { mutableStateOf(false) }
+    val isDoubleTapping = remember { mutableStateOf(false) }
 
     var isChangingEpisode by remember { mutableStateOf(false) }
 
@@ -155,14 +156,14 @@ fun PlayerScreen(
         val isLoading = (!viewModel.player.hasBeenInitialized
                 || !viewModel.player.isPlaying
                 || viewModel.player.playbackState == Player.STATE_BUFFERING
-                || viewModel.player.playbackState == Player.STATE_ENDED) && !viewModel.areControlsLocked
+                || viewModel.player.playbackState == Player.STATE_ENDED)
+                && !viewModel.areControlsLocked
+                && !isDoubleTapping.value
 
-        controlTimeoutVisibility = if (!isShowing || areSomeSheetsOpened) {
-            0
-        } else if (isLoading) {
-            Int.MAX_VALUE
-        } else {
-            PLAYER_CONTROL_VISIBILITY_TIMEOUT
+        controlTimeoutVisibility = when {
+            !isShowing || areSomeSheetsOpened -> 0
+            isLoading -> Int.MAX_VALUE
+            else -> PLAYER_CONTROL_VISIBILITY_TIMEOUT
         }
     }
 
@@ -415,12 +416,10 @@ fun PlayerScreen(
             )
 
             PlayerControls(
-                visibilityProvider = {
-                    viewModel.areControlsVisible &&
-                            !isInPipMode
-                },
+                isVisible = viewModel.areControlsVisible && !isInPipMode,
                 appSettings = appSettings,
                 areControlsLocked = viewModel.areControlsLocked,
+                isDoubleTapping = isDoubleTapping,
                 isEpisodesSheetOpened = isEpisodesSheetOpened,
                 isAudiosAndSubtitlesDialogOpened = isAudiosAndSubtitlesDialogOpened,
                 servers = sourceData.cachedLinks,
@@ -431,8 +430,8 @@ fun PlayerScreen(
                 availableSeasons = (args.film as? TvShow)?.totalSeasons,
                 currentEpisodeSelected = currentSelectedEpisode,
                 isLastEpisode = viewModel.isLastEpisode,
-                stateProvider = { uiState },
-                seasonDataProvider = { seasonData },
+                state = uiState,
+                seasonData = seasonData,
                 onBack = navigator::goBack,
                 onSnackbarToggle = viewModel::showSnackbar,
                 onSeasonChange = viewModel::onSeasonChange,
@@ -447,7 +446,7 @@ fun PlayerScreen(
                 onPanelChange = viewModel::onPanelChange,
                 toggleVideoTimeReverse = viewModel::toggleVideoTimeReverse,
                 showControls = { showControls(it) },
-                toggleControlLock = { viewModel.areControlsLocked = it },
+                lockControls = { viewModel.areControlsLocked = it },
                 addSubtitle = { sourceData.cachedSubtitles.add(index = 0, element = it) },
                 onEpisodeClick = {
                     viewModel.run {
