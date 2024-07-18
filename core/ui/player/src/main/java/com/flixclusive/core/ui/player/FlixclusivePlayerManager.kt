@@ -37,6 +37,7 @@ import androidx.media3.session.MediaSession
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
 import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
+import com.flixclusive.core.ui.player.util.MimeTypeParser
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.availablePlaybackSpeeds
 import com.flixclusive.core.ui.player.util.VolumeManager
@@ -363,7 +364,7 @@ class FlixclusivePlayerManager(
                 .build()
         )
         .apply {
-            if (url.endsWith(".txt")) {
+            if (MimeTypeParser.isM3U8(url)) {
                 setMimeType(MimeTypes.APPLICATION_M3U8)
             }
         }
