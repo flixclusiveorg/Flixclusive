@@ -1,9 +1,10 @@
-package com.flixclusive.core.ui.common
+package com.flixclusive.core.util.film
 
 import androidx.annotation.StringRes
 import com.flixclusive.core.util.R as UtilR
 
 
+@Deprecated("Use SearchFilterSet")
 enum class SearchFilter(
     val type: String,
     @StringRes val resId: Int

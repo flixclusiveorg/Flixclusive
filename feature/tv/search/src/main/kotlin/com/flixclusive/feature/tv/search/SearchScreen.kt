@@ -37,7 +37,6 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.flixclusive.core.ui.common.SearchFilter
 import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.tv.component.FilmCard
@@ -55,6 +54,7 @@ import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.film.SearchFilter
 import com.flixclusive.feature.tv.search.component.FilterBlock
 import com.flixclusive.feature.tv.search.component.KEYBOARD_FOCUS_KEY_FORMAT
 import com.flixclusive.feature.tv.search.component.SearchCustomKeyboard

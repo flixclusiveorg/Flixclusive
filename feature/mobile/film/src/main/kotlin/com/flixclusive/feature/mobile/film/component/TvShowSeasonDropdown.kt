@@ -31,8 +31,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
@@ -42,13 +42,13 @@ internal fun TvShowSeasonDropdown(
     selectedSeason: Int,
     onSeasonChange: (Int) -> Unit,
 ) {
-    var dropdownIcon by remember { mutableIntStateOf(R.drawable.down_arrow) }
+    var dropdownIcon by remember { mutableIntStateOf(UiCommonR.drawable.down_arrow) }
     val isDropdownExpanded = remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = isDropdownExpanded.value) {
         dropdownIcon = when(isDropdownExpanded.value) {
-            true -> R.drawable.up_arrow
-            false -> R.drawable.down_arrow
+            true -> UiCommonR.drawable.up_arrow
+            false -> UiCommonR.drawable.down_arrow
         }
     }
 
