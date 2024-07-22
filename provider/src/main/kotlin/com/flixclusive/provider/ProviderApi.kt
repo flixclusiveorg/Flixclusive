@@ -1,6 +1,8 @@
 package com.flixclusive.provider
 
 import android.content.Context
+import com.flixclusive.core.util.film.Filter
+import com.flixclusive.core.util.film.FilterList
 import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
@@ -17,6 +19,9 @@ import okhttp3.OkHttpClient
 
 /**
  * The base class for every provider api.
+ *
+ * An api will provide source links for a given film. It could also be used to search for films and retrieve detailed information about them.
+ *
  * @param client The [OkHttpClient] instance used for network requests.
  */
 abstract class ProviderApi(
@@ -36,6 +41,12 @@ abstract class ProviderApi(
      * Whether this provider needs to use a WebView to scrape content
      * */
     open val useWebView: Boolean = false
+
+    /**
+     *  The list of [Filter]s that this provider's search method supports.
+     * */
+    open val filters: FilterList
+        get() = FilterList()
 
     /** This provider's own catalogs */
     open val catalogs: List<ProviderCatalog>
@@ -64,6 +75,7 @@ abstract class ProviderApi(
      * @param tmdbId The TMDB ID of the film to search for (optional).
      * @param imdbId The IMDB ID of the film to search for (optional).
      * @param page The page number of the search results (optional, defaults to 1).
+     * @param filters A list of filters to apply to the search (optional, defaults to an empty list).
      *
      * @return A [SearchResponseData] object containing the search results.
      */
@@ -73,6 +85,7 @@ abstract class ProviderApi(
         id: String? = null,
         imdbId: String? = null,
         tmdbId: Int? = null,
+        filters: FilterList = this.filters,
     ): SearchResponseData<FilmSearchItem> {
         TODO("OPTIONAL: Not yet implemented")
     }

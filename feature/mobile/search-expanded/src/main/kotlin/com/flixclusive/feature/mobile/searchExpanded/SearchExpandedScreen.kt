@@ -10,13 +10,16 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -25,11 +28,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
 import com.flixclusive.core.ui.mobile.util.shouldPaginate
 import com.flixclusive.core.util.common.ui.PagingState
+import com.flixclusive.core.util.film.FilterList
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchBarInput
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchFilmsGridView
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchProvidersView
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchSearchHistoryView
-import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.feature.mobile.searchExpanded.component.filter.FilterBottomSheet
+import com.flixclusive.feature.mobile.searchExpanded.util.Constant
+import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
 import com.flixclusive.model.tmdb.Film
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
@@ -40,6 +46,7 @@ internal enum class SearchItemViewType {
     Films;
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Destination
 @Composable
 fun SearchExpandedScreen(
@@ -56,18 +63,31 @@ fun SearchExpandedScreen(
         }
     }
 
-
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+
+    var filterGroupIndexToShow by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(key1 = shouldStartPaginate) {
         if(shouldStartPaginate && viewModel.pagingState == PagingState.IDLE)
             viewModel.paginateItems()
     }
 
-    val selectedProvider = remember(viewModel.selectedProviderIndex) {
-        viewModel.providerDataList
+    val providerData = remember(viewModel.selectedProviderIndex) {
+        val providerData = viewModel.providerDataList
             .getOrNull(viewModel.selectedProviderIndex - 1)
-            ?.name ?: DEFAULT_FILM_SOURCE_NAME
+
+        if (providerData == null) {
+            return@remember Constant.tmdbProviderData
+        }
+
+        providerData
+    }
+
+
+    val sortedFilters by remember {
+        derivedStateOf {
+            FilterList(viewModel.filters.sortedByDescending { it.isBeingUsed() })
+        }
     }
 
     Scaffold(
@@ -77,7 +97,11 @@ fun SearchExpandedScreen(
                 searchQuery = viewModel.searchQuery,
                 lastQuerySearched = viewModel.lastQuerySearched,
                 currentViewType = viewModel.currentViewType,
-                selectedProvider = selectedProvider,
+                providerData = providerData,
+                filters = sortedFilters,
+                onNavigationIconClick = navigator::goBack,
+                onQueryChange = viewModel::onQueryChange,
+                onToggleFilterSheet = { filterGroupIndexToShow = it },
                 onSearch = {
                     scope.launch {
                         // Scroll to top
@@ -85,8 +109,6 @@ fun SearchExpandedScreen(
                     }
                     viewModel.onSearch()
                 },
-                onNavigationIconClick = navigator::goBack,
-                onQueryChange = viewModel::onQueryChange,
                 onChangeProvider = {
                     viewModel.onChangeProvider(it)
                     scope.launch {
@@ -147,5 +169,15 @@ fun SearchExpandedScreen(
                 }
             }
         }
+    }
+
+    if (filterGroupIndexToShow != null) {
+        FilterBottomSheet(
+            filters = sortedFilters[filterGroupIndexToShow!!],
+            onUpdateFilters = { viewModel.onUpdateFilters(sortedFilters) },
+            onDismissRequest = {
+                filterGroupIndexToShow = null
+            },
+        )
     }
 }

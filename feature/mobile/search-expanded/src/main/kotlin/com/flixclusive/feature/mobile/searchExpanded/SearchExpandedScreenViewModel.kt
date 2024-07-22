@@ -15,14 +15,17 @@ import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.film.FilterList
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.tmdb.TMDBRepository
+import com.flixclusive.feature.mobile.searchExpanded.util.TmdbFilters.Companion.getDefaultTmdbFilters
 import com.flixclusive.gradle.entities.Status
 import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.provider.ProviderApi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -70,6 +73,8 @@ class SearchExpandedScreenViewModel @Inject constructor(
         )
 
     val searchResults = mutableStateListOf<FilmSearchItem>()
+    var filters by mutableStateOf(getDefaultTmdbFilters())
+        private set
 
     private var searchingJob: Job? = null
 
@@ -119,12 +124,15 @@ class SearchExpandedScreenViewModel @Inject constructor(
 
     fun onChangeProvider(index: Int) {
         selectedProviderIndex = index
-
         onSearch()
     }
 
     fun onQueryChange(query: String) {
         searchQuery = query
+    }
+
+    fun onUpdateFilters(newFilters: FilterList) {
+        filters = newFilters
     }
 
     fun paginateItems() {
@@ -152,6 +160,15 @@ class SearchExpandedScreenViewModel @Inject constructor(
             }
         }
     }
+
+    fun deleteSearchHistoryItem(item: SearchHistory) {
+        viewModelScope.launch {
+            searchHistoryRepository.remove(id = item.id)
+        }
+    }
+
+    private suspend fun getSelectedProvider(): ProviderApi?
+            = providers.first().getOrNull(selectedProviderIndex - 1)
 
     private fun SearchResponseData<FilmSearchItem>.parseResults() {
         val results = results
@@ -185,8 +202,7 @@ class SearchExpandedScreenViewModel @Inject constructor(
         } else {
             try {
                 val result = withContext(ioDispatcher) {
-                    val apis = providers.first()
-                    apis[selectedProviderIndex - 1].search(
+                    getSelectedProvider()!!.search(
                         page = page,
                         title = searchQuery,
                     )
@@ -200,12 +216,6 @@ class SearchExpandedScreenViewModel @Inject constructor(
                         error = it.error
                     }
             }
-        }
-    }
-
-    fun deleteSearchHistoryItem(item: SearchHistory) {
-        viewModelScope.launch {
-            searchHistoryRepository.remove(id = item.id)
         }
     }
 }

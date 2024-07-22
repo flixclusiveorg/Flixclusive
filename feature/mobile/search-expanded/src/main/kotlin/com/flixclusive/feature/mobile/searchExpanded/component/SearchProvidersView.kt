@@ -19,11 +19,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenViewModel
-import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.feature.mobile.searchExpanded.util.Constant
 import com.flixclusive.core.util.R as UtilR
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -65,14 +64,8 @@ internal fun SearchProvidersView(
         }
 
         item {
-            val tmdbProviderData = getDummyProviderData()
-                .copy(
-                    name = "$DEFAULT_FILM_SOURCE_NAME - Default",
-                    iconUrl = "https://i.imgur.com/qd6zqII.png"
-                )
-
             SearchProviderBlock(
-                providerData = tmdbProviderData,
+                providerData = Constant.tmdbProviderData,
                 isSelected = viewModel.selectedProviderIndex == 0,
                 onClick = {
                     viewModel.onChangeProvider(0)
