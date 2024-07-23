@@ -1,4 +1,4 @@
-package com.flixclusive.core.util.film
+package com.flixclusive.core.util.film.filter
 
 import androidx.compose.runtime.Stable
 

@@ -1,4 +1,9 @@
-package com.flixclusive.core.util.film
+package com.flixclusive.core.util.film.filter
+
+import android.content.Context
+import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.film.filter.Filter.Sort.Selection
+import com.flixclusive.core.util.film.filter.Filter.TriState.Companion.STATE_UNSELECTED
 
 /**
  * A sealed class representing a filter with a name and a state.
@@ -17,13 +22,27 @@ sealed class Filter<T>(
      * An abstract class representing a selectable filter.
      *
      * @param V The type of the values that can be selected.
+     * @param name The name of the filter.
      * @param options The list of values that can be selected.
      * @param state The current state, default is 0.
      */
-    class Select<V>(
+    open class Select<V>(
+        name: String,
         val options: List<V>,
-        state: Int? = null
-    ) : Filter<Int?>("", state)
+        state: Int = 0
+    ) : Filter<Int>(name, state) {
+        companion object {
+            fun <T> getOptionName(
+                option: T,
+                context: Context
+            ): String {
+                return when (option) {
+                    is UiText -> option.asString(context)
+                    else -> option.toString()
+                }
+            }
+        }
+    }
 
     /**
      * An abstract class representing a checkbox filter.
@@ -31,7 +50,7 @@ sealed class Filter<T>(
      * @param name The name of the filter.
      * @param state The current state, default is false.
      */
-    abstract class CheckBox(
+    open class CheckBox(
         name: String,
         state: Boolean = false
     ) : Filter<Boolean>(name, state)
@@ -39,21 +58,26 @@ sealed class Filter<T>(
     /**
      * An abstract class representing a tri-state filter.
      *
+     * It has three states: unselected, selected, and indeterminate.
+     * - Unselected: The filter is not selected. Checkbox is empty.
+     * - Selected: The filter is selected. Checkbox is checked.
+     * - Indeterminate: The filter is indeterminate. Checkbox has a dash line.
+     *
      * @param name The name of the filter.
-     * @param state The current state, default is [STATE_IGNORE].
+     * @param state The current state, default is [STATE_UNSELECTED].
      */
-    abstract class TriState(
+    open class TriState(
         name: String,
-        state: Int? = null
-    ) : Filter<Int?>(name, state) {
-        fun isIgnored() = state == STATE_IGNORE
-        fun isIncluded() = state == STATE_INCLUDE
-        fun isExcluded() = state == STATE_EXCLUDE
+        state: Int = STATE_UNSELECTED
+    ) : Filter<Int>(name, state) {
+        fun isUnselected() = state == STATE_UNSELECTED
+        fun isSelected() = state == STATE_SELECTED
+        fun isIndeterminate() = state == STATE_INDETERMINATE
 
         companion object {
-            const val STATE_IGNORE = 0
-            const val STATE_INCLUDE = 1
-            const val STATE_EXCLUDE = 2
+            const val STATE_UNSELECTED = 0
+            const val STATE_SELECTED = 1
+            const val STATE_INDETERMINATE = 2
         }
     }
 
@@ -61,15 +85,14 @@ sealed class Filter<T>(
      * An abstract class representing a sort filter.
      *
      * @param name The name of the filter.
+     * @property options The list of filters that could be sorted either on ascending or descending order.
      * @param state The current state, which is a [Selection] object or null.
-     * @property values The array of sortable values.
      */
-    abstract class Sort(
+    open class Sort<V>(
         name: String,
-        val values: List<String>,
+        val options: List<V>,
         state: Selection? = null
-    ) : Filter<Sort.Selection?>(name, state) {
-
+    ) : Filter<Selection?>(name, state) {
         /**
          * A data class representing a selection with an index and a boolean indicating ascending order.
          *

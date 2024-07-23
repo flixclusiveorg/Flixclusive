@@ -8,6 +8,7 @@ import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.exception.catchInternetRelatedException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.configuration.AppConfigurationManager
+import com.flixclusive.data.tmdb.TmdbFilters.Companion.getMediaTypeFromInt
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.Genre
 import com.flixclusive.model.tmdb.Movie
@@ -90,6 +91,7 @@ internal class DefaultTMDBRepository @Inject constructor(
     override suspend fun search(
         query: String,
         page: Int,
+        filter: Int,
     ): Resource<SearchResponseData<FilmSearchItem>> {
         return withContext(ioDispatcher) {
             try {
@@ -98,7 +100,7 @@ internal class DefaultTMDBRepository @Inject constructor(
                 }
 
                 val response = tmdbApiService.search(
-                    mediaType = "multi", // TODO: Dynamically change this again
+                    mediaType = getMediaTypeFromInt(filter),
                     apiKey = tmdbApiKey,
                     page = page,
                     query = query
