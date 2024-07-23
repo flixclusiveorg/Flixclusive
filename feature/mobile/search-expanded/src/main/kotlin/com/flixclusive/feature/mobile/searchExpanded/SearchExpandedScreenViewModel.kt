@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,12 +17,15 @@ import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.film.FilterList
+import com.flixclusive.core.util.film.filter.BottomSheetComponent
+import com.flixclusive.core.util.film.filter.FilterGroup
+import com.flixclusive.core.util.film.filter.FilterList
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.feature.mobile.searchExpanded.util.TmdbFilters.Companion.getDefaultTmdbFilters
+import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
+import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
 import com.flixclusive.gradle.entities.Status
 import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.model.tmdb.FilmSearchItem
@@ -168,7 +173,7 @@ class SearchExpandedScreenViewModel @Inject constructor(
     }
 
     private suspend fun getSelectedProvider(): ProviderApi?
-            = providers.first().getOrNull(selectedProviderIndex - 1)
+        = providers.first().getOrNull(selectedProviderIndex - 1)
 
     private fun SearchResponseData<FilmSearchItem>.parseResults() {
         val results = results
@@ -193,11 +198,31 @@ class SearchExpandedScreenViewModel @Inject constructor(
         return page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE) || searchQuery.isEmpty()
     }
 
+    private fun filterOutUiComponentsFromFilterList(): FilterList
+        = FilterList(
+            filters.fastMap { group ->
+                FilterGroup(
+                    name = group.name,
+                    list = group.list.fastFilter { filter ->
+                        filter !is BottomSheetComponent<*>
+                    }
+                )
+            }.sortedByDescending {
+                it.isBeingUsed()
+            }
+        )
+
     private suspend fun getResponseFromProviderEndpoint(): Resource<SearchResponseData<FilmSearchItem>> {
+        val filteredFilters = filterOutUiComponentsFromFilterList()
+
         return if (selectedProviderIndex == 0) {
+            val mediaTypeFilter = filteredFilters.first().first()
+            val mediaType = mediaTypeFilter.state as Int
+
             tmdbRepository.search(
                 page = page,
-                query = searchQuery
+                query = searchQuery,
+                filter = mediaType
             )
         } else {
             try {

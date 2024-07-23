@@ -340,6 +340,7 @@
     <string name="see_more_btn_content_desc">A vertical see more button icon</string>
     <string name="server_snackbar_message">Server set to %1$s</string>
     <string name="signup_prerelease_updates_desc">Opt-in on using pre-release updates instead of official ones.</string>
+    <string name="sort_icon_content_desc">Sort icon</string>
     <string name="subtitle_icon_content_desc">Subtitle icon</string>
     <string name="subtitle_snackbar_message">Subtitle set to %1$s</string>
     <string name="subtitles_background_color_desc">Choose a background color behind the subtitle</string>

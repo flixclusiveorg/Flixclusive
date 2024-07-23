@@ -1,8 +1,8 @@
 package com.flixclusive.provider
 
 import android.content.Context
-import com.flixclusive.core.util.film.Filter
-import com.flixclusive.core.util.film.FilterList
+import com.flixclusive.core.util.film.filter.Filter
+import com.flixclusive.core.util.film.filter.FilterList
 import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle

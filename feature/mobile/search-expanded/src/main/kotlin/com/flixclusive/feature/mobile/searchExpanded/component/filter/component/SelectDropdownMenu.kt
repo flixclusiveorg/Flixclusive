@@ -1,7 +1,6 @@
 package com.flixclusive.feature.mobile.searchExpanded.component.filter.component
 
 
-import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,24 +43,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.film.filter.Filter.Select.Companion.getOptionName
 import com.flixclusive.core.util.R as UtilR
 
-private fun <T> getOptionName(
-    option: T,
-    context: Context
-): String {
-    return when (option) {
-        is UiText -> option.asString(context)
-        else -> option.toString()
-    }
-}
-
+/**
+ *
+ * Custom implementation of BottomSheet + Dialog for Compose since the vanilla one sucks ass.
+ *
+ * Originally from [Peter Törnhult](https://proandroiddev.com/improving-the-compose-dropdownmenu-88469b1ef34)
+ * */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun <T> SelectDropdownMenu(
     modifier: Modifier = Modifier,
-    label: String,
+    label: String?,
     options: List<T>,
     selected: Int?,
     onSelect: (Int) -> Unit,
@@ -83,13 +78,15 @@ internal fun <T> SelectDropdownMenu(
 
     Box(modifier = modifier.height(IntrinsicSize.Min)) {
         OutlinedTextField(
-            label = {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8F)
-                )
+            label = if (label == null) null else {
+                {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.5F)
+                    )
+                }
             },
             value = selectedOption,
             enabled = false,
@@ -108,7 +105,6 @@ internal fun <T> SelectDropdownMenu(
             readOnly = true,
         )
 
-        // Transparent clickable surface on top of OutlinedTextField
         Surface(
             modifier = Modifier
                 .fillMaxSize()

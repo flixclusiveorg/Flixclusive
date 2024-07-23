@@ -1,4 +1,4 @@
-package com.flixclusive.core.util.film
+package com.flixclusive.core.util.film.filter
 
 /**
  * An abstract class representing a filter group.
@@ -7,7 +7,7 @@ package com.flixclusive.core.util.film
  * @param list The list of filters in the group.
  */
 @Suppress("unused")
-abstract class FilterGroup(
+open class FilterGroup(
     val name: String,
     val list: List<Filter<*>>
 ) : List<Filter<*>> by list {

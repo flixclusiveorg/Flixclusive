@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.searchExpanded.component
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
@@ -53,13 +54,13 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.film.FilterList
+import com.flixclusive.core.util.film.filter.FilterList
+import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
 import com.flixclusive.feature.mobile.searchExpanded.SearchItemViewType
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.ProviderFilterButton
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.getFormattedName
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
-import com.flixclusive.feature.mobile.searchExpanded.util.TmdbFilters.Companion.getDefaultTmdbFilters
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
@@ -232,13 +233,18 @@ internal fun SearchBarInput(
                         .height(32.dp)
                         .widthIn(min = 80.dp)
                 ) {
-                    Text(
-                        text = filterGroup.getFormattedName(context = context),
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        ),
-                    )
+                    AnimatedContent(
+                        targetState = filterGroup.getFormattedName(context = context),
+                        label = ""
+                    ) {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            ),
+                        )
+                    }
                 }
             }
         }

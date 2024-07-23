@@ -7,17 +7,19 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAll
+import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.film.Filter
-import com.flixclusive.core.util.film.FilterGroup
+import com.flixclusive.core.util.film.filter.Filter
+import com.flixclusive.core.util.film.filter.FilterGroup
 
 internal object FilterHelper {
 
     private const val SELECTED_FILTER_BUTTON_ALPHA = 0.05F
 
     fun FilterGroup.isBeingUsed(): Boolean {
-        for (filter in this) {
+        fastForEach { filter ->
             if (filter is Filter.CheckBox && filter.state) {
                 return true
             }
@@ -51,27 +53,8 @@ internal object FilterHelper {
 
                 return groupName
             }
-            is Filter.Select<*> -> {
-                val selectedFilter = firstFilter.options
-                    .getOrNull(firstFilter.state!!)
-
-                if (selectedFilter is UiText) {
-                    return selectedFilter.asString(context)
-                }
-
-                if (selectedFilter == null)
-                    return name
-
-                return selectedFilter.toString()
-            }
-            is Filter.Sort -> {
-                val selectedFilter = firstFilter.values
-                    .getOrNull(firstFilter.state!!.index)
-
-                if (selectedFilter == null)
-                    return name
-
-                return selectedFilter
+            is Filter.Select<*>, is Filter.Sort<*> -> {
+                return firstFilter.getFilterDisplayValue(context)
             }
             else -> name
         }
@@ -82,7 +65,7 @@ internal object FilterHelper {
             return true
 
         val firstType = first()::class
-        return all { it::class == firstType }
+        return fastAll { it::class == firstType }
     }
 
     @Composable
@@ -105,5 +88,19 @@ internal object FilterHelper {
                 color = MaterialTheme.colorScheme.primary,
             )
         } else ButtonDefaults.outlinedButtonBorder
+    }
+
+    private fun Filter<*>.getFilterDisplayValue(context: Context): String {
+        val selectedFilter = when (this) {
+            is Filter.Select<*> -> options.getOrNull(state!!)
+            is Filter.Sort<*> -> options.getOrNull(state!!.index)
+            else -> null
+        }
+
+        return when (selectedFilter) {
+            is UiText -> selectedFilter.asString(context)
+            null -> name
+            else -> selectedFilter.toString()
+        }
     }
 }

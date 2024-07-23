@@ -49,6 +49,7 @@ interface TMDBRepository {
     suspend fun search(
         query: String,
         page: Int,
+        filter: Int = FILTER_ALL,
     ): Resource<SearchResponseData<FilmSearchItem>>
 
     suspend fun getLogo(
