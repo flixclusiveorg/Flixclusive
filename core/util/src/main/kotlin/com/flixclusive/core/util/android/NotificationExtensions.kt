@@ -22,8 +22,17 @@ val Context.notificationManager: NotificationManager
 fun Context.notify(
     id: Int,
     channelId: String,
+    channelName: String,
+    shouldInitializeChannel: Boolean = false,
     block: (NotificationCompat.Builder.() -> Unit)? = null,
 ) {
+    if(shouldInitializeChannel && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        notificationManager.createChannel(
+            channelId = channelId,
+            channelName = channelName
+        )
+    }
+
     val notification = notificationBuilder(channelId, block).build()
     this.notify(id, notification)
 }

@@ -3,7 +3,6 @@ package com.flixclusive.data.provider
 import android.content.Context
 import android.content.res.AssetManager
 import android.content.res.Resources
-import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshotFlow
 import com.flixclusive.core.datastore.AppSettingsManager
@@ -17,6 +16,9 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.core.util.network.fromJson
+import com.flixclusive.data.provider.util.CrashHelper.getApiCrashMessage
+import com.flixclusive.data.provider.util.CrashHelper.isCrashingOnGetApiMethod
+import com.flixclusive.data.provider.util.NotificationUtil.notifyOnError
 import com.flixclusive.data.provider.util.buildValidFilename
 import com.flixclusive.data.provider.util.downloadFile
 import com.flixclusive.data.provider.util.provideValidProviderPath
@@ -60,13 +62,15 @@ class ProviderManager @Inject constructor(
     val providers: MutableMap<String, Provider> = LinkedHashMap()
     private val classLoaders: MutableMap<PathClassLoader, Provider> = HashMap()
 
+    private var notificationChannelHasBeensInitialized = false
+
     /**
      * An observable map of provider data
      */
     val providerDataList = mutableStateListOf<ProviderData>()
 
-    /** Providers that failed to load for various reasons. Map of file to String or Exception  */
-    private val failedToLoad: MutableMap<File, Any> = LinkedHashMap()
+    /** Providers that failed to load for various reasons. Map of provider data to String or Exception  */
+    private val failedToLoad: MutableMap<ProviderData, Any> = LinkedHashMap()
 
     /**
      *
@@ -108,10 +112,12 @@ class ProviderManager @Inject constructor(
             }
 
             if (failedToLoad.isNotEmpty()) {
-                context.showToast(
-                    message = context.getString(UtilR.string.failed_to_load_providers_msg),
-                    duration = Toast.LENGTH_LONG
+                context.notifyOnError(
+                    shouldInitializeChannel = !notificationChannelHasBeensInitialized,
+                    providers = failedToLoad.keys,
                 )
+
+                notificationChannelHasBeensInitialized = true
             }
         }
     }
@@ -265,10 +271,21 @@ class ProviderManager @Inject constructor(
             throw IOException("Something went wrong trying to download the provider.")
         }
 
+        val initialFailedToLoadProviders = failedToLoad.size
         loadProvider(
             file = file,
             providerData = providerData
         )
+
+        val hasNewErrors = needsDownload && failedToLoad.size - initialFailedToLoadProviders > 0
+        if (hasNewErrors) {
+            context.notifyOnError(
+                shouldInitializeChannel = !notificationChannelHasBeensInitialized,
+                providers = failedToLoad.keys,
+            )
+
+            notificationChannelHasBeensInitialized = true
+        }
     }
 
     /**
@@ -279,12 +296,12 @@ class ProviderManager @Inject constructor(
      */
     @Suppress("DEPRECATION", "UNCHECKED_CAST")
     private suspend fun loadProvider(file: File, providerData: ProviderData) {
-        val fileName = file.nameWithoutExtension
+        val name = file.nameWithoutExtension
         val filePath = file.absolutePath
 
-        var providerPreference = getProviderPreference(fileName)
+        var providerPreference = getProviderPreference(name)
 
-        infoLog("Loading provider: $fileName")
+        infoLog("Loading provider: $name")
 
         safeCall {
             File(filePath).setReadOnly()
@@ -302,7 +319,7 @@ class ProviderManager @Inject constructor(
                     manifest = fromJson(reader)
                 }
             }
-            val name = manifest.name
+
             val providerClass: Class<out Provider?> =
                 loader.loadClass(manifest.providerClassName) as Class<out Provider>
             val providerInstance: Provider =
@@ -313,11 +330,10 @@ class ProviderManager @Inject constructor(
                 return
             }
 
-
             val settingsPath = context.getExternalFilesDir(null)
                 ?.absolutePath + "/settings/${buildValidFilename(providerData.repositoryUrl!!)}"
 
-            providerInstance.__filename = fileName
+            providerInstance.__filename = name
             providerInstance.manifest = manifest
             providerInstance.settings = ProviderSettings(
                 fileDirectory = settingsPath,
@@ -335,12 +351,10 @@ class ProviderManager @Inject constructor(
                     context.resources.configuration
                 )
             }
-            providers[name] = providerInstance
-            classLoaders[loader] = providerInstance
 
             if (providerPreference == null) {
                 providerPreference = ProviderPreference(
-                    name = fileName,
+                    name = name,
                     filePath = filePath,
                     isDisabled = false
                 )
@@ -358,10 +372,24 @@ class ProviderManager @Inject constructor(
             }
 
             providerDataList.add(providerData)
+            providers[name] = providerInstance
+            classLoaders[loader] = providerInstance
         } catch (e: Throwable) {
-            failedToLoad[file] = e
-            errorLog("Failed to load provider $fileName: ${e.localizedMessage}")
-            throw e
+            if (isCrashingOnGetApiMethod(e)) {
+                val message = context.getApiCrashMessage(provider = name)
+                errorLog(message)
+
+                toggleUsageOnSettings(
+                    name = name,
+                    isDisabled = true
+                )
+
+                return loadProvider(file, providerData)
+            }
+
+            errorLog("$name crashed with error: ${e.localizedMessage}")
+            errorLog(e)
+            failedToLoad[providerData] = e
         }
     }
 
@@ -537,14 +565,22 @@ class ProviderManager @Inject constructor(
         if (isProviderEnabled) {
             providerApiRepository.remove(providerData.name)
         } else {
-            providers[providerData.name]
-                ?.getApi(context, client)
-                ?.let {
+            try {
+                val api = providers[providerData.name]?.getApi(context, client)
+
+                if (api != null) {
                     providerApiRepository.add(
                         providerName = providerData.name,
-                        providerApi = it
+                        providerApi = api
                     )
                 }
+            } catch (e: Throwable) {
+                val message = context.getApiCrashMessage(provider = providerData.name)
+                errorLog(message)
+                context.showToast(message)
+
+                toggleUsage(providerData)
+            }
         }
     }
 
