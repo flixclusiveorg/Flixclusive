@@ -12,9 +12,10 @@ import javax.net.ssl.SSLException
 
 /**
  * Catches exceptions related to internet operations and converts them into a [Resource.Failure] object.
+ *
  * @return A [Resource.Failure] object with an appropriate error message.
  */
-fun Exception.catchInternetRelatedException(): Resource.Failure {
+fun Exception.toNetworkException(): Resource.Failure {
     val defaultMessage = localizedMessage ?: message ?: "Unknown error occurred"
 
     return when (this) {

@@ -23,7 +23,7 @@ import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.feature.mobile.player.controls.common.BasePlayerDialog
 import com.flixclusive.feature.mobile.player.controls.common.ListContentHolder
 import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
@@ -32,7 +32,7 @@ import com.flixclusive.core.util.R as UtilR
 @Composable
 internal fun PlayerServersDialog(
     state: PlayerUiState,
-    servers: List<SourceLink>,
+    servers: List<Stream>,
     providerApis: List<ProviderApi>,
     onProviderChange: (String) -> Unit,
     onVideoServerChange: (Int, String) -> Unit,
@@ -104,7 +104,7 @@ private fun PlayerServersDialogPreview() {
     val serverNames = listOf("ServerA", "ServerB", "ServerC", "ServerD", "ServerE")
     val serverUrls = listOf("http://serverA.com", "http://serverB.com", "http://serverC.com", "http://serverD.com", "http://serverE.com")
     val servers = List(10) {
-        SourceLink(
+        Stream(
             name = serverNames.random(),
             url = serverUrls.random()
         )

@@ -75,7 +75,6 @@ internal fun SearchBarInput(
     onSearch: () -> Unit,
     onNavigationIconClick: () -> Unit,
     onToggleFilterSheet: (Int) -> Unit,
-    onChangeProvider: (Int) -> Unit,
     onQueryChange: (String) -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -265,7 +264,6 @@ private fun SearchBarExpandedPreview() {
                 onSearch = {},
                 onNavigationIconClick = {},
                 onQueryChange = {},
-                onChangeProvider = {},
                 onToggleFilterSheet = {},
                 filters = getDefaultTmdbFilters(),
                 providerData = getDummyProviderData(),

@@ -3,9 +3,8 @@ package com.flixclusive.provider
 import android.content.Context
 import com.flixclusive.core.util.film.filter.Filter
 import com.flixclusive.core.util.film.filter.FilterList
+import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.ProviderCatalog
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
@@ -13,9 +12,14 @@ import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
-import com.flixclusive.provider.util.FlixclusiveWebView
-import com.flixclusive.provider.util.WebViewCallback
+import com.flixclusive.provider.webview.ProviderWebView
+import com.flixclusive.provider.webview.ProviderWebViewCallback
 import okhttp3.OkHttpClient
+
+/**
+ * Default value for [ProviderApi.testWatchId].
+ * */
+private const val DEFAULT_TEST_WATCH_ID = "tt0068646"
 
 /**
  * The base class for every provider api.
@@ -23,34 +27,25 @@ import okhttp3.OkHttpClient
  * An api will provide source links for a given film. It could also be used to search for films and retrieve detailed information about them.
  *
  * @param client The [OkHttpClient] instance used for network requests.
+ *
+ * @property name The name of the provider.
+ * @property baseUrl The base URL used for network requests. Defaults to an empty string.
+ * @property testWatchId The unique watch identifier that will be used for provider testing. Defaults to [DEFAULT_TEST_WATCH_ID].
+ * @property useWebView Whether this provider needs to use a WebView to scrape content. Defaults to false.
+ * @property catalogs The list of [ProviderCatalog]s that this provider provides. Defaults to an empty list.
+ * @property filters The list of [Filter]s that this provider's search method supports. Defaults to an empty list.
  */
+@Suppress("unused")
 abstract class ProviderApi(
     protected val client: OkHttpClient
 ) {
-    /**
-     * The name of the provider.
-     */
     abstract val name: String
 
-    /**
-     * The base URL used for network requests. Defaults to an empty string.
-     */
     open val baseUrl: String = ""
-
-    /**
-     * Whether this provider needs to use a WebView to scrape content
-     * */
+    open val testWatchId: String = DEFAULT_TEST_WATCH_ID
     open val useWebView: Boolean = false
-
-    /**
-     *  The list of [Filter]s that this provider's search method supports.
-     * */
-    open val filters: FilterList
-        get() = FilterList()
-
-    /** This provider's own catalogs */
-    open val catalogs: List<ProviderCatalog>
-        get() = emptyList()
+    open val filters: FilterList get() = FilterList()
+    open val catalogs: List<ProviderCatalog> get() = emptyList()
 
     /**
      * Obtains a list of [Film] items from the provider's catalog.
@@ -63,9 +58,8 @@ abstract class ProviderApi(
     open suspend fun getCatalogItems(
         catalog: ProviderCatalog,
         page: Int = 1
-    ): SearchResponseData<FilmSearchItem> {
-        TODO("OPTIONAL: Not yet implemented")
-    }
+    ): SearchResponseData<FilmSearchItem>
+        = throw NotImplementedError()
 
     /**
      * Searches for films based on the provided criteria.
@@ -86,39 +80,38 @@ abstract class ProviderApi(
         imdbId: String? = null,
         tmdbId: Int? = null,
         filters: FilterList = this.filters,
-    ): SearchResponseData<FilmSearchItem> {
-        TODO("OPTIONAL: Not yet implemented")
-    }
+    ): SearchResponseData<FilmSearchItem>
+        = throw NotImplementedError()
 
     /**
      * Retrieves detailed information about a film.
      * @param film The [Film] object of the film to retrieve details for.
      * @return a [FilmDetails] instance containing the film's information. It could either be a [Movie] or [TvShow].
      */
-    open suspend fun getFilmDetails(film: Film): FilmDetails {
-        TODO("OPTIONAL: Not yet implemented")
-    }
+    open suspend fun getFilmDetails(film: Film): FilmDetails
+        = throw NotImplementedError()
 
     /**
-     * Obtains source links for the provided film, season, and episode.
+     * Obtains resource links for the provided film, season, and episode.
+     *
      * @param watchId The unique watch identifier for the film.
-     * @param film The [Film] object of the film. It could either be a [Movie] or [TvShow].
+     * @param film The detailed film object of the film. Notice that it is a [FilmDetails] and not a [Film] object, this means that this film object has full details and not just the partial info of it. It could either be a [Movie] or [TvShow].
      * @param episode The [Episode] object of the episode. Defaults to null for movies.
-     * @param onLinkLoaded A callback function invoked when a [SourceLink] is loaded.
-     * @param onSubtitleLoaded A callback function invoked when a [Subtitle] is loaded.
+     *
+     * @return a list of [MediaLink] objects representing the links for the film.
      */
-    abstract suspend fun getSourceLinks(
+    open suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode? = null,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit,
-    )
+        episode: Episode? = null
+    ): List<MediaLink>
+        = throw NotImplementedError()
 
     open fun getWebView(
         context: Context,
-        callback: WebViewCallback,
+        callback: ProviderWebViewCallback,
         film: FilmDetails,
         episode: Episode? = null,
-    ): FlixclusiveWebView? = null
+    ): ProviderWebView
+        = throw NotImplementedError("This provider indicates that it uses a WebView but does not provide one. Make it make sense!")
 }

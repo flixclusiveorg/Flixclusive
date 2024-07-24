@@ -10,16 +10,16 @@ import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.data.util.InternetMonitor
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.data.watchlist.WatchlistRepository
-import com.flixclusive.domain.provider.SourceLinksProviderUseCase
+import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
 import com.flixclusive.model.database.toWatchlistItem
-import com.flixclusive.model.provider.SourceData
-import com.flixclusive.model.provider.SourceDataState
+import com.flixclusive.model.provider.CachedLinks
+import com.flixclusive.model.provider.MediaLinkResourceState
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.model.tmdb.toFilmInstance
-import com.flixclusive.provider.util.FlixclusiveWebView
+import com.flixclusive.provider.webview.ProviderWebView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +38,7 @@ import com.flixclusive.core.util.R as UtilR
 @HiltViewModel
 internal class MobileAppViewModel @Inject constructor(
     private val filmProviderUseCase: FilmProviderUseCase,
-    private val sourceLinksProvider: SourceLinksProviderUseCase,
+    private val getMediaLinksUseCase: GetMediaLinksUseCase,
     private val watchHistoryRepository: WatchHistoryRepository,
     private val watchlistRepository: WatchlistRepository,
     internetMonitor: InternetMonitor,
@@ -68,9 +68,9 @@ internal class MobileAppViewModel @Inject constructor(
     private val _filmToPreview = MutableStateFlow<Film?>(null)
     val filmToPreview = _filmToPreview.asStateFlow()
 
-    val loadedSourceData: SourceData?
+    val loadedCachedLinks: CachedLinks?
         get() = _filmToPreview.value?.identifier?.let {
-            sourceLinksProvider.getLinks(
+            getMediaLinksUseCase.getCache(
                 filmId = it,
                 episode = _episodeToPlay.value,
             )
@@ -144,13 +144,13 @@ internal class MobileAppViewModel @Inject constructor(
     fun onPlayClick(
         film: Film? = null,
         episode: Episode? = null,
-        runWebView: (FlixclusiveWebView) -> Unit,
+        runWebView: (ProviderWebView) -> Unit,
     ) {
         if(onPlayClickJob?.isActive == true)
             return
 
         onPlayClickJob = viewModelScope.launch {
-            updateVideoDataDialogState(SourceDataState.Fetching(UtilR.string.film_data_fetching))
+            updateVideoDataDialogState(MediaLinkResourceState.Fetching(UtilR.string.film_data_fetching))
 
             var filmToShow = film ?: _filmToPreview.value ?: return@launch
 
@@ -161,7 +161,7 @@ internal class MobileAppViewModel @Inject constructor(
                 else -> Resource.Success(filmToShow)
             }
 
-            val errorFetchingFilm = SourceDataState.Error(UtilR.string.film_data_fetch_failed)
+            val errorFetchingFilm = MediaLinkResourceState.Error(UtilR.string.film_data_fetch_failed)
             if(response !is Resource.Success) {
                 return@launch updateVideoDataDialogState(errorFetchingFilm)
             }
@@ -179,7 +179,7 @@ internal class MobileAppViewModel @Inject constructor(
 
             _filmToPreview.value = filmToShow
 
-            sourceLinksProvider.loadLinks(
+            getMediaLinksUseCase(
                 film = filmToShow,
                 watchHistoryItem = watchHistoryItem,
                 episode = episode,
@@ -191,14 +191,14 @@ internal class MobileAppViewModel @Inject constructor(
         }
     }
 
-    private fun updateVideoDataDialogState(sourceDataState: SourceDataState) {
+    private fun updateVideoDataDialogState(mediaLinkResourceState: MediaLinkResourceState) {
         _uiState.update {
-            it.copy(sourceDataState = sourceDataState)
+            it.copy(mediaLinkResourceState = mediaLinkResourceState)
         }
     }
 
     fun onConsumeSourceDataDialog(isForceClosing: Boolean = false) {
-        updateVideoDataDialogState(SourceDataState.Idle)
+        updateVideoDataDialogState(MediaLinkResourceState.Idle)
         if(isForceClosing) {
             onPlayClickJob?.cancel() // Cancel job
             onPlayClickJob = null

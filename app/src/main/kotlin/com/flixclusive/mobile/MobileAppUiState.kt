@@ -1,6 +1,6 @@
 package com.flixclusive.mobile
 
-import com.flixclusive.model.provider.SourceDataState
+import com.flixclusive.model.provider.MediaLinkResourceState
 
 internal data class MobileAppUiState(
     val isOnPlayerScreen: Boolean = false,
@@ -8,6 +8,6 @@ internal data class MobileAppUiState(
     val isShowingBottomSheetCard: Boolean = false,
     val isLongClickedFilmInWatchlist: Boolean = false,
     val isLongClickedFilmInWatchHistory: Boolean = false,
-    val sourceDataState: SourceDataState = SourceDataState.Idle,
+    val mediaLinkResourceState: MediaLinkResourceState = MediaLinkResourceState.Idle,
     val isOnPipMode: Boolean = false,
 )

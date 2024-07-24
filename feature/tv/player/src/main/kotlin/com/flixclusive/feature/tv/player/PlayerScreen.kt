@@ -47,7 +47,7 @@ import com.flixclusive.core.ui.tv.util.handleDPadKeyEvents
 import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.feature.tv.player.controls.PlaybackControls
-import com.flixclusive.model.provider.SourceDataState
+import com.flixclusive.model.provider.MediaLinkResourceState
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
@@ -102,7 +102,7 @@ fun PlayerScreen(
 
     LaunchedEffect(episodeToPlay, isPlayerRunning, isIdle) {
         if (
-            dialogState is SourceDataState.Success
+            dialogState is MediaLinkResourceState.Success
             && (
                 isSameEpisode(
                     film = film,
@@ -134,7 +134,7 @@ fun PlayerScreen(
     }
 
     LaunchedEffect(dialogState, isIdle, isPlayerRunning) {
-        if (!isPlayerRunning && dialogState is SourceDataState.Success && isIdle && !hasLaunchedFromIdle) {
+        if (!isPlayerRunning && dialogState is MediaLinkResourceState.Success && isIdle && !hasLaunchedFromIdle) {
             viewModel.onDestroyWebView()
             scrapingJob?.cancel()
             scrapingJob = null
@@ -149,15 +149,15 @@ fun PlayerScreen(
     }
 
     if(
-        ((dialogState !is SourceDataState.Success
-        && dialogState !is SourceDataState.Idle) || viewModel.webView != null)
+        ((dialogState !is MediaLinkResourceState.Success
+        && dialogState !is MediaLinkResourceState.Idle) || viewModel.webView != null)
         && isPlayerRunning
     ) {
         Box(
             contentAlignment = Alignment.Center
         ) {
-            if (dialogState !is SourceDataState.Success
-                && dialogState !is SourceDataState.Idle) {
+            if (dialogState !is MediaLinkResourceState.Success
+                && dialogState !is MediaLinkResourceState.Idle) {
                 SourceDataDialog(
                     state = dialogState,
                     onConsumeDialog = {
@@ -176,7 +176,7 @@ fun PlayerScreen(
                         viewModel.webView!!.also {
                             scrapingJob = scope.launch {
                                 val shouldPlay = viewModel.player.isPlaying
-                                async { it.startScraping() }
+                                async { it.getLinks() }
 
                                 delay(200)
                                 if (shouldPlay) {
@@ -200,12 +200,12 @@ fun PlayerScreen(
     }
 
     AnimatedVisibility(
-        visible = dialogState is SourceDataState.Success && isPlayerRunning,
+        visible = dialogState is MediaLinkResourceState.Success && isPlayerRunning,
         enter = fadeIn(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY)),
         exit = fadeOut(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY))
     ) {
-        val sourceData = viewModel.sourceData
-        val sourceProviders by viewModel.sourceProviders.collectAsStateWithLifecycle(initialValue = emptyList())
+        val sourceData = viewModel.cachedLinks
+        val providers by viewModel.providers.collectAsStateWithLifecycle(initialValue = emptyList())
 
         val currentPlayerTitle = remember(currentEpisodeSelected) {
             formatPlayerTitle(film, currentEpisodeSelected)
@@ -318,8 +318,8 @@ fun PlayerScreen(
             ObserveNewLinksAndSubtitles(
                 selectedSourceLink = uiState.selectedSourceLink,
                 currentPlayerTitle = currentPlayerTitle,
-                newLinks = sourceData.cachedLinks,
-                newSubtitles = sourceData.cachedSubtitles,
+                newLinks = sourceData.streams,
+                newSubtitles = sourceData.subtitles,
                 getSavedTimeForCurrentSourceData = {
                     viewModel.getSavedTimeForSourceData(currentEpisodeSelected).first
                 }
@@ -349,15 +349,15 @@ fun PlayerScreen(
 
                                 player.initialize()
                                 sourceData.run {
-                                    val getPossibleSourceLink = cachedLinks
+                                    val getPossibleSourceLink = streams
                                         .getOrNull(uiState.selectedSourceLink)
-                                        ?: cachedLinks.getOrNull(0)
+                                        ?: streams.getOrNull(0)
 
                                     getPossibleSourceLink?.let {
                                         player.prepare(
                                             link = it,
                                             title = currentPlayerTitle,
-                                            subtitles = cachedSubtitles,
+                                            subtitles = subtitles,
                                             initialPlaybackPosition = currentPosition
                                         )
                                     }
@@ -404,8 +404,8 @@ fun PlayerScreen(
                         isServerPanelOpened = isServerPanelOpened,
                         isPlaybackSpeedPanelOpened = isPlaybackSpeedPanelOpened,
                         isVisible = viewModel.areControlsVisible,
-                        servers = sourceData.cachedLinks,
-                        providerApis = sourceProviders,
+                        servers = sourceData.streams,
+                        providerApis = providers,
                         currentEpisodeSelected = currentEpisodeSelected,
                         stateProvider = { uiState },
                         dialogStateProvider = { dialogState },

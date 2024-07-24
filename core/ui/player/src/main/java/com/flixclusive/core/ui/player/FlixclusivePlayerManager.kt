@@ -56,7 +56,7 @@ import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.player.CaptionSizePreference.Companion.getDp
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
 import kotlinx.coroutines.delay
@@ -281,7 +281,7 @@ class FlixclusivePlayerManager(
     }
 
     fun prepare(
-        link: SourceLink,
+        link: Stream,
         title: String,
         subtitles: List<Subtitle>,
         initialPlaybackPosition: Long = 0L,
@@ -294,8 +294,10 @@ class FlixclusivePlayerManager(
                 title = title
             )
 
-            okHttpDataSource.setDefaultRequestProperties(link.customHeaders ?: emptyMap())
-            baseHttpDataSource.setDefaultRequestProperties(link.customHeaders ?: emptyMap())
+            val customHeaders = link.customHeaders ?: emptyMap()
+
+            okHttpDataSource.setDefaultRequestProperties(customHeaders)
+            baseHttpDataSource.setDefaultRequestProperties(customHeaders)
 
             val mediaSource = cacheFactory.createMediaSource(mediaItem)
 

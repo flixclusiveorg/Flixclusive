@@ -13,19 +13,19 @@ import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
-import com.flixclusive.domain.provider.SourceLinksProviderUseCase
+import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.toWatchHistoryItem
 import com.flixclusive.model.database.util.getSavedTimeForFilm
 import com.flixclusive.model.datastore.player.PlayerQuality.Companion.getIndexOfPreferredQuality
-import com.flixclusive.model.provider.SourceData
-import com.flixclusive.model.provider.SourceDataState
+import com.flixclusive.model.provider.CachedLinks
+import com.flixclusive.model.provider.MediaLinkResourceState
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.model.tmdb.common.tv.Season
-import com.flixclusive.provider.util.FlixclusiveWebView
+import com.flixclusive.provider.webview.ProviderWebView
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -50,12 +50,12 @@ abstract class BasePlayerViewModel(
     watchHistoryRepository: WatchHistoryRepository,
     private val appSettingsManager: AppSettingsManager,
     private val seasonProviderUseCase: SeasonProviderUseCase,
-    private val sourceLinksProvider: SourceLinksProviderUseCase,
+    private val getMediaLinksUseCase: GetMediaLinksUseCase,
     private val watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
 ) : ViewModel() {
     val film = args.film
 
-    var webView: FlixclusiveWebView? by mutableStateOf(null)
+    var webView: ProviderWebView? by mutableStateOf(null)
         private set
     val player = FlixclusivePlayerManager(
         client = client,
@@ -70,16 +70,16 @@ abstract class BasePlayerViewModel(
         }
     )
 
-    val sourceData: SourceData
-        get() = sourceLinksProvider.getLinks(
+    val cachedLinks: CachedLinks
+        get() = getMediaLinksUseCase.getCache(
             filmId = film.identifier,
             episode = _currentSelectedEpisode.value
         )
 
-    val sourceProviders = sourceLinksProvider.providerApis
+    val providers = getMediaLinksUseCase.providerApis
 
-    private val _dialogState = MutableStateFlow<SourceDataState>(SourceDataState.Idle)
-    val dialogState: StateFlow<SourceDataState> = _dialogState.asStateFlow()
+    private val _dialogState = MutableStateFlow<MediaLinkResourceState>(MediaLinkResourceState.Idle)
+    val dialogState: StateFlow<MediaLinkResourceState> = _dialogState.asStateFlow()
 
     private val _season = MutableStateFlow<Resource<Season?>>(Resource.Loading)
     val season = _season.asStateFlow()
@@ -127,18 +127,18 @@ abstract class BasePlayerViewModel(
         _uiState.update {
             val preferredQuality = appSettings.value.preferredQuality
             val preferredResizeMode = appSettings.value.preferredResizeMode
-            val indexOfPreferredServer = sourceData.cachedLinks
+            val indexOfPreferredServer = cachedLinks.streams
                 .getIndexOfPreferredQuality(preferredQuality = preferredQuality)
 
             it.copy(
                 selectedSourceLink = indexOfPreferredServer,
                 selectedResizeMode = preferredResizeMode,
-                selectedProvider = sourceData.providerName
+                selectedProvider = cachedLinks.providerName
             )
         }
     }
 
-    fun onRunWebView(webView: FlixclusiveWebView) {
+    fun onRunWebView(webView: ProviderWebView) {
         this.webView = webView
     }
 
@@ -149,7 +149,7 @@ abstract class BasePlayerViewModel(
 
     /**
      *
-     * Obtains the saved time for the current [SourceData] to be watched.
+     * Obtains the saved time for the current [CachedLinks] to be watched.
      *
      * @param episode an optional parameter for episode to be watched if the film is a [TvShow]
      *
@@ -218,7 +218,7 @@ abstract class BasePlayerViewModel(
 
     fun onProviderChange(
         newProvider: String,
-        runWebView: (FlixclusiveWebView) -> Unit
+        runWebView: (ProviderWebView) -> Unit
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true)
             return
@@ -238,7 +238,7 @@ abstract class BasePlayerViewModel(
             val oldSelectedSource = _uiState.value.selectedProvider
             updateProviderSelected(newProvider)
 
-            sourceLinksProvider.loadLinks(
+            getMediaLinksUseCase(
                 film = film as FilmDetails,
                 preferredProviderName = newProvider,
                 watchHistoryItem = watchHistoryItem.value,
@@ -260,14 +260,14 @@ abstract class BasePlayerViewModel(
                 }
             }.collect { state ->
                 when (state) {
-                    SourceDataState.Idle,
-                    is SourceDataState.Error,
-                    is SourceDataState.Unavailable,
-                    SourceDataState.Success -> _uiState.update {
+                    MediaLinkResourceState.Idle,
+                    is MediaLinkResourceState.Error,
+                    is MediaLinkResourceState.Unavailable,
+                    MediaLinkResourceState.Success -> _uiState.update {
                         it.copy(selectedProviderState = PlayerProviderState.SELECTED)
                     }
 
-                    is SourceDataState.Extracting, is SourceDataState.Fetching -> _uiState.update {
+                    is MediaLinkResourceState.Extracting, is MediaLinkResourceState.Fetching -> _uiState.update {
                         it.copy(selectedProviderState = PlayerProviderState.LOADING)
                     }
                 }
@@ -284,12 +284,12 @@ abstract class BasePlayerViewModel(
     }
 
     fun onConsumePlayerDialog() {
-        _dialogState.update { SourceDataState.Idle }
+        _dialogState.update { MediaLinkResourceState.Idle }
     }
 
     fun onServerChange(index: Int? = null) {
         val preferredQuality = appSettings.value.preferredQuality
-        val indexToUse = index ?: sourceData.cachedLinks.getIndexOfPreferredQuality(preferredQuality = preferredQuality)
+        val indexToUse = index ?: cachedLinks.streams.getIndexOfPreferredQuality(preferredQuality = preferredQuality)
 
         updateWatchHistory(
             currentTime = player.currentPosition,
@@ -422,7 +422,7 @@ abstract class BasePlayerViewModel(
      */
     fun onEpisodeClick(
         episodeToWatch: Episode? = null,
-        runWebView: (FlixclusiveWebView) -> Unit
+        runWebView: (ProviderWebView) -> Unit
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
             showErrorSnackbar(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
@@ -460,13 +460,13 @@ abstract class BasePlayerViewModel(
     }
 
     /**
-     * Function to load [SourceData] from a provider
+     * Function to load [CachedLinks] from a provider
      *
      * @param episodeToWatch an optional parameter for the episode to watch if film to be watched is a [TvShow]
      */
     fun loadSourceData(
         episodeToWatch: Episode? = null,
-        runWebView: (FlixclusiveWebView) -> Unit
+        runWebView: (ProviderWebView) -> Unit
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
             showErrorSnackbar(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
@@ -480,9 +480,9 @@ abstract class BasePlayerViewModel(
         }
 
         loadLinksJob = viewModelScope.launch {
-            sourceLinksProvider.loadLinks(
+            getMediaLinksUseCase(
                 film = film as FilmDetails,
-                watchId = sourceData.watchId,
+                watchId = cachedLinks.watchId,
                 preferredProviderName = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = episodeToWatch,
@@ -541,7 +541,7 @@ abstract class BasePlayerViewModel(
      * Callback function to silently queue up the next episode
      */
     fun onQueueNextEpisode(
-        runWebView: (FlixclusiveWebView) -> Unit
+        runWebView: (ProviderWebView) -> Unit
     ) {
         if (loadNextLinksJob?.isActive == true || isNextEpisodeLoaded || loadLinksJob?.isActive == true || loadLinksFromNewProviderJob?.isActive == true)
             return
@@ -550,9 +550,9 @@ abstract class BasePlayerViewModel(
             val episode = currentSelectedEpisode.value!!
                 .getNextEpisode()
 
-            sourceLinksProvider.loadLinks(
+            getMediaLinksUseCase(
                 film = film as FilmDetails,
-                watchId = sourceData.watchId,
+                watchId = cachedLinks.watchId,
                 preferredProviderName = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = episode,

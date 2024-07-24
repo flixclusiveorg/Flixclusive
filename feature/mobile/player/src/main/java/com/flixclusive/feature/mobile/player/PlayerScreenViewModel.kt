@@ -15,7 +15,7 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
-import com.flixclusive.domain.provider.SourceLinksProviderUseCase
+import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.model.tmdb.TvShow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,7 +34,7 @@ class PlayerScreenViewModel @Inject constructor(
     playerCacheManager: PlayerCacheManager,
     savedStateHandle: SavedStateHandle,
     seasonProvider: SeasonProviderUseCase,
-    sourceLinksProvider: SourceLinksProviderUseCase,
+    getMediaLinksUseCase: GetMediaLinksUseCase,
     watchHistoryRepository: WatchHistoryRepository,
     watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
 ) : BasePlayerViewModel(
@@ -45,7 +45,7 @@ class PlayerScreenViewModel @Inject constructor(
     watchHistoryRepository = watchHistoryRepository,
     appSettingsManager = appSettingsManager,
     seasonProviderUseCase = seasonProvider,
-    sourceLinksProvider = sourceLinksProvider,
+    getMediaLinksUseCase = getMediaLinksUseCase,
     watchTimeUpdaterUseCase = watchTimeUpdaterUseCase,
 ) {
     val snackbarQueue = mutableStateListOf<PlayerSnackbarMessage>()
@@ -168,17 +168,17 @@ class PlayerScreenViewModel @Inject constructor(
     }
 
     private fun selectNextServer() {
-        val nextLinkIndex = (uiState.value.selectedSourceLink + 1).takeIf { it <= sourceData.cachedLinks.lastIndex }
+        val nextLinkIndex = (uiState.value.selectedSourceLink + 1).takeIf { it <= cachedLinks.streams.lastIndex }
 
         if (nextLinkIndex != null) {
-            val newLink = sourceData.cachedLinks[nextLinkIndex]
+            val newLink = cachedLinks.streams[nextLinkIndex]
             val currentPlayerTitle = PlayerUiUtil.formatPlayerTitle(film, currentSelectedEpisode.value)
 
             onServerChange(index = nextLinkIndex)
             player.prepare(
                 link = newLink,
                 title = currentPlayerTitle,
-                subtitles = sourceData.cachedSubtitles.toList(),
+                subtitles = cachedLinks.subtitles.toList(),
                 initialPlaybackPosition = player.currentPosition
             )
         }

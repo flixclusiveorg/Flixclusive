@@ -1,236 +1,227 @@
 package com.flixclusive.provider.settings
 
-import com.flixclusive.core.util.log.errorLog
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.File
-import java.math.BigDecimal
+import com.flixclusive.provider.Provider
 
 /**
  *
- * Utility class to store and retrieve preferences
+ * Settings manager for a [Provider]
  *
- * @see [Aliucord](https://github.com/Aliucord/Aliucord/blob/main/Aliucord/src/main/java/com/aliucord/SettingsUtilsJSON.kt)
- *
+ * @see [SettingsAPI](https://github.com/Aliucord/Aliucord/blob/main/Aliucord/src/main/java/com/aliucord/api/SettingsAPI.java)
+ * @see JsonSettings
  * */
-@Suppress("unused", "KDocUnresolvedReference", "SpellCheckingInspection")
+@Suppress("unused", "MemberVisibilityCanBePrivate", "KDocUnresolvedReference",
+    "SpellCheckingInspection"
+)
 class ProviderSettings(
-    settingsPath: String,
-    providerName: String,
+    private val fileDirectory: String,
+    private val providerName: String,
 ) {
-    private val settingsFile = "$settingsPath/$providerName.json"
-    val gson = Gson()
-    val cache: MutableMap<String, Any> = HashMap()
-    val settings: JSONObject by lazy {
-        val file = File(settingsFile)
-        if (file.exists()) {
-            val read = file.readText()
-            if (read != "") return@lazy JSONObject(read)
-        }
-        JSONObject()
-    }
+    /**
+     * The main settings object of this wrapper class.
+     * */
+    var settings: JsonSettings
+        private set
 
+    /**
+     * Creates a SettingsAPI for the specified plugin
+     */
     init {
-        val dir = File(settingsPath)
-        if (!dir.exists() && !dir.mkdirs()) throw RuntimeException("Failed to create settings dir")
-    }
-
-    private fun writeData() {
-        if (settings.length() > 0) {
-            val file = File(settingsFile)
-            try {
-                file.writeText(settings.toString(4))
-            } catch (e: Throwable) {
-                errorLog("Failed to save settings: ${e.localizedMessage}")
-            }
-        }
+        settings = JsonSettings(fileDirectory, providerName)
     }
 
     /**
      * Resets All Settings
+     *
      * @return true if successful, else false
      */
-    fun resetFile() = File(settingsFile).delete()
-
-    /**
-     * Toggles Boolean and returns it
-     * @param key Key of the value
-     * @param defVal Default Value if setting doesn't exist
-     * @return Toggled boolean
-     */
-    fun toggleBool(key: String, defVal: Boolean): Boolean {
-        getBool(key, !defVal).also {
-            setBool(key, !it)
-            return !it
-        }
+    fun resetSettings(): Boolean {
+        val isSuccessful = settings.resetFile()
+        settings = JsonSettings(fileDirectory, providerName)
+        return isSuccessful
     }
 
     /**
      * Removes Item from settings
+     *
      * @param key Key of the value
      * @return True if removed, else false
      */
-    @Synchronized
     fun remove(key: String): Boolean {
-        val bool = settings.remove(key) != null
-        writeData()
-        return bool
+        return settings.remove(key)
     }
 
+    val allKeys: List<String>
+        /**
+         * Gets All Keys from settings
+         * @return List of all keys
+         */
+        get() = settings.getAllKeys()
+
     /**
-     * Gets All Keys from settings
-     * @return List of all keys
+     * Toggles Boolean and returns it
+     *
+     * @param key Key of the value
+     * @param defValue Default Value if setting doesn't exist
+     * @return Toggled boolean
      */
-    fun getAllKeys(): List<String> {
-        val iterator: Iterator<String> = settings.keys()
-        val copy: MutableList<String> = ArrayList()
-        while (iterator.hasNext()) copy.add(iterator.next())
-        return copy
+    fun toggleBool(key: String, defValue: Boolean): Boolean {
+        return settings.toggleBool(key, defValue)
     }
 
     /**
      * Check if Key exists in settings
+     *
      * @param key Key of the value
      * @return True if found, else false
      */
-    fun exists(key: String): Boolean = settings.has(key)
-
-    /**
-     * Get a boolean from the preferences
-     * @param key Key of the value
-     * @param defaultValue Default value
-     * @return Value if found, else the defaultValue
-     */
-    fun getBool(key: String, defaultValue: Boolean) = if (settings.has(key)) settings.getBoolean(key) else defaultValue
-
-    /**
-     * Set a boolean item
-     * @param key Key of the item
-     * @param value Value
-     */
-    fun setBool(key: String, value: Boolean) = putObject(key, value)
-
-    /**
-     * Get an int from the preferences
-     * @param key Key of the value
-     * @param defaultValue Default value
-     * @return Value if found, else the defaultValue
-     */
-    fun getInt(key: String, defaultValue: Int) =
-        if (settings.has(key)) settings.getInt(key) else defaultValue
-
-    @Synchronized
-    private fun putObject(key: String, value: Any?) {
-        settings.put(key, value)
-        writeData()
+    fun exists(key: String): Boolean {
+        return settings.exists(key)
     }
 
     /**
-     * Set an int item
-     * @param key Key of the item
-     * @param value Value
+     * Reads a [Boolean] from the settings.
+     * @param key Key of the setting.
+     * @param defValue Default value of the setting.
+     * @return Stored value, or default value if it doesn't exist.
      */
-    fun setInt(key: String, value: Int) = putObject(key, value)
+    fun getBool(key: String, defValue: Boolean): Boolean {
+        return settings.getBool(key, defValue)
+    }
 
     /**
-     * Get a float from the preferences
-     * @param key Key of the value
-     * @param defaultValue Default value
-     * @return Value if found, else the defaultValue
+     * Writes a [Boolean] to the settings.
+     * @param key Key of the setting.
+     * @param val Value of the setting.
      */
-    fun getFloat(key: String, defaultValue: Float) =
-        if (settings.has(key)) BigDecimal.valueOf(settings.getDouble(key)).toFloat() else defaultValue
+    fun setBool(key: String, `val`: Boolean) {
+        settings.setBool(key, `val`)
+    }
 
     /**
-     * Set a float item
-     * @param key Key of the item
-     * @param value Value
+     * Gets an [Int] stored in the settings.
+     * @param key Key of the setting.
+     * @param defValue Default value of the setting.
+     * @return Stored value, or default value if it doesn't exist.
      */
-    fun setFloat(key: String, value: Float) = putObject(key, value)
+    fun getInt(key: String, defValue: Int): Int {
+        return settings.getInt(key, defValue)
+    }
 
     /**
-     * Get a long from the preferences
-     * @param key Key of the value
-     * @param defaultValue Default value
-     * @return Value if found, else the defaultValue
+     * Writes an [Int] to the settings.
+     * @param key Key of the setting.
+     * @param val Value of the setting.
      */
-    fun getLong(key: String, defaultValue: Long) = if (settings.has(key)) settings.getLong(key) else defaultValue
+    fun setInt(key: String, `val`: Int) {
+        settings.setInt(key, `val`)
+    }
 
     /**
-     * Set a long item
-     * @param key Key of the item
-     * @param value Value
+     * Gets a [Float] stored in the settings.
+     * @param key Key of the setting.
+     * @param defValue Default value of the setting.
+     * @return Stored value, or default value if it doesn't exist.
      */
-    fun setLong(key: String, value: Long) = putObject(key, value)
+    fun getFloat(key: String, defValue: Float): Float {
+        return settings.getFloat(key, defValue)
+    }
 
     /**
-     * Get a [String] from the preferences
-     * @param key Key of the value
-     * @param defaultValue Default value
-     * @return Value if found, else the defaultValue
+     * Writes a [Float] to the settings.
+     * @param key Key of the setting.
+     * @param val Value of the setting.
      */
-    fun getString(key: String, defaultValue: String?) =
-        if (settings.has(key)) settings.getString(key) else defaultValue
+    fun setFloat(key: String, `val`: Float) {
+        settings.setFloat(key, `val`)
+    }
 
     /**
-     * Set a [String] item
-     * @param key Key of the item
-     * @param value Value
+     * Gets a [Long] stored in the settings.
+     * @param key Key of the setting.
+     * @param defValue Default value of the setting.
+     * @return Stored value, or default value if it doesn't exist.
      */
-    fun setString(key: String, value: String?) = putObject(key, value)
+    fun getLong(key: String, defValue: Long): Long {
+        return settings.getLong(key, defValue)
+    }
 
     /**
-     * Get a [JSONObject] item
-     * @param key Key of the item
-     * @param defaultValue Default value
-     * @return Value if found, else the defaultValue
+     * Writes a [Long] to the settings.
+     * @param key Key of the setting.
+     * @param val Value of the setting.
      */
-    fun getJSONObject(key: String, defaultValue: JSONObject?) =
-        if (settings.has(key)) settings.getJSONObject(key) else defaultValue
+    fun setLong(key: String, `val`: Long) {
+        settings.setLong(key, `val`)
+    }
 
     /**
-     * Set a [JSONObject] item
-     * @param key Key of the item
-     * @param value Value
+     * Gets a [String] stored in the settings.
+     * @param key Key of the setting.
+     * @param defValue Default value of the setting.
+     * @return Stored value, or default value if it doesn't exist.
      */
-    fun setJSONObject(key: String, value: JSONObject) = putObject(key, value)
+    fun getString(key: String, defValue: String?): String? {
+        return settings.getString(key, defValue)
+    }
 
     /**
-     * Get an [Object] from the preferences
-     * @param key Key of the value
-     * @param defaultValue Default value
-     *
-     * @return Value if found, else the defaultValue
+     * Writes a [String] to the settings.
+     * @param key Key of the setting.
+     * @param val Value of the setting.
+     */
+    fun setString(key: String, `val`: String?) {
+        settings.setString(key, `val`)
+    }
+
+    /**
+     * Gets an [Object] stored in the settings.
+     * @param key Key of the setting.
+     * @param defValue Default value of the setting.
+     * @return Stored value, or default value if it doesn't exist.
      */
     inline fun <reified T> getObject(
         key: String,
-        defaultValue: T? = null
+        defValue: T? = null
     ): T? {
-        val cached = cache[key]
-        if (cached != null) try {
-            return cached as T
-        } catch (ignored: Throwable) { }
-
-        val t: T? = when {
-            settings.has(key) -> gson.fromJson(
-                /* json = */ settings.getString(key),
-                /* typeOfT = */ object : TypeToken<T>() {}.type
-            )
-            else -> null
-        }
-        return t ?: defaultValue
+        return settings.getObject(key, defValue)
     }
 
     /**
-     * Set an [Object] item
-     * @param key Key of the item
-     * @param value Value
+     * Writes an [Object] to the settings.
+     * @param key Key of the setting.
+     * @param val Value of the setting.
      */
-    fun setObject(key: String, value: Any) {
-        cache[key] = value
-        val stringJson = gson.toJson(value)
-        putObject(key, if (stringJson.startsWith("{")) JSONObject(stringJson) else JSONArray(stringJson))
+    fun setObject(key: String, `val`: Any) {
+        settings.setObject(key, `val`)
+    }
+
+    /**
+     * Get a value of an unknown type
+     * @param key Key of the item
+     */
+    fun getUnknown(key: String, defValue: Any): Any? {
+        return when (defValue) {
+            is String -> getString(key, defValue)
+            is Boolean -> getBool(key, defValue)
+            is Long -> getLong(key, defValue)
+            is Float -> getFloat(key, defValue)
+            else -> if (defValue is Int) getInt(key, defValue) else getObject(key, defValue)
+        }
+    }
+
+    /**
+     * Set a value of an unknown type
+     * @param key Key of the item
+     * @param value Value of the item
+     */
+    fun setUnknown(key: String, value: Any) {
+        when (value) {
+            is String -> setString(key, value)
+            is Boolean -> setBool(key, value)
+            is Long -> setLong(key, value)
+            is Float -> setFloat(key, value)
+            is Int -> setInt(key, value)
+            else -> setObject(key, value)
+        }
     }
 }

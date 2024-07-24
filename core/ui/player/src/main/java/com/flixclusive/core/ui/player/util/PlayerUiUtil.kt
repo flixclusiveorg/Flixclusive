@@ -45,8 +45,8 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.database.util.calculateRemainingTime
 import com.flixclusive.model.database.util.isTimeInRangeOfThreshold
 import com.flixclusive.model.datastore.player.ResizeMode
-import com.flixclusive.model.provider.SourceData
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.CachedLinks
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.common.tv.Episode
@@ -381,14 +381,14 @@ object PlayerUiUtil {
     
     /**
      * 
-     * Re-prepares the player if the provided [SourceData] has changed
+     * Re-prepares the player if the provided [CachedLinks] has changed
      * 
      * */
     @Composable
     fun ObserveNewLinksAndSubtitles(
         selectedSourceLink: Int,
         currentPlayerTitle: String,
-        newLinks: SnapshotStateList<SourceLink>,
+        newLinks: SnapshotStateList<Stream>,
         newSubtitles: SnapshotStateList<Subtitle>,
         getSavedTimeForCurrentSourceData: () -> Long
     ) {

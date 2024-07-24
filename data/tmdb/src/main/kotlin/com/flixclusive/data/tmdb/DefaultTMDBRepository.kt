@@ -5,7 +5,7 @@ import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.exception.actualMessage
-import com.flixclusive.core.util.exception.catchInternetRelatedException
+import com.flixclusive.core.util.exception.toNetworkException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.tmdb.TmdbFilters.Companion.getMediaTypeFromInt
@@ -51,7 +51,7 @@ internal class DefaultTMDBRepository @Inject constructor(
 
                 Resource.Success(response)
             } catch (e: Exception) {
-                e.catchInternetRelatedException()
+                e.toNetworkException()
             }
         }
     }
@@ -83,7 +83,7 @@ internal class DefaultTMDBRepository @Inject constructor(
 
                 Resource.Success(response)
             } catch (e: Exception) {
-                e.catchInternetRelatedException()
+                e.toNetworkException()
             }
         }
     }
@@ -108,7 +108,7 @@ internal class DefaultTMDBRepository @Inject constructor(
 
                 Resource.Success(response)
             } catch (e: Exception) {
-                e.catchInternetRelatedException()
+                e.toNetworkException()
             }
         }
     }
@@ -130,7 +130,7 @@ internal class DefaultTMDBRepository @Inject constructor(
 
                 Resource.Success(logo)
             } catch (e: Exception) {
-                e.catchInternetRelatedException()
+                e.toNetworkException()
             }
         }
     }
@@ -174,7 +174,7 @@ internal class DefaultTMDBRepository @Inject constructor(
                     )
                 )
             } catch (e: Exception) {
-                e.catchInternetRelatedException()
+                e.toNetworkException()
             }
         }
     }
@@ -210,7 +210,7 @@ internal class DefaultTMDBRepository @Inject constructor(
                     )
                 )
             } catch (e: Exception) {
-                e.catchInternetRelatedException()
+                e.toNetworkException()
             }
         }
     }
@@ -224,7 +224,7 @@ internal class DefaultTMDBRepository @Inject constructor(
 
                 Resource.Success(season)
             } catch (e: Exception) {
-                e.catchInternetRelatedException()
+                e.toNetworkException()
             }
         }
     }
@@ -248,7 +248,7 @@ internal class DefaultTMDBRepository @Inject constructor(
                 Resource.Success(episodeId)
             }
         } catch (e: Exception) {
-            e.catchInternetRelatedException()
+            e.toNetworkException()
         }
     }
 
@@ -261,7 +261,7 @@ internal class DefaultTMDBRepository @Inject constructor(
 
                 Resource.Success(response)
             } catch (e: Exception) {
-                e.catchInternetRelatedException()
+                e.toNetworkException()
             }
         }
     }

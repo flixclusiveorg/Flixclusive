@@ -56,8 +56,8 @@ import com.flixclusive.feature.tv.player.controls.settings.ServersPanel
 import com.flixclusive.feature.tv.player.controls.settings.SubtitleStylePanel
 import com.flixclusive.feature.tv.player.controls.settings.SubtitleSyncPanel
 import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.model.provider.SourceDataState
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.MediaLinkResourceState
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import kotlinx.coroutines.delay
@@ -80,9 +80,9 @@ internal fun PlaybackControls(
     isVisible: Boolean,
     isTvShow: Boolean,
     providerApis: List<ProviderApi>,
-    servers: List<SourceLink>,
+    servers: List<Stream>,
     stateProvider: () -> PlayerUiState,
-    dialogStateProvider: () -> SourceDataState,
+    dialogStateProvider: () -> MediaLinkResourceState,
     playbackTitle: String,
     isLastEpisode: Boolean,
     seekMultiplier: Long,
@@ -102,7 +102,7 @@ internal fun PlaybackControls(
     val isLoading = remember(player.playbackState, dialogState, seekMultiplier) {
         player.playbackState == Player.STATE_BUFFERING
         && seekMultiplier == 0L
-        || dialogState !is SourceDataState.Success
+        || dialogState !is MediaLinkResourceState.Success
     }
 
     val topFadeEdge = Brush.verticalGradient(
@@ -352,7 +352,7 @@ private fun PlaybackControlsPreview() {
     val serverNames = listOf("ServerA", "ServerB", "ServerC", "ServerD", "ServerE")
     val serverUrls = listOf("http://serverA.com", "http://serverB.com", "http://serverC.com", "http://serverD.com", "http://serverE.com")
     val servers = List(10) {
-        SourceLink(
+        Stream(
             name = serverNames.random(),
             url = serverUrls.random()
         )
@@ -392,7 +392,7 @@ private fun PlaybackControlsPreview() {
                         isPlaybackSpeedPanelOpened = remember { mutableStateOf(false) },
                         appSettings = AppSettings(isPlayerTimeReversed = false),
                         stateProvider = { PlayerUiState() },
-                        dialogStateProvider = { SourceDataState.Success },
+                        dialogStateProvider = { MediaLinkResourceState.Success },
                         playbackTitle = "American Bad Boy",
                         isLastEpisode = false,
                         seekMultiplier = seekMultiplier,

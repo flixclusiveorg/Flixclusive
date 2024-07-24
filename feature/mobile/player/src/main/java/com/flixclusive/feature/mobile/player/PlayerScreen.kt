@@ -43,7 +43,7 @@ import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.mobile.ListenKeyEvents
-import com.flixclusive.core.ui.mobile.component.SourceDataDialog
+import com.flixclusive.core.ui.mobile.component.ProviderResourceStateDialog
 import com.flixclusive.core.ui.mobile.rememberPipMode
 import com.flixclusive.core.ui.mobile.util.toggleSystemBars
 import com.flixclusive.core.ui.player.PLAYER_CONTROL_VISIBILITY_TIMEOUT
@@ -64,8 +64,8 @@ import com.flixclusive.feature.mobile.player.controls.PlayerControls
 import com.flixclusive.feature.mobile.player.util.BrightnessManager
 import com.flixclusive.feature.mobile.player.util.LocalBrightnessManager
 import com.flixclusive.feature.mobile.player.util.PlayerPipReceiver
-import com.flixclusive.model.provider.SourceData
-import com.flixclusive.model.provider.SourceDataState
+import com.flixclusive.model.provider.CachedLinks
+import com.flixclusive.model.provider.MediaLinkResourceState
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TvShow
@@ -120,8 +120,8 @@ fun PlayerScreen(
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
 
-    val sourceData = viewModel.sourceData
-    val sourceProviders by viewModel.sourceProviders.collectAsStateWithLifecycle(initialValue = emptyList())
+    val sourceData = viewModel.cachedLinks
+    val providers by viewModel.providers.collectAsStateWithLifecycle(initialValue = emptyList())
     val seasonData by viewModel.season.collectAsStateWithLifecycle()
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
@@ -188,7 +188,7 @@ fun PlayerScreen(
      *
      * If a user comes back from an [Lifecycle.Event.ON_DESTROY] state for a long time,
      * the system will decide to kill the app. This side effect will
-     * ensures that there will always be a [SourceData] to play for the player. Otherwise,
+     * ensures that there will always be a [CachedLinks] to play for the player. Otherwise,
      * it's just going to fail to play and possibly throw an unhandled exception.
      *
      * */
@@ -318,8 +318,8 @@ fun PlayerScreen(
         ObserveNewLinksAndSubtitles(
             selectedSourceLink = uiState.selectedSourceLink,
             currentPlayerTitle = currentPlayerTitle,
-            newLinks = sourceData.cachedLinks,
-            newSubtitles = sourceData.cachedSubtitles,
+            newLinks = sourceData.streams,
+            newSubtitles = sourceData.subtitles,
             getSavedTimeForCurrentSourceData = {
                 viewModel.getSavedTimeForSourceData(currentSelectedEpisode).first
             }
@@ -381,15 +381,15 @@ fun PlayerScreen(
 
                         player.initialize()
                         sourceData.run {
-                            val getPossibleSourceLink = cachedLinks
+                            val getPossibleSourceLink = streams
                                 .getOrNull(uiState.selectedSourceLink)
-                                ?: cachedLinks.getOrNull(0)
+                                ?: streams.getOrNull(0)
 
                             getPossibleSourceLink?.let {
                                 player.prepare(
                                     link = it,
                                     title = currentPlayerTitle,
-                                    subtitles = cachedSubtitles,
+                                    subtitles = subtitles,
                                     initialPlaybackPosition = currentPosition
                                 )
                             }
@@ -423,11 +423,11 @@ fun PlayerScreen(
                 isDoubleTapping = isDoubleTapping,
                 isEpisodesSheetOpened = isEpisodesSheetOpened,
                 isAudiosAndSubtitlesDialogOpened = isAudiosAndSubtitlesDialogOpened,
-                servers = sourceData.cachedLinks,
+                servers = sourceData.streams,
                 isPlayerSettingsDialogOpened = isPlayerSettingsDialogOpened,
                 isServersDialogOpened = isServersDialogOpened,
                 watchHistoryItem = watchHistoryItem,
-                providerApis = sourceProviders,
+                providerApis = providers,
                 availableSeasons = (args.film as? TvShow)?.totalSeasons,
                 currentEpisodeSelected = currentSelectedEpisode,
                 isLastEpisode = viewModel.isLastEpisode,
@@ -448,7 +448,7 @@ fun PlayerScreen(
                 toggleVideoTimeReverse = viewModel::toggleVideoTimeReverse,
                 showControls = { showControls(it) },
                 lockControls = { viewModel.areControlsLocked = it },
-                addSubtitle = { sourceData.cachedSubtitles.add(index = 0, element = it) },
+                addSubtitle = { sourceData.subtitles.add(index = 0, element = it) },
                 onEpisodeClick = {
                     viewModel.run {
                         updateWatchHistory(
@@ -492,7 +492,7 @@ fun PlayerScreen(
         }
     }
 
-    if (dialogState !is SourceDataState.Idle || viewModel.webView != null) {
+    if (dialogState !is MediaLinkResourceState.Idle || viewModel.webView != null) {
         LaunchedEffect(Unit) {
             viewModel.player.run {
                 if (isPlaying) {
@@ -505,8 +505,8 @@ fun PlayerScreen(
         Box(
             contentAlignment = Alignment.Center
         ) {
-            if (dialogState !is SourceDataState.Idle) {
-                SourceDataDialog(
+            if (dialogState !is MediaLinkResourceState.Idle) {
+                ProviderResourceStateDialog(
                     state = dialogState,
                     onConsumeDialog = {
                         viewModel.onDestroyWebView()
@@ -527,7 +527,7 @@ fun PlayerScreen(
                         viewModel.webView!!.also {
                             scrapingJob = scope.launch {
                                 val shouldPlay = viewModel.player.isPlaying
-                                async { it.startScraping() }
+                                async { it.getLinks() }
 
                                 delay(200)
                                 if (shouldPlay) {
