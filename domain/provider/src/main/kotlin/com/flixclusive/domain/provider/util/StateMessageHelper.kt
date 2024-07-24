@@ -21,12 +21,19 @@ internal object StateMessageHelper {
     )
 
     fun ProducerScope<MediaLinkResourceState>.sendExtractingLinksMessage(
-        provider: String
-    ) = trySend(
-        MediaLinkResourceState.Extracting(
-            UiText.StringResource(UtilR.string.extracting_from_provider_format, provider)
+        provider: String,
+        isOnWebView: Boolean = false
+    ) {
+        val messageFormat = if (isOnWebView) {
+            UtilR.string.extracting_from_web_view_provider_format
+        } else UtilR.string.extracting_from_provider_format
+
+        trySend(
+            MediaLinkResourceState.Extracting(
+                UiText.StringResource(messageFormat, provider)
+            )
         )
-    )
+    }
 
     fun ProducerScope<MediaLinkResourceState>.throwError(error: UiText?) =
         trySend(MediaLinkResourceState.Error(error))
