@@ -15,7 +15,7 @@ import javax.net.ssl.SSLException
  *
  * @return A [Resource.Failure] object with an appropriate error message.
  */
-fun Exception.toNetworkException(): Resource.Failure {
+fun Throwable.toNetworkException(): Resource.Failure {
     val defaultMessage = localizedMessage ?: message ?: "Unknown error occurred"
 
     return when (this) {
@@ -52,12 +52,12 @@ fun Exception.toNetworkException(): Resource.Failure {
 inline fun <T> safeCall(message: String? = null, unsafeCall: () -> T?): T? {
     return try {
         unsafeCall()
-    } catch (e: Exception) {
+    } catch (e: Throwable) {
         errorLog(message ?: e.stackTraceToString())
         null
     }
 }
 
 
-val Exception.actualMessage: String
+val Throwable.actualMessage: String
     get() = localizedMessage ?: message ?: "UNKNOWN ERR"

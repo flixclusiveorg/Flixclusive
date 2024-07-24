@@ -52,7 +52,7 @@ class MediaLinksRepository @Inject constructor(
                 )
 
                 Resource.Success(links)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 e.toNetworkException()
             }
         }
@@ -141,7 +141,7 @@ class MediaLinksRepository @Inject constructor(
                 }
 
                 Resource.Success(watchId)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 errorLog(e)
                 Resource.Failure(
                     UiText.StringResource(
