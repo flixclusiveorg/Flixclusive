@@ -67,9 +67,9 @@ class GetMediaLinksUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
     private val mediaLinksRepository: MediaLinksRepository,
     private val tmdbRepository: TMDBRepository,
-    providersManager: ProviderManager,
+    providerManager: ProviderManager,
 ) {
-    val providerApis: Flow<List<ProviderApi>> = providersManager.workingApis
+    val providerApis: Flow<List<ProviderApi>> = providerManager.workingApis
 
     /**
      *
