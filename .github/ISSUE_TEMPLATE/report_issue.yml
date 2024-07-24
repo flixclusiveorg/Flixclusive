@@ -1,7 +1,7 @@
 # Tachiyomi (RIP king!) issue template
 
 name: 🐞 Issue report
-description: Report an issue in Flixclusive
+description: Report an issue
 labels: [ bug ]
 body:
 
@@ -50,8 +50,8 @@ body:
   - type: input
     id: flixclusive-version
     attributes:
-      label: Flixclusive version
-      description: You can find your Flixclusive version in **Preferences → About Flixclusive**.
+      label: App version
+      description: You can find the app's version in **Preferences → About**.
       placeholder: |
         Example: "1.2.1"
     validations:

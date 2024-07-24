@@ -1,7 +1,7 @@
 # Tachiyomi (RIP king!) feature template
 
 name: ⭐ Feature request
-description: Suggest a feature to improve Flixclusive
+description: Suggest a feature to improve the app
 labels: [ enhancement ]
 body:
 
@@ -9,7 +9,7 @@ body:
     id: feature-description
     attributes:
       label: Describe your suggested feature
-      description: How can Flixclusive be improved?
+      description: How can the app be improved?
       placeholder: |
         Example:
           "It should work like this..."
