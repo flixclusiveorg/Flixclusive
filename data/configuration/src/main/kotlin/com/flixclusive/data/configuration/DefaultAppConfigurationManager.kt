@@ -7,7 +7,7 @@ import com.flixclusive.core.util.common.configuration.GITHUB_REPOSITORY
 import com.flixclusive.core.util.common.configuration.GITHUB_USERNAME
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.exception.catchInternetRelatedException
+import com.flixclusive.core.util.exception.toNetworkException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.model.configuration.AppConfig
 import com.flixclusive.model.tmdb.category.HomeCategoriesData
@@ -84,7 +84,7 @@ internal class DefaultAppConfigurationManager @Inject constructor(
                     errorLog(e)
 
                     if (i == MAX_RETRIES) {
-                        val errorMessageId = e.catchInternetRelatedException().error!!
+                        val errorMessageId = e.toNetworkException().error!!
 
                         return@launch _configurationStatus.update { Resource.Failure(errorMessageId) }
                     }
@@ -152,7 +152,7 @@ internal class DefaultAppConfigurationManager @Inject constructor(
             }
         } catch (e: Exception) {
             errorLog(e)
-            val errorMessageId = e.catchInternetRelatedException().error!!
+            val errorMessageId = e.toNetworkException().error!!
 
             _updateStatus.update { UpdateStatus.Error(errorMessageId) }
         }

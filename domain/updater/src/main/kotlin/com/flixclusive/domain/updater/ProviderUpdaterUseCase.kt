@@ -144,9 +144,10 @@ class ProviderUpdaterUseCase @Inject constructor(
         if (manifest?.updateUrl == null
             || manifest.updateUrl.equals(""))
             return null
-        val name = provider.getName()!!
 
+        val name = provider.name!!
         val cached = cachedProviders[manifest.updateUrl]
+
         if (cached != null
             && cached.time > System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(30)) {
             return cached.data.findProviderData(name)

@@ -108,12 +108,6 @@ fun SearchExpandedScreen(
                         listState.scrollToItem(0)
                     }
                     viewModel.onSearch()
-                },
-                onChangeProvider = {
-                    viewModel.onChangeProvider(it)
-                    scope.launch {
-                        listState.scrollToItem(0)
-                    }
                 }
             )
         }

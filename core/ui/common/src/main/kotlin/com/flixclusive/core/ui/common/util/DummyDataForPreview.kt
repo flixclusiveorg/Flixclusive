@@ -8,8 +8,7 @@ import com.flixclusive.gradle.entities.Language
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
@@ -45,16 +44,13 @@ object DummyDataForPreview {
     fun getDummyProviderApi() = remember {
         List<ProviderApi>(5) {
             object : ProviderApi(OkHttpClient()) {
-                override val name: String
-                    get() = "FLX $it"
+                override val name: String = "FLX $it"
 
-                override suspend fun getSourceLinks(
+                override suspend fun getLinks(
                     watchId: String,
                     film: FilmDetails,
-                    episode: Episode?,
-                    onLinkLoaded: (SourceLink) -> Unit,
-                    onSubtitleLoaded: (Subtitle) -> Unit
-                ) = Unit
+                    episode: Episode?
+                ): List<MediaLink> = emptyList()
             }
         }
     }

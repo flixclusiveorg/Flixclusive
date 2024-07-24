@@ -15,7 +15,7 @@ import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
-import com.flixclusive.domain.provider.SourceLinksProviderUseCase
+import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.feature.tv.player.di.ViewModelFactoryProvider
 import com.flixclusive.model.datastore.AppSettings
@@ -44,7 +44,7 @@ class PlayerScreenViewModel @AssistedInject constructor(
     context: Context,
     playerCacheManager: PlayerCacheManager,
     seasonProvider: SeasonProviderUseCase,
-    sourceLinksProvider: SourceLinksProviderUseCase,
+    getMediaLinksUseCase: GetMediaLinksUseCase,
     watchHistoryRepository: WatchHistoryRepository,
     watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
 ) : BasePlayerViewModel(
@@ -54,7 +54,7 @@ class PlayerScreenViewModel @AssistedInject constructor(
     context = context,
     playerCacheManager = playerCacheManager,
     seasonProviderUseCase = seasonProvider,
-    sourceLinksProvider = sourceLinksProvider,
+    getMediaLinksUseCase = getMediaLinksUseCase,
     watchHistoryRepository = watchHistoryRepository,
     watchTimeUpdaterUseCase = watchTimeUpdaterUseCase,
 ) {

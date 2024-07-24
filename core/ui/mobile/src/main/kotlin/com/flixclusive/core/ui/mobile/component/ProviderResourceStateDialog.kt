@@ -30,19 +30,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
-import com.flixclusive.model.provider.SourceDataState
+import com.flixclusive.model.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-fun SourceDataDialog(
-    state: SourceDataState,
+fun ProviderResourceStateDialog(
+    state: MediaLinkResourceState,
     canSkipExtractingPhase: Boolean = false,
     onConsumeDialog: () -> Unit,
     onSkipExtractingPhase: () -> Unit = {},
 ) {
     LaunchedEffect(key1 = state) {
-        if (state is SourceDataState.Success) {
+        if (state is MediaLinkResourceState.Success) {
             onConsumeDialog()
         }
     }
@@ -60,7 +60,7 @@ fun SourceDataDialog(
 
 @Composable
 private fun SourceDataDialogContent(
-    state: SourceDataState,
+    state: MediaLinkResourceState,
     canSkipExtractingPhase: Boolean = false,
     onSkipExtractingPhase: () -> Unit = {},
 ) {
@@ -79,7 +79,7 @@ private fun SourceDataDialogContent(
                 contentAlignment = Alignment.Center
             ) {
                 this@Column.AnimatedVisibility(
-                    visible = state !is SourceDataState.Error && state !is SourceDataState.Unavailable,
+                    visible = state !is MediaLinkResourceState.Error && state !is MediaLinkResourceState.Unavailable,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
@@ -109,7 +109,7 @@ private fun SourceDataDialogContent(
                 }
 
                 this@Column.AnimatedVisibility(
-                    visible = state is SourceDataState.Error || state is SourceDataState.Unavailable,
+                    visible = state is MediaLinkResourceState.Error || state is MediaLinkResourceState.Unavailable,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
@@ -176,8 +176,8 @@ fun VideoPlayerDialogPreview() {
                 .background(Color.White)
                 .fillMaxSize()
         ) {
-            SourceDataDialog(
-                state = SourceDataState.Fetching(),
+            ProviderResourceStateDialog(
+                state = MediaLinkResourceState.Fetching(),
                 canSkipExtractingPhase = false,
                 onSkipExtractingPhase = {},
                 onConsumeDialog = {}

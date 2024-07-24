@@ -28,7 +28,7 @@ import com.flixclusive.gradle.entities.Repository.Companion.toValidRepositoryLin
 import com.flixclusive.gradle.entities.Status
 import com.flixclusive.model.datastore.provider.ProviderPreference
 import com.flixclusive.provider.Provider
-import com.flixclusive.provider.settings.ProviderSettingsManager
+import com.flixclusive.provider.settings.ProviderSettings
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.CoroutineDispatcher
@@ -319,8 +319,8 @@ class ProviderManager @Inject constructor(
 
             providerInstance.__filename = fileName
             providerInstance.manifest = manifest
-            providerInstance.settings = ProviderSettingsManager(
-                settingsPath = settingsPath,
+            providerInstance.settings = ProviderSettings(
+                fileDirectory = settingsPath,
                 providerName = providerData.name
             )
             if (manifest.requiresResources) {
@@ -421,18 +421,18 @@ class ProviderManager @Inject constructor(
         file: File,
         unloadOnSettings: Boolean
     ) {
-        infoLog("Unloading provider: ${provider.getName()}")
-        safeCall("Exception while unloading provider: ${provider.getName()}") {
+        infoLog("Unloading provider: ${provider.name}")
+        safeCall("Exception while unloading provider: ${provider.name}") {
             provider.onUnload(context.applicationContext)
 
             providerDataList.removeIf {
                 it.name.equals(file.nameWithoutExtension, true)
             }
             classLoaders.values.removeIf { 
-                it.getName().equals(provider.getName(), true)
+                it.name.equals(provider.name, true)
             }
-            providerApiRepository.remove(provider.getName()!!)
-            providers.remove(provider.getName())
+            providerApiRepository.remove(provider.name!!)
+            providers.remove(provider.name)
             if (unloadOnSettings) {
                 unloadProviderOnSettings(file.absolutePath)
             }

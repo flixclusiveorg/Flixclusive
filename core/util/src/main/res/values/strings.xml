@@ -250,7 +250,7 @@
     <string name="fetching_episode_message">Fetching show episode…</string>
     <string name="film_data_fetching">Fetching film details…</string>
     <string name="loading_next_episode">Loading next episode…</string>
-    <string name="no_available_sources">No available source providers!</string>
+    <string name="no_available_providers">No available source providers!</string>
     <string name="non_configurable_provider_message">This provider has is not configurable.</string>
     <string name="offline_message">You\'re offline</string>
     <string name="online_message">Back online</string>

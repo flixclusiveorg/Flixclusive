@@ -31,7 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
-import com.flixclusive.core.ui.mobile.component.SourceDataDialog
+import com.flixclusive.core.ui.mobile.component.ProviderResourceStateDialog
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
@@ -41,8 +41,8 @@ import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
 import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.FilmCoverPreview
 import com.flixclusive.mobile.component.FilmPreviewBottomSheet
-import com.flixclusive.model.provider.SourceDataState
-import com.flixclusive.provider.util.FlixclusiveWebView
+import com.flixclusive.model.provider.MediaLinkResourceState
+import com.flixclusive.provider.webview.ProviderWebView
 import com.flixclusive.util.AppNavHost
 import com.flixclusive.util.currentScreenAsState
 import com.flixclusive.util.navigateIfResumed
@@ -71,7 +71,7 @@ internal fun MobileActivity.MobileApp(
     var hasBeenDisconnected by remember { mutableStateOf(false) }
     var fullScreenImageToShow: String? by remember { mutableStateOf(null) }
 
-    var webView: FlixclusiveWebView? by remember { mutableStateOf(null) }
+    var webView: ProviderWebView? by remember { mutableStateOf(null) }
 
     val scope = rememberCoroutineScope()
     var scrapingJob by remember { mutableStateOf<Job?>(null) }
@@ -86,7 +86,7 @@ internal fun MobileActivity.MobileApp(
     val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(initialValue = MobileNavGraphs.root.startRoute)
     val currentNavGraph by navController.currentScreenAsState(MobileNavGraphs.home)
 
-    val sourceData = viewModel.loadedSourceData
+    val cachedLinks = viewModel.loadedCachedLinks
 
     val onStartPlayer = {
         viewModel.setPlayerModeState(isInPlayer = true)
@@ -102,9 +102,9 @@ internal fun MobileActivity.MobileApp(
         )
     }
 
-    LaunchedEffect(sourceData?.cachedLinks?.size, uiState.sourceDataState) {
+    LaunchedEffect(cachedLinks?.streams?.size, uiState.mediaLinkResourceState) {
         if (
-            uiState.sourceDataState == SourceDataState.Success
+            uiState.mediaLinkResourceState == MediaLinkResourceState.Success
             && currentSelectedScreen != PlayerScreenDestination
         ) {
             onStartPlayer()
@@ -249,21 +249,23 @@ internal fun MobileActivity.MobileApp(
             )
         }
 
-        if (uiState.sourceDataState !is SourceDataState.Idle) {
+        if (uiState.mediaLinkResourceState !is MediaLinkResourceState.Idle) {
             window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             Box(
                 contentAlignment = Alignment.Center
             ) {
-                SourceDataDialog(
-                    state = uiState.sourceDataState,
-                    canSkipExtractingPhase = sourceData?.cachedLinks?.isNotEmpty() == true,
+                ProviderResourceStateDialog(
+                    state = uiState.mediaLinkResourceState,
+                    canSkipExtractingPhase = cachedLinks?.streams?.isNotEmpty() == true,
                     onSkipExtractingPhase = onStartPlayer,
                     onConsumeDialog = {
                         viewModel.onConsumeSourceDataDialog(isForceClosing = true)
                         scrapingJob?.cancel()
                         scrapingJob = null
+
                         webView?.destroy()
                         webView = null
+
                         viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
                     }
                 )
@@ -273,7 +275,7 @@ internal fun MobileActivity.MobileApp(
                         factory = { _ ->
                             webView!!.also {
                                 scrapingJob = scope.launch {
-                                    it.startScraping()
+                                    it.getLinks()
                                 }
                             }
                         },

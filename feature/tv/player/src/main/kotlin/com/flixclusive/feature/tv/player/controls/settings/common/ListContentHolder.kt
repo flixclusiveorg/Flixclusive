@@ -33,7 +33,7 @@ import com.flixclusive.core.ui.player.PlayerProviderState
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.provider.ProviderApi
 
@@ -82,7 +82,7 @@ internal fun <Type> ListContentHolder(
             itemsIndexed(items) { i, item ->
                 val name = when (item) {
                     is String -> item
-                    is SourceLink -> item.name
+                    is Stream -> item.name
                     is ProviderApi -> item.name
                     is Subtitle -> item.language
                     else -> throw ClassFormatError("Invalid content type provided.")

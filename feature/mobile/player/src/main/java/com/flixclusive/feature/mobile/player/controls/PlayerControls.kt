@@ -33,7 +33,7 @@ import com.flixclusive.feature.mobile.player.controls.gestures.SeekerAndSliderGe
 import com.flixclusive.feature.mobile.player.util.rememberBrightnessManager
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.model.tmdb.common.tv.Season
@@ -53,7 +53,7 @@ internal fun PlayerControls(
     isPlayerSettingsDialogOpened: MutableState<Boolean>,
     isServersDialogOpened: MutableState<Boolean>,
     watchHistoryItem: WatchHistoryItem?,
-    servers: List<SourceLink>,
+    servers: List<Stream>,
     isLastEpisode: Boolean,
     providerApis: List<ProviderApi>,
     availableSeasons: Int?,

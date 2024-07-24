@@ -2,51 +2,42 @@ package com.flixclusive.provider
 
 import android.content.Context
 import android.content.res.Resources
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import com.flixclusive.core.util.R as UtilR
 import com.flixclusive.gradle.entities.ProviderManifest
-import com.flixclusive.provider.settings.ProviderSettingsManager
+import com.flixclusive.provider.settings.ProviderSettings
 import okhttp3.OkHttpClient
 
+/**
+ *
+ * The base class for all providers. Note that this differs from [ProviderApi], this holds every the detailed information of the provider.
+ *
+ * @property name The name of the provider.
+ * @property manifest A [ProviderManifest] instance that contains the provider's information.
+ * @property resources A [Resources] instance that is used to hold all of the app's resources.
+ * @property __filename The filename of the provider.
+ *
+ * @property settings A [ProviderSettings] instance that holds the provider's settings/preferences.
+ * */
 @Suppress("PropertyName")
 abstract class Provider {
-    lateinit var settings: ProviderSettingsManager
     var manifest: ProviderManifest? = null
-
-    /**
-     * Resources associated with the provider, if specified.
-     * */
+    val name: String? get() = manifest?.name
     var resources: Resources? = null
-    /**
-     * The filename of the provider.
-     * */
     var __filename: String? = null
 
+    lateinit var settings: ProviderSettings
+
     /**
-     * Called when the [Provider] is loaded
+     * Called when the [Provider] is loaded. Should return a [ProviderApi] instance.
      *
      * @param context The app's context
      * @param client The app's global [OkHttpClient] for network requests
      */
     @Throws(Throwable::class)
-    open fun getApi(
+    abstract fun getApi(
         context: Context?,
         client: OkHttpClient
-    ): ProviderApi {
-        TODO("Return a ProviderApi here")
-    }
+    ): ProviderApi
 
 
     /**
@@ -55,16 +46,6 @@ abstract class Provider {
      */
     @Throws(Throwable::class)
     open fun onUnload(context: Context?) = Unit
-
-    /**
-     *
-     * Get the provider's name
-     *
-     * @return the provider's name
-     * */
-    open fun getName(): String? {
-        return manifest?.name
-    }
 
     /**
      *
@@ -82,21 +63,5 @@ abstract class Provider {
      * ```
      * */
     @Composable
-    open fun SettingsScreen() {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stringResource(UtilR.string.non_configurable_provider_message),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Black
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            )
-        }
-    }
+    open fun SettingsScreen() = Unit
 }

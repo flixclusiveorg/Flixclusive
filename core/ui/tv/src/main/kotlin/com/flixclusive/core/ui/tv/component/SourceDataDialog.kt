@@ -30,13 +30,13 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
-import com.flixclusive.model.provider.SourceDataState
+import com.flixclusive.model.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
 fun SourceDataDialog(
-    state: SourceDataState,
+    state: MediaLinkResourceState,
     canSkipExtractingPhase: Boolean = false,
     onConsumeDialog: () -> Unit,
     onSkipExtractingPhase: () -> Unit = {},
@@ -59,7 +59,7 @@ fun SourceDataDialog(
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun SourceDataDialogContent(
-    state: SourceDataState,
+    state: MediaLinkResourceState,
     canSkipExtractingPhase: Boolean = false,
     onSkipExtractingPhase: () -> Unit = {},
 ) {
@@ -83,7 +83,7 @@ private fun SourceDataDialogContent(
                 contentAlignment = Alignment.Center
             ) {
                 this@Column.AnimatedVisibility(
-                    visible = state !is SourceDataState.Error && state !is SourceDataState.Unavailable,
+                    visible = state !is MediaLinkResourceState.Error && state !is MediaLinkResourceState.Unavailable,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
@@ -112,7 +112,7 @@ private fun SourceDataDialogContent(
                 }
 
                 this@Column.AnimatedVisibility(
-                    visible = state is SourceDataState.Error || state is SourceDataState.Unavailable,
+                    visible = state is MediaLinkResourceState.Error || state is MediaLinkResourceState.Unavailable,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
@@ -180,7 +180,7 @@ fun VideoPlayerDialogPreview() {
                 .fillMaxSize()
         ) {
             SourceDataDialog(
-                state = SourceDataState.Fetching(),
+                state = MediaLinkResourceState.Fetching(),
                 canSkipExtractingPhase = false,
                 onSkipExtractingPhase = {},
                 onConsumeDialog = {}

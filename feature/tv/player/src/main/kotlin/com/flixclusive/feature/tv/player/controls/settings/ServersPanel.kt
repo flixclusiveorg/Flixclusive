@@ -23,7 +23,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.core.ui.tv.util.hasPressedRight
 import com.flixclusive.feature.tv.player.controls.settings.common.ListContentHolder
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.util.R as UtilR
 
@@ -31,7 +31,7 @@ import com.flixclusive.core.util.R as UtilR
 internal fun ServersPanel(
     modifier: Modifier = Modifier,
     state: PlayerUiState,
-    servers: List<SourceLink>,
+    servers: List<Stream>,
     providerApis: List<ProviderApi>,
     onProviderChange: (String) -> Unit,
     onServerChange: (Int) -> Unit,

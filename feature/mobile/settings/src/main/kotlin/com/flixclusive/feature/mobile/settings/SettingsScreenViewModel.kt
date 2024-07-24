@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.data.search_history.SearchHistoryRepository
-import com.flixclusive.domain.provider.SourceLinksProviderUseCase
+import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.model.datastore.AppSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,7 +38,7 @@ internal const val KEY_DECODER_PRIORITY_DIALOG = "isDecoderPriorityDialogOpen"
 class SettingsScreenViewModel @Inject constructor(
     private val appSettingsManager: AppSettingsManager,
     private val searchHistoryRepository: SearchHistoryRepository,
-    private val sourceLinksProvider: SourceLinksProviderUseCase
+    private val sourceLinksProvider: GetMediaLinksUseCase
 ) : ViewModel() {
     val searchHistoryCount = searchHistoryRepository.getAllItemsInFlow()
         .map { it.size }

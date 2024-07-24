@@ -19,6 +19,14 @@ abstract class FilmDetails : Film() {
     abstract val producers: List<Company>
     abstract val tagLine: String?
     abstract val cast: List<Person>
+
+    companion object {
+        val FilmDetails.isMovie
+            get() = this is Movie
+
+        val FilmDetails.isTvShow
+            get() = this is Movie
+    }
 }
 
 /*
