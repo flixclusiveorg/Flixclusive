@@ -8,6 +8,7 @@ import com.flixclusive.data.provider.MediaLinksRepository
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.DEFAULT_ERROR_MESSAGE
+import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.DEFAULT_WEB_VIEW_ERROR_MESSAGE
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.EMPTY_PROVIDER_MESSAGE
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.UNAVAILABLE_EPISODE_MESSAGE
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.getNoLinksLoadedMessage
@@ -173,28 +174,32 @@ class GetMediaLinksUseCase @Inject constructor(
                         context = context,
                         callback = ProviderWebViewCallbackImpl(
                             cachedLinks = cachedLinks,
-                            onDestroy = {
-                                if (cachedLinks.streams.size == 0) {
-                                    val message = getNoLinksLoadedMessage(provider.name)
-                                    onError?.invoke(message)
-                                    throwError(message)
-                                    continuation.resume(false)
-                                    return@ProviderWebViewCallbackImpl
+                            onDestroy = { error ->
+                                when {
+                                    error != null -> {
+                                        onError?.invoke(UiText.StringValue(error.localizedMessage ?: DEFAULT_WEB_VIEW_ERROR_MESSAGE))
+                                        throwError(error)
+                                        continuation.resume(false)
+                                        return@ProviderWebViewCallbackImpl
+                                    }
+                                    cachedLinks.streams.size == 0 -> {
+                                        val message = getNoLinksLoadedMessage(provider.name)
+                                        onError?.invoke(message)
+                                        throwError(message)
+                                        continuation.resume(false)
+                                        return@ProviderWebViewCallbackImpl
+                                    }
+                                    else -> {
+                                        onSuccess(episodeToUse)
+                                        finish()
+                                        continuation.resume(true)
+                                    }
                                 }
-                                
-                                onSuccess(episodeToUse)
-                                finish()
-                                continuation.resume(true)
                             }
                         )
                     )
 
-                    try {
-                        runWebView(webView)
-                    } catch (e: Exception) {
-                        throwError(e)
-                        continuation.resume(false)
-                    }
+                    runWebView(webView)
                 }
 
                 webView.destroy()
