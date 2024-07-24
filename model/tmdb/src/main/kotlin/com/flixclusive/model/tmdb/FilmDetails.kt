@@ -25,7 +25,7 @@ abstract class FilmDetails : Film() {
             get() = this is Movie
 
         val FilmDetails.isTvShow
-            get() = this is Movie
+            get() = this is TvShow
     }
 }
 
