@@ -199,6 +199,10 @@ class GetMediaLinksUseCase @Inject constructor(
                         )
                     )
 
+                    sendExtractingLinksMessage(
+                        provider = provider.name,
+                        isOnWebView = true
+                    )
                     runWebView(webView)
                 }
 
