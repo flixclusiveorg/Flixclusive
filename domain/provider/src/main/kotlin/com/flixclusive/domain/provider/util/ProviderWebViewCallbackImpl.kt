@@ -7,11 +7,11 @@ import com.flixclusive.provider.webview.ProviderWebViewCallback
 
 internal class ProviderWebViewCallbackImpl(
     private val cachedLinks: CachedLinks,
-    private val onDestroy: () -> Unit,
+    private val onDestroy: (Throwable?) -> Unit,
 ) : ProviderWebViewCallback {
-    override suspend fun onStop() {
+    override suspend fun onStop(error: Throwable?) {
         infoLog("Destroying WebView...")
-        onDestroy()
+        onDestroy(error)
     }
 
     override fun onLinkLoaded(link: MediaLink) {

@@ -7,10 +7,11 @@ import com.flixclusive.model.provider.MediaLink
  */
 interface ProviderWebViewCallback {
     /**
-     * Called when the WebView needs to destroy itself.
+     * Called when the WebView needs to destroy itself. It provides an error if the WebView fails to get links.
      *
+     * @param error The possible error that caused the WebView to be destroyed.
      */
-    suspend fun onStop()
+    suspend fun onStop(error: Throwable? = null)
 
     /**
      * Called when a media link has been loaded.
