@@ -1,7 +1,5 @@
 ![Flixclusive logo](https://i.imgur.com/tizcKbi.png)
 
-An ad-free TV show and movie player application. Explore newly released and exclusive films from the app's extensive and diverse database of movies and shows.
-
 <div>
   <table>
     <tr>
@@ -9,7 +7,7 @@ An ad-free TV show and movie player application. Explore newly released and excl
       <td><a href="https://github.com/rhenwinch/Flixclusive/actions/workflows/Build.yml"><img src="https://img.shields.io/github/actions/workflow/status/rhenwinch/Flixclusive/Build.yml?label=CI+Build&style=for-the-badge" alt="CI"></a></td>
     </tr>
     <tr>
-      <td>Sonar Quality Gate</td>
+      <td>Quality Gate</td>
       <td><a href="https://sonarcloud.io/summary/overall?id=rhenwinch_Flixclusive"><img src="https://img.shields.io/sonar/quality_gate/rhenwinch_Flixclusive?server=https%3A%2F%2Fsonarcloud.io&style=for-the-badge" alt="Sonar quality gate"></a></td>
     </tr>
     <tr>
@@ -28,21 +26,12 @@ An ad-free TV show and movie player application. Explore newly released and excl
 </div>
 
 ## Disclaimer
-The app does not host and contain movies and tv shows streaming links. Flixclusive assumes no responsibility for the content displayed. Legal issues pertaining to the movies/TV shows should be addressed directly with the respective third-party providers.
-
-## Screenshot (Outdated)
-![Screenshot 1](/docs/flixclusive.gif?raw=true)
-![Screenshot 2](/docs/flixclusive-player.gif?raw=true)
+The app **DOES NOT** host and contain movies and tv shows streaming links!
 
 ## Roadmap
-- **A badly needed add-ons/plugins system for providers**
-- **Android TV Support**
-- **Offline Viewing**
+- Join the discord; its in there! 🥦
 
 ## Contributors
 <a href="https://github.com/rhenwinch/Flixclusive/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=rhenwinch/Flixclusive"  alt="Contributors"/>
+  <img width="80" src="https://contrib.rocks/image?repo=rhenwinch/Flixclusive"  alt="Contributors"/>
 </a>
-
-## License
-The Flixclusive app is licensed under the [MIT License](LICENSE). Feel free to modify and distribute it according to your needs.
