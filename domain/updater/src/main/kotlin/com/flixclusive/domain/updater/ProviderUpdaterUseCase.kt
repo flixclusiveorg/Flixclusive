@@ -1,11 +1,8 @@
 package com.flixclusive.domain.updater
 
 import android.content.Context
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.util.android.createChannel
-import com.flixclusive.core.util.android.notificationManager
 import com.flixclusive.core.util.android.notify
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 import com.flixclusive.core.util.common.dispatcher.Dispatcher
@@ -47,7 +44,7 @@ class ProviderUpdaterUseCase @Inject constructor(
     val updatedProvidersMap: MutableMap<String, VersionCode> = Collections.synchronizedMap(HashMap())
     val outdatedProviders: MutableList<String> = Collections.synchronizedList(ArrayList())
 
-    private var channelHasBeenInitialized = false
+    private var notificationChannelHasBeenInitialized = false
 
     suspend fun checkForUpdates(notify: Boolean) {
         val appSettings = appSettingsManager.appSettings.data.first()
@@ -82,22 +79,15 @@ class ProviderUpdaterUseCase @Inject constructor(
             else -> context.getString(UtilR.string.all_providers_updated)
         }
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !channelHasBeenInitialized) {
-            context.notificationManager.createChannel(
-                channelId = CHANNEL_UPDATER_ID,
-                channelName = CHANNEL_UPDATER_NAME
-            )
-
-            channelHasBeenInitialized = true
-        }
-
         context.notify(
             id = (System.currentTimeMillis() / 1000).toInt(),
             channelId = CHANNEL_UPDATER_ID,
+            channelName = CHANNEL_UPDATER_NAME,
+            shouldInitializeChannel = !notificationChannelHasBeenInitialized
         ) {
             setContentTitle(context.getString(UtilR.string.flixclusive_providers))
             setContentText(notificationBody)
-            setSmallIcon(UiCommonR.drawable.download)
+            setSmallIcon(UiCommonR.drawable.provider_logo)
             setOnlyAlertOnce(false)
             setAutoCancel(true)
             setColorized(true)
@@ -107,6 +97,8 @@ class ProviderUpdaterUseCase @Inject constructor(
                     .bigText(notificationBody)
             )
         }
+
+        notificationChannelHasBeenInitialized = true
     }
 
     suspend fun isProviderOutdated(providerData: ProviderData): Boolean {

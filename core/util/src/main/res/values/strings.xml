@@ -49,6 +49,7 @@
     <string name="failed_to_initialize_home_items">Failed to initialize home items</string>
     <string name="failed_to_initialize_search_items">Failed to initialize search items</string>
     <string name="failed_to_load_online_providers">Could not parse online providers.</string>
+    <string name="failed_to_load_providers">Failed to load providers!</string>
     <string name="failed_to_update_provider">Failed to update the provider.</string>
     <string name="film_data_fetch_failed">Failed to fetch film data</string>
     <string name="film_not_found">Film not found</string>
@@ -73,6 +74,8 @@
     <string name="failed_to_fetch_media_id_message">Something went wrong fetching the media id: %1$s</string>
     <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
     <string name="failed_to_load_provider">Failed to download provider: %1$s</string>
+    <string name="failed_to_load_provider_on_api">"%1$s\'s API has crashed. Disabling it now..."</string>
+    <string name="failed_to_load_providers_msg_format">The following provider(s) could not be loaded: %1$s</string>
     <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
 
     <!--  Film/Filter types  -->
@@ -246,7 +249,6 @@
     <string name="empty_providers_list_message">Start adding providers now!</string>
     <string name="empty_recently_watched_list_message">Start watching now!</string>
     <string name="failed_to_get_media_id_error_msg">Failed to get media id. This might not be available yet.</string>
-    <string name="failed_to_load_providers_msg">Some providers failed to load. Check the providers page for more info.</string>
     <string name="fetching_episode_message">Fetching show episode…</string>
     <string name="film_data_fetching">Fetching film details…</string>
     <string name="loading_next_episode">Loading next episode…</string>
