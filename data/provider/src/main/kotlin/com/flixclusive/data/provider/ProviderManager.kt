@@ -10,7 +10,6 @@ import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
-import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
@@ -138,22 +137,22 @@ class ProviderManager @Inject constructor(
         val providerSettings = appSettingsManager.providerSettings.data.first()
         val repositoryFolders = localDir.listFiles()
 
-        repositoryFolders?.mapAsync folderMap@ { folder ->
+        repositoryFolders?.forEach folderForEach@ { folder ->
             if (!folder.isDirectory)
-                return@folderMap
+                return@folderForEach
 
             val updaterJsonFile = File(folder.absolutePath + "/updater.json")
             if (!updaterJsonFile.exists()) {
                 errorLog("Provider's updater.json could not be found!")
-                return@folderMap
+                return@folderForEach
             }
 
             val randomProviderFile = fromJson<List<ProviderData>>(updaterJsonFile.reader())
                 .firstOrNull()
-                ?: return@folderMap
+                ?: return@folderForEach
 
             val repository = randomProviderFile.repositoryUrl?.toValidRepositoryLink()
-                ?: return@folderMap
+                ?: return@folderForEach
 
             if (!providerSettings.repositories.contains(repository)) {
                 appSettingsManager.updateProviderSettings {
@@ -162,7 +161,7 @@ class ProviderManager @Inject constructor(
             }
 
             folder.listFiles()
-                ?.mapAsync { providerFile ->
+                ?.forEach { providerFile ->
                     val isProviderNotYetLoaded
                         = providerSettings.providers.any {
                             it.filePath == providerFile.absolutePath
