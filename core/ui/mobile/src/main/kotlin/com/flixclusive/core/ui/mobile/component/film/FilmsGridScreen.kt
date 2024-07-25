@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.mobile.component
+package com.flixclusive.core.ui.mobile.component.film
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -46,8 +46,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.mobile.R
-import com.flixclusive.core.ui.mobile.component.film.FilmCard
-import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
+import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
+import com.flixclusive.core.ui.mobile.component.RetryButton
+import com.flixclusive.core.ui.mobile.component.SMALL_ERROR
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.util.common.ui.PagingState

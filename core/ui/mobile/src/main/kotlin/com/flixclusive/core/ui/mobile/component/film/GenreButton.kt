@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.mobile.component
+package com.flixclusive.core.ui.mobile.component.film
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

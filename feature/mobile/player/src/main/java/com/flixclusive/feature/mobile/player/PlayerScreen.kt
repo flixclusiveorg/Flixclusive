@@ -43,7 +43,7 @@ import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.mobile.ListenKeyEvents
-import com.flixclusive.core.ui.mobile.component.ProviderResourceStateDialog
+import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
 import com.flixclusive.core.ui.mobile.rememberPipMode
 import com.flixclusive.core.ui.mobile.util.toggleSystemBars
 import com.flixclusive.core.ui.player.PLAYER_CONTROL_VISIBILITY_TIMEOUT

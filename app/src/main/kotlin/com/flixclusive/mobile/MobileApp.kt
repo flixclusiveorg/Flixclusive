@@ -31,7 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
-import com.flixclusive.core.ui.mobile.component.ProviderResourceStateDialog
+import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination

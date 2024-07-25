@@ -18,7 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
-import com.flixclusive.core.ui.mobile.component.FilmsGridScreen
+import com.flixclusive.core.ui.mobile.component.film.FilmsGridScreen
 import com.flixclusive.model.tmdb.Film
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.util.R as UtilR
