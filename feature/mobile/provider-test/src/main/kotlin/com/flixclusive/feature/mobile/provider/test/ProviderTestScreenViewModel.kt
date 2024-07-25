@@ -8,7 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class ProviderSettingsScreenViewModel @Inject constructor(
+class ProviderTestScreenViewModel @Inject constructor(
     providerManager: ProviderManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {

@@ -2,58 +2,31 @@ package com.flixclusive.feature.mobile.provider.test
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.currentComposer
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.flixclusive.core.ui.common.COMMON_TOP_BAR_HEIGHT
-import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.GoBackAction
-import com.flixclusive.core.ui.common.navigation.ProviderInfoScreenNavArgs
+import com.flixclusive.gradle.entities.ProviderData
 import com.ramcosta.composedestinations.annotation.Destination
 
+data class ProviderTestScreenNavArgs(
+    val providers: ArrayList<ProviderData>
+)
+
 @Destination(
-    navArgsDelegate = ProviderInfoScreenNavArgs::class
+    navArgsDelegate = ProviderTestScreenNavArgs::class
 )
 @Composable
 fun ProviderTestScreen(
     navigator: GoBackAction,
-    args: ProviderInfoScreenNavArgs
+    args: ProviderTestScreenNavArgs
 ) {
-    val viewModel = hiltViewModel<ProviderSettingsScreenViewModel>()
+    val viewModel = hiltViewModel<ProviderTestScreenViewModel>()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        Box(
-            modifier = Modifier
-                .statusBarsPadding()
-                .padding(top = COMMON_TOP_BAR_HEIGHT)
-        ) {
-            if (viewModel.providerInstance != null) {
-                // Need to call the composable with the reflection way bc
-                // Compose won't let us call it the normal way.
-                val method = remember {
-                    viewModel.providerInstance::class.java
-                        .declaredMethods
-                        .find {
-                            it.name.equals("SettingsScreen")
-                        }?.also {
-                            it.isAccessible = true
-                        }
-                }
-
-                method?.invoke(viewModel.providerInstance, currentComposer, 0)
-            }
-        }
-
-        CommonTopBar(
-            headerTitle = args.providerData.name,
-            onNavigationIconClick = navigator::goBack
-        )
+//        TestScreenHeader()
     }
 }
