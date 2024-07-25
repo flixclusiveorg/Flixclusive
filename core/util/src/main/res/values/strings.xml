@@ -112,6 +112,7 @@
     <string name="content">Content</string>
     <string name="continue_watching">Continue Watching</string>
     <string name="copy_link">Copy link</string>
+    <string name="currently_testing">Currently Testing</string>
     <string name="debug">DEBUG</string>
     <string name="decoder_device_only">Device decoders</string>
     <string name="decoder_prefer_app">FFMPEG decoders</string>
@@ -196,6 +197,7 @@
     <string name="sign_up_prerelease">Use pre-release updates</string>
     <string name="something_went_wrong">Something went wrong</string>
     <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
+    <string name="stage">Stage</string>
     <string name="status">Status</string>
     <string name="subtitle">Subtitle</string>
     <string name="subtitles_background_color">Background color</string>
@@ -207,6 +209,7 @@
     <string name="sync">Sync</string>
     <string name="sync_subtitles">Sync Subtitles</string>
     <string name="test_provider">Test provider</string>
+    <string name="test_results">Test results</string>
     <string name="understood">Understood</string>
     <string name="uninstall">Uninstall</string>
     <string name="unknown_language">Unknown language</string>
@@ -307,6 +310,7 @@
     <string name="episode_image_content_desc_format">An image of episode %1$s: %2$s</string>
     <string name="episodes_button_desc">An icon for episodes button</string>
     <string name="error_icon_content_desc">Error icon</string>
+    <string name="expand_card_icon_content_desc">Expand test result card icon</string>
     <string name="film_card_titles_label">Show titles on film cards.</string>
     <string name="film_item_content_description">A film\'s backdrop, picture or poster.</string>
     <string name="filter_button">Filter button</string>
