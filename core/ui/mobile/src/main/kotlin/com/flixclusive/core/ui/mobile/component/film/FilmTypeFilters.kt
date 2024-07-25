@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.mobile.component
+package com.flixclusive.core.ui.mobile.component.film
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

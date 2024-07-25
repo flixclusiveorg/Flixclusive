@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.mobile.component
+package com.flixclusive.core.ui.mobile.component.provider
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

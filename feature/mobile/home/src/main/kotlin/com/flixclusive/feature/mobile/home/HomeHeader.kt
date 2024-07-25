@@ -51,7 +51,7 @@ import com.flixclusive.core.theme.starColor
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.core.ui.mobile.component.GenreButton
+import com.flixclusive.core.ui.mobile.component.film.GenreButton
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.film.formatRating
 import com.flixclusive.model.tmdb.Film
