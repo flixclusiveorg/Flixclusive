@@ -149,15 +149,16 @@ class GetMediaLinksUseCase @Inject constructor(
         for (i in providersList.indices) {
             val provider = providersList[i]
 
+            val isNotTheSameFilmProvider = !film.providerName.equals(provider.name, true) && !film.isFromTmdb
             val isChangingProvider = preferredProviderName != null
 
-            if ((isChangingProvider && provider.name != preferredProviderName))
+            if ((isChangingProvider && provider.name != preferredProviderName) || isNotTheSameFilmProvider)
                 continue
 
             sendFetchingFilmMessage(provider = provider.name)
 
             if (provider.useWebView) {
-                putCache(
+                storeCache(
                     filmId = film.identifier,
                     episode = episodeToUse,
                     cachedLinks = cachedLinks.copy(
@@ -214,11 +215,9 @@ class GetMediaLinksUseCase @Inject constructor(
                 return@channelFlow
             }
 
-            val canStopLooping = i == providersList.lastIndex || isChangingProvider
+            val canStopLooping = i == providersList.lastIndex || isChangingProvider || !film.isFromTmdb
 
-            val isNotTheSameFilmProvider = !film.providerName.equals(provider.name, true) && !film.isFromTmdb
-            val needsNewWatchId = watchId == null && (film.isFromTmdb || isNotTheSameFilmProvider)
-
+            val needsNewWatchId = watchId == null && film.isFromTmdb
             val watchIdResource = when {
                 needsNewWatchId -> mediaLinksRepository.getWatchId(
                     film = film,
@@ -269,7 +268,7 @@ class GetMediaLinksUseCase @Inject constructor(
                 }
                 is Resource.Success -> {
                     cachedLinks.addAll(links = result.data ?: emptyList())
-                    putCache(
+                    storeCache(
                         filmId = film.identifier,
                         episode = episodeToUse,
                         cachedLinks = cachedLinks.copy(
@@ -310,7 +309,7 @@ class GetMediaLinksUseCase @Inject constructor(
      * @param episode The episode data of the film if it is a tv show
      * @param cachedLinks The cached links of the cached film
      * */
-    private fun putCache(
+    private fun storeCache(
         filmId: String,
         episode: Episode?,
         cachedLinks: CachedLinks
