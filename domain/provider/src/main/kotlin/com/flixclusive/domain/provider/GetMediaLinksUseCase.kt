@@ -24,6 +24,7 @@ import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.provider.CachedLinks
 import com.flixclusive.model.provider.MediaLinkResourceState
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmDetails.Companion.isTvShow
 import com.flixclusive.model.tmdb.TvShow
@@ -252,21 +253,22 @@ class GetMediaLinksUseCase @Inject constructor(
                 api = provider
             )
 
-            when (result) {
-                Resource.Loading -> Unit
-                is Resource.Failure -> {
-                    if (canStopLooping) {
-                        val error = result.error ?: when (cachedLinks.streams.size) {
-                            0 -> provider.name.getNoLinksMessage
-                            else -> DEFAULT_ERROR_MESSAGE
-                        }
+            val hasNoStreamLinks = result.data
+                ?.filterIsInstance<Stream>()
+                ?.isEmpty() ?: false
 
-                        onError?.invoke(error)
-                        trySend(MediaLinkResourceState.Error(error))
-                        return@channelFlow
+            when {
+                (result is Resource.Failure || hasNoStreamLinks) && canStopLooping -> {
+                    val error = result.error ?: when (cachedLinks.streams.size) {
+                        0 -> provider.name.getNoLinksMessage
+                        else -> DEFAULT_ERROR_MESSAGE
                     }
+
+                    onError?.invoke(error)
+                    trySend(MediaLinkResourceState.Error(error))
+                    return@channelFlow
                 }
-                is Resource.Success -> {
+                result is Resource.Success -> {
                     cachedLinks.addAll(links = result.data ?: emptyList())
                     storeCache(
                         filmId = film.identifier,
