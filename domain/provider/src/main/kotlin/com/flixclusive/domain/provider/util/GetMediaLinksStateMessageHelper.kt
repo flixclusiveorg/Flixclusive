@@ -5,7 +5,7 @@ import com.flixclusive.model.provider.MediaLinkResourceState
 import kotlinx.coroutines.channels.ProducerScope
 import com.flixclusive.core.util.R as UtilR
 
-internal object StateMessageHelper {
+internal object GetMediaLinksStateMessageHelper {
     fun ProducerScope<MediaLinkResourceState>.sendFetchingEpisodeMessage() =
         trySend(MediaLinkResourceState.Fetching(UiText.StringResource(UtilR.string.fetching_episode_message)))
 

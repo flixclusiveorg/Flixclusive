@@ -46,7 +46,8 @@ media-ffmpeg = "0.7.1"
 mockk = "1.13.8"
 okhttp = "4.12.0"
 palette = "1.0.0"
-pluginsGradle = "main-SNAPSHOT"
+pauseCoroutine = "3959287e12"
+providersGradle = "1.0.0"
 retrofit = "2.9.0"
 room = "2.6.1"
 serialization = "1.6.0"
@@ -146,7 +147,7 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-dnsoverhttps = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttp" }
 
 # Flixclusive
-flixclusive-gradle = { module = "com.github.Flixclusive.providers-gradle:providers-gradle", version.ref = "pluginsGradle" }
+flixclusive-gradle = { module = "com.github.Flixclusive.providers-gradle:providers-gradle", version.ref = "providersGradle" }
 
 # Retrofit
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
@@ -162,6 +163,7 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 unifile = { module = "com.github.seven332:unifile", version.ref = "unifile" }
 
 # Testing
+pauseCoroutineDispatcher = { group = "com.github.Koitharu", name = "pausing-coroutine-dispatcher", version.ref = "pauseCoroutine" }
 coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }

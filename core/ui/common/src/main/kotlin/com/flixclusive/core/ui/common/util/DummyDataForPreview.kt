@@ -1,5 +1,6 @@
 package com.flixclusive.core.ui.common.util
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.flixclusive.core.util.film.FilmType
@@ -13,6 +14,7 @@ import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import okhttp3.OkHttpClient
 
@@ -42,10 +44,17 @@ object DummyDataForPreview {
 
     @Composable
     fun getDummyProviderApi() = remember {
-        List<ProviderApi>(5) {
-            object : ProviderApi(OkHttpClient()) {
-                override val name: String = "FLX $it"
+        val provider = object: Provider() {
+            override fun getApi(context: Context?, client: OkHttpClient): ProviderApi {
+                TODO("Not yet implemented")
+            }
+        }
 
+        List<ProviderApi>(5) {
+            object : ProviderApi(
+                OkHttpClient(),
+                provider
+            ) {
                 override suspend fun getLinks(
                     watchId: String,
                     film: FilmDetails,

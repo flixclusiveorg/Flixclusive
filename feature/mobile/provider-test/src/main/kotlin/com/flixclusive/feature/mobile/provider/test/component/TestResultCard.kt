@@ -3,8 +3,10 @@ package com.flixclusive.feature.mobile.provider.test.component
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +24,7 @@ import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -31,12 +35,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -45,7 +53,12 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.domain.provider.test.ProviderTestCaseOutput
+import com.flixclusive.domain.provider.test.ProviderTestResult
+import com.flixclusive.domain.provider.test.TestStatus
+import kotlin.random.Random
+import kotlin.time.Duration
 import com.flixclusive.core.util.R as UtilR
 
 private val ButtonHeight = 40.dp
@@ -57,11 +70,10 @@ private val ContentPadding = PaddingValues(
 
 @Composable
 internal fun TestResultCard(
-    provider: ProviderData,
-    checksPassed: Int,
-    totalChecks: Int,
+    testResult: ProviderTestResult,
     isExpanded: Boolean,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    showFullLog: (ProviderTestCaseOutput) -> Unit
 ) {
     val maxContentHeight = when(isExpanded) {
         true -> Dp.Unspecified
@@ -77,13 +89,14 @@ internal fun TestResultCard(
                 .heightIn(
                     min = ButtonHeight * 2,
                     max = maxContentHeight
-                )
+                ),
+            outputs = testResult.outputs,
+            showFullLog = showFullLog
         )
 
         TestResultCardHeader(
-            provider = getDummyProviderData(),
-            checksPassed = 1,
-            totalChecks = 3,
+            testScore = testResult.score,
+            providerName = testResult.provider.name,
             isExpanded = isExpanded,
             onToggle = onToggle
         )
@@ -92,10 +105,9 @@ internal fun TestResultCard(
 
 @Composable
 private fun TestResultCardHeader(
-    provider: ProviderData,
-    checksPassed: Int,
-    totalChecks: Int,
     isExpanded: Boolean,
+    testScore: String,
+    providerName: String,
     onToggle: () -> Unit
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surface
@@ -131,7 +143,7 @@ private fun TestResultCardHeader(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "$checksPassed/$totalChecks",
+                text = testScore,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Medium,
                     fontSize = 12.sp,
@@ -141,7 +153,7 @@ private fun TestResultCardHeader(
 
             Text(
                 modifier = Modifier.weight(1F),
-                text = provider.name ,
+                text = providerName,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -170,7 +182,9 @@ private fun TestResultCardHeader(
 
 @Composable
 private fun TestResultCardContent(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    outputs: List<ProviderTestCaseOutput>,
+    showFullLog: (ProviderTestCaseOutput) -> Unit
 ) {
     val extraCutOutPadding = ButtonHeight.times(0.15F)
 
@@ -180,21 +194,91 @@ private fun TestResultCardContent(
             .padding(top = ButtonHeight.minus(extraCutOutPadding)),
         shape = CardShape,
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(ContentPadding)
                 .padding(top = extraCutOutPadding + 4.dp)
         ) {
-            Text(
-                text = "Movie used:",
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 11.sp,
-                    color = LocalContentColor.current.onMediumEmphasis()
-                ),
-            )
+            for (i in outputs.indices) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (i != 0 && outputs.isNotEmpty()) {
+                        HorizontalDivider(
+                            thickness = 0.5.dp,
+                            color = LocalContentColor.current.onMediumEmphasis(0.4F)
+                        )
+                    }
+
+                    val output = outputs[i]
+                    TestOutputLog(
+                        output = output,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.extraSmall)
+                            .clickable {
+                                showFullLog(output)
+                            }
+                            .padding(vertical = 5.dp)
+                    )
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun TestOutputLog(
+    modifier: Modifier = Modifier,
+    output: ProviderTestCaseOutput,
+) {
+    val context = LocalContext.current
+    val iconTint = if (output.status.color != null) {
+        Color(output.status.color!!)
+    } else MaterialTheme.colorScheme.primary
+
+    val shortLog = remember(output.shortLog) {
+        if (output.status != TestStatus.RUNNING) {
+            output.shortLog?.asString(context)
+                ?: context.getString(UtilR.string.no_short_log)
+        } else context.getString(UtilR.string.asserting)
+    }
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(output.status.iconId),
+            contentDescription = output.status.toString(),
+            tint = iconTint,
+            modifier = Modifier.size(18.dp)
+        )
+
+        Text(
+            text = output.name.asString(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp
+            )
+        )
+
+        Text(
+            modifier = Modifier.weight(1F),
+            text = shortLog,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Medium,
+                color = LocalContentColor.current.onMediumEmphasis(),
+                fontSize = 11.sp,
+                textAlign = TextAlign.End
+            )
+        )
     }
 }
 
@@ -203,7 +287,7 @@ private fun TestResultCardContent(
 private fun TestResultCardPreview() {
     val providers = List(5) { getDummyProviderData() }
     val isExpandedMap = remember {
-        List(providers.size) { index: Int -> index to false }
+        List(providers.size) { index: Int -> index to Random.nextBoolean() }
             .toMutableStateMap()
     }
 
@@ -214,14 +298,30 @@ private fun TestResultCardPreview() {
                 modifier = Modifier.fillMaxSize()
             ) {
                 itemsIndexed(providers) { i, data ->
+                    val testResult = remember {
+                        ProviderTestResult(provider = data)
+                            .apply {
+                                val statuses = TestStatus.entries.toTypedArray()
+                                repeat(5) {
+                                    add(
+                                        ProviderTestCaseOutput(
+                                            name = UiText.StringValue("Test Case $it"),
+                                            status = statuses.random(),
+                                            timeTaken = Duration.parse("1h 30m"),
+                                            fullLog = UiText.StringValue("Full Log"),
+                                            shortLog = UiText.StringValue("Short Log")
+                                        )
+                                    )
+                                }
+                            }
+                    }
                     TestResultCard(
-                        provider = data,
-                        checksPassed = 1,
-                        totalChecks = 3,
                         isExpanded = isExpandedMap[i] ?: true,
+                        testResult = testResult,
                         onToggle = {
                             isExpandedMap[i] = !(isExpandedMap[i] ?: true)
-                        }
+                        },
+                        showFullLog = {}
                     )
                 }
             }

@@ -12,43 +12,37 @@ import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.provider.util.defaultTestFilm
 import com.flixclusive.provider.webview.ProviderWebView
 import com.flixclusive.provider.webview.ProviderWebViewCallback
 import okhttp3.OkHttpClient
-
-/**
- * Default value for [ProviderApi.testWatchId].
- * */
-private const val DEFAULT_TEST_WATCH_ID = "tt0068646"
 
 /**
  * The base class for every provider api.
  *
  * An api will provide source links for a given film. It could also be used to search for films and retrieve detailed information about them.
  *
- * @param client The [OkHttpClient] instance used for network requests.
+ * @property client The [OkHttpClient] instance used for network requests.
  *
- * @property name The name of the provider.
  * @property baseUrl The base URL used for network requests. Defaults to an empty string.
- * @property testWatchId The unique watch identifier that will be used for provider testing. Defaults to [DEFAULT_TEST_WATCH_ID].
+ * @property testFilm The [Film] to use for testing purposes. Defaults to [The Godfather (1972)](https://www.themoviedb.org/movie/238-the-godfather).
  * @property useWebView Whether this provider needs to use a WebView to scrape content. Defaults to false.
  * @property catalogs The list of [ProviderCatalog]s that this provider provides. Defaults to an empty list.
  * @property filters The list of [Filter]s that this provider's search method supports. Defaults to an empty list.
  */
 @Suppress("unused")
 abstract class ProviderApi(
-    protected val client: OkHttpClient
+    protected val client: OkHttpClient,
+    val provider: Provider,
 ) {
-    abstract val name: String
-
     open val baseUrl: String = ""
-    open val testWatchId: String = DEFAULT_TEST_WATCH_ID
+    open val testFilm: FilmDetails = defaultTestFilm
     open val useWebView: Boolean = false
     open val filters: FilterList get() = FilterList()
     open val catalogs: List<ProviderCatalog> get() = emptyList()
 
     /**
-     * Obtains a list of [Film] items from the provider's catalog.
+     * Obtains a list of [Film] items from the provider's [catalogs].
      *
      * @param catalog The [ProviderCatalog] to load.
      * @param page The page number for paginated results. Defaults to 1.

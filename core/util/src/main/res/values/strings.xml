@@ -32,6 +32,8 @@
     <string name="connection_timeout">Connection timeout</string>
     <string name="decryption_error">Decryption of data failed, try again later</string>
     <string name="default_error">No additional error information provided.</string>
+    <string name="empty_data_default_label">Felix Came Up Empty</string>
+    <string name="empty_data_default_sub_label">No hits just yet, but he\'s on the case!</string>
     <string name="empty_query_error_msg">Search query must not be empty!</string>
     <string name="error_crash_title">Oops!</string>
     <string name="error_downloading_update">Error updating the app</string>
@@ -80,8 +82,8 @@
 
     <!--  Film/Filter types  -->
     <string name="all">All</string>
-    <string name="movies">Movies</string>
-    <string name="tv_shows">TV Shows</string>
+    <string name="movie">Movie</string>
+    <string name="tv_show">TV Show</string>
 
     <!--  Extra labels  -->
     <string name="add_own_subtitle">Add subs</string>
@@ -89,6 +91,7 @@
     <string name="add_sync_offset_message">Add if subs are delayed.</string>
     <string name="add_to_watchlist">Add to Watchlist</string>
     <string name="allow">Allow</string>
+    <string name="asserting">Asserting…</string>
     <string name="audio">Audio</string>
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
     <string name="authors">Authors</string>
@@ -152,6 +155,7 @@
     <string name="no_ratings">No ratings</string>
     <string name="no_release_date">"No release date"</string>
     <string name="no_runtime">No runtime</string>
+    <string name="no_short_log">View full logs</string>
     <string name="none_label">None</string>
     <string name="not_now_label">Not now</string>
     <string name="notify_about_new_app_updates">Notify about new app updates</string>
@@ -161,6 +165,7 @@
     <string name="opt_in_prerelease">Ok 🗿</string>
     <string name="opt_out_prerelease">Hell nah 😭</string>
     <string name="other_films_message">Other films you might like!</string>
+    <string name="pause">Pause</string>
     <string name="play">Play</string>
     <string name="playback_speed">Playback speed</string>
     <string name="popular">Popular</string>
@@ -182,6 +187,7 @@
     <string name="reset_settings">Reset settings</string>
     <string name="resize_mode">Resize mode</string>
     <string name="restart">Restart</string>
+    <string name="resume">Resume</string>
     <string name="retry">Retry</string>
     <string name="reverse_player_time">Reverse player time</string>
     <string name="sample_subtitle_text">ROSE: I\'m flying!</string>
@@ -198,7 +204,9 @@
     <string name="something_went_wrong">Something went wrong</string>
     <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
     <string name="stage">Stage</string>
+    <string name="start">Start</string>
     <string name="status">Status</string>
+    <string name="stop">Stop</string>
     <string name="subtitle">Subtitle</string>
     <string name="subtitles_background_color">Background color</string>
     <string name="subtitles_color">Font color</string>
@@ -216,10 +224,10 @@
     <string name="unlock_label">Unlock</string>
     <string name="update_info">Update information</string>
     <string name="update_label">Update</string>
-    <string name="volume_booster">Volume booster</string>
     <string name="version">Version</string>
     <string name="video_buffer_max_length">Maximum time to buffer</string>
     <string name="video_buffer_size">Player\'s buffer size</string>
+    <string name="volume_booster">Volume booster</string>
     <string name="warning">Warning</string>
     <string name="watch">Watch</string>
     <string name="watch_again">Watch Again</string>
@@ -228,13 +236,14 @@
 
     <!--  Extra labels with formatting  -->
     <string name="continue_watching_tv_show">Continue Watching S%1$d E%2$d</string>
+    <string name="count_selection_format">%1$d selected</string>
     <string name="current_playback_speed_format">Current playback speed: %1$sx</string>
     <string name="episode_runtime_formatter">%1$d Episode</string>
     <string name="made_by_author_label_format">Made by %1$s</string>
+    <string name="provider_test_film_used_for_testing_format">%1$s used for testing: %2$s</string>
     <string name="season_number_formatter">Season %1$d</string>
     <string name="season_runtime_formatter">%1$d Season</string>
     <string name="seek_seconds_format">%1$s seconds</string>
-    <string name="count_selection_format">%1$d selected</string>
 
     <!--  State messages  -->
     <string name="all_providers_installed">All providers have been installed!</string>
@@ -259,6 +268,10 @@
     <string name="non_configurable_provider_message">This provider has is not configurable.</string>
     <string name="offline_message">You\'re offline</string>
     <string name="online_message">Back online</string>
+    <string name="provider_test_stage_done">Done!</string>
+    <string name="provider_test_stage_idle">Testing has not started</string>
+    <string name="provider_test_stage_stage1">Testing API properties…</string>
+    <string name="provider_test_stage_stage2">Testing API methods…</string>
     <string name="remove_repositories_notice_msg">Are you sure you want to remove the selected repositories?</string>
     <string name="skip_loading_message">Player can be played now!</string>
     <string name="source_data_dialog_state_error_default">Could not initialize video player!</string>
@@ -388,5 +401,23 @@
         ]]>
     </string>
     <string name="privacy_notice_opt_in">Opt-in to crash data collection</string>
+
+    <!--  Provider test labels  -->
+    <string name="ptest_error_get_catalog_list">Failed to get catalog list</string>
+    <string name="ptest_error_get_search_filters">Failed to get search filters</string>
+    <string name="ptest_error_get_testable_film">Failed to get testable film</string>
+    <string name="ptest_error_method_get_catalog_items">Failed to load catalog item %1$s</string>
+    <string name="ptest_error_method_get_film_details">Failed to detailed film for %1$s</string>
+    <string name="ptest_error_method_get_links">Failed to fetch links for %1$s</string>
+    <string name="ptest_error_not_implemented">This has not been implemented.</string>
+    <string name="ptest_get_catalog_list">Get catalog list</string>
+    <string name="ptest_get_search_filters">Get search filters</string>
+    <string name="ptest_get_testable_film">Get testable film</string>
+    <string name="ptest_method_get_catalog_items">Load a catalog item</string>
+    <string name="ptest_method_get_film_details">Get film details</string>
+    <string name="ptest_method_get_links">Get links</string>
+    <string name="ptest_method_get_search_items">Search for items</string>
+    <string name="ptest_success_items_count_found">%1$d items found</string>
+    <string name="ptest_success_items_count_found_empty">Passed but no items found</string>
 </resources>
 

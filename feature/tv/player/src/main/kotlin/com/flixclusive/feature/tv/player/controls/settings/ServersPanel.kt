@@ -32,13 +32,15 @@ internal fun ServersPanel(
     modifier: Modifier = Modifier,
     state: PlayerUiState,
     servers: List<Stream>,
-    providerApis: List<ProviderApi>,
+    apis: List<ProviderApi>,
     onProviderChange: (String) -> Unit,
     onServerChange: (Int) -> Unit,
     hidePanel: () -> Unit,
 ) {
-    val selectedSourceIndex = remember(state.selectedProvider) {
-        providerApis.indexOfFirst { it.name.equals(state.selectedProvider, true) }
+    val selectedProviderIndex = remember(state.selectedProvider) {
+        apis.indexOfFirst {
+            it.provider.name.equals(state.selectedProvider, true)
+        }
     }
 
     var isFirstItemFullyFocused by remember { mutableStateOf(true) }
@@ -73,11 +75,11 @@ internal fun ServersPanel(
                     },
                 contentDescription = stringResource(id = UtilR.string.providers),
                 label = stringResource(id = UtilR.string.providers),
-                items = providerApis,
-                selectedIndex = selectedSourceIndex,
+                items = apis,
+                selectedIndex = selectedProviderIndex,
                 itemState = state.selectedProviderState,
                 onItemClick = {
-                    onProviderChange(providerApis[it].name)
+                    onProviderChange(apis[it].provider.name!!)
                 }
             )
 

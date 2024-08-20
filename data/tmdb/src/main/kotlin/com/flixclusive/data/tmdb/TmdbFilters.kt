@@ -27,8 +27,8 @@ class TmdbFilters(
             TmdbFilters(
                 options = listOf(
                     UiText.StringResource(R.string.all),
-                    UiText.StringResource(R.string.tv_shows),
-                    UiText.StringResource(R.string.movies)
+                    UiText.StringResource(R.string.tv_show),
+                    UiText.StringResource(R.string.movie)
                 )
             ),
         )

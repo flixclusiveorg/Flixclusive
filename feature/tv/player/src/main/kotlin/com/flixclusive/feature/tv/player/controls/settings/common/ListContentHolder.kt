@@ -83,7 +83,7 @@ internal fun <Type> ListContentHolder(
                 val name = when (item) {
                     is String -> item
                     is Stream -> item.name
-                    is ProviderApi -> item.name
+                    is ProviderApi -> item.provider.name!!
                     is Subtitle -> item.language
                     else -> throw ClassFormatError("Invalid content type provided.")
                 }

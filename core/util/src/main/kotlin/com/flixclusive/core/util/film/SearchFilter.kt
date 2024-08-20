@@ -15,10 +15,10 @@ enum class SearchFilter(
     ),
     MOVIE(
         type = "movie",
-        resId = UtilR.string.movies
+        resId = UtilR.string.movie
     ),
     TV_SHOW(
         type = "tv",
-        resId = UtilR.string.tv_shows
+        resId = UtilR.string.tv_show
     );
 }

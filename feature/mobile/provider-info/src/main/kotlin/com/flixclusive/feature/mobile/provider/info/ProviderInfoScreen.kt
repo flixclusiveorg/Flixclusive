@@ -56,7 +56,7 @@ internal val LABEL_SIZE_IN_DP = LABEL_SIZE.dp
 internal val SUB_LABEL_SIZE = 13.sp
 
 interface ProviderInfoNavigator : RepositorySearchScreenNavigator {
-    fun testProviders(providers: List<ProviderData>)
+    fun testProviders(providers: ArrayList<ProviderData>)
     fun seeWhatsNew(providerData: ProviderData)
     fun openProviderSettings(providerData: ProviderData)
 }
@@ -159,8 +159,7 @@ fun ProviderInfoScreen(
                             .padding(bottom = 10.dp),
                         providerInstallationStatus = viewModel.providerInstallationStatus,
                         onTestProvider = {
-                            context.showToast(context.getString(UtilR.string.coming_soon_feature))
-                            navigator.testProviders(listOf(args.providerData))
+                            navigator.testProviders(arrayListOf(args.providerData))
                         },
                         onToggleInstallationState = viewModel::toggleInstallation
                     )
@@ -223,7 +222,7 @@ private fun ProviderInfoScreenPreview() {
             ProviderInfoScreen(
                 navigator = object : ProviderInfoNavigator {
                     override fun goBack() {}
-                    override fun testProviders(providers: List<ProviderData>) {}
+                    override fun testProviders(providers: ArrayList<ProviderData>) {}
                     override fun seeWhatsNew(providerData: ProviderData) {}
                     override fun openProviderSettings(providerData: ProviderData) {}
                     override fun openRepositoryScreen(repository: Repository) {}

@@ -8,17 +8,18 @@ android {
     namespace = "com.flixclusive.model.provider"
 }
 
-configurations.all {
-    resolutionStrategy.cacheChangingModulesFor(6, TimeUnit.HOURS)
-}
+//configurations.all {
+//    resolutionStrategy.cacheChangingModulesFor(6, TimeUnit.HOURS)
+//}
 
 
 dependencies {
     api(libs.compose.runtime)
     api(libs.gson)
-    api(libs.flixclusive.gradle) {
-        isChanging = true
-    }
+    api(libs.flixclusive.gradle)
+//    {
+//        isChanging = true
+//    }
 
     implementation(projects.core.util)
     implementation(projects.model.tmdb)
