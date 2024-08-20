@@ -67,7 +67,7 @@ fun FilmTypeFilters(
                             .height(35.dp)
                     ) {
                         Text(
-                            text = stringResource(filter.resId),
+                            text = stringResource(filter.stringId),
                             style = MaterialTheme.typography.labelMedium,
                         )
                     }

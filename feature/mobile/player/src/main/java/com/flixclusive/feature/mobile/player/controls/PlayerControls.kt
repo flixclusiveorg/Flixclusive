@@ -323,7 +323,7 @@ internal fun PlayerControls(
         PlayerServersDialog(
             state = state,
             servers = servers,
-            providerApis = providerApis,
+            providers = providerApis,
             onProviderChange = { provider ->
                 onProviderChange(provider)
                 triggerSnackbar(

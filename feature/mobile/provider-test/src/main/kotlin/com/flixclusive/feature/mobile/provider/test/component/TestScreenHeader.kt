@@ -1,6 +1,12 @@
 package com.flixclusive.feature.mobile.provider.test.component
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,7 +32,8 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.domain.provider.test.TestStage
+import com.flixclusive.domain.provider.test.TestStage.Idle.Companion.isIdle
 import com.flixclusive.core.util.R as UtilR
 
 private val HeaderLabelSpacing = 50.dp
@@ -32,13 +41,8 @@ private val HeaderLabelSpacing = 50.dp
 @Composable
 internal fun TestScreenHeader(
     modifier: Modifier = Modifier,
-    providers: List<ProviderData>,
-    currentTesting: Int,
+    stage: TestStage,
 ) {
-    val currentProviderToTest = remember(currentTesting) {
-        providers.getOrNull(currentTesting)
-    }
-
     Box(
         modifier = modifier
             .heightIn(min = 280.dp)
@@ -46,18 +50,37 @@ internal fun TestScreenHeader(
         contentAlignment = Alignment.TopCenter
     ) {
         AnimatedContent(
-            targetState = currentProviderToTest != null,
+            targetState = stage.providerOnTest != null && !stage.isIdle,
             label = "",
         ) {
             when (it) {
                 true -> {
                     HeaderLabels(
                         modifier = Modifier
-                            .padding(top = 100.dp, bottom = HeaderLabelSpacing),
-                        currentProviderToTest = currentProviderToTest!!
+                            .padding(
+                                top = 100.dp,
+                                bottom = HeaderLabelSpacing
+                            ),
+                        stage = stage
                     )
                 }
-                false -> TODO()
+                false -> {
+                    Box(
+                        modifier = Modifier
+                            .padding(
+                                top = 100.dp,
+                                bottom = HeaderLabelSpacing
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(UtilR.string.provider_test_stage_idle),
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                textAlign = TextAlign.Center
+                            ),
+                        )
+                    }
+                }
             }
         }
 
@@ -68,7 +91,7 @@ internal fun TestScreenHeader(
 @Composable
 private fun HeaderLabels(
     modifier: Modifier = Modifier,
-    currentProviderToTest: ProviderData,
+    stage: TestStage,
 ) {
     val context = LocalContext.current
     val testingLabel = remember {
@@ -77,6 +100,13 @@ private fun HeaderLabels(
     val testingStageLabel = remember {
         context.getString(UtilR.string.stage).uppercase()
     }
+
+    val stageLabelColor = when (stage) {
+        is TestStage.Done -> Color(0xFF30FF1F)
+        is TestStage.Idle -> LocalContentColor.current
+        else -> MaterialTheme.colorScheme.tertiary
+    }
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(HeaderLabelSpacing),
@@ -97,12 +127,30 @@ private fun HeaderLabels(
                 ),
             )
 
-            Text(
-                text = currentProviderToTest.name,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    textAlign = TextAlign.Center
-                ),
-            )
+            if (stage.providerOnTest?.name != null) {
+                AnimatedContent(
+                    targetState = stage.providerOnTest!!.name,
+                    label = "",
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            slideInHorizontally { -it } + fadeIn() togetherWith
+                                    slideOutHorizontally { it } + fadeOut()
+                        } else {
+                            slideInHorizontally { it } + fadeIn() togetherWith
+                                    slideOutHorizontally { -it } + fadeOut()
+                        }.using(
+                            SizeTransform(clip = false)
+                        )
+                    },
+                ) { providerName ->
+                    Text(
+                        text = providerName,
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            textAlign = TextAlign.Center
+                        ),
+                    )
+                }
+            }
         }
 
         Column(
@@ -120,15 +168,30 @@ private fun HeaderLabels(
                 ),
             )
 
-            /*TODO("Make a dynamic sealed/enum class for stages")*/
-            Text(
-                text = "Done" ,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp
-                ),
-            )
-            /*TODO("Add a loading progress component here")*/
+            AnimatedContent(
+                targetState = stage,
+                label = "",
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        slideInHorizontally { -it } + fadeIn() togetherWith
+                                slideOutHorizontally { it } + fadeOut()
+                    } else {
+                        slideInHorizontally { it } + fadeIn() togetherWith
+                                slideOutHorizontally { -it } + fadeOut()
+                    }.using(
+                        SizeTransform(clip = false)
+                    )
+                },
+            ) {
+                Text(
+                    text = it.toString(context) ,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Medium,
+                        color = stageLabelColor,
+                        fontSize = 16.sp
+                    ),
+                )
+            }
         }
     }
 }
@@ -139,8 +202,7 @@ private fun ScreenHeaderPreview() {
     FlixclusiveTheme {
         Surface {
             TestScreenHeader(
-                providers = listOf(getDummyProviderData().copy(name = "CINEFLIXHAHAHAHAHAHAHAHHAHAHHAHAHAHAH")),
-                currentTesting = 0
+                stage = TestStage.Stage1(getDummyProviderData())
             )
         }
     }

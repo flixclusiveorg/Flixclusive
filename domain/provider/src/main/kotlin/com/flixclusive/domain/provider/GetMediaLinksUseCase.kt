@@ -7,6 +7,12 @@ import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.provider.MediaLinksRepository
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.tmdb.TMDBRepository
+import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.finish
+import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.sendExtractingLinksMessage
+import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.sendFetchingEpisodeMessage
+import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.sendFetchingFilmMessage
+import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.throwError
+import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.throwUnavailableError
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.DEFAULT_ERROR_MESSAGE
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.DEFAULT_WEB_VIEW_ERROR_MESSAGE
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.EMPTY_PROVIDER_MESSAGE
@@ -14,12 +20,6 @@ import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.UNAVAILABLE_E
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.getNoLinksLoadedMessage
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.isCached
 import com.flixclusive.domain.provider.util.ProviderWebViewCallbackImpl
-import com.flixclusive.domain.provider.util.StateMessageHelper.finish
-import com.flixclusive.domain.provider.util.StateMessageHelper.sendExtractingLinksMessage
-import com.flixclusive.domain.provider.util.StateMessageHelper.sendFetchingEpisodeMessage
-import com.flixclusive.domain.provider.util.StateMessageHelper.sendFetchingFilmMessage
-import com.flixclusive.domain.provider.util.StateMessageHelper.throwError
-import com.flixclusive.domain.provider.util.StateMessageHelper.throwUnavailableError
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.provider.CachedLinks
@@ -105,9 +105,9 @@ class GetMediaLinksUseCase @Inject constructor(
         onSuccess: (Episode?) -> Unit,
         onError: ((UiText) -> Unit)? = null,
     ): Flow<MediaLinkResourceState> = channelFlow {
-        val providersList = getPrioritizedProvidersList(preferredProviderName)
+        val apis = getPrioritizedProvidersList(preferredProviderName)
 
-        if (providersList.isEmpty()) {
+        if (apis.isEmpty()) {
             onError?.invoke(EMPTY_PROVIDER_MESSAGE)
             throwError(EMPTY_PROVIDER_MESSAGE)
             return@channelFlow
@@ -147,30 +147,30 @@ class GetMediaLinksUseCase @Inject constructor(
             return@channelFlow
         }
 
-        for (i in providersList.indices) {
-            val provider = providersList[i]
+        for (i in apis.indices) {
+            val api = apis[i]
 
-            val isNotTheSameFilmProvider = !film.providerName.equals(provider.name, true) && !film.isFromTmdb
+            val isNotTheSameFilmProvider = !film.providerName.equals(api.provider.name, true) && !film.isFromTmdb
             val isChangingProvider = preferredProviderName != null
 
-            if ((isChangingProvider && provider.name != preferredProviderName) || isNotTheSameFilmProvider)
+            if ((isChangingProvider && api.provider.name != preferredProviderName) || isNotTheSameFilmProvider)
                 continue
 
-            sendFetchingFilmMessage(provider = provider.name)
+            sendFetchingFilmMessage(provider = api.provider.name)
 
-            if (provider.useWebView) {
+            if (api.useWebView) {
                 storeCache(
                     filmId = film.identifier,
                     episode = episodeToUse,
                     cachedLinks = cachedLinks.copy(
                         watchId = "${film.identifier}-WEBVIEW",
-                        providerName = provider.name
+                        providerName = api.provider.name
                     )
                 )
 
                 val webView: ProviderWebView
                 val isSuccess = suspendCoroutine { continuation ->
-                    webView = provider.getWebView(
+                    webView = api.getWebView(
                         film = film,
                         episode = episodeToUse,
                         context = context,
@@ -185,7 +185,7 @@ class GetMediaLinksUseCase @Inject constructor(
                                         return@ProviderWebViewCallbackImpl
                                     }
                                     cachedLinks.streams.size == 0 -> {
-                                        val message = getNoLinksLoadedMessage(provider.name)
+                                        val message = getNoLinksLoadedMessage(api.provider.name)
                                         onError?.invoke(message)
                                         throwError(message)
                                         continuation.resume(false)
@@ -202,7 +202,7 @@ class GetMediaLinksUseCase @Inject constructor(
                     )
 
                     sendExtractingLinksMessage(
-                        provider = provider.name,
+                        provider = api.provider.name,
                         isOnWebView = true
                     )
                     runWebView(webView)
@@ -216,13 +216,13 @@ class GetMediaLinksUseCase @Inject constructor(
                 return@channelFlow
             }
 
-            val canStopLooping = i == providersList.lastIndex || isChangingProvider || !film.isFromTmdb
+            val canStopLooping = i == apis.lastIndex || isChangingProvider || !film.isFromTmdb
 
             val needsNewWatchId = watchId == null && film.isFromTmdb
             val watchIdResource = when {
                 needsNewWatchId -> mediaLinksRepository.getWatchId(
                     film = film,
-                    api = provider
+                    api = api
                 )
                 else -> Resource.Success(watchId ?: film.identifier)
             }
@@ -243,14 +243,14 @@ class GetMediaLinksUseCase @Inject constructor(
 
             val watchIdToUse = watchIdResource.data!!
 
-            sendExtractingLinksMessage(provider = provider.name)
+            sendExtractingLinksMessage(provider = api.provider.name)
             cachedLinks.streams.clear()
             
             val result = mediaLinksRepository.getLinks(
                 film = film,
                 watchId = watchIdToUse,
                 episode = episodeToUse,
-                api = provider
+                api = api
             )
 
             val hasNoStreamLinks = result.data
@@ -259,9 +259,9 @@ class GetMediaLinksUseCase @Inject constructor(
 
             when {
                 (result is Resource.Failure || hasNoStreamLinks) && canStopLooping -> {
-                    val error = result.error ?: when (cachedLinks.streams.size) {
-                        0 -> provider.name.getNoLinksMessage
-                        else -> DEFAULT_ERROR_MESSAGE
+                    val error = when (cachedLinks.streams.size) {
+                        0 -> api.provider.name.getNoLinksMessage
+                        else -> result.error ?: DEFAULT_ERROR_MESSAGE
                     }
 
                     onError?.invoke(error)
@@ -275,7 +275,7 @@ class GetMediaLinksUseCase @Inject constructor(
                         episode = episodeToUse,
                         cachedLinks = cachedLinks.copy(
                             watchId = watchIdToUse,
-                            providerName = provider.name
+                            providerName = api.provider.name
                         )
                     )
                     
@@ -395,8 +395,9 @@ class GetMediaLinksUseCase @Inject constructor(
         preferredProviderName: String?
     ): List<ProviderApi> {
         if(preferredProviderName != null) {
-            return providerApis.first()
-                .sortedByDescending { it.name.equals(preferredProviderName, true) }
+            return providerApis.first().sortedByDescending {
+                it.provider.name.equals(preferredProviderName, true)
+            }
         }
 
         return providerApis.first()

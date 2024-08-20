@@ -12,7 +12,9 @@ sealed class UiText {
      * Represents a string value.
      * @param str The string value.
      */
-    data class StringValue(val str: String) : UiText()
+    data class StringValue(val str: String) : UiText() {
+        constructor(e: Throwable?) : this(e?.message ?: "")
+    }
 
     /**
      * Represents a string resource.
@@ -44,7 +46,7 @@ sealed class UiText {
     fun asString(): String {
         return when (this) {
             is StringValue -> str
-            is StringResource -> stringResource(id = stringId, formatArgs = args)
+            is StringResource -> stringResource(id = stringId, *args)
         }
     }
 }

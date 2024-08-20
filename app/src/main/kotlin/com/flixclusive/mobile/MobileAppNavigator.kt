@@ -16,6 +16,7 @@ import com.flixclusive.feature.mobile.provider.ProvidersScreenNavigator
 import com.flixclusive.feature.mobile.provider.info.ProviderInfoNavigator
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
+import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
 import com.flixclusive.feature.mobile.provider.whats_new.destinations.ProviderWhatsNewScreenDestination
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
@@ -30,9 +31,9 @@ import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDest
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.Repository
-import com.flixclusive.model.tmdb.category.Category
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Genre
+import com.flixclusive.model.tmdb.category.Category
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.util.navGraph
 import com.flixclusive.util.navigateIfResumed
@@ -155,8 +156,10 @@ internal class MobileAppNavigator(
         )
     }
 
-    override fun testProviders(providers: List<ProviderData>) {
-        // TODO("Not yet implemented")
+    override fun testProviders(providers: ArrayList<ProviderData>) {
+        navController.navigateIfResumed(
+            ProviderTestScreenDestination(providers = providers) within destination.navGraph()
+        )
     }
 
     override fun seeWhatsNew(providerData: ProviderData) {

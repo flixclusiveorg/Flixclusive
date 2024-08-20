@@ -20,8 +20,10 @@ import okhttp3.OkHttpClient
  * */
 @Suppress("PropertyName")
 abstract class Provider {
+    open val name: String
+        get() = manifest?.name ?: throw Exception("This provider has no name.")
+
     var manifest: ProviderManifest? = null
-    val name: String? get() = manifest?.name
     var resources: Resources? = null
     var __filename: String? = null
 

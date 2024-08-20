@@ -33,13 +33,15 @@ import com.flixclusive.core.util.R as UtilR
 internal fun PlayerServersDialog(
     state: PlayerUiState,
     servers: List<Stream>,
-    providerApis: List<ProviderApi>,
+    providers: List<ProviderApi>,
     onProviderChange: (String) -> Unit,
     onVideoServerChange: (Int, String) -> Unit,
     onDismissSheet: () -> Unit,
 ) {
-    val selectedSourceIndex = remember(state.selectedProvider) {
-        providerApis.indexOfFirst { it.name.equals(state.selectedProvider, true) }
+    val selectedProviderIndex = remember(state.selectedProvider) {
+        providers.indexOfFirst {
+            it.provider.name.equals(state.selectedProvider, true)
+        }
     }
 
     BasePlayerDialog(onDismissSheet = onDismissSheet) {
@@ -53,11 +55,11 @@ internal fun PlayerServersDialog(
                 icon = painterResource(id = UiCommonR.drawable.database_icon),
                 contentDescription = stringResource(id = UtilR.string.providers),
                 label = stringResource(id = UtilR.string.providers),
-                items = providerApis,
-                selectedIndex = selectedSourceIndex,
+                items = providers,
+                selectedIndex = selectedProviderIndex,
                 itemState = state.selectedProviderState,
                 onItemClick = {
-                    onProviderChange(providerApis[it].name)
+                    onProviderChange(providers[it].provider.name!!)
                 }
             )
 
@@ -113,9 +115,9 @@ private fun PlayerServersDialogPreview() {
     FlixclusiveTheme {
         Surface {
             PlayerServersDialog(
-                state = PlayerUiState(selectedProvider = sources[0].name),
+                state = PlayerUiState(selectedProvider = sources[0].provider.name),
                 servers = servers,
-                providerApis = sources,
+                providers = sources,
                 onProviderChange = {},
                 onVideoServerChange = { _, _ ->}
             ) {}

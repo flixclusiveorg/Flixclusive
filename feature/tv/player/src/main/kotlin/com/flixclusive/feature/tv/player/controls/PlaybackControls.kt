@@ -311,7 +311,7 @@ internal fun PlaybackControls(
             ServersPanel(
                 state = state,
                 servers = servers,
-                providerApis = providerApis,
+                apis = providerApis,
                 onProviderChange = onProviderChange,
                 onServerChange = onServerChange,
                 hidePanel = { isServerPanelOpened.value = false },
