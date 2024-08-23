@@ -24,7 +24,7 @@ import com.flixclusive.core.util.R as UtilR
 internal fun ProviderTestScreenTopBar(
     modifier: Modifier = Modifier,
     onNavigationIconClick: () -> Unit,
-    onTestPreferencesClick: () -> Unit
+    onOpenSortBottomSheet: () -> Unit
 ) {
     Box(
         modifier = modifier
@@ -50,9 +50,9 @@ internal fun ProviderTestScreenTopBar(
             
             Spacer(modifier = Modifier.weight(1f))
 
-            IconButton(onClick = onTestPreferencesClick) {
+            IconButton(onClick = onOpenSortBottomSheet) {
                 Icon(
-                    painter = painterResource(UiCommonR.drawable.provider_settings),
+                    painter = painterResource(UiCommonR.drawable.filter_list),
                     contentDescription = stringResource(UtilR.string.settings)
                 )
             }

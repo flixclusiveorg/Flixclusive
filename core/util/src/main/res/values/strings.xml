@@ -206,6 +206,9 @@
     <string name="sign_up_prerelease">Use pre-release updates</string>
     <string name="skip">Skip</string>
     <string name="something_went_wrong">Something went wrong</string>
+    <string name="sort_name">Sort by name</string>
+    <string name="sort_date">Sort by date</string>
+    <string name="sort_score">Sort by score</string>
     <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
     <string name="stage">Stage</string>
     <string name="start">Start</string>

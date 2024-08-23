@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,12 +51,15 @@ import com.flixclusive.core.ui.common.CommonNoticeDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.buildImageUrl
+import com.flixclusive.domain.provider.test.ProviderTestResult
 import com.flixclusive.domain.provider.test.TestStage.Idle.Companion.isIdle
 import com.flixclusive.feature.mobile.provider.test.component.ButtonControllerDivider
 import com.flixclusive.feature.mobile.provider.test.component.ProviderTestScreenTopBar
+import com.flixclusive.feature.mobile.provider.test.component.SortBottomSheet
 import com.flixclusive.feature.mobile.provider.test.component.TestResultCard
 import com.flixclusive.feature.mobile.provider.test.component.TestScreenHeader
 import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.model.provider.id
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.util.R as UtilR
 
@@ -80,6 +84,7 @@ private fun Modifier.drawScrimOnForeground(
         }
     }
 
+@OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Destination(
     navArgsDelegate = ProviderTestScreenNavArgs::class
@@ -95,6 +100,8 @@ fun ProviderTestScreen(
     val testJobState by viewModel.testProviderUseCase.testJobState.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    var isSortingBottomSheetOpen by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val localDensity = LocalDensity.current
@@ -137,13 +144,26 @@ fun ProviderTestScreen(
         }
     }
 
+    val testResults by remember {
+        derivedStateOf {
+            viewModel.testProviderUseCase.results.sortedWith { a, b ->
+                compareTestResults(
+                    a = a,
+                    b = b,
+                    sortOption = viewModel.sortOption
+                )
+            }
+
+        }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ProviderTestScreenTopBar(
                 onNavigationIconClick = navigator::goBack,
-                onTestPreferencesClick = {},
+                onOpenSortBottomSheet = { isSortingBottomSheetOpen = true },
                 modifier = Modifier
                     .background(topBarBackgroundColor)
             )
@@ -196,12 +216,16 @@ fun ProviderTestScreen(
                 }
             }
 
-            items(viewModel.testProviderUseCase.results) { data ->
+            items(
+                items = testResults,
+                key = { it.provider.id }
+            ) { data ->
                 TestResultCard(
                     isExpanded = true,
                     testResult = data,
                     onToggle = { /*TODO*/ },
-                    showFullLog = { /*TODO*/ }
+                    showFullLog = { /*TODO*/ },
+                    modifier = Modifier.animateItemPlacement()
                 )
             }
         }
@@ -228,6 +252,32 @@ fun ProviderTestScreen(
             },
         )
     }
+
+    if (isSortingBottomSheetOpen) {
+        SortBottomSheet(
+            selectedSortOption = viewModel.sortOption,
+            onSort = { viewModel.sortOption = it },
+            onDismiss = { isSortingBottomSheetOpen = false }
+        )
+    }
+}
+
+private fun compareTestResults(
+    a: ProviderTestResult,
+    b: ProviderTestResult,
+    sortOption: SortOption
+): Int {
+    val comparison = when (sortOption.sort) {
+        SortOption.SortType.Name -> a.provider.name.compareTo(b.provider.name)
+        SortOption.SortType.Date -> a.date.time.compareTo(b.date.time)
+        SortOption.SortType.Score -> {
+            val passedCountA = a.outputs.count { it.isSuccess }
+            val passedCountB = b.outputs.count { it.isSuccess }
+            passedCountA.compareTo(passedCountB)
+        }
+    }
+
+    return if (sortOption.ascending) comparison else -comparison
 }
 
 @Preview
