@@ -72,7 +72,10 @@ internal fun FullLogDialog(
     )
 
     BasicAlertDialog(
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 180.dp)
     ) {
         Surface(
             shape = FullLogDialogShape,
@@ -80,8 +83,6 @@ internal fun FullLogDialog(
             Column(
                 verticalArrangement = Arrangement.spacedBy(3.dp),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(180.dp)
                     .padding(10.dp)
             ) {
                 Row(
@@ -155,7 +156,10 @@ internal fun FullLogDialog(
                     colors = TextFieldDefaults.colors(
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
-                    )
+                    ),
+                    modifier = Modifier
+                        .weight(weight = 1F, fill = false)
+                        .fillMaxWidth()
                 )
 
                 Button(
@@ -266,7 +270,7 @@ $fullLog
     """.trimIndent()
 }
 
-@Preview
+@Preview(device = "spec:parent=pixel_5")
 @Composable
 private fun FullLogDialogPreview() {
     val testCaseOutput = ProviderTestCaseOutput(
