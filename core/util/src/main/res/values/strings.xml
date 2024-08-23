@@ -63,6 +63,8 @@
     <string name="null_repository_url_error">No repository url has been given for this provider</string>
     <string name="pagination_error_message">Error while fetching items</string>
     <string name="player_not_initialized">Player has not been initialized</string>
+    <string name="repetitive_test_warning_description">It seems like some providers has been already tested. Skipping them is the recommended option. However, if you know what you\'re doing, you can re-test them.</string>
+    <string name="repetitive_test_warning_label">Repetitive tests</string>
     <string name="splash_default_error_message">An error occurred while initializing the app.</string>
     <string name="splash_maintenance_message">Sorry for the inconvenience. We\'re performing a quick update. Be back soon!</string>
     <string name="unknown_season">Unknown season</string>
@@ -179,6 +181,7 @@
     <string name="rating">Rating</string>
     <string name="release">RELEASE</string>
     <string name="release_player">Release player on app minimize</string>
+    <string name="re_test">Re-test</string>
     <string name="remove">Remove</string>
     <string name="remove_from_watchlist">Remove from Watchlist</string>
     <string name="remove_repositories">Remove repositories</string>
@@ -201,6 +204,7 @@
     <string name="share_button">Share button</string>
     <string name="share_the_app">Share the App!</string>
     <string name="sign_up_prerelease">Use pre-release updates</string>
+    <string name="skip">Skip</string>
     <string name="something_went_wrong">Something went wrong</string>
     <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
     <string name="stage">Stage</string>
@@ -292,6 +296,7 @@
     <string name="invalid_provider_file_dex_json_msg_format">Found extracted provider file %s in your providers folder. DO NOT EXTRACT PROVIDER ZIPS!</string>
     <string name="invalid_provider_file_directory_msg_format">Found directory %s in your providers folder. DO NOT EXTRACT PROVIDER ZIPS!</string>
     <string name="next_episode_on_format">Next episode on %1$d…</string>
+    <string name="test_providers_completed">Test results summary: %1$s</string>
     <string name="update_out_now_format">%1$s is out now</string>
     <string name="updates_out_now_provider_format">Updates for plugins are available: %1$s</string>
     <string name="providers_updated_format">The following provider(s) have been updated: %1$s</string>
