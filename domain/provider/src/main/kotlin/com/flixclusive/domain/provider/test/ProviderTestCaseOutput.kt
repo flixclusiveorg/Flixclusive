@@ -45,7 +45,7 @@ data class ProviderTestCaseOutput(
  * */
 enum class TestStatus(
     @DrawableRes val iconId: Int,
-    val color: Long? = null
+    val color: Long = -1L
 ) {
     RUNNING(iconId = -1),
     SUCCESS(

@@ -3,7 +3,8 @@ package com.flixclusive.feature.mobile.provider.test.component
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -52,8 +53,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.domain.provider.test.ProviderTestCaseOutput
 import com.flixclusive.domain.provider.test.ProviderTestResult
@@ -77,6 +80,7 @@ internal fun TestResultCard(
     onToggle: () -> Unit,
     showFullLog: (ProviderTestCaseOutput) -> Unit
 ) {
+    val clipboardManager = rememberClipboardManager()
     val maxContentHeight = when(isExpanded) {
         true -> Dp.Unspecified
         false -> 0.dp
@@ -95,8 +99,9 @@ internal fun TestResultCard(
                     min = ButtonHeight * 2,
                     max = maxContentHeight
                 ),
-            outputs = testResult.outputs,
-            showFullLog = showFullLog
+            testResult = testResult,
+            showFullLog = showFullLog,
+            onCopyFullLog = { clipboardManager.setText(it) }
         )
 
         TestResultCardHeader(
@@ -131,7 +136,7 @@ private fun TestResultCardHeader(
         ),
         contentPadding = ContentPadding,
         modifier = Modifier
-            .height(ButtonHeight)
+            .heightIn(ButtonHeight)
             .shadow(
                 elevation = 1.dp,
                 shape = CardShape,
@@ -185,13 +190,19 @@ private fun TestResultCardHeader(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TestResultCardContent(
     modifier: Modifier = Modifier,
-    outputs: List<ProviderTestCaseOutput>,
-    showFullLog: (ProviderTestCaseOutput) -> Unit
+    testResult: ProviderTestResult,
+    showFullLog: (ProviderTestCaseOutput) -> Unit,
+    onCopyFullLog: (String) -> Unit
 ) {
     val extraCutOutPadding = ButtonHeight.times(0.15F)
+    val horizontalPadding = ContentPadding.calculateLeftPadding(LocalLayoutDirection.current)
+
+    val context = LocalContext.current
+    val hapticFeedback = getFeedbackOnLongPress()
 
     ElevatedCard(
         modifier = modifier
@@ -202,30 +213,51 @@ private fun TestResultCardContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(ContentPadding)
+                .padding(vertical = ContentPadding.calculateTopPadding())
                 .padding(top = extraCutOutPadding + 4.dp)
         ) {
-            for (i in outputs.indices) {
+            for (i in testResult.outputs.indices) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (i != 0 && outputs.isNotEmpty()) {
+                    if (i != 0 && testResult.outputs.isNotEmpty()) {
                         HorizontalDivider(
                             thickness = 0.5.dp,
-                            color = LocalContentColor.current.onMediumEmphasis(0.4F)
+                            color = LocalContentColor.current.onMediumEmphasis(0.4F),
+                            modifier = Modifier.padding(horizontal = horizontalPadding)
                         )
                     }
 
-                    val output = outputs[i]
+                    val output = testResult.outputs[i]
+                    val otherLabels = getFullLogOtherLabels(
+                        provider = testResult.provider,
+                        testCaseOutput = output
+                    )
+
                     TestOutputLog(
                         output = output,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(MaterialTheme.shapes.extraSmall)
-                            .clickable {
-                                showFullLog(output)
-                            }
-                            .padding(vertical = 5.dp)
+                            .combinedClickable(
+                                enabled = output.status != TestStatus.RUNNING,
+                                onClick = { showFullLog(output) },
+                                onLongClick = {
+                                    hapticFeedback()
+                                    onCopyFullLog(
+                                        formatFullLog(
+                                            testName = output.name.asString(context),
+                                            otherLabels = otherLabels,
+                                            fullLog = output.fullLog?.asString(context)
+                                                ?: context.getString(UtilR.string.no_full_log)
+                                        )
+                                    )
+                                }
+                            )
+                            .padding(
+                                vertical = 5.dp,
+                                horizontal = horizontalPadding
+                            )
                     )
                 }
             }
@@ -239,9 +271,6 @@ private fun TestOutputLog(
     output: ProviderTestCaseOutput,
 ) {
     val context = LocalContext.current
-    val iconTint = if (output.status.color != null) {
-        Color(output.status.color!!)
-    } else MaterialTheme.colorScheme.primary
 
     val shortLog = remember(output.shortLog) {
         if (output.status != TestStatus.RUNNING) {
@@ -270,7 +299,7 @@ private fun TestOutputLog(
                     Icon(
                         painter = painterResource(it.iconId),
                         contentDescription = it.toString(),
-                        tint = iconTint,
+                        tint = Color(output.status.color),
                         modifier = Modifier.size(18.dp)
                     )
                 }

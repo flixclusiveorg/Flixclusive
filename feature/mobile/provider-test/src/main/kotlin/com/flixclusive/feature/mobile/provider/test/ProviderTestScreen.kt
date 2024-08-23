@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -39,7 +40,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastSumBy
@@ -47,14 +47,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.CommonNoticeDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.buildImageUrl
+import com.flixclusive.domain.provider.test.ProviderTestCaseOutput
 import com.flixclusive.domain.provider.test.ProviderTestResult
 import com.flixclusive.domain.provider.test.TestStage.Idle.Companion.isIdle
 import com.flixclusive.feature.mobile.provider.test.component.ButtonControllerDivider
+import com.flixclusive.feature.mobile.provider.test.component.FullLogDialog
 import com.flixclusive.feature.mobile.provider.test.component.ProviderTestScreenTopBar
+import com.flixclusive.feature.mobile.provider.test.component.RepetitiveTestNoticeDialog
 import com.flixclusive.feature.mobile.provider.test.component.SortBottomSheet
 import com.flixclusive.feature.mobile.provider.test.component.TestResultCard
 import com.flixclusive.feature.mobile.provider.test.component.TestScreenHeader
@@ -101,7 +103,8 @@ fun ProviderTestScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var isSortingBottomSheetOpen by remember { mutableStateOf(false) }
+    var isSortingBottomSheetOpen by rememberSaveable { mutableStateOf(false) }
+    var testCaseOutputToShow by remember { mutableStateOf<Pair<ProviderData, ProviderTestCaseOutput>?>(null) }
 
     val context = LocalContext.current
     val localDensity = LocalDensity.current
@@ -153,7 +156,6 @@ fun ProviderTestScreen(
                     sortOption = viewModel.sortOption
                 )
             }
-
         }
     }
 
@@ -224,7 +226,7 @@ fun ProviderTestScreen(
                     isExpanded = viewModel.isExpanded(id = data.provider.id),
                     testResult = data,
                     onToggle = { viewModel.toggleCard(id = data.provider.id) },
-                    showFullLog = { /*TODO*/ },
+                    showFullLog = { testCaseOutputToShow = data.provider to it },
                     modifier = Modifier.animateItemPlacement()
                 )
             }
@@ -232,24 +234,20 @@ fun ProviderTestScreen(
     }
 
     if (viewModel.showRepetitiveTestWarning) {
-        CommonNoticeDialog(
-            label = stringResource(id = UtilR.string.repetitive_test_warning_label),
-            description = stringResource(id = UtilR.string.repetitive_test_warning_description),
-            confirmButtonLabel = stringResource(id = UtilR.string.skip),
-            dismissButtonLabel = stringResource(id = UtilR.string.re_test),
-            dismissOnConfirm = false,
-            onConfirm = {
+        RepetitiveTestNoticeDialog(
+            onSkip = {
                 viewModel.startTests(
                     providers = args.providers,
                     skipTestedProviders = true
                 )
             },
-            onDismiss = {
+            onTestAgain = {
                 viewModel.startTests(
                     providers = args.providers,
                     skipTestedProviders = false
                 )
             },
+            onDismiss = viewModel::hideRepetitiveTestWarning
         )
     }
 
@@ -258,6 +256,15 @@ fun ProviderTestScreen(
             selectedSortOption = viewModel.sortOption,
             onSort = { viewModel.sortOption = it },
             onDismiss = { isSortingBottomSheetOpen = false }
+        )
+    }
+
+    if (testCaseOutputToShow != null) {
+        val (provider, testCaseOutput) = testCaseOutputToShow!!
+        FullLogDialog(
+            testCaseOutput = testCaseOutput,
+            provider = provider,
+            onDismiss = { testCaseOutputToShow = null }
         )
     }
 }
