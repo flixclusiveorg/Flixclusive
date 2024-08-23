@@ -47,7 +47,7 @@ enum class TestStatus(
     @DrawableRes val iconId: Int,
     val color: Long? = null
 ) {
-    RUNNING(iconId = UiCommonR.drawable.vital_sign),
+    RUNNING(iconId = -1),
     SUCCESS(
         iconId = UiCommonR.drawable.check,
         color = 0xFF30FF1F
