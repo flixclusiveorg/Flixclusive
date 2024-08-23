@@ -55,6 +55,10 @@ class ProviderTestScreenViewModel @Inject constructor(
         testResultCardsIsExpandedMap[id] = !(testResultCardsIsExpandedMap[id] ?: false)
     }
 
+    fun hideRepetitiveTestWarning() {
+        showRepetitiveTestWarning = false
+    }
+
     fun startTests(
         providers: ArrayList<ProviderData>,
         skipTestedProviders: Boolean = false

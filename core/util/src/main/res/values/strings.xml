@@ -154,10 +154,11 @@
     <string name="more_like_this">More like this</string>
     <string name="next_episode">Next episode</string>
     <string name="no_cache_limit_label">No cache limit (plz dont)</string>
+    <string name="no_full_log">No full logs provided</string>
     <string name="no_ratings">No ratings</string>
     <string name="no_release_date">"No release date"</string>
     <string name="no_runtime">No runtime</string>
-    <string name="no_short_log">View full logs</string>
+    <string name="no_short_log">No short log provided</string>
     <string name="none_label">None</string>
     <string name="not_now_label">Not now</string>
     <string name="notify_about_new_app_updates">Notify about new app updates</string>
@@ -251,6 +252,10 @@
     <string name="season_number_formatter">Season %1$d</string>
     <string name="season_runtime_formatter">%1$d Season</string>
     <string name="seek_seconds_format">%1$s seconds</string>
+    <string name="full_log_provider_used_format">Provider: </string>
+    <string name="full_log_short_log_used_format">Short log: </string>
+    <string name="full_log_version_used_format">Version (code): </string>
+    <string name="full_log_time_taken_format">Time taken: </string>
 
     <!--  State messages  -->
     <string name="all_providers_installed">All providers have been installed!</string>
@@ -259,6 +264,7 @@
     <string name="clear_search_history_notice_msg">Are you sure you want to clear all your search history?</string>
     <string name="coming_soon_feature">This feature is coming soon!</string>
     <string name="copied_link">Link has been copied</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="copy_stack_trace_message">You could open a github issue and paste this stack trace.</string>
     <string name="default_description_msg">No description given.</string>
     <string name="default_update_info_message">No additional update information provided.</string>
@@ -305,8 +311,6 @@
     <string name="providers_updated_format">The following provider(s) have been updated: %1$s</string>
 
     <!--  Content descriptions  -->
-
-    <!--  Player snackbar messages  -->
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>
     <string name="add_500ms_content_description">Add 500ms on subtitle delay</string>
     <string name="add_to_watchlist_button">Add to watchlist button</string>
@@ -322,6 +326,7 @@
     <string name="clear_cache_content_desc">Clear cache</string>
     <string name="clear_text_button">Clear text button</string>
     <string name="copy_button">Copy to clipboard button</string>
+    <string name="copy_full_logs_button">Copy full logs to clipboard</string>
     <string name="decoder_priority_description">Preferred decoder for improved playback compatibility. May fix issues with high-quality streams and no-audio streams on devices with limited hardware support.</string>
     <string name="delete_search_history_item_message">Are you sure you want to delete this search history item?</string>
     <string name="dns_label">Configure this if your ISP blocks you from watching.</string>
