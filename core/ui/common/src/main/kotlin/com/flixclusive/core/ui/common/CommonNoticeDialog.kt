@@ -35,6 +35,7 @@ fun CommonNoticeDialog(
     description: String,
     confirmButtonLabel: String = stringResource(id = UtilR.string.ok),
     dismissButtonLabel: String = stringResource(id = UtilR.string.cancel),
+    dismissOnConfirm: Boolean = true,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -88,7 +89,9 @@ fun CommonNoticeDialog(
                     Button(
                         onClick = {
                             onConfirm()
-                            onDismiss()
+
+                            if (dismissOnConfirm)
+                                onDismiss()
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),

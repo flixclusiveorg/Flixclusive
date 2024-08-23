@@ -213,6 +213,7 @@ fun ProviderTestScreen(
             description = stringResource(id = UtilR.string.repetitive_test_warning_description),
             confirmButtonLabel = stringResource(id = UtilR.string.skip),
             dismissButtonLabel = stringResource(id = UtilR.string.re_test),
+            dismissOnConfirm = false,
             onConfirm = {
                 viewModel.startTests(
                     providers = args.providers,
