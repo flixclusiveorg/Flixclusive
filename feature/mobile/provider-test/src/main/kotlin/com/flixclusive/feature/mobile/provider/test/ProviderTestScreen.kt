@@ -6,9 +6,9 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -150,9 +150,9 @@ fun ProviderTestScreen(
         }
     ) {
         LazyColumn(
-            modifier = Modifier
-                .padding(horizontal = 10.dp),
-            state = listState
+            modifier = Modifier.padding(horizontal = 10.dp),
+            state = listState,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item {
                 Box {
@@ -194,10 +194,6 @@ fun ProviderTestScreen(
                         )
                     }
                 }
-            }
-
-            item {
-                Spacer(modifier = Modifier.padding(10.dp))
             }
 
             items(viewModel.testProviderUseCase.results) { data ->
