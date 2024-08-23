@@ -51,6 +51,7 @@ class ProviderTestScreenViewModel @Inject constructor(
             }
         }
 
+        showRepetitiveTestWarning = false
         testProviderUseCase(
             providers = providers
                 .apply {
@@ -63,8 +64,6 @@ class ProviderTestScreenViewModel @Inject constructor(
                     }
                 }
         )
-
-        showRepetitiveTestWarning = false
     }
 
     private fun ProviderData.hasAlreadyBeenTested(): Boolean {
