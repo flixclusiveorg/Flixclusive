@@ -220,13 +220,13 @@ fun ProviderTestScreen(
             onConfirm = {
                 viewModel.startTests(
                     providers = args.providers,
-                    skipTestedProviders = false
+                    skipTestedProviders = true
                 )
             },
             onDismiss = {
                 viewModel.startTests(
                     providers = args.providers,
-                    skipTestedProviders = true
+                    skipTestedProviders = false
                 )
             },
         )
