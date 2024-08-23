@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -51,19 +52,16 @@ class ProviderTestScreenViewModel @Inject constructor(
             }
         }
 
-        showRepetitiveTestWarning = false
-        testProviderUseCase(
-            providers = providers
-                .apply {
-                    if (skipTestedProviders) {
-                        fastForEach {
-                            if (it.hasAlreadyBeenTested()) {
-                                remove(it)
-                            }
-                        }
-                    }
+        val providersToTest = providers.apply {
+            if (skipTestedProviders) {
+                fastFilter { provider ->
+                    !provider.hasAlreadyBeenTested()
                 }
-        )
+            }
+        }
+
+        showRepetitiveTestWarning = false
+        testProviderUseCase(providers = providersToTest)
     }
 
     private fun ProviderData.hasAlreadyBeenTested(): Boolean {
