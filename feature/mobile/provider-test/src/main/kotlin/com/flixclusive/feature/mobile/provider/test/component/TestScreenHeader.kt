@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.provider.test.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LocalContentColor
@@ -45,32 +47,32 @@ internal fun TestScreenHeader(
 ) {
     Box(
         modifier = modifier
-            .heightIn(min = 280.dp)
+            .heightIn(min = 295.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.TopCenter
     ) {
         AnimatedContent(
             targetState = stage.providerOnTest != null && !stage.isIdle,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(220, delayMillis = 90)) togetherWith
+                        fadeOut(animationSpec = tween(90))
+            },
             label = "",
         ) {
             when (it) {
                 true -> {
                     HeaderLabels(
-                        modifier = Modifier
-                            .padding(
-                                top = 100.dp,
-                                bottom = HeaderLabelSpacing
-                            ),
+                        modifier = Modifier.padding(
+                            top = 100.dp,
+                            bottom = HeaderLabelSpacing
+                        ),
                         stage = stage
                     )
                 }
+
                 false -> {
                     Box(
-                        modifier = Modifier
-                            .padding(
-                                top = 100.dp,
-                                bottom = HeaderLabelSpacing
-                            ),
+                        modifier = Modifier.height(295.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -83,8 +85,6 @@ internal fun TestScreenHeader(
                 }
             }
         }
-
-
     }
 }
 
@@ -184,7 +184,7 @@ private fun HeaderLabels(
                 },
             ) {
                 Text(
-                    text = it.toString(context) ,
+                    text = it.toString(context),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Medium,
                         color = stageLabelColor,
@@ -203,6 +203,18 @@ private fun ScreenHeaderPreview() {
         Surface {
             TestScreenHeader(
                 stage = TestStage.Stage1(getDummyProviderData())
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ScreenHeaderPreview1() {
+    FlixclusiveTheme {
+        Surface {
+            TestScreenHeader(
+                stage = TestStage.Idle(null)
             )
         }
     }

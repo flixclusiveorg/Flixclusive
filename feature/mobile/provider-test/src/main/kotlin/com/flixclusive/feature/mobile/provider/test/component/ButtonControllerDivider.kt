@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -149,9 +148,13 @@ private fun IdleStateButtons(
     Box(
         modifier = modifier,
     ) {
-        ElevatedButton(
+        OutlinedButton(
             onClick = onStart,
             shape = MaterialTheme.shapes.extraSmall,
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05F),
+            ),
+            border = getBorderStroke(),
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth(0.5F)
