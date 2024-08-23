@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
-import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.flixclusive.data.provider.ProviderManager
@@ -43,21 +42,20 @@ class ProviderTestScreenViewModel @Inject constructor(
         providers: ArrayList<ProviderData>,
         skipTestedProviders: Boolean = false
     ) {
-        if (!showRepetitiveTestWarning) {
-            providers.fastForEach {
-                if (it.hasAlreadyBeenTested()) {
-                    showRepetitiveTestWarning = true
-                    return@startTests
-                }
-            }
+        if (
+            !showRepetitiveTestWarning
+            && providers.fastAny { it.hasAlreadyBeenTested() }
+        ) {
+            showRepetitiveTestWarning = true
+            return
         }
 
-        val providersToTest = providers.apply {
+        val providersToTest = providers.let {
             if (skipTestedProviders) {
-                fastFilter { provider ->
+                return@let it.fastFilter { provider ->
                     !provider.hasAlreadyBeenTested()
-                }
-            }
+                }.toCollection(ArrayList())
+            } else it
         }
 
         showRepetitiveTestWarning = false
