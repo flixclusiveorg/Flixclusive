@@ -97,6 +97,7 @@ class TestProviderUseCase @Inject constructor(
         testJob?.cancel()
         testJob = null
         _testJobState.value = TestJobState.IDLE
+        _testStage.update { TestStage.Idle(providerOnTest = null) }
     }
 
     private suspend fun runTestCases(
