@@ -49,13 +49,12 @@ class TestProviderUseCase @Inject constructor(
 
             for (i in providers.indices) {
                 val provider = providers[i]
-                    .addTestCountSuffix()
 
                 val api = providerApiRepository.apiMap[provider.name]
                     ?: continue
                 
                 val testOutputs = ProviderTestResult(
-                    provider = provider
+                    provider = provider.addTestCountSuffix()
                 )
 
                 results.add(testOutputs)
