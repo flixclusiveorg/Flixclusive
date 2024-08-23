@@ -5,7 +5,7 @@ import com.flixclusive.gradle.entities.ProviderData
 /**
  *
  * Gets the unique identifier for the provider as
- * name alone is note reliable enough to determine
+ * name alone is not reliable enough to determine
  * the uniqueness of a provider.
  *
  * */
