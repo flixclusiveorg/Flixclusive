@@ -143,12 +143,17 @@ class TestProviderUseCase @Inject constructor(
 
     private fun ProviderData.addTestCountSuffix(): ProviderData {
         val testCount = results.count {
-            it.provider.id == id
+            it.provider.id.removeCountSuffix() == id
         }
 
         if (testCount == 0)
             return this
 
         return copy(name = "$name ($testCount)")
+    }
+
+    private fun String.removeCountSuffix(): String {
+        val regex = """\s*\(\d+\)""".toRegex() // Matches " (number)" at the end of the string
+        return replace(regex, "")
     }
 }
