@@ -133,11 +133,11 @@ private fun HeaderLabels(
                     label = "",
                     transitionSpec = {
                         if (targetState > initialState) {
-                            slideInHorizontally { -it } + fadeIn() togetherWith
-                                    slideOutHorizontally { it } + fadeOut()
+                            fadeIn() + slideInHorizontally { it } togetherWith
+                                    fadeOut() + slideOutHorizontally { -it }
                         } else {
-                            slideInHorizontally { it } + fadeIn() togetherWith
-                                    slideOutHorizontally { -it } + fadeOut()
+                            fadeIn() + slideInHorizontally { -it } + fadeIn() togetherWith
+                                    fadeOut() + slideOutHorizontally { it }
                         }.using(
                             SizeTransform(clip = false)
                         )
@@ -173,11 +173,11 @@ private fun HeaderLabels(
                 label = "",
                 transitionSpec = {
                     if (targetState > initialState) {
-                        slideInHorizontally { -it } + fadeIn() togetherWith
-                                slideOutHorizontally { it } + fadeOut()
+                        fadeIn() + slideInHorizontally { it } togetherWith
+                                fadeOut() + slideOutHorizontally { -it }
                     } else {
-                        slideInHorizontally { it } + fadeIn() togetherWith
-                                slideOutHorizontally { -it } + fadeOut()
+                        fadeIn() + slideInHorizontally { -it } + fadeIn() togetherWith
+                                fadeOut() + slideOutHorizontally { it }
                     }.using(
                         SizeTransform(clip = false)
                     )
