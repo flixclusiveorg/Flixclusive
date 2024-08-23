@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.provider.test
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastAny
@@ -26,9 +27,11 @@ class ProviderTestScreenViewModel @Inject constructor(
     var showRepetitiveTestWarning by mutableStateOf(false)
         private set
 
-    internal var sortOption by mutableStateOf(
-        SortOption(sort = SortOption.SortType.Date)
-    )
+    private val testResultCardsIsExpandedMap
+        = mutableStateMapOf<String, Boolean>()
+
+    internal var sortOption
+        by mutableStateOf(SortOption(sort = SortOption.SortType.Date))
 
     fun stopTests() {
         testProviderUseCase.stop()
@@ -40,6 +43,16 @@ class ProviderTestScreenViewModel @Inject constructor(
 
     fun resumeTests() {
         testProviderUseCase.resume()
+    }
+
+    fun isExpanded(id: String): Boolean {
+        return testResultCardsIsExpandedMap.getOrPut(id) {
+            false
+        }
+    }
+
+    fun toggleCard(id: String) {
+        testResultCardsIsExpandedMap[id] = !(testResultCardsIsExpandedMap[id] ?: false)
     }
 
     fun startTests(
