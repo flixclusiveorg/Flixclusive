@@ -23,6 +23,7 @@ import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -250,12 +251,28 @@ private fun TestOutputLog(
         horizontalArrangement = Arrangement.spacedBy(3.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(output.status.iconId),
-            contentDescription = output.status.toString(),
-            tint = iconTint,
-            modifier = Modifier.size(18.dp)
-        )
+        AnimatedContent(
+            targetState = output.status,
+            label = ""
+        ) {
+            when (it) {
+                TestStatus.RUNNING -> {
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+                else -> {
+                    Icon(
+                        painter = painterResource(it.iconId),
+                        contentDescription = it.toString(),
+                        tint = iconTint,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+        }
 
         Text(
             text = output.name.asString(),
@@ -268,7 +285,7 @@ private fun TestOutputLog(
         )
 
         Text(
-            modifier = Modifier.weight(1F),
+            modifier = Modifier.weight(0.8F),
             text = shortLog,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
