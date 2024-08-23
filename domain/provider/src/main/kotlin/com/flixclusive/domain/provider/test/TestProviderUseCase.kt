@@ -9,6 +9,7 @@ import com.flixclusive.domain.provider.test.ProviderTestCases.ProviderTestCase
 import com.flixclusive.domain.provider.test.ProviderTestCases.methodTestCases
 import com.flixclusive.domain.provider.test.ProviderTestCases.propertyTestCases
 import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.model.provider.id
 import com.flixclusive.provider.ProviderApi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -48,10 +49,14 @@ class TestProviderUseCase @Inject constructor(
 
             for (i in providers.indices) {
                 val provider = providers[i]
+                    .addTestCountSuffix()
+
                 val api = providerApiRepository.apiMap[provider.name]
                     ?: continue
                 
-                val testOutputs = ProviderTestResult(provider = provider)
+                val testOutputs = ProviderTestResult(
+                    provider = provider
+                )
 
                 results.add(testOutputs)
 
@@ -135,5 +140,16 @@ class TestProviderUseCase @Inject constructor(
 
             delay(TEST_DELAY)
         }
+    }
+
+    private fun ProviderData.addTestCountSuffix(): ProviderData {
+        val testCount = results.count {
+            it.provider.id == id
+        }
+
+        if (testCount == 0)
+            return this
+
+        return copy(name = "$name ($testCount)")
     }
 }

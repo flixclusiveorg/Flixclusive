@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.provider.test
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
@@ -16,8 +17,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -32,21 +38,26 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastSumBy
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.CommonNoticeDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.buildImageUrl
+import com.flixclusive.domain.provider.test.TestStage.Idle.Companion.isIdle
 import com.flixclusive.feature.mobile.provider.test.component.ButtonControllerDivider
 import com.flixclusive.feature.mobile.provider.test.component.ProviderTestScreenTopBar
 import com.flixclusive.feature.mobile.provider.test.component.TestResultCard
 import com.flixclusive.feature.mobile.provider.test.component.TestScreenHeader
 import com.flixclusive.gradle.entities.ProviderData
 import com.ramcosta.composedestinations.annotation.Destination
+import com.flixclusive.core.util.R as UtilR
 
 private const val THE_MATRIX_NEO_BACKDROP = "/wkzeNsJjQBYCzkbiI2jxWnlrwR6.jpg"
 
@@ -69,6 +80,7 @@ private fun Modifier.drawScrimOnForeground(
         }
     }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Destination(
     navArgsDelegate = ProviderTestScreenNavArgs::class
 )
@@ -81,6 +93,8 @@ fun ProviderTestScreen(
 
     val stage by viewModel.testProviderUseCase.testStage.collectAsStateWithLifecycle()
     val testJobState by viewModel.testProviderUseCase.testJobState.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val context = LocalContext.current
     val localDensity = LocalDensity.current
@@ -101,9 +115,40 @@ fun ProviderTestScreen(
         label = ""
     )
 
-    Box(
+    LaunchedEffect(stage, viewModel.testProviderUseCase.results.size) {
+        val resultsAreNotEmpty = viewModel.testProviderUseCase.results.isNotEmpty()
+        if (stage.isIdle && resultsAreNotEmpty) {
+            val totalTestsPerformed
+                = viewModel.testProviderUseCase.results
+                    .fastSumBy { it.outputs.size }
+            val totalTestsPassed
+                = viewModel.testProviderUseCase.results
+                    .fastSumBy { result ->
+                        result.outputs.count { it.isSuccess }
+                    }
+
+            snackbarHostState.showSnackbar(
+                message = context.getString(UtilR.string.test_providers_completed, "$totalTestsPassed/$totalTestsPerformed"),
+                duration = SnackbarDuration.Indefinite,
+                withDismissAction = true
+            )
+        } else if (!stage.isIdle) {
+            snackbarHostState.currentSnackbarData?.dismiss()
+        }
+    }
+
+    Scaffold(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxSize(),
+        topBar = {
+            ProviderTestScreenTopBar(
+                onNavigationIconClick = navigator::goBack,
+                onTestPreferencesClick = {},
+                modifier = Modifier
+                    .background(topBarBackgroundColor)
+            )
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) {
         LazyColumn(
             modifier = Modifier
@@ -165,12 +210,26 @@ fun ProviderTestScreen(
                 )
             }
         }
+    }
 
-        ProviderTestScreenTopBar(
-            onNavigationIconClick = navigator::goBack,
-            onTestPreferencesClick = {},
-            modifier = Modifier
-                .background(topBarBackgroundColor)
+    if (viewModel.showRepetitiveTestWarning) {
+        CommonNoticeDialog(
+            label = stringResource(id = UtilR.string.repetitive_test_warning_label),
+            description = stringResource(id = UtilR.string.repetitive_test_warning_description),
+            confirmButtonLabel = stringResource(id = UtilR.string.skip),
+            dismissButtonLabel = stringResource(id = UtilR.string.re_test),
+            onConfirm = {
+                viewModel.startTests(
+                    providers = args.providers,
+                    skipTestedProviders = false
+                )
+            },
+            onDismiss = {
+                viewModel.startTests(
+                    providers = args.providers,
+                    skipTestedProviders = true
+                )
+            },
         )
     }
 }

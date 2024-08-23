@@ -1,10 +1,16 @@
 package com.flixclusive.feature.mobile.provider.test
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.domain.provider.test.TestProviderUseCase
 import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.model.provider.id
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -16,6 +22,9 @@ class ProviderTestScreenViewModel @Inject constructor(
 ) : ViewModel() {
 //    val providerData = savedStateHandle.navArgs<ProviderTestScreenNavArgs>().providers
 //    val providerInstance = providerManager.providers[providerData.name]
+
+    var showRepetitiveTestWarning by mutableStateOf(false)
+        private set
 
     fun stopTests() {
         testProviderUseCase.stop()
@@ -30,8 +39,37 @@ class ProviderTestScreenViewModel @Inject constructor(
     }
 
     fun startTests(
-        providers: ArrayList<ProviderData>
+        providers: ArrayList<ProviderData>,
+        skipTestedProviders: Boolean = false
     ) {
-        testProviderUseCase(providers = providers)
+        if (!showRepetitiveTestWarning) {
+            providers.fastForEach {
+                if (it.hasAlreadyBeenTested()) {
+                    showRepetitiveTestWarning = true
+                    return@startTests
+                }
+            }
+        }
+
+        testProviderUseCase(
+            providers = providers
+                .apply {
+                    if (skipTestedProviders) {
+                        fastForEach {
+                            if (it.hasAlreadyBeenTested()) {
+                                remove(it)
+                            }
+                        }
+                    }
+                }
+        )
+
+        showRepetitiveTestWarning = false
+    }
+
+    private fun ProviderData.hasAlreadyBeenTested(): Boolean {
+        return testProviderUseCase.results.fastAny {
+            it.provider.id == id
+        }
     }
 }

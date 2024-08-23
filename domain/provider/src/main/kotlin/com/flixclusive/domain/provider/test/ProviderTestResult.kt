@@ -19,8 +19,7 @@ data class ProviderTestResult(
 
     val score: String
         get() {
-            val successTests = outputs
-                .count { it.status == TestStatus.SUCCESS }
+            val successTests = outputs.count { it.isSuccess }
             val totalTests = outputs.size
 
             return "$successTests/$totalTests"
