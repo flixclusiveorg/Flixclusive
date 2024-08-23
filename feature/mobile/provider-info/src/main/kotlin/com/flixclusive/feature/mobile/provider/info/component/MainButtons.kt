@@ -51,6 +51,7 @@ internal fun MainButtons(
             onClick = onTestProvider,
             enabled = providerInstallationStatus == ProviderInstallationStatus.Installed,
             iconId = UiCommonR.drawable.test,
+            emphasize = providerInstallationStatus == ProviderInstallationStatus.Installed,
             label = stringResource(id = UtilR.string.test_provider),
             contentPadding = PaddingValues(vertical = 5.dp),
             modifier = Modifier.weight(1F)
@@ -60,7 +61,7 @@ internal fun MainButtons(
             onClick = onToggleInstallationState,
             iconId = iconForInstallationStatus,
             label = stringResource(id = labelForInstallationStatus),
-            emphasize = true,
+            emphasize = providerInstallationStatus == ProviderInstallationStatus.NotInstalled,
             isLoading = providerInstallationStatus == ProviderInstallationStatus.Installing,
             contentPadding = PaddingValues(vertical = 5.dp),
             indicatorSize = 16.dp,
