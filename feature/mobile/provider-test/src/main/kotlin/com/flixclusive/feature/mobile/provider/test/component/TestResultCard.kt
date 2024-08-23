@@ -71,6 +71,7 @@ private val ContentPadding = PaddingValues(
 
 @Composable
 internal fun TestResultCard(
+    modifier: Modifier = Modifier,
     testResult: ProviderTestResult,
     isExpanded: Boolean,
     onToggle: () -> Unit,
@@ -81,7 +82,10 @@ internal fun TestResultCard(
         false -> 0.dp
     }
 
-    Box(contentAlignment = Alignment.TopCenter) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.TopCenter
+    ) {
         TestResultCardContent(
             modifier = Modifier
                 .animateContentSize(

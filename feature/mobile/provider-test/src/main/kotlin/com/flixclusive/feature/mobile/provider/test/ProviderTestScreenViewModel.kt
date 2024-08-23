@@ -26,6 +26,10 @@ class ProviderTestScreenViewModel @Inject constructor(
     var showRepetitiveTestWarning by mutableStateOf(false)
         private set
 
+    internal var sortOption by mutableStateOf(
+        SortOption(sort = SortOption.SortType.Date)
+    )
+
     fun stopTests() {
         testProviderUseCase.stop()
     }
