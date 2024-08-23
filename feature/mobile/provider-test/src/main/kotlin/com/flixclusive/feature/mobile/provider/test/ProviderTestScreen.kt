@@ -221,9 +221,9 @@ fun ProviderTestScreen(
                 key = { it.provider.id }
             ) { data ->
                 TestResultCard(
-                    isExpanded = true,
+                    isExpanded = viewModel.isExpanded(id = data.provider.id),
                     testResult = data,
-                    onToggle = { /*TODO*/ },
+                    onToggle = { viewModel.toggleCard(id = data.provider.id) },
                     showFullLog = { /*TODO*/ },
                     modifier = Modifier.animateItemPlacement()
                 )
