@@ -412,7 +412,7 @@
     <string name="ptest_error_get_search_filters">Failed to get search filters</string>
     <string name="ptest_error_get_testable_film">Failed to get testable film</string>
     <string name="ptest_error_method_get_catalog_items">Failed to load catalog item %1$s</string>
-    <string name="ptest_error_method_get_film_details">Failed to detailed film for %1$s</string>
+    <string name="ptest_error_method_get_film_details">Failed to get detailed film for %1$s</string>
     <string name="ptest_error_method_get_links">Failed to fetch links for %1$s</string>
     <string name="ptest_error_not_implemented">This has not been implemented.</string>
     <string name="ptest_get_catalog_list">Get catalog list</string>
