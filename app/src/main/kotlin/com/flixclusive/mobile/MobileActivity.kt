@@ -66,6 +66,7 @@ class MobileActivity : ComponentActivity() {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             && viewModel.uiState.value.isOnPlayerScreen
             && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+            && viewModel.isPiPModeEnabled
         ) {
             // Force pip mode for player
             enterPictureInPictureMode(
