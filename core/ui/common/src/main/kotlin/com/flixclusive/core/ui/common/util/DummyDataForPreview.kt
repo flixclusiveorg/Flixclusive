@@ -45,7 +45,7 @@ object DummyDataForPreview {
     @Composable
     fun getDummyProviderApi() = remember {
         val provider = object: Provider() {
-            override fun getApi(context: Context?, client: OkHttpClient): ProviderApi {
+            override fun getApi(context: Context, client: OkHttpClient): ProviderApi {
                 TODO("Not yet implemented")
             }
         }
