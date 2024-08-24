@@ -253,9 +253,10 @@ class GetMediaLinksUseCase @Inject constructor(
 
             when {
                 (result is Resource.Failure || hasNoStreamLinks) && canStopLooping -> {
-                    val error = when (cachedLinks.streams.size) {
-                        0 -> api.provider.name.getNoLinksMessage
-                        else -> result.error ?: DEFAULT_ERROR_MESSAGE
+                    val error = when {
+                        result.error != null -> result.error!!
+                        cachedLinks.streams.isEmpty() -> api.provider.name.getNoLinksMessage
+                        else -> DEFAULT_ERROR_MESSAGE
                     }
 
                     onError?.invoke(error)

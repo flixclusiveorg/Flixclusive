@@ -34,8 +34,8 @@ fun Throwable.toNetworkException(): Resource.Failure {
             Resource.Failure(errorMessage)
         }
         else -> {
-            errorLog(defaultMessage)
-            Resource.Failure(defaultMessage)
+            errorLog(stackTraceToString())
+            Resource.Failure(this)
         }
     }.also {
         errorLog(stackTraceToString())
