@@ -112,6 +112,7 @@
     <string name="clear_cache_links">Clear cached links</string>
     <string name="clear_search_history">Clear search history</string>
     <string name="close_label">Close</string>
+    <string name="cloudfare_interceptor">Cloudfare Interceptor</string>
     <string name="collections">Collections</string>
     <string name="coming_soon">Coming Soon</string>
     <string name="content">Content</string>

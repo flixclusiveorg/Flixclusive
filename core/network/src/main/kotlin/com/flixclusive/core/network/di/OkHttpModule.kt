@@ -30,8 +30,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object OkHttpModule {
-
+internal object OkHttpModule {
     @Provides
     @Singleton
     internal fun provideClient(
@@ -43,7 +42,11 @@ object OkHttpModule {
             errorLog(throwable.localizedMessage ?: "Unknown error trying to support TLS 1.3")
         }
 
-        val dns = runBlocking { appSettingsManager.appSettings.data.map { it.dns }.first() }
+        val dns = runBlocking {
+            appSettingsManager.appSettings.data
+                .map { it.dns }
+                .first()
+        }
 
         return OkHttpClient.Builder()
             .followRedirects(true)

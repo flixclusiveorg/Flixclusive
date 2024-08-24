@@ -17,9 +17,9 @@ import java.net.URL
 import kotlin.random.Random
 
 
-const val USER_AGENT = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.3) Gecko/20090912 Gentoo Firefox/3.5.3 FirePHP/0.3"
+const val USER_AGENT = "Mozilla/5.0 (Linux; Android 13; SM-A145M Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/478.0.0.41.86;]"
 
-private fun getRandomUserAgent(): String {
+fun getRandomUserAgent(): String {
     val osPlatforms = listOf(
         "Windows NT ${Random.nextInt(6, 11)}.0; Win64; x64",
         "Macintosh; Intel Mac OS X 10_${Random.nextInt(8, 16)}_${Random.nextInt(0, 8)}",
@@ -29,8 +29,8 @@ private fun getRandomUserAgent(): String {
     )
 
     val browsers = listOf(
-        "Chrome/${Random.nextInt(80, 100)}.0.${Random.nextInt(4000, 5000)}.${Random.nextInt(100, 200)}",
-        "Firefox/${Random.nextInt(70, 90)}.0",
+        "Chrome/${Random.nextInt(120, 127)}.0.${Random.nextInt(4000, 5000)}.${Random.nextInt(100, 200)}",
+        "Firefox/${Random.nextInt(120, 129)}.0",
         "Safari/605.1.${Random.nextInt(10, 30)}",
         "Edge/${Random.nextInt(16, 20)}.${Random.nextInt(10000, 20000)}"
     )
@@ -253,7 +253,13 @@ fun OkHttpClient.request(
     body: RequestBody? = null,
     headers: Headers = Headers.headersOf(),
     userAgent: String = USER_AGENT,
-): Call = request(url.toString(), method, body, headers, userAgent)
+): Call = request(
+    url = url.toString(),
+    method = method,
+    body = body,
+    headers = headers,
+    userAgent = userAgent
+)
 
 fun OkHttpClient.request(
     url: HttpUrl,
@@ -261,4 +267,10 @@ fun OkHttpClient.request(
     body: RequestBody? = null,
     headers: Headers = Headers.headersOf(),
     userAgent: String = USER_AGENT,
-): Call = request(url.toString(), method, body, headers, userAgent)
+): Call = request(
+    url = url.toString(),
+    method = method,
+    body = body,
+    headers = headers,
+    userAgent = userAgent
+)
