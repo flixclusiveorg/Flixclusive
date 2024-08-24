@@ -13,6 +13,8 @@ import com.flixclusive.provider.ProviderApi
  * */
 val defaultTestFilm = Movie(
     id = "tt0068646",
+    tmdbId = 238,
+    imdbId = "tt0068646",
     title = "The Godfather",
     rating = 8.691,
     year = 1972,
