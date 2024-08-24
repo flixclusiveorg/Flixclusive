@@ -50,6 +50,7 @@ data class AppSettings(
     // == player
     val shouldReleasePlayer: Boolean = true,
     val isPlayerTimeReversed: Boolean = true,
+    val isPiPModeEnabled: Boolean = true,
     val isUsingVolumeBoost: Boolean = false,
     val preferredAudioLanguage: String = "en",
     /** Unset = -1 = Default */

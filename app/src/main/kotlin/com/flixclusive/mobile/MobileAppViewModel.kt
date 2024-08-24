@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.mobile.KeyEventHandler
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.data.util.InternetMonitor
@@ -41,6 +42,7 @@ internal class MobileAppViewModel @Inject constructor(
     private val getMediaLinksUseCase: GetMediaLinksUseCase,
     private val watchHistoryRepository: WatchHistoryRepository,
     private val watchlistRepository: WatchlistRepository,
+    private val appSettingsManager: AppSettingsManager,
     internetMonitor: InternetMonitor,
 ) : ViewModel() {
     private var onFilmLongClickJob: Job? = null
@@ -58,6 +60,9 @@ internal class MobileAppViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking { internetMonitor.isOnline.first() }
         )
+
+    val isPiPModeEnabled: Boolean
+        get() = appSettingsManager.localAppSettings.isPiPModeEnabled
 
     private val _uiState = MutableStateFlow(MobileAppUiState())
     val uiState: StateFlow<MobileAppUiState> = _uiState.asStateFlow()

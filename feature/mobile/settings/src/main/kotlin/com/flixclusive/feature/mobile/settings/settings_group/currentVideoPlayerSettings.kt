@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.settings.KEY_AUDIO_LANGUAGE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_QUALITY_DIALOG
@@ -21,6 +20,7 @@ import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
 import com.flixclusive.model.datastore.player.ResizeMode
 import java.util.Locale
+import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
@@ -62,6 +62,22 @@ internal fun currentVideoPlayerSettings(
                     checked = appSettings.isPlayerTimeReversed,
                     onCheckedChange = {
                         onChangeSettings(appSettings.copy(isPlayerTimeReversed = !appSettings.isPlayerTimeReversed))
+                    },
+                    modifier = Modifier.scale(0.7F)
+                )
+            }
+        ),
+        SettingsItem(
+            title = stringResource(UtilR.string.pip_mode),
+            description = stringResource(UtilR.string.pip_mode_desc),
+            onClick = {
+                onChangeSettings(appSettings.copy(isPiPModeEnabled = !appSettings.isPiPModeEnabled))
+            },
+            previewContent = {
+                Switch(
+                    checked = appSettings.isPiPModeEnabled,
+                    onCheckedChange = {
+                        onChangeSettings(appSettings.copy(isPiPModeEnabled = !appSettings.isPiPModeEnabled))
                     },
                     modifier = Modifier.scale(0.7F)
                 )
