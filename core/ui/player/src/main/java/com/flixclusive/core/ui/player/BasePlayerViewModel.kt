@@ -25,7 +25,6 @@ import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.model.tmdb.common.tv.Season
-import com.flixclusive.provider.webview.ProviderWebView
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,7 +32,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -55,8 +53,6 @@ abstract class BasePlayerViewModel(
 ) : ViewModel() {
     val film = args.film
 
-    var webView: ProviderWebView? by mutableStateOf(null)
-        private set
     val player = FlixclusivePlayerManager(
         client = client,
         context = context,
@@ -138,15 +134,6 @@ abstract class BasePlayerViewModel(
         }
     }
 
-    fun onRunWebView(webView: ProviderWebView) {
-        this.webView = webView
-    }
-
-    fun onDestroyWebView() {
-        webView?.destroy()
-        webView = null
-    }
-
     /**
      *
      * Obtains the saved time for the current [CachedLinks] to be watched.
@@ -217,8 +204,7 @@ abstract class BasePlayerViewModel(
     }
 
     fun onProviderChange(
-        newProvider: String,
-        runWebView: (ProviderWebView) -> Unit
+        newProvider: String
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true)
             return
@@ -244,21 +230,14 @@ abstract class BasePlayerViewModel(
                 watchHistoryItem = watchHistoryItem.value,
                 episode = currentSelectedEpisode.value,
                 onSuccess = { _ ->
-                    onDestroyWebView()
-
                     resetUiState()
                     resetNextEpisodeQueue()
                 },
-                runWebView = runWebView,
                 onError = {
                     updateProviderSelected(oldSelectedSource)
                     showErrorSnackbar(it)
                 }
-            ).onCompletion {
-                if (it != null) {
-                    onDestroyWebView()
-                }
-            }.collect { state ->
+            ).collect { state ->
                 when (state) {
                     MediaLinkResourceState.Idle,
                     is MediaLinkResourceState.Error,
@@ -420,10 +399,7 @@ abstract class BasePlayerViewModel(
      *
      * @param episodeToWatch The next episode to be played, or null if not available.
      */
-    fun onEpisodeClick(
-        episodeToWatch: Episode? = null,
-        runWebView: (ProviderWebView) -> Unit
-    ) {
+    fun onEpisodeClick(episodeToWatch: Episode? = null) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
             showErrorSnackbar(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
             return
@@ -455,7 +431,7 @@ abstract class BasePlayerViewModel(
                 }
             }
 
-            loadSourceData(episode, runWebView)
+            loadSourceData(episode)
         }
     }
 
@@ -465,8 +441,7 @@ abstract class BasePlayerViewModel(
      * @param episodeToWatch an optional parameter for the episode to watch if film to be watched is a [TvShow]
      */
     fun loadSourceData(
-        episodeToWatch: Episode? = null,
-        runWebView: (ProviderWebView) -> Unit
+        episodeToWatch: Episode? = null
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
             showErrorSnackbar(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
@@ -486,20 +461,13 @@ abstract class BasePlayerViewModel(
                 preferredProviderName = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = episodeToWatch,
-                runWebView = runWebView,
                 onSuccess = { newEpisode ->
-                    onDestroyWebView()
-
                     _currentSelectedEpisode.value = newEpisode
 
                     resetUiState()
                     resetNextEpisodeQueue()
                 }
-            ).onCompletion {
-                if (it != null) {
-                    onDestroyWebView()
-                }
-            }.collect {
+            ).collect {
                 _dialogState.value = it
             }
         }
@@ -540,9 +508,7 @@ abstract class BasePlayerViewModel(
      *
      * Callback function to silently queue up the next episode
      */
-    fun onQueueNextEpisode(
-        runWebView: (ProviderWebView) -> Unit
-    ) {
+    fun onQueueNextEpisode() {
         if (loadNextLinksJob?.isActive == true || isNextEpisodeLoaded || loadLinksJob?.isActive == true || loadLinksFromNewProviderJob?.isActive == true)
             return
 
@@ -556,18 +522,11 @@ abstract class BasePlayerViewModel(
                 preferredProviderName = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = episode,
-                runWebView = runWebView,
                 onSuccess = { newEpisode ->
-                    onDestroyWebView()
-
                     nextEpisodeToUse = newEpisode
                     isNextEpisodeLoaded = true
                 }
-            ).onCompletion {
-                if (it != null) {
-                    onDestroyWebView()
-                }
-            }.collect()
+            ).collect()
         }
     }
 

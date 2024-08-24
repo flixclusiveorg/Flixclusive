@@ -10,8 +10,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -24,12 +22,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.tv.material3.ExperimentalTvMaterial3Api
@@ -52,7 +47,6 @@ import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -125,17 +119,15 @@ fun PlayerScreen(
 
         if (episodeToPlay != null) {
             viewModel.onEpisodeClick(
-                episodeToWatch = episodeToPlay,
-                runWebView = viewModel::onRunWebView
+                episodeToWatch = episodeToPlay
             )
         } else {
-            viewModel.loadSourceData(runWebView = viewModel::onRunWebView)
+            viewModel.loadSourceData()
         }
     }
 
     LaunchedEffect(dialogState, isIdle, isPlayerRunning) {
         if (!isPlayerRunning && dialogState is MediaLinkResourceState.Success && isIdle && !hasLaunchedFromIdle) {
-            viewModel.onDestroyWebView()
             scrapingJob?.cancel()
             scrapingJob = null
 
@@ -149,52 +141,25 @@ fun PlayerScreen(
     }
 
     if(
-        ((dialogState !is MediaLinkResourceState.Success
-        && dialogState !is MediaLinkResourceState.Idle) || viewModel.webView != null)
+        dialogState !is MediaLinkResourceState.Success
+        && dialogState !is MediaLinkResourceState.Idle
         && isPlayerRunning
     ) {
         Box(
             contentAlignment = Alignment.Center
         ) {
-            if (dialogState !is MediaLinkResourceState.Success
-                && dialogState !is MediaLinkResourceState.Idle) {
-                SourceDataDialog(
-                    state = dialogState,
-                    onConsumeDialog = {
-                        viewModel.onDestroyWebView()
-                        scrapingJob?.cancel()
-                        scrapingJob = null
-                        viewModel.onConsumePlayerDialog()
-                        onBack(true)
-                    }
-                )
-            }
-
-            if (viewModel.webView != null) {
-                AndroidView(
-                    factory = { _ ->
-                        viewModel.webView!!.also {
-                            scrapingJob = scope.launch {
-                                val shouldPlay = viewModel.player.isPlaying
-                                async { it.getLinks() }
-
-                                delay(200)
-                                if (shouldPlay) {
-                                    viewModel.player.play()
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .height(0.5.dp)
-                        .width(0.5.dp)
-                        .alpha(0F)
-                )
-            }
+            SourceDataDialog(
+                state = dialogState,
+                onConsumeDialog = {
+                    scrapingJob?.cancel()
+                    scrapingJob = null
+                    viewModel.onConsumePlayerDialog()
+                    onBack(true)
+                }
+            )
         }
     }
     else {
-        viewModel.onDestroyWebView()
         scrapingJob?.cancel()
         scrapingJob = null
     }
@@ -418,7 +383,6 @@ fun PlayerScreen(
                         onServerChange = viewModel::onServerChange,
                         onProviderChange = { newProvider ->
                             viewModel.onProviderChange(
-                                runWebView = viewModel::onRunWebView,
                                 newProvider = newProvider
                             )
                         },
@@ -438,7 +402,7 @@ fun PlayerScreen(
                                     duration = duration
                                 )
 
-                                viewModel.onEpisodeClick(runWebView = viewModel::onRunWebView)
+                                viewModel.onEpisodeClick()
                             }
                         },
                     )

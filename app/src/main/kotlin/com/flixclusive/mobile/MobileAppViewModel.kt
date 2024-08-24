@@ -20,7 +20,6 @@ import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.model.tmdb.toFilmInstance
-import com.flixclusive.provider.webview.ProviderWebView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -149,7 +148,6 @@ internal class MobileAppViewModel @Inject constructor(
     fun onPlayClick(
         film: Film? = null,
         episode: Episode? = null,
-        runWebView: (ProviderWebView) -> Unit,
     ) {
         if(onPlayClickJob?.isActive == true)
             return
@@ -188,7 +186,6 @@ internal class MobileAppViewModel @Inject constructor(
                 film = filmToShow,
                 watchHistoryItem = watchHistoryItem,
                 episode = episode,
-                runWebView = runWebView,
                 onSuccess = { episodeToPlay ->
                     _episodeToPlay.value = episodeToPlay
                 }

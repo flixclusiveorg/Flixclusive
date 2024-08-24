@@ -14,7 +14,6 @@ import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.util.defaultTestFilm
 import com.flixclusive.provider.webview.ProviderWebView
-import com.flixclusive.provider.webview.ProviderWebViewCallback
 import okhttp3.OkHttpClient
 
 /**
@@ -103,7 +102,6 @@ abstract class ProviderApi(
 
     open fun getWebView(
         context: Context,
-        callback: ProviderWebViewCallback,
         film: FilmDetails,
         episode: Episode? = null,
     ): ProviderWebView

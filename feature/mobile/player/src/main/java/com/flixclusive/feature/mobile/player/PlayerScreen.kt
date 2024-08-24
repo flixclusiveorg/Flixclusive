@@ -11,9 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -28,12 +26,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.SavedStateHandle
@@ -72,9 +68,7 @@ import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 interface PlayerScreenNavigator : GoBackAction {
@@ -169,8 +163,7 @@ fun PlayerScreen(
 
     fun onEpisodeClick(episode: Episode? = null) {
         viewModel.onEpisodeClick(
-            episodeToWatch = episode,
-            runWebView = viewModel::onRunWebView
+            episodeToWatch = episode
         )
     }
 
@@ -196,7 +189,7 @@ fun PlayerScreen(
         if (sourceData.watchId.isEmpty() || sourceData.providerName.isEmpty()) {
             when(args.film) {
                 is TvShow -> onEpisodeClick(args.episodeToPlay)
-                is Movie -> viewModel.loadSourceData(runWebView = viewModel::onRunWebView)
+                is Movie -> viewModel.loadSourceData()
                 else -> throw IllegalStateException("Invalid film instance [${args.film.filmType}]: ${args.film}")
             }
         }
@@ -356,7 +349,7 @@ fun PlayerScreen(
             isInPipMode = isInPipMode,
             showSnackbar = viewModel::showSnackbar,
             onQueueNextEpisode = {
-                viewModel.onQueueNextEpisode(runWebView = viewModel::onRunWebView)
+                viewModel.onQueueNextEpisode()
             }
         )
 
@@ -440,8 +433,7 @@ fun PlayerScreen(
                 onVideoServerChange = viewModel::onServerChange,
                 onProviderChange = { newProvider ->
                     viewModel.onProviderChange(
-                        newProvider =  newProvider,
-                        runWebView = viewModel::onRunWebView
+                        newProvider =  newProvider
                     )
                 },
                 onResizeModeChange = viewModel::onResizeModeChange,
@@ -493,7 +485,7 @@ fun PlayerScreen(
         }
     }
 
-    if (dialogState !is MediaLinkResourceState.Idle || viewModel.webView != null) {
+    if (dialogState !is MediaLinkResourceState.Idle) {
         LaunchedEffect(Unit) {
             viewModel.player.run {
                 if (isPlaying) {
@@ -510,7 +502,6 @@ fun PlayerScreen(
                 ProviderResourceStateDialog(
                     state = dialogState,
                     onConsumeDialog = {
-                        viewModel.onDestroyWebView()
                         scrapingJob?.cancel()
                         scrapingJob = null
                         viewModel.onConsumePlayerDialog()
@@ -521,31 +512,8 @@ fun PlayerScreen(
                     }
                 )
             }
-
-            if (viewModel.webView != null) {
-                AndroidView(
-                    factory = { _ ->
-                        viewModel.webView!!.also {
-                            scrapingJob = scope.launch {
-                                val shouldPlay = viewModel.player.isPlaying
-                                async { it.getLinks() }
-
-                                delay(200)
-                                if (shouldPlay) {
-                                    viewModel.player.play()
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .height(0.5.dp)
-                        .width(0.5.dp)
-                        .alpha(0F)
-                )
-            }
         }
     } else {
-        viewModel.onDestroyWebView()
         scrapingJob?.cancel()
         scrapingJob = null
     }
