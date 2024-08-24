@@ -226,7 +226,7 @@
     <string name="sync">Sync</string>
     <string name="sync_subtitles">Sync Subtitles</string>
     <string name="test_provider">Test provider</string>
-    <string name="test_results">Test results</string>
+    <string name="test_providers">Test providers</string>
     <string name="understood">Understood</string>
     <string name="uninstall">Uninstall</string>
     <string name="unknown_language">Unknown language</string>

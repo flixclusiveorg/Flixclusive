@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.ProviderInfoScreenNavArgs
+import com.flixclusive.core.ui.common.navigation.ProviderTestNavigator
 import com.flixclusive.core.ui.common.navigation.RepositorySearchScreenNavigator
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.common.util.showToast
@@ -55,8 +56,7 @@ internal val LABEL_SIZE_IN_SP = LABEL_SIZE.sp
 internal val LABEL_SIZE_IN_DP = LABEL_SIZE.dp
 internal val SUB_LABEL_SIZE = 13.sp
 
-interface ProviderInfoNavigator : RepositorySearchScreenNavigator {
-    fun testProviders(providers: ArrayList<ProviderData>)
+interface ProviderInfoNavigator : RepositorySearchScreenNavigator, ProviderTestNavigator {
     fun seeWhatsNew(providerData: ProviderData)
     fun openProviderSettings(providerData: ProviderData)
 }
