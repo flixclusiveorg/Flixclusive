@@ -6,10 +6,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -23,10 +21,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
@@ -42,7 +38,6 @@ import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.FilmCoverPreview
 import com.flixclusive.mobile.component.FilmPreviewBottomSheet
 import com.flixclusive.model.provider.MediaLinkResourceState
-import com.flixclusive.provider.webview.ProviderWebView
 import com.flixclusive.util.AppNavHost
 import com.flixclusive.util.currentScreenAsState
 import com.flixclusive.util.navigateIfResumed
@@ -50,7 +45,6 @@ import com.ramcosta.composedestinations.dynamic.within
 import com.ramcosta.composedestinations.navigation.navigate
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import com.ramcosta.composedestinations.utils.startDestination
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 import com.flixclusive.core.util.R as UtilR
@@ -71,10 +65,7 @@ internal fun MobileActivity.MobileApp(
     var hasBeenDisconnected by remember { mutableStateOf(false) }
     var fullScreenImageToShow: String? by remember { mutableStateOf(null) }
 
-    var webView: ProviderWebView? by remember { mutableStateOf(null) }
-
     val scope = rememberCoroutineScope()
-    var scrapingJob by remember { mutableStateOf<Job?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val skipPartiallyExpanded by remember { mutableStateOf(true) }
@@ -90,8 +81,6 @@ internal fun MobileActivity.MobileApp(
 
     val onStartPlayer = {
         viewModel.setPlayerModeState(isInPlayer = true)
-        webView?.destroy()
-        webView = null
         viewModel.onConsumeSourceDataDialog()
 
         navController.navigateIfResumed(
@@ -196,8 +185,7 @@ internal fun MobileActivity.MobileApp(
                 play = { film, episode ->
                     viewModel.onPlayClick(
                         film = film,
-                        episode = episode,
-                        runWebView = { webView = it }
+                        episode = episode
                     )
                 },
                 closeApp = {
@@ -240,7 +228,7 @@ internal fun MobileActivity.MobileApp(
                 },
                 onDismissRequest = viewModel::onBottomSheetClose,
                 onPlayClick = {
-                    viewModel.onPlayClick(runWebView = { webView = it })
+                    viewModel.onPlayClick()
                     navigateToFilmScreen()
                 },
                 onImageClick = {
@@ -260,36 +248,12 @@ internal fun MobileActivity.MobileApp(
                     onSkipExtractingPhase = onStartPlayer,
                     onConsumeDialog = {
                         viewModel.onConsumeSourceDataDialog(isForceClosing = true)
-                        scrapingJob?.cancel()
-                        scrapingJob = null
-
-                        webView?.destroy()
-                        webView = null
-
                         viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
                     }
                 )
-
-                if(webView != null) {
-                    AndroidView(
-                        factory = { _ ->
-                            webView!!.also {
-                                scrapingJob = scope.launch {
-                                    it.getLinks()
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .height(0.5.dp)
-                            .width(0.5.dp)
-                            .alpha(0F)
-                    )
-                }
             }
         } else {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            webView?.destroy()
-            webView = null
         }
 
         AnimatedVisibility(

@@ -2,6 +2,8 @@ package com.flixclusive.domain.provider
 
 import android.content.Context
 import androidx.compose.runtime.mutableStateMapOf
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers
+import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.provider.MediaLinksRepository
@@ -14,12 +16,10 @@ import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.send
 import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.throwError
 import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.throwUnavailableError
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.DEFAULT_ERROR_MESSAGE
-import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.DEFAULT_WEB_VIEW_ERROR_MESSAGE
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.EMPTY_PROVIDER_MESSAGE
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.UNAVAILABLE_EPISODE_MESSAGE
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.getNoLinksLoadedMessage
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.isCached
-import com.flixclusive.domain.provider.util.ProviderWebViewCallbackImpl
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.provider.CachedLinks
@@ -30,15 +30,14 @@ import com.flixclusive.model.tmdb.FilmDetails.Companion.isTvShow
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.webview.ProviderWebView
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import com.flixclusive.core.util.R as UtilR
 
 /**
@@ -66,6 +65,7 @@ private fun getFilmKey(
 @Singleton
 class GetMediaLinksUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
+    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
     private val mediaLinksRepository: MediaLinksRepository,
     private val tmdbRepository: TMDBRepository,
     providerManager: ProviderManager,
@@ -101,7 +101,6 @@ class GetMediaLinksUseCase @Inject constructor(
         preferredProviderName: String? = null,
         watchId: String? = null,
         episode: Episode? = null,
-        runWebView: (ProviderWebView) -> Unit,
         onSuccess: (Episode?) -> Unit,
         onError: ((UiText) -> Unit)? = null,
     ): Flow<MediaLinkResourceState> = channelFlow {
@@ -168,52 +167,39 @@ class GetMediaLinksUseCase @Inject constructor(
                     )
                 )
 
-                val webView: ProviderWebView
-                val isSuccess = suspendCoroutine { continuation ->
-                    webView = api.getWebView(
-                        film = film,
-                        episode = episodeToUse,
-                        context = context,
-                        callback = ProviderWebViewCallbackImpl(
-                            cachedLinks = cachedLinks,
-                            onDestroy = { error ->
-                                when {
-                                    error != null -> {
-                                        onError?.invoke(UiText.StringValue(error.localizedMessage ?: DEFAULT_WEB_VIEW_ERROR_MESSAGE))
-                                        throwError(error)
-                                        continuation.resume(false)
-                                        return@ProviderWebViewCallbackImpl
-                                    }
-                                    cachedLinks.streams.size == 0 -> {
-                                        val message = getNoLinksLoadedMessage(api.provider.name)
-                                        onError?.invoke(message)
-                                        throwError(message)
-                                        continuation.resume(false)
-                                        return@ProviderWebViewCallbackImpl
-                                    }
-                                    else -> {
-                                        onSuccess(episodeToUse)
-                                        finish()
-                                        continuation.resume(true)
-                                    }
-                                }
-                            }
-                        )
-                    )
+                val webView = api.getWebView(
+                    film = film,
+                    episode = episodeToUse,
+                    context = context
+                )
 
-                    sendExtractingLinksMessage(
-                        provider = api.provider.name,
-                        isOnWebView = true
-                    )
-                    runWebView(webView)
-                }
+                sendExtractingLinksMessage(
+                    provider = api.provider.name,
+                    isOnWebView = true
+                )
 
-                webView.destroy()
-                if (!isSuccess) {
+                try {
+                    val links = withContext(ioDispatcher) {
+                        webView.getLinks()
+                    }
+                    webView.destroy()
+
+                    if (links.isEmpty()) {
+                        val message = getNoLinksLoadedMessage(api.provider.name)
+                        onError?.invoke(message)
+                        throwError(message)
+                        continue
+                    }
+
+                    onSuccess(episodeToUse)
+                    trySend(MediaLinkResourceState.Success)
+                    return@channelFlow
+                } catch (e: Throwable) {
+                    webView.destroy()
+                    onError?.invoke(UiText.StringValue(e))
+                    throwError(e)
                     continue
                 }
-
-                return@channelFlow
             }
 
             val canStopLooping = i == apis.lastIndex || isChangingProvider || !film.isFromTmdb
