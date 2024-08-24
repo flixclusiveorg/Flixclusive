@@ -249,7 +249,7 @@ internal fun getFullLogOtherLabels(
         ),
         labelValueStringBuilder(
             label = UtilR.string.full_log_time_taken_format,
-            value = (testCaseOutput.timeTaken ?: 0.seconds).toString(unit = DurationUnit.SECONDS)
+            value = testCaseOutput.timeTaken.toString(unit = DurationUnit.MILLISECONDS)
         )
     )
 }

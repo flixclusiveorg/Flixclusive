@@ -6,9 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.domain.provider.test.TestProviderUseCase
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.model.provider.id
@@ -17,13 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProviderTestScreenViewModel @Inject constructor(
-    providerManager: ProviderManager,
-    savedStateHandle: SavedStateHandle,
     val testProviderUseCase: TestProviderUseCase
 ) : ViewModel() {
-//    val providerData = savedStateHandle.navArgs<ProviderTestScreenNavArgs>().providers
-//    val providerInstance = providerManager.providers[providerData.name]
-
     var showRepetitiveTestWarning by mutableStateOf(false)
         private set
 

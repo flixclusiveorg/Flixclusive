@@ -7,6 +7,7 @@ import com.flixclusive.domain.provider.test.TestStatus.NOT_IMPLEMENTED
 import com.flixclusive.domain.provider.test.TestStatus.RUNNING
 import com.flixclusive.domain.provider.test.TestStatus.SUCCESS
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 /**
@@ -24,7 +25,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 data class ProviderTestCaseOutput(
     val status: TestStatus,
     val name: UiText,
-    val timeTaken: Duration? = null,
+    val timeTaken: Duration = 0.seconds,
     val fullLog: UiText? = null,
     val shortLog: UiText? = null
 ) {
