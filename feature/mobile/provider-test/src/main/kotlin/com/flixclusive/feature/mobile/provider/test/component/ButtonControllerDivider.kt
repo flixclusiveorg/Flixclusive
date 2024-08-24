@@ -1,9 +1,6 @@
 package com.flixclusive.feature.mobile.provider.test.component
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,12 +39,10 @@ private fun getBorderStroke()
 internal fun ButtonControllerDivider(
     modifier: Modifier = Modifier,
     testJobState: TestJobState,
-    showResetButton: Boolean,
     onStop: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onStart: () -> Unit,
-    onReset: () -> Unit,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -73,27 +68,6 @@ internal fun ButtonControllerDivider(
             color = LocalContentColor.current.onMediumEmphasis(),
             thickness = 0.5.dp
         )
-
-        AnimatedVisibility(
-            visible = showResetButton,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            OutlinedButton(
-                onClick = onReset,
-                shape = MaterialTheme.shapes.extraSmall,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.End)
-            ) {
-                Text(
-                    text = stringResource(id = UtilR.string.clear_tests),
-                    style = LocalTextStyle.current.copy(
-                        color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
-                    )
-                )
-            }
-        }
     }
 }
 
@@ -202,12 +176,10 @@ private fun ButtonControllerDividerPreview() {
         Surface {
             ButtonControllerDivider(
                 testJobState = TestJobState.IDLE,
-                showResetButton = true,
                 onStop = {},
                 onPause = {},
                 onResume = {},
-                onStart = {},
-                onReset = {}
+                onStart = {}
             )
         }
     }
