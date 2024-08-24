@@ -207,12 +207,12 @@ fun ProviderTestScreen(
 
                         ButtonControllerDivider(
                             testJobState = testJobState,
+                            showResetButton = viewModel.testProviderUseCase.results.isNotEmpty() && stage.isIdle,
                             onStop = viewModel::stopTests,
                             onPause = viewModel::pauseTests,
                             onResume = viewModel::resumeTests,
-                            onStart = {
-                                viewModel.startTests(args.providers)
-                            },
+                            onStart = { viewModel.startTests(args.providers) },
+                            onReset = viewModel::resetTests
                         )
                     }
                 }
