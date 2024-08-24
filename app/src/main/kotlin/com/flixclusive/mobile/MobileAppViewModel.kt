@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.network.okhttp.CloudfareWebViewManager
 import com.flixclusive.core.ui.mobile.KeyEventHandler
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.data.util.InternetMonitor
@@ -52,6 +53,13 @@ internal class MobileAppViewModel @Inject constructor(
     val keyEventHandlers = mutableListOf<KeyEventHandler>()
     var isInPipMode by mutableStateOf(false)
 
+    val cloudfareWebView = CloudfareWebViewManager.webView
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
     val isConnectedAtNetwork = internetMonitor
         .isOnline
         .stateIn(
@@ -79,6 +87,10 @@ internal class MobileAppViewModel @Inject constructor(
                 episode = _episodeToPlay.value,
             )
         }
+
+    fun destroyCloudfareWebView() {
+        CloudfareWebViewManager.destroyWebView()
+    }
 
     fun previewFilm(film: Film) {
         if(onFilmLongClickJob?.isActive == true)
