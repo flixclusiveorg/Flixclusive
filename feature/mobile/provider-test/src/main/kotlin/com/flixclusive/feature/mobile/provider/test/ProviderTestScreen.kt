@@ -17,12 +17,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -40,6 +43,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastSumBy
@@ -50,6 +54,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.buildImageUrl
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.domain.provider.test.ProviderTestCaseOutput
 import com.flixclusive.domain.provider.test.ProviderTestResult
 import com.flixclusive.domain.provider.test.TestStage.Idle.Companion.isIdle
@@ -64,8 +69,6 @@ import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.model.provider.id
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.util.R as UtilR
-
-private const val THE_MATRIX_NEO_BACKDROP = "/wkzeNsJjQBYCzkbiI2jxWnlrwR6.jpg"
 
 data class ProviderTestScreenNavArgs(
     val providers: ArrayList<ProviderData>
@@ -100,6 +103,7 @@ fun ProviderTestScreen(
 
     val stage by viewModel.testProviderUseCase.testStage.collectAsStateWithLifecycle()
     val testJobState by viewModel.testProviderUseCase.testJobState.collectAsStateWithLifecycle()
+    val filmOnTest by viewModel.testProviderUseCase.filmOnTest.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -179,13 +183,13 @@ fun ProviderTestScreen(
             item {
                 Box {
                     AnimatedVisibility(
-                        visible = headerHeight > 0.dp,
+                        visible = headerHeight > 0.dp && filmOnTest != null,
                         enter = fadeIn(initialAlpha = 0.3F),
                         exit = fadeOut(targetAlpha = 0.3F)
                     ) {
                         AsyncImage(
                             model = context.buildImageUrl(
-                                imagePath = THE_MATRIX_NEO_BACKDROP,
+                                imagePath = filmOnTest,
                                 imageSize = "w600_and_h900_multi_faces"
                             ),
                             contentScale = ContentScale.Crop,
@@ -197,23 +201,44 @@ fun ProviderTestScreen(
                         )
                     }
 
-                    Column(
-                        modifier = Modifier.onGloballyPositioned { coordinates ->
-                            headerHeightPx = coordinates.size.height.toFloat()
-                            headerHeight = with(localDensity) { coordinates.size.height.toDp() }
-                        }
-                    ) {
-                        TestScreenHeader(stage = stage)
+                    Column {
+                        Column(
+                            modifier = Modifier.onGloballyPositioned { coordinates ->
+                                headerHeightPx = coordinates.size.height.toFloat()
+                                headerHeight = with(localDensity) { coordinates.size.height.toDp() }
+                            }
+                        ) {
+                            TestScreenHeader(stage = stage)
 
-                        ButtonControllerDivider(
-                            testJobState = testJobState,
-                            showResetButton = viewModel.testProviderUseCase.results.isNotEmpty() && stage.isIdle,
-                            onStop = viewModel::stopTests,
-                            onPause = viewModel::pauseTests,
-                            onResume = viewModel::resumeTests,
-                            onStart = { viewModel.startTests(args.providers) },
-                            onReset = viewModel::resetTests
-                        )
+                            ButtonControllerDivider(
+                                testJobState = testJobState,
+                                onStop = viewModel::stopTests,
+                                onPause = viewModel::pauseTests,
+                                onResume = viewModel::resumeTests,
+                                onStart = { viewModel.startTests(args.providers) }
+                            )
+                        }
+
+                        AnimatedVisibility(
+                            visible = viewModel.testProviderUseCase.results.isNotEmpty() && stage.isIdle,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            OutlinedButton(
+                                onClick = viewModel::clearTests,
+                                shape = MaterialTheme.shapes.extraSmall,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 10.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(id = UtilR.string.clear_tests),
+                                    style = LocalTextStyle.current.copy(
+                                        color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             }

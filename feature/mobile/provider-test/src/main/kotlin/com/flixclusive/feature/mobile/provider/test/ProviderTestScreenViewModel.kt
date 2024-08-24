@@ -76,7 +76,7 @@ class ProviderTestScreenViewModel @Inject constructor(
         testProviderUseCase(providers = providersToTest)
     }
 
-    fun resetTests() {
+    fun clearTests() {
         testProviderUseCase.results.clear()
     }
 

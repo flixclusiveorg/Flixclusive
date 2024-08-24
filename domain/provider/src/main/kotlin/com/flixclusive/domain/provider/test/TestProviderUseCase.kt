@@ -52,6 +52,12 @@ class TestProviderUseCase @Inject constructor(
     private val _testJobState = MutableStateFlow(TestJobState.IDLE)
     val testJobState = _testJobState.asStateFlow()
 
+    /**
+     * The film backdrop/poster on test.
+     * */
+    private val _filmOnTest = MutableStateFlow<String?>(null)
+    val filmOnTest = _filmOnTest.asStateFlow()
+
     operator fun invoke(
         providers: ArrayList<ProviderData>
     ) {
@@ -82,6 +88,8 @@ class TestProviderUseCase @Inject constructor(
                         )
                     }
                 ) ?: continue
+
+                updateFilmOnTest(api)
 
                 runTestCases(
                     api = api,
@@ -122,6 +130,13 @@ class TestProviderUseCase @Inject constructor(
         testJob = null
         _testJobState.value = TestJobState.IDLE
         _testStage.update { TestStage.Idle(providerOnTest = null) }
+    }
+
+    private fun updateFilmOnTest(api: ProviderApi) {
+        try {
+            _filmOnTest.value = api.testFilm.backdropImage
+                ?: api.testFilm.posterImage
+        } catch (_: Throwable) {}
     }
 
     private fun loadProviderApi(
