@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
@@ -83,7 +84,7 @@ internal fun BottomCardContent(
                 modifier = Modifier.size(width = 80.dp, height = 25.dp),
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.4F),
+                    contentColor = LocalContentColor.current.onMediumEmphasis(0.4F),
                 )
             ) {
                 Text(
