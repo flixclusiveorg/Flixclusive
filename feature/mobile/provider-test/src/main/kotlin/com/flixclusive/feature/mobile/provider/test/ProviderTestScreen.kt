@@ -219,25 +219,20 @@ fun ProviderTestScreen(
                             )
                         }
 
-                        AnimatedVisibility(
-                            visible = viewModel.testProviderUseCase.results.isNotEmpty() && stage.isIdle,
-                            enter = fadeIn(),
-                            exit = fadeOut()
+                        OutlinedButton(
+                            onClick = viewModel::clearTests,
+                            enabled = stage.isIdle && viewModel.testProviderUseCase.results.isNotEmpty(),
+                            shape = MaterialTheme.shapes.extraSmall,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 10.dp)
                         ) {
-                            OutlinedButton(
-                                onClick = viewModel::clearTests,
-                                shape = MaterialTheme.shapes.extraSmall,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 10.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(id = UtilR.string.clear_tests),
-                                    style = LocalTextStyle.current.copy(
-                                        color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
-                                    )
+                            Text(
+                                text = stringResource(id = UtilR.string.clear_tests),
+                                style = LocalTextStyle.current.copy(
+                                    color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
                                 )
-                            }
+                            )
                         }
                     }
                 }
