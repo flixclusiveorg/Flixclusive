@@ -1,16 +1,21 @@
 package com.flixclusive.domain.provider.test
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateListOf
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.data.provider.ProviderApiRepository
+import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.domain.provider.test.ProviderTestCases.ProviderTestCase
 import com.flixclusive.domain.provider.test.ProviderTestCases.methodTestCases
 import com.flixclusive.domain.provider.test.ProviderTestCases.propertyTestCases
+import com.flixclusive.domain.provider.util.StringHelper.createString
+import com.flixclusive.domain.provider.util.StringHelper.getString
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.model.provider.id
 import com.flixclusive.provider.ProviderApi
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -18,17 +23,23 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 import org.koitharu.pausingcoroutinedispatcher.PausingJob
 import org.koitharu.pausingcoroutinedispatcher.launchPausing
 import org.koitharu.pausingcoroutinedispatcher.pausing
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
+import com.flixclusive.core.util.R as UtilR
 
 private const val TEST_DELAY = 1000L
 
 @Singleton
 class TestProviderUseCase @Inject constructor(
     private val providerApiRepository: ProviderApiRepository,
+    private val providerManager: ProviderManager,
+    private val client: OkHttpClient,
+    @ApplicationContext private val context: Context,
     @ApplicationScope private val scope: CoroutineScope,
     @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
 ) {
@@ -50,14 +61,27 @@ class TestProviderUseCase @Inject constructor(
             for (i in providers.indices) {
                 val provider = providers[i]
 
-                val api = providerApiRepository.apiMap[provider.name]
-                    ?: continue
-                
                 val testOutputs = ProviderTestResult(
                     provider = provider.addTestCountSuffix()
                 )
 
                 results.add(testOutputs)
+                val apiTestCaseIndex = testOutputs.add(
+                    ProviderTestCaseOutput(
+                        status = TestStatus.RUNNING,
+                        name = getString(UtilR.string.ptest_get_api)
+                    )
+                )
+
+                val api = loadProviderApi(
+                    providerData = provider,
+                    updateOutput = {
+                        testOutputs.update(
+                            index = apiTestCaseIndex,
+                            output = it
+                        )
+                    }
+                ) ?: continue
 
                 runTestCases(
                     api = api,
@@ -98,6 +122,50 @@ class TestProviderUseCase @Inject constructor(
         testJob = null
         _testJobState.value = TestJobState.IDLE
         _testStage.update { TestStage.Idle(providerOnTest = null) }
+    }
+
+    private fun loadProviderApi(
+        providerData: ProviderData,
+        updateOutput: (ProviderTestCaseOutput) -> Unit,
+    ): ProviderApi? {
+        try {
+            updateOutput(
+                ProviderTestCaseOutput(
+                    status = TestStatus.RUNNING,
+                    name = getString(UtilR.string.ptest_get_api)
+                )
+            )
+
+            val provider = providerManager.providers[providerData.name]
+            val api = providerApiRepository.apiMap[providerData.name]
+                ?: provider!!.getApi(
+                    context = context,
+                    client = client
+                )
+
+            updateOutput(
+                ProviderTestCaseOutput(
+                    status = TestStatus.SUCCESS,
+                    name = getString(UtilR.string.ptest_get_api),
+                    timeTaken = 0.milliseconds,
+                    shortLog = getString(UtilR.string.ptest_success_get_api),
+                    fullLog = createString("${api.javaClass.simpleName} [HASHCODE:${api.hashCode()}]")
+                )
+            )
+
+            return api
+        } catch (e: Throwable) {
+            updateOutput(
+                ProviderTestCaseOutput(
+                    status = TestStatus.FAILURE,
+                    name = getString(UtilR.string.ptest_get_api),
+                    timeTaken = 0.milliseconds,
+                    shortLog = getString(UtilR.string.ptest_error_get_api),
+                    fullLog = createString(e.stackTraceToString())
+                )
+            )
+            return null
+        }
     }
 
     private suspend fun runTestCases(

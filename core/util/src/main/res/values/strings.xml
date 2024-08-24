@@ -417,6 +417,7 @@
     <string name="privacy_notice_opt_in">Opt-in to crash data collection</string>
 
     <!--  Provider test labels  -->
+    <string name="ptest_error_get_api">Failed to get provider API</string>
     <string name="ptest_error_get_catalog_list">Failed to get catalog list</string>
     <string name="ptest_error_get_search_filters">Failed to get search filters</string>
     <string name="ptest_error_get_testable_film">Failed to get testable film</string>
@@ -424,6 +425,7 @@
     <string name="ptest_error_method_get_film_details">Failed to get detailed film for %1$s</string>
     <string name="ptest_error_method_get_links">Failed to fetch links for %1$s</string>
     <string name="ptest_error_not_implemented">This has not been implemented.</string>
+    <string name="ptest_get_api">Get provider API</string>
     <string name="ptest_get_catalog_list">Get catalog list</string>
     <string name="ptest_get_search_filters">Get search filters</string>
     <string name="ptest_get_testable_film">Get testable film</string>
@@ -431,6 +433,7 @@
     <string name="ptest_method_get_film_details">Get film details</string>
     <string name="ptest_method_get_links">Get links</string>
     <string name="ptest_method_get_search_items">Search for items</string>
+    <string name="ptest_success_get_api">API has been loaded</string>
     <string name="ptest_success_items_count_found">%1$d items found</string>
     <string name="ptest_success_items_count_found_empty">Passed but no items found</string>
 </resources>
