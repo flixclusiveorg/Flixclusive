@@ -355,6 +355,7 @@
     <string name="owner_avatar_content_desc">Avatar or picture of repository\'s owner</string>
     <string name="pause_button">Pause button</string>
     <string name="pip_mode_desc">Picture-in-picture (PiP) lets you watch videos while using other apps.</string>
+    <string name="cache_links_item_count">You have %1$d cached links</string>
     <string name="play_button">Play button</string>
     <string name="play_pause_button_content_description">Play or pause button</string>
     <string name="playback_speed_snackbar_message">Playback speed set to %1$s</string>
@@ -372,7 +373,6 @@
     <string name="search_for_providers">Search for providers</string>
     <string name="search_history_icon">An icon for search history</string>
     <string name="search_history_item_count_format">You have %1$d search history items</string>
-    <string name="cache_links_item_count">You have %1$d cached links</string>
     <string name="see_more_btn_content_desc">A vertical see more button icon</string>
     <string name="server_snackbar_message">Server set to %1$s</string>
     <string name="signup_prerelease_updates_desc">Opt-in on using pre-release updates instead of official ones.</string>
@@ -391,6 +391,7 @@
     <string name="video_buffer_size_label">The target size to always buffer. Setting this too high could cause device problems.</string>
     <string name="video_cache_size">Player\'s dedicated cache size</string>
     <string name="video_cache_size_label">The dedicated video cache for the player. Always limit the cache if you have limited storage space.</string>
+    <string name="volume_booster_desc">Adds an additional volume (dB) to the player. However, it might cause device to not play the audio properly.</string>
     <string name="warning_content_description">Warning icon</string>
 
     <!--  Share app message  -->

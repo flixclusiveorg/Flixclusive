@@ -85,6 +85,7 @@ internal fun currentVideoPlayerSettings(
         ),
         SettingsItem(
             title = stringResource(UtilR.string.volume_booster),
+            description = stringResource(UtilR.string.volume_booster_desc),
             onClick = {
                 onChangeSettings(appSettings.copy(isUsingVolumeBoost = !appSettings.isUsingVolumeBoost))
             },
