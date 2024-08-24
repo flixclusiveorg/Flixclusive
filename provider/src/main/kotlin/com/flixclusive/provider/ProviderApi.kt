@@ -100,10 +100,6 @@ abstract class ProviderApi(
     ): List<MediaLink>
         = throw NotImplementedError()
 
-    open fun getWebView(
-        context: Context,
-        film: FilmDetails,
-        episode: Episode? = null,
-    ): ProviderWebView
+    open fun getWebView(context: Context): ProviderWebView
         = throw NotImplementedError("This provider indicates that it uses a WebView but does not provide one. Make it make sense!")
 }
