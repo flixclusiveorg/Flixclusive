@@ -18,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,10 +43,10 @@ fun InstalledProviderCard(
         displacementOffset != null
     }
 
-    val color = when {
-        isBeingDragged && enabled && isDraggable -> MaterialTheme.colorScheme.tertiary
-        enabled -> Color.Unspecified
-        else -> MaterialTheme.colorScheme.surfaceVariant
+    val cardColor = MaterialTheme.colorScheme.surface
+    val elevation = when {
+        isBeingDragged && enabled && isDraggable -> 20.dp
+        else -> 3.dp
     }
 
     Box(
@@ -60,10 +59,13 @@ fun InstalledProviderCard(
             onClick = onClick,
             interactionSource = interactionSource,
             shape = MaterialTheme.shapes.medium,
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = elevation
+            ),
             colors = CardDefaults.cardColors(
-                containerColor = color,
+                containerColor = cardColor,
                 contentColor = contentColorFor(
-                    backgroundColor = color.copy(
+                    backgroundColor = cardColor.copy(
                         if (!enabled) 0.4F else 1F
                     )
                 )
@@ -71,7 +73,7 @@ fun InstalledProviderCard(
             border = if (isBeingDragged && enabled || pressed)
                 BorderStroke(
                     width = 2.dp,
-                    color = contentColorFor(color)
+                    color = contentColorFor(cardColor)
                 ) else null,
             modifier = Modifier
                 .fillMaxWidth()
