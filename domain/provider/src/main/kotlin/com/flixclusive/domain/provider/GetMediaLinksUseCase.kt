@@ -167,11 +167,7 @@ class GetMediaLinksUseCase @Inject constructor(
                     )
                 )
 
-                val webView = api.getWebView(
-                    film = film,
-                    episode = episodeToUse,
-                    context = context
-                )
+                val webView = api.getWebView(context = context)
 
                 sendExtractingLinksMessage(
                     provider = api.provider.name,
@@ -180,7 +176,10 @@ class GetMediaLinksUseCase @Inject constructor(
 
                 try {
                     val links = withContext(ioDispatcher) {
-                        webView.getLinks()
+                        webView.getLinks(
+                            film = film,
+                            episode = episodeToUse,
+                        )
                     }
                     webView.destroy()
 
