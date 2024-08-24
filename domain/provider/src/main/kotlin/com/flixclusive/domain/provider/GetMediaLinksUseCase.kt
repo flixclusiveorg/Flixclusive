@@ -155,6 +155,8 @@ class GetMediaLinksUseCase @Inject constructor(
             if ((isChangingProvider && api.provider.name != preferredProviderName) || isNotTheSameFilmProvider)
                 continue
 
+            val canStopLooping = i == apis.lastIndex || isChangingProvider || !film.isFromTmdb
+
             sendFetchingFilmMessage(provider = api.provider.name)
 
             if (api.useWebView) {
@@ -185,8 +187,12 @@ class GetMediaLinksUseCase @Inject constructor(
 
                     if (links.isEmpty()) {
                         val message = getNoLinksLoadedMessage(api.provider.name)
-                        onError?.invoke(message)
-                        throwError(message)
+                        if (canStopLooping) {
+                            onError?.invoke(message)
+                            throwError(message)
+                            return@channelFlow
+                        }
+
                         continue
                     }
 
@@ -195,13 +201,15 @@ class GetMediaLinksUseCase @Inject constructor(
                     return@channelFlow
                 } catch (e: Throwable) {
                     webView.destroy()
-                    onError?.invoke(UiText.StringValue(e))
-                    throwError(e)
+                    if (canStopLooping) {
+                        onError?.invoke(UiText.StringValue(e))
+                        throwError(e)
+                        return@channelFlow
+                    }
+
                     continue
                 }
             }
-
-            val canStopLooping = i == apis.lastIndex || isChangingProvider || !film.isFromTmdb
 
             val needsNewWatchId = watchId == null && film.isFromTmdb
             val watchIdResource = when {
