@@ -37,7 +37,7 @@ abstract class Provider {
      */
     @Throws(Throwable::class)
     abstract fun getApi(
-        context: Context?,
+        context: Context,
         client: OkHttpClient
     ): ProviderApi
 
