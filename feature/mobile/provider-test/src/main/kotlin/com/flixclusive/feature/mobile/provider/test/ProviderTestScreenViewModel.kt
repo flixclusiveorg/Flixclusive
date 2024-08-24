@@ -83,6 +83,10 @@ class ProviderTestScreenViewModel @Inject constructor(
         testProviderUseCase(providers = providersToTest)
     }
 
+    fun resetTests() {
+        testProviderUseCase.results.clear()
+    }
+
     private fun ProviderData.hasAlreadyBeenTested(): Boolean {
         return testProviderUseCase.results.fastAny {
             it.provider.id == id
