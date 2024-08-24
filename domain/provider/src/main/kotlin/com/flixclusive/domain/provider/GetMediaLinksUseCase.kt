@@ -186,8 +186,8 @@ class GetMediaLinksUseCase @Inject constructor(
                     webView.destroy()
 
                     if (links.isEmpty()) {
-                        val message = getNoLinksLoadedMessage(api.provider.name)
                         if (canStopLooping) {
+                            val message = getNoLinksLoadedMessage(api.provider.name)
                             onError?.invoke(message)
                             throwError(message)
                             return@channelFlow
@@ -196,6 +196,7 @@ class GetMediaLinksUseCase @Inject constructor(
                         continue
                     }
 
+                    cachedLinks.addAll(links)
                     onSuccess(episodeToUse)
                     trySend(MediaLinkResourceState.Success)
                     return@channelFlow
