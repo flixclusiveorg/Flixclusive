@@ -7,14 +7,16 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.flixclusive.core.network.util.CookieHelper.getValue
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.USER_AGENT
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -66,43 +68,40 @@ class CloudfareWebViewInterceptor(
 
         return lock.withLock {
             try {
+                val cloudfareUrl = request.url.toString()
+                val urlHost = request.url.domainWithScheme()
+
                 val cookieManager = CookieManager.getInstance()
                     ?: throw Exception("[CF] Could not initialize cookie manager")
 
                 response.close()
-                // Remove old cf_clearance from the cookie
-                val cookie = cookieManager
-                    .getCookie(request.url.toString())
-                    ?.splitToSequence(";")
-                    ?.map { it.split("=").map(String::trim) }
-                    ?.filter { it[0] != CLOUDFARE_COOKIE_KEY }
-                    ?.joinToString(";") { it.joinToString("=") }
 
-                infoLog("[CF] Clearing cookies...")
-                cookieManager.setCookie(request.url.toString(), cookie)
-
-                infoLog("[CF] Resolving with WebView...")
-                val clearance = runBlocking(Dispatchers.IO) {
-                    resolveWithWebView(request, cookieManager)
-                }
-
-                if (clearance == null) {
-                    throw Exception("[CF] Could not resolve with WebView")
-                }
-
-                infoLog("[CF] Using cf_clearance cookie...")
-                val bypassedCookies = cookieManager.getCookie(request.url.toString())
-                val newResponse = chain.proceed(
-                    request.newBuilder()
-                        .addHeader("Cookie", bypassedCookies)
-                        .build()
+                val oldClearance = cookieManager.getValue(
+                    key = CLOUDFARE_COOKIE_KEY,
+                    url = cloudfareUrl
                 )
 
-                if (newResponse.isCloudFare()) {
-                    throw Exception("[CF] Could not bypass verification")
+                if (oldClearance != null) {
+                    infoLog("[CF] Trying old cf_clearance...")
+                    safeCall("[CF] Old cf_clearance might be outdated!") {
+                        return@withLock chain.bypassChallenge(cookieManager)
+                    }
+
+                    runBlocking(Dispatchers.Main) {
+                        cookieManager.removeAllCookies(null)
+                        cookieManager.flush()
+                    }
                 }
 
-                newResponse
+                infoLog("[CF] Resolving with WebView...")
+                runBlocking(Dispatchers.Default) {
+                    withTimeoutOrNull(60.seconds) {
+                        resolveWithWebView(request, cookieManager)
+                    }
+                } ?: throw Exception("[CF] WebView timed out after 60 seconds")
+
+                infoLog("[CF] Using new cf_clearance cookie...")
+                chain.bypassChallenge(cookieManager)
             } catch (e: CancellationException) {
                 errorLog(e)
                 throw e
@@ -125,13 +124,15 @@ class CloudfareWebViewInterceptor(
     private suspend fun resolveWithWebView(
         request: Request,
         cookieManager: CookieManager
-    ) = withContext(Dispatchers.Default) {
+    ): Boolean {
+        val cloudfareUrl = request.url.toString()
         val headers = request
             .headers
             .toMultimap()
             .mapValues { it.value.firstOrNull() ?: "" }
 
-        withContext(Dispatchers.Main) {
+        val mainThread = Dispatchers.Main
+        withContext(mainThread) {
             val webView = WebView(context).apply {
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
@@ -147,28 +148,43 @@ class CloudfareWebViewInterceptor(
                 webViewClient = object : WebViewClient() {}
             }
 
+            webView.loadUrl(cloudfareUrl, headers)
             CloudfareWebViewManager.updateWebView(webView)
-            webView.loadUrl(request.url.toString(), headers)
-
-            val maxRetries = 30
-            var retries = 0
-            var clearance: String? = null
-            while (retries < maxRetries) {
-                clearance = cookieManager.getValue(
-                    key = CLOUDFARE_COOKIE_KEY,
-                    url = request.url.toString()
-                )
-
-                if (clearance != null) {
-                    break
-                }
-
-                delay(1.seconds)
-                retries++
-            }
-
-            CloudfareWebViewManager.destroyWebView()
-            clearance
         }
+
+        while (true) {
+            val clearance = cookieManager.getValue(
+                key = CLOUDFARE_COOKIE_KEY,
+                url = cloudfareUrl
+            )
+
+            if (clearance != null) {
+                withContext(mainThread) {
+                    CloudfareWebViewManager.destroyWebView()
+                }
+                return true
+            }
+        }
+    }
+
+    private fun Interceptor.Chain.bypassChallenge(cookieManager: CookieManager): Response {
+        val request = request()
+        val url = request.url.toString()
+        val response = proceed(
+            request.newBuilder()
+                .addHeader("Cookie", cookieManager.getCookie(url))
+                .build()
+        )
+
+        if (response.isCloudFare()) {
+            response.close()
+            throw Exception("[CF] Could not bypass verification")
+        }
+
+        return response
+    }
+
+    private fun HttpUrl.domainWithScheme(): String {
+        return "$scheme://$host"
     }
 }
