@@ -5,6 +5,8 @@ import com.flixclusive.core.util.film.filter.Filter
 import com.flixclusive.core.util.film.filter.FilterList
 import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.ProviderCatalog
+import com.flixclusive.model.provider.Stream
+import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
@@ -12,7 +14,7 @@ import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
-import com.flixclusive.provider.util.defaultTestFilm
+import com.flixclusive.provider.util.DefaultTestFilm.getDefaultTestFilm
 import com.flixclusive.provider.webview.ProviderWebView
 import okhttp3.OkHttpClient
 
@@ -22,6 +24,8 @@ import okhttp3.OkHttpClient
  * An api will provide source links for a given film. It could also be used to search for films and retrieve detailed information about them.
  *
  * @property client The [OkHttpClient] instance used for network requests.
+ * @property context The [Context] used for accessing application-specific resources.
+ * @property provider The [Provider] object representing the provider's information.
  *
  * @property baseUrl The base URL used for network requests. Defaults to an empty string.
  * @property testFilm The [Film] to use for testing purposes. Defaults to [The Godfather (1972)](https://www.themoviedb.org/movie/238-the-godfather).
@@ -31,11 +35,12 @@ import okhttp3.OkHttpClient
  */
 @Suppress("unused")
 abstract class ProviderApi(
-    protected val client: OkHttpClient,
+    val client: OkHttpClient,
+    val context: Context,
     val provider: Provider,
 ) {
     open val baseUrl: String = ""
-    open val testFilm: FilmDetails = defaultTestFilm
+    open val testFilm: FilmDetails = getDefaultTestFilm()
     open val useWebView: Boolean = false
     open val filters: FilterList get() = FilterList()
     open val catalogs: List<ProviderCatalog> get() = emptyList()
@@ -90,16 +95,21 @@ abstract class ProviderApi(
      * @param watchId The unique watch identifier for the film.
      * @param film The detailed film object of the film. Notice that it is a [FilmDetails] and not a [Film] object, this means that this film object has full details and not just the partial info of it. It could either be a [Movie] or [TvShow].
      * @param episode The [Episode] object of the episode. Defaults to null for movies.
+     * @param onLinkFound A callback function that is invoked when a [Stream] or [Subtitle] is found.
      *
      * @return a list of [MediaLink] objects representing the links for the film.
      */
     open suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode? = null
-    ): List<MediaLink>
-        = throw NotImplementedError()
+        episode: Episode? = null,
+        onLinkFound: (MediaLink) -> Unit
+    ): Unit = throw NotImplementedError()
 
-    open fun getWebView(context: Context): ProviderWebView
+    /**
+     *
+     * Gets the WebView instance for this provider api. This method is only called if [useWebView] is true. It also must use the public [context] property to instantiate the [ProviderWebView].
+     * */
+    open fun getWebView(): ProviderWebView
         = throw NotImplementedError("This provider indicates that it uses a WebView but does not provide one. Make it make sense!")
 }

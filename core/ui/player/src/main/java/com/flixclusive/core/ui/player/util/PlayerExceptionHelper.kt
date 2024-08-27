@@ -12,7 +12,7 @@ internal fun String?.isDdosProtection(): Boolean {
     if (this == null) return true
 
     return contains("ddos", true)
-    || contains("cloudfare", true)
+    || contains("cloudflare", true)
 }
 
 @OptIn(UnstableApi::class)
