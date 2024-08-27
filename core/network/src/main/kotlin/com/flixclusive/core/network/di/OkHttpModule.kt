@@ -56,7 +56,7 @@ internal object OkHttpModule {
                 when (dns) {
                     DoHPreference.None -> Unit
                     DoHPreference.Google -> dohGoogle()
-                    DoHPreference.Cloudfare -> dohCloudflare()
+                    DoHPreference.Cloudflare -> dohCloudflare()
                     DoHPreference.AdGuard -> dohAdGuard()
                     DoHPreference.Quad9 -> dohQuad9()
                     DoHPreference.AliDNS -> dohAliDNS()

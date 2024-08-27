@@ -4,7 +4,7 @@ package com.flixclusive.model.datastore.network
 enum class DoHPreference {
     None,
     Google,
-    Cloudfare,
+    Cloudflare,
     AdGuard,
     Quad9,
     AliDNS,

@@ -2,10 +2,10 @@ package com.flixclusive.mobile
 
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.webkit.WebView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
@@ -18,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -30,8 +31,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +40,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
+import com.flixclusive.core.network.okhttp.webview.WebViewInterceptor
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
 import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
@@ -76,7 +78,7 @@ internal fun MobileActivity.MobileApp(
     val filmToPreview by viewModel.filmToPreview.collectAsStateWithLifecycle()
     val episodeToPlay by viewModel.episodeToPlay.collectAsStateWithLifecycle()
 
-    val cloudfareWebView by viewModel.cloudfareWebView.collectAsStateWithLifecycle()
+    val webViewInterceptor by viewModel.webViewResolver.collectAsStateWithLifecycle()
 
     var hasBeenDisconnected by remember { mutableStateOf(false) }
     var fullScreenImageToShow: String? by remember { mutableStateOf(null) }
@@ -90,7 +92,9 @@ internal fun MobileActivity.MobileApp(
     )
 
     val navController = rememberNavController()
-    val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(initialValue = MobileNavGraphs.root.startRoute)
+    val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(
+        initialValue = MobileNavGraphs.root.startRoute
+    )
     val currentNavGraph by navController.currentScreenAsState(MobileNavGraphs.home)
 
     val cachedLinks = viewModel.loadedCachedLinks
@@ -149,9 +153,9 @@ internal fun MobileActivity.MobileApp(
 
     val useBottomBar = remember(currentSelectedScreen) {
         currentSelectedScreen.route != SearchExpandedScreenDestination.within(MobileNavGraphs.search).route
-        && currentSelectedScreen != PlayerScreenDestination
-        && currentSelectedScreen != SplashScreenDestination
-        && currentSelectedScreen != UpdateScreenDestination
+                && currentSelectedScreen != PlayerScreenDestination
+                && currentSelectedScreen != SplashScreenDestination
+                && currentSelectedScreen != UpdateScreenDestination
     }
 
     val windowInsets = when (currentSelectedScreen) {
@@ -162,9 +166,9 @@ internal fun MobileActivity.MobileApp(
     Scaffold(
         contentWindowInsets = windowInsets,
         snackbarHost = {
-           if (!viewModel.isInPipMode) {
-               InternetMonitorSnackbar(hostState = snackbarHostState)
-           }
+            if (!viewModel.isInPipMode) {
+                InternetMonitorSnackbar(hostState = snackbarHostState)
+            }
         },
         bottomBar = {
             if (useBottomBar) {
@@ -212,8 +216,8 @@ internal fun MobileActivity.MobileApp(
         }
     }
 
-    if(!uiState.isOnPlayerScreen) {
-        if(uiState.isShowingBottomSheetCard && filmToPreview != null) {
+    if (!uiState.isOnPlayerScreen) {
+        if (uiState.isShowingBottomSheetCard && filmToPreview != null) {
             val navigateToFilmScreen = {
                 navController.navigateIfResumed(
                     direction = FilmScreenDestination(
@@ -237,7 +241,7 @@ internal fun MobileActivity.MobileApp(
                     scope.launch {
                         bottomSheetState.hide()
                     }.invokeOnCompletion {
-                        if(!bottomSheetState.isVisible) {
+                        if (!bottomSheetState.isVisible) {
                             viewModel.onBottomSheetClose()
                         }
                     }
@@ -288,44 +292,58 @@ internal fun MobileActivity.MobileApp(
         }
     }
 
-    if (cloudfareWebView != null) {
-        CloudfareWebViewDialog(
-            webView = cloudfareWebView!!,
-            onDismiss = viewModel::destroyCloudfareWebView
+    if (webViewInterceptor != null) {
+        WebViewDialog(
+            webView = webViewInterceptor!!,
+            onDismiss = viewModel::destroyWebViewInterceptor
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CloudfareWebViewDialog(
-    webView: WebView,
+private fun WebViewDialog(
+    webView: WebViewInterceptor,
     onDismiss: () -> Unit
 ) {
     BasicAlertDialog(
-        properties = DialogProperties(dismissOnClickOutside = false),
+        properties = DialogProperties(
+            dismissOnClickOutside = false,
+            usePlatformDefaultWidth = false
+        ),
         onDismissRequest = onDismiss,
     ) {
         Column(
             modifier = Modifier
-                .fillMaxHeight(0.8F)
+                .fillMaxHeight(0.9F)
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = stringResource(id = UtilR.string.cloudfare_interceptor),
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                ),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Surface(tonalElevation = 3.dp) {
+                Box(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surface)
+                        .clip(MaterialTheme.shapes.extraSmall)
+                        .padding(bottom = 6.dp)
+                ) {
+                    Text(
+                        text = webView.interceptorName,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        modifier = Modifier
+                            .padding(10.dp)
+                    )
+                }
+            }
 
             AndroidView(
                 modifier = Modifier
-                    .weight(0.8F)
+                    .weight(0.7F)
                     .alpha(0.99F)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(26.dp),
                 factory = {
                     webView.apply {
                         layoutParams = ViewGroup.LayoutParams(

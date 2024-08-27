@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.network.okhttp.CloudfareWebViewManager
+import com.flixclusive.core.network.okhttp.webview.WebViewInterceptorManager
 import com.flixclusive.core.ui.mobile.KeyEventHandler
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.data.util.InternetMonitor
@@ -53,7 +53,7 @@ internal class MobileAppViewModel @Inject constructor(
     val keyEventHandlers = mutableListOf<KeyEventHandler>()
     var isInPipMode by mutableStateOf(false)
 
-    val cloudfareWebView = CloudfareWebViewManager.webView
+    val webViewResolver = WebViewInterceptorManager.webView
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -88,8 +88,8 @@ internal class MobileAppViewModel @Inject constructor(
             )
         }
 
-    fun destroyCloudfareWebView() {
-        CloudfareWebViewManager.destroyWebView()
+    fun destroyWebViewInterceptor() {
+        WebViewInterceptorManager.destroy()
     }
 
     fun previewFilm(film: Film) {
