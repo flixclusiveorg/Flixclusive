@@ -5,6 +5,7 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.domain.provider.util.StringHelper.createString
 import com.flixclusive.domain.provider.util.StringHelper.getString
+import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
@@ -324,11 +325,15 @@ internal object ProviderTestCases {
                     else -> null
                 }
 
+                val links = mutableSetOf<MediaLink>()
                 api.getLinks(
                     watchId = api.testFilm.id ?: api.testFilm.identifier,
                     film = api.testFilm,
                     episode = episodeData,
+                    onLinkFound = links::add
                 )
+
+                return@assertWithMeasuredTime links
             }
         )
     }
