@@ -31,6 +31,9 @@ object WebViewDriverManager {
      * */
     fun destroy() {
         _webView.value?.destroy()
+    }
+
+    internal fun unregister() {
         _webView.value = null
     }
 }

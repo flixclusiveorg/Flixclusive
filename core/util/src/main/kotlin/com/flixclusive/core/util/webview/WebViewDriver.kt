@@ -23,7 +23,6 @@ import com.flixclusive.core.util.common.dispatcher.AppDispatchers
  * @property shouldClearFormData Whether to clear the form data.
  * @property shouldClearWebStorage Whether to clear the web storage.
  * @property shouldClearSslPreferences Whether to clear the SSL preferences.
- * @property shouldClearAppCache Whether to clear the app cache.
  *
  * @see WebViewDriverManager
  * */
@@ -38,13 +37,12 @@ abstract class WebViewDriver(
     abstract val name: String
     abstract val isHeadless: Boolean
 
-    open val shouldClearCache: Boolean = true
-    open val shouldClearCookies: Boolean = true
-    open val shouldClearHistory: Boolean = true
-    open val shouldClearFormData: Boolean = true
-    open val shouldClearWebStorage: Boolean = true
-    open val shouldClearSslPreferences: Boolean = true
-    open val shouldClearAppCache: Boolean = true
+    open val shouldClearCache: Boolean = false
+    open val shouldClearCookies: Boolean = false
+    open val shouldClearHistory: Boolean = false
+    open val shouldClearFormData: Boolean = false
+    open val shouldClearWebStorage: Boolean = false
+    open val shouldClearSslPreferences: Boolean = false
 
     val cookieManager get() = CookieManager.getInstance()
     val webStorage get() = WebStorage.getInstance()
@@ -74,34 +72,34 @@ abstract class WebViewDriver(
     }
 
     override fun destroy() {
-        if (isHeadless) {
-            AppDispatchers.runOnMain {
-                if (shouldClearCache) {
-                    clearCache(true)
-                }
-                if (shouldClearCookies) {
-                    cookieManager?.removeAllCookies(null)
-                    cookieManager?.flush()
-                }
-                if (shouldClearHistory) {
-                    clearHistory()
-                }
-                if (shouldClearFormData) {
-                    clearFormData()
-                }
-                if (shouldClearWebStorage) {
-                    webStorage?.deleteAllData()
-                }
-                if (shouldClearSslPreferences) {
-                    clearSslPreferences()
-                }
-
-                stopLoading()
-                onPause()
-                super.destroy()
+        AppDispatchers.runOnMain {
+            if (shouldClearCache) {
+                clearCache(true)
             }
-        } else {
-            WebViewDriverManager.destroy()
+            if (shouldClearCookies) {
+                cookieManager?.removeAllCookies(null)
+                cookieManager?.flush()
+            }
+            if (shouldClearHistory) {
+                clearHistory()
+            }
+            if (shouldClearFormData) {
+                clearFormData()
+            }
+            if (shouldClearWebStorage) {
+                webStorage?.deleteAllData()
+            }
+            if (shouldClearSslPreferences) {
+                clearSslPreferences()
+            }
+
+            stopLoading()
+            onPause()
+            super.destroy()
+        }
+
+        if (!isHeadless) {
+            WebViewDriverManager.unregister()
         }
     }
 }
