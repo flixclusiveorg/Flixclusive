@@ -14,7 +14,7 @@ import com.flixclusive.provider.ProviderApi
 object DefaultTestFilm {
     fun getDefaultTestFilm(): Movie {
         return Movie(
-            id = "tt0068646",
+            id = "238",
             tmdbId = 238,
             imdbId = "tt0068646",
             title = "The Godfather",
