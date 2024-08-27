@@ -6,7 +6,6 @@ import android.webkit.CookieManager
 import android.webkit.WebStorage
 import android.webkit.WebView
 import androidx.annotation.MainThread
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 
 /**
  *
@@ -54,9 +53,7 @@ abstract class WebViewDriver(
         url: String,
         headers: Map<String, String>
     ) {
-        AppDispatchers.runOnMain {
-            super.loadUrl(url, headers)
-        }
+        super.loadUrl(url, headers)
 
         if (!isHeadless) {
             WebViewDriverManager.register(this)
@@ -64,9 +61,7 @@ abstract class WebViewDriver(
     }
 
     override fun loadUrl(url: String) {
-        AppDispatchers.runOnMain {
-            super.loadUrl(url)
-        }
+        super.loadUrl(url)
 
         if (!isHeadless) {
             WebViewDriverManager.register(this)
@@ -74,31 +69,29 @@ abstract class WebViewDriver(
     }
 
     override fun destroy() {
-        AppDispatchers.runOnMain {
-            if (shouldClearCache) {
-                clearCache(true)
-            }
-            if (shouldClearCookies) {
-                cookieManager?.removeAllCookies(null)
-                cookieManager?.flush()
-            }
-            if (shouldClearHistory) {
-                clearHistory()
-            }
-            if (shouldClearFormData) {
-                clearFormData()
-            }
-            if (shouldClearWebStorage) {
-                webStorage?.deleteAllData()
-            }
-            if (shouldClearSslPreferences) {
-                clearSslPreferences()
-            }
-
-            stopLoading()
-            onPause()
-            super.destroy()
+        if (shouldClearCache) {
+            clearCache(true)
         }
+        if (shouldClearCookies) {
+            cookieManager?.removeAllCookies(null)
+            cookieManager?.flush()
+        }
+        if (shouldClearHistory) {
+            clearHistory()
+        }
+        if (shouldClearFormData) {
+            clearFormData()
+        }
+        if (shouldClearWebStorage) {
+            webStorage?.deleteAllData()
+        }
+        if (shouldClearSslPreferences) {
+            clearSslPreferences()
+        }
+
+        stopLoading()
+        onPause()
+        super.destroy()
 
         if (!isHeadless) {
             WebViewDriverManager.unregister()
