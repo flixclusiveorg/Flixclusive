@@ -9,8 +9,10 @@ import com.flixclusive.provider.Provider
  * @see [SettingsAPI](https://github.com/Aliucord/Aliucord/blob/main/Aliucord/src/main/java/com/aliucord/api/SettingsAPI.java)
  * @see JsonSettings
  * */
-@Suppress("unused", "MemberVisibilityCanBePrivate", "KDocUnresolvedReference",
-    "SpellCheckingInspection"
+@Suppress(
+    "unused",
+    "MemberVisibilityCanBePrivate",
+    "KDocUnresolvedReference"
 )
 class ProviderSettings(
     private val fileDirectory: String,

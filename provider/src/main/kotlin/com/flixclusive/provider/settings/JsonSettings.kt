@@ -15,7 +15,10 @@ import java.math.BigDecimal
  * @see [SettingsUtilsJSON](https://github.com/Aliucord/Aliucord/blob/main/Aliucord/src/main/java/com/aliucord/SettingsUtilsJSON.kt)
  *
  * */
-@Suppress("unused", "KDocUnresolvedReference", "SpellCheckingInspection")
+@Suppress(
+    "unused",
+    "KDocUnresolvedReference"
+)
 class JsonSettings(
     fileDirectory: String,
     fileName: String,
