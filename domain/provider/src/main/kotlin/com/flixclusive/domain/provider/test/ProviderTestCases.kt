@@ -1,5 +1,6 @@
 package com.flixclusive.domain.provider.test
 
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.log.infoLog
@@ -326,12 +327,25 @@ internal object ProviderTestCases {
                 }
 
                 val links = mutableSetOf<MediaLink>()
-                api.getLinks(
-                    watchId = api.testFilm.id ?: api.testFilm.identifier,
-                    film = api.testFilm,
-                    episode = episodeData,
-                    onLinkFound = links::add
-                )
+                if (api.useWebView) {
+                    val webView = withMainContext {
+                        api.getWebView()
+                    }
+
+                    webView.getLinks(
+                        watchId = api.testFilm.id ?: api.testFilm.identifier,
+                        film = api.testFilm,
+                        episode = episodeData,
+                        onLinkFound = links::add
+                    )
+                } else {
+                    api.getLinks(
+                        watchId = api.testFilm.id ?: api.testFilm.identifier,
+                        film = api.testFilm,
+                        episode = episodeData,
+                        onLinkFound = links::add
+                    )
+                }
 
                 return@assertWithMeasuredTime links
             }
