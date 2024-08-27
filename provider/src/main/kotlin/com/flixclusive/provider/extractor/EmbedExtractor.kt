@@ -4,7 +4,7 @@ import com.flixclusive.model.provider.MediaLink
 import okhttp3.OkHttpClient
 
 /**
- * An extractor class for providers that uses indirect and implicit link data sources.
+ * A class for providers that uses indirect and implicit link data sources.
  *
  * @param client The [OkHttpClient] instance used for network requests.
  *
@@ -12,7 +12,7 @@ import okhttp3.OkHttpClient
  * @property baseUrl The base URL associated with the extractor.
  */
 @Suppress("unused")
-abstract class Extractor(
+abstract class EmbedExtractor(
     protected val client: OkHttpClient
 ) {
     abstract val name: String
@@ -28,6 +28,7 @@ abstract class Extractor(
      */
     abstract suspend fun extract(
         url: String,
-        customHeaders: Map<String, String>? = null
-    ): List<MediaLink>
+        customHeaders: Map<String, String>? = null,
+        onLinkFound: (MediaLink) -> Unit
+    )
 }
