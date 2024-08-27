@@ -6,9 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.network.okhttp.webview.WebViewInterceptorManager
 import com.flixclusive.core.ui.mobile.KeyEventHandler
 import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.util.webview.WebViewDriverManager
 import com.flixclusive.data.util.InternetMonitor
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.data.watchlist.WatchlistRepository
@@ -53,7 +53,7 @@ internal class MobileAppViewModel @Inject constructor(
     val keyEventHandlers = mutableListOf<KeyEventHandler>()
     var isInPipMode by mutableStateOf(false)
 
-    val webViewResolver = WebViewInterceptorManager.webView
+    val webViewDriver = WebViewDriverManager.webView
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -88,8 +88,8 @@ internal class MobileAppViewModel @Inject constructor(
             )
         }
 
-    fun destroyWebViewInterceptor() {
-        WebViewInterceptorManager.destroy()
+    fun hideWebViewDriver() {
+        WebViewDriverManager.destroy()
     }
 
     fun previewFilm(film: Film) {

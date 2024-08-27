@@ -40,11 +40,11 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
-import com.flixclusive.core.network.okhttp.webview.WebViewInterceptor
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
 import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
 import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.webview.WebViewDriver
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
@@ -78,7 +78,7 @@ internal fun MobileActivity.MobileApp(
     val filmToPreview by viewModel.filmToPreview.collectAsStateWithLifecycle()
     val episodeToPlay by viewModel.episodeToPlay.collectAsStateWithLifecycle()
 
-    val webViewInterceptor by viewModel.webViewResolver.collectAsStateWithLifecycle()
+    val webViewDriver by viewModel.webViewDriver.collectAsStateWithLifecycle()
 
     var hasBeenDisconnected by remember { mutableStateOf(false) }
     var fullScreenImageToShow: String? by remember { mutableStateOf(null) }
@@ -292,18 +292,18 @@ internal fun MobileActivity.MobileApp(
         }
     }
 
-    if (webViewInterceptor != null) {
-        WebViewDialog(
-            webView = webViewInterceptor!!,
-            onDismiss = viewModel::destroyWebViewInterceptor
+    if (webViewDriver != null) {
+        WebViewDriverDialog(
+            webView = webViewDriver!!,
+            onDismiss = viewModel::hideWebViewDriver
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun WebViewDialog(
-    webView: WebViewInterceptor,
+private fun WebViewDriverDialog(
+    webView: WebViewDriver,
     onDismiss: () -> Unit
 ) {
     BasicAlertDialog(
@@ -327,7 +327,7 @@ private fun WebViewDialog(
                         .padding(bottom = 6.dp)
                 ) {
                     Text(
-                        text = webView.interceptorName,
+                        text = webView.name,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
