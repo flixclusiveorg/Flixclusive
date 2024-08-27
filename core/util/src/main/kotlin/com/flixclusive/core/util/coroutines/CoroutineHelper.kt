@@ -45,28 +45,3 @@ fun <R> asyncCalls(
         async { it.invoke() }
     }.awaitAll()
 }
-
-private val ioCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-
-/**
- * Launches a coroutine in the IO coroutine scope.
- * @param block The suspending lambda to execute in the IO coroutine scope.
- * @return A [Job] object representing the coroutine job.
- */
-fun ioLaunch(block: suspend () -> Unit): Job {
-    return ioCoroutineScope.launch {
-        block()
-    }
-}
-
-/**
- * Calls the specified suspending function in the IO dispatcher.
- * @param block The suspending lambda to execute.
- * @return The result of the suspending function.
- */
-suspend fun <T> ioCall(block: suspend () -> T): T {
-    return withContext(Dispatchers.IO) {
-        block()
-    }
-}
