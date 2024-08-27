@@ -1,28 +1,22 @@
-package com.flixclusive.core.network.okhttp.webview
+package com.flixclusive.core.util.webview
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.webkit.CookieManager
 import android.webkit.WebStorage
 import android.webkit.WebView
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.runOnMain
-import com.flixclusive.core.util.exception.safeCall
-import kotlinx.coroutines.Dispatchers
-import okhttp3.Interceptor
-import okhttp3.OkHttpClient
-import okhttp3.Response
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 
 /**
- * An [OkHttpClient] interceptor that uses [WebView].
  *
- * @property context The application context.
- * @property interceptorName The name of the interceptor. For example, "Cloudflare Interceptor".
+ * An extension of the [WebView] class. It allows users to run the instance on headless or non-headless mode.
+ *
+ *
+ * @property name The name of the WebView. For example, "Cloudflare Interceptor". This will be shown in the WebViewDriverDialog
  * @property isHeadless Whether the WebView is running in headless mode.
- * @property mainThread The coroutine dispatcher for the main thread.
  *
  * @property cookieManager The [CookieManager] for managing cookies.
  * @property webStorage The [WebStorage] for managing web storage.
- * @property interceptor The [Interceptor] that intercepts the request and response.
  * @property shouldClearCache Whether to clear the cache.
  * @property shouldClearCookies Whether to clear the cookies.
  * @property shouldClearHistory Whether to clear the history.
@@ -30,20 +24,18 @@ import okhttp3.Response
  * @property shouldClearWebStorage Whether to clear the web storage.
  * @property shouldClearSslPreferences Whether to clear the SSL preferences.
  * @property shouldClearAppCache Whether to clear the app cache.
- */
-@Suppress("unused", "HasPlatformType", "MemberVisibilityCanBePrivate")
-abstract class WebViewInterceptor(context: Context) : WebView(context) {
-    companion object {
-        fun OkHttpClient.addWebViewInterceptor(
-            webViewInterceptor: WebViewInterceptor
-        ): OkHttpClient {
-            return newBuilder()
-                .addInterceptor(webViewInterceptor.interceptor)
-                .build()
-        }
-    }
-
-    abstract val interceptorName: String
+ *
+ * @see WebViewDriverManager
+ * */
+@Suppress(
+    "unused",
+    "HasPlatformType",
+    "MemberVisibilityCanBePrivate"
+)
+abstract class WebViewDriver(
+    context: Context
+) : WebView(context) {
+    abstract val name: String
     abstract val isHeadless: Boolean
 
     open val shouldClearCache: Boolean = true
@@ -54,51 +46,42 @@ abstract class WebViewInterceptor(context: Context) : WebView(context) {
     open val shouldClearSslPreferences: Boolean = true
     open val shouldClearAppCache: Boolean = true
 
-    protected val mainThread = Dispatchers.Main
-    val cookieManager = CookieManager.getInstance()
-    val webStorage = WebStorage.getInstance()
-
-    internal val interceptor: Interceptor = Interceptor {
-        val response = intercept(it)
-        safeCall { destroy() }
-        return@Interceptor response
-    }
-
-    abstract fun intercept(chain: Interceptor.Chain): Response
+    val cookieManager get() = CookieManager.getInstance()
+    val webStorage get() = WebStorage.getInstance()
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun loadUrl(
         url: String,
         headers: Map<String, String>
     ) {
-        runOnMain {
+        AppDispatchers.runOnMain {
             super.loadUrl(url, headers)
         }
 
         if (!isHeadless) {
-            WebViewInterceptorManager.register(this)
+            WebViewDriverManager.register(this)
         }
     }
 
     override fun loadUrl(url: String) {
-        runOnMain {
+        AppDispatchers.runOnMain {
             super.loadUrl(url)
         }
 
         if (!isHeadless) {
-            WebViewInterceptorManager.register(this)
+            WebViewDriverManager.register(this)
         }
     }
 
     override fun destroy() {
         if (isHeadless) {
-            runOnMain {
+            AppDispatchers.runOnMain {
                 if (shouldClearCache) {
                     clearCache(true)
                 }
                 if (shouldClearCookies) {
                     cookieManager?.removeAllCookies(null)
-                    cookieManager.flush()
+                    cookieManager?.flush()
                 }
                 if (shouldClearHistory) {
                     clearHistory()
@@ -107,7 +90,7 @@ abstract class WebViewInterceptor(context: Context) : WebView(context) {
                     clearFormData()
                 }
                 if (shouldClearWebStorage) {
-                    webStorage.deleteAllData()
+                    webStorage?.deleteAllData()
                 }
                 if (shouldClearSslPreferences) {
                     clearSslPreferences()
@@ -118,7 +101,7 @@ abstract class WebViewInterceptor(context: Context) : WebView(context) {
                 super.destroy()
             }
         } else {
-            WebViewInterceptorManager.destroy()
+            WebViewDriverManager.destroy()
         }
     }
 }
