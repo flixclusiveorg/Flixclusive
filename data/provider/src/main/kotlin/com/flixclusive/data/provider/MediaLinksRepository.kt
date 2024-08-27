@@ -57,13 +57,14 @@ class MediaLinksRepository @Inject constructor(
                 if (api.useWebView) {
                     withContext(mainDispatcher) {
                         webView = api.getWebView()
-                        webView!!.getLinks(
-                            watchId = watchId,
-                            film = film,
-                            episode = episode,
-                            onLinkFound = onLinkFound
-                        )
                     }
+
+                    webView!!.getLinks(
+                        watchId = watchId,
+                        film = film,
+                        episode = episode,
+                        onLinkFound = onLinkFound
+                    )
                 } else {
                     api.getLinks(
                         watchId = watchId,
@@ -77,7 +78,9 @@ class MediaLinksRepository @Inject constructor(
             } catch (e: Throwable) {
                 e.toNetworkException()
             } finally {
-                webView?.destroy()
+                withContext(mainDispatcher) {
+                    webView?.destroy()
+                }
             }
         }
     }
