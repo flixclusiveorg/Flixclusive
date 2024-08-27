@@ -1,6 +1,7 @@
 package com.flixclusive.provider
 
 import android.content.Context
+import androidx.annotation.MainThread
 import com.flixclusive.core.util.film.filter.Filter
 import com.flixclusive.core.util.film.filter.FilterList
 import com.flixclusive.model.provider.MediaLink
@@ -109,7 +110,10 @@ abstract class ProviderApi(
     /**
      *
      * Gets the WebView instance for this provider api. This method is only called if [useWebView] is true. It also must use the public [context] property to instantiate the [ProviderWebView].
+     *
+     * **WARNING: THIS MUST BE ONLY CALLED ON THE MAIN THREAD.**
      * */
+    @MainThread
     open fun getWebView(): ProviderWebView
         = throw NotImplementedError("This provider indicates that it uses a WebView but does not provide one. Make it make sense!")
 }

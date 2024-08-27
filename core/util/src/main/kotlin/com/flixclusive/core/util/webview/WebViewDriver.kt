@@ -5,6 +5,7 @@ import android.content.Context
 import android.webkit.CookieManager
 import android.webkit.WebStorage
 import android.webkit.WebView
+import androidx.annotation.MainThread
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers
 
 /**
@@ -31,6 +32,7 @@ import com.flixclusive.core.util.common.dispatcher.AppDispatchers
     "HasPlatformType",
     "MemberVisibilityCanBePrivate"
 )
+@MainThread
 abstract class WebViewDriver(
     context: Context
 ) : WebView(context) {
