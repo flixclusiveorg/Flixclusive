@@ -4,6 +4,7 @@ import android.content.Context
 import android.webkit.CookieManager
 import android.webkit.WebStorage
 import android.webkit.WebView
+import androidx.annotation.MainThread
 import com.flixclusive.core.util.webview.WebViewDriver
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -21,6 +22,7 @@ import okhttp3.Response
  * @property interceptor The [Interceptor] that intercepts the request and response.
  */
 @Suppress("unused")
+@MainThread
 abstract class WebViewInterceptor(context: Context) : WebViewDriver(context) {
     companion object {
         fun OkHttpClient.addWebViewInterceptor(
