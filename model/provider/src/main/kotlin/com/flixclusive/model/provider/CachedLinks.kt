@@ -23,17 +23,13 @@ data class CachedLinks(
     val streams: SnapshotStateList<Stream> = mutableStateListOf(),
     val subtitles: SnapshotStateList<Subtitle> = mutableStateListOf()
 ) : Serializable {
-    fun addAll(links: List<MediaLink>) {
-        links.forEach(this::add)
-    }
-
     fun add(link: MediaLink) {
         when {
             link is Stream && !streams.contains(link) -> {
-                streams.add(0, link)
+                streams.add(link)
             }
             link is Subtitle && !subtitles.contains(link) -> {
-                subtitles.add(0, link)
+                subtitles.add(link)
             }
         }
     }

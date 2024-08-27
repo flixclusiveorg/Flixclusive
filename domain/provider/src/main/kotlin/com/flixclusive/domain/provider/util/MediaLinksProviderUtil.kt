@@ -2,6 +2,8 @@ package com.flixclusive.domain.provider.util
 
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.model.provider.CachedLinks
+import com.flixclusive.model.provider.MediaLink
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import com.flixclusive.core.util.R as UtilR
 
 internal object MediaLinksProviderUtil {
@@ -16,4 +18,8 @@ internal object MediaLinksProviderUtil {
          = streams.isNotEmpty()
             && (providerName.equals(providerName, true)
             || providerName == null)
+
+    fun MediaLink.isValidLink(): Boolean {
+        return url.toHttpUrlOrNull() != null
+    }
 }

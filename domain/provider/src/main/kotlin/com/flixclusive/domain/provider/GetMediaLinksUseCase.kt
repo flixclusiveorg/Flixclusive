@@ -15,16 +15,15 @@ import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.send
 import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.sendFetchingFilmMessage
 import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.throwError
 import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.throwUnavailableError
+import com.flixclusive.domain.provider.util.MediaLinksProviderUtil
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.DEFAULT_ERROR_MESSAGE
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.EMPTY_PROVIDER_MESSAGE
-import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.UNAVAILABLE_EPISODE_MESSAGE
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.getNoLinksLoadedMessage
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.isCached
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.provider.CachedLinks
 import com.flixclusive.model.provider.MediaLinkResourceState
-import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmDetails.Companion.isTvShow
 import com.flixclusive.model.tmdb.TvShow
@@ -35,7 +34,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.flixclusive.core.util.R as UtilR
@@ -89,7 +87,6 @@ class GetMediaLinksUseCase @Inject constructor(
      * @param preferredProviderName The name of the preferred provider
      * @param watchId The watch id of the film
      * @param episode The episode of the film if it is a tv show
-     * @param runWebView A callback to run the web view
      * @param onSuccess A callback to run when the links are obtained successfully
      * @param onError A callback to run when an error occurs
      * 
@@ -116,16 +113,18 @@ class GetMediaLinksUseCase @Inject constructor(
             film.isTvShow && episode == null -> {
                 sendFetchingEpisodeMessage()
                 
-                getNearestEpisodeToWatch(
+                val nextEpisode = getNearestEpisodeToWatch(
                     film = film as TvShow,
                     watchHistoryItem = watchHistoryItem
-                ).also {
-                    if (it is Resource.Failure) {
-                        onError?.invoke(it.error ?: UNAVAILABLE_EPISODE_MESSAGE)
-                        throwError(it.error)
-                        return@channelFlow
-                    }
-                }.data
+                )
+
+                if (nextEpisode is Resource.Failure) {
+                    onError?.invoke(nextEpisode.error ?: MediaLinksProviderUtil.UNAVAILABLE_EPISODE_MESSAGE)
+                    throwError(nextEpisode.error)
+                    return@channelFlow
+                }
+
+                nextEpisode.data
             }
             else -> episode
         }
@@ -135,11 +134,6 @@ class GetMediaLinksUseCase @Inject constructor(
             episode = episodeToUse
         )
 
-        /*
-         *
-         * If user chose the same film or the [FilmKey] is valid,
-         * then just proceed with the same cached link.
-         * */
         if (cachedLinks.isCached(preferredProviderName)) {
             onSuccess(episodeToUse)
             finish()
@@ -159,103 +153,56 @@ class GetMediaLinksUseCase @Inject constructor(
 
             sendFetchingFilmMessage(provider = api.provider.name)
 
-            if (api.useWebView) {
-                storeCache(
-                    filmId = film.identifier,
-                    episode = episodeToUse,
-                    cachedLinks = cachedLinks.copy(
-                        watchId = "${film.identifier}-WEBVIEW",
-                        providerName = api.provider.name
-                    )
-                )
+            val watchIdResource = getCorrectWatchId(
+                watchId = watchId,
+                film = film,
+                api = api
+            )
 
-                val webView = api.getWebView(context = context)
-
-                sendExtractingLinksMessage(
-                    provider = api.provider.name,
-                    isOnWebView = true
-                )
-
-                try {
-                    val links = withContext(ioDispatcher) {
-                        webView.getLinks(
-                            film = film,
-                            episode = episodeToUse,
-                        )
-                    }
-                    webView.destroy()
-
-                    if (links.isEmpty()) {
-                        if (canStopLooping) {
-                            val message = getNoLinksLoadedMessage(api.provider.name)
-                            onError?.invoke(message)
-                            throwError(message)
-                            return@channelFlow
-                        }
-
-                        continue
-                    }
-
-                    cachedLinks.addAll(links)
-                    onSuccess(episodeToUse)
-                    trySend(MediaLinkResourceState.Success)
-                    return@channelFlow
-                } catch (e: Throwable) {
-                    webView.destroy()
-                    if (canStopLooping) {
-                        onError?.invoke(UiText.StringValue(e))
-                        throwError(e)
-                        return@channelFlow
-                    }
-
-                    continue
-                }
-            }
-
-            val needsNewWatchId = watchId == null && film.isFromTmdb
-            val watchIdResource = when {
-                needsNewWatchId -> mediaLinksRepository.getWatchId(
-                    film = film,
-                    api = api
-                )
-                else -> Resource.Success(watchId ?: film.identifier)
-            }
-
-            val hasFailedToGetWatchId = watchIdResource is Resource.Failure || watchIdResource.data.isNullOrBlank()
-            when {
-                hasFailedToGetWatchId && canStopLooping -> {
+            if (watchIdResource.data.isNullOrBlank()) {
+                if (canStopLooping) {
                     val error = watchIdResource.error
                         ?: UiText.StringResource(UtilR.string.blank_media_id_error_message)
 
                     onError?.invoke(error)
                     throwUnavailableError(error)
                     return@channelFlow
-
                 }
-                hasFailedToGetWatchId -> continue
+
+                continue
             }
 
             val watchIdToUse = watchIdResource.data!!
+            sendExtractingLinksMessage(
+                provider = api.provider.name,
+                isOnWebView = api.useWebView
+            )
 
-            sendExtractingLinksMessage(provider = api.provider.name)
             cachedLinks.streams.clear()
-            
+            storeCache(
+                filmId = film.identifier,
+                episode = episodeToUse,
+                cachedLinks = cachedLinks.copy(
+                    watchId = watchIdToUse,
+                    providerName = api.provider.name
+                )
+            )
+
             val result = mediaLinksRepository.getLinks(
                 film = film,
                 watchId = watchIdToUse,
                 episode = episodeToUse,
-                api = api
+                api = api,
+                onLinkFound = cachedLinks::add
             )
 
-            val hasNoStreamLinks = result.data
-                ?.filterIsInstance<Stream>()
-                ?.isEmpty() ?: false
-
+            val noLinksLoaded = result is Resource.Success && cachedLinks.streams.isEmpty()
+            val isNotSuccessful = result is Resource.Failure || noLinksLoaded
             when {
-                (result is Resource.Failure || hasNoStreamLinks) && canStopLooping -> {
+                isNotSuccessful && canStopLooping -> {
                     val error = when {
                         result.error != null -> result.error!!
-                        cachedLinks.streams.isEmpty() -> api.provider.name.getNoLinksMessage
+                        noLinksLoaded -> getNoLinksLoadedMessage(api.provider.name)
                         else -> DEFAULT_ERROR_MESSAGE
                     }
 
@@ -264,16 +211,6 @@ class GetMediaLinksUseCase @Inject constructor(
                     return@channelFlow
                 }
                 result is Resource.Success -> {
-                    cachedLinks.addAll(links = result.data ?: emptyList())
-                    storeCache(
-                        filmId = film.identifier,
-                        episode = episodeToUse,
-                        cachedLinks = cachedLinks.copy(
-                            watchId = watchIdToUse,
-                            providerName = api.provider.name
-                        )
-                    )
-                    
                     onSuccess(episodeToUse)
                     trySend(MediaLinkResourceState.Success)
                     return@channelFlow
@@ -398,6 +335,20 @@ class GetMediaLinksUseCase @Inject constructor(
         return providerApis.first()
     }
 
-    private val String.getNoLinksMessage
-        get() = UiText.StringResource(UtilR.string.no_links_loaded_format_message, this)
+    private suspend fun getCorrectWatchId(
+        watchId: String?,
+        film: FilmDetails,
+        api: ProviderApi
+    ): Resource<String?> {
+        val needsNewWatchId = watchId == null && film.isFromTmdb && !api.useWebView
+        val watchIdResource = when {
+            needsNewWatchId -> mediaLinksRepository.getWatchId(
+                film = film,
+                api = api
+            )
+            else -> Resource.Success(watchId ?: film.identifier)
+        }
+
+        return watchIdResource
+    }
 }

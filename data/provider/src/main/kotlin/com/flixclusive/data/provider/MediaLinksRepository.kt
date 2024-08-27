@@ -9,12 +9,15 @@ import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.exception.toNetworkException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.model.provider.Stream
+import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
+import com.flixclusive.provider.webview.ProviderWebView
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -24,6 +27,8 @@ import javax.inject.Singleton
 class MediaLinksRepository @Inject constructor(
     @Dispatcher(AppDispatchers.IO)
     private val ioDispatcher: CoroutineDispatcher,
+    @Dispatcher(AppDispatchers.Main)
+    private val mainDispatcher: CoroutineDispatcher,
 ) {
 
     /**
@@ -34,6 +39,7 @@ class MediaLinksRepository @Inject constructor(
      * @param watchId The unique identifier to be used to obtain the links.
      * @param film A detailed film object used to obtain the links. It could either be a [Movie] or a [TvShow]
      * @param episode An episode data used to obtain the links if the [film] parameter is a [TvShow]
+     * @param onLinkFound A callback function that is invoked when a [Stream] or [Subtitle] is found.
      *
      * @return a [Resource] of [List] of [MediaLink]
      * */
@@ -41,19 +47,37 @@ class MediaLinksRepository @Inject constructor(
         api: ProviderApi,
         watchId: String,
         film: FilmDetails,
-        episode: Episode?
-    ): Resource<List<MediaLink>> {
+        episode: Episode?,
+        onLinkFound: (MediaLink) -> Unit
+    ): Resource<Unit> {
         return withContext(ioDispatcher) {
-            try {
-                val links = api.getLinks(
-                    watchId = watchId,
-                    film = film,
-                    episode = episode
-                )
+            var webView: ProviderWebView? = null
 
-                Resource.Success(links)
+            try {
+                if (api.useWebView) {
+                    withContext(mainDispatcher) {
+                        webView = api.getWebView()
+                        webView!!.getLinks(
+                            watchId = watchId,
+                            film = film,
+                            episode = episode,
+                            onLinkFound = onLinkFound
+                        )
+                    }
+                } else {
+                    api.getLinks(
+                        watchId = watchId,
+                        film = film,
+                        episode = episode,
+                        onLinkFound = onLinkFound
+                    )
+                }
+
+                Resource.Success(Unit)
             } catch (e: Throwable) {
                 e.toNetworkException()
+            } finally {
+                webView?.destroy()
             }
         }
     }

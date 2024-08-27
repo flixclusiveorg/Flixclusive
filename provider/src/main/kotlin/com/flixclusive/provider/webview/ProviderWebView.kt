@@ -11,7 +11,14 @@ abstract class ProviderWebView(
     context: Context,
 ) : WebView(context) {
     abstract suspend fun getLinks(
+        watchId: String,
         film: FilmDetails,
         episode: Episode? = null,
-    ): List<MediaLink>
+        onLinkFound: (MediaLink) -> Unit,
+    )
+
+    override fun destroy() {
+        stopLoading()
+        super.destroy()
+    }
 }
