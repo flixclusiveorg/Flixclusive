@@ -6,7 +6,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineDispatcher
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -20,4 +19,9 @@ object DispatchersModule {
     @Dispatcher(AppDispatchers.Default)
     fun providesDefaultDispatcher()
         = AppDispatchers.Default.dispatcher
+
+    @Provides
+    @Dispatcher(AppDispatchers.Main)
+    fun providesMainDispatcher()
+        = AppDispatchers.Main.dispatcher
 }
