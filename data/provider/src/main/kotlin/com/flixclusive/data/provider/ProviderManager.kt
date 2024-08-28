@@ -1,13 +1,12 @@
 package com.flixclusive.data.provider
 
 import android.content.Context
-import android.content.res.AssetManager
-import android.content.res.Resources
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshotFlow
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.exception.safeCall
@@ -17,6 +16,7 @@ import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.data.provider.util.CrashHelper.getApiCrashMessage
 import com.flixclusive.data.provider.util.CrashHelper.isCrashingOnGetApiMethod
+import com.flixclusive.data.provider.util.DynamicResourceLoader
 import com.flixclusive.data.provider.util.NotificationUtil.notifyOnError
 import com.flixclusive.data.provider.util.buildValidFilename
 import com.flixclusive.data.provider.util.downloadFile
@@ -76,6 +76,8 @@ class ProviderManager @Inject constructor(
      * Map of all repository's updater.json files and their contents
      * */
     private val updaterJsonMap = HashMap<String, List<ProviderData>>()
+
+    private val dynamicResourceLoader = DynamicResourceLoader(context = context)
 
     val workingApis = snapshotFlow {
         providerDataList
@@ -293,7 +295,7 @@ class ProviderManager @Inject constructor(
      * @param file              Provider file
      * @param providerData      The provider information
      */
-    @Suppress("DEPRECATION", "UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST")
     private suspend fun loadProvider(file: File, providerData: ProviderData) {
         val name = file.nameWithoutExtension
         val filePath = file.absolutePath
@@ -339,16 +341,12 @@ class ProviderManager @Inject constructor(
                 providerName = providerData.name
             )
             if (manifest.requiresResources) {
-                // based on https://stackoverflow.com/questions/7483568/dynamic-resource-loading-from-other-apk
-                val assets = AssetManager::class.java.getDeclaredConstructor().newInstance()
-                val addAssetPath =
-                    AssetManager::class.java.getMethod("addAssetPath", String::class.java)
-                addAssetPath.invoke(assets, file.absolutePath)
-                providerInstance.resources = Resources(
-                    assets,
-                    context.resources.displayMetrics,
-                    context.resources.configuration
-                )
+                withIOContext {
+                    dynamicResourceLoader.load(
+                        inputFile = file,
+                        provider = providerInstance
+                    )
+                }
             }
 
             if (providerPreference == null) {
@@ -458,7 +456,7 @@ class ProviderManager @Inject constructor(
             classLoaders.values.removeIf { 
                 it.name.equals(provider.name, true)
             }
-            providerApiRepository.remove(provider.name!!)
+            providerApiRepository.remove(provider.name)
             providers.remove(provider.name)
             if (unloadOnSettings) {
                 unloadProviderOnSettings(file.absolutePath)

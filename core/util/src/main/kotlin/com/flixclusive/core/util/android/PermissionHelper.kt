@@ -14,11 +14,16 @@ fun Context.hasAllPermissionGranted(): Boolean {
         requiredPermissions.add(Manifest.permission.POST_NOTIFICATIONS)
     }
 
-    for (permission in requiredPermissions){
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        requiredPermissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+        requiredPermissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    }
+
+    for (permission in requiredPermissions) {
 
         val status = checkCallingOrSelfPermission(permission)
 
-        if (status != PackageManager.PERMISSION_GRANTED){
+        if (status != PackageManager.PERMISSION_GRANTED) {
             allPermissionProvided = false
             break
         }
