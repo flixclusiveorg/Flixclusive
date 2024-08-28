@@ -37,12 +37,12 @@ internal fun AuthorCard(
     Box(
         modifier = modifier
             .ifElse(
-                condition = author.githubLink != null,
+                condition = author.socialLink != null,
                 ifTrueModifier = Modifier.clickable(
                     interactionSource = interactionSource,
                     indication = null,
                     onClick = {
-                        author.githubLink?.let(uriHandler::openUri)
+                        author.socialLink?.let(uriHandler::openUri)
                     }
                 )
             )
@@ -58,7 +58,7 @@ internal fun AuthorCard(
                 modifier = Modifier
                     .size(avatarSize)
                     .ifElse(
-                        condition = author.githubLink != null,
+                        condition = author.socialLink != null,
                         ifTrueModifier = Modifier.clickable(
                             interactionSource = interactionSource,
                             indication = rememberRipple(
@@ -66,12 +66,12 @@ internal fun AuthorCard(
                                 radius = avatarSize / 2
                             ),
                             onClick = {
-                                author.githubLink?.let(uriHandler::openUri)
+                                author.socialLink?.let(uriHandler::openUri)
                             }
                         )
                     ),
                 placeholderModifier = Modifier.fillMaxSize(),
-                urlImage = "${author.githubLink}.png",
+                urlImage = "${author.socialLink}.png",
                 placeholderId = UiCommonR.drawable.profile_placeholder,
                 contentDescId = UtilR.string.author_icon_content_desc,
             )

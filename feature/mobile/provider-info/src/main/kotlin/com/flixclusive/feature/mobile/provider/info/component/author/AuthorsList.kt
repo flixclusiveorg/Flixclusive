@@ -62,7 +62,7 @@ private fun AuthorsListPreview() {
                 authors = List(5) {
                     Author(
                         name = "Captain Jack Sparrow",
-                        githubLink = "https://github.com/johndoe"
+                        socialLink = "https://github.com/johndoe"
                     )
                 }
             )
