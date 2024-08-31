@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -55,16 +57,18 @@ fun Consent(
     goNext: (isOptIn: Boolean) -> Unit
 ) {
     val context = LocalContext.current.getActivity<ComponentActivity>()
-
     val buttonMinHeight = 60.dp
 
     var isOptIn by remember { mutableStateOf(true) }
 
     Column(
         modifier = modifier
-            .padding(horizontal = 5.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(
+                horizontal = 5.dp,
+                vertical = 8.dp
+            ),
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         HorizontalDivider(
             modifier = Modifier
@@ -72,22 +76,36 @@ fun Consent(
             thickness = 0.5.dp
         )
 
-        Text(
-            text = header,
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Black
+        Column(
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .weight(1F, fill = false)
+                .padding(bottom = 15.dp)
+        ) {
+            Text(
+                text = header,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Black
+                ),
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
             )
-        )
 
-        Text(
-            text = consentContent,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Normal,
-                textAlign = TextAlign.Justify
+            Text(
+                text = consentContent,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Justify
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
             )
-        )
+        }
+
 
         if (hasOptInFeature) {
             Surface(
@@ -126,6 +144,7 @@ fun Consent(
             }
         }
 
+        // TODO("Remove `context.isTvMode()` in here after creating TV UI's own splash screen")
         if (context.isTvMode()) {
             TvButton(
                 onClick = { goNext(isOptIn) },
@@ -172,17 +191,22 @@ fun Consent(
     }
 }
 
+@OptIn(ExperimentalTvMaterial3Api::class)
 @Preview
 @Composable
 private fun ConsentPreview() {
     FlixclusiveTheme {
-        Column {
-            Text("FLIXCLUSIVE", fontSize = 30.sp)
-
+        Surface {
             Consent(
                 hasOptInFeature = true,
                 header = stringResource(id = UtilR.string.privacy_notice),
-                consentContent = stringResource(id = UtilR.string.privacy_notice_crash_log_sender),
+                consentContent = """
+                     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean vel laoreet dui. In hac habitasse platea dictumst. Maecenas neque dui, pretium ac dui eu, condimentum sollicitudin arcu. Sed ac interdum sem, consequat posuere enim. Proin vitae lacus quis augue porttitor luctus. Proin consequat lobortis neque, ac malesuada massa lobortis ut. Vestibulum vel augue consequat nulla fringilla porttitor sit amet quis mauris. Nunc et nisi in sapien interdum euismod id in urna. Curabitur pretium malesuada diam, vel accumsan velit commodo ut. Aenean ac efficitur ligula, vel dictum felis. Nunc placerat tortor nec metus venenatis, a malesuada neque volutpat.
+
+Nam quis efficitur nulla. Nulla venenatis non augue et viverra. Vivamus sit amet vestibulum mi, ac volutpat dolor. Aenean cursus, ex ornare lacinia semper, est lectus fermentum quam, quis porta felis turpis faucibus nulla. In hac habitasse platea dictumst. Vestibulum pulvinar fermentum mi sit amet eleifend. Fusce euismod mi nec finibus maximus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nullam venenatis massa nec tellus dignissim, et facilisis risus dapibus.
+
+Integer efficitur viverra mauris. Mauris bibendum ipsum quis quam vehicula interdum. Ut aliquam mauris tempor iaculis pulvinar. Integer porttitor, mi vitae congue mollis, sapien libero rhoncus velit, id semper odio risus ullamcorper ligula. Suspendisse potenti. Nam tincidunt elit in ex ornare venenatis. Etiam laoreet enim sed nibh suscipit mattis. Proin mauris nunc, molestie id consequat ac, convallis vel neque. 
+                """.trimIndent(),
                 optInLabel = stringResource(id = UtilR.string.privacy_notice_opt_in),
                 goNext = {}
             )
