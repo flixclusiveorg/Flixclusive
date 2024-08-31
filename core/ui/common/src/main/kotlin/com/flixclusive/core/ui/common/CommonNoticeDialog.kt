@@ -29,7 +29,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.R as UtilR
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,7 +105,7 @@ fun CommonNoticeDialog(
                                 onDismiss()
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
+                            containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = Color.Black
                         ),
                         shape = buttonShape.copy(
