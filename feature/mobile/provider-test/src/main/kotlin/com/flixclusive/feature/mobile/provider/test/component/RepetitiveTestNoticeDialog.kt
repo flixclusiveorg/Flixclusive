@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
@@ -21,8 +22,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.R as UtilR
 
@@ -33,13 +36,15 @@ fun RepetitiveTestNoticeDialog(
     onTestAgain: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val buttonMinHeight = 60.dp
+    val buttonMinHeight = 50.dp
+    val buttonShape = MaterialTheme.shapes.medium
+    val buttonShapeRoundnessPercentage = 10
 
     BasicAlertDialog(
         onDismissRequest = onDismiss
     ) {
         Surface(
-            shape = RoundedCornerShape(10),
+            shape = RoundedCornerShape(buttonShapeRoundnessPercentage),
         ) {
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,
@@ -47,11 +52,13 @@ fun RepetitiveTestNoticeDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(180.dp)
-                    .padding(10.dp)
             ) {
                 Column(
                     verticalArrangement = Arrangement.SpaceEvenly,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .weight(1F, fill = false)
                 ) {
                     Text(
                         text = stringResource(id = UtilR.string.repetitive_test_warning_label),
@@ -78,7 +85,10 @@ fun RepetitiveTestNoticeDialog(
                 }
 
                 Row(
-                    verticalAlignment = Alignment.Bottom
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 10.dp)
+                        .padding(bottom = 10.dp)
                 ) {
                     Button(
                         onClick = onSkip,
@@ -86,11 +96,12 @@ fun RepetitiveTestNoticeDialog(
                             containerColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
                             contentColor = Color.Black
                         ),
-                        shape = MaterialTheme.shapes.medium,
+                        shape = buttonShape.copy(
+                            bottomEnd = CornerSize((buttonShapeRoundnessPercentage  *2).dp),
+                        ),
                         modifier = Modifier
                             .weight(1F)
                             .heightIn(min = buttonMinHeight)
-                            .padding(5.dp)
                     ) {
                         Text(
                             text = stringResource(id = UtilR.string.skip),
@@ -107,11 +118,12 @@ fun RepetitiveTestNoticeDialog(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
-                        shape = MaterialTheme.shapes.medium,
+                        shape = buttonShape.copy(
+                            bottomEnd = CornerSize((buttonShapeRoundnessPercentage  *2).dp),
+                        ),
                         modifier = Modifier
                             .weight(1F)
                             .heightIn(min = buttonMinHeight)
-                            .padding(5.dp)
                     ) {
                         Text(
                             text = stringResource(id = UtilR.string.re_test),
@@ -121,6 +133,20 @@ fun RepetitiveTestNoticeDialog(
                     }
                 }
             }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun RepetitiveTestNoticeDialogPreview() {
+    FlixclusiveTheme {
+        Surface {
+            RepetitiveTestNoticeDialog(
+                onSkip = { },
+                onTestAgain = { },
+                onDismiss = { }
+            )
         }
     }
 }
