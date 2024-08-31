@@ -15,9 +15,11 @@ import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.category.Category
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -51,6 +53,18 @@ class HomeScreenViewModel @Inject constructor(
     internetMonitor: InternetMonitor,
     watchHistoryRepository: WatchHistoryRepository,
 ) : ViewModel() {
+    var itemsSize by mutableIntStateOf(0) // For TV
+        private set
+
+    private val paginationJobs = mutableMapOf<Int, Job?>()
+
+    val state = homeItemsProviderUseCase.state
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = homeItemsProviderUseCase.state.value
+        )
+
     val appSettings = appSettingsManager.appSettings
         .data
         .stateIn(
@@ -58,17 +72,6 @@ class HomeScreenViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = appSettingsManager.localAppSettings
         )
-
-    var itemsSize by mutableIntStateOf(0) // For TV
-        private set
-
-
-    val headerItem = homeItemsProviderUseCase.headerItem
-    val homeCategories = homeItemsProviderUseCase.categories
-    val homeRowItems = homeItemsProviderUseCase.rowItems
-    val homeRowItemsPagingState = homeItemsProviderUseCase.rowItemsPagingState
-
-    val uiState = homeItemsProviderUseCase.initializationStatus
 
     private val connectionObserver = internetMonitor
         .isOnline
@@ -95,8 +98,12 @@ class HomeScreenViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            val initializationStatus = homeItemsProviderUseCase.state.map {
+                it.status
+            }.distinctUntilChanged()
+
             connectionObserver
-                .combine(homeItemsProviderUseCase.initializationStatus) { isConnected, status ->
+                .combine(initializationStatus) { isConnected, status ->
                     isConnected to status
                 }
                 .onEach { (isConnected, status) ->
@@ -120,7 +127,7 @@ class HomeScreenViewModel @Inject constructor(
 
     fun onPaginateCategories() {
         viewModelScope.launch {
-            itemsSize += homeCategories.first().size
+            itemsSize += homeItemsProviderUseCase.state.value.categories.size
         }
     }
 
@@ -129,11 +136,11 @@ class HomeScreenViewModel @Inject constructor(
         page: Int,
         index: Int
     ) {
-        homeItemsProviderUseCase.run {
-            if(rowItemsPaginationJobs[index]?.isActive == true)
+        homeItemsProviderUseCase.state.value.run {
+            if(paginationJobs[index]?.isActive == true)
                 return
 
-            rowItemsPaginationJobs[index] = viewModelScope.launch {
+            paginationJobs[index] = viewModelScope.launch {
                 homeItemsProviderUseCase.getCategoryItems(
                     category = category,
                     index = index,

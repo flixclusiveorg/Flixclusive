@@ -29,6 +29,6 @@ class HomeItemsProviderUseCaseTest {
     @Test
     fun `Get home items`() = scope.runTest {
         homeItemsProviderUseCase()
-        println(homeItemsProviderUseCase.rowItems.value)
+        println(homeItemsProviderUseCase.state.value.rowItems)
     }
 }
