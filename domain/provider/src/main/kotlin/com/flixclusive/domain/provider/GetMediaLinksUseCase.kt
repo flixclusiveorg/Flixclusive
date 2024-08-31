@@ -210,6 +210,7 @@ class GetMediaLinksUseCase @Inject constructor(
                     trySend(MediaLinkResourceState.Error(error))
                     return@channelFlow
                 }
+                isNotSuccessful -> continue
                 result is Resource.Success -> {
                     onSuccess(episodeToUse)
                     trySend(MediaLinkResourceState.Success)
