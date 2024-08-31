@@ -1,9 +1,6 @@
 package com.flixclusive.domain.provider
 
-import android.content.Context
 import androidx.compose.runtime.mutableStateMapOf
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.data.provider.MediaLinksRepository
@@ -29,8 +26,6 @@ import com.flixclusive.model.tmdb.FilmDetails.Companion.isTvShow
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
@@ -62,11 +57,9 @@ private fun getFilmKey(
 
 @Singleton
 class GetMediaLinksUseCase @Inject constructor(
-    @ApplicationContext private val context: Context,
-    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
     private val mediaLinksRepository: MediaLinksRepository,
     private val tmdbRepository: TMDBRepository,
-    providerManager: ProviderManager,
+    private val providerManager: ProviderManager,
 ) {
     val providerApis: Flow<List<ProviderApi>> = providerManager.workingApis
 
@@ -101,7 +94,10 @@ class GetMediaLinksUseCase @Inject constructor(
         onSuccess: (Episode?) -> Unit,
         onError: ((UiText) -> Unit)? = null,
     ): Flow<MediaLinkResourceState> = channelFlow {
-        val apis = getPrioritizedProvidersList(preferredProviderName)
+        val apis = getPrioritizedProvidersList(
+            preferredProviderName = preferredProviderName,
+            filmLanguage = film.language
+        )
 
         if (apis.isEmpty()) {
             onError?.invoke(EMPTY_PROVIDER_MESSAGE)
@@ -325,11 +321,22 @@ class GetMediaLinksUseCase @Inject constructor(
      * given provider and puts it on top of the list
      * */
     private suspend fun getPrioritizedProvidersList(
-        preferredProviderName: String?
+        preferredProviderName: String?,
+        filmLanguage: String?,
     ): List<ProviderApi> {
         if(preferredProviderName != null) {
             return providerApis.first().sortedByDescending {
                 it.provider.name.equals(preferredProviderName, true)
+            }
+        }
+
+        if (filmLanguage != null) {
+            return providerApis.first().sortedByDescending { api ->
+                val name = api.provider.name
+
+                providerManager.providerDataList
+                    .find { it.name == name }!!
+                    .language.languageCode.equals(filmLanguage, true)
             }
         }
 
