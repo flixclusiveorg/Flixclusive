@@ -27,7 +27,7 @@ inline fun <reified Activity : ComponentActivity> Context.getActivity(): Activit
     }
 
     check(activity != null) {
-        stringResource(id = R.string.null_player_context_error)
+        stringResource(id = R.string.context_null_error)
     }
 
     return activity

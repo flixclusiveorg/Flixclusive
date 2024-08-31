@@ -59,7 +59,7 @@
     <string name="invalid_repository">Repository does not have `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
     <string name="invalid_tmdb_id">The TMDB ID shouldn\'t be null or must be an integer.</string>
     <string name="load_link_job_active_error_message">Still processing the last request…</string>
-    <string name="null_player_context_error">Player context should not be null!</string>
+    <string name="context_null_error">Specified context could not be found!</string>
     <string name="null_repository_url_error">No repository url has been given for this provider</string>
     <string name="pagination_error_message">Error while fetching items</string>
     <string name="player_not_initialized">Player has not been initialized</string>
