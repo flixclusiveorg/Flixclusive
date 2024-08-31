@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -32,7 +31,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.core.util.R as UtilR
 
@@ -110,8 +108,8 @@ fun ProviderUninstallNoticeDialog(
                     Button(
                         onClick = onConfirm,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
-                            contentColor = Color.Black
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                         shape = buttonShape.copy(
                             bottomStart = CornerSize((buttonShapeRoundnessPercentage  *2).dp),
@@ -131,10 +129,6 @@ fun ProviderUninstallNoticeDialog(
 
                     Button(
                         onClick = onDismiss,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
                         shape = buttonShape.copy(
                             bottomEnd = CornerSize((buttonShapeRoundnessPercentage  *2).dp),
                         ),
