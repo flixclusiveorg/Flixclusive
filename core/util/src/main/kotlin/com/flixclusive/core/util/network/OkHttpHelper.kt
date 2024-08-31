@@ -19,6 +19,8 @@ import kotlin.random.Random
 
 const val USER_AGENT = "Mozilla/5.0 (Linux; Android 13; SM-A145M Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/478.0.0.41.86;]"
 
+private const val REQUIRES_BODY_ERROR_MESSAGE = "The method request doesn't require a body. Are you using a function that requires a body?"
+
 fun getRandomUserAgent(): String {
     val osPlatforms = listOf(
         "Windows NT ${Random.nextInt(6, 11)}.0; Win64; x64",
@@ -93,7 +95,7 @@ fun OkHttpClient.formRequest(
     userAgent: String = USER_AGENT,
 ): Call {
     require(method.requiresBody) {
-        "The method request doesn't require a body. Are you using a function that requires a body?"
+        REQUIRES_BODY_ERROR_MESSAGE
     }
 
     return request(
@@ -122,7 +124,7 @@ fun OkHttpClient.jsonRequest(
     userAgent: String = USER_AGENT,
 ): Call {
     require(method.requiresBody) {
-        "The method request doesn't require a body. Are you using a function that requires a body?"
+        REQUIRES_BODY_ERROR_MESSAGE
     }
 
     return request(
@@ -153,7 +155,7 @@ fun OkHttpClient.genericBodyRequest(
     userAgent: String = USER_AGENT,
 ): Call {
     require(method.requiresBody) {
-        "The method request doesn't require a body. Are you using a function that requires a body?"
+        REQUIRES_BODY_ERROR_MESSAGE
     }
 
     return request(
