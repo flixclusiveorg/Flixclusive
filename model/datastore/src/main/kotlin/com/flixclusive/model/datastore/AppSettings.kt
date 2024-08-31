@@ -1,6 +1,7 @@
 package com.flixclusive.model.datastore
 
 import android.graphics.Color
+import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.model.datastore.network.DoHPreference
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionSizePreference
@@ -45,6 +46,7 @@ data class AppSettings(
 
     // == internet/others
     val dns: DoHPreference = DoHPreference.None,
+    val userAgent: String = USER_AGENT,
     // ==
 
     // == player

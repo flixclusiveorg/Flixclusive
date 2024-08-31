@@ -1,4 +1,4 @@
-package com.flixclusive.core.network.util
+package com.flixclusive.core.network.util.serializers
 
 import com.flixclusive.core.network.retrofit.dto.TMDBSearchItem
 import com.flixclusive.core.network.retrofit.dto.toFilmSearchItem

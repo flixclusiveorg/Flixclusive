@@ -1,6 +1,7 @@
 package com.flixclusive.core.network.di
 
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.network.util.okhttp.UserAgentInterceptor
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.doh360
 import com.flixclusive.core.util.network.dohAdGuard
@@ -21,7 +22,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import org.conscrypt.Conscrypt
@@ -42,18 +42,17 @@ internal object OkHttpModule {
             errorLog(throwable.localizedMessage ?: "Unknown error trying to support TLS 1.3")
         }
 
-        val dns = runBlocking {
-            appSettingsManager.appSettings.data
-                .map { it.dns }
-                .first()
+        val preferences = runBlocking {
+            appSettingsManager.appSettings.data.first()
         }
 
         return OkHttpClient.Builder()
             .followRedirects(true)
             .followSslRedirects(true)
             .ignoreAllSSLErrors()
+            .addInterceptor(UserAgentInterceptor(preferences.userAgent))
             .apply {
-                when (dns) {
+                when (preferences.dns) {
                     DoHPreference.None -> Unit
                     DoHPreference.Google -> dohGoogle()
                     DoHPreference.Cloudflare -> dohCloudflare()

@@ -1,4 +1,4 @@
-package com.flixclusive.core.network.util
+package com.flixclusive.core.network.util.serializers
 
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData

@@ -4,10 +4,10 @@ import com.flixclusive.core.network.retrofit.GithubApiService
 import com.flixclusive.core.network.retrofit.GithubRawApiService
 import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.core.network.retrofit.TMDB_API_BASE_URL
-import com.flixclusive.core.network.util.FilmSearchItemDeserializer
-import com.flixclusive.core.network.util.PaginatedSearchItemsDeserializer
-import com.flixclusive.core.network.util.TMDBMovieDeserializer
-import com.flixclusive.core.network.util.TMDBTvShowDeserializer
+import com.flixclusive.core.network.util.serializers.FilmSearchItemDeserializer
+import com.flixclusive.core.network.util.serializers.PaginatedSearchItemsDeserializer
+import com.flixclusive.core.network.util.serializers.TMDBMovieDeserializer
+import com.flixclusive.core.network.util.serializers.TMDBTvShowDeserializer
 import com.flixclusive.core.util.common.configuration.GITHUB_API_BASE_URL
 import com.flixclusive.core.util.common.configuration.GITHUB_RAW_API_BASE_URL
 import com.flixclusive.model.tmdb.FilmSearchItem
