@@ -1,13 +1,12 @@
 package com.flixclusive.core.ui.common
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
@@ -45,23 +44,29 @@ fun ProviderUninstallNoticeDialog(
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
-    val buttonMinHeight = 60.dp
+    val buttonMinHeight = 50.dp
+    val buttonShape = MaterialTheme.shapes.medium
+    val buttonShapeRoundnessPercentage = 10
 
     BasicAlertDialog(
         onDismissRequest = onDismiss
     ) {
         Surface(
-            shape = RoundedCornerShape(10),
+            shape = RoundedCornerShape(buttonShapeRoundnessPercentage),
         ) {
-            Box(
+            Column(
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .height(180.dp)
+                    .fillMaxWidth()
+                    .heightIn(min = 180.dp)
             ) {
                 Column(
                     verticalArrangement = Arrangement.SpaceEvenly,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .padding(10.dp)
+                        .weight(1F, fill = false)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.warning),
@@ -94,50 +99,54 @@ fun ProviderUninstallNoticeDialog(
                             .padding(bottom = 20.dp)
                             .padding(horizontal = 10.dp)
                     )
+                }
 
-                    Row(
-                        modifier = Modifier.weight(1F),
-                        verticalAlignment = Alignment.Bottom
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 10.dp)
+                        .padding(bottom = 10.dp)
+                ) {
+                    Button(
+                        onClick = onConfirm,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
+                            contentColor = Color.Black
+                        ),
+                        shape = buttonShape.copy(
+                            bottomStart = CornerSize((buttonShapeRoundnessPercentage  *2).dp),
+                        ),
+                        modifier = Modifier
+                            .weight(1F)
+                            .heightIn(min = buttonMinHeight)
                     ) {
-                        Button(
-                            onClick = onConfirm,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
-                                contentColor = Color.Black
-                            ),
-                            shape = MaterialTheme.shapes.medium,
+                        Text(
+                            text = stringResource(id = UtilR.string.uninstall),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier
-                                .weight(1F)
-                                .heightIn(min = buttonMinHeight)
-                                .padding(5.dp)
-                        ) {
-                            Text(
-                                text = stringResource(id = UtilR.string.uninstall),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .padding(end = 2.dp)
-                            )
-                        }
+                                .padding(end = 2.dp)
+                        )
+                    }
 
-                        Button(
-                            onClick = onDismiss,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            shape = MaterialTheme.shapes.medium,
-                            modifier = Modifier
-                                .weight(1F)
-                                .heightIn(min = buttonMinHeight)
-                                .padding(5.dp)
-                        ) {
-                            Text(
-                                text = stringResource(id = UtilR.string.cancel),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Light
-                            )
-                        }
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        shape = buttonShape.copy(
+                            bottomEnd = CornerSize((buttonShapeRoundnessPercentage  *2).dp),
+                        ),
+                        modifier = Modifier
+                            .weight(1F)
+                            .heightIn(min = buttonMinHeight)
+                    ) {
+                        Text(
+                            text = stringResource(id = UtilR.string.cancel),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Light
+                        )
                     }
                 }
             }
