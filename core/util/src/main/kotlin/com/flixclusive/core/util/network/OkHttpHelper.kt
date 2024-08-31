@@ -16,11 +16,17 @@ import org.json.JSONObject
 import java.net.URL
 import kotlin.random.Random
 
-
-const val USER_AGENT = "Mozilla/5.0 (Linux; Android 13; SM-A145M Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/478.0.0.41.86;]"
+/**
+ * The default User-Agent header value.
+ * */
+const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; WOW64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 OPR/113.0.0.0"
 
 private const val REQUIRES_BODY_ERROR_MESSAGE = "The method request doesn't require a body. Are you using a function that requires a body?"
 
+@Deprecated(
+    "These generate outdated user-agents",
+    ReplaceWith("UserAgentManager.getRandomUserAgent()", "com.flixclusive.core.network.util.okhttp.UserAgentManager")
+)
 fun getRandomUserAgent(): String {
     val osPlatforms = listOf(
         "Windows NT ${Random.nextInt(6, 11)}.0; Win64; x64",
@@ -92,7 +98,7 @@ fun OkHttpClient.formRequest(
     method: HttpMethod,
     body: Map<String, String>,
     headers: Headers = Headers.headersOf(),
-    userAgent: String = USER_AGENT,
+    userAgent: String? = null,
 ): Call {
     require(method.requiresBody) {
         REQUIRES_BODY_ERROR_MESSAGE
@@ -121,7 +127,7 @@ fun OkHttpClient.jsonRequest(
     method: HttpMethod,
     json: Any,
     headers: Headers = Headers.headersOf(),
-    userAgent: String = USER_AGENT,
+    userAgent: String? = null,
 ): Call {
     require(method.requiresBody) {
         REQUIRES_BODY_ERROR_MESSAGE
@@ -152,7 +158,7 @@ fun OkHttpClient.genericBodyRequest(
     body: String,
     mediaType: MediaType?,
     headers: Headers = Headers.headersOf(),
-    userAgent: String = USER_AGENT,
+    userAgent: String? = null,
 ): Call {
     require(method.requiresBody) {
         REQUIRES_BODY_ERROR_MESSAGE
@@ -181,11 +187,14 @@ fun OkHttpClient.request(
     method: HttpMethod = HttpMethod.GET,
     body: RequestBody? = null,
     headers: Headers = Headers.headersOf(),
-    userAgent: String = USER_AGENT,
+    userAgent: String? = null,
 ): Call {
     val headersToUse = Headers.Builder()
-        .add("User-Agent", userAgent)
         .addAll(headers)
+        .apply { 
+            if (userAgent != null)
+                add("User-Agent", userAgent)
+        }
         .build()
 
     var request = Request.Builder()
@@ -254,7 +263,7 @@ fun OkHttpClient.request(
     method: HttpMethod = HttpMethod.GET,
     body: RequestBody? = null,
     headers: Headers = Headers.headersOf(),
-    userAgent: String = USER_AGENT,
+    userAgent: String? = null,
 ): Call = request(
     url = url.toString(),
     method = method,
@@ -268,7 +277,7 @@ fun OkHttpClient.request(
     method: HttpMethod = HttpMethod.GET,
     body: RequestBody? = null,
     headers: Headers = Headers.headersOf(),
-    userAgent: String = USER_AGENT,
+    userAgent: String? = null,
 ): Call = request(
     url = url.toString(),
     method = method,

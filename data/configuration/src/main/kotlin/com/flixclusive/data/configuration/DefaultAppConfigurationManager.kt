@@ -3,6 +3,7 @@ package com.flixclusive.data.configuration
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.network.retrofit.GithubApiService
 import com.flixclusive.core.network.retrofit.GithubRawApiService
+import com.flixclusive.core.network.util.okhttp.UserAgentManager
 import com.flixclusive.core.util.common.configuration.GITHUB_REPOSITORY
 import com.flixclusive.core.util.common.configuration.GITHUB_USERNAME
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import javax.inject.Inject
 import com.flixclusive.core.util.R as UtilR
 
@@ -31,7 +33,9 @@ internal class DefaultAppConfigurationManager @Inject constructor(
     private val githubApiService: GithubApiService,
     private val appSettingsManager: AppSettingsManager,
     @ApplicationScope private val scope: CoroutineScope,
+    client: OkHttpClient,
 ) : AppConfigurationManager {
+    private val userAgentManager = UserAgentManager(client)
 
     private var fetchJob: Job? = null
 
@@ -76,6 +80,7 @@ internal class DefaultAppConfigurationManager @Inject constructor(
                 try {
                     checkForUpdates()
 
+                    userAgentManager.loadLatestUserAgents()
                     homeCategoriesData = githubRawApiService.getHomeCategoriesConfig()
                     searchCategoriesData = githubRawApiService.getSearchCategoriesConfig()
 
