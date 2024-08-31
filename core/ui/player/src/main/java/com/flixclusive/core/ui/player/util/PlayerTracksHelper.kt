@@ -1,55 +1,80 @@
 package com.flixclusive.core.ui.player.util
 
 import android.content.Context
-import androidx.media3.common.MimeTypes
+import com.flixclusive.core.util.locale.Language
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
-import java.util.Locale
-import kotlin.math.max
 import com.flixclusive.core.util.R as UtilR
 
-internal fun getSubtitleMimeType(subtitle: Subtitle): String? {
-    val isLocalSubtitle = subtitle.url.contains("content://")
-    val uri = if(isLocalSubtitle) {
-        subtitle.language
-    } else subtitle.url
+@Suppress("MemberVisibilityCanBePrivate")
+object PlayerTracksHelper {
+    internal fun <T> List<T>.getIndexOfPreferredLanguage(
+        preferredLanguage: String,
+        languageExtractor: (T) -> String
+    ): Int {
+        val normalizedPreferredLanguage = normalizeLanguageCode(preferredLanguage)
 
-    return when {
-        uri.endsWith(".srt", true) || uri.contains(".srt", true) -> MimeTypes.APPLICATION_SUBRIP
-        uri.endsWith(".vtt", true) || uri.contains(".vtt", true) -> MimeTypes.TEXT_VTT
-        uri.endsWith(".ssa", true) || uri.contains(".ssa", true) -> MimeTypes.TEXT_SSA
-        (uri.endsWith(".ttml", true) || uri.contains(".ttml", true)) || (uri.endsWith(".xml", true) || uri.contains(".xml", true)) -> MimeTypes.APPLICATION_TTML
-        else -> MimeTypes.APPLICATION_SUBRIP
-    }
-}
+        val index = indexOfFirst { item ->
+            val extractedLanguage = languageExtractor(item)
+            val normalizedExtractedLanguage = normalizeLanguageCode(extractedLanguage)
 
-internal fun <T> List<T>.getIndexOfPreferredLanguage(
-    preferredLanguage: String,
-    languageExtractor: (T) -> String
-): Int {
-    val locale = Locale(preferredLanguage)
+            normalizedExtractedLanguage == normalizedPreferredLanguage ||
+                    Language.map[normalizedExtractedLanguage]?.second?.equals(
+                        Language.map[normalizedPreferredLanguage]?.second, ignoreCase = true) == true
+        }
 
-    val index = indexOfFirst { item ->
-        val preferredLocale = Locale(languageExtractor(item))
-
-        languageExtractor(item).equals(preferredLanguage, ignoreCase = true)
-            || preferredLocale.displayLanguage.contains(locale.displayLanguage, true)
+        return maxOf(index, 0)
     }
 
-    return max(index, 0)
-}
+    /**
+     * Initializes the subtitles by adding an "Off" option and updating the video data with the new subtitles.
+     */
+    internal fun List<Subtitle>.addOffSubtitle(
+        context: Context
+    ): List<Subtitle> {
+        return listOf(
+            Subtitle(
+                url = "",
+                language = context.getString(UtilR.string.off_subtitles),
+                type = SubtitleSource.EMBEDDED
+            )
+        ) + this
+    }
 
-/**
- * Initializes the subtitles by adding an "Off" option and updating the video data with the new subtitles.
- */
-internal fun List<Subtitle>.addOffSubtitle(
-    context: Context
-): List<Subtitle> {
-    return listOf(
-        Subtitle(
-            url = "",
-            language = context.getString(UtilR.string.off_subtitles),
-            type = SubtitleSource.EMBEDDED
-        )
-    ) + this
+    fun normalizeLanguageCode(code: String): String {
+        // Remove any non-alphanumeric characters and trim
+        val cleanedCode = code.replace(Regex("[^A-Za-z0-9]"), " ").trim()
+
+        // Split the cleaned string into words
+        val words = cleanedCode.split("\\s+".toRegex())
+
+        // Check each word (and combinations for multi-word languages)
+        for (i in words.indices) {
+            for (j in i until words.size) {
+                val substring = words.subList(i, j + 1)
+                    .joinToString(" ")
+
+                // Check if it's a 2-letter code
+                if (substring.length == 2) {
+                    Language.map.entries.find {
+                        it.value.first.equals(substring, ignoreCase = true)
+                    }?.key?.let { return it }
+                }
+
+                // Check if it's a 3-letter code
+                if (substring.length == 3) {
+                    Language.map.entries.find { it.key.equals(substring, ignoreCase = true) }?.key?.let { return it }
+                }
+
+                // Check if it matches a full language name
+                Language.map.entries.find { it.value.second.equals(substring, ignoreCase = true) }?.key?.let { return it }
+
+                // Check for partial matches (e.g., "Eng" for "English")
+                Language.map.entries.find { it.value.second.startsWith(substring, ignoreCase = true) }?.key?.let { return it }
+            }
+        }
+
+        // If no match found, return the original cleaned code
+        return cleanedCode
+    }
 }

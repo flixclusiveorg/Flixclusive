@@ -38,16 +38,16 @@ import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
 import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
 import com.flixclusive.core.ui.player.util.MimeTypeParser
+import com.flixclusive.core.ui.player.util.MimeTypeParser.toMimeType
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
+import com.flixclusive.core.ui.player.util.PlayerTracksHelper.addOffSubtitle
+import com.flixclusive.core.ui.player.util.PlayerTracksHelper.getIndexOfPreferredLanguage
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.availablePlaybackSpeeds
 import com.flixclusive.core.ui.player.util.VolumeManager
-import com.flixclusive.core.ui.player.util.addOffSubtitle
 import com.flixclusive.core.ui.player.util.disableSSLVerification
 import com.flixclusive.core.ui.player.util.getCacheFactory
-import com.flixclusive.core.ui.player.util.getIndexOfPreferredLanguage
 import com.flixclusive.core.ui.player.util.getLoadControl
 import com.flixclusive.core.ui.player.util.getRenderers
-import com.flixclusive.core.ui.player.util.getSubtitleMimeType
 import com.flixclusive.core.ui.player.util.handleError
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.exception.safeCall
@@ -457,7 +457,7 @@ class FlixclusivePlayerManager(
 
             val subtitleConfiguration = SubtitleConfiguration
                 .Builder(Uri.parse(subtitle.url))
-                .setMimeType(getSubtitleMimeType(subtitle))
+                .setMimeType(subtitle.toMimeType())
                 .setLanguage(subtitleName)
                 .build()
 
