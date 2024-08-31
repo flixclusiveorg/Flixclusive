@@ -120,15 +120,15 @@
     <string name="currently_testing">Currently Testing</string>
     <string name="debug">DEBUG</string>
     <string name="decoder_device_only">Device decoders</string>
-    <string name="decoder_prefer_app">FFMPEG decoders</string>
     <string name="clear_tests">Clear tests</string>
+    <string name="decoder_prefer_app">FFMPEG decoders</string>
     <string name="decoder_prefer_device">Device + FFMPEG decoders</string>
     <string name="decoder_priority">Player\'s decoder priority</string>
     <string name="default_label">(default)</string>
+    <string name="default_user_agent">Default user agent</string>
     <string name="delete_search_history_item">Delete search history item</string>
     <string name="description">Description</string>
     <string name="doh">DNS over HTTPS</string>
-    <string name="doh_change_toast_message">Restart is required for this to take effect.</string>
     <string name="episodes">Episodes</string>
     <string name="exit">Exit</string>
     <string name="export_label">Export</string>
@@ -181,6 +181,7 @@
     <string name="privacy_notice">Privacy notice</string>
     <string name="provider_disclaimer">Providers Disclaimer</string>
     <string name="provider_settings">Provider Settings</string>
+    <string name="randomize">Randomize</string>
     <string name="rating">Rating</string>
     <string name="re_test">Re-test</string>
     <string name="release">RELEASE</string>
@@ -288,6 +289,7 @@
     <string name="provider_test_stage_stage1">Testing API properties…</string>
     <string name="provider_test_stage_stage2">Testing API methods…</string>
     <string name="remove_repositories_notice_msg">Are you sure you want to remove the selected repositories?</string>
+    <string name="restart_app_for_changes_message">Restart is required for this to take effect.</string>
     <string name="skip_loading_message">Player can be played now!</string>
     <string name="source_data_dialog_state_error_default">Something went wrong trying to get links</string>
     <string name="source_data_dialog_state_extracting">Extracting video data…</string>
@@ -330,6 +332,7 @@
     <string name="copy_button">Copy to clipboard button</string>
     <string name="copy_full_logs_button">Copy full logs to clipboard</string>
     <string name="decoder_priority_description">Preferred decoder for improved playback compatibility. May fix issues with high-quality streams and no-audio streams on devices with limited hardware support.</string>
+    <string name="default_user_agent_description">Your user agent is like a digital ID for your browser or app, telling websites and servers who\'s asking for information.</string>
     <string name="delete_search_history_item_message">Are you sure you want to delete this search history item?</string>
     <string name="dns_label">Configure this if your ISP blocks you from watching.</string>
     <string name="down_arrow_season_dropdown_content_desc">A down arrow for dropdown menu</string>

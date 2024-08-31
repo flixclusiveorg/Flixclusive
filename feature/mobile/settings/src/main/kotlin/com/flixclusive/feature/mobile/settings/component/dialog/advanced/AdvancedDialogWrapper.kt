@@ -27,7 +27,7 @@ internal fun AdvancedDialogWrapper(
                 onChange = {
                     onChangeSettings(appSettings.copy(dns = it))
                     onDismissDialog(KEY_DOH_DIALOG)
-                    context.showToast(UiText.StringResource(UtilR.string.doh_change_toast_message).asString(context))
+                    context.showToast(UiText.StringResource(UtilR.string.restart_app_for_changes_message).asString(context))
                 },
                 onDismissRequest = {
                     onDismissDialog(KEY_DOH_DIALOG)

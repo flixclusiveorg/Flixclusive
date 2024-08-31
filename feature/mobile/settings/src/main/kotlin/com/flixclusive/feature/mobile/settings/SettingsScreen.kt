@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -37,6 +38,7 @@ import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.util.android.getDirectorySize
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.feature.mobile.settings.component.EditUserAgentDialog
 import com.flixclusive.feature.mobile.settings.component.PreReleaseUpdatesWarningDialog
 import com.flixclusive.feature.mobile.settings.component.SettingsGroup
 import com.flixclusive.feature.mobile.settings.component.dialog.advanced.AdvancedDialogWrapper
@@ -69,7 +71,9 @@ fun SettingsScreen(
     val searchHistoryCount by viewModel.searchHistoryCount.collectAsStateWithLifecycle()
 
     var sizeSummary: String? by remember { mutableStateOf(null) }
-    val (isOptingInOnPreReleaseUpdates, onUsePrereleaseUpdatesChange) = remember { mutableStateOf(false) }
+    val (isOptingInOnPreReleaseUpdates, onUsePrereleaseUpdatesChange)
+        = rememberSaveable { mutableStateOf(false) }
+    var isUserAgentDialogOpen by rememberSaveable { mutableStateOf(false) }
 
     val listState = rememberLazyListState()
     val shouldShowTopBar by listState.isScrollingUp()
@@ -175,7 +179,9 @@ fun SettingsScreen(
 
                 item {
                     SettingsGroup(
-                        items = currentNetworkSettings(),
+                        items = currentNetworkSettings(
+                            onOpenUserAgentDialog = { isUserAgentDialogOpen = true }
+                        ),
                         onItemClick = onSettingsItemClock
                     )
                 }
@@ -222,6 +228,19 @@ fun SettingsScreen(
                 onUsePrereleaseUpdatesChange(false)
             },
             onDismiss = { onUsePrereleaseUpdatesChange(false) }
+        )
+    }
+
+    if (isUserAgentDialogOpen) {
+        EditUserAgentDialog(
+            defaultUserAgent = appSettings.userAgent,
+            onDismiss = { isUserAgentDialogOpen = false },
+            onConfirm = {
+                if (it.equals(appSettings.userAgent, ignoreCase = true))
+                    return@EditUserAgentDialog
+
+                viewModel.onChangeSettings(appSettings.copy(userAgent = it))
+            }
         )
     }
 }
