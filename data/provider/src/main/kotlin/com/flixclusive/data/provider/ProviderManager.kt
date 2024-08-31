@@ -47,6 +47,7 @@ import com.flixclusive.core.util.R as UtilR
 
 
 const val PROVIDERS_FOLDER = "flx_providers"
+private const val UPDATER_JSON_FILE = "/updater.json"
 
 @Singleton
 class ProviderManager @Inject constructor(
@@ -143,7 +144,7 @@ class ProviderManager @Inject constructor(
             if (!folder.isDirectory)
                 return@folderForEach
 
-            val updaterJsonFile = File(folder.absolutePath + "/updater.json")
+            val updaterJsonFile = File(folder.absolutePath + UPDATER_JSON_FILE)
             if (!updaterJsonFile.exists()) {
                 errorLog("Provider's updater.json could not be found!")
                 return@folderForEach
@@ -189,7 +190,7 @@ class ProviderManager @Inject constructor(
     }
 
     private suspend fun initializeProvider(providerFile: File) {
-        val updaterJsonFilePath = providerFile.parent?.plus("/updater.json")
+        val updaterJsonFilePath = providerFile.parent?.plus(UPDATER_JSON_FILE)
 
         if (updaterJsonFilePath == null) {
             errorLog("Provider's file path must not be null!")
@@ -239,7 +240,7 @@ class ProviderManager @Inject constructor(
         buildUrl: String
     ): Boolean {
         val updaterJsonUrl = replaceLastAfterSlash(buildUrl, "updater.json")
-        val updaterJsonFile = File(file.parent!!.plus("/updater.json"))
+        val updaterJsonFile = File(file.parent!!.plus(UPDATER_JSON_FILE))
 
         // Download provider
         val isProviderDownloadSuccess = withContext(ioDispatcher) {
