@@ -49,6 +49,7 @@ import com.flixclusive.feature.tv.home.component.watched.HomeContinueWatchingRow
 import com.flixclusive.model.tmdb.Film
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
+import java.util.Locale
 
 interface HomeScreenTvNavigator : CommonScreenNavigator {
     fun openPlayerScreen(film: Film)
@@ -66,11 +67,12 @@ fun HomeScreen(
     val lastItemFocused = useLocalLastFocusedItemPerDestination()
 
     val listState = rememberTvLazyListState()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val headerItem by viewModel.headerItem.collectAsStateWithLifecycle()
-    val homeCategories by viewModel.homeCategories.collectAsStateWithLifecycle()
-    val homeRowItems by viewModel.homeRowItems.collectAsStateWithLifecycle()
-    val homeRowItemsPagingState by viewModel.homeRowItemsPagingState.collectAsStateWithLifecycle()
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
+
+    val headerItem = uiState.headerItem
+    val homeCategories = uiState.categories
+    val homeRowItemsPagingState = uiState.rowItemsPagingState
+    val homeRowItems = uiState.rowItems
     val continueWatchingList by viewModel.continueWatchingList.collectAsStateWithLifecycle()
 
     var focusedFilm: Film? by remember { mutableStateOf(null) }
@@ -85,9 +87,9 @@ fun HomeScreen(
     // Initialize focus to the first item.
     LaunchedEffect(Unit) {
         val defaultValue = if (continueWatchingList.isNotEmpty()) {
-            String.format(HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT, 0, 0)
+            String.format(Locale.ROOT, HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT, 0, 0)
         } else {
-            String.format(HOME_FOCUS_KEY_FORMAT, 1, 0)
+            String.format(Locale.ROOT, HOME_FOCUS_KEY_FORMAT, 1, 0)
         }
 
         lastItemFocused.getOrPut(currentRoute) {
@@ -174,7 +176,7 @@ fun HomeScreen(
                             )
                         )
                 ) {
-                    if(!uiState.isLoading) {
+                    if(!uiState.status.isLoading) {
                         val shouldStartPaginate by remember {
                             derivedStateOf {
                                 listState.shouldPaginate()

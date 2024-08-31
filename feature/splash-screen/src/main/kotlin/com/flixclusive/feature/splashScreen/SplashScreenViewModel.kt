@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -60,18 +59,15 @@ internal class SplashScreenViewModel @Inject constructor(
             }
 
             launch {
-                homeItemsProviderUseCase.rowItems
-                    .combine(homeItemsProviderUseCase.initializationStatus) { items, status ->
-                        items to status
-                    }.collectLatest { (items, status) ->
-                        _uiState.update {
-                            when {
-                                items.size >= PREFERRED_MINIMUM_HOME_ITEMS -> SplashScreenUiState.Okay
-                                status is Resource.Failure -> SplashScreenUiState.Failure
-                                else -> it
-                            }
+                homeItemsProviderUseCase.state.collectLatest { state ->
+                    _uiState.update {
+                        when {
+                            state.rowItems.size >= PREFERRED_MINIMUM_HOME_ITEMS -> SplashScreenUiState.Okay
+                            state.status is Resource.Failure -> SplashScreenUiState.Failure
+                            else -> it
                         }
                     }
+                }
             }
 
             launch {

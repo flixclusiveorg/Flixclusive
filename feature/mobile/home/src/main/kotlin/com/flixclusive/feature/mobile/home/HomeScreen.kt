@@ -60,12 +60,12 @@ fun HomeScreen(
     val listState = rememberLazyListState()
 
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val headerItem by viewModel.headerItem.collectAsStateWithLifecycle()
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
 
-    val homeCategories by viewModel.homeCategories.collectAsStateWithLifecycle()
-    val homeRowItemsPagingState by viewModel.homeRowItemsPagingState.collectAsStateWithLifecycle()
-    val homeRowItems by viewModel.homeRowItems.collectAsStateWithLifecycle()
+    val headerItem = uiState.headerItem
+    val homeCategories = uiState.categories
+    val homeRowItemsPagingState = uiState.rowItemsPagingState
+    val homeRowItems = uiState.rowItems
     val watchHistoryItems by viewModel.continueWatchingList.collectAsStateWithLifecycle()
 
     val isScrollToTopEnabled by remember {
@@ -85,19 +85,19 @@ fun HomeScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        HomeScreenContentLoadingScreen(isLoading = uiState.isLoading)
+        HomeScreenContentLoadingScreen(isLoading = uiState.status.isLoading)
 
         RetryButton(
             modifier = Modifier.fillMaxSize(),
-            shouldShowError = uiState.error != null,
-            error = uiState.error?.asString() ?: stringResource(UtilR.string.error_on_initialization),
+            shouldShowError = uiState.status.error != null,
+            error = uiState.status.error?.asString() ?: stringResource(UtilR.string.error_on_initialization),
             onRetry = viewModel::initialize
         )
 
         LazyColumn(
             state = listState
         ) {
-            if(uiState.data != null) {
+            if(uiState.status.data != null) {
                 item {
                     HomeHeader(
                         modifier = Modifier
@@ -152,7 +152,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun HomeScreenContentLoadingScreen(
+internal fun HomeScreenContentLoadingScreen(
     isLoading: Boolean
 ) {
     AnimatedVisibility(
