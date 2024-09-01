@@ -452,7 +452,7 @@ class ProviderManager @Inject constructor(
             provider.onUnload(context.applicationContext)
 
             providerDataList.removeIf {
-                it.name.equals(file.nameWithoutExtension, true)
+                it.name.equals(provider.name, true)
             }
             classLoaders.values.removeIf { 
                 it.name.equals(provider.name, true)
