@@ -51,6 +51,7 @@ fun EmptyDataMessage(
     description: String = stringResource(id = UtilR.string.empty_data_default_sub_label),
     titleStyle: TextStyle = getDefaultTitleStyle(),
     descriptionStyle: TextStyle = getDefaultDescriptionStyle(),
+    alignment: Alignment = Alignment.Center,
     icon: @Composable (() -> Unit)? = null
 ) {
     val titleUppercase = remember(title) {
@@ -59,7 +60,8 @@ fun EmptyDataMessage(
 
     Box(
         modifier = Modifier
-            .then(modifier)
+            .then(modifier),
+        contentAlignment = alignment
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),

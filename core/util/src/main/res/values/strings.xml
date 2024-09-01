@@ -326,6 +326,7 @@
     <string name="author_icon_content_desc">Author icon</string>
     <string name="automatic_crash_report">Automatic crash report</string>
     <string name="backward_button_content_description">Backward button for the player</string>
+    <string name="cache_links_item_count">You have %1$d cached links</string>
     <string name="change_logs_image_content_desc">Change logs image logo</string>
     <string name="clear_cache_content_desc">Clear cache</string>
     <string name="clear_text_button">Clear text button</string>
@@ -349,6 +350,7 @@
     <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>
     <string name="forward_button_content_description">Forward button for the player</string>
     <string name="lock_button_desc">An icon for locking the player</string>
+    <string name="missing_providers_logo_content_description">Missing providers logo</string>
     <string name="navigate_to_film">Go see details of film button</string>
     <string name="navigate_to_repository_content_desc">Open repository screen</string>
     <string name="navigate_up">Go back</string>
@@ -358,7 +360,6 @@
     <string name="owner_avatar_content_desc">Avatar or picture of repository\'s owner</string>
     <string name="pause_button">Pause button</string>
     <string name="pip_mode_desc">Picture-in-picture (PiP) lets you watch videos while using other apps.</string>
-    <string name="cache_links_item_count">You have %1$d cached links</string>
     <string name="play_button">Play button</string>
     <string name="play_pause_button_content_description">Play or pause button</string>
     <string name="playback_speed_snackbar_message">Playback speed set to %1$s</string>
