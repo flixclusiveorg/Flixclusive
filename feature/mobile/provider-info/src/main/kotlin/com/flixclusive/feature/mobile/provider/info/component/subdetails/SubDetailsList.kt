@@ -1,5 +1,9 @@
 package com.flixclusive.feature.mobile.provider.info.component.subdetails
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -39,7 +43,7 @@ internal fun SubDetailsList(
             providerData.versionName to UiText.StringResource(UtilR.string.version),
             providerData.status.toString() to UiText.StringResource(UtilR.string.status),
             Locale(providerData.language.languageCode).displayLanguage.capitalize() to UiText.StringResource(UtilR.string.language),
-            providerData.providerType?.type to UiText.StringResource(UtilR.string.content),
+            providerData.providerType.type to UiText.StringResource(UtilR.string.content),
         )
     }
 
@@ -49,23 +53,31 @@ internal fun SubDetailsList(
         modifier = Modifier
             .padding(vertical = 20.dp)
     ) {
-        itemsIndexed(subDetails) { i, (title, value) ->
-            title?.let {
+        itemsIndexed(subDetails) { i, details ->
+            AnimatedContent(
+                targetState = details,
+                transitionSpec = {
+                     ContentTransform(
+                         targetContentEnter = fadeIn(),
+                         initialContentExit = fadeOut()
+                     )
+                },
+                label = ""
+            ) { (title, value) ->
                 SubDetailsItem(
                     title = title,
                     subtitle = value.asString()
                 )
+            }
 
-                if (i < subDetails.lastIndex) {
-                    VerticalDivider(
-                        thickness = 1.dp,
-                        color = LocalContentColor.current.onMediumEmphasis(0.4F),
-                        modifier = Modifier
-                            .height(20.dp)
-                            .padding(horizontal = 25.dp)
-                    )
-                }
-
+            if (i < subDetails.lastIndex) {
+                VerticalDivider(
+                    thickness = 1.dp,
+                    color = LocalContentColor.current.onMediumEmphasis(0.4F),
+                    modifier = Modifier
+                        .height(20.dp)
+                        .padding(horizontal = 25.dp)
+                )
             }
         }
     }

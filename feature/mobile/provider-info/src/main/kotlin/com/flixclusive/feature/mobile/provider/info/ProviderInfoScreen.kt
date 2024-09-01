@@ -35,6 +35,7 @@ import com.flixclusive.core.ui.common.navigation.ProviderTestNavigator
 import com.flixclusive.core.ui.common.navigation.RepositorySearchScreenNavigator
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.common.util.showToast
+import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
@@ -82,8 +83,8 @@ fun ProviderInfoScreen(
 
     val webNavigationItems = remember {
         listOf(
-            UtilR.string.issue_a_bug to args.providerData.repositoryUrl?.getNewIssueUrl(),
-            UtilR.string.browse_repository to args.providerData.repositoryUrl,
+            UtilR.string.issue_a_bug to viewModel.providerData.repositoryUrl?.getNewIssueUrl(),
+            UtilR.string.browse_repository to viewModel.providerData.repositoryUrl,
         )
     }
 
@@ -100,10 +101,10 @@ fun ProviderInfoScreen(
         topBar = {
             ProviderInfoTopBar(
                 isVisible = shouldShowTopBar,
-                providerName = args.providerData.name,
+                providerName = viewModel.providerData.name,
                 onNavigationIconClick = navigator::goBack,
                 onSettingsClick = {
-                    navigator.openProviderSettings(args.providerData)
+                    navigator.openProviderSettings(viewModel.providerData)
                 }
             )
         }
@@ -141,7 +142,7 @@ fun ProviderInfoScreen(
                 item {
                     ProviderInfoHeader(
                         modifier = Modifier.padding(horizontal = HORIZONTAL_PADDING),
-                        providerData = args.providerData,
+                        providerData = viewModel.providerData,
                         openRepositoryScreen = {
                             viewModel.repository?.let(navigator::openRepositoryScreen)
                         }
@@ -149,7 +150,7 @@ fun ProviderInfoScreen(
                 }
 
                 item {
-                    SubDetailsList(providerData = args.providerData)
+                    SubDetailsList(providerData = viewModel.providerData)
                 }
 
                 item {
@@ -159,18 +160,23 @@ fun ProviderInfoScreen(
                             .padding(bottom = 10.dp),
                         providerInstallationStatus = viewModel.providerInstallationStatus,
                         onTestProvider = {
-                            navigator.testProviders(arrayListOf(args.providerData))
+                            val status = viewModel.providerInstallationStatus
+                            if (status == ProviderInstallationStatus.Outdated) {
+                                navigator.testProviders(arrayListOf(args.providerData))
+                            } else if (status == ProviderInstallationStatus.Installed) {
+                                navigator.testProviders(arrayListOf(viewModel.providerData))
+                            }
                         },
                         onToggleInstallationState = viewModel::toggleInstallation
                     )
                 }
 
-                if (args.providerData.changelog != null) {
+                if (viewModel.providerData.changelog != null) {
                     item {
                         NavigationItem(
                             label = stringResource(id = UtilR.string.whats_new),
                             onClick = {
-                                navigator.seeWhatsNew(providerData = args.providerData)
+                                navigator.seeWhatsNew(providerData = viewModel.providerData)
                             }
                         )
                     }
@@ -178,7 +184,7 @@ fun ProviderInfoScreen(
 
                 item {
                     DescriptionBlock(
-                        description = args.providerData.description,
+                        description = viewModel.providerData.description,
                         modifier = Modifier
                             .padding(horizontal = HORIZONTAL_PADDING)
                     )
@@ -186,7 +192,7 @@ fun ProviderInfoScreen(
 
                 item {
                     AuthorsList(
-                        authors = args.providerData.authors,
+                        authors = viewModel.providerData.authors,
                     )
                 }
 

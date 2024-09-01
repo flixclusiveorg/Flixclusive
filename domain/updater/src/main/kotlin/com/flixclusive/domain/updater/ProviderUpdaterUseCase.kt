@@ -130,6 +130,15 @@ class ProviderUpdaterUseCase @Inject constructor(
         return false
     }
 
+    suspend fun getLatestProviderData(providerName: String): ProviderData? {
+        val provider = providerManager.providers[providerName]
+        requireNotNull(provider) {
+            "No such provider: $providerName"
+        }
+
+        return getLatestProviderData(provider)
+    }
+
     private suspend fun getLatestProviderData(provider: Provider): ProviderData? {
         val manifest = provider.manifest
 
@@ -137,11 +146,10 @@ class ProviderUpdaterUseCase @Inject constructor(
             || manifest.updateUrl.equals(""))
             return null
 
-        val name = provider.name!!
+        val name = provider.name
         val cached = cachedProviders[manifest.updateUrl]
 
-        if (cached != null
-            && cached.time > System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(30)) {
+        if (cached != null && cached.time > System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(30)) {
             return cached.data.findProviderData(name)
         }
 
@@ -179,10 +187,8 @@ class ProviderUpdaterUseCase @Inject constructor(
         val providerData = providerManager.providerDataList.find {
             it.name.equals(providerName, true)
         } ?: throw NoSuchElementException("No such provider data: $providerName")
-        val provider = providerManager.providers[providerName]
-            ?: throw NoSuchElementException("No such provider: $providerName")
 
-        val updateInfo = getLatestProviderData(provider)
+        val updateInfo = getLatestProviderData(providerName)
             ?: return false
 
         providerManager.reloadProvider(providerData)
