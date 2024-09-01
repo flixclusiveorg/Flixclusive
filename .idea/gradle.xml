@@ -57,6 +57,7 @@
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/mobile" />
             <option value="$PROJECT_DIR$/feature/mobile/about" />
+            <option value="$PROJECT_DIR$/feature/mobile/changelogs" />
             <option value="$PROJECT_DIR$/feature/mobile/crash" />
             <option value="$PROJECT_DIR$/feature/mobile/film" />
             <option value="$PROJECT_DIR$/feature/mobile/genre" />
@@ -67,7 +68,6 @@
             <option value="$PROJECT_DIR$/feature/mobile/provider-list" />
             <option value="$PROJECT_DIR$/feature/mobile/provider-settings" />
             <option value="$PROJECT_DIR$/feature/mobile/provider-test" />
-            <option value="$PROJECT_DIR$/feature/mobile/provider-whats-new" />
             <option value="$PROJECT_DIR$/feature/mobile/recently-watched" />
             <option value="$PROJECT_DIR$/feature/mobile/repository" />
             <option value="$PROJECT_DIR$/feature/mobile/repository-search" />

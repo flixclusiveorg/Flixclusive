@@ -142,6 +142,7 @@
     <string name="genres">Genres</string>
     <string name="get_search_results_from">Get search results from:</string>
     <string name="github_repository">Github Repository</string>
+    <string name="help">Help</string>
     <string name="ignore_warning_message">Don\'t warn me anymore.</string>
     <string name="import_label">Import</string>
     <string name="install">Install</string>
@@ -274,7 +275,7 @@
     <string name="download_completed">Download completed</string>
     <string name="download_in_progress">Downloading</string>
     <string name="empty_list_default_message">No items found.</string>
-    <string name="empty_providers_list_message">Start adding providers now!</string>
+    <string name="empty_providers_list_message">No providers installed</string>
     <string name="empty_recently_watched_list_message">Start watching now!</string>
     <string name="failed_to_get_media_id_error_msg">Failed to get media id. This might not be available yet.</string>
     <string name="fetching_episode_message">Fetching show episode…</string>

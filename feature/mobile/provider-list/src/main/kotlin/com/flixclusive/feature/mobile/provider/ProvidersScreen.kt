@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.provider
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,6 +22,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -72,6 +74,8 @@ interface ProvidersScreenNavigator : GoBackAction, ProviderTestNavigator {
     fun openAddRepositoryScreen()
 }
 
+private val FabButtonSize = 56.dp
+
 @Destination
 @Composable
 fun ProvidersScreen(
@@ -121,25 +125,30 @@ fun ProvidersScreen(
                 isVisible = shouldShowTopBar,
                 searchQuery = viewModel.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChange,
+                onNeedHelp = {
+
+                },
                 searchExpanded = searchExpanded
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = navigator::openAddRepositoryScreen,
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                shape = MaterialTheme.shapes.medium,
-                expanded = !shouldShowTopBar,
-                text = {
-                    Text(text = stringResource(UtilR.string.add_provider))
-                },
-                icon = {
-                    Icon(
-                        painter = painterResource(id = UiCommonR.drawable.round_add_24),
-                        contentDescription = stringResource(UtilR.string.add_provider)
-                    )
-                }
-            )
+            if (viewModel.providerDataList.isNotEmpty()) {
+                ExtendedFloatingActionButton(
+                    onClick = navigator::openAddRepositoryScreen,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = MaterialTheme.shapes.medium,
+                    expanded = !shouldShowTopBar,
+                    text = {
+                        Text(text = stringResource(UtilR.string.add_provider))
+                    },
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = UiCommonR.drawable.round_add_24),
+                            contentDescription = stringResource(UtilR.string.add_provider)
+                        )
+                    }
+                )
+            }
         }
     ) { innerPadding ->
         val topPadding by animateDpAsState(
@@ -154,19 +163,40 @@ fun ProvidersScreen(
         ) {
             AnimatedContent(
                 targetState = viewModel.providerDataList.isEmpty(),
-                label = ""
+                label = "",
+                transitionSpec = {
+                    ContentTransform(
+                        targetContentEnter = fadeIn(),
+                        initialContentExit = fadeOut()
+                    )
+                }
             ) { state ->
                 if (state) {
                     EmptyDataMessage(
                         modifier = Modifier.fillMaxSize(),
-                        alignment = Alignment.Center
+                        description = stringResource(UtilR.string.empty_providers_list_message),
                     ) {
-                        MissingProvidersLogo()
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(5.dp),
+                            modifier = Modifier
+                                .padding(bottom = 12.dp)
+                        ) {
+                            MissingProvidersLogo()
+                            OutlinedButton(
+                                onClick = navigator::openAddRepositoryScreen,
+                                modifier = Modifier
+                            ) {
+                                Text(text = stringResource(UtilR.string.add_provider))
+                            }
+                        }
                     }
                 } else {
                     LazyColumn(
                         state = listState,
-                        contentPadding = PaddingValues(horizontal = 10.dp),
+                        contentPadding = PaddingValues(
+                            bottom = FabButtonSize * 2,
+                        ),
                         modifier = Modifier
                             .padding(horizontal = 10.dp)
                             .dragGestureHandler(
