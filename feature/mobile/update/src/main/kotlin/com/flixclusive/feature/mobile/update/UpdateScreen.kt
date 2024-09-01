@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.update
 
+import android.text.util.Linkify
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
@@ -157,7 +158,7 @@ fun UpdateScreen(
                 markdown = args.updateInfo?.fromGitmoji() ?: stringResource(id = UtilR.string.default_update_info_message),
                 isTextSelectable = true,
                 linkColor = Color(0xFF5890FF),
-                fontResource = com.flixclusive.core.theme.R.font.space_grotesk_medium,
+                linkifyMask = Linkify.WEB_URLS or Linkify.EMAIL_ADDRESSES,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = LocalContentColor.current,
                 ),

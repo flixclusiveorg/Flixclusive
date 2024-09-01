@@ -111,6 +111,7 @@
     <string name="clear_app_cache">Clear app cache</string>
     <string name="clear_cache_links">Clear cached links</string>
     <string name="clear_search_history">Clear search history</string>
+    <string name="clear_tests">Clear tests</string>
     <string name="close_label">Close</string>
     <string name="collections">Collections</string>
     <string name="coming_soon">Coming Soon</string>
@@ -120,7 +121,6 @@
     <string name="currently_testing">Currently Testing</string>
     <string name="debug">DEBUG</string>
     <string name="decoder_device_only">Device decoders</string>
-    <string name="clear_tests">Clear tests</string>
     <string name="decoder_prefer_app">FFMPEG decoders</string>
     <string name="decoder_prefer_device">Device + FFMPEG decoders</string>
     <string name="decoder_priority">Player\'s decoder priority</string>
@@ -142,6 +142,7 @@
     <string name="genres">Genres</string>
     <string name="get_search_results_from">Get search results from:</string>
     <string name="github_repository">Github Repository</string>
+    <string name="heads_up">Heads up!</string>
     <string name="help">Help</string>
     <string name="ignore_warning_message">Don\'t warn me anymore.</string>
     <string name="import_label">Import</string>
@@ -180,6 +181,7 @@
     <string name="preferred_quality">Preferred quality</string>
     <string name="preferred_resize_mode">Preferred resize mode</string>
     <string name="privacy_notice">Privacy notice</string>
+    <string name="proceed">Proceed</string>
     <string name="provider_disclaimer">Providers Disclaimer</string>
     <string name="provider_settings">Provider Settings</string>
     <string name="randomize">Randomize</string>
@@ -283,6 +285,7 @@
     <string name="loading_next_episode">Loading next episode…</string>
     <string name="no_available_providers">No available source providers!</string>
     <string name="non_configurable_provider_message">This provider has is not configurable.</string>
+    <string name="not_trusted_url">Hey! The app doesn\'t monitor external sites, so proceed with caution and use your best internet judgment.</string>
     <string name="offline_message">You\'re offline</string>
     <string name="online_message">Back online</string>
     <string name="provider_test_stage_done">Done!</string>
