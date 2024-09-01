@@ -9,6 +9,7 @@ import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.mobile.KeyEventHandler
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.webview.WebViewDriverManager
+import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.util.InternetMonitor
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.data.watchlist.WatchlistRepository
@@ -28,7 +29,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -43,6 +46,7 @@ internal class MobileAppViewModel @Inject constructor(
     private val watchHistoryRepository: WatchHistoryRepository,
     private val watchlistRepository: WatchlistRepository,
     private val appSettingsManager: AppSettingsManager,
+    private val appConfigurationManager: AppConfigurationManager,
     internetMonitor: InternetMonitor,
 ) : ViewModel() {
     private var onFilmLongClickJob: Job? = null
@@ -70,6 +74,27 @@ internal class MobileAppViewModel @Inject constructor(
 
     val isPiPModeEnabled: Boolean
         get() = appSettingsManager.localAppSettings.isPiPModeEnabled
+
+    val currentVersionCode: Long
+        get() = appConfigurationManager.currentAppBuild?.build ?: -1
+    val currentVersionName: String
+        get() {
+            return appConfigurationManager.currentAppBuild?.let {
+                if (it.debug) {
+                    it.versionName.split("-").first()
+                } else it.versionName
+            } ?: ""
+        }
+    val hasSeenChangelogsForCurrentBuild = appSettingsManager.appSettings.data
+        .map {
+            currentVersionCode > it.lastSeenChangelogsVersion
+        }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
 
     private val _uiState = MutableStateFlow(MobileAppUiState())
     val uiState: StateFlow<MobileAppUiState> = _uiState.asStateFlow()
@@ -223,6 +248,16 @@ internal class MobileAppViewModel @Inject constructor(
 
     fun setPlayerModeState(isInPlayer: Boolean) {
         _uiState.update { it.copy(isOnPlayerScreen = isInPlayer) }
+    }
+
+    fun onSaveLastSeenChangelogsVersion(version: Long) {
+        viewModelScope.launch {
+            appSettingsManager.updateSettings {
+                it.copy(
+                    lastSeenChangelogsVersion = version
+                )
+            }
+        }
     }
 }
 

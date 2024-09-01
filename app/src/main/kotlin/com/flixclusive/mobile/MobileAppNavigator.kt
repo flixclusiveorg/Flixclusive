@@ -6,6 +6,7 @@ import com.flixclusive.core.ui.common.navigation.ProviderTestNavigator
 import com.flixclusive.core.ui.common.navigation.RepositorySearchScreenNavigator
 import com.flixclusive.core.ui.common.navigation.UpdateDialogNavigator
 import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
+import com.flixclusive.feature.mobile.changelogs.destinations.ChangelogsScreenDestination
 import com.flixclusive.feature.mobile.film.FilmScreenNavigator
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
@@ -18,7 +19,6 @@ import com.flixclusive.feature.mobile.provider.info.ProviderInfoNavigator
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
-import com.flixclusive.feature.mobile.provider.whats_new.destinations.ProviderWhatsNewScreenDestination
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
 import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
@@ -165,7 +165,10 @@ internal class MobileAppNavigator(
 
     override fun seeWhatsNew(providerData: ProviderData) {
         navController.navigateIfResumed(
-            ProviderWhatsNewScreenDestination(providerData = providerData) within destination.navGraph()
+            ChangelogsScreenDestination(
+                title = providerData.name,
+                changeLogs = providerData.changelog ?: ""
+            ) within destination.navGraph()
         )
     }
 

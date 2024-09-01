@@ -79,7 +79,7 @@ dependencies {
     implementation(projects.feature.mobile.providerList)
     implementation(projects.feature.mobile.providerSettings)
     implementation(projects.feature.mobile.providerTest)
-    implementation(projects.feature.mobile.providerWhatsNew)
+    implementation(projects.feature.mobile.changelogs)
     implementation(projects.feature.mobile.recentlyWatched)
     implementation(projects.feature.mobile.repository)
     implementation(projects.feature.mobile.repositorySearch)
