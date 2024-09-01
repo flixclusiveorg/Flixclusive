@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -21,8 +22,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,15 +38,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.ProviderUninstallNoticeDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.ProviderTestNavigator
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
+import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
 import com.flixclusive.core.ui.mobile.component.provider.InstalledProviderCard
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isAtTop
@@ -151,14 +157,11 @@ fun ProvidersScreen(
                 label = ""
             ) { state ->
                 if (state) {
-                    Box(
+                    EmptyDataMessage(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        alignment = Alignment.Center
                     ) {
-                        Text(
-                            text = stringResource(id = UtilR.string.empty_providers_list_message),
-                            textAlign = TextAlign.Center
-                        )
+                        MissingProvidersLogo()
                     }
                 } else {
                     LazyColumn(
@@ -249,5 +252,46 @@ fun ProvidersScreen(
             },
             onDismiss = { indexOfProviderToUninstall = null }
         )
+    }
+}
+
+@Composable
+private fun MissingProvidersLogo() {
+    Box(
+        contentAlignment = Alignment.Center,
+    ) {
+        CompositionLocalProvider(
+            LocalContentColor provides MaterialTheme.colorScheme.primary.onMediumEmphasis()
+        ) {
+            Icon(
+                painter = painterResource(id = UiCommonR.drawable.provider_logo),
+                contentDescription = stringResource(id = UtilR.string.missing_providers_logo_content_description),
+                modifier = Modifier.size(70.dp)
+            )
+
+            Text(
+                text = "?",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = 25.sp
+                ),
+                modifier = Modifier
+                    .padding(bottom = 2.dp)
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun MissingProvidersLogoPreview() {
+    FlixclusiveTheme {
+        Surface {
+            EmptyDataMessage(
+                modifier = Modifier.fillMaxSize(),
+                alignment = Alignment.Center
+            ) {
+                MissingProvidersLogo()
+            }
+        }
     }
 }
