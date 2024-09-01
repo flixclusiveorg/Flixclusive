@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.whats_new
+package com.flixclusive.feature.mobile.changelogs
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,20 +22,20 @@ import coil.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.COMMON_TOP_BAR_HEIGHT
 import com.flixclusive.core.ui.common.CommonTopBar
+import com.flixclusive.core.ui.common.navigation.ChangelogsNavArgs
 import com.flixclusive.core.ui.common.navigation.GoBackAction
-import com.flixclusive.core.ui.common.navigation.ProviderInfoScreenNavArgs
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.ramcosta.composedestinations.annotation.Destination
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.theme.R as ThemeR
 
+
 @Destination(
-    navArgsDelegate = ProviderInfoScreenNavArgs::class
+    navArgsDelegate = ChangelogsNavArgs::class
 )
 @Composable
-fun ProviderWhatsNewScreen(
+fun ChangelogsScreen(
     navigator: GoBackAction,
-    args: ProviderInfoScreenNavArgs
+    args: ChangelogsNavArgs
 ) {
     val uriHandler = LocalUriHandler.current
 
@@ -49,26 +49,24 @@ fun ProviderWhatsNewScreen(
                 .padding(top = COMMON_TOP_BAR_HEIGHT)
                 .verticalScroll(rememberScrollState())
         ) {
-            args.providerData.changelog?.let {
-                MarkdownText(
-                    markdown = it,
-                    isTextSelectable = true,
-                    linkColor = Color(0xFF5890FF),
-                    fontResource = ThemeR.font.space_grotesk_medium,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = LocalContentColor.current,
-                    ),
-                    imageLoader = LocalContext.current.imageLoader,
-                    onLinkClicked = uriHandler::openUri,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-            }
+            MarkdownText(
+                markdown = args.changeLogs,
+                isTextSelectable = true,
+                linkColor = Color(0xFF5890FF),
+                fontResource = ThemeR.font.space_grotesk_medium,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = LocalContentColor.current,
+                ),
+                imageLoader = LocalContext.current.imageLoader,
+                onLinkClicked = uriHandler::openUri,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
         }
 
         CommonTopBar(
-            headerTitle = args.providerData.name,
+            headerTitle = args.title,
             onNavigationIconClick = navigator::goBack
         )
     }
@@ -79,12 +77,13 @@ fun ProviderWhatsNewScreen(
 private fun ProviderWhatsNewScreenPreview() {
     FlixclusiveTheme {
         Surface {
-            ProviderWhatsNewScreen(
+            ChangelogsScreen(
                 navigator = object : GoBackAction {
                     override fun goBack() {}
                 },
-                args = ProviderInfoScreenNavArgs(
-                    providerData = getDummyProviderData()
+                args = ChangelogsNavArgs(
+                    title = "2.0.0",
+                    changeLogs = ""
                 )
             )
         }

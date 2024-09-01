@@ -6,12 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.feature.mobile.provider.whats_new"
+    namespace = "com.flixclusive.feature.mobile.changelogs"
 }
 
 dependencies {
     implementation(projects.core.ui.mobile)
-    implementation(projects.data.provider)
 
     implementation(libs.coil.compose)
     implementation(libs.compose.foundation)

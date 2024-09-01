@@ -32,6 +32,7 @@ data class AppSettings(
 
     // On-boarding settings
     val isFirstTimeUserLaunch_: Boolean = true, // TODO: Remove underscore
+    val lastSeenChangelogsVersion: Long = -1L,
     // ===
 
     // == Subs

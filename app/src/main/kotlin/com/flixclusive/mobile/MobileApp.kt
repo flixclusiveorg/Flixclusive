@@ -43,8 +43,10 @@ import androidx.navigation.compose.rememberNavController
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
 import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
+import com.flixclusive.core.util.android.readFileAsString
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.webview.WebViewDriver
+import com.flixclusive.feature.mobile.changelogs.destinations.ChangelogsScreenDestination
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
@@ -61,6 +63,7 @@ import com.ramcosta.composedestinations.dynamic.within
 import com.ramcosta.composedestinations.navigation.navigate
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import com.ramcosta.composedestinations.utils.startDestination
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 import com.flixclusive.core.util.R as UtilR
@@ -73,6 +76,7 @@ internal fun MobileActivity.MobileApp(
     val context = LocalContext.current
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val hasSeenChangelogsForCurrentBuild by viewModel.hasSeenChangelogsForCurrentBuild.collectAsStateWithLifecycle()
     val isConnectedAtNetwork by viewModel.isConnectedAtNetwork.collectAsStateWithLifecycle()
 
     val filmToPreview by viewModel.filmToPreview.collectAsStateWithLifecycle()
@@ -109,6 +113,27 @@ internal fun MobileActivity.MobileApp(
                 episodeToPlay = episodeToPlay
             )
         )
+    }
+
+    LaunchedEffect(hasSeenChangelogsForCurrentBuild, currentSelectedScreen) {
+        if (hasSeenChangelogsForCurrentBuild && currentSelectedScreen != SplashScreenDestination) {
+            delay(1000L) // Add delay for smooth transition
+            val changelogs = assets.readFileAsString("changelogs/${viewModel.currentVersionName}.md") ?: return@LaunchedEffect
+
+            navController.navigateIfResumed(
+                direction = ChangelogsScreenDestination(
+                    title = viewModel.currentVersionName,
+                    changeLogs = changelogs
+                )
+            ) {
+                launchSingleTop = true
+                restoreState = true
+            }
+
+            viewModel.onSaveLastSeenChangelogsVersion(
+                version = viewModel.currentVersionCode
+            )
+        }
     }
 
     LaunchedEffect(cachedLinks?.streams?.size, uiState.mediaLinkResourceState) {
@@ -153,9 +178,10 @@ internal fun MobileActivity.MobileApp(
 
     val useBottomBar = remember(currentSelectedScreen) {
         currentSelectedScreen.route != SearchExpandedScreenDestination.within(MobileNavGraphs.search).route
-                && currentSelectedScreen != PlayerScreenDestination
-                && currentSelectedScreen != SplashScreenDestination
-                && currentSelectedScreen != UpdateScreenDestination
+            && currentSelectedScreen != PlayerScreenDestination
+            && currentSelectedScreen != SplashScreenDestination
+            && currentSelectedScreen != UpdateScreenDestination
+            && currentSelectedScreen != ChangelogsScreenDestination
     }
 
     val windowInsets = when (currentSelectedScreen) {

@@ -2,6 +2,7 @@ package com.flixclusive.mobile
 
 import com.flixclusive.ROOT
 import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
+import com.flixclusive.feature.mobile.changelogs.destinations.ChangelogsScreenDestination
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.destinations.HomeScreenDestination
@@ -10,7 +11,6 @@ import com.flixclusive.feature.mobile.preferences.destinations.PreferencesScreen
 import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
-import com.flixclusive.feature.mobile.provider.whats_new.destinations.ProviderWhatsNewScreenDestination
 import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
@@ -69,7 +69,7 @@ internal object MobileNavGraphs {
             RepositoryScreenDestination,
             ProviderInfoScreenDestination,
             ProviderSettingsScreenDestination,
-            ProviderWhatsNewScreenDestination,
+            ChangelogsScreenDestination,
             ProviderTestScreenDestination
         ).routedIn(this)
             .associateBy { it.route }
@@ -102,6 +102,7 @@ internal object MobileNavGraphs {
             PlayerScreenDestination,
             SplashScreenDestination,
             UpdateScreenDestination,
+            ChangelogsScreenDestination,
         ).associateBy { it.route }
 
         override val nestedNavGraphs = listOf(

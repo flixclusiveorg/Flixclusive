@@ -1,5 +1,7 @@
 package com.flixclusive.core.util.android
 
+import android.content.res.AssetManager
+import com.flixclusive.core.util.exception.safeCall
 import okio.BufferedSource
 import okio.buffer
 import okio.sink
@@ -40,6 +42,14 @@ fun BufferedSource.saveTo(stream: OutputStream) {
         stream.sink().buffer().use {
             it.writeAll(input)
             it.flush()
+        }
+    }
+}
+
+fun AssetManager.readFileAsString(path: String): String? {
+    return safeCall {
+        open(path).bufferedReader().use {
+            return@safeCall it.readText()
         }
     }
 }
