@@ -43,7 +43,6 @@ import androidx.navigation.compose.rememberNavController
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
 import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
-import com.flixclusive.core.util.android.readFileAsString
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.webview.WebViewDriver
 import com.flixclusive.feature.mobile.changelogs.destinations.ChangelogsScreenDestination
@@ -118,11 +117,21 @@ internal fun MobileActivity.MobileApp(
     LaunchedEffect(hasSeenChangelogsForCurrentBuild, currentSelectedScreen) {
         if (hasSeenChangelogsForCurrentBuild && currentSelectedScreen != SplashScreenDestination) {
             delay(1000L) // Add delay for smooth transition
-            val changelogs = assets.readFileAsString("changelogs/${viewModel.currentVersionName}.md") ?: return@LaunchedEffect
+            val changelogsId = context.resources
+                .getIdentifier(
+                    /* name = */ "changelog_${viewModel.currentVersionCode}",
+                    /* defType = */ "array",
+                    /* defPackage = */ context.packageName
+                )
+
+            if (changelogsId == 0)
+                return@LaunchedEffect
+
+            val (title, changelogs) = context.resources.getStringArray(changelogsId)
 
             navController.navigateIfResumed(
                 direction = ChangelogsScreenDestination(
-                    title = viewModel.currentVersionName,
+                    title = title,
                     changeLogs = changelogs
                 )
             ) {

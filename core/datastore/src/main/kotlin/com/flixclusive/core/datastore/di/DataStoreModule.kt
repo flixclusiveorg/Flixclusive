@@ -5,8 +5,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.flixclusive.core.datastore.serializer.AppSettingsProviderSerializer
 import com.flixclusive.core.datastore.serializer.AppSettingsSerializer
+import com.flixclusive.core.datastore.serializer.OnBoardingPreferencesSerializer
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.AppSettingsProvider
+import com.flixclusive.model.datastore.OnBoardingPreferences
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,19 +19,26 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object DataStoreModule {
+internal object DataStoreModule {
     private val Context.appSettings by dataStore("app-preferences.json", AppSettingsSerializer)
     private val Context.appProviderSettings by dataStore("app-provider-preferences.json", AppSettingsProviderSerializer)
+    private val Context.onBoardingPreferences by dataStore("on-boarding-preferences.json", OnBoardingPreferencesSerializer)
 
     @Provides
     @Singleton
-    internal fun providesUserPreferencesDataStore(
+    fun providesUserPreferencesDataStore(
         @ApplicationContext context: Context,
     ): DataStore<AppSettings> = context.appSettings
 
     @Provides
     @Singleton
-    internal fun providesUserProviderPreferencesDataStore(
+    fun providesUserProviderPreferencesDataStore(
         @ApplicationContext context: Context,
     ): DataStore<AppSettingsProvider> = context.appProviderSettings
+
+    @Provides
+    @Singleton
+    fun providesOnBoardingPreferencesDataStore(
+        @ApplicationContext context: Context,
+    ): DataStore<OnBoardingPreferences> = context.onBoardingPreferences
 }

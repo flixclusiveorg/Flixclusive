@@ -3,8 +3,11 @@ package com.flixclusive.feature.mobile.changelogs
 import android.text.util.Linkify
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -71,6 +74,12 @@ fun ChangelogsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
+            )
+            
+            Spacer(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .height(10.dp)
             )
         }
 

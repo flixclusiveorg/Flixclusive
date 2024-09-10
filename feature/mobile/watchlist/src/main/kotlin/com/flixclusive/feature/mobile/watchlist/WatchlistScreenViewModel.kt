@@ -20,7 +20,7 @@ class WatchlistScreenViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.localAppSettings
+            initialValue = appSettingsManager.cachedAppSettings
         )
 
     val items = watchlistRepository

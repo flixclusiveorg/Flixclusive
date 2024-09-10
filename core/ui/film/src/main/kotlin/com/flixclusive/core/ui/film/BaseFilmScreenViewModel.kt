@@ -41,7 +41,7 @@ abstract class BaseFilmScreenViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.localAppSettings
+            initialValue = appSettingsManager.cachedAppSettings
         )
 
     private val filmId: String = partiallyDetailedFilm.identifier

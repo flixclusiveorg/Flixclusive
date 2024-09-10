@@ -34,7 +34,7 @@ class RepositorySearchScreenViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.localProviderSettings.repositories
+            initialValue = appSettingsManager.cachedProviderSettings.repositories
         )
 
     fun selectRepository(repository: Repository) {

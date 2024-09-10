@@ -127,7 +127,7 @@ class ProviderInfoScreenViewModel @Inject constructor(
     private suspend fun getRepository(url: String) {
         val (username, repositoryName) = extractGithubInfoFromLink(url) ?: return
 
-        repository = appSettingsManager.localProviderSettings.repositories.find {
+        repository = appSettingsManager.cachedProviderSettings.repositories.find {
             it.owner.equals(username, true) && it.name == repositoryName
         }
 

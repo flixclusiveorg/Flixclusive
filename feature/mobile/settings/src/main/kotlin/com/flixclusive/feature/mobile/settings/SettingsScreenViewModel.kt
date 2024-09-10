@@ -72,7 +72,7 @@ class SettingsScreenViewModel @Inject constructor(
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            appSettingsManager.localAppSettings
+            appSettingsManager.cachedAppSettings
         )
 
     val cacheLinksSize by derivedStateOf {

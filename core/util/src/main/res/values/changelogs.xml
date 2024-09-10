@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="changelog_20000">
+        <item>2.0.0</item>
+        <item>
+            <![CDATA[
+                # Welcome to the Providers System 🎉\n\n
+
+                Starting from **2.0.0**, the app will migrate from embedded providers to dynamic ones. This allows users to choose where and how to get content based on their preferences.\n\n
+
+                ![](https://i.imgur.com/eLPjt1l.png)\n\n
+
+                ### Brief info about providers\n\n
+
+                A provider, commonly known as _extension_, _source_ or _addon_, is an external feature that is separated from the app. It handles content generation such as media catalogs.\n\n
+
+                For those familiar with _Cloudstream3_ and _Stremio_, this new dynamic provider system will feel right at home as it was mainly inspired by them. If you are new to this concept, **think of the app as a browser while the providers are the browser extensions**\n\n
+
+                ### Author\'s note\n\n
+
+                Thank you all for the great support around the app. I have been trying my best to be _motivated_ every day to push a commit, but, you know, sometimes _productivity_ is not really one of your friends so I apologize for the slow updates\n\n
+
+                Let us keep growing (slowly pls 😔🫵) and keep the app alive and well!\n
+            ]]>
+        </item>
+    </string-array>
+</resources>

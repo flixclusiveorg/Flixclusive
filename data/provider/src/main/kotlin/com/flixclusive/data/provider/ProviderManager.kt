@@ -601,7 +601,7 @@ class ProviderManager @Inject constructor(
     }
 
     private fun getProviderPreference(name: String): ProviderPreference? {
-        return appSettingsManager.localProviderSettings
+        return appSettingsManager.cachedProviderSettings
             .providers
             .find { it.name.equals(name, true) }
     }
@@ -614,7 +614,7 @@ class ProviderManager @Inject constructor(
      */
     fun isProviderEnabled(name: String): Boolean {
         return appSettingsManager
-            .localProviderSettings
+            .cachedProviderSettings
             .providers
             .find { it.name.contains(name, true) }
             ?.isDisabled?.not() ?: true

@@ -9,8 +9,6 @@ import com.flixclusive.model.datastore.player.CaptionStylePreference
 import com.flixclusive.model.datastore.player.DecoderPriority
 import com.flixclusive.model.datastore.player.PlayerQuality
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import java.io.InputStream
 
 const val DEFAULT_PLAYER_SEEK_AMOUNT = 10000L
 const val DEFAULT_PLAYER_CACHE_SIZE_AMOUNT = 200L
@@ -28,11 +26,6 @@ data class AppSettings(
 
     // UI
     val isShowingFilmCardTitle: Boolean = false,
-    // ===
-
-    // On-boarding settings
-    val isFirstTimeUserLaunch_: Boolean = true, // TODO: Remove underscore
-    val lastSeenChangelogsVersion: Long = -1L,
     // ===
 
     // == Subs
@@ -68,13 +61,4 @@ data class AppSettings(
     val preferredQuality: PlayerQuality = PlayerQuality.Quality1080p,
     val decoderPriority: DecoderPriority = DecoderPriority.PREFER_DEVICE,
     // ==
-) {
-    companion object {
-        fun parseFrom(input: InputStream): AppSettings {
-            return Json.decodeFromString(
-                deserializer = serializer(),
-                string = input.readBytes().decodeToString()
-            )
-        }
-    }
-}
+)

@@ -36,7 +36,7 @@ class ProvidersScreenViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.localProviderSettings.providers
+            initialValue = appSettingsManager.cachedProviderSettings.providers
         )
 
     fun onSearchQueryChange(newQuery: String) {
