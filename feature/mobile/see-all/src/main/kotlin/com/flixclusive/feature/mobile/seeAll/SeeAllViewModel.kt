@@ -38,7 +38,7 @@ class SeeAllViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.localAppSettings
+            initialValue = appSettingsManager.cachedAppSettings
         )
 
     private val args = savedStateHandle.navArgs<SeeAllScreenNavArgs>()

@@ -79,6 +79,7 @@ fun SplashScreen(
     val viewModel: SplashScreenViewModel = hiltViewModel()
 
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val onBoardingPreferences by viewModel.onBoardingPreferences.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle()
     val configurationStatus by viewModel.configurationStatus.collectAsStateWithLifecycle()
@@ -111,7 +112,7 @@ fun SplashScreen(
             verticalArrangement = Arrangement.Center
         ) {
             val paddingBottom by animateDpAsState(
-                targetValue = if (!appSettings.isFirstTimeUserLaunch_) 30.dp else 50.dp,
+                targetValue = if (!onBoardingPreferences.isFirstTimeUserLaunch_) 30.dp else 50.dp,
                 label = ""
             )
 
@@ -135,7 +136,7 @@ fun SplashScreen(
             }
 
             AnimatedContent(
-                targetState = appSettings.isFirstTimeUserLaunch_,
+                targetState = onBoardingPreferences.isFirstTimeUserLaunch_,
                 contentAlignment = Alignment.TopCenter,
                 label = ""
             ) { state ->
@@ -174,10 +175,10 @@ fun SplashScreen(
                                     }
                                     true -> {
                                         ProvidersDisclaimer(
-                                            understood = {
-                                                viewModel.updateSettings(
-                                                    appSettings.copy(isFirstTimeUserLaunch_ = false)
-                                                )
+                                            understood = { _ ->
+                                                viewModel.updateOnBoardingPreferences {
+                                                    it.copy(isFirstTimeUserLaunch_ = false)
+                                                }
                                             }
                                         )
                                     }
@@ -246,7 +247,7 @@ fun SplashScreen(
             }
         } else areAllPermissionsGranted = true
 
-        if (areAllPermissionsGranted && isDoneAnimating && !appSettings.isFirstTimeUserLaunch_) {
+        if (areAllPermissionsGranted && isDoneAnimating && !onBoardingPreferences.isFirstTimeUserLaunch_) {
             if (updateStatus == UpdateStatus.Outdated && appSettings.isUsingAutoUpdateAppFeature) {
                 navigator.openUpdateScreen(
                     newVersion = viewModel.appUpdateCheckerUseCase.newVersion!!,

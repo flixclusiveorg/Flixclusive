@@ -10,6 +10,7 @@ import com.flixclusive.domain.home.PREFERRED_MINIMUM_HOME_ITEMS
 import com.flixclusive.domain.updater.AppUpdateCheckerUseCase
 import com.flixclusive.domain.updater.ProviderUpdaterUseCase
 import com.flixclusive.model.datastore.AppSettings
+import com.flixclusive.model.datastore.OnBoardingPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -45,7 +46,16 @@ internal class SplashScreenViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.localAppSettings
+            initialValue = appSettingsManager.cachedAppSettings
+        )
+
+    val onBoardingPreferences = appSettingsManager
+        .onBoardingPreferences
+        .data
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = OnBoardingPreferences()
         )
 
     init {
@@ -79,6 +89,15 @@ internal class SplashScreenViewModel @Inject constructor(
     fun updateSettings(newAppSettings: AppSettings) {
         viewModelScope.launch {
             appSettingsManager.updateSettings(newAppSettings)
+        }
+    }
+
+    fun updateOnBoardingPreferences(transform: suspend (t: OnBoardingPreferences) -> OnBoardingPreferences) {
+        viewModelScope.launch {
+            appSettingsManager.updateOnBoardingPreferences {
+                val newSettings = transform(it)
+                newSettings
+            }
         }
     }
 }

@@ -73,19 +73,13 @@ internal class MobileAppViewModel @Inject constructor(
         )
 
     val isPiPModeEnabled: Boolean
-        get() = appSettingsManager.localAppSettings.isPiPModeEnabled
+        get() = appSettingsManager.cachedAppSettings.isPiPModeEnabled
 
     val currentVersionCode: Long
         get() = appConfigurationManager.currentAppBuild?.build ?: -1
-    val currentVersionName: String
-        get() {
-            return appConfigurationManager.currentAppBuild?.let {
-                if (it.debug) {
-                    it.versionName.split("-").first()
-                } else it.versionName
-            } ?: ""
-        }
-    val hasSeenChangelogsForCurrentBuild = appSettingsManager.appSettings.data
+
+    val hasSeenChangelogsForCurrentBuild = appSettingsManager
+        .onBoardingPreferences.data
         .map {
             currentVersionCode > it.lastSeenChangelogsVersion
         }
@@ -252,7 +246,7 @@ internal class MobileAppViewModel @Inject constructor(
 
     fun onSaveLastSeenChangelogsVersion(version: Long) {
         viewModelScope.launch {
-            appSettingsManager.updateSettings {
+            appSettingsManager.updateOnBoardingPreferences {
                 it.copy(
                     lastSeenChangelogsVersion = version
                 )

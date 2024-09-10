@@ -33,7 +33,7 @@ class GenreViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.localAppSettings
+            initialValue = appSettingsManager.cachedAppSettings
         )
 
     private val genreArgs = savedStateHandle.navArgs<GenreScreenNavArgs>()

@@ -57,7 +57,7 @@ abstract class BasePlayerViewModel(
         client = client,
         context = context,
         playerCacheManager = playerCacheManager,
-        appSettings = appSettingsManager.localAppSettings,
+        appSettings = appSettingsManager.cachedAppSettings,
         showErrorCallback = {
             showErrorSnackbar(
                 message = it,
@@ -111,7 +111,7 @@ abstract class BasePlayerViewModel(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.localAppSettings
+            initialValue = appSettingsManager.cachedAppSettings
         )
 
     private var loadLinksFromNewProviderJob: Job? = null

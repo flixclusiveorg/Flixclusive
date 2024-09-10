@@ -37,7 +37,7 @@ fun CommonNoticeDialog(
     label: String,
     description: String,
     confirmButtonLabel: String = stringResource(id = UtilR.string.ok),
-    dismissButtonLabel: String = stringResource(id = UtilR.string.cancel),
+    dismissButtonLabel: String? = stringResource(id = UtilR.string.cancel),
     dismissOnConfirm: Boolean = true,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
@@ -124,24 +124,26 @@ fun CommonNoticeDialog(
                         )
                     }
 
-                    Button(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        shape = buttonShape.copy(
-                            bottomEnd = CornerSize((buttonShapeRoundnessPercentage  *2).dp),
-                        ),
-                        modifier = Modifier
-                            .weight(1F)
-                            .heightIn(min = buttonMinHeight)
-                    ) {
-                        Text(
-                            text = dismissButtonLabel,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Light
-                        )
+                    if (dismissButtonLabel != null) {
+                        Button(
+                            onClick = onDismiss,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            shape = buttonShape.copy(
+                                bottomEnd = CornerSize((buttonShapeRoundnessPercentage  *2).dp),
+                            ),
+                            modifier = Modifier
+                                .weight(1F)
+                                .heightIn(min = buttonMinHeight)
+                        ) {
+                            Text(
+                                text = dismissButtonLabel,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Light
+                            )
+                        }
                     }
                 }
             }
@@ -160,6 +162,7 @@ private fun CommonNoticeDialogPreview() {
         ) {
             CommonNoticeDialog(
                 label = "Alert!",
+                dismissButtonLabel = null,
                 description = " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus diam orci, blandit sit amet dolor nec, congue ultricies risus. Etiam porttitor bibendum elit, vitae luctus libero feugiat quis. Praesent vel finibus nisl. Ut quis libero mi. Proin molestie eros elit, in condimentum justo aliquam ut. Suspendisse gravida luctus ornare. Morbi nulla est, pretium a vestibulum nec, lobortis ac mauris. Sed viverra ipsum quis scelerisque cursus. Praesent sed libero enim. Aenean eleifend ut urna in commodo. Pellentesque pretium tempor magna, nec tempor arcu venenatis vitae. Aliquam lacinia faucibus leo, facilisis viverra sapien ullamcorper eu.\n" +
                         "\n" +
                         "Integer ullamcorper libero vel efficitur vulputate. Sed aliquam mauris eu sollicitudin fringilla. Proin accumsan, sem non pulvinar tristique, lacus turpis vehicula ante, id feugiat nisl risus in ex. Aenean lacus sem, dapibus eget vestibulum sed, condimentum eu nulla. Praesent fringilla eros vel libero fermentum, non varius quam pharetra. Mauris nec ligula nibh. Pellentesque vel orci ut libero rutrum tempor. Maecenas fermentum lorem enim, quis commodo ante bibendum et. Integer aliquam mi id magna porta, ut viverra lacus ultrices. Nunc aliquet ut ante at ornare. Proin placerat egestas est, sed suscipit metus porta malesuada. Sed ligula lectus, iaculis nec lacinia in, commodo sed orci. Integer maximus, justo ut rutrum dignissim, ex eros maximus lacus, ut finibus massa neque vel velit. Proin sodales turpis ac ipsum lacinia volutpat.\n" +
