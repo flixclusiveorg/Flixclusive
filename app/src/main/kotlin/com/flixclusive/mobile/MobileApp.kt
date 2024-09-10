@@ -45,8 +45,8 @@ import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
 import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.webview.WebViewDriver
-import com.flixclusive.feature.mobile.changelogs.destinations.ChangelogsScreenDestination
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
+import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
@@ -130,9 +130,9 @@ internal fun MobileActivity.MobileApp(
             val (title, changelogs) = context.resources.getStringArray(changelogsId)
 
             navController.navigateIfResumed(
-                direction = ChangelogsScreenDestination(
+                direction = MarkdownScreenDestination(
                     title = title,
-                    changeLogs = changelogs
+                    description = changelogs
                 )
             ) {
                 launchSingleTop = true
@@ -190,7 +190,7 @@ internal fun MobileActivity.MobileApp(
             && currentSelectedScreen != PlayerScreenDestination
             && currentSelectedScreen != SplashScreenDestination
             && currentSelectedScreen != UpdateScreenDestination
-            && currentSelectedScreen != ChangelogsScreenDestination
+            && currentSelectedScreen != MarkdownScreenDestination
     }
 
     val windowInsets = when (currentSelectedScreen) {

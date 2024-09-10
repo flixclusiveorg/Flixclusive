@@ -2,15 +2,16 @@ package com.flixclusive.mobile
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
+import com.flixclusive.core.ui.common.navigation.MarkdownNavigator
 import com.flixclusive.core.ui.common.navigation.ProviderTestNavigator
 import com.flixclusive.core.ui.common.navigation.RepositorySearchScreenNavigator
 import com.flixclusive.core.ui.common.navigation.UpdateDialogNavigator
 import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
-import com.flixclusive.feature.mobile.changelogs.destinations.ChangelogsScreenDestination
 import com.flixclusive.feature.mobile.film.FilmScreenNavigator
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.HomeNavigator
+import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.preferences.PreferencesScreenNavigator
@@ -47,7 +48,8 @@ internal class MobileAppNavigator(
     private val navController: NavController,
     private val closeApp: () -> Unit,
 ) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator, FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator, ProvidersScreenNavigator,
-    RepositorySearchScreenNavigator, ProviderInfoNavigator, ProviderTestNavigator {
+    RepositorySearchScreenNavigator, ProviderInfoNavigator, ProviderTestNavigator,
+    MarkdownNavigator {
 
     override fun goBack() {
         navController.navigateUp()
@@ -164,17 +166,24 @@ internal class MobileAppNavigator(
     }
 
     override fun seeWhatsNew(providerData: ProviderData) {
-        navController.navigateIfResumed(
-            ChangelogsScreenDestination(
-                title = providerData.name,
-                changeLogs = providerData.changelog ?: ""
-            ) within destination.navGraph()
+        openMarkdownScreen(
+            title = providerData.name,
+            description = providerData.changelog ?: ""
         )
     }
 
     override fun openProviderInfo(providerData: ProviderData) {
         navController.navigateIfResumed(
             ProviderInfoScreenDestination(providerData = providerData) within destination.navGraph()
+        )
+    }
+
+    override fun openMarkdownScreen(title: String, description: String) {
+        navController.navigateIfResumed(
+            MarkdownScreenDestination(
+                title = title,
+                description = description
+            ) within destination.navGraph()
         )
     }
 }

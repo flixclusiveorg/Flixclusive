@@ -57,11 +57,11 @@
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/mobile" />
             <option value="$PROJECT_DIR$/feature/mobile/about" />
-            <option value="$PROJECT_DIR$/feature/mobile/changelogs" />
             <option value="$PROJECT_DIR$/feature/mobile/crash" />
             <option value="$PROJECT_DIR$/feature/mobile/film" />
             <option value="$PROJECT_DIR$/feature/mobile/genre" />
             <option value="$PROJECT_DIR$/feature/mobile/home" />
+            <option value="$PROJECT_DIR$/feature/mobile/markdown" />
             <option value="$PROJECT_DIR$/feature/mobile/player" />
             <option value="$PROJECT_DIR$/feature/mobile/preferences" />
             <option value="$PROJECT_DIR$/feature/mobile/provider-info" />

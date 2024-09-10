@@ -31,7 +31,7 @@ include(":feature:splash-screen")
 
 // Mobile features
 include(":feature:mobile:about")
-include(":feature:mobile:changelogs")
+include(":feature:mobile:markdown")
 include(":feature:mobile:crash")
 include(":feature:mobile:film")
 include(":feature:mobile:genre")

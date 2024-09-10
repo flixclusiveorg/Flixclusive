@@ -48,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.ProviderUninstallNoticeDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
+import com.flixclusive.core.ui.common.navigation.MarkdownNavigator
 import com.flixclusive.core.ui.common.navigation.ProviderTestNavigator
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
@@ -68,7 +69,7 @@ import kotlinx.coroutines.Job
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
-interface ProvidersScreenNavigator : GoBackAction, ProviderTestNavigator {
+interface ProvidersScreenNavigator : GoBackAction, ProviderTestNavigator, MarkdownNavigator {
     fun openProviderSettings(providerData: ProviderData)
     fun openProviderInfo(providerData: ProviderData)
     fun openAddRepositoryScreen()
@@ -126,7 +127,12 @@ fun ProvidersScreen(
                 searchQuery = viewModel.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChange,
                 onNeedHelp = {
+                    val (title, description) = context.resources.getStringArray(UtilR.array.providers_screen_help)
 
+                     navigator.openMarkdownScreen(
+                         title = title,
+                         description = description
+                     )
                 },
                 searchExpanded = searchExpanded
             )
