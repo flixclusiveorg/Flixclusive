@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -83,7 +82,6 @@ internal fun ProvidersTopBar(
         Box(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(top = 5.dp)
                 .noIndicationClickable {},
             contentAlignment = Alignment.TopCenter
         ) {
@@ -100,9 +98,7 @@ internal fun ProvidersTopBar(
                             ExpandedTopBar(
                                 searchQuery = searchQuery,
                                 onQueryChange = onQueryChange,
-                                onCollapseTopBar = { searchExpanded.value = false },
-                                modifier = Modifier
-                                    .height(65.dp)
+                                onCollapseTopBar = { searchExpanded.value = false }
                             )
                         }
                     }
@@ -111,7 +107,7 @@ internal fun ProvidersTopBar(
                             onExpandTopBar = { searchExpanded.value = true },
                             onNeedHelp = onNeedHelp,
                             modifier = Modifier
-                                .height(65.dp)
+                                .statusBarsPadding()
                         )
                     }
                 }

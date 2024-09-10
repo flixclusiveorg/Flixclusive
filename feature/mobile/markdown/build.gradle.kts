@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.feature.mobile.changelogs"
+    namespace = "com.flixclusive.feature.mobile.markdown"
 }
 
 dependencies {

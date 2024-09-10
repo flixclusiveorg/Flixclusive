@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="providers_screen_help">
+        <item>Understanding Providers</item>
+        <item>
+            <![CDATA[
+            ### What is a provider?\n\n
+
+            _The app acts as a browser while a provider acts as a browser extension_\n\n
+            
+            How do you use your dekstop browsers? Do you use AdBlocks on it? If so, providers are the _same_.\n\n
+            
+            To keep it simple and short, a **provider** is an optional extension of the app\'s vanilla capabilities to provide you with what content you best prefer.\n\n
+            
+            Providers are made by other developers/programmers outside of the app. Any issue that could be considered as a provider-related one is out of scope for the app.\n\n
+            
+            ### Is it required to install providers?\n\n
+            
+            No. Like many browser extensions, they are purely optional to install, but you are free to do so.\n\n
+            
+            ### Is there a security drawback for installing a provider?\n\n
+            
+            Yes. Each provider accessible through the app is not securedly monitored by the author(s) of the app.\n\n
+            
+            When you install a provider, _it can access the whole context of the app_ such as device storage, notifications, etc. which is considerably a common security flaw for android apps.\n\n
+            
+            Installing a provider is entirely up to your judgment, with all risks and responsibilities falling on you. Trust or not to trust? It\'s up to you!\n\n
+            
+            ### Why implement the provider system? It is confusing\n\n
+            
+            Providers are flexible\n
+            ]]>
+        </item>
+    </string-array>
+</resources>

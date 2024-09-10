@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.changelogs
+package com.flixclusive.feature.mobile.markdown
 
 import android.text.util.Linkify
 import androidx.compose.foundation.layout.Box
@@ -32,19 +32,19 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.COMMON_TOP_BAR_HEIGHT
 import com.flixclusive.core.ui.common.CommonNoticeDialog
 import com.flixclusive.core.ui.common.CommonTopBar
-import com.flixclusive.core.ui.common.navigation.ChangelogsNavArgs
 import com.flixclusive.core.ui.common.navigation.GoBackAction
+import com.flixclusive.core.ui.common.navigation.MarkdownNavArgs
 import com.ramcosta.composedestinations.annotation.Destination
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.util.R as UtilR
 
 @Destination(
-    navArgsDelegate = ChangelogsNavArgs::class
+    navArgsDelegate = MarkdownNavArgs::class
 )
 @Composable
-fun ChangelogsScreen(
+fun MarkdownScreen(
     navigator: GoBackAction,
-    args: ChangelogsNavArgs
+    args: MarkdownNavArgs
 ) {
     val uriHandler = LocalUriHandler.current
     var linkToOpen by rememberSaveable { mutableStateOf<String?>(null) }
@@ -60,7 +60,7 @@ fun ChangelogsScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             MarkdownText(
-                markdown = args.changeLogs,
+                markdown = args.description,
                 isTextSelectable = true,
                 linkColor = Color(0xFF5890FF),
                 style = MaterialTheme.typography.bodyMedium.copy(
@@ -105,13 +105,13 @@ fun ChangelogsScreen(
 private fun ProviderWhatsNewScreenPreview() {
     FlixclusiveTheme {
         Surface {
-            ChangelogsScreen(
+            MarkdownScreen(
                 navigator = object : GoBackAction {
                     override fun goBack() {}
                 },
-                args = ChangelogsNavArgs(
+                args = MarkdownNavArgs(
                     title = "2.0.0",
-                    changeLogs = """
+                    description = """
                         # Flixclusive
                         
                         Lorem ipsum dolor sit amet, consectetur adipiscing elit.
