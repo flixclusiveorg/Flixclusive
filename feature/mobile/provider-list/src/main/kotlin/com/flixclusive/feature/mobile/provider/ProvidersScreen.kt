@@ -106,7 +106,7 @@ fun ProvidersScreen(
 
     val filteredProviders by remember {
         derivedStateOf {
-            when (viewModel.searchQuery.isNotEmpty()) {
+            when (viewModel.searchQuery.isNotEmpty() && searchExpanded.value) {
                 true -> viewModel.providerDataList.filter {
                     it.name.contains(viewModel.searchQuery, true)
                 }
