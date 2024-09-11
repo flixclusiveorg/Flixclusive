@@ -26,15 +26,18 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TooltipState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -42,6 +45,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,23 +60,27 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 
 private val SearchIconSize = 18.dp
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ProvidersTopBar(
     isVisible: Boolean,
     searchExpanded: MutableState<Boolean>,
     searchQuery: String,
+    tooltipState: TooltipState,
     onQueryChange: (String) -> Unit,
-    onNeedHelp: () -> Unit
+    onNeedHelp: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = isVisible,
@@ -106,6 +114,7 @@ internal fun ProvidersTopBar(
                         CollapsedTopBar(
                             onExpandTopBar = { searchExpanded.value = true },
                             onNeedHelp = onNeedHelp,
+                            tooltipState = tooltipState,
                             modifier = Modifier
                                 .statusBarsPadding()
                         )
@@ -120,9 +129,12 @@ internal fun ProvidersTopBar(
 @Composable
 private fun CollapsedTopBar(
     modifier: Modifier = Modifier,
+    tooltipState: TooltipState,
     onExpandTopBar: () -> Unit,
     onNeedHelp: () -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -147,11 +159,33 @@ private fun CollapsedTopBar(
             TooltipBox(
                 positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
                 tooltip = {
-                    PlainTooltip {
-                        Text(stringResource(id = UtilR.string.help))
+                    RichTooltip(
+                        title = {
+                            Text(
+                                text = stringResource(id = UtilR.string.understanding_providers),
+                                style = LocalTextStyle.current.copy(
+                                    fontSize = 18.sp
+                                )
+                            )
+                        },
+                        action = {
+                            TextButton(
+                                onClick = {
+                                    scope.launch {
+                                        tooltipState.dismiss()
+                                    }
+                                }
+                            ) {
+                                Text(stringResource(id = UtilR.string.ok))
+                            }
+                        },
+                    ) {
+                        Text(
+                            text = stringResource(id = UtilR.string.tooltip_providers_screen_help_guide)
+                        )
                     }
                 },
-                state = rememberTooltipState(isPersistent = true)
+                state = tooltipState
             ) {
                 Box(
                     modifier = Modifier.clickable {
@@ -258,6 +292,7 @@ private fun ExpandedTopBar(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 private fun TopBarPreview() {
@@ -270,6 +305,7 @@ private fun TopBarPreview() {
                         isVisible = true,
                         searchExpanded = remember { mutableStateOf(false) },
                         searchQuery = "",
+                        tooltipState = rememberTooltipState(),
                         onNeedHelp = {},
                         onQueryChange = {}
                     )

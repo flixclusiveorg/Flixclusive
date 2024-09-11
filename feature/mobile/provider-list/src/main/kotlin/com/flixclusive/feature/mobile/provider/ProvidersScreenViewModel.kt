@@ -19,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProvidersScreenViewModel @Inject constructor(
     private val providerManager: ProviderManager,
-    appSettingsManager: AppSettingsManager,
+    private val appSettingsManager: AppSettingsManager,
 ) : ViewModel() {
     val providerDataList = providerManager.providerDataList
 
@@ -37,6 +37,15 @@ class ProvidersScreenViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = appSettingsManager.cachedProviderSettings.providers
+        )
+
+    val isFirstTimeOnProvidersScreen = appSettingsManager.onBoardingPreferences
+        .data
+        .map { it.isFirstTimeOnProvidersScreen }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
         )
 
     fun onSearchQueryChange(newQuery: String) {
@@ -70,6 +79,14 @@ class ProvidersScreenViewModel @Inject constructor(
 
         uninstallJob = viewModelScope.launch {
             providerManager.unloadProvider(providerSettings.value[index])
+        }
+    }
+
+    suspend fun setFirstTimeOnProvidersScreen(state: Boolean) {
+        appSettingsManager.updateOnBoardingPreferences {
+            it.copy(
+                isFirstTimeOnProvidersScreen = state
+            )
         }
     }
 }

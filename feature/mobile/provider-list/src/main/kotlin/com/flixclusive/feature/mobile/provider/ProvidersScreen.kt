@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.provider
 
+import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -26,6 +28,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
@@ -46,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.CommonNoticeDialog
 import com.flixclusive.core.ui.common.ProviderUninstallNoticeDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.MarkdownNavigator
@@ -66,6 +70,7 @@ import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.Status
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
@@ -76,7 +81,10 @@ interface ProvidersScreenNavigator : GoBackAction, ProviderTestNavigator, Markdo
 }
 
 private val FabButtonSize = 56.dp
+private fun Context.getHelpGuideTexts()
+    = resources.getStringArray(UtilR.array.providers_screen_help)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Destination
 @Composable
 fun ProvidersScreen(
@@ -86,10 +94,12 @@ fun ProvidersScreen(
 
     val viewModel = hiltViewModel<ProvidersScreenViewModel>()
     val providerSettings by viewModel.providerSettings.collectAsStateWithLifecycle()
+    val isFirstTimeOnProvidersScreen by viewModel.isFirstTimeOnProvidersScreen.collectAsStateWithLifecycle()
     val searchExpanded = rememberSaveable { mutableStateOf(false) }
     var indexOfProviderToUninstall by rememberSaveable { mutableStateOf<Int?>(null) }
 
-    val coroutineScope = rememberCoroutineScope()
+    val helpTooltipState = rememberTooltipState(isPersistent = true)
+    val scope = rememberCoroutineScope()
     val overscrollJob = remember { mutableStateOf<Job?>(null) }
     val dragDropListState = rememberDragDropListState(
         onMove = { fromIndex, toIndex ->
@@ -102,7 +112,6 @@ fun ProvidersScreen(
     val listState = dragDropListState.getLazyListState()
     val shouldShowTopBar by listState.isScrollingUp()
     val listIsAtTop by listState.isAtTop()
-
 
     val filteredProviders by remember {
         derivedStateOf {
@@ -119,6 +128,14 @@ fun ProvidersScreen(
         context.showToast(context.getString(UtilR.string.coming_soon_feature))
     }
 
+    val onNeedHelp = {
+        val (title, description) = context.getHelpGuideTexts()
+        navigator.openMarkdownScreen(
+            title = title,
+            description = description
+        )
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
@@ -126,15 +143,9 @@ fun ProvidersScreen(
                 isVisible = shouldShowTopBar,
                 searchQuery = viewModel.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChange,
-                onNeedHelp = {
-                    val (title, description) = context.resources.getStringArray(UtilR.array.providers_screen_help)
-
-                     navigator.openMarkdownScreen(
-                         title = title,
-                         description = description
-                     )
-                },
-                searchExpanded = searchExpanded
+                tooltipState = helpTooltipState,
+                searchExpanded = searchExpanded,
+                onNeedHelp = onNeedHelp
             )
         },
         floatingActionButton = {
@@ -206,7 +217,7 @@ fun ProvidersScreen(
                         modifier = Modifier
                             .padding(horizontal = 10.dp)
                             .dragGestureHandler(
-                                scope = coroutineScope,
+                                scope = scope,
                                 itemListDragAndDropState = dragDropListState,
                                 overscrollJob = overscrollJob,
                                 feedbackLongPress = getFeedbackOnLongPress()
@@ -287,6 +298,33 @@ fun ProvidersScreen(
                 indexOfProviderToUninstall = null
             },
             onDismiss = { indexOfProviderToUninstall = null }
+        )
+    }
+
+    if (isFirstTimeOnProvidersScreen) {
+        CommonNoticeDialog(
+            label = stringResource(UtilR.string.first_time_providers_screen_title),
+            description = stringResource(UtilR.string.first_time_providers_screen_message),
+            dismissButtonLabel = stringResource(id = UtilR.string.skip),
+            dismissOnConfirm = false,
+            onConfirm = {
+                scope.launch {
+                    viewModel.setFirstTimeOnProvidersScreen(false)
+                }.invokeOnCompletion {
+                    onNeedHelp()
+                }
+            },
+            onDismiss = {
+                scope.run {
+                    launch {
+                        viewModel.setFirstTimeOnProvidersScreen(false)
+                    }.invokeOnCompletion {
+                        launch {
+                            helpTooltipState.show()
+                        }
+                    }
+                }
+            }
         )
     }
 }
