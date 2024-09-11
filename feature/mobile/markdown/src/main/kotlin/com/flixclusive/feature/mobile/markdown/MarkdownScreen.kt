@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.markdown
 
 import android.text.util.Linkify
+import android.util.Patterns
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +39,11 @@ import com.ramcosta.composedestinations.annotation.Destination
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.util.R as UtilR
 
+private fun isValidUrl(url: String): Boolean {
+    return Patterns.WEB_URL.matcher(url).matches()
+}
+
+
 @Destination(
     navArgsDelegate = MarkdownNavArgs::class
 )
@@ -69,7 +75,9 @@ fun MarkdownScreen(
                 linkifyMask = Linkify.WEB_URLS or Linkify.EMAIL_ADDRESSES,
                 imageLoader = LocalContext.current.imageLoader,
                 onLinkClicked = {
-                    linkToOpen = it
+                    if (isValidUrl(it)) {
+                        linkToOpen = it
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
