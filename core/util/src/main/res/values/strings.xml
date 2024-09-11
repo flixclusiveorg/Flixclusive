@@ -134,6 +134,7 @@
     <string name="export_label">Export</string>
     <string name="film_card_titles">Film card titles</string>
     <string name="film_filter">Film Type</string>
+    <string name="first_time_providers_screen_title">Welcome to the Providers Screen!</string>
     <string name="flixclusive_providers">Flixclusive Providers</string>
     <string name="gender_female">Female</string>
     <string name="gender_male">Male</string>
@@ -213,8 +214,8 @@
     <string name="sign_up_prerelease">Use pre-release updates</string>
     <string name="skip">Skip</string>
     <string name="something_went_wrong">Something went wrong</string>
-    <string name="sort_name">Sort by name</string>
     <string name="sort_date">Sort by date</string>
+    <string name="sort_name">Sort by name</string>
     <string name="sort_score">Sort by score</string>
     <string name="splash_maintenance_header">❗❗ MAINTENANCE ❗❗</string>
     <string name="stage">Stage</string>
@@ -232,6 +233,7 @@
     <string name="sync_subtitles">Sync Subtitles</string>
     <string name="test_provider">Test provider</string>
     <string name="test_providers">Test providers</string>
+    <string name="understanding_providers">Understanding Providers</string>
     <string name="understood">Understood</string>
     <string name="uninstall">Uninstall</string>
     <string name="unknown_language">Unknown language</string>
@@ -263,6 +265,8 @@
     <string name="full_log_version_used_format">Version (code): </string>
     <string name="full_log_time_taken_format">Time taken: </string>
 
+
+
     <!--  State messages  -->
     <string name="all_providers_installed">All providers have been installed!</string>
     <string name="all_providers_updated">All providers are up to date!</string>
@@ -282,6 +286,7 @@
     <string name="failed_to_get_media_id_error_msg">Failed to get media id. This might not be available yet.</string>
     <string name="fetching_episode_message">Fetching show episode…</string>
     <string name="film_data_fetching">Fetching film details…</string>
+    <string name="first_time_providers_screen_message">It seems like this is your first time using the providers system, would you like to read more about it?</string>
     <string name="loading_next_episode">Loading next episode…</string>
     <string name="no_available_providers">No available source providers!</string>
     <string name="non_configurable_provider_message">This provider has is not configurable.</string>
@@ -300,6 +305,7 @@
     <string name="source_data_dialog_state_fetching">Fetching video data…</string>
     <string name="source_data_dialog_state_success">Starting player…</string>
     <string name="source_data_dialog_state_unavailable_default">No links available</string>
+    <string name="tooltip_providers_screen_help_guide">This guide contains all the useful information about the providers system. Check it out for more details!</string>
     <string name="unavailable_episode">Episode is not yet available</string>
     <string name="unknown_provider_type">Unknown provider type</string>
     <string name="up_to_date">Version is up to date!</string>
