@@ -14,6 +14,7 @@ import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
+import com.flixclusive.provider.ProviderWebViewApi
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -327,7 +328,7 @@ internal object ProviderTestCases {
                 }
 
                 val links = mutableSetOf<MediaLink>()
-                if (api.useWebView) {
+                if (api is ProviderWebViewApi) {
                     val webView = withMainContext {
                         api.getWebView()
                     }

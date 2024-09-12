@@ -26,6 +26,7 @@ import com.flixclusive.model.tmdb.FilmDetails.Companion.isTvShow
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
+import com.flixclusive.provider.ProviderWebViewApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
@@ -171,7 +172,7 @@ class GetMediaLinksUseCase @Inject constructor(
             val watchIdToUse = watchIdResource.data!!
             sendExtractingLinksMessage(
                 provider = api.provider.name,
-                isOnWebView = api.useWebView
+                isOnWebView = api is ProviderWebViewApi
             )
 
             cachedLinks.streams.clear()
@@ -232,7 +233,7 @@ class GetMediaLinksUseCase @Inject constructor(
     ) = cache.getOrElse(getFilmKey(filmId, episode)) {
         CachedLinks()
     }
-    
+
     /**
      * Puts the [CachedLinks] data of the film with its matching cache key
      *
@@ -348,7 +349,7 @@ class GetMediaLinksUseCase @Inject constructor(
         film: FilmDetails,
         api: ProviderApi
     ): Resource<String?> {
-        val needsNewWatchId = watchId == null && film.isFromTmdb && !api.useWebView
+        val needsNewWatchId = watchId == null && film.isFromTmdb && api !is ProviderWebViewApi
         val watchIdResource = when {
             needsNewWatchId -> mediaLinksRepository.getWatchId(
                 film = film,

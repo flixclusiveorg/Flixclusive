@@ -17,6 +17,7 @@ import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
+import com.flixclusive.provider.ProviderWebViewApi
 import com.flixclusive.provider.webview.ProviderWebView
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -54,7 +55,7 @@ class MediaLinksRepository @Inject constructor(
             var webView: ProviderWebView? = null
 
             try {
-                if (api.useWebView) {
+                if (api is ProviderWebViewApi) {
                     withContext(mainDispatcher) {
                         webView = api.getWebView()
                     }
