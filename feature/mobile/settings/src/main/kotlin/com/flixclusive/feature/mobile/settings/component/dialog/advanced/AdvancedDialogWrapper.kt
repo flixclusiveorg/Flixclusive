@@ -7,8 +7,8 @@ import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.feature.mobile.settings.KEY_DOH_DIALOG
 import com.flixclusive.feature.mobile.settings.component.dialog.advanced.dialog.AdvancedDialogDoH
-import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
@@ -18,7 +18,7 @@ internal fun AdvancedDialogWrapper(
 ) {
     val context = LocalContext.current
     val appSettings by rememberLocalAppSettings()
-    val onChangeSettings by rememberSettingsChanger()
+    val onChangeSettings by rememberAppSettingsChanger()
 
     when {
         openedDialogMap[KEY_DOH_DIALOG] == true -> {

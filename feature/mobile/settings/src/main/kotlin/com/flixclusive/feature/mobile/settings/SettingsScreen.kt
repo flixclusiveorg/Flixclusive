@@ -49,11 +49,14 @@ import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.Subtit
 import com.flixclusive.feature.mobile.settings.settings_group.currentAdvancedPlayerSettings
 import com.flixclusive.feature.mobile.settings.settings_group.currentGeneralSettings
 import com.flixclusive.feature.mobile.settings.settings_group.currentNetworkSettings
+import com.flixclusive.feature.mobile.settings.settings_group.currentProviderSettings
 import com.flixclusive.feature.mobile.settings.settings_group.currentSubtitlesSettings
 import com.flixclusive.feature.mobile.settings.settings_group.currentUiSettings
 import com.flixclusive.feature.mobile.settings.settings_group.currentVideoPlayerSettings
-import com.flixclusive.feature.mobile.settings.util.LocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.LocalSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.LocalAppSettings
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.LocalAppSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.ProviderSettingsHelper.LocalAppSettingsProvider
+import com.flixclusive.feature.mobile.settings.util.ProviderSettingsHelper.LocalAppSettingsProviderChanger
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.util.R as UtilR
 
@@ -68,6 +71,7 @@ fun SettingsScreen(
 
     val viewModel = hiltViewModel<SettingsScreenViewModel>()
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val appSettingsProvider by viewModel.appSettingsProvider.collectAsStateWithLifecycle()
     val searchHistoryCount by viewModel.searchHistoryCount.collectAsStateWithLifecycle()
 
     var sizeSummary: String? by remember { mutableStateOf(null) }
@@ -88,7 +92,7 @@ fun SettingsScreen(
         }
     }
 
-    val onSettingsItemClock = { item: SettingsItem ->
+    val onSettingsItemClick = { item: SettingsItem ->
         when {
             item.onClick != null -> item.onClick.invoke()
             else -> viewModel.toggleDialog(item.dialogKey!!)
@@ -102,7 +106,9 @@ fun SettingsScreen(
 
     CompositionLocalProvider(
         LocalAppSettings provides appSettings,
-        LocalSettingsChanger provides viewModel::onChangeSettings
+        LocalAppSettingsChanger provides viewModel::onChangeAppSettings,
+        LocalAppSettingsProvider provides appSettingsProvider,
+        LocalAppSettingsProviderChanger provides viewModel::onChangeAppSettingsProvider,
     ) {
         Scaffold(
             modifier = Modifier
@@ -136,14 +142,21 @@ fun SettingsScreen(
                             searchHistoryCount = searchHistoryCount,
                             onUsePrereleaseUpdatesChange = onUsePrereleaseUpdatesChange
                         ),
-                        onItemClick = onSettingsItemClock
+                        onItemClick = onSettingsItemClick
+                    )
+                }
+
+                item {
+                    SettingsGroup(
+                        items = currentProviderSettings(),
+                        onItemClick = onSettingsItemClick
                     )
                 }
 
                 item {
                     SettingsGroup(
                         items = currentUiSettings(),
-                        onItemClick = onSettingsItemClock
+                        onItemClick = onSettingsItemClick
                     )
                 }
 
@@ -153,14 +166,14 @@ fun SettingsScreen(
                             cacheLinksSize = viewModel.cacheLinksSize,
                             clearCacheLinks = viewModel::clearCacheLinks
                         ),
-                        onItemClick = onSettingsItemClock
+                        onItemClick = onSettingsItemClick
                     )
                 }
 
                 item {
                     SettingsGroup(
                         items = currentSubtitlesSettings(),
-                        onItemClick = onSettingsItemClock
+                        onItemClick = onSettingsItemClick
                     )
                 }
 
@@ -182,7 +195,7 @@ fun SettingsScreen(
                         items = currentNetworkSettings(
                             onOpenUserAgentDialog = { isUserAgentDialogOpen = true }
                         ),
-                        onItemClick = onSettingsItemClock
+                        onItemClick = onSettingsItemClick
                     )
                 }
 
@@ -192,7 +205,7 @@ fun SettingsScreen(
                             sizeSummary = sizeSummary,
                             updateAppCacheSize = { updateAppCacheSize() }
                         ),
-                        onItemClick = onSettingsItemClock
+                        onItemClick = onSettingsItemClick
                     )
                 }
 
@@ -224,7 +237,7 @@ fun SettingsScreen(
     if (isOptingInOnPreReleaseUpdates) {
         PreReleaseUpdatesWarningDialog(
             onConfirm = {
-                viewModel.onChangeSettings(appSettings.copy(isUsingPrereleaseUpdates = true))
+                viewModel.onChangeAppSettings(appSettings.copy(isUsingPrereleaseUpdates = true))
                 onUsePrereleaseUpdatesChange(false)
             },
             onDismiss = { onUsePrereleaseUpdatesChange(false) }
@@ -239,7 +252,7 @@ fun SettingsScreen(
                 if (it.equals(appSettings.userAgent, ignoreCase = true))
                     return@EditUserAgentDialog
 
-                viewModel.onChangeSettings(appSettings.copy(userAgent = it))
+                viewModel.onChangeAppSettings(appSettings.copy(userAgent = it))
             }
         )
     }

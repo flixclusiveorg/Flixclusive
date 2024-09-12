@@ -68,6 +68,7 @@
     <string name="splash_default_error_message">An error occurred while initializing the app.</string>
     <string name="splash_maintenance_message">Sorry for the inconvenience. We\'re performing a quick update. Be back soon!</string>
     <string name="unknown_season">Unknown season</string>
+    <string name="warning_install_message_second_half">By proceeding with the installation, you acknowledge that you understand the risks involved, and any resulting damage will be your responsibility. Are you sure you want to continue?</string>
     <string name="warning_uninstall_message_first_half">Are you sure you want to uninstall</string>
     <string name="warning_use_prerelease_updates">Pre-release versions may be unstable and may contain bugs or other issues. Please use at your own risk.</string>
 
@@ -81,6 +82,10 @@
     <string name="failed_to_load_provider_on_api">"%1$s\'s API has crashed. Disabling it now..."</string>
     <string name="failed_to_load_providers_msg_format">The following provider(s) could not be loaded: %1$s</string>
     <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
+    <plurals name="warning_install_message_first_half">
+        <item quantity="one">You\'re about to install <b>%1$s</b>.</item>
+        <item quantity="other">You\'re about to install <b>%1$d</b> providers.</item>
+    </plurals>
 
     <!--  Film/Filter types  -->
     <string name="all">All</string>
@@ -128,6 +133,7 @@
     <string name="default_user_agent">Default user agent</string>
     <string name="delete_search_history_item">Delete search history item</string>
     <string name="description">Description</string>
+    <string name="disable_warning">Disable warning</string>
     <string name="doh">DNS over HTTPS</string>
     <string name="episodes">Episodes</string>
     <string name="exit">Exit</string>
@@ -238,12 +244,14 @@
     <string name="uninstall">Uninstall</string>
     <string name="unknown_language">Unknown language</string>
     <string name="unlock_label">Unlock</string>
+    <string name="unsafe_and_untrusted">Unsafe and Untrusted</string>
     <string name="update_info">Update information</string>
     <string name="update_label">Update</string>
     <string name="version">Version</string>
     <string name="video_buffer_max_length">Maximum time to buffer</string>
     <string name="video_buffer_size">Player\'s buffer size</string>
     <string name="volume_booster">Volume booster</string>
+    <string name="warn_on_unsafe_install">Warn for unsafe provider installation</string>
     <string name="warning">Warning</string>
     <string name="watch">Watch</string>
     <string name="watch_again">Watch Again</string>
@@ -407,6 +415,7 @@
     <string name="video_cache_size_label">The dedicated video cache for the player. Always limit the cache if you have limited storage space.</string>
     <string name="volume_booster_desc">Adds an additional volume (dB) to the player. However, it might cause device to not play the audio properly.</string>
     <string name="warning_content_description">Warning icon</string>
+    <string name="warn_on_unsafe_install_description">Triggers an alert dialog when an unsafe Provider installation is detected. This is a recommended option, as Providers operate independently and are not monitored by the app.</string>
 
     <!--  Share app message  -->
     <string name="share_message">Watch all latest and exclusive films at:\n\n%1$s</string>

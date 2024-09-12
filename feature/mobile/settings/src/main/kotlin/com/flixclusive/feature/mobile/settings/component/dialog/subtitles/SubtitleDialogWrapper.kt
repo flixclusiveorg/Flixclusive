@@ -18,8 +18,8 @@ import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogFontColor
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogFontStyle
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogSize
-import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
 
 @Composable
 internal fun SubtitleDialogWrapper(
@@ -27,7 +27,7 @@ internal fun SubtitleDialogWrapper(
     onDismissDialog: (String) -> Unit
 ) {
     val appSettings by rememberLocalAppSettings()
-    val onChangeSettings by rememberSettingsChanger()
+    val onChangeSettings by rememberAppSettingsChanger()
     
     when {
         openedDialogMap[KEY_SUBTITLE_SIZE_DIALOG] == true -> {

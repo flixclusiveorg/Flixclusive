@@ -19,7 +19,6 @@ const val DEFAULT_PLAYER_BUFFER_AMOUNT = 50L
 data class AppSettings(
     // General
     val isUsingAutoUpdateAppFeature: Boolean = true,
-    val isUsingAutoUpdateProviderFeature: Boolean = true,
     val isUsingPrereleaseUpdates: Boolean = false,
     val isSendingCrashLogsAutomatically: Boolean = true,
     // ===

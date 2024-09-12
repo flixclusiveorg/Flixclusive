@@ -14,8 +14,8 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.feature.mobile.settings.KEY_SEARCH_HISTORY_NOTICE_DIALOG
 import com.flixclusive.feature.mobile.settings.SettingsItem
-import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
@@ -26,7 +26,7 @@ internal fun currentGeneralSettings(
 ): List<SettingsItem> {
     val context = LocalContext.current
     val appSettings by rememberLocalAppSettings()
-    val onChangeSettings by rememberSettingsChanger()
+    val onChangeSettings by rememberAppSettingsChanger()
 
     val clearSearchHistory = if (searchHistoryCount == 0) {
         {
@@ -64,29 +64,6 @@ internal fun currentGeneralSettings(
                         onChangeSettings(
                             appSettings.copy(
                                 isUsingAutoUpdateAppFeature = !appSettings.isUsingAutoUpdateAppFeature
-                            )
-                        )
-                    },
-                    modifier = Modifier.scale(0.7F)
-                )
-            },
-        ),
-        SettingsItem(
-            title = stringResource(UtilR.string.auto_update_providers),
-            onClick = {
-                onChangeSettings(
-                    appSettings.copy(
-                        isUsingAutoUpdateProviderFeature = !appSettings.isUsingAutoUpdateProviderFeature
-                    )
-                )
-            },
-            previewContent = {
-                Switch(
-                    checked = appSettings.isUsingAutoUpdateProviderFeature,
-                    onCheckedChange = {
-                        onChangeSettings(
-                            appSettings.copy(
-                                isUsingAutoUpdateProviderFeature = !appSettings.isUsingAutoUpdateProviderFeature
                             )
                         )
                     },

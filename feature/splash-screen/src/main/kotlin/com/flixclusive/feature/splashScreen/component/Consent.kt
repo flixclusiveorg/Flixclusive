@@ -53,7 +53,6 @@ fun Consent(
     consentContent: String,
     buttonLabel: String? = null,
     optInLabel: String? = null,
-    hasOptInFeature: Boolean = false,
     goNext: (isOptIn: Boolean) -> Unit
 ) {
     val context = LocalContext.current.getActivity<ComponentActivity>()
@@ -107,7 +106,7 @@ fun Consent(
         }
 
 
-        if (hasOptInFeature) {
+        if (optInLabel != null) {
             Surface(
                 onClick = { isOptIn = !isOptIn },
                 shape = ClickableSurfaceDefaults.shape(RectangleShape),
@@ -134,7 +133,7 @@ fun Consent(
                     )
 
                     Text(
-                        text = stringResource(id = UtilR.string.privacy_notice_opt_in),
+                        text = optInLabel,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
@@ -198,7 +197,6 @@ private fun ConsentPreview() {
     FlixclusiveTheme {
         Surface {
             Consent(
-                hasOptInFeature = true,
                 header = stringResource(id = UtilR.string.privacy_notice),
                 consentContent = """
                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean vel laoreet dui. In hac habitasse platea dictumst. Maecenas neque dui, pretium ac dui eu, condimentum sollicitudin arcu. Sed ac interdum sem, consequat posuere enim. Proin vitae lacus quis augue porttitor luctus. Proin consequat lobortis neque, ac malesuada massa lobortis ut. Vestibulum vel augue consequat nulla fringilla porttitor sit amet quis mauris. Nunc et nisi in sapien interdum euismod id in urna. Curabitur pretium malesuada diam, vel accumsan velit commodo ut. Aenean ac efficitur ligula, vel dictum felis. Nunc placerat tortor nec metus venenatis, a malesuada neque volutpat.

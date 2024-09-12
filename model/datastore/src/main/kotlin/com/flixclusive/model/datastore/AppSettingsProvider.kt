@@ -14,6 +14,8 @@ import kotlinx.serialization.Serializable
  * */
 @Serializable
 data class AppSettingsProvider(
+    val warnOnInstall: Boolean = true,
+    val isUsingAutoUpdateProviderFeature: Boolean = true,
     val repositories: List<Repository> = listOf(GITHUB_BUILT_IN_PROVIDERS_REPOSITORY.toValidRepositoryLink()),
     val providers: List<ProviderPreference> = emptyList(),
 )

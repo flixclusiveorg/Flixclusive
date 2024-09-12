@@ -49,9 +49,9 @@ internal fun MainButtons(
     ) {
         ButtonWithCircularProgressIndicator(
             onClick = onTestProvider,
-            enabled = providerInstallationStatus == ProviderInstallationStatus.Installed,
+            enabled = providerInstallationStatus.isInstalled,
             iconId = UiCommonR.drawable.test,
-            emphasize = providerInstallationStatus == ProviderInstallationStatus.Installed,
+            emphasize = providerInstallationStatus.isInstalling,
             label = stringResource(id = UtilR.string.test_provider),
             contentPadding = PaddingValues(vertical = 5.dp),
             modifier = Modifier.weight(1F)
@@ -61,8 +61,8 @@ internal fun MainButtons(
             onClick = onToggleInstallationState,
             iconId = iconForInstallationStatus,
             label = stringResource(id = labelForInstallationStatus),
-            emphasize = providerInstallationStatus == ProviderInstallationStatus.NotInstalled,
-            isLoading = providerInstallationStatus == ProviderInstallationStatus.Installing,
+            emphasize = providerInstallationStatus.isNotInstalled,
+            isLoading = providerInstallationStatus.isInstalling,
             contentPadding = PaddingValues(vertical = 5.dp),
             indicatorSize = 16.dp,
             modifier = Modifier.weight(1F)

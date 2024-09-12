@@ -47,8 +47,8 @@ class ProviderUpdaterUseCase @Inject constructor(
     private var notificationChannelHasBeenInitialized = false
 
     suspend fun checkForUpdates(notify: Boolean) {
-        val appSettings = appSettingsManager.appSettings.data.first()
-        
+        val appSettingsProvider = appSettingsManager.providerSettings.data.first()
+
         outdatedProviders.clear()
         providerManager.providers.forEach { (name, provider) ->
             if (isProviderOutdated(provider)) outdatedProviders.add(name)
@@ -62,7 +62,7 @@ class ProviderUpdaterUseCase @Inject constructor(
         val updatableProviders = outdatedProviders.joinToString(", ")
 
         val notificationBody = when {
-            appSettings.isUsingAutoUpdateProviderFeature -> {
+            appSettingsProvider.isUsingAutoUpdateProviderFeature -> {
                 val res = updateAllProviders()
                 if (res == 0) return
 

@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -38,10 +39,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFilter
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.RetryButton
+import com.flixclusive.core.ui.mobile.component.dialog.UnsafeInstallAlertDialog
 import com.flixclusive.core.ui.mobile.component.provider.ButtonWithCircularProgressIndicator
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCard
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCardPlaceholder
@@ -74,15 +77,18 @@ fun RepositoryScreen(
     val context = LocalContext.current
 
     val viewModel = hiltViewModel<RepositoryScreenViewModel>()
+
+    val warnOnInstall by viewModel.warnOnInstall.collectAsStateWithLifecycle()
     val providerDataList by remember {
         derivedStateOf {
-            when(viewModel.searchQuery.isNotEmpty()) {
+            when (viewModel.searchQuery.isNotEmpty()) {
                 true -> {
                     viewModel.onlineProviderMap.keys.toList()
                         .fastFilter {
                             it.name.contains(viewModel.searchQuery, true)
                         }
                 }
+
                 false -> viewModel.onlineProviderMap.keys.toList()
             }
         }
@@ -100,7 +106,10 @@ fun RepositoryScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val searchExpanded = rememberSaveable { mutableStateOf(false) }
-    var providerDataToUninstall by rememberSaveable { mutableStateOf<ProviderData?>(null) }
+
+    var providerToInstall by remember { mutableStateOf<ProviderData?>(null) }
+    var providersToInstall by rememberSaveable { mutableIntStateOf(0) }
+    var providerToUninstall by remember { mutableStateOf<ProviderData?>(null) }
 
     LaunchedEffect(viewModel.snackbar) {
         if (viewModel.snackbar?.error != null) {
@@ -164,29 +173,37 @@ fun RepositoryScreen(
                     items(4) {
                         ProviderCardPlaceholder()
                     }
-                }
-                else if (errorFetchingList) {
+                } else if (errorFetchingList) {
                     item {
                         RetryButton(
                             modifier = Modifier.fillMaxSize(),
                             shouldShowError = viewModel.uiState.error != null,
-                            error = viewModel.uiState.error?.asString() ?: stringResource(UtilR.string.failed_to_load_online_providers),
+                            error = viewModel.uiState.error?.asString()
+                                ?: stringResource(UtilR.string.failed_to_load_online_providers),
                             onRetry = viewModel::initialize
                         )
                     }
-                }
-                else if (viewModel.onlineProviderMap.isNotEmpty()) {
+                } else if (viewModel.onlineProviderMap.isNotEmpty()) {
                     item {
                         val canInstallAll by remember {
                             derivedStateOf {
                                 viewModel.onlineProviderMap.any { (_, state) ->
-                                    state == ProviderInstallationStatus.NotInstalled
+                                    state.isNotInstalled
                                 }
                             }
                         }
 
                         ButtonWithCircularProgressIndicator(
-                            onClick = viewModel::installAll,
+                            onClick = {
+                                if (warnOnInstall) {
+                                    providersToInstall = viewModel.onlineProviderMap.count { (_, state) ->
+                                        state.isNotInstalled
+                                    }
+                                    return@ButtonWithCircularProgressIndicator
+                                }
+
+                                viewModel.installAll()
+                            },
                             iconId = UiCommonR.drawable.download,
                             isLoading = viewModel.installAllJob?.isActive == true,
                             label = stringResource(id = UtilR.string.install_all),
@@ -201,12 +218,18 @@ fun RepositoryScreen(
                     ) { providerData ->
                         ProviderCard(
                             providerData = providerData,
-                            status = viewModel.onlineProviderMap[providerData] ?: ProviderInstallationStatus.NotInstalled,
+                            status = viewModel.onlineProviderMap[providerData]
+                                ?: ProviderInstallationStatus.NotInstalled,
                             onClick = {
-                                if (viewModel.onlineProviderMap[providerData] != ProviderInstallationStatus.Installed) {
+                                val isNotInstalled = viewModel.onlineProviderMap[providerData] !=
+                                        ProviderInstallationStatus.Installed
+
+                                if (isNotInstalled && warnOnInstall) {
+                                    providerToInstall = providerData
+                                } else if (isNotInstalled) {
                                     viewModel.toggleInstallationStatus(providerData)
                                 } else {
-                                    providerDataToUninstall = providerData
+                                    providerToUninstall = providerData
                                 }
                             },
                             modifier = Modifier
@@ -223,7 +246,42 @@ fun RepositoryScreen(
         }
     }
 
-    if (providerDataToUninstall != null) {
+    if (providerToInstall != null || providersToInstall > 0) {
+        val quantity = when (providerToInstall) {
+            null -> providersToInstall
+            else -> 1
+        }
+        val formattedName: Any = if (quantity == 1 && providerToInstall == null) {
+            viewModel.onlineProviderMap.firstNotNullOf {
+                when (it.value) {
+                    ProviderInstallationStatus.NotInstalled -> it.key
+                    else -> null
+                }
+            }.name
+        } else if (quantity == 1) providerToInstall!!.name
+        else providersToInstall
+
+        UnsafeInstallAlertDialog(
+            quantity = quantity,
+            formattedName = formattedName,
+            warnOnInstall = warnOnInstall,
+            onConfirm = { disableWarning ->
+                if (providerToInstall == null) {
+                    viewModel.installAll()
+                    return@UnsafeInstallAlertDialog
+                }
+
+                viewModel.disableWarnOnInstall(disableWarning)
+                viewModel.toggleInstallationStatus(providerToInstall!!)
+            },
+            onDismiss = {
+                providerToInstall = null
+                providersToInstall = 0
+            }
+        )
+    }
+
+    if (providerToUninstall != null) {
         IconAlertDialog(
             painter = painterResource(id = UiCommonR.drawable.warning),
             contentDescription = stringResource(id = UtilR.string.warning_content_description),
@@ -231,15 +289,14 @@ fun RepositoryScreen(
                 append(context.getString(UtilR.string.warning_uninstall_message_first_half))
                 append(" ")
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append(providerDataToUninstall!!.name)
+                    append(providerToUninstall!!.name)
                 }
                 append("?")
             },
             onConfirm = {
-                viewModel.toggleInstallationStatus(providerDataToUninstall!!)
-                providerDataToUninstall = null
+                viewModel.toggleInstallationStatus(providerToUninstall!!)
             },
-            onDismiss = { providerDataToUninstall = null }
+            onDismiss = { providerToUninstall = null }
         )
     }
 }
