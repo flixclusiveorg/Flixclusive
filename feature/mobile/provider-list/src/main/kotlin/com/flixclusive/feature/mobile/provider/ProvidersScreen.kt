@@ -43,14 +43,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.CommonNoticeDialog
-import com.flixclusive.core.ui.common.ProviderUninstallNoticeDialog
+import com.flixclusive.core.ui.common.R
+import com.flixclusive.core.ui.common.dialog.IconAlertDialog
+import com.flixclusive.core.ui.common.dialog.TextAlertDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.MarkdownNavigator
 import com.flixclusive.core.ui.common.navigation.ProviderTestNavigator
@@ -291,8 +296,18 @@ fun ProvidersScreen(
 
     if (indexOfProviderToUninstall != null) {
         val providerData = remember { (filteredProviders ?: viewModel.providerDataList)[indexOfProviderToUninstall!!] }
-        ProviderUninstallNoticeDialog(
-            providerData = providerData,
+
+        IconAlertDialog(
+            painter = painterResource(id = R.drawable.warning),
+            contentDescription = stringResource(id = UtilR.string.warning_content_description),
+            description = buildAnnotatedString {
+                append(context.getString(UtilR.string.warning_uninstall_message_first_half))
+                append(" ")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append(providerData.name)
+                }
+                append("?")
+            },
             onConfirm = {
                 viewModel.uninstallProvider(indexOfProviderToUninstall!!)
                 indexOfProviderToUninstall = null
@@ -302,7 +317,7 @@ fun ProvidersScreen(
     }
 
     if (isFirstTimeOnProvidersScreen) {
-        CommonNoticeDialog(
+        TextAlertDialog(
             label = stringResource(UtilR.string.first_time_providers_screen_title),
             description = stringResource(UtilR.string.first_time_providers_screen_message),
             dismissButtonLabel = stringResource(id = UtilR.string.skip),

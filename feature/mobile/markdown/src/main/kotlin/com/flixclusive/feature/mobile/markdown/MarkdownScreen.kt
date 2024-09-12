@@ -31,8 +31,8 @@ import androidx.compose.ui.unit.dp
 import coil.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.COMMON_TOP_BAR_HEIGHT
-import com.flixclusive.core.ui.common.CommonNoticeDialog
 import com.flixclusive.core.ui.common.CommonTopBar
+import com.flixclusive.core.ui.common.dialog.TextAlertDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.MarkdownNavArgs
 import com.ramcosta.composedestinations.annotation.Destination
@@ -98,7 +98,7 @@ fun MarkdownScreen(
     }
 
     if (linkToOpen != null) {
-        CommonNoticeDialog(
+        TextAlertDialog(
             label = stringResource(id = UtilR.string.heads_up),
             description = stringResource(id = UtilR.string.not_trusted_url),
             confirmButtonLabel = stringResource(id = UtilR.string.proceed),
