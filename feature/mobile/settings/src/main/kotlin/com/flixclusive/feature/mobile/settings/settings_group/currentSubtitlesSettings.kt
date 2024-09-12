@@ -24,8 +24,8 @@ import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_SIZE_DIALOG
 import com.flixclusive.feature.mobile.settings.SettingsItem
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.BorderedText
 import com.flixclusive.feature.mobile.settings.util.ColorPickerHelper
-import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionStylePreference
 import java.util.Locale
@@ -36,7 +36,7 @@ private const val DEFAULT_TEXT_PREVIEW = "Abc"
 @Composable
 internal fun currentSubtitlesSettings(): List<SettingsItem> {
     val appSettings by rememberLocalAppSettings()
-    val onChangeSettings by rememberSettingsChanger()
+    val onChangeSettings by rememberAppSettingsChanger()
 
     return listOf(
         SettingsItem(

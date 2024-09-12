@@ -17,7 +17,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -29,13 +32,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.ProviderInfoScreenNavArgs
 import com.flixclusive.core.ui.common.navigation.ProviderTestNavigator
 import com.flixclusive.core.ui.common.navigation.RepositorySearchScreenNavigator
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
+import com.flixclusive.core.ui.mobile.component.dialog.UnsafeInstallAlertDialog
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
@@ -71,6 +75,9 @@ fun ProviderInfoScreen(
     args: ProviderInfoScreenNavArgs
 ) {
     val viewModel = hiltViewModel<ProviderInfoScreenViewModel>()
+
+    val warnOnInstall by viewModel.warnOnInstall.collectAsStateWithLifecycle()
+    var openWarnOnInstallDialog by rememberSaveable { mutableStateOf(false) }
 
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
@@ -161,13 +168,20 @@ fun ProviderInfoScreen(
                         providerInstallationStatus = viewModel.providerInstallationStatus,
                         onTestProvider = {
                             val status = viewModel.providerInstallationStatus
-                            if (status == ProviderInstallationStatus.Outdated) {
+                            if (status.isOutdated) {
                                 navigator.testProviders(arrayListOf(args.providerData))
-                            } else if (status == ProviderInstallationStatus.Installed) {
+                            } else if (status.isInstalled) {
                                 navigator.testProviders(arrayListOf(viewModel.providerData))
                             }
                         },
-                        onToggleInstallationState = viewModel::toggleInstallation
+                        onToggleInstallationState = {
+                            if (viewModel.providerInstallationStatus.isNotInstalled && warnOnInstall) {
+                                openWarnOnInstallDialog = true
+                                return@MainButtons
+                            }
+
+                            viewModel.toggleInstallation()
+                        }
                     )
                 }
 
@@ -209,6 +223,19 @@ fun ProviderInfoScreen(
                 }
             }
         }
+    }
+
+    if (openWarnOnInstallDialog) {
+        UnsafeInstallAlertDialog(
+            quantity = 1,
+            formattedName = viewModel.providerData.name,
+            warnOnInstall = warnOnInstall,
+            onConfirm = { disableWarning ->
+                viewModel.disableWarnOnInstall(disableWarning)
+                viewModel.toggleInstallation()
+            },
+            onDismiss = { openWarnOnInstallDialog = false }
+        )
     }
 }
 

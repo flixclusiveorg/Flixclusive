@@ -9,6 +9,7 @@ import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.model.datastore.AppSettings
+import com.flixclusive.model.datastore.AppSettingsProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -75,6 +76,13 @@ class SettingsScreenViewModel @Inject constructor(
             appSettingsManager.cachedAppSettings
         )
 
+    val appSettingsProvider = appSettingsManager.providerSettings.data
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            appSettingsManager.cachedProviderSettings
+        )
+
     val cacheLinksSize by derivedStateOf {
         sourceLinksProvider.cache.size
     }
@@ -83,9 +91,17 @@ class SettingsScreenViewModel @Inject constructor(
         openedDialogMap[dialogKey] = !openedDialogMap[dialogKey]!!
     }
 
-    fun onChangeSettings(newAppSettings: AppSettings) {
+    fun onChangeAppSettings(newAppSettings: AppSettings) {
         viewModelScope.launch {
             appSettingsManager.updateSettings(newAppSettings)
+        }
+    }
+
+    fun onChangeAppSettingsProvider(newAppSettingsProvider: AppSettingsProvider) {
+        viewModelScope.launch {
+            appSettingsManager.updateProviderSettings {
+                newAppSettingsProvider
+            }
         }
     }
 

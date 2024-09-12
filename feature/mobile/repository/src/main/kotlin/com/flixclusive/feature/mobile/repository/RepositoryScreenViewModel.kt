@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.common.resource.Resource
@@ -19,6 +20,9 @@ import com.flixclusive.gradle.entities.ProviderData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.flixclusive.core.util.R as UtilR
@@ -28,6 +32,7 @@ class RepositoryScreenViewModel @Inject constructor(
     private val providerManager: ProviderManager,
     private val providerUpdaterUseCase: ProviderUpdaterUseCase,
     private val getOnlineProvidersUseCase: GetOnlineProvidersUseCase,
+    private val appSettingsManager: AppSettingsManager,
     @ApplicationScope private val scope: CoroutineScope,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -41,6 +46,14 @@ class RepositoryScreenViewModel @Inject constructor(
     var searchQuery by mutableStateOf("")
         private set
     val onlineProviderMap = mutableStateMapOf<ProviderData, ProviderInstallationStatus>()
+
+    val warnOnInstall = appSettingsManager.providerSettings.data
+        .map { it.warnOnInstall }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = false
+        )
 
     private var initJob: Job? = null
     private var installJob: Job? = null
@@ -171,5 +184,15 @@ class RepositoryScreenViewModel @Inject constructor(
 
     fun onConsumeSnackbar() {
         snackbar = null
+    }
+
+    fun disableWarnOnInstall(state: Boolean) {
+        viewModelScope.launch {
+            appSettingsManager.updateProviderSettings {
+                it.copy(
+                    warnOnInstall = state
+                )
+            }
+        }
     }
 }

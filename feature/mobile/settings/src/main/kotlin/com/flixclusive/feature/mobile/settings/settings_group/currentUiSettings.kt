@@ -7,14 +7,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import com.flixclusive.feature.mobile.settings.SettingsItem
-import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun currentUiSettings(): List<SettingsItem> {
     val appSettings by rememberLocalAppSettings()
-    val onChangeSettings by rememberSettingsChanger()
+    val onChangeSettings by rememberAppSettingsChanger()
 
     return listOf(
         SettingsItem(

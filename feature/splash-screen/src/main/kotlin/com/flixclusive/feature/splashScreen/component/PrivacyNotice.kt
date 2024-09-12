@@ -12,7 +12,6 @@ fun PrivacyNotice(
 ) {
     Consent(
         modifier = modifier,
-        hasOptInFeature = true,
         header = stringResource(id = UtilR.string.privacy_notice),
         consentContent = stringResource(id = UtilR.string.privacy_notice_crash_log_sender),
         optInLabel = stringResource(id = UtilR.string.privacy_notice_opt_in),

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
@@ -34,7 +33,16 @@ enum class ProviderInstallationStatus {
     NotInstalled,
     Installing,
     Installed,
-    Outdated
+    Outdated;
+
+    val isNotInstalled: Boolean
+        get() = this == NotInstalled
+    val isInstalled: Boolean
+        get() = this == Installed
+    val isOutdated: Boolean
+        get() = this == Outdated
+    val isInstalling: Boolean
+        get() = this == Installing
 }
 
 @Composable

@@ -20,6 +20,9 @@ import com.flixclusive.gradle.entities.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.flixclusive.core.util.R as UtilR
@@ -46,6 +49,14 @@ class ProviderInfoScreenViewModel @Inject constructor(
 
     var repository: Repository? by mutableStateOf(null)
         private set
+
+    val warnOnInstall = appSettingsManager.providerSettings.data
+        .map { it.warnOnInstall }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = false
+        )
 
     init {
         viewModelScope.launch {
@@ -148,5 +159,15 @@ class ProviderInfoScreenViewModel @Inject constructor(
 
     fun onConsumeSnackbar() {
         snackbar = null
+    }
+
+    fun disableWarnOnInstall(state: Boolean) {
+        viewModelScope.launch {
+            appSettingsManager.updateProviderSettings {
+                it.copy(
+                    warnOnInstall = state
+                )
+            }
+        }
     }
 }

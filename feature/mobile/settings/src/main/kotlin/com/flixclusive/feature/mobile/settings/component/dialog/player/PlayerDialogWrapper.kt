@@ -23,8 +23,8 @@ import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.
 import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.playerBufferLengths
 import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.playerBufferSizes
 import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.playerCacheSizes
-import com.flixclusive.feature.mobile.settings.util.rememberLocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.rememberSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
+import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
 import com.flixclusive.model.datastore.DEFAULT_PLAYER_BUFFER_AMOUNT
 import com.flixclusive.model.datastore.DEFAULT_PLAYER_CACHE_SIZE_AMOUNT
 import com.flixclusive.model.datastore.player.DecoderPriority
@@ -42,7 +42,7 @@ internal fun PlayerDialogWrapper(
     val scope = rememberCoroutineScope()
     
     val appSettings by rememberLocalAppSettings()
-    val onChangeSettings by rememberSettingsChanger()
+    val onChangeSettings by rememberAppSettingsChanger()
 
     when {
         openedDialogMap[KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG] == true -> {
