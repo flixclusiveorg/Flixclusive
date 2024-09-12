@@ -2,20 +2,17 @@ package com.flixclusive.feature.mobile.provider.test.component
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +39,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_ROUNDNESS_PERCENTAGE
+import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -54,9 +53,6 @@ import kotlin.time.DurationUnit
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
-private val FullLogDialogShape = RoundedCornerShape(10)
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FullLogDialog(
     testCaseOutput: ProviderTestCaseOutput,
@@ -66,102 +62,22 @@ internal fun FullLogDialog(
     val context = LocalContext.current
     val clipboardManager = rememberClipboardManager()
 
+    val bottomCornerSize = CornerSize(
+        (ALERT_DIALOG_ROUNDNESS_PERCENTAGE * 2.5).dp
+    )
     val labels = getFullLogOtherLabels(
         provider = provider,
         testCaseOutput = testCaseOutput
     )
 
-    BasicAlertDialog(
-        onDismissRequest = onDismiss,
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 180.dp)
-    ) {
-        Surface(
-            shape = FullLogDialogShape,
-        ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(3.dp),
+    CustomBaseAlertDialog(
+        onDismiss = onDismiss,
+        action = {
+            Box(
                 modifier = Modifier
-                    .padding(10.dp)
+                    .padding(bottom = 10.dp)
+                    .padding(horizontal = 10.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .padding(bottom = 5.dp),
-                    horizontalArrangement = Arrangement.spacedBy(space = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    with(testCaseOutput.status) {
-                        Icon(
-                            painter = painterResource(id = iconId),
-                            tint = Color(color),
-                            contentDescription = toString(),
-                            modifier = Modifier.size(23.dp)
-                        )
-                    }
-
-                    Text(
-                        text = testCaseOutput.name.asString(),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier.weight(1F)
-                    )
-
-                    IconButton(
-                        onClick = {
-                            val toCopy = formatFullLog(
-                                testName = testCaseOutput.name.asString(context),
-                                otherLabels = labels,
-                                fullLog = testCaseOutput.fullLog?.asString(context)
-                                    ?: context.getString(UtilR.string.no_full_log)
-                            )
-
-                            clipboardManager.setText(toCopy)
-                        },
-                        modifier = Modifier.size(23.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = UiCommonR.drawable.round_content_copy_24),
-                            tint = LocalContentColor.current.onMediumEmphasis(),
-                            contentDescription = stringResource(id = UtilR.string.copy_full_logs_button),
-                            modifier = Modifier.size(23.dp)
-                        )
-                    }
-                }
-
-                labels.forEach {
-                    Text(text = it)
-                }
-
-                HorizontalDivider(
-                    color = LocalContentColor.current.onMediumEmphasis(),
-                    modifier = Modifier
-                        .padding(vertical = 5.dp),
-                )
-
-                TextField(
-                    value = testCaseOutput.fullLog?.asString()
-                        ?: stringResource(id = UtilR.string.no_full_log),
-                    onValueChange = {},
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 11.sp,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Normal,
-
-                        ),
-                    shape = MaterialTheme.shapes.extraSmall,
-                    readOnly = true,
-                    colors = TextFieldDefaults.colors(
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                    ),
-                    modifier = Modifier
-                        .weight(weight = 1F, fill = false)
-                        .fillMaxWidth()
-                )
-
                 Button(
                     onClick = onDismiss,
                     colors = ButtonDefaults.buttonColors(
@@ -169,13 +85,12 @@ internal fun FullLogDialog(
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     shape = MaterialTheme.shapes.extraSmall.copy(
-                        bottomStart = CornerSize(20.dp),
-                        bottomEnd = CornerSize(20.dp),
+                        bottomStart = bottomCornerSize,
+                        bottomEnd = bottomCornerSize,
                     ),
                     modifier = Modifier
-                        .height(60.dp)
+                        .height(50.dp)
                         .fillMaxWidth()
-                        .padding(vertical = 5.dp)
                 ) {
                     Text(
                         text = stringResource(id = UtilR.string.close_label),
@@ -185,6 +100,88 @@ internal fun FullLogDialog(
                 }
             }
         }
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(bottom = 5.dp),
+                horizontalArrangement = Arrangement.spacedBy(space = 5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                with(testCaseOutput.status) {
+                    Icon(
+                        painter = painterResource(id = iconId),
+                        tint = Color(color),
+                        contentDescription = toString(),
+                        modifier = Modifier.size(23.dp)
+                    )
+                }
+
+                Text(
+                    text = testCaseOutput.name.asString(),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier.weight(1F)
+                )
+
+                IconButton(
+                    onClick = {
+                        val toCopy = formatFullLog(
+                            testName = testCaseOutput.name.asString(context),
+                            otherLabels = labels,
+                            fullLog = testCaseOutput.fullLog?.asString(context)
+                                ?: context.getString(UtilR.string.no_full_log)
+                        )
+
+                        clipboardManager.setText(toCopy)
+                    },
+                    modifier = Modifier.size(23.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = UiCommonR.drawable.round_content_copy_24),
+                        tint = LocalContentColor.current.onMediumEmphasis(),
+                        contentDescription = stringResource(id = UtilR.string.copy_full_logs_button),
+                        modifier = Modifier.size(23.dp)
+                    )
+                }
+            }
+
+            labels.forEach {
+                Text(text = it)
+            }
+
+            HorizontalDivider(
+                color = LocalContentColor.current.onMediumEmphasis(),
+                modifier = Modifier
+                    .padding(vertical = 5.dp),
+            )
+
+            TextField(
+                value = testCaseOutput.fullLog?.asString()
+                    ?: stringResource(id = UtilR.string.no_full_log),
+                onValueChange = {},
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Normal,
+
+                    ),
+                shape = MaterialTheme.shapes.extraSmall,
+                readOnly = true,
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                ),
+                modifier = Modifier
+                    .weight(weight = 1F, fill = false)
+                    .fillMaxWidth()
+            )
+        }
+
     }
 }
 
@@ -260,13 +257,13 @@ internal fun formatFullLog(
     fullLog: String
 ): String {
     return """
-Test case name: $testName
-        
--- [Other details] --
-${otherLabels.joinToString("\n")}
-        
--- [Full log] --
-$fullLog
+        Test case name: $testName
+                
+        -- [Other details] --
+        ${otherLabels.joinToString("\n")}
+                
+        -- [Full log] --
+        $fullLog
     """.trimIndent()
 }
 

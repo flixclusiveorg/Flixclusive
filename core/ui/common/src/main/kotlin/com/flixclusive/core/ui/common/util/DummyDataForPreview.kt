@@ -3,7 +3,6 @@ package com.flixclusive.core.ui.common.util
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.gradle.entities.Author
 import com.flixclusive.gradle.entities.Language
@@ -42,8 +41,6 @@ object DummyDataForPreview {
 
     @Composable
     fun getDummyProviderApi(): List<ProviderApi> {
-        val context = LocalContext.current
-
         return remember {
             val provider = object : Provider() {
                 override fun getApi(context: Context, client: OkHttpClient)
@@ -53,7 +50,6 @@ object DummyDataForPreview {
             return@remember List<ProviderApi>(5) {
                 object : ProviderApi(
                     OkHttpClient(),
-                    context,
                     provider
                 ) {
 

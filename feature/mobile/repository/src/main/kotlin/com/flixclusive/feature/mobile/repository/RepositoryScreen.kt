@@ -29,11 +29,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFilter
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.flixclusive.core.ui.common.ProviderUninstallNoticeDialog
+import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.RetryButton
@@ -219,12 +224,19 @@ fun RepositoryScreen(
     }
 
     if (providerDataToUninstall != null) {
-        val providerData = remember { providerDataToUninstall!! }
-
-        ProviderUninstallNoticeDialog(
-            providerData = providerData,
+        IconAlertDialog(
+            painter = painterResource(id = UiCommonR.drawable.warning),
+            contentDescription = stringResource(id = UtilR.string.warning_content_description),
+            description = buildAnnotatedString {
+                append(context.getString(UtilR.string.warning_uninstall_message_first_half))
+                append(" ")
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append(providerDataToUninstall!!.name)
+                }
+                append("?")
+            },
             onConfirm = {
-                viewModel.toggleInstallationStatus(providerData)
+                viewModel.toggleInstallationStatus(providerDataToUninstall!!)
                 providerDataToUninstall = null
             },
             onDismiss = { providerDataToUninstall = null }

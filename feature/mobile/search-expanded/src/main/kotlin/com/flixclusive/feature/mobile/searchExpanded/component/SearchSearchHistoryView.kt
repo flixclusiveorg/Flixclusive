@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.CommonNoticeDialog
+import com.flixclusive.core.ui.common.dialog.TextAlertDialog
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenViewModel
 import com.flixclusive.model.database.SearchHistory
@@ -82,7 +82,7 @@ internal fun SearchSearchHistoryView(
     }
 
     if (searchHistoryToDelete != null) {
-        CommonNoticeDialog(
+        TextAlertDialog(
             label = stringResource(id = UtilR.string.delete_search_history_item),
             description = stringResource(id = UtilR.string.delete_search_history_item_message),
             onConfirm = { viewModel.deleteSearchHistoryItem(searchHistoryToDelete!!) },
