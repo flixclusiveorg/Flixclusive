@@ -122,7 +122,7 @@ abstract class ProviderApi(
 abstract class ProviderWebViewApi(
     client: OkHttpClient,
     provider: Provider,
-    private val context: Context,
+    val context: Context,
 ) : ProviderApi(
     client = client,
     provider = provider
