@@ -1,6 +1,7 @@
 package com.flixclusive.provider
 
 import android.content.Context
+import android.webkit.WebView
 import androidx.annotation.MainThread
 import com.flixclusive.core.util.film.filter.Filter
 import com.flixclusive.core.util.film.filter.FilterList
@@ -25,24 +26,20 @@ import okhttp3.OkHttpClient
  * An api will provide source links for a given film. It could also be used to search for films and retrieve detailed information about them.
  *
  * @property client The [OkHttpClient] instance used for network requests.
- * @property context The [Context] used for accessing application-specific resources.
  * @property provider The [Provider] object representing the provider's information.
  *
  * @property baseUrl The base URL used for network requests. Defaults to an empty string.
  * @property testFilm The [Film] to use for testing purposes. Defaults to [The Godfather (1972)](https://www.themoviedb.org/movie/238-the-godfather).
- * @property useWebView Whether this provider needs to use a WebView to scrape content. Defaults to false.
  * @property catalogs The list of [ProviderCatalog]s that this provider provides. Defaults to an empty list.
  * @property filters The list of [Filter]s that this provider's search method supports. Defaults to an empty list.
  */
 @Suppress("unused")
 abstract class ProviderApi(
     val client: OkHttpClient,
-    val context: Context,
-    val provider: Provider,
+    val provider: Provider
 ) {
     open val baseUrl: String = ""
     open val testFilm: FilmDetails = getDefaultTestFilm()
-    open val useWebView: Boolean = false
     open val filters: FilterList get() = FilterList()
     open val catalogs: List<ProviderCatalog> get() = emptyList()
 
@@ -106,12 +103,36 @@ abstract class ProviderApi(
         episode: Episode? = null,
         onLinkFound: (MediaLink) -> Unit
     ): Unit = throw NotImplementedError()
+}
 
+
+/**
+ * The base class for every provider api that uses a [WebView].
+ *
+ * An api will provide source links for a given film. It could also be used to search for films and retrieve detailed information about them.
+ *
+ * @property client The [OkHttpClient] instance used for network requests.
+ * @property provider The [Provider] object representing the provider's information.
+ *
+ * @property baseUrl The base URL used for network requests. Defaults to an empty string.
+ * @property testFilm The [Film] to use for testing purposes. Defaults to [The Godfather (1972)](https://www.themoviedb.org/movie/238-the-godfather).
+ * @property catalogs The list of [ProviderCatalog]s that this provider provides. Defaults to an empty list.
+ * @property filters The list of [Filter]s that this provider's search method supports. Defaults to an empty list.
+ */
+abstract class ProviderWebViewApi(
+    client: OkHttpClient,
+    provider: Provider,
+    private val context: Context,
+) : ProviderApi(
+    client = client,
+    provider = provider
+) {
     /**
+     * **WARNING: THIS MUST ONLY BE CALLED ON THE MAIN THREAD.**
      *
-     * Gets the WebView instance for this provider api. This method is only called if [useWebView] is true. It also must use the public [context] property to instantiate the [ProviderWebView].
+     * Gets the WebView instance for this provider api. It also must use the [context] property to instantiate the [ProviderWebView].
      *
-     * **WARNING: THIS MUST BE ONLY CALLED ON THE MAIN THREAD.**
+     * @return A [ProviderWebView] instance for this provider.
      * */
     @MainThread
     open fun getWebView(): ProviderWebView
