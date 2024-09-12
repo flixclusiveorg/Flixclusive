@@ -10,9 +10,12 @@
             - Provider structure\n
             - So… where do I get providers?\n\n
 
+            Technical questions:\n
+            - How to configure a provider?\n
+            - How to troubleshoot a broken provider?\n\n
 
+            Other questions:\n
             - Is it required to install providers?\n
-            - A provider I installed is not working, how to fix?\n
             - Is there a security drawback for installing a provider?\n
             - Why implement the provider system? It is confusing\n
             - Other apps have better extension system. Why should I use this?\n
@@ -60,13 +63,16 @@
 
             ---\n\n
 
-            # Other questions\n\n
+            # Technical questions\n\n
 
-            ### Is it required to install providers?\n\n
-            
-            No. Like many browser extensions, they are purely optional to install, but you are free to do so.\n\n
+            ### How to configure a provider?\n\n
 
-            ### A provider I installed is not working, how to fix?\n\n
+            When a provider asks for a configuration, follow the instructions it will provide you with.\n\n
+
+            Usually its configurations are included inside its provider settings which can be opened by clicking the settings button on its provider card or provider detailed information screen.\n
+            ![Provider\'s settings button](https://i.imgur.com/s7H7HZD.png)\n\n
+
+            ### How to troubleshoot a broken provider?\n\n
 
             Unfortunately, issues that pertains to providers must be reported to the author/s of the provider, not to the app\'s repository itself.\n\n
 
@@ -81,15 +87,22 @@
                 \t- Click the provider card to open the provider\'s detailed information screen.\n
                 \t- On the bottom of the authors section, click the _\'Issue a bug\'_ button.\n
                 \t![Issue a bug button preview](https://i.imgur.com/sjRuK7T.png)\n
-                \t- Paste the logs and report it.\n
+                \t- Paste the logs and report it.\n\n
 
-            \n
+            ---\n\n
+
+            # Other questions\n\n
+
+            ### Is it required to install providers?\n\n
+            
+            No. Like many browser extensions, they are purely optional to install, but you are free to do so.\n\n
+
             ### Is there a security drawback for installing a provider?\n\n
-            
-            Yes. Each provider accessible through the app is not securedly monitored by the author(s) of the app.\n\n
-            
+
+            Yes. Each provider accessible through the app is not securely monitored by the author(s) of the app.\n\n
+
             When you install a provider, _it can access the whole context of the app_ such as device storage, notifications, etc. which is considerably a common security flaw for android apps.\n\n
-            
+
             Installing a provider is entirely up to your judgment, with all risks and responsibilities falling on you. Trust or not to trust? It\'s up to you!\n\n
             
             ### Why implement the provider system? It is confusing.\n\n
