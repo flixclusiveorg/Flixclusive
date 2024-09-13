@@ -1,3 +1,8 @@
+
+import org.jetbrains.dokka.DokkaConfiguration
+import org.jetbrains.dokka.gradle.DokkaTaskPartial
+import java.net.URL
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
@@ -16,7 +21,7 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.room) apply false
-    alias(libs.plugins.dokka) apply false
+    alias(libs.plugins.dokka)
     id("com.osacky.doctor") version "0.9.1"
 }
 
@@ -75,3 +80,49 @@ tasks.register<Jar>("generateStubsJar") {
     }
 }
 
+subprojects {
+    apply(plugin = "org.jetbrains.dokka")
+
+    tasks.withType<DokkaTaskPartial>().configureEach {
+        if (subprojects.size == 0) {
+            moduleName.set(
+                getModuleNameForDokka(project = this@subprojects)
+            )
+        }
+
+        dokkaSourceSets.configureEach {
+            documentedVisibilities.set(
+                setOf(
+                    DokkaConfiguration.Visibility.PUBLIC,
+                    DokkaConfiguration.Visibility.PROTECTED
+                )
+            )
+
+            sourceLink {
+                val repository = "https://github.com/rhenwinch/Flixclusive/tree/master"
+
+                localDirectory.set(rootProject.projectDir)
+                remoteUrl.set(URL(repository))
+                remoteLineSuffix.set("#L")
+            }
+        }
+    }
+}
+
+tasks.dokkaHtmlMultiModule {
+    moduleName.set("Flixclusive Documentation")
+}
+
+fun getModuleNameForDokka(project: Project): String {
+    var parentProject = project.parent
+    val parentNames = arrayListOf("")
+    while (!parentProject?.name.equals(rootProject.name)) {
+        parentNames.add(parentProject?.name ?: "")
+        parentProject = parentProject?.parent
+    }
+
+    val moduleNamePrefix = parentNames.reversed()
+        .joinToString("-")
+
+    return moduleNamePrefix + project.name
+}
