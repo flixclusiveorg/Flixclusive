@@ -81,36 +81,37 @@ tasks.register<Jar>("generateStubsJar") {
 }
 
 subprojects {
-    apply(plugin = "org.jetbrains.dokka")
+    if (subprojects.size == 0) {
+        apply(plugin = "org.jetbrains.dokka")
 
-    tasks.withType<DokkaTaskPartial>().configureEach {
-        if (subprojects.size == 0) {
-            moduleName.set(
-                getModuleNameForDokka(project = this@subprojects)
-            )
-        }
+        tasks.withType<DokkaTaskPartial>().configureEach {
+            moduleName.set(getModuleNameForDokka(project = this@subprojects))
 
-        dokkaSourceSets.configureEach {
-            documentedVisibilities.set(
-                setOf(
-                    DokkaConfiguration.Visibility.PUBLIC,
-                    DokkaConfiguration.Visibility.PROTECTED
+            dokkaSourceSets.configureEach {
+                documentedVisibilities.set(
+                    setOf(
+                        DokkaConfiguration.Visibility.PUBLIC,
+                        DokkaConfiguration.Visibility.PROTECTED
+                    )
                 )
-            )
 
-            sourceLink {
-                val repository = "https://github.com/rhenwinch/Flixclusive/tree/master"
+                sourceLink {
+                    val branch = "master"
+                    val repository = "https://github.com/rhenwinch/Flixclusive/tree"
+                    val remoteDirPath = projectDir.path.split("Flixclusive/").last()
+                    val (localSrcDir, remoteSrcDir) = getSrcDir(this@subprojects)
 
-                localDirectory.set(rootProject.projectDir)
-                remoteUrl.set(URL(repository))
-                remoteLineSuffix.set("#L")
+                    localDirectory.set(localSrcDir)
+                    remoteUrl.set(URL("$repository/$branch/$remoteDirPath/$remoteSrcDir"))
+                    remoteLineSuffix.set("#L")
+                }
             }
         }
     }
 }
 
 tasks.dokkaHtmlMultiModule {
-    moduleName.set("Flixclusive Documentation")
+    moduleName.set("Flixclusive API Reference")
 }
 
 fun getModuleNameForDokka(project: Project): String {
@@ -125,4 +126,15 @@ fun getModuleNameForDokka(project: Project): String {
         .joinToString("-")
 
     return moduleNamePrefix + project.name
+}
+
+fun getSrcDir(project: Project): Pair<File, String> {
+    val kotlinSrc = "src/main/kotlin"
+    val javaSrc = "src/main/kotlin"
+
+    return try {
+        project.projectDir.resolve(kotlinSrc) to kotlinSrc
+    } catch (e: Throwable) {
+        project.projectDir.resolve(javaSrc) to javaSrc
+    }
 }
