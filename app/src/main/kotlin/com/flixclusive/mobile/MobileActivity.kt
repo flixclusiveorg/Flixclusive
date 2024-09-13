@@ -25,7 +25,7 @@ import com.flixclusive.core.ui.mobile.util.toggleSystemBars
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MobileActivity : ComponentActivity() {
+internal class MobileActivity : ComponentActivity() {
     private val viewModel: MobileAppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {

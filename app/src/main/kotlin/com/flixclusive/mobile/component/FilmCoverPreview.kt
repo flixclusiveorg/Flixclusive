@@ -9,7 +9,7 @@ import com.flixclusive.core.ui.common.FilmCover
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FilmCoverPreview(
+internal fun FilmCoverPreview(
     imagePath: String,
     onDismiss: () -> Unit
 ) {

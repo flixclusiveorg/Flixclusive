@@ -13,7 +13,7 @@ import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 @HiltAndroidApp
-class FlixclusiveApplication : Application(), ImageLoaderFactory {
+internal class FlixclusiveApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var providerManager: ProviderManager
     @Inject

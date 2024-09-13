@@ -28,7 +28,7 @@ import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import kotlin.system.exitProcess
 
 @Composable
-fun TvActivity.TvApp() {
+internal fun TvActivity.TvApp() {
     val navController = rememberNavController()
     val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(initialValue = TvNavGraphs.root.startRoute)
     val currentNavGraph by navController.currentScreenAsState(TvNavGraphs.home, isTv = true)

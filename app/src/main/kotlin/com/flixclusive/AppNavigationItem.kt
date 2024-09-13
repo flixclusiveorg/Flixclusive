@@ -4,7 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 
-const val ROOT = "root"
+internal const val ROOT = "root"
 
 internal data class AppNavigationItem(
     val screen: NavGraphSpec,
