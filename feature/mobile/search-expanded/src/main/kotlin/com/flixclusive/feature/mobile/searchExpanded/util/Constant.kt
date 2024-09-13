@@ -6,7 +6,7 @@ import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
 import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
 
-object Constant {
+internal object Constant {
     val tmdbProviderData = ProviderData(
         authors = emptyList(),
         repositoryUrl = null,

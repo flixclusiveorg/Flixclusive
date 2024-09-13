@@ -1,4 +1,6 @@
-package com.flixclusive.core.ui.common.navigation
+package com.flixclusive.core.ui.common.navigation.navigator
+
+import com.flixclusive.core.ui.common.navigation.GoBackAction
 
 
 interface UpdateDialogNavigator : GoBackAction {

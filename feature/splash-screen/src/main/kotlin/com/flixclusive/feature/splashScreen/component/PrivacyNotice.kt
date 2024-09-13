@@ -6,7 +6,7 @@ import androidx.compose.ui.res.stringResource
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-fun PrivacyNotice(
+internal fun PrivacyNotice(
     modifier: Modifier = Modifier,
     nextStep: (isOptIn: Boolean) -> Unit
 ) {

@@ -19,7 +19,7 @@ import com.flixclusive.core.util.R as UtilR
 
 @Destination
 @Composable
-fun AboutScreen(
+internal fun AboutScreen(
     navigator: GoBackAction,
 ) {
     val viewModel = hiltViewModel<AboutScreenViewModel>()

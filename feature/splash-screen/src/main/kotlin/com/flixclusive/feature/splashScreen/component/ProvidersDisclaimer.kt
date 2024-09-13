@@ -6,7 +6,7 @@ import androidx.compose.ui.res.stringResource
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-fun ProvidersDisclaimer(
+internal fun ProvidersDisclaimer(
     modifier: Modifier = Modifier,
     understood: (isOptIn: Boolean) -> Unit
 ) {

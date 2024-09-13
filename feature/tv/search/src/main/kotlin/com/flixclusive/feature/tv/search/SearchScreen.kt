@@ -37,7 +37,7 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.tv.component.FilmCard
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
@@ -67,7 +67,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Destination
 @Composable
-fun SearchScreen(
+internal fun SearchScreen(
     navigator: CommonScreenNavigator
 ) {
     val viewModel: SearchScreenViewModel = hiltViewModel()

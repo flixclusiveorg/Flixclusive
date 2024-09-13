@@ -41,7 +41,7 @@ import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-fun FilmErrorSnackbar(
+internal fun FilmErrorSnackbar(
     errorMessage: UiText?,
     modifier: Modifier = Modifier,
 ) {

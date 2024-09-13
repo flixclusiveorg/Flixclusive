@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Scaffold
@@ -28,7 +27,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.navigation.RepositorySearchScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.RepositorySearchScreenNavigator
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
@@ -42,7 +41,7 @@ import com.flixclusive.core.util.R as UtilR
 
 @Destination
 @Composable
-fun RepositorySearchScreen(
+internal fun RepositorySearchScreen(
     navigator: RepositorySearchScreenNavigator
 ) {
     val context = LocalContext.current

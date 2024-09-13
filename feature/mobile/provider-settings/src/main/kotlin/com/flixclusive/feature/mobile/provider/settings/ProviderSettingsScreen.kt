@@ -12,14 +12,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.ui.common.COMMON_TOP_BAR_HEIGHT
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.GoBackAction
-import com.flixclusive.core.ui.common.navigation.ProviderInfoScreenNavArgs
+import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavArgs
 import com.ramcosta.composedestinations.annotation.Destination
 
 @Destination(
     navArgsDelegate = ProviderInfoScreenNavArgs::class
 )
 @Composable
-fun ProviderSettingsScreen(
+internal fun ProviderSettingsScreen(
     navigator: GoBackAction,
     args: ProviderInfoScreenNavArgs
 ) {

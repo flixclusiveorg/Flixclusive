@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -43,6 +42,7 @@ import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
+// TODO: Make this internal once TV UI gets its own CrashScreen
 @Composable
 fun CrashMobileScreen(
     softwareInfo: String? = null,

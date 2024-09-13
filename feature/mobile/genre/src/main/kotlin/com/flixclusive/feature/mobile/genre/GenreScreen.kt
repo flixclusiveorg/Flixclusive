@@ -8,7 +8,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navargs.GenreScreenNavArgs
+import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
 import com.flixclusive.core.ui.mobile.component.film.FilmsGridScreen
 import com.flixclusive.core.ui.mobile.util.shouldPaginate
 import com.flixclusive.core.util.common.ui.PagingState
@@ -20,7 +21,7 @@ import com.ramcosta.composedestinations.annotation.Destination
     navArgsDelegate = GenreScreenNavArgs::class
 )
 @Composable
-fun GenreScreen(
+internal fun GenreScreen(
     navigator: CommonScreenNavigator,
     args: GenreScreenNavArgs,
     previewFilm: (Film) -> Unit,

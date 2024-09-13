@@ -12,7 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class FilmScreenViewModel @Inject constructor(
+internal class FilmScreenViewModel @Inject constructor(
     watchHistoryRepository: WatchHistoryRepository,
     seasonProvider: SeasonProviderUseCase,
     filmProvider: FilmProviderUseCase,

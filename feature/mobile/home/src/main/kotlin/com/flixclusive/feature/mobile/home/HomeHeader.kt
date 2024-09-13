@@ -207,7 +207,7 @@ internal fun HomeHeader(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun HomeHeaderPlaceholder(
+internal fun HomeHeaderPlaceholder(
     modifier: Modifier = Modifier
 ) {
     val listBottomFade = Brush.verticalGradient(0.8f to Color.Red, 0.9f to Color.Transparent)

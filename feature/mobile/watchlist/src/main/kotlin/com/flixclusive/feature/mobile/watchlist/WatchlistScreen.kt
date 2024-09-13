@@ -17,7 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.CommonTopBar
-import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
 import com.flixclusive.core.ui.mobile.component.film.FilmsGridScreen
 import com.flixclusive.model.tmdb.Film
 import com.ramcosta.composedestinations.annotation.Destination
@@ -25,7 +25,7 @@ import com.flixclusive.core.util.R as UtilR
 
 @Destination
 @Composable
-fun WatchlistScreen(
+internal fun WatchlistScreen(
     navigator: CommonScreenNavigator,
     previewFilm: (Film) -> Unit,
 ) {

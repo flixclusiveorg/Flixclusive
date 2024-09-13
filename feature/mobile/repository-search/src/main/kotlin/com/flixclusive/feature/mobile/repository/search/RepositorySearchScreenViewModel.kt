@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class RepositorySearchScreenViewModel @Inject constructor(
+internal class RepositorySearchScreenViewModel @Inject constructor(
     private val getRepositoryUseCase: GetRepositoryUseCase,
     private val appSettingsManager: AppSettingsManager,
 ) : ViewModel() {

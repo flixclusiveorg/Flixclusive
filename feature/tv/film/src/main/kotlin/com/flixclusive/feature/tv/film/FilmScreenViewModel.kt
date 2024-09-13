@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class FilmScreenViewModel @Inject constructor(
+internal class FilmScreenViewModel @Inject constructor(
     filmProvider: FilmProviderUseCase,
     watchHistoryRepository: WatchHistoryRepository,
     seasonProvider: SeasonProviderUseCase,

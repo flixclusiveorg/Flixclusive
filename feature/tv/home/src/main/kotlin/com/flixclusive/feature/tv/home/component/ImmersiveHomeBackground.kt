@@ -28,7 +28,7 @@ import com.flixclusive.model.tmdb.Film
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun ImmersiveHomeBackground(
+internal fun ImmersiveHomeBackground(
     modifier: Modifier = Modifier,
     headerItem: Film?
 ) {

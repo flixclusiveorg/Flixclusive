@@ -9,6 +9,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.ui.common.navigation.navargs.SeeAllScreenNavArgs
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.film.FilmType
@@ -28,7 +29,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SeeAllViewModel @Inject constructor(
+internal class SeeAllViewModel @Inject constructor(
     private val categoryItemsProviderUseCase: CategoryItemsProviderUseCase,
     savedStateHandle: SavedStateHandle,
     appSettingsManager: AppSettingsManager,

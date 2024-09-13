@@ -56,9 +56,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.dialog.TextAlertDialog
-import com.flixclusive.core.ui.common.navigation.GoBackAction
-import com.flixclusive.core.ui.common.navigation.MarkdownNavigator
-import com.flixclusive.core.ui.common.navigation.ProviderTestNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.ProvidersScreenNavigator
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
@@ -71,19 +69,12 @@ import com.flixclusive.feature.mobile.provider.component.ProfileHandlerButtons
 import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
 import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
 import com.flixclusive.feature.mobile.provider.util.rememberDragDropListState
-import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.Status
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
-
-interface ProvidersScreenNavigator : GoBackAction, ProviderTestNavigator, MarkdownNavigator {
-    fun openProviderSettings(providerData: ProviderData)
-    fun openProviderInfo(providerData: ProviderData)
-    fun openAddRepositoryScreen()
-}
 
 private val FabButtonSize = 56.dp
 private fun Context.getHelpGuideTexts()
@@ -92,7 +83,7 @@ private fun Context.getHelpGuideTexts()
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination
 @Composable
-fun ProvidersScreen(
+internal fun ProvidersScreen(
     navigator: ProvidersScreenNavigator
 ) {
     val context = LocalContext.current

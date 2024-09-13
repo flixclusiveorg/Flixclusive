@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
-class AboutScreenViewModel @Inject constructor(
+internal class AboutScreenViewModel @Inject constructor(
     appConfigurationManager: AppConfigurationManager,
     appSettingsManager: AppSettingsManager
 ) : ViewModel() {

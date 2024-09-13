@@ -64,7 +64,7 @@ internal val settingItemShape = RoundedCornerShape(20.dp)
 
 @Destination
 @Composable
-fun SettingsScreen(
+internal fun SettingsScreen(
     navigator: GoBackAction,
 ) {
     val context = LocalContext.current

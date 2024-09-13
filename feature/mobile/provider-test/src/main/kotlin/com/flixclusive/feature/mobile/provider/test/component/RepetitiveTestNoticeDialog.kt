@@ -26,7 +26,7 @@ import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-fun RepetitiveTestNoticeDialog(
+internal fun RepetitiveTestNoticeDialog(
     onSkip: () -> Unit,
     onTestAgain: () -> Unit,
     onDismiss: () -> Unit,

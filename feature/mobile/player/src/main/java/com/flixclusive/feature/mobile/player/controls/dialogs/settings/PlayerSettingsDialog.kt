@@ -36,7 +36,7 @@ import com.flixclusive.model.datastore.player.ResizeMode
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR
 
-const val ELEVATED_VIDEO_SETTINGS_PANEL = 0.4F
+internal const val ELEVATED_VIDEO_SETTINGS_PANEL = 0.4F
 
 internal data class VideoSettingItem(
     @DrawableRes val iconId: Int,

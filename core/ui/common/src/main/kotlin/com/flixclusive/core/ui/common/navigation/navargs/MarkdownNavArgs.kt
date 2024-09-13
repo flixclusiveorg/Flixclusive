@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.common.navigation
+package com.flixclusive.core.ui.common.navigation.navargs
 
 data class MarkdownNavArgs(
     val title: String,

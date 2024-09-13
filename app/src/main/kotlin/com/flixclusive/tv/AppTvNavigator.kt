@@ -2,12 +2,12 @@ package com.flixclusive.tv
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenTvNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.HomeScreenTvNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
-import com.flixclusive.feature.splashScreen.SplashScreenNavigator
-import com.flixclusive.feature.tv.film.FilmScreenTvNavigator
 import com.flixclusive.feature.tv.film.destinations.FilmScreenDestination
-import com.flixclusive.feature.tv.home.HomeScreenTvNavigator
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.util.navGraph
 import com.flixclusive.util.navigateIfResumed
@@ -88,7 +88,8 @@ internal class AppTvNavigator(
             UpdateScreenDestination(
                 newVersion = newVersion,
                 updateUrl = updateUrl,
-                updateInfo = updateInfo
+                updateInfo = updateInfo,
+                isComingFromSplashScreen = false
             )
         )
     }
