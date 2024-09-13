@@ -34,7 +34,7 @@ import com.flixclusive.core.ui.common.COMMON_TOP_BAR_HEIGHT
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.dialog.TextAlertDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
-import com.flixclusive.core.ui.common.navigation.MarkdownNavArgs
+import com.flixclusive.core.ui.common.navigation.navargs.MarkdownNavArgs
 import com.ramcosta.composedestinations.annotation.Destination
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.util.R as UtilR
@@ -48,7 +48,7 @@ private fun isValidUrl(url: String): Boolean {
     navArgsDelegate = MarkdownNavArgs::class
 )
 @Composable
-fun MarkdownScreen(
+internal fun MarkdownScreen(
     navigator: GoBackAction,
     args: MarkdownNavArgs
 ) {

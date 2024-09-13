@@ -45,8 +45,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
-import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
-import com.flixclusive.core.ui.common.navigation.UpdateDialogNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.util.android.hasAllPermissionGranted
 import com.flixclusive.core.util.common.resource.Resource
@@ -63,16 +62,13 @@ import kotlinx.coroutines.delay
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
-interface SplashScreenNavigator : UpdateDialogNavigator, StartHomeScreenAction {
-    fun onExitApplication()
-}
 
 @OptIn(ExperimentalAnimationGraphicsApi::class, ExperimentalPermissionsApi::class,
     ExperimentalAnimationApi::class
 )
 @Destination
 @Composable
-fun SplashScreen(
+internal fun SplashScreen(
     navigator: SplashScreenNavigator
 ) {
     val context = LocalContext.current

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.ui.common.navigation.navigator.PreferencesScreenNavigator
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.preferences.component.PreferencesItem
 import com.flixclusive.feature.mobile.preferences.component.ShareHeader
@@ -26,17 +26,9 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
-interface PreferencesScreenNavigator {
-    fun openWatchlistScreen()
-    fun openRecentlyWatchedScreen()
-    fun openSettingsScreen()
-    fun openAboutScreen()
-    fun checkForUpdates()
-}
-
 @Destination
 @Composable
-fun PreferencesScreen(
+internal fun PreferencesScreen(
     navigator: PreferencesScreenNavigator
 ) {
     val items = remember {

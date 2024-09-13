@@ -13,7 +13,7 @@ private val LocalBackgroundImmersiveColor = compositionLocalOf<MutableState<Colo
 }
 
 @Composable
-fun LocalImmersiveBackgroundColorProvider(
+internal fun LocalImmersiveBackgroundColorProvider(
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(
@@ -23,4 +23,4 @@ fun LocalImmersiveBackgroundColorProvider(
 }
 
 @Composable
-fun useLocalImmersiveBackgroundColor() = LocalBackgroundImmersiveColor.current
+internal fun useLocalImmersiveBackgroundColor() = LocalBackgroundImmersiveColor.current

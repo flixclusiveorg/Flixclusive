@@ -9,6 +9,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.ui.common.navigation.navargs.GenreScreenNavArgs
 import com.flixclusive.core.util.common.resource.Resource
 import com.flixclusive.core.util.common.ui.PagingState
 import com.flixclusive.core.util.film.FilmType
@@ -23,7 +24,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class GenreViewModel @Inject constructor(
+internal class GenreViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     savedStateHandle: SavedStateHandle,
     appSettingsManager: AppSettingsManager,

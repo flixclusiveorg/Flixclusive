@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.genre
+package com.flixclusive.core.ui.common.navigation.navargs
 
 import com.flixclusive.model.tmdb.Genre
 

@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.R
-import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenNavigator
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.RetryButton
@@ -63,7 +63,6 @@ import com.flixclusive.feature.mobile.film.component.FilmScreenButtons
 import com.flixclusive.feature.mobile.film.component.FilmScreenHeader
 import com.flixclusive.feature.mobile.film.component.TvShowSeasonDropdown
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.Genre
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
@@ -76,16 +75,12 @@ internal enum class FilmTab(val stringId: Int) {
     Collections(UtilR.string.collections)
 }
 
-interface FilmScreenNavigator : CommonScreenNavigator {
-    fun openGenreScreen(genre: Genre)
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 @Destination(
     navArgsDelegate = FilmScreenNavArgs::class
 )
 @Composable
-fun FilmScreen(
+internal fun FilmScreen(
     navigator: FilmScreenNavigator,
     previewFilm: (Film) -> Unit,
     play: (Film, Episode?) -> Unit,
@@ -355,7 +350,7 @@ private fun ContentTabs(
 }
 
 @Composable
-fun CollapsibleTopBar(
+private fun CollapsibleTopBar(
     title: String,
     isCollapsedProvider: () -> Boolean,
     onNavigationIconClick: () -> Unit,

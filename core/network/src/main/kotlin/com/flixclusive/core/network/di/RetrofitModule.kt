@@ -26,11 +26,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object RetrofitModule {
+internal object RetrofitModule {
 
     @Provides
     @Singleton
-    internal fun provideTMDBApiService(
+    fun provideTMDBApiService(
         client: OkHttpClient
     ): TMDBApiService {
         val searchResponseData = SearchResponseData<FilmSearchItem>()
@@ -52,7 +52,7 @@ object RetrofitModule {
 
     @Provides
     @Singleton
-    internal fun provideGithubRawApiService(
+    fun provideGithubRawApiService(
         client: OkHttpClient
     ): GithubRawApiService =
         Retrofit.Builder()
@@ -64,7 +64,7 @@ object RetrofitModule {
 
     @Provides
     @Singleton
-    internal fun provideGithubApiService(
+    fun provideGithubApiService(
         client: OkHttpClient
     ): GithubApiService =
         Retrofit.Builder()

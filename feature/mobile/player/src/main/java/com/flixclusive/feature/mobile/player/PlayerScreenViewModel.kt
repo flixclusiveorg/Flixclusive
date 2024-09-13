@@ -27,7 +27,7 @@ import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 @HiltViewModel
-class PlayerScreenViewModel @Inject constructor(
+internal class PlayerScreenViewModel @Inject constructor(
     appSettingsManager: AppSettingsManager,
     client: OkHttpClient,
     context: Context,

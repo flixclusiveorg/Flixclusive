@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ProvidersScreenViewModel @Inject constructor(
+internal class ProvidersScreenViewModel @Inject constructor(
     private val providerManager: ProviderManager,
     private val appSettingsManager: AppSettingsManager,
 ) : ViewModel() {

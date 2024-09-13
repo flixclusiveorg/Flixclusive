@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SearchScreenViewModel @Inject constructor(
+internal class SearchScreenViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     private val getSearchRecommendedCardsUseCase: GetSearchRecommendedCardsUseCase
 ) : ViewModel() {

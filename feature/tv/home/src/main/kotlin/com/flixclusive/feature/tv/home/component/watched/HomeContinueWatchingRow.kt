@@ -35,7 +35,7 @@ internal const val HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT = "watchedRow=%d, watched
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun HomeContinueWatchingRow(
+internal fun HomeContinueWatchingRow(
     modifier: Modifier = Modifier,
     items: List<WatchHistoryItem>,
     onPlayClick: (Film) -> Unit,

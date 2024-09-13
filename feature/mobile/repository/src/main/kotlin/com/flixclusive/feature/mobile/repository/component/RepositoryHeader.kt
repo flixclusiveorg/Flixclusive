@@ -29,7 +29,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
-fun RepositoryHeader(
+internal fun RepositoryHeader(
     repository: Repository,
     toggleSnackbar: (UiText) -> Unit,
 ) {

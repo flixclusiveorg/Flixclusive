@@ -47,6 +47,7 @@ import androidx.tv.foundation.lazy.list.TvLazyColumn
 import coil.compose.AsyncImage
 import coil.imageLoader
 import com.flixclusive.core.ui.common.navigation.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenTvNavigator
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.ifElse
@@ -79,17 +80,13 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
-interface FilmScreenTvNavigator : GoBackAction {
-    fun openFilmScreenSeamlessly(film: Film)
-}
-
 @OptIn(ExperimentalAnimationApi::class)
 @Destination(
     navArgsDelegate = FilmScreenNavArgs::class,
     style = FadeInAndOutScreenTransition::class
 )
 @Composable
-fun FilmScreen(
+internal fun FilmScreen(
     navigator: FilmScreenTvNavigator,
     args: FilmScreenNavArgs
 ) {

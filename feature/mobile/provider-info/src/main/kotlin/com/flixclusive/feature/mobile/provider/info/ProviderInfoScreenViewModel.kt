@@ -7,7 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.ui.common.navigation.ProviderInfoScreenNavArgs
+import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
 import com.flixclusive.core.util.common.resource.Resource
@@ -28,7 +28,7 @@ import javax.inject.Inject
 import com.flixclusive.core.util.R as UtilR
 
 @HiltViewModel
-class ProviderInfoScreenViewModel @Inject constructor(
+internal class ProviderInfoScreenViewModel @Inject constructor(
     @ApplicationScope private val scope: CoroutineScope,
     private val appSettingsManager: AppSettingsManager,
     private val getRepositoryUseCase: GetRepositoryUseCase,

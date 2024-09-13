@@ -2,35 +2,35 @@ package com.flixclusive.mobile
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import com.flixclusive.core.ui.common.navigation.MarkdownNavigator
-import com.flixclusive.core.ui.common.navigation.ProviderTestNavigator
-import com.flixclusive.core.ui.common.navigation.RepositorySearchScreenNavigator
-import com.flixclusive.core.ui.common.navigation.UpdateDialogNavigator
+import com.flixclusive.core.ui.common.navigation.navargs.MarkdownNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.HomeNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.PlayerScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.PreferencesScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.ProviderInfoNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.ProviderTestNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.ProvidersScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.RepositorySearchScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.SearchScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.UpdateDialogNavigator
 import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
-import com.flixclusive.feature.mobile.film.FilmScreenNavigator
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
-import com.flixclusive.feature.mobile.home.HomeNavigator
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
-import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
-import com.flixclusive.feature.mobile.preferences.PreferencesScreenNavigator
-import com.flixclusive.feature.mobile.provider.ProvidersScreenNavigator
-import com.flixclusive.feature.mobile.provider.info.ProviderInfoNavigator
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
 import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
-import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
 import com.flixclusive.feature.mobile.settings.destinations.SettingsScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
-import com.flixclusive.feature.splashScreen.SplashScreenNavigator
 import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.gradle.entities.Repository
 import com.flixclusive.model.tmdb.Film
@@ -47,7 +47,8 @@ internal class MobileAppNavigator(
     private val destination: NavDestination,
     private val navController: NavController,
     private val closeApp: () -> Unit,
-) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator, FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator, ProvidersScreenNavigator,
+) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator,
+    FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator, ProvidersScreenNavigator,
     RepositorySearchScreenNavigator, ProviderInfoNavigator, ProviderTestNavigator,
     MarkdownNavigator {
 

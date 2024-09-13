@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
-class RecentlyWatchedScreenViewModel @Inject constructor(
+internal class RecentlyWatchedScreenViewModel @Inject constructor(
     watchHistoryRepository: WatchHistoryRepository,
     appSettingsManager: AppSettingsManager,
 ) : ViewModel() {

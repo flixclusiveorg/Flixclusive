@@ -37,7 +37,7 @@ internal fun playerScreenViewModel(args: PlayerScreenNavArgs): PlayerScreenViewM
 }
 
 
-class PlayerScreenViewModel @AssistedInject constructor(
+internal class PlayerScreenViewModel @AssistedInject constructor(
     @Assisted args: PlayerScreenNavArgs,
     private val appSettingsManager: AppSettingsManager,
     client: OkHttpClient,

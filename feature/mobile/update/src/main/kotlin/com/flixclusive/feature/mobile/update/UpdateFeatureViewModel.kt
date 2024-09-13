@@ -6,6 +6,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class UpdateFeatureViewModel @Inject constructor(
+internal class UpdateFeatureViewModel @Inject constructor(
     val appUpdateCheckerUseCase: AppUpdateCheckerUseCase
 ) : ViewModel()

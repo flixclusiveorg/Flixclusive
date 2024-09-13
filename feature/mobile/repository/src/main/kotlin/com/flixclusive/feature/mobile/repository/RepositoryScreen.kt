@@ -42,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navargs.RepositoryScreenNavArgs
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.dialog.UnsafeInstallAlertDialog
@@ -55,22 +56,18 @@ import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.repository.component.RepositoryHeader
 import com.flixclusive.feature.mobile.repository.component.RepositoryTopBar
 import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.gradle.entities.Repository
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
-data class RepositoryScreenNavArgs(
-    val repository: Repository
-)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Destination(
     navArgsDelegate = RepositoryScreenNavArgs::class
 )
 @Composable
-fun RepositoryScreen(
+internal fun RepositoryScreen(
     navigator: GoBackAction,
     args: RepositoryScreenNavArgs
 ) {

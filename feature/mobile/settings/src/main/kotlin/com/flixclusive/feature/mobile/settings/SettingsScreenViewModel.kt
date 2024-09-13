@@ -36,7 +36,7 @@ internal const val KEY_AUDIO_LANGUAGE_DIALOG = "isAudioLanguageDialogOpen"
 internal const val KEY_DECODER_PRIORITY_DIALOG = "isDecoderPriorityDialogOpen"
 
 @HiltViewModel
-class SettingsScreenViewModel @Inject constructor(
+internal class SettingsScreenViewModel @Inject constructor(
     private val appSettingsManager: AppSettingsManager,
     private val searchHistoryRepository: SearchHistoryRepository,
     private val sourceLinksProvider: GetMediaLinksUseCase

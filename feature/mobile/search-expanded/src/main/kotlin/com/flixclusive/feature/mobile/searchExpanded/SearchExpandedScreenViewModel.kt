@@ -42,7 +42,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-class SearchExpandedScreenViewModel @Inject constructor(
+internal class SearchExpandedScreenViewModel @Inject constructor(
     @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
     private val tmdbRepository: TMDBRepository,
     private val searchHistoryRepository: SearchHistoryRepository,

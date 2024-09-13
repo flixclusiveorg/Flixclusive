@@ -28,14 +28,14 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
-import com.flixclusive.core.ui.common.navigation.UpdateDialogNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.UpdateDialogNavigator
 import com.flixclusive.data.configuration.UpdateStatus
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.spec.DestinationStyle
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
-object DismissibleDialog : DestinationStyle.Dialog {
+internal object DismissibleDialog : DestinationStyle.Dialog {
     override val properties = DialogProperties(
         dismissOnClickOutside = true,
         dismissOnBackPress = true,
@@ -44,7 +44,7 @@ object DismissibleDialog : DestinationStyle.Dialog {
 
 @Destination(style = DismissibleDialog::class)
 @Composable
-fun UpdateDialog(
+internal fun UpdateDialog(
     navigator: UpdateDialogNavigator,
 ) {
     val viewModel = hiltViewModel<UpdateFeatureViewModel>()
@@ -131,7 +131,7 @@ fun UpdateDialog(
                         )
 
                         Text(
-                            text = updateStatus?.errorMessage?.asString()
+                            text = updateStatus.errorMessage?.asString()
                                 ?: stringResource(id = UtilR.string.failed_checking_for_updates),
                             style = MaterialTheme.typography.labelLarge,
                             textAlign = TextAlign.Center

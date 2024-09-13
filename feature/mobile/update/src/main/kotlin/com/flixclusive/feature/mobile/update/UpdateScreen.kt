@@ -62,6 +62,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
+import com.flixclusive.core.ui.common.navigation.navargs.UpdateScreenNavArgs
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.android.installApkActivity
 import com.flixclusive.feature.mobile.update.util.fromGitmoji
@@ -71,18 +72,11 @@ import com.ramcosta.composedestinations.annotation.Destination
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.util.R as UtilR
 
-data class UpdateScreenNavArgs(
-    val newVersion: String,
-    val updateUrl: String,
-    val updateInfo: String? = null,
-    val isComingFromSplashScreen: Boolean = false
-)
-
 @Destination(
     navArgsDelegate = UpdateScreenNavArgs::class
 )
 @Composable
-fun UpdateScreen(
+internal fun UpdateScreen(
     navigator: StartHomeScreenAction,
     args: UpdateScreenNavArgs,
 ) {
@@ -334,7 +328,8 @@ private fun UpdateScreenPreview() {
                     newVersion = "v1.5.0",
                     updateUrl = "https://www.google.com",
                     updateInfo = "## This is an update message" +
-                            "\n\nhahhahaha **HAHAHA PERO**"
+                            "\n\nhahhahaha **HAHAHA PERO**",
+                    isComingFromSplashScreen = false
                 )
             )
         }

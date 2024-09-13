@@ -1,6 +1,6 @@
 package com.flixclusive.feature.mobile.settings.component.dialog.player
 
-object Constant {
+internal object Constant {
     val playerBufferLengths =
         mapOf(
             50L to "50s ",

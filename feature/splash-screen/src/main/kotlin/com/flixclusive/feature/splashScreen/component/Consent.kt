@@ -47,7 +47,7 @@ import com.flixclusive.core.util.R as UtilR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-fun Consent(
+internal fun Consent(
     modifier: Modifier = Modifier,
     header: String,
     consentContent: String,

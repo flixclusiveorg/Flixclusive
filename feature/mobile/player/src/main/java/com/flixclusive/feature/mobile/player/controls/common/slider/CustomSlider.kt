@@ -115,7 +115,7 @@ import kotlin.math.roundToInt
  * [Interaction]s and customize the appearance / behavior of this slider in different states.
  */
 @Composable
-fun CustomSlider(
+internal fun CustomSlider(
     value: Float,
     onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier,
@@ -198,7 +198,7 @@ fun CustomSlider(
  */
 @Composable
 @ExperimentalMaterial3Api
-fun CustomSlider(
+internal fun CustomSlider(
     value: Float,
     onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier,
@@ -405,7 +405,7 @@ private fun SliderImpl(
  * Object to hold defaults used by [CustomSlider]
  */
 @Stable
-object CustomSliderDefaults {
+internal object CustomSliderDefaults {
 
     /**
      * Creates a [CustomSliderColors] that represents the different colors used in parts of the
@@ -763,7 +763,7 @@ private fun Modifier.sliderTapModifier(
     })
 
 @Immutable
-class CustomSliderColors internal constructor(
+internal class CustomSliderColors internal constructor(
     private val thumbColor: Color,
     private val activeTrackColor: Color,
     private val activeTickColor: Color,
@@ -883,7 +883,7 @@ private enum class SliderComponents {
  * and fractional positions where the discrete ticks should be drawn on the track.
  */
 @Stable
-class CustomSliderPositions(
+internal class CustomSliderPositions(
     initialActiveRange: ClosedFloatingPointRange<Float> = 0f..1f,
     initialTickFractions: FloatArray = floatArrayOf()
 ) {

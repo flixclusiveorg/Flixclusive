@@ -52,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navargs.ProviderTestScreenNavArgs
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -69,10 +70,6 @@ import com.flixclusive.gradle.entities.ProviderData
 import com.flixclusive.model.provider.id
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.util.R as UtilR
-
-data class ProviderTestScreenNavArgs(
-    val providers: ArrayList<ProviderData>
-)
 
 @Composable
 private fun Modifier.drawScrimOnForeground(
@@ -95,7 +92,7 @@ private fun Modifier.drawScrimOnForeground(
     navArgsDelegate = ProviderTestScreenNavArgs::class
 )
 @Composable
-fun ProviderTestScreen(
+internal fun ProviderTestScreen(
     navigator: GoBackAction,
     args: ProviderTestScreenNavArgs
 ) {

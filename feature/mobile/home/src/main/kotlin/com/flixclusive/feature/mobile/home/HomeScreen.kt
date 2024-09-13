@@ -28,29 +28,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.navigation.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.HomeNavigator
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.home.HomeScreenViewModel
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.category.Category
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import com.flixclusive.core.util.R as UtilR
 
-
-interface HomeNavigator : CommonScreenNavigator {
-    fun openGenreScreen(genre: Genre)
-    fun openSeeAllScreen(item: Category)
-}
-
 @Destination
 @Composable
-fun HomeScreen(
+internal fun HomeScreen(
     navigator: HomeNavigator,
     previewFilm: (Film) -> Unit,
     play: (Film, Episode?) -> Unit,
