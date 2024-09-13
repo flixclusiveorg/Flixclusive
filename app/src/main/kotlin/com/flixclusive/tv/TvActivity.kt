@@ -13,7 +13,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class TvActivity : ComponentActivity() {
+internal class TvActivity : ComponentActivity() {
     @OptIn(ExperimentalTvMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

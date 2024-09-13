@@ -54,7 +54,7 @@ import com.flixclusive.core.util.R as UtilR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FilmPreviewBottomSheet(
+internal fun FilmPreviewBottomSheet(
     film: Film,
     sheetState: SheetState,
     isInWatchlist: () -> Boolean,
@@ -266,7 +266,7 @@ fun FilmPreviewBottomSheet(
 }
 
 @Composable
-fun IconButtonWithLabel(
+internal fun IconButtonWithLabel(
     @StringRes labelId: Int,
     onClick: () -> Unit,
     size: Dp = 65.dp,
