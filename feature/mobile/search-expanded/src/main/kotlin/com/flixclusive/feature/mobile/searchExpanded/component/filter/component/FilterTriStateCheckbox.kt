@@ -12,7 +12,7 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.tooling.preview.Preview
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.mobile.component.CustomTriStateCheckbox
-import com.flixclusive.model.provider.filter.Filter
+import com.flixclusive.provider.filter.Filter
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterBottomSheetStyle.getCheckboxColors
 
 private fun getNextState(currentState: MutableIntState): Int {

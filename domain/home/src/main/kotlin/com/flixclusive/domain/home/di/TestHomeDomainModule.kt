@@ -19,8 +19,7 @@ object TestHomeDomainModule {
             watchHistoryRepository = getMockWatchHistoryRepository(),
             configurationProvider = getMockAppConfigurationManager(),
             catalogItemsProviderUseCase = getMockCatalogItemsProviderUseCase(),
-            providerManager = getMockProviderManager(),
-            scope = scope,
+            providerManager = getMockProviderManager()
         )
     }
 }

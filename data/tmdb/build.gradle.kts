@@ -12,10 +12,10 @@ android {
 dependencies {
     api(libs.stubs.util)
     api(projects.core.locale)
+    api(projects.core.network)
     api(libs.stubs.model.film)
 
     implementation(libs.coroutines.test)
     implementation(libs.mockk)
-    implementation(projects.core.network)
     implementation(projects.data.configuration)
 }

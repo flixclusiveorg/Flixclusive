@@ -6,14 +6,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.mobile.component.SingleChoiceSegmentedButtonColumn
 import com.flixclusive.core.ui.mobile.component.VerticalSegmentedButton
 import com.flixclusive.core.ui.mobile.component.getVerticalSegmentedShape
-import com.flixclusive.model.provider.filter.Filter
+import com.flixclusive.feature.mobile.searchExpanded.component.filter.util.toOptionString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,8 +22,6 @@ internal fun SelectRadioMenu(
     selected: Int?,
     onSelect: (Int) -> Unit,
 ) {
-    val context = LocalContext.current
-
     SingleChoiceSegmentedButtonColumn(
         modifier = modifier
     ) {
@@ -41,10 +38,7 @@ internal fun SelectRadioMenu(
                     .heightIn(min = 50.dp)
             ) {
                 Text(
-                    text = Filter.Select.getOptionName(
-                        option = option,
-                        context = context
-                    )
+                    text = option.toOptionString()
                 )
             }
         }

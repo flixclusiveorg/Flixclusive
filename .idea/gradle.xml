@@ -37,7 +37,6 @@
             <option value="$PROJECT_DIR$/core/ui/mobile" />
             <option value="$PROJECT_DIR$/core/ui/player" />
             <option value="$PROJECT_DIR$/core/ui/tv" />
-            <option value="$PROJECT_DIR$/core/util" />
             <option value="$PROJECT_DIR$/data" />
             <option value="$PROJECT_DIR$/data/configuration" />
             <option value="$PROJECT_DIR$/data/network" />
@@ -88,9 +87,6 @@
             <option value="$PROJECT_DIR$/model/configuration" />
             <option value="$PROJECT_DIR$/model/database" />
             <option value="$PROJECT_DIR$/model/datastore" />
-            <option value="$PROJECT_DIR$/model/film" />
-            <option value="$PROJECT_DIR$/model/provider" />
-            <option value="$PROJECT_DIR$/provider" />
             <option value="$PROJECT_DIR$/service" />
           </set>
         </option>

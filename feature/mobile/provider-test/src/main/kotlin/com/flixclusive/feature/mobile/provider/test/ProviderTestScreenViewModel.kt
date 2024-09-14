@@ -9,7 +9,6 @@ import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.ViewModel
 import com.flixclusive.domain.provider.test.TestProviderUseCase
 import com.flixclusive.model.provider.ProviderData
-import com.flixclusive.model.provider.id
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

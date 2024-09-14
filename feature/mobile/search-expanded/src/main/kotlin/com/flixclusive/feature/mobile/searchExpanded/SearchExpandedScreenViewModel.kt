@@ -16,9 +16,9 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
-import com.flixclusive.model.provider.filter.BottomSheetComponent
-import com.flixclusive.model.provider.filter.FilterGroup
-import com.flixclusive.model.provider.filter.FilterList
+import com.flixclusive.provider.filter.BottomSheetComponent
+import com.flixclusive.provider.filter.FilterGroup
+import com.flixclusive.provider.filter.FilterList
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.search_history.SearchHistoryRepository

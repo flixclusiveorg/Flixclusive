@@ -117,6 +117,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.constraintlayout.compose)
+    implementation(libs.core.splashscreen)
     implementation(libs.hilt.navigation)
     implementation(libs.lifecycle.runtimeCompose)
 }
