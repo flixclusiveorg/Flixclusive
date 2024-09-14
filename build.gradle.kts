@@ -98,7 +98,7 @@ subprojects {
 
                 sourceLink {
                     val branch = "master"
-                    val repository = "https://github.com/rhenwinch/Flixclusive/tree"
+                    val repository = "https://github.com/flixclusiveorg/Flixclusive/tree"
                     val remoteDirPath = projectDir.path.split("Flixclusive/").last()
                     val (localSrcDir, remoteSrcDir) = getSrcDir(this@subprojects)
 

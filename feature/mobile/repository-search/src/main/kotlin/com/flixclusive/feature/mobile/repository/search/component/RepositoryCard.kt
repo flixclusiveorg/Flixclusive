@@ -118,7 +118,7 @@ private fun RepositoryCardPreview() {
                 repository = Repository(
                     "rhenwinch",
                     "providers",
-                    "https://github.com/rhenwinch/providers",
+                    "https://github.com/flixclusiveorg/providers",
                     ""
                 ),
                 isSelected = true,
