@@ -96,5 +96,5 @@ body:
           required: true
         - label: I have written a short but informative title.
           required: true
-        - label: I have updated the app to the **[pre-release version](https://github.com/rhenwinch/Flixclusive/releases/tag/pre-release)**.
+        - label: I have updated the app to the **[pre-release version](https://github.com/flixclusiveorg/Flixclusive/releases/tag/pre-release)**.
           required: true
