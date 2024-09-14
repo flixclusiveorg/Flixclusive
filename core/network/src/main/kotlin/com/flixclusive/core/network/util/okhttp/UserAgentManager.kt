@@ -33,7 +33,7 @@ class UserAgentManager(
     }
 
     private val userAgentSourceUrl
-        = "https://flixclusive.github.io/user-agents/user-agents.min.json"
+        = "https://flixclusiveorg.github.io/user-agents/user-agents.min.json"
 
     fun loadLatestUserAgents() {
         val desktopKey = "desktop"
