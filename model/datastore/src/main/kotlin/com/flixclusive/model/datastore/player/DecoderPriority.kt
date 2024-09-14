@@ -1,7 +1,7 @@
 package com.flixclusive.model.datastore.player
 
 import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 enum class DecoderPriority {
     PREFER_DEVICE,
@@ -10,9 +10,9 @@ enum class DecoderPriority {
 
     fun toUiText(): UiText {
         return when (this) {
-            PREFER_DEVICE -> UiText.StringResource(UtilR.string.decoder_prefer_device)
-            PREFER_APP -> UiText.StringResource(UtilR.string.decoder_prefer_app)
-            DEVICE_ONLY -> UiText.StringResource(UtilR.string.decoder_device_only)
+            PREFER_DEVICE -> UiText.StringResource(LocaleR.string.decoder_prefer_device)
+            PREFER_APP -> UiText.StringResource(LocaleR.string.decoder_prefer_app)
+            DEVICE_ONLY -> UiText.StringResource(LocaleR.string.decoder_device_only)
         }
     }
 }

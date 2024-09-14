@@ -7,12 +7,12 @@ import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.util.FilmType
 import java.util.Locale
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 fun formatMinutes(totalMinutes: Int?): UiText {
     if (totalMinutes == null || totalMinutes <= 0)
-        return UiText.StringResource(UtilR.string.no_runtime)
+        return UiText.StringResource(LocaleR.string.no_runtime)
 
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
@@ -24,7 +24,7 @@ fun formatMinutes(totalMinutes: Int?): UiText {
 }
 
 fun formatRating(number: Double?): UiText {
-    val noRatingsMessage = UiText.StringResource(UtilR.string.no_ratings)
+    val noRatingsMessage = UiText.StringResource(LocaleR.string.no_ratings)
 
     if (number == null)
         return noRatingsMessage
@@ -52,7 +52,7 @@ fun formatTvRuntime(
                 }
 
                 if(totalSeasons > 0) {
-                    append(getString(UtilR.string.season_runtime_formatter, totalSeasons))
+                    append(getString(LocaleR.string.season_runtime_formatter, totalSeasons))
 
                     if(totalSeasons > 1)
                         append("s")
@@ -62,7 +62,7 @@ fun formatTvRuntime(
 
 
                 if(totalEpisodes > 0) {
-                    append(getString(UtilR.string.episode_runtime_formatter, totalEpisodes))
+                    append(getString(LocaleR.string.episode_runtime_formatter, totalEpisodes))
 
                     if(totalEpisodes > 1)
                         append("s")
@@ -78,14 +78,14 @@ fun formatPlayButtonLabel(
     watchHistoryItem: WatchHistoryItem?,
 ): UiText {
     if (watchHistoryItem == null)
-        return UiText.StringResource(UtilR.string.watch)
+        return UiText.StringResource(LocaleR.string.watch)
 
     return when (watchHistoryItem.film.filmType) {
         FilmType.MOVIE -> {
             if (watchHistoryItem.episodesWatched.last().isFinished) {
-                UiText.StringResource(UtilR.string.watch_again)
+                UiText.StringResource(LocaleR.string.watch_again)
             } else {
-                UiText.StringResource(UtilR.string.continue_watching)
+                UiText.StringResource(LocaleR.string.continue_watching)
             }
         }
 
@@ -93,9 +93,9 @@ fun formatPlayButtonLabel(
             val (season, episode) = getNextEpisodeToWatch(watchHistoryItem = watchHistoryItem)
 
             if (season == null) {
-                UiText.StringResource(UtilR.string.watch_again)
+                UiText.StringResource(LocaleR.string.watch_again)
             } else {
-                UiText.StringResource(UtilR.string.continue_watching_tv_show, season, episode!!)
+                UiText.StringResource(LocaleR.string.continue_watching_tv_show, season, episode!!)
             }
         }
     }

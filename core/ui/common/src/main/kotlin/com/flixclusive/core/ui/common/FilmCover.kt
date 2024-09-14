@@ -18,7 +18,7 @@ import coil.compose.AsyncImage
 import coil.imageLoader
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 enum class FilmCover(val ratio: Float) {
     Backdrop(16F / 9F),
@@ -55,7 +55,7 @@ enum class FilmCover(val ratio: Float) {
             imageLoader = LocalContext.current.imageLoader,
             error = imagePlaceholder,
             contentScale = contentScale,
-            contentDescription = contentDescription ?: stringResource(id = UtilR.string.film_item_content_description),
+            contentDescription = contentDescription ?: stringResource(id = LocaleR.string.film_item_content_description),
             onSuccess = { onSuccess?.invoke() },
             modifier = modifier
                 .aspectRatio(ratio)

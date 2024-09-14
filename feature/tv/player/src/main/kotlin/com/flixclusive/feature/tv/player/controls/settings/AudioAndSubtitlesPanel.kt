@@ -23,6 +23,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.core.ui.tv.util.hasPressedLeft
 import com.flixclusive.feature.tv.player.controls.settings.common.ListContentHolder
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun AudioAndSubtitlesPanel(
@@ -67,8 +68,8 @@ internal fun AudioAndSubtitlesPanel(
                         false
                     },
                 initializeFocus = true,
-                contentDescription = stringResource(id = com.flixclusive.core.util.R.string.audio_icon_content_desc),
-                label = stringResource(id = com.flixclusive.core.util.R.string.audio),
+                contentDescription = stringResource(id = LocaleR.string.audio_icon_content_desc),
+                label = stringResource(id = LocaleR.string.audio),
                 items = player.availableAudios,
                 selectedIndex = player.selectedAudioIndex,
                 onItemClick = player::onAudioChange
@@ -81,8 +82,8 @@ internal fun AudioAndSubtitlesPanel(
                         isFirstItemFullyFocused = false
                         false
                     },
-                contentDescription = stringResource(id = com.flixclusive.core.util.R.string.subtitle_icon_content_desc),
-                label = stringResource(id = com.flixclusive.core.util.R.string.subtitle),
+                contentDescription = stringResource(id = LocaleR.string.subtitle_icon_content_desc),
+                label = stringResource(id = LocaleR.string.subtitle),
                 items = player.availableSubtitles,
                 selectedIndex = player.selectedSubtitleIndex,
                 onItemClick = player::onSubtitleChange

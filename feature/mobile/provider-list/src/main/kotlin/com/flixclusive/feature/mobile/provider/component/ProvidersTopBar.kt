@@ -67,7 +67,7 @@ import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 private val SearchIconSize = 18.dp
@@ -150,7 +150,7 @@ private fun CollapsedTopBar(
                 .padding(end = 15.dp, start = 5.dp)
         ) {
             Text(
-                text = stringResource(id = UtilR.string.providers),
+                text = stringResource(id = LocaleR.string.providers),
                 style = MaterialTheme.typography.headlineMedium,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1
@@ -162,7 +162,7 @@ private fun CollapsedTopBar(
                     RichTooltip(
                         title = {
                             Text(
-                                text = stringResource(id = UtilR.string.understanding_providers),
+                                text = stringResource(id = LocaleR.string.understanding_providers),
                                 style = LocalTextStyle.current.copy(
                                     fontSize = 18.sp
                                 )
@@ -176,12 +176,12 @@ private fun CollapsedTopBar(
                                     }
                                 }
                             ) {
-                                Text(stringResource(id = UtilR.string.ok))
+                                Text(stringResource(id = LocaleR.string.ok))
                             }
                         },
                     ) {
                         Text(
-                            text = stringResource(id = UtilR.string.tooltip_providers_screen_help_guide)
+                            text = stringResource(id = LocaleR.string.tooltip_providers_screen_help_guide)
                         )
                     }
                 },
@@ -195,7 +195,7 @@ private fun CollapsedTopBar(
                 ) {
                     Icon(
                         painter = painterResource(id = UiCommonR.drawable.help),
-                        contentDescription = stringResource(id = UtilR.string.help)
+                        contentDescription = stringResource(id = LocaleR.string.help)
                     )
                 }
             }
@@ -217,7 +217,7 @@ private fun CollapsedTopBar(
         ) {
             Icon(
                 painter = painterResource(id = UiCommonR.drawable.search_outlined),
-                contentDescription = stringResource(id = UtilR.string.search_for_providers),
+                contentDescription = stringResource(id = LocaleR.string.search_for_providers),
                 modifier = Modifier
                     .size(SearchIconSize)
             )
@@ -254,20 +254,20 @@ private fun ExpandedTopBar(
         leadingIcon = {
             Icon(
                 painter = painterResource(UiCommonR.drawable.search_outlined),
-                contentDescription = stringResource(UtilR.string.search),
+                contentDescription = stringResource(LocaleR.string.search),
             )
         },
         trailingIcon = {
             IconButton(onClick = onCollapseTopBar) {
                 Icon(
                     painter = painterResource(UiCommonR.drawable.round_close_24),
-                    contentDescription = stringResource(UtilR.string.close_label)
+                    contentDescription = stringResource(LocaleR.string.close_label)
                 )
             }
         },
         placeholder = {
             Text(
-                text = stringResource(UtilR.string.search_for_providers),
+                text = stringResource(LocaleR.string.search_for_providers),
                 style = MaterialTheme.typography.bodyMedium,
                 color = LocalContentColor.current.onMediumEmphasis(),
                 overflow = TextOverflow.Ellipsis,
@@ -315,12 +315,12 @@ private fun TopBarPreview() {
                         onClick = { /*TODO*/ },
                         containerColor = MaterialTheme.colorScheme.surface,
                         text = {
-                            Text(text = stringResource(UtilR.string.add_provider))
+                            Text(text = stringResource(LocaleR.string.add_provider))
                         },
                         icon = {
                             Icon(
                                 painter = painterResource(id = UiCommonR.drawable.round_add_24),
-                                contentDescription = stringResource(UtilR.string.add_provider)
+                                contentDescription = stringResource(LocaleR.string.add_provider)
                             )
                         }
                     )

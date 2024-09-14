@@ -34,7 +34,7 @@ import com.flixclusive.feature.mobile.player.controls.common.BasePlayerDialog
 import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
 import com.flixclusive.model.datastore.player.ResizeMode
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 internal const val ELEVATED_VIDEO_SETTINGS_PANEL = 0.4F
 
@@ -62,7 +62,7 @@ internal fun PlayerSettingsDialog(
     val settingsList = listOf(
         VideoSettingItem(
             iconId = PlayerR.drawable.speedometer,
-            labelId = UtilR.string.playback_speed,
+            labelId = LocaleR.string.playback_speed,
             items = availablePlaybackSpeeds.map { "${it}x" },
             selected = availablePlaybackSpeeds.indexOf(player.playbackSpeed),
             onClick = { i, _ ->
@@ -70,14 +70,14 @@ internal fun PlayerSettingsDialog(
 
                 showSnackbar(
                     "${player.playbackSpeed}x",
-                    UtilR.string.playback_speed_snackbar_message,
+                    LocaleR.string.playback_speed_snackbar_message,
                     PlayerSnackbarMessageType.PlaybackSpeed
                 )
             }
         ),
         VideoSettingItem(
             iconId = PlayerR.drawable.resize_mode_icon,
-            labelId = UtilR.string.resize_mode,
+            labelId = LocaleR.string.resize_mode,
             items = resizeModes,
             selected = state.selectedResizeMode,
             onClick = { i, _ ->
@@ -86,7 +86,7 @@ internal fun PlayerSettingsDialog(
         ),
         VideoSettingItem(
             iconId = PlayerR.drawable.sync_black_24dp,
-            labelId = UtilR.string.sync_subtitles,
+            labelId = LocaleR.string.sync_subtitles,
             content = {
                 SubtitleSyncPanel()
             }
@@ -149,7 +149,7 @@ internal fun PlayerSettingsDialog(
         PlayerDialogButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd),
-            label = stringResource(UtilR.string.close_label),
+            label = stringResource(LocaleR.string.close_label),
             onClick = onDismissSheet
         )
     }

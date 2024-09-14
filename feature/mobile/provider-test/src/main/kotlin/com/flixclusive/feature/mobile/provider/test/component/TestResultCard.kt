@@ -63,7 +63,7 @@ import com.flixclusive.domain.provider.test.ProviderTestResult
 import com.flixclusive.domain.provider.test.TestStatus
 import kotlin.random.Random
 import kotlin.time.Duration
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 private val ButtonHeight = 40.dp
 private val CardShape = RoundedCornerShape(8.dp)
@@ -182,7 +182,7 @@ private fun TestResultCardHeader(
 
                 Icon(
                     imageVector = icon,
-                    contentDescription = stringResource(id = UtilR.string.expand_card_icon_content_desc),
+                    contentDescription = stringResource(id = LocaleR.string.expand_card_icon_content_desc),
                     tint = LocalContentColor.current.onMediumEmphasis(0.8F)
                 )
             }
@@ -249,7 +249,7 @@ private fun TestResultCardContent(
                                             testName = output.name.asString(context),
                                             otherLabels = otherLabels,
                                             fullLog = output.fullLog?.asString(context)
-                                                ?: context.getString(UtilR.string.no_full_log)
+                                                ?: context.getString(LocaleR.string.no_full_log)
                                         )
                                     )
                                 }
@@ -275,8 +275,8 @@ private fun TestOutputLog(
     val shortLog = remember(output.shortLog) {
         if (output.status != TestStatus.RUNNING) {
             output.shortLog?.asString(context)
-                ?: context.getString(UtilR.string.no_short_log)
-        } else context.getString(UtilR.string.asserting)
+                ?: context.getString(LocaleR.string.no_short_log)
+        } else context.getString(LocaleR.string.asserting)
     }
 
     Row(

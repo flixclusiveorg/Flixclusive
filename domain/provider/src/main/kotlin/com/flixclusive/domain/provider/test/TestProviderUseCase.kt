@@ -25,7 +25,7 @@ import org.koitharu.pausingcoroutinedispatcher.pausing
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 private const val TEST_DELAY = 1000L
 
@@ -68,7 +68,7 @@ class TestProviderUseCase @Inject constructor(
                 val apiTestCaseIndex = testOutputs.add(
                     ProviderTestCaseOutput(
                         status = TestStatus.RUNNING,
-                        name = getString(UtilR.string.ptest_get_api)
+                        name = getString(LocaleR.string.ptest_get_api)
                     )
                 )
 
@@ -140,7 +140,7 @@ class TestProviderUseCase @Inject constructor(
             updateOutput(
                 ProviderTestCaseOutput(
                     status = TestStatus.RUNNING,
-                    name = getString(UtilR.string.ptest_get_api)
+                    name = getString(LocaleR.string.ptest_get_api)
                 )
             )
 
@@ -154,9 +154,9 @@ class TestProviderUseCase @Inject constructor(
             updateOutput(
                 ProviderTestCaseOutput(
                     status = TestStatus.SUCCESS,
-                    name = getString(UtilR.string.ptest_get_api),
+                    name = getString(LocaleR.string.ptest_get_api),
                     timeTaken = 0.milliseconds,
-                    shortLog = getString(UtilR.string.ptest_success_get_api),
+                    shortLog = getString(LocaleR.string.ptest_success_get_api),
                     fullLog = createString("${api.javaClass.simpleName} [HASHCODE:${api.hashCode()}]")
                 )
             )
@@ -166,9 +166,9 @@ class TestProviderUseCase @Inject constructor(
             updateOutput(
                 ProviderTestCaseOutput(
                     status = TestStatus.FAILURE,
-                    name = getString(UtilR.string.ptest_get_api),
+                    name = getString(LocaleR.string.ptest_get_api),
                     timeTaken = 0.milliseconds,
-                    shortLog = getString(UtilR.string.ptest_error_get_api),
+                    shortLog = getString(LocaleR.string.ptest_error_get_api),
                     fullLog = createString(e.stackTraceToString())
                 )
             )

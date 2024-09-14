@@ -19,7 +19,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.model.provider.filter.Filter
 import com.flixclusive.model.provider.filter.Filter.Select.Companion.getOptionName
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 /**
  *
@@ -83,7 +83,7 @@ internal fun <T> SortItems(
 
                         Icon(
                             painter = painterResource(id = iconId),
-                            contentDescription = stringResource(id = UtilR.string.sort_icon_content_desc),
+                            contentDescription = stringResource(id = LocaleR.string.sort_icon_content_desc),
                             modifier = Modifier
                                 .size(16.dp)
                                 .align(Alignment.CenterVertically)

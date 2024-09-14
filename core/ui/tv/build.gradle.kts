@@ -10,8 +10,8 @@ android {
 
 dependencies {
     api(projects.core.ui.common)
-    implementation(projects.model.film)
-    implementation(projects.model.provider)
+    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.provider)
     implementation(projects.model.database)
 
     implementation(libs.coil.compose)

@@ -33,7 +33,7 @@ import com.flixclusive.data.configuration.UpdateStatus
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.spec.DestinationStyle
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 internal object DismissibleDialog : DestinationStyle.Dialog {
     override val properties = DialogProperties(
@@ -105,7 +105,7 @@ internal fun UpdateDialog(
                         }
 
                         Text(
-                            text = stringResource(id = UtilR.string.checking_for_updates),
+                            text = stringResource(id = LocaleR.string.checking_for_updates),
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
@@ -123,7 +123,7 @@ internal fun UpdateDialog(
                     ) {
                         Icon(
                             painter = painterResource(id = UiCommonR.drawable.round_error_outline_24),
-                            contentDescription = stringResource(id = UtilR.string.error_icon_content_desc),
+                            contentDescription = stringResource(id = LocaleR.string.error_icon_content_desc),
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier
                                 .size(80.dp)
@@ -132,7 +132,7 @@ internal fun UpdateDialog(
 
                         Text(
                             text = updateStatus.errorMessage?.asString()
-                                ?: stringResource(id = UtilR.string.failed_checking_for_updates),
+                                ?: stringResource(id = LocaleR.string.failed_checking_for_updates),
                             style = MaterialTheme.typography.labelLarge,
                             textAlign = TextAlign.Center
                         )
@@ -159,7 +159,7 @@ internal fun UpdateDialog(
                         )
 
                         Text(
-                            text = stringResource(id = UtilR.string.up_to_date),
+                            text = stringResource(id = LocaleR.string.up_to_date),
                             style = MaterialTheme.typography.labelLarge,
                             textAlign = TextAlign.Center
                         )

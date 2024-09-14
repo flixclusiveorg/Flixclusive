@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.provider.info.SUB_LABEL_SIZE
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun DescriptionBlock(
@@ -27,10 +27,10 @@ internal fun DescriptionBlock(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Title(text = stringResource(id = UtilR.string.description))
+        Title(text = stringResource(id = LocaleR.string.description))
 
         Text(
-            text = description ?: stringResource(id = UtilR.string.default_description_msg),
+            text = description ?: stringResource(id = LocaleR.string.default_description_msg),
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Normal,

@@ -38,7 +38,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.player.PlayerProviderState
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -111,7 +111,7 @@ internal fun ListItem(
                     PlayerProviderState.SELECTED -> {
                         Icon(
                             imageVector = Icons.Rounded.Check,
-                            contentDescription = stringResource(UtilR.string.check_indicator_content_desc),
+                            contentDescription = stringResource(LocaleR.string.check_indicator_content_desc),
                         )
                     }
                 }

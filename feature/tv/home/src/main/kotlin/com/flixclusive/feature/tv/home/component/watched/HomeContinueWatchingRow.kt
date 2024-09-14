@@ -29,7 +29,7 @@ import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.film.Film
 import kotlinx.coroutines.launch
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 internal const val HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT = "watchedRow=%d, watchedColumn=%d"
 
@@ -56,7 +56,7 @@ internal fun HomeContinueWatchingRow(
             .heightIn(min = FilmPadding.bottom + 18.dp + FilmCardHeight)
     ) {
         Text(
-            text = stringResource(id = UtilR.string.continue_watching),
+            text = stringResource(id = LocaleR.string.continue_watching),
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.Black,
                 fontSize = 40.sp

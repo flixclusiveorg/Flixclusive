@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.feature.mobile.settings.component.dialog.BaseSettingsDialog
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.network.DoHPreference
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun AdvancedDialogDoH(
@@ -48,7 +48,7 @@ internal fun AdvancedDialogDoH(
     }
 
     BaseSettingsDialog(
-        title = stringResource(id = UtilR.string.doh),
+        title = stringResource(id = LocaleR.string.doh),
         onDismissRequest = onDismissRequest,
     ) {
         LazyColumn(

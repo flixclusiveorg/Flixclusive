@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 /**
  *
@@ -35,8 +35,8 @@ fun TextAlertDialog(
     label: CharSequence,
     description: CharSequence,
     dialogProperties: DialogProperties = DialogProperties(),
-    confirmButtonLabel: String = stringResource(id = UtilR.string.ok),
-    dismissButtonLabel: String? = stringResource(id = UtilR.string.cancel),
+    confirmButtonLabel: String = stringResource(id = LocaleR.string.ok),
+    dismissButtonLabel: String? = stringResource(id = LocaleR.string.cancel),
     dismissOnConfirm: Boolean = true,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,

@@ -56,19 +56,20 @@ import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemFocusedRequester
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 import kotlinx.coroutines.delay
+import com.flixclusive.core.locale.R as LocaleR
 
 internal val tvNavigationItems = listOf(
     AppNavigationItem(
         screen = TvNavGraphs.home,
         iconSelected = R.drawable.home,
         iconUnselected = R.drawable.home_outlined,
-        label = com.flixclusive.core.util.R.string.home
+        label = LocaleR.string.home
     ),
     AppNavigationItem(
         screen = TvNavGraphs.search,
         iconSelected = R.drawable.search,
         iconUnselected = R.drawable.search_outlined,
-        label = com.flixclusive.core.util.R.string.search
+        label = LocaleR.string.search
     ),
 )
 

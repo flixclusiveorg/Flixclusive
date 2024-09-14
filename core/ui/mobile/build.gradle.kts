@@ -11,8 +11,8 @@ android {
 dependencies {
     api(projects.core.ui.common)
 
-    implementation(projects.model.provider)
-    implementation(projects.model.film)
+    implementation(libs.stubs.model.provider)
+    implementation(libs.stubs.model.film)
 
     implementation(libs.coil.compose)
     implementation(libs.compose.material3)

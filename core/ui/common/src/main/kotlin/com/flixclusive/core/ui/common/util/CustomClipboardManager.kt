@@ -9,7 +9,7 @@ import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 class CustomClipboardManager(
@@ -23,7 +23,7 @@ class CustomClipboardManager(
         clipboard.setText(AnnotatedString(text))
 
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2)
-            context.showToast(toastMessage ?: context.getString(UtilR.string.copied_to_clipboard), Toast.LENGTH_SHORT)
+            context.showToast(toastMessage ?: context.getString(LocaleR.string.copied_to_clipboard), Toast.LENGTH_SHORT)
     }
 
     companion object {

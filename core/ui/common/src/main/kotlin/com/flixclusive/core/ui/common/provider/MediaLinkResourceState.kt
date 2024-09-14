@@ -8,7 +8,7 @@ import com.flixclusive.core.ui.common.provider.MediaLinkResourceState.Fetching
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState.Idle
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState.Success
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState.Unavailable
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 /**
@@ -30,10 +30,10 @@ sealed class MediaLinkResourceState(val message: UiText) {
 
     companion object {
         @StringRes
-        private val defaultUnavailableMessageId = UtilR.string.source_data_dialog_state_unavailable_default
+        private val defaultUnavailableMessageId = LocaleR.string.source_data_dialog_state_unavailable_default
 
         @StringRes
-        private val defaultErrorMessageId = UtilR.string.source_data_dialog_state_error_default
+        private val defaultErrorMessageId = LocaleR.string.source_data_dialog_state_error_default
     }
 
     /**
@@ -50,7 +50,7 @@ sealed class MediaLinkResourceState(val message: UiText) {
         message: UiText? = null,
     ) : MediaLinkResourceState(
         message = message
-            ?: UiText.StringResource(UtilR.string.source_data_dialog_state_fetching)
+            ?: UiText.StringResource(LocaleR.string.source_data_dialog_state_fetching)
     ) {
         /**
          * Constructor with a string resource ID for the message.
@@ -71,7 +71,7 @@ sealed class MediaLinkResourceState(val message: UiText) {
         message: UiText? = null,
     ) : MediaLinkResourceState(
         message = message
-            ?: UiText.StringResource(UtilR.string.source_data_dialog_state_extracting)
+            ?: UiText.StringResource(LocaleR.string.source_data_dialog_state_extracting)
     ) {
         /**
          * Constructor with a custom string message.
@@ -132,6 +132,6 @@ sealed class MediaLinkResourceState(val message: UiText) {
      */
     data object Success :
         MediaLinkResourceState(
-            message = UiText.StringResource(UtilR.string.source_data_dialog_state_success)
+            message = UiText.StringResource(LocaleR.string.source_data_dialog_state_success)
         )
 }

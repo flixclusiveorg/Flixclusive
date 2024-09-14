@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.provider.test.SortOption
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,7 +126,7 @@ private fun SortTypeTextButton(
 
                     Icon(
                         painter = painterResource(id = iconId),
-                        contentDescription = stringResource(id = com.flixclusive.core.util.R.string.sort_icon_content_desc),
+                        contentDescription = stringResource(id = LocaleR.string.sort_icon_content_desc),
                         modifier = Modifier
                             .size(16.dp)
                             .align(Alignment.CenterVertically)

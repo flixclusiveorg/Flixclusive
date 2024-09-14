@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 sealed class UpdateStatus(
     val errorMessage: UiText? = null
@@ -123,7 +123,7 @@ class AppConfigurationManager @Inject constructor(
             }
 
             _configurationStatus.update {
-                Resource.Failure(UtilR.string.failed_to_init_app)
+                Resource.Failure(LocaleR.string.failed_to_init_app)
             }
         }
     }

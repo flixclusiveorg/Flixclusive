@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @HiltViewModel
 internal class RepositoryScreenViewModel @Inject constructor(
@@ -120,11 +120,11 @@ internal class RepositoryScreenViewModel @Inject constructor(
             if (failedToInstallProviders.isNotEmpty()) {
                 val failedProviders = failedToInstallProviders.joinToString(", ")
 
-                snackbar = Resource.Failure(UiText.StringResource(UtilR.string.failed_to_load_provider, failedProviders))
+                snackbar = Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_load_provider, failedProviders))
                 return@launch
             }
 
-            snackbar = Resource.Failure(UiText.StringResource(UtilR.string.all_providers_installed))
+            snackbar = Resource.Failure(UiText.StringResource(LocaleR.string.all_providers_installed))
         }
     }
 
@@ -150,7 +150,7 @@ internal class RepositoryScreenViewModel @Inject constructor(
             onlineProviderMap[providerData] = ProviderInstallationStatus.Installed
         } else {
             snackbar =
-                Resource.Failure(UiText.StringResource(UtilR.string.failed_to_update_provider))
+                Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_update_provider))
         }
     }
 
@@ -163,7 +163,7 @@ internal class RepositoryScreenViewModel @Inject constructor(
                 needsDownload = true
             )
         } catch (_: Exception) {
-            snackbar = Resource.Failure(UiText.StringResource(UtilR.string.failed_to_load_provider, providerData.name))
+            snackbar = Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_load_provider, providerData.name))
             onlineProviderMap[providerData] = ProviderInstallationStatus.NotInstalled
             return false
         }

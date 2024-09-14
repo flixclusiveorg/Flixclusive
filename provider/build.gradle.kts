@@ -12,9 +12,9 @@ android {
 dependencies {
     api(libs.jsoup)
     api(libs.okhttp)
-    api(projects.core.util)
-    api(projects.model.provider)
-    api(projects.model.film)
+    api(libs.stubs.util)
+    api(libs.stubs.model.provider)
+    api(libs.stubs.model.film)
 
     implementation(libs.compose.runtime)
 }

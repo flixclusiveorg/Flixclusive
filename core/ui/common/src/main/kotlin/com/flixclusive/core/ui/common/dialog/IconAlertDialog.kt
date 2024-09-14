@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.R
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 /**
  *
@@ -40,8 +40,8 @@ fun IconAlertDialog(
     description: CharSequence,
     tint: Color = MaterialTheme.colorScheme.primary,
     dialogProperties: DialogProperties = DialogProperties(),
-    confirmButtonLabel: String = stringResource(id = UtilR.string.ok),
-    dismissButtonLabel: String? = stringResource(id = UtilR.string.cancel),
+    confirmButtonLabel: String = stringResource(id = LocaleR.string.ok),
+    dismissButtonLabel: String? = stringResource(id = LocaleR.string.cancel),
     dismissOnConfirm: Boolean = true,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
@@ -153,7 +153,7 @@ private fun CommonNoticeDialogPreview() {
             IconAlertDialog(
                 painter = painterResource(id = R.drawable.warning),
                 contentDescription = stringResource(
-                    id = UtilR.string.warning_content_description
+                    id = LocaleR.string.warning_content_description
                 ),
                 dismissButtonLabel = null,
                 description = " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus diam orci, blandit sit amet dolor nec, congue ultricies risus. Etiam porttitor bibendum elit, vitae luctus libero feugiat quis. Praesent vel finibus nisl. Ut quis libero mi. Proin molestie eros elit, in condimentum justo aliquam ut. Suspendisse gravida luctus ornare. Morbi nulla est, pretium a vestibulum nec, lobortis ac mauris. Sed viverra ipsum quis scelerisque cursus. Praesent sed libero enim. Aenean eleifend ut urna in commodo. Pellentesque pretium tempor magna, nec tempor arcu venenatis vitae. Aliquam lacinia faucibus leo, facilisis viverra sapien ullamcorper eu.\n" +
@@ -178,7 +178,7 @@ private fun CommonNoticeDialogPreviewPart2() {
         ) {
             IconAlertDialog(
                 painter = painterResource(id = R.drawable.warning),
-                contentDescription = stringResource(id = UtilR.string.warning_content_description),
+                contentDescription = stringResource(id = LocaleR.string.warning_content_description),
                 description = " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus diam orci, blandit sit amet dolor nec, congue ultricies risus. Etiam porttitor bibendum",
                 onConfirm = {},
                 onDismiss = {}

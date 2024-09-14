@@ -19,7 +19,7 @@ import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.dialog.SubtitleDialogSize
 import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
 import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun SubtitleDialogWrapper(
@@ -45,7 +45,7 @@ internal fun SubtitleDialogWrapper(
             LanguageDialog(
                 appSettings = appSettings,
                 selectedOption = remember { mutableStateOf(appSettings.subtitleLanguage) },
-                label = stringResource(id = UtilR.string.subtitles_language),
+                label = stringResource(id = LocaleR.string.subtitles_language),
                 onChange = {
                     onChangeSettings(appSettings.copy(subtitleLanguage = it.language))
                 },

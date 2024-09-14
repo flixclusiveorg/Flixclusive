@@ -9,7 +9,7 @@ import androidx.compose.ui.res.stringResource
 import com.flixclusive.feature.mobile.settings.SettingsItem
 import com.flixclusive.feature.mobile.settings.util.ProviderSettingsHelper.rememberAppSettingsProviderChanger
 import com.flixclusive.feature.mobile.settings.util.ProviderSettingsHelper.rememberLocalAppSettingsProvider
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun currentProviderSettings(): List<SettingsItem> {
@@ -18,7 +18,7 @@ internal fun currentProviderSettings(): List<SettingsItem> {
 
     return listOf(
         SettingsItem(
-            title = stringResource(UtilR.string.auto_update_providers),
+            title = stringResource(LocaleR.string.auto_update_providers),
             onClick = {
                 onChangeSettings(
                     appSettingsProvider.copy(
@@ -41,8 +41,8 @@ internal fun currentProviderSettings(): List<SettingsItem> {
             },
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.warn_on_unsafe_install),
-            description = stringResource(UtilR.string.warn_on_unsafe_install_description),
+            title = stringResource(LocaleR.string.warn_on_unsafe_install),
+            description = stringResource(LocaleR.string.warn_on_unsafe_install_description),
             onClick = {
                 onChangeSettings(
                     appSettingsProvider.copy(

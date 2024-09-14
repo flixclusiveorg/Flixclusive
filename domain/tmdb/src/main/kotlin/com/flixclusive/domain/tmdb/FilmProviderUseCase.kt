@@ -12,7 +12,7 @@ import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmDetails
 import com.flixclusive.provider.ProviderApi
 import javax.inject.Inject
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 class FilmProviderUseCase @Inject constructor(
     private val tmdbRepository: TMDBRepository,
@@ -32,11 +32,11 @@ class FilmProviderUseCase @Inject constructor(
                             Resource.Success(detailedFilm)
                         } catch (e: Exception) {
                             errorLog(e)
-                            Resource.Failure(UiText.StringResource(UtilR.string.failed_to_fetch_data_message, e.actualMessage))
+                            Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_fetch_data_message, e.actualMessage))
                         }
                     }
                 }
-                else -> Resource.Failure(UiText.StringResource(UtilR.string.film_not_found))
+                else -> Resource.Failure(UiText.StringResource(LocaleR.string.film_not_found))
             }
         }
     }

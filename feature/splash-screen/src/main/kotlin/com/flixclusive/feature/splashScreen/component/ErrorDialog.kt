@@ -27,14 +27,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ErrorDialog(
     title: String,
     description: String,
-    dismissButtonLabel: String = stringResource(UtilR.string.exit),
+    dismissButtonLabel: String = stringResource(LocaleR.string.exit),
     onDismiss: () -> Unit,
 ) {
     val buttonMinHeight = 60.dp

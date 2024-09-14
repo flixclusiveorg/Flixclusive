@@ -33,7 +33,7 @@ import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.model.provider.link.SubtitleSource
 import com.hippo.unifile.UniFile
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 @OptIn(UnstableApi::class)
@@ -76,7 +76,7 @@ internal fun PlayerAudioAndSubtitleDialog(
 
             showSnackbar(
                 localSub.language,
-                UtilR.string.subtitle_snackbar_message,
+                LocaleR.string.subtitle_snackbar_message,
                 PlayerSnackbarMessageType.Audio
             )
         }
@@ -90,8 +90,8 @@ internal fun PlayerAudioAndSubtitleDialog(
                 modifier = Modifier
                     .weight(1F),
                 icon = painterResource(id = PlayerR.drawable.record_voice_over_black_24dp),
-                contentDescription = stringResource(id = UtilR.string.audio_icon_content_desc),
-                label = stringResource(id = UtilR.string.audio),
+                contentDescription = stringResource(id = LocaleR.string.audio_icon_content_desc),
+                label = stringResource(id = LocaleR.string.audio),
                 items = player.availableAudios,
                 selectedIndex = player.selectedAudioIndex,
                 onItemClick = {
@@ -99,7 +99,7 @@ internal fun PlayerAudioAndSubtitleDialog(
                         onAudioChange(it)
                         showSnackbar(
                             availableAudios[it],
-                            UtilR.string.audio_snackbar_message,
+                            LocaleR.string.audio_snackbar_message,
                             PlayerSnackbarMessageType.Audio
                         )
                     }
@@ -119,8 +119,8 @@ internal fun PlayerAudioAndSubtitleDialog(
                 modifier = Modifier
                     .weight(1F),
                 icon = painterResource(id = PlayerR.drawable.outline_subtitles_24),
-                contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
-                label = stringResource(id = UtilR.string.subtitle),
+                contentDescription = stringResource(id = LocaleR.string.subtitle_icon_content_desc),
+                label = stringResource(id = LocaleR.string.subtitle),
                 items = player.availableSubtitles,
                 selectedIndex = player.selectedSubtitleIndex,
                 onItemClick = {
@@ -128,7 +128,7 @@ internal fun PlayerAudioAndSubtitleDialog(
                         onSubtitleChange(it)
                         showSnackbar(
                             availableSubtitles[it].language,
-                            UtilR.string.subtitle_snackbar_message,
+                            LocaleR.string.subtitle_snackbar_message,
                             PlayerSnackbarMessageType.Audio
                         )
                     }
@@ -141,7 +141,7 @@ internal fun PlayerAudioAndSubtitleDialog(
                 .align(Alignment.BottomEnd)
         ) {
             PlayerDialogButton(
-                label = stringResource(id = UtilR.string.add_own_subtitle),
+                label = stringResource(id = LocaleR.string.add_own_subtitle),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White.copy(0.3F),
                     contentColor = Color.White
@@ -164,7 +164,7 @@ internal fun PlayerAudioAndSubtitleDialog(
             )
 
             PlayerDialogButton(
-                label = stringResource(UtilR.string.close_label),
+                label = stringResource(LocaleR.string.close_label),
                 onClick = onDismissSheet
             )
         }

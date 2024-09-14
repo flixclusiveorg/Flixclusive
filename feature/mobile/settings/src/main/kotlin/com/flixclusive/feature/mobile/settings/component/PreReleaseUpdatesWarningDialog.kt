@@ -24,7 +24,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.theme.warningColor
 import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun PreReleaseUpdatesWarningDialog(
@@ -58,7 +58,7 @@ internal fun PreReleaseUpdatesWarningDialog(
                         .heightIn(min = buttonMinHeight)
                 ) {
                     Text(
-                        text = stringResource(id = UtilR.string.opt_in_prerelease),
+                        text = stringResource(id = LocaleR.string.opt_in_prerelease),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -80,7 +80,7 @@ internal fun PreReleaseUpdatesWarningDialog(
                         .heightIn(min = buttonMinHeight)
                 ) {
                     Text(
-                        text = stringResource(id = UtilR.string.opt_out_prerelease),
+                        text = stringResource(id = LocaleR.string.opt_out_prerelease),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Light
                     )
@@ -101,7 +101,7 @@ internal fun PreReleaseUpdatesWarningDialog(
         )
 
         Text(
-            text = stringResource(UtilR.string.warning_use_prerelease_updates),
+            text = stringResource(LocaleR.string.warning_use_prerelease_updates),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,

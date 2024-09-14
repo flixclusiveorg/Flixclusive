@@ -50,7 +50,7 @@ import com.flixclusive.core.ui.common.util.formatRating
 import com.flixclusive.model.film.Film
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.mobile.R as UiMobileR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,7 +138,7 @@ internal fun FilmPreviewBottomSheet(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Star,
-                        contentDescription = stringResource(UtilR.string.rating_icon),
+                        contentDescription = stringResource(LocaleR.string.rating_icon),
                         modifier = Modifier.scale(0.6F),
                         tint = starColor,
                     )
@@ -170,27 +170,27 @@ internal fun FilmPreviewBottomSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButtonWithLabel(
-                    labelId = UtilR.string.play,
+                    labelId = LocaleR.string.play,
                     onClick = onPlayClick
                 ) {
                     Icon(
                         painter = painterResource(UiCommonR.drawable.play),
-                        contentDescription = stringResource(UtilR.string.play_button),
+                        contentDescription = stringResource(LocaleR.string.play_button),
                         modifier = Modifier.size(33.dp)
                     )
                 }
 
                 val contentDescription = if (isInWatchlist()) {
-                    UtilR.string.added_to_watchlist_button
-                } else UtilR.string.add_to_watchlist_button
+                    LocaleR.string.added_to_watchlist_button
+                } else LocaleR.string.add_to_watchlist_button
 
                 val icon = if (isInWatchlist()) {
                     R.drawable.added_bookmark
                 } else R.drawable.add_bookmark
 
                 val label = if (isInWatchlist()) {
-                    UtilR.string.watchlisted
-                } else UtilR.string.watchlist
+                    LocaleR.string.watchlisted
+                } else LocaleR.string.watchlist
 
                 IconButtonWithLabel(
                     labelId = label,
@@ -205,12 +205,12 @@ internal fun FilmPreviewBottomSheet(
 
                 if (isInWatchHistory()) {
                     IconButtonWithLabel(
-                        labelId = UtilR.string.remove,
+                        labelId = LocaleR.string.remove,
                         onClick = onWatchHistoryButtonClick
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.delete),
-                            contentDescription = stringResource(UtilR.string.remove),
+                            contentDescription = stringResource(LocaleR.string.remove),
                             modifier = Modifier.size(33.dp)
                         )
                     }
@@ -238,14 +238,14 @@ internal fun FilmPreviewBottomSheet(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.information),
-                    contentDescription = stringResource(UtilR.string.more_details),
+                    contentDescription = stringResource(LocaleR.string.more_details),
                     modifier = Modifier
                         .scale(0.7F)
                         .padding(start = 15.dp),
                 )
 
                 Text(
-                    text = stringResource(UtilR.string.more_details),
+                    text = stringResource(LocaleR.string.more_details),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier
                         .padding(vertical = 15.dp)
@@ -254,7 +254,7 @@ internal fun FilmPreviewBottomSheet(
 
                 Icon(
                     painter = painterResource(UiMobileR.drawable.right_arrow),
-                    contentDescription = stringResource(UtilR.string.navigate_to_film),
+                    contentDescription = stringResource(LocaleR.string.navigate_to_film),
                     modifier = Modifier
                         .scale(0.7F)
                         .padding(end = 15.dp),

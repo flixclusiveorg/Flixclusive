@@ -23,7 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.feature.mobile.player.R
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun LockControls(
@@ -62,7 +62,7 @@ internal fun LockControls(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.round_lock_open_24),
-                        contentDescription = stringResource(UtilR.string.unlock_content_description),
+                        contentDescription = stringResource(LocaleR.string.unlock_content_description),
                         tint = Color.White,
                         modifier = Modifier
                             .size(40.dp)
@@ -70,7 +70,7 @@ internal fun LockControls(
                     )
 
                     Text(
-                        text = stringResource(UtilR.string.unlock_label),
+                        text = stringResource(LocaleR.string.unlock_label),
                         color = Color.White,
                         style = MaterialTheme.typography.bodySmall
                     )

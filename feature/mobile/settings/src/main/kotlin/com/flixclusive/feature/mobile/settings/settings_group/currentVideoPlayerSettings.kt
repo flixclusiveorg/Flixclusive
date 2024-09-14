@@ -21,7 +21,7 @@ import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAp
 import com.flixclusive.model.datastore.player.ResizeMode
 import java.util.Locale
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun currentVideoPlayerSettings(
@@ -37,8 +37,8 @@ internal fun currentVideoPlayerSettings(
 
     return listOf(
         SettingsItem(
-            title = stringResource(UtilR.string.release_player),
-            description = stringResource(UtilR.string.release_player_desc),
+            title = stringResource(LocaleR.string.release_player),
+            description = stringResource(LocaleR.string.release_player_desc),
             onClick = {
                 onChangeSettings(appSettings.copy(shouldReleasePlayer = !appSettings.shouldReleasePlayer))
             },
@@ -53,7 +53,7 @@ internal fun currentVideoPlayerSettings(
             }
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.reverse_player_time),
+            title = stringResource(LocaleR.string.reverse_player_time),
             onClick = {
                 onChangeSettings(appSettings.copy(isPlayerTimeReversed = !appSettings.isPlayerTimeReversed))
             },
@@ -68,8 +68,8 @@ internal fun currentVideoPlayerSettings(
             }
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.pip_mode),
-            description = stringResource(UtilR.string.pip_mode_desc),
+            title = stringResource(LocaleR.string.pip_mode),
+            description = stringResource(LocaleR.string.pip_mode_desc),
             onClick = {
                 onChangeSettings(appSettings.copy(isPiPModeEnabled = !appSettings.isPiPModeEnabled))
             },
@@ -84,8 +84,8 @@ internal fun currentVideoPlayerSettings(
             }
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.volume_booster),
-            description = stringResource(UtilR.string.volume_booster_desc),
+            title = stringResource(LocaleR.string.volume_booster),
+            description = stringResource(LocaleR.string.volume_booster_desc),
             onClick = {
                 onChangeSettings(appSettings.copy(isUsingVolumeBoost = !appSettings.isUsingVolumeBoost))
             },
@@ -100,34 +100,34 @@ internal fun currentVideoPlayerSettings(
             }
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.clear_cache_links),
-            description = stringResource(UtilR.string.cache_links_item_count, cacheLinksSize),
+            title = stringResource(LocaleR.string.clear_cache_links),
+            description = stringResource(LocaleR.string.cache_links_item_count, cacheLinksSize),
             onClick = clearCacheLinks,
             previewContent = {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.database_icon),
-                    contentDescription = stringResource(id = UtilR.string.clear_cache_content_desc),
+                    contentDescription = stringResource(id = LocaleR.string.clear_cache_content_desc),
                     tint = LocalContentColor.current.onMediumEmphasis(0.8F)
                 )
             }
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.preferred_audio_language),
+            title = stringResource(LocaleR.string.preferred_audio_language),
             description = Locale(appSettings.preferredAudioLanguage).displayLanguage,
             dialogKey = KEY_AUDIO_LANGUAGE_DIALOG,
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.preferred_quality),
+            title = stringResource(LocaleR.string.preferred_quality),
             description = appSettings.preferredQuality.qualityName.asString(),
             dialogKey = KEY_PLAYER_QUALITY_DIALOG,
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.preferred_resize_mode),
+            title = stringResource(LocaleR.string.preferred_resize_mode),
             description = selectedResizeMode,
             dialogKey = KEY_PLAYER_RESIZE_MODE_DIALOG,
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.seek_length_label),
+            title = stringResource(LocaleR.string.seek_length_label),
             description = "${appSettings.preferredSeekAmount / 1000} seconds",
             dialogKey = KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG,
         ),

@@ -44,7 +44,7 @@ import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun SubtitleSyncPanel(
@@ -71,7 +71,7 @@ internal fun SubtitleSyncPanel(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(UtilR.string.sync_subtitles),
+            text = stringResource(LocaleR.string.sync_subtitles),
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Black,
                 fontSize = 14.sp,
@@ -116,7 +116,7 @@ internal fun SubtitleSyncPanel(
         ) {
             OffsetButton(
                 drawableId = PlayerR.drawable.round_keyboard_double_arrow_left_24,
-                contentDescription = stringResource(UtilR.string.subtract_1000ms_content_description),
+                contentDescription = stringResource(LocaleR.string.subtract_1000ms_content_description),
                 changeOffset = {
                     changeOffset(player.subtitleOffset - 1000)
                 }
@@ -124,7 +124,7 @@ internal fun SubtitleSyncPanel(
 
             OffsetButton(
                 drawableId = PlayerR.drawable.chevron_left_black_24dp,
-                contentDescription = stringResource(UtilR.string.subtract_500ms_content_description),
+                contentDescription = stringResource(LocaleR.string.subtract_500ms_content_description),
                 changeOffset = {
                     changeOffset(player.subtitleOffset - 500)
                 }
@@ -132,7 +132,7 @@ internal fun SubtitleSyncPanel(
 
             OffsetButton(
                 drawableId = PlayerR.drawable.chevron_right_black_24dp,
-                contentDescription = stringResource(UtilR.string.add_500ms_content_description),
+                contentDescription = stringResource(LocaleR.string.add_500ms_content_description),
                 changeOffset = {
                     changeOffset(player.subtitleOffset + 500)
                 }
@@ -140,7 +140,7 @@ internal fun SubtitleSyncPanel(
 
             OffsetButton(
                 drawableId = PlayerR.drawable.round_keyboard_double_arrow_right_24,
-                contentDescription = stringResource(UtilR.string.add_1000ms_content_description),
+                contentDescription = stringResource(LocaleR.string.add_1000ms_content_description),
                 changeOffset = {
                     changeOffset(player.subtitleOffset + 1000)
                 }
@@ -156,7 +156,7 @@ internal fun SubtitleSyncPanel(
             Text(
                 modifier = Modifier
                     .fillMaxWidth(),
-                text = stringResource(id = UtilR.string.add_sync_offset_message),
+                text = stringResource(id = LocaleR.string.add_sync_offset_message),
                 style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = FontWeight.Black,
                     fontSize = 12.sp,
@@ -168,7 +168,7 @@ internal fun SubtitleSyncPanel(
             Text(
                 modifier = Modifier
                     .fillMaxWidth(),
-                text = stringResource(id = UtilR.string.subtract_sync_offset_message),
+                text = stringResource(id = LocaleR.string.subtract_sync_offset_message),
                 style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = FontWeight.Black,
                     fontSize = 12.sp,

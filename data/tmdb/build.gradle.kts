@@ -10,9 +10,9 @@ android {
 }
 
 dependencies {
-    api(projects.core.util)
+    api(libs.stubs.util)
     api(projects.core.locale)
-    api(projects.model.film)
+    api(libs.stubs.model.film)
 
     implementation(libs.coroutines.test)
     implementation(libs.mockk)

@@ -28,7 +28,7 @@ import com.flixclusive.core.ui.mobile.R
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 @Composable
@@ -48,7 +48,7 @@ internal fun TopCardContent(
                 Icon(
                     painter = painterResource(id = R.drawable.round_drag_indicator_24),
                     contentDescription = stringResource(
-                        id = UtilR.string.drag_icon_content_desc
+                        id = LocaleR.string.drag_icon_content_desc
                     ),
                     modifier = Modifier
                         .size(30.dp)
@@ -61,7 +61,7 @@ internal fun TopCardContent(
             placeholderModifier = Modifier.size(30.dp),
             urlImage = providerData.iconUrl,
             placeholderId = UiCommonR.drawable.provider_logo,
-            contentDescId = UtilR.string.provider_icon_content_desc,
+            contentDescId = LocaleR.string.provider_icon_content_desc,
             shape = MaterialTheme.shapes.small
         )
 
@@ -118,7 +118,7 @@ private fun ProviderDetails(
         val authors = remember {
             if (providerData.authors.size == 1) {
                 context.getString(
-                    UtilR.string.made_by_author_label_format,
+                    LocaleR.string.made_by_author_label_format,
                     providerData.authors.firstOrNull()?.name ?: "anon"
                 )
             } else {
@@ -140,7 +140,7 @@ private fun ProviderDetails(
         )
 
         Text(
-            text = providerData.providerType?.toString() ?: stringResource(UtilR.string.unknown_provider_type),
+            text = providerData.providerType?.toString() ?: stringResource(LocaleR.string.unknown_provider_type),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.titleMedium.copy(

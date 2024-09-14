@@ -27,7 +27,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.model.provider.ProviderData
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 enum class ProviderInstallationStatus {
     NotInstalled,
@@ -105,9 +105,9 @@ fun ProviderCard(
                 ) {
                     val textLabel = remember(it) {
                         when (it) {
-                            ProviderInstallationStatus.Installed -> context.getString(UtilR.string.uninstall)
-                            ProviderInstallationStatus.Outdated -> context.getString(UtilR.string.update_label)
-                            else -> context.getString(UtilR.string.install)
+                            ProviderInstallationStatus.Installed -> context.getString(LocaleR.string.uninstall)
+                            ProviderInstallationStatus.Outdated -> context.getString(LocaleR.string.update_label)
+                            else -> context.getString(LocaleR.string.install)
                         }
                     }
 

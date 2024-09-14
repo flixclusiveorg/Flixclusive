@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.model.provider.filter.Filter.Select.Companion.getOptionName
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 /**
  *
@@ -196,7 +196,7 @@ internal fun SelectDropdownMenuItem(
         if (selected) {
             Icon(
                 imageVector = Icons.Rounded.Check,
-                contentDescription = stringResource(UtilR.string.check_indicator_content_desc),
+                contentDescription = stringResource(LocaleR.string.check_indicator_content_desc),
                 modifier = Modifier.size(20.dp)
             )
         }

@@ -36,7 +36,7 @@ import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun CenterControls(
@@ -88,7 +88,7 @@ internal fun CenterControls(
     ) {
         CenterControlsButtons(
             drawableId = replaySeekIcon,
-            contentDescriptionId = UtilR.string.backward_button_content_description,
+            contentDescriptionId = LocaleR.string.backward_button_content_description,
             onClick = {
                 player.seekBack()
                 showControls(true)
@@ -147,7 +147,7 @@ internal fun CenterControls(
             ) {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.play),
-                    contentDescription = stringResource(id = UtilR.string.play_button),
+                    contentDescription = stringResource(id = LocaleR.string.play_button),
                     tint = Color.White,
                     modifier = Modifier
                         .size(42.dp)
@@ -161,7 +161,7 @@ internal fun CenterControls(
             ) {
                 Icon(
                     painter = painterResource(id = PlayerR.drawable.pause),
-                    contentDescription = stringResource(UtilR.string.pause_button),
+                    contentDescription = stringResource(LocaleR.string.pause_button),
                     tint = Color.White,
                     modifier = Modifier
                         .size(42.dp)
@@ -175,7 +175,7 @@ internal fun CenterControls(
             ) {
                 Icon(
                     painter = painterResource(id = PlayerR.drawable.round_replay_24),
-                    contentDescription = stringResource(UtilR.string.replay_button),
+                    contentDescription = stringResource(LocaleR.string.replay_button),
                     tint = Color.White
                 )
             }
@@ -183,7 +183,7 @@ internal fun CenterControls(
 
         CenterControlsButtons(
             drawableId = forwardSeekIcon,
-            contentDescriptionId = UtilR.string.forward_button_content_description,
+            contentDescriptionId = LocaleR.string.forward_button_content_description,
             onClick = {
                 player.seekForward()
                 showControls(true)

@@ -11,6 +11,6 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.okhttp)
     implementation(projects.core.ui.common)
-    implementation(projects.core.util)
+    implementation(libs.stubs.util)
     implementation(projects.data.configuration)
 }

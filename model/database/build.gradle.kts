@@ -10,6 +10,6 @@ android {
 
 dependencies {
     api(libs.gson)
-    api(projects.core.util)
-    api(projects.model.film)
+    api(libs.stubs.util)
+    api(libs.stubs.model.film)
 }

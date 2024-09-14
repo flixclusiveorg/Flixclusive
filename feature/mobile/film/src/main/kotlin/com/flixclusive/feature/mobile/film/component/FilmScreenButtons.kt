@@ -39,7 +39,7 @@ import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.film.FilmReleaseStatus
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun FilmScreenButtons(
@@ -55,8 +55,8 @@ internal fun FilmScreenButtons(
     }
     val (watchlistIcon, watchlistContentDescription) = remember(isInWatchlist) {
         val icon = if(isInWatchlist)
-            R.drawable.added_bookmark to UtilR.string.added_to_watchlist_button
-        else R.drawable.add_bookmark to UtilR.string.add_to_watchlist_button
+            R.drawable.added_bookmark to LocaleR.string.added_to_watchlist_button
+        else R.drawable.add_bookmark to LocaleR.string.add_to_watchlist_button
 
         icon
     }
@@ -109,7 +109,7 @@ internal fun FilmScreenButtons(
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.play),
-                            contentDescription = stringResource(UtilR.string.play_button)
+                            contentDescription = stringResource(LocaleR.string.play_button)
                         )
 
                         Text(
@@ -138,11 +138,11 @@ internal fun FilmScreenButtons(
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.time_circle_outlined),
-                            contentDescription = stringResource(UtilR.string.coming_soon)
+                            contentDescription = stringResource(LocaleR.string.coming_soon)
                         )
 
                         Text(
-                            text = stringResource(UtilR.string.coming_soon),
+                            text = stringResource(LocaleR.string.coming_soon),
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
@@ -181,11 +181,11 @@ private fun ComingSoonButton() {
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.added_bookmark),
-                        contentDescription = stringResource(UtilR.string.more_like_this)
+                        contentDescription = stringResource(LocaleR.string.more_like_this)
                     )
 
                     Text(
-                        text = stringResource(UtilR.string.more_like_this),
+                        text = stringResource(LocaleR.string.more_like_this),
                         style = MaterialTheme.typography.labelLarge
                     )
                 }

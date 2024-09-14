@@ -24,7 +24,7 @@ import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.feature.mobile.provider.info.SUB_LABEL_SIZE
 import com.flixclusive.model.provider.Author
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun AuthorCard(
@@ -73,7 +73,7 @@ internal fun AuthorCard(
                 placeholderModifier = Modifier.fillMaxSize(),
                 urlImage = "${author.socialLink}.png",
                 placeholderId = UiCommonR.drawable.profile_placeholder,
-                contentDescId = UtilR.string.author_icon_content_desc,
+                contentDescId = LocaleR.string.author_icon_content_desc,
             )
 
             Text(

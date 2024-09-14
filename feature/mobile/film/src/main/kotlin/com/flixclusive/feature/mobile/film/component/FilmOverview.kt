@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.film.R
 import kotlin.math.roundToInt
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 private val whitespaceLineRegex = Regex("[\\r\\n]{2,}", setOf(RegexOption.MULTILINE))
 
@@ -125,7 +125,7 @@ private fun Overview(
                     Icon(
                         painter = rememberAnimatedVectorPainter(image, !expanded),
                         contentDescription = stringResource(
-                            if (expanded) UtilR.string.overview_collapse else UtilR.string.overview_expand,
+                            if (expanded) LocaleR.string.overview_collapse else LocaleR.string.overview_expand,
                         ),
                         tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.background(Brush.radialGradient(colors = colors.asReversed())),

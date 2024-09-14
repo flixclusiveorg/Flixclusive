@@ -49,7 +49,7 @@ import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun EditUserAgentDialog(
@@ -100,7 +100,7 @@ internal fun EditUserAgentDialog(
                         .heightIn(min = buttonMinHeight)
                 ) {
                     Text(
-                        text = stringResource(id = UtilR.string.save),
+                        text = stringResource(id = LocaleR.string.save),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -122,7 +122,7 @@ internal fun EditUserAgentDialog(
                         .heightIn(min = buttonMinHeight)
                 ) {
                     Text(
-                        text = stringResource(id = UtilR.string.cancel),
+                        text = stringResource(id = LocaleR.string.cancel),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Light
                     )
@@ -131,7 +131,7 @@ internal fun EditUserAgentDialog(
         }
     ) {
         Text(
-            text = stringResource(id = UtilR.string.default_user_agent),
+            text = stringResource(id = LocaleR.string.default_user_agent),
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 17.sp
@@ -194,7 +194,7 @@ internal fun EditUserAgentDialog(
                         ) {
                             Icon(
                                 painter = painterResource(UiCommonR.drawable.round_close_24),
-                                contentDescription = stringResource(UtilR.string.clear_text_button)
+                                contentDescription = stringResource(LocaleR.string.clear_text_button)
                             )
                         }
                     }
@@ -214,7 +214,7 @@ internal fun EditUserAgentDialog(
                     .widthIn(min = 150.dp)
             ) {
                 Text(
-                    text = stringResource(id = UtilR.string.randomize),
+                    text = stringResource(id = LocaleR.string.randomize),
                 )
             }
         }

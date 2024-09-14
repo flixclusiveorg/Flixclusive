@@ -23,7 +23,7 @@ import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenViewModel
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.film.Film
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun SearchFilmsGridView(
@@ -76,7 +76,7 @@ internal fun SearchFilmsGridView(
                     .fillMaxWidth(),
                 shouldShowError = viewModel.pagingState.isError,
                 error = viewModel.error?.asString()
-                    ?: stringResource(UtilR.string.error_on_search),
+                    ?: stringResource(LocaleR.string.error_on_search),
                 onRetry = viewModel::paginateItems
             )
         }

@@ -20,7 +20,7 @@ import com.flixclusive.provider.ProviderWebViewApi
 import com.flixclusive.provider.webview.ProviderWebView
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Singleton
 class MediaLinksRepository @Inject constructor() {
@@ -96,7 +96,7 @@ class MediaLinksRepository @Inject constructor() {
         return withIOContext {
             try {
                 if (film == null)
-                    return@withIOContext Resource.Failure(UtilR.string.default_error)
+                    return@withIOContext Resource.Failure(LocaleR.string.default_error)
 
                 var i = 1
                 var watchId: String? = null
@@ -166,7 +166,7 @@ class MediaLinksRepository @Inject constructor() {
                 errorLog(e)
                 Resource.Failure(
                     UiText.StringResource(
-                        UtilR.string.failed_to_fetch_media_id_message,
+                        LocaleR.string.failed_to_fetch_media_id_message,
                         e.actualMessage
                     )
                 )

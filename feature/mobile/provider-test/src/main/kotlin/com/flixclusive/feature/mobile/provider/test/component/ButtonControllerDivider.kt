@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.domain.provider.test.TestJobState
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 @Composable
@@ -87,7 +87,7 @@ private fun RunningStateButtons(
             modifier = Modifier.weight(1F)
         ) {
             Text(
-                text = stringResource(id = UtilR.string.pause),
+                text = stringResource(id = LocaleR.string.pause),
                 style = LocalTextStyle.current.copy(
                     color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8F),
                     fontWeight = FontWeight.Bold
@@ -101,7 +101,7 @@ private fun RunningStateButtons(
             modifier = Modifier.weight(1F)
         ) {
             Text(
-                text = stringResource(id = UtilR.string.stop),
+                text = stringResource(id = LocaleR.string.stop),
                 style = LocalTextStyle.current.copy(
                     color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8F),
                     fontWeight = FontWeight.Bold
@@ -131,7 +131,7 @@ private fun PausedStateButtons(
                 .fillMaxWidth(0.5F)
         ) {
             Text(
-                text = stringResource(id = UtilR.string.resume),
+                text = stringResource(id = LocaleR.string.resume),
                 style = LocalTextStyle.current.copy(
                     fontWeight = FontWeight.Bold
                 )
@@ -160,7 +160,7 @@ private fun IdleStateButtons(
                 .fillMaxWidth(0.5F)
         ) {
             Text(
-                text = stringResource(id = UtilR.string.start),
+                text = stringResource(id = LocaleR.string.start),
                 style = LocalTextStyle.current.copy(
                     fontWeight = FontWeight.Bold
                 )

@@ -14,7 +14,7 @@ import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.provider.ProviderApi
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Singleton
 class CatalogItemsProviderUseCase @Inject constructor(
@@ -39,7 +39,7 @@ class CatalogItemsProviderUseCase @Inject constructor(
                     Resource.Success(items)
                 } catch (e: Exception) {
                     errorLog(e)
-                    Resource.Failure(UiText.StringResource(UtilR.string.failed_to_fetch_catalog_items_format_message, e.actualMessage))
+                    Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_fetch_catalog_items_format_message, e.actualMessage))
                 }
             }
             else -> tmdbRepository.paginateConfigItems(

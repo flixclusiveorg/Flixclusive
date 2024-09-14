@@ -28,7 +28,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -55,7 +55,7 @@ internal fun SearchHistoryBlock(
         ) {
             Icon(
                 painter = painterResource(id = UiCommonR.drawable.time_circle_outlined),
-                contentDescription = stringResource(UtilR.string.search_history_icon),
+                contentDescription = stringResource(LocaleR.string.search_history_icon),
                 tint = LocalContentColor.current.onMediumEmphasis(),
                 modifier = Modifier.size(16.dp)
             )
@@ -78,7 +78,7 @@ internal fun SearchHistoryBlock(
             ) {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.north_west_arrow),
-                    contentDescription = stringResource(UtilR.string.search_history_icon),
+                    contentDescription = stringResource(LocaleR.string.search_history_icon),
                     tint = LocalContentColor.current.onMediumEmphasis(0.8F),
                     modifier = Modifier.size(20.dp)
                 )

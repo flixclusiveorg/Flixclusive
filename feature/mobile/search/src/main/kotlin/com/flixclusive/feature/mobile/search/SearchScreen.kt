@@ -43,7 +43,7 @@ import com.flixclusive.feature.mobile.search.component.SearchItemRow
 import com.flixclusive.model.film.Genre
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Destination
 @Composable
@@ -71,7 +71,7 @@ internal fun SearchScreen(
                 SearchItemRow(
                     list = providersCatalogsCards,
                     showItemNames = false,
-                    rowTitle = UiText.StringResource(UtilR.string.browse_providers_catalogs),
+                    rowTitle = UiText.StringResource(LocaleR.string.browse_providers_catalogs),
                     onClick = navigator::openSeeAllScreen
                 )
             }
@@ -81,7 +81,7 @@ internal fun SearchScreen(
             SearchItemRow(
                 list = tvShowNetworkCards,
                 showItemNames = false,
-                rowTitle = UiText.StringResource(UtilR.string.browse_tv_networks),
+                rowTitle = UiText.StringResource(LocaleR.string.browse_tv_networks),
                 onClick = navigator::openSeeAllScreen
             )
         }
@@ -90,14 +90,14 @@ internal fun SearchScreen(
             SearchItemRow(
                 list = movieCompanyCards,
                 showItemNames = false,
-                rowTitle = UiText.StringResource(UtilR.string.browse_movie_companies),
+                rowTitle = UiText.StringResource(LocaleR.string.browse_movie_companies),
                 onClick = navigator::openSeeAllScreen
             )
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             Text(
-                text = stringResource(UtilR.string.browse_categories),
+                text = stringResource(LocaleR.string.browse_categories),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -116,7 +116,7 @@ internal fun SearchScreen(
                     modifier = Modifier
                         .height(LARGE_ERROR),
                     shouldShowError = true,
-                    error = genreCards.error?.asString() ?: stringResource(id = UtilR.string.failed_to_initialize_search_items),
+                    error = genreCards.error?.asString() ?: stringResource(id = LocaleR.string.failed_to_initialize_search_items),
                     onRetry = viewModel::retryLoadingCards
                 )
             }
@@ -155,7 +155,7 @@ private fun SearchBarHeader(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Text(
-            text = stringResource(id = UtilR.string.search),
+            text = stringResource(id = LocaleR.string.search),
             style = MaterialTheme.typography.headlineMedium,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
@@ -183,11 +183,11 @@ private fun SearchBarHeader(
             ) {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.search_outlined),
-                    contentDescription = stringResource(id = UtilR.string.search)
+                    contentDescription = stringResource(id = LocaleR.string.search)
                 )
 
                 Text(
-                    text = stringResource(id = UtilR.string.search_suggestion),
+                    text = stringResource(id = LocaleR.string.search_suggestion),
                     style = MaterialTheme.typography.bodyMedium,
                     color = LocalContentColor.current.onMediumEmphasis(),
                     overflow = TextOverflow.Ellipsis,

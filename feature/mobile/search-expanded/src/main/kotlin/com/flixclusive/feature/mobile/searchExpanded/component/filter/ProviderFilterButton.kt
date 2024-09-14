@@ -36,6 +36,7 @@ import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.getButtonColors
 import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.core.ui.common.R as UiCommonR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun ProviderFilterButton(
@@ -77,7 +78,7 @@ internal fun ProviderFilterButton(
                 if (isIconLoadingError) {
                     Icon(
                         painter = painterResource(id = UiCommonR.drawable.provider_logo),
-                        contentDescription = stringResource(com.flixclusive.core.util.R.string.provider_icon_content_desc),
+                        contentDescription = stringResource(LocaleR.string.provider_icon_content_desc),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .size(16.dp)
@@ -87,7 +88,7 @@ internal fun ProviderFilterButton(
 
                     AsyncImage(
                         model = imageModel,
-                        contentDescription = stringResource(com.flixclusive.core.util.R.string.provider_icon_content_desc),
+                        contentDescription = stringResource(LocaleR.string.provider_icon_content_desc),
                         onError = { isIconLoadingError = true },
                         modifier = Modifier
                             .size(16.dp)

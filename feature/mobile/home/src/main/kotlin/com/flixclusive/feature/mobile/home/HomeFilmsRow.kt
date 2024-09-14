@@ -38,7 +38,7 @@ import com.flixclusive.domain.home.PaginationStateInfo
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.core.ui.mobile.R as UiMobileR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun HomeFilmsRow(
@@ -104,7 +104,7 @@ internal fun HomeFilmsRow(
                     ) {
                         Icon(
                             painter = painterResource(id = UiMobileR.drawable.right_arrow),
-                            contentDescription = stringResource(id = UtilR.string.see_all),
+                            contentDescription = stringResource(id = LocaleR.string.see_all),
                             tint = LocalContentColor.current.onMediumEmphasis(),
                             modifier = Modifier
                                 .size(14.dp)

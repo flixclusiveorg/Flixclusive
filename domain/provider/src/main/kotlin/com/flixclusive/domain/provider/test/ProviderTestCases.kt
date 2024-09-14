@@ -22,41 +22,41 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.junit.Assert.assertNotNull
 import kotlin.time.measureTimedValue
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Suppress("MemberVisibilityCanBePrivate")
 internal object ProviderTestCases {
     val propertyTestCases = listOf(
         ProviderTestCase(
-            name = getString(UtilR.string.ptest_get_testable_film),
+            name = getString(LocaleR.string.ptest_get_testable_film),
             stopTestOnFailure = true,
             test = ::testFilmIsSafeToGet,
         ),
         ProviderTestCase(
-            name = getString(UtilR.string.ptest_get_catalog_list),
+            name = getString(LocaleR.string.ptest_get_catalog_list),
             test = ::catalogListIsSafeToGet,
         ),
         ProviderTestCase(
-            name = getString(UtilR.string.ptest_get_search_filters),
+            name = getString(LocaleR.string.ptest_get_search_filters),
             test = ::filtersAreSafeToGet,
         ),
     )
 
     val methodTestCases = listOf(
         ProviderTestCase(
-            name = getString(UtilR.string.ptest_method_get_catalog_items),
+            name = getString(LocaleR.string.ptest_method_get_catalog_items),
             test = ::methodGetCatalogItemsIsSafeToCall,
         ),
         ProviderTestCase(
-            name = getString(UtilR.string.ptest_method_get_search_items),
+            name = getString(LocaleR.string.ptest_method_get_search_items),
             test = ::methodSearchIsSafeToCall,
         ),
         ProviderTestCase(
-            name = getString(UtilR.string.ptest_method_get_film_details),
+            name = getString(LocaleR.string.ptest_method_get_film_details),
             test = ::methodGetFilmDetailsIsSafeToCall,
         ),
         ProviderTestCase(
-            name = getString(UtilR.string.ptest_method_get_links),
+            name = getString(LocaleR.string.ptest_method_get_links),
             test = ::methodGetLinksIsSafeToCall,
         ),
     )
@@ -127,7 +127,7 @@ internal object ProviderTestCases {
             TestStatus.NOT_IMPLEMENTED, TestStatus.FAILURE -> {
                 val actualNotImplementedShortLog = notImplementedShortLog?.invoke(value.error)
                     ?: value.error?.localizedMessage?.let(::createString)
-                    ?: getString(UtilR.string.ptest_error_not_implemented)
+                    ?: getString(LocaleR.string.ptest_error_not_implemented)
 
                 val actualFailedFullLog = failedFullLog?.invoke(value.error)
                     ?: createString(value.error!!.stackTraceToString())
@@ -157,9 +157,9 @@ internal object ProviderTestCases {
 
     private fun getShortLogForItemsFound(size: Int?): UiText {
         if (size == null || size == 0)
-            return getString(UtilR.string.ptest_success_items_count_found_empty)
+            return getString(LocaleR.string.ptest_success_items_count_found_empty)
 
-        return getString(UtilR.string.ptest_success_items_count_found, size)
+        return getString(LocaleR.string.ptest_success_items_count_found, size)
     }
 
     suspend fun testFilmIsSafeToGet(
@@ -168,7 +168,7 @@ internal object ProviderTestCases {
     ): ProviderTestCaseOutput {
         return assertWithMeasuredTime(
             testName = testName,
-            failedShortLog = { getString(UtilR.string.ptest_error_get_testable_film) },
+            failedShortLog = { getString(LocaleR.string.ptest_error_get_testable_film) },
             successShortLog = { createString(api.testFilm.title) },
             successFullLog = { createString(json.encodeToString(api.testFilm)) },
             assert = { assertProperty(api.testFilm) }
@@ -181,7 +181,7 @@ internal object ProviderTestCases {
     ): ProviderTestCaseOutput {
         return assertWithMeasuredTime(
             testName = testName,
-            failedShortLog = { getString(UtilR.string.ptest_error_get_catalog_list) },
+            failedShortLog = { getString(LocaleR.string.ptest_error_get_catalog_list) },
             successShortLog = { getShortLogForItemsFound(api.catalogs.size) },
             successFullLog = { createString(json.encodeToString(api.catalogs)) },
             assert = { assertProperty(api.catalogs) }
@@ -194,7 +194,7 @@ internal object ProviderTestCases {
     ): ProviderTestCaseOutput {
         return assertWithMeasuredTime(
             testName = testName,
-            failedShortLog = { getString(UtilR.string.ptest_error_get_search_filters) },
+            failedShortLog = { getString(LocaleR.string.ptest_error_get_search_filters) },
             successShortLog = { getShortLogForItemsFound(api.filters.size) },
             successFullLog = {
                 val mapOfFilters = api.filters.withIndex().associate { (index, list) ->
@@ -233,7 +233,7 @@ internal object ProviderTestCases {
                 } else "- ${api.catalogs.first().name}"
 
                 getString(
-                    UtilR.string.ptest_error_method_get_catalog_items,
+                    LocaleR.string.ptest_error_method_get_catalog_items,
                     catalogTested
                 )
             },
@@ -264,7 +264,7 @@ internal object ProviderTestCases {
                 } else "- ${api.catalogs.first().name}"
 
                 getString(
-                    UtilR.string.ptest_error_method_get_catalog_items,
+                    LocaleR.string.ptest_error_method_get_catalog_items,
                     catalogTested
                 )
             },
@@ -293,7 +293,7 @@ internal object ProviderTestCases {
             testName = testName,
             failedShortLog = {
                 getString(
-                    UtilR.string.ptest_error_method_get_film_details,
+                    LocaleR.string.ptest_error_method_get_film_details,
                     "${api.testFilm.title} [${api.testFilm.identifier}]"
                 )
             },
@@ -311,7 +311,7 @@ internal object ProviderTestCases {
             testName = testName,
             failedShortLog = {
                 getString(
-                    UtilR.string.ptest_error_method_get_links,
+                    LocaleR.string.ptest_error_method_get_links,
                     "${api.testFilm.title} [${api.testFilm.identifier}]"
                 )
             },

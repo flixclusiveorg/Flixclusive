@@ -24,7 +24,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -69,7 +69,7 @@ internal fun SeasonBlock(
         onClick = onSeasonChange
     ) {
         Text(
-            text = stringResource(UtilR.string.season_number_formatter, seasonNumber),
+            text = stringResource(LocaleR.string.season_number_formatter, seasonNumber),
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             ),

@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun Header(
@@ -38,9 +38,9 @@ internal fun Header(
     val appNameUppercase = remember { appName.uppercase() }
     val version = versionName + (if (isOnPreRelease) "-[$commitVersion]" else "")
     val mode = when {
-        isInDebugMode -> stringResource(id =  UtilR.string.debug)
-        isOnPreRelease -> stringResource(id =  UtilR.string.pre_release)
-        else -> stringResource(id =  UtilR.string.release)
+        isInDebugMode -> stringResource(id =  LocaleR.string.debug)
+        isOnPreRelease -> stringResource(id =  LocaleR.string.pre_release)
+        else -> stringResource(id =  LocaleR.string.release)
     }
 
     Column(
@@ -55,7 +55,7 @@ internal fun Header(
     ) {
         Image(
             painter = painterResource(id = UiCommonR.mipmap.ic_launcher_foreground),
-            contentDescription = stringResource(UtilR.string.flixclusive_icon_content_desc),
+            contentDescription = stringResource(LocaleR.string.flixclusive_icon_content_desc),
             modifier = Modifier
                 .scale(2F)
         )

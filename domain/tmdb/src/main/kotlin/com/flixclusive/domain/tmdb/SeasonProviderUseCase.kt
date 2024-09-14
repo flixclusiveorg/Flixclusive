@@ -8,7 +8,7 @@ import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Season
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 class SeasonProviderUseCase @Inject constructor(
     private val tmdbRepository: TMDBRepository,
@@ -17,7 +17,7 @@ class SeasonProviderUseCase @Inject constructor(
     fun asFlow(tvShow: TvShow, seasonNumber: Int) = flow {
         emit(Resource.Loading)
 
-        val noSeasonFoundError = Resource.Failure(UiText.StringResource(UtilR.string.failed_to_fetch_season_message))
+        val noSeasonFoundError = Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_fetch_season_message))
 
         if (!tvShow.isFromTmdb) {
             val season = tvShow.seasons
@@ -54,7 +54,7 @@ class SeasonProviderUseCase @Inject constructor(
     }
 
     suspend operator fun invoke(tvShow: TvShow, seasonNumber: Int): Resource<Season> {
-        val noSeasonFoundError = Resource.Failure(UiText.StringResource(UtilR.string.failed_to_fetch_season_message))
+        val noSeasonFoundError = Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_fetch_season_message))
 
         if (!tvShow.isFromTmdb) {
             val season = tvShow.seasons

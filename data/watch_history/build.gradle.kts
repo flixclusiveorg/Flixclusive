@@ -9,7 +9,7 @@ android {
 }
 
 dependencies {
-    api(projects.core.util)
+    api(libs.stubs.util)
     api(projects.core.locale)
     api(projects.model.database)
 

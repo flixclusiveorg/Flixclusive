@@ -104,7 +104,7 @@ dependencies {
     implementation(projects.data.watchlist)
     implementation(projects.domain.provider)
     implementation(projects.domain.tmdb)
-    implementation(projects.model.provider)
+    implementation(libs.stubs.model.provider)
 
     implementation(projects.service)
 

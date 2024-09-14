@@ -50,7 +50,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @SuppressLint("UnusedCrossfadeTargetStateParameter")
 @Composable
@@ -113,12 +113,12 @@ private fun CollapsedTopBar(
         IconButton(onClick = onNavigationIconClick) {
             Icon(
                 painter = painterResource(UiCommonR.drawable.left_arrow),
-                contentDescription = stringResource(UtilR.string.navigate_up)
+                contentDescription = stringResource(LocaleR.string.navigate_up)
             )
         }
 
         Text(
-            text = stringResource(id = UtilR.string.repository),
+            text = stringResource(id = LocaleR.string.repository),
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontWeight = FontWeight.SemiBold
             ),
@@ -132,7 +132,7 @@ private fun CollapsedTopBar(
         IconButton(onClick = onExpandTopBar) {
             Icon(
                 painter = painterResource(UiCommonR.drawable.search_outlined),
-                contentDescription = stringResource(UtilR.string.search_for_providers),
+                contentDescription = stringResource(LocaleR.string.search_for_providers),
             )
         }
     }
@@ -167,20 +167,20 @@ private fun ExpandedTopBar(
         leadingIcon = {
             Icon(
                 painter = painterResource(UiCommonR.drawable.search_outlined),
-                contentDescription = stringResource(UtilR.string.search),
+                contentDescription = stringResource(LocaleR.string.search),
             )
         },
         trailingIcon = {
             IconButton(onClick = onCollapseTopBar) {
                 Icon(
                     painter = painterResource(UiCommonR.drawable.round_close_24),
-                    contentDescription = stringResource(UtilR.string.close_label)
+                    contentDescription = stringResource(LocaleR.string.close_label)
                 )
             }
         },
         placeholder = {
             Text(
-                text = stringResource(UtilR.string.search_for_providers),
+                text = stringResource(LocaleR.string.search_for_providers),
                 style = MaterialTheme.typography.bodyMedium,
                 color = LocalContentColor.current.onMediumEmphasis(),
                 overflow = TextOverflow.Ellipsis,

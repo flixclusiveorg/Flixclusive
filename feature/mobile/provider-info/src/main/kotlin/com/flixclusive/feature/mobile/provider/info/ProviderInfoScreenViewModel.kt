@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @HiltViewModel
 internal class ProviderInfoScreenViewModel @Inject constructor(
@@ -106,7 +106,7 @@ internal class ProviderInfoScreenViewModel @Inject constructor(
         } catch (_: Exception) {
             snackbar = Resource.Failure(
                 UiText.StringResource(
-                    UtilR.string.failed_to_load_provider,
+                    LocaleR.string.failed_to_load_provider,
                     oldProviderData.name
                 )
             )
@@ -129,7 +129,7 @@ internal class ProviderInfoScreenViewModel @Inject constructor(
             providerInstallationStatus = ProviderInstallationStatus.Installed
         } else {
             snackbar =
-                Resource.Failure(UiText.StringResource(UtilR.string.failed_to_update_provider))
+                Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_update_provider))
         }
     }
 

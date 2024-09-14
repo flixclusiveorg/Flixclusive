@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 private typealias VersionCode = Long
@@ -63,16 +63,16 @@ class ProviderUpdaterUseCase @Inject constructor(
                 if (res == 0) return
 
                 if (res == -1) {
-                    context.getString(UtilR.string.failed_to_auto_update_providers_error_message)
+                    context.getString(LocaleR.string.failed_to_auto_update_providers_error_message)
                 } else {
-                    context.getString(UtilR.string.providers_updated_format,
+                    context.getString(LocaleR.string.providers_updated_format,
                         updatableProviders)
                 }
             }
             outdatedProviders.size > 0 -> {
-                context.getString(UtilR.string.updates_out_now_provider_format, updatableProviders)
+                context.getString(LocaleR.string.updates_out_now_provider_format, updatableProviders)
             }
-            else -> context.getString(UtilR.string.all_providers_updated)
+            else -> context.getString(LocaleR.string.all_providers_updated)
         }
 
         context.notify(
@@ -81,7 +81,7 @@ class ProviderUpdaterUseCase @Inject constructor(
             channelName = CHANNEL_UPDATER_NAME,
             shouldInitializeChannel = !notificationChannelHasBeenInitialized
         ) {
-            setContentTitle(context.getString(UtilR.string.flixclusive_providers))
+            setContentTitle(context.getString(LocaleR.string.flixclusive_providers))
             setContentText(notificationBody)
             setSmallIcon(UiCommonR.drawable.provider_logo)
             setOnlyAlertOnce(false)

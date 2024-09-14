@@ -12,5 +12,5 @@ dependencies {
     api(libs.dataStore.preferences)
     api(projects.model.datastore)
 
-    implementation(projects.core.util)
+    implementation(libs.stubs.util)
 }

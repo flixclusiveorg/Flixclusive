@@ -4,7 +4,7 @@ import android.content.Context
 import com.flixclusive.core.locale.Language
 import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.model.provider.link.SubtitleSource
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Suppress("MemberVisibilityCanBePrivate")
 object PlayerTracksHelper {
@@ -35,7 +35,7 @@ object PlayerTracksHelper {
         return listOf(
             Subtitle(
                 url = "",
-                language = context.getString(UtilR.string.off_subtitles),
+                language = context.getString(LocaleR.string.off_subtitles),
                 type = SubtitleSource.EMBEDDED
             )
         ) + this

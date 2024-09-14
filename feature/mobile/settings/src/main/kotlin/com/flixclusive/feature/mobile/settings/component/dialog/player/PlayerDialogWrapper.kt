@@ -31,7 +31,7 @@ import com.flixclusive.model.datastore.player.DecoderPriority
 import com.flixclusive.model.datastore.player.PlayerQuality
 import com.flixclusive.model.datastore.player.ResizeMode
 import kotlinx.coroutines.launch
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun PlayerDialogWrapper(
@@ -47,11 +47,11 @@ internal fun PlayerDialogWrapper(
     when {
         openedDialogMap[KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG] == true -> {
             CommonSettingsDialog(
-                label = stringResource(id = UtilR.string.preferred_quality),
+                label = stringResource(id = LocaleR.string.preferred_quality),
                 options = availableSeekIncrementMs,
                 selectedOption = remember { mutableStateOf(appSettings.preferredSeekAmount) },
                 optionLabelExtractor = {
-                    stringResource(UtilR.string.seek_seconds_format, it.div(1000))
+                    stringResource(LocaleR.string.seek_seconds_format, it.div(1000))
                 },
                 onChange = {
                     onChangeSettings(appSettings.copy(preferredSeekAmount = it))
@@ -63,7 +63,7 @@ internal fun PlayerDialogWrapper(
         }
         openedDialogMap[KEY_PLAYER_QUALITY_DIALOG] == true -> {
             CommonSettingsDialog(
-                label = stringResource(id = UtilR.string.preferred_quality),
+                label = stringResource(id = LocaleR.string.preferred_quality),
                 options = PlayerQuality.entries,
                 selectedOption = remember { mutableStateOf(appSettings.preferredQuality) },
                 optionLabelExtractor = { it.qualityName.asString() },
@@ -77,7 +77,7 @@ internal fun PlayerDialogWrapper(
         }
         openedDialogMap[KEY_PLAYER_RESIZE_MODE_DIALOG] == true -> {
             CommonSettingsDialog(
-                label = stringResource(id = UtilR.string.preferred_resize_mode),
+                label = stringResource(id = LocaleR.string.preferred_resize_mode),
                 options = remember { ResizeMode.entries.map { it.ordinal } },
                 selectedOption = remember { mutableStateOf(appSettings.preferredResizeMode) },
                 optionLabelExtractor = { ResizeMode.entries[it].toString() },
@@ -91,17 +91,17 @@ internal fun PlayerDialogWrapper(
         }
         openedDialogMap[KEY_PLAYER_DISK_CACHE_DIALOG] == true -> {
             CommonSettingsDialog(
-                label = stringResource(id = UtilR.string.video_cache_size),
+                label = stringResource(id = LocaleR.string.video_cache_size),
                 options = playerCacheSizes,
                 selectedOption = remember { mutableStateOf(appSettings.preferredDiskCacheSize) },
                 optionLabelExtractor = {
                     when (it) {
-                        0L -> context.getString(UtilR.string.none_label)
-                        -1L -> context.getString(UtilR.string.no_cache_limit_label)
+                        0L -> context.getString(LocaleR.string.none_label)
+                        -1L -> context.getString(LocaleR.string.no_cache_limit_label)
                         else -> Formatter.formatShortFileSize(
                             /* context = */ context,
                             /* sizeBytes = */ it * 1000L * 1000L
-                        ) + if(it == DEFAULT_PLAYER_CACHE_SIZE_AMOUNT) " " + context.getString(UtilR.string.default_label) else ""
+                        ) + if(it == DEFAULT_PLAYER_CACHE_SIZE_AMOUNT) " " + context.getString(LocaleR.string.default_label) else ""
                     }
                 },
                 onChange = {
@@ -125,12 +125,12 @@ internal fun PlayerDialogWrapper(
         }
         openedDialogMap[KEY_PLAYER_BUFFER_SIZE_DIALOG] == true -> {
             CommonSettingsDialog(
-                label = stringResource(id = UtilR.string.video_buffer_size),
+                label = stringResource(id = LocaleR.string.video_buffer_size),
                 options = playerBufferSizes,
                 selectedOption = remember { mutableStateOf(appSettings.preferredBufferCacheSize) },
                 optionLabelExtractor = {
                     if (it == -1L)
-                        context.getString(UtilR.string.auto_option)
+                        context.getString(LocaleR.string.auto_option)
                     else Formatter.formatShortFileSize(
                         /* context = */ context,
                         /* sizeBytes = */ it * 1000L * 1000L
@@ -146,12 +146,12 @@ internal fun PlayerDialogWrapper(
         }
         openedDialogMap[KEY_PLAYER_BUFFER_LENGTH_DIALOG] == true -> {
             CommonSettingsDialog(
-                label = stringResource(id = UtilR.string.video_buffer_max_length),
+                label = stringResource(id = LocaleR.string.video_buffer_max_length),
                 options = playerBufferLengths.keys.toList(),
                 selectedOption = remember { mutableStateOf(appSettings.preferredVideoBufferMs) },
                 optionLabelExtractor = {
                     playerBufferLengths[it] + when (it) {
-                        DEFAULT_PLAYER_BUFFER_AMOUNT -> context.getString(UtilR.string.default_label)
+                        DEFAULT_PLAYER_BUFFER_AMOUNT -> context.getString(LocaleR.string.default_label)
                         else -> ""
                     }
                 },
@@ -167,7 +167,7 @@ internal fun PlayerDialogWrapper(
             LanguageDialog(
                 appSettings = appSettings,
                 selectedOption = remember { mutableStateOf(appSettings.preferredAudioLanguage) },
-                label = stringResource(id = UtilR.string.preferred_audio_language),
+                label = stringResource(id = LocaleR.string.preferred_audio_language),
                 onChange = {
                     onChangeSettings(appSettings.copy(preferredAudioLanguage = it.language))
                 },
@@ -178,7 +178,7 @@ internal fun PlayerDialogWrapper(
         }
         openedDialogMap[KEY_DECODER_PRIORITY_DIALOG] == true -> {
             CommonSettingsDialog(
-                label = stringResource(id = UtilR.string.decoder_priority),
+                label = stringResource(id = LocaleR.string.decoder_priority),
                 options = DecoderPriority.entries,
                 selectedOption = remember { mutableStateOf(appSettings.decoderPriority) },
                 optionLabelExtractor = { it.toUiText().asString() },

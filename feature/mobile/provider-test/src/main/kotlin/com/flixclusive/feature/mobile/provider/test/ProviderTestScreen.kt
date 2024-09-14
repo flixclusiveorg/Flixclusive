@@ -69,7 +69,7 @@ import com.flixclusive.feature.mobile.provider.test.component.TestScreenHeader
 import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.model.provider.id
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 private fun Modifier.drawScrimOnForeground(
@@ -139,7 +139,7 @@ internal fun ProviderTestScreen(
                     }
 
             snackbarHostState.showSnackbar(
-                message = context.getString(UtilR.string.test_providers_completed, "$totalTestsPassed/$totalTestsPerformed"),
+                message = context.getString(LocaleR.string.test_providers_completed, "$totalTestsPassed/$totalTestsPerformed"),
                 duration = SnackbarDuration.Indefinite,
                 withDismissAction = true
             )
@@ -225,7 +225,7 @@ internal fun ProviderTestScreen(
                                 .padding(top = 10.dp)
                         ) {
                             Text(
-                                text = stringResource(id = UtilR.string.clear_tests),
+                                text = stringResource(id = LocaleR.string.clear_tests),
                                 style = LocalTextStyle.current.copy(
                                     color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
                                 )

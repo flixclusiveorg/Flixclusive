@@ -17,7 +17,7 @@ import com.flixclusive.feature.mobile.settings.SettingsItem
 import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
 import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun currentGeneralSettings(
@@ -30,26 +30,26 @@ internal fun currentGeneralSettings(
 
     val clearSearchHistory = if (searchHistoryCount == 0) {
         {
-            context.showToast(context.getString(UtilR.string.error_search_history_is_already_cleared))
+            context.showToast(context.getString(LocaleR.string.error_search_history_is_already_cleared))
         }
     } else null
 
     return listOf(
         SettingsItem(
-            title = stringResource(UtilR.string.clear_search_history),
-            description = stringResource(UtilR.string.search_history_item_count_format, searchHistoryCount),
+            title = stringResource(LocaleR.string.clear_search_history),
+            description = stringResource(LocaleR.string.search_history_item_count_format, searchHistoryCount),
             onClick = clearSearchHistory,
             dialogKey = KEY_SEARCH_HISTORY_NOTICE_DIALOG,
             previewContent = {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.broom_clean),
-                    contentDescription = stringResource(id = UtilR.string.clear_cache_content_desc),
+                    contentDescription = stringResource(id = LocaleR.string.clear_cache_content_desc),
                     tint = LocalContentColor.current.onMediumEmphasis(0.8F)
                 )
             }
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.notify_about_new_app_updates),
+            title = stringResource(LocaleR.string.notify_about_new_app_updates),
             onClick = {
                 onChangeSettings(
                     appSettings.copy(
@@ -72,8 +72,8 @@ internal fun currentGeneralSettings(
             },
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.sign_up_prerelease),
-            description = stringResource(UtilR.string.signup_prerelease_updates_desc),
+            title = stringResource(LocaleR.string.sign_up_prerelease),
+            description = stringResource(LocaleR.string.signup_prerelease_updates_desc),
             onClick = {
                 if (!appSettings.isUsingPrereleaseUpdates) {
                     onUsePrereleaseUpdatesChange(true)
@@ -94,8 +94,8 @@ internal fun currentGeneralSettings(
             },
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.automatic_crash_report),
-            description = stringResource(UtilR.string.automatic_crash_report_label),
+            title = stringResource(LocaleR.string.automatic_crash_report),
+            description = stringResource(LocaleR.string.automatic_crash_report_label),
             onClick = {
                 onChangeSettings(appSettings.copy(isSendingCrashLogsAutomatically = !appSettings.isSendingCrashLogsAutomatically))
             },

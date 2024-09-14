@@ -32,7 +32,7 @@ import com.flixclusive.feature.mobile.player.controls.common.EnlargedTouchableBu
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun TopControls(
@@ -63,7 +63,7 @@ internal fun TopControls(
             modifier = Modifier
                 .align(Alignment.CenterStart),
             iconId = UiCommonR.drawable.left_arrow,
-            contentDescription = stringResource(UtilR.string.navigate_up),
+            contentDescription = stringResource(LocaleR.string.navigate_up),
             onClick = onNavigationIconClick
         )
 
@@ -116,7 +116,7 @@ internal fun TopControls(
                     //.align(Alignment.CenterStart), /*uncomment if adding cast feature already*/
                     .align(Alignment.CenterStart),
                 iconId = PlayerR.drawable.round_cloud_queue_24,
-                contentDescription = stringResource(id = UtilR.string.servers),
+                contentDescription = stringResource(id = LocaleR.string.servers),
                 onClick = onServersClick
             )
 
@@ -125,7 +125,7 @@ internal fun TopControls(
             //    modifier = Modifier
             //        .align(Alignment.Center),
             //    iconId = R.drawable.round_cast_24,
-            //    contentDescription = stringResource(id = UtilR.string.cast),
+            //    contentDescription = stringResource(id = LocaleR.string.cast),
             //    onClick = onVideoSettingsClick
             //)
 
@@ -133,7 +133,7 @@ internal fun TopControls(
                 modifier = Modifier
                     .align(Alignment.CenterEnd),
                 iconId = UiCommonR.drawable.settings,
-                contentDescription = stringResource(id = UtilR.string.settings),
+                contentDescription = stringResource(id = LocaleR.string.settings),
                 onClick = onPlayerSettingsClick
             )
         }

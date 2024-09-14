@@ -45,7 +45,7 @@ import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.repository.search.util.parseGithubUrl
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun AddRepositoryBar(
@@ -110,7 +110,7 @@ internal fun AddRepositoryBar(
             ),
             placeholder = {
                 Text(
-                    text = stringResource(UtilR.string.search_repository_url_suggestion),
+                    text = stringResource(LocaleR.string.search_repository_url_suggestion),
                     style = MaterialTheme.typography.bodySmall,
                     color = LocalContentColor.current.onMediumEmphasis(),
                     overflow = TextOverflow.Ellipsis,
@@ -131,7 +131,7 @@ internal fun AddRepositoryBar(
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.outline_close_square),
-                            contentDescription = stringResource(UtilR.string.clear_text_button)
+                            contentDescription = stringResource(LocaleR.string.clear_text_button)
                         )
                     }
                 }
@@ -162,7 +162,7 @@ internal fun AddRepositoryBar(
                 .fillMaxWidth()
         ) {
             Text(
-                text = stringResource(id = UtilR.string.load_url),
+                text = stringResource(id = LocaleR.string.load_url),
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Black,
                     fontSize = 14.sp

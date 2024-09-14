@@ -52,7 +52,7 @@ import com.flixclusive.feature.mobile.provider.info.component.subdetails.SubDeta
 import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.model.provider.Repository
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 internal val HORIZONTAL_PADDING = 20.dp
 internal const val LABEL_SIZE = 15
@@ -84,8 +84,8 @@ internal fun ProviderInfoScreen(
 
     val webNavigationItems = remember {
         listOf(
-            UtilR.string.issue_a_bug to viewModel.providerData.repositoryUrl?.getNewIssueUrl(),
-            UtilR.string.browse_repository to viewModel.providerData.repositoryUrl,
+            LocaleR.string.issue_a_bug to viewModel.providerData.repositoryUrl?.getNewIssueUrl(),
+            LocaleR.string.browse_repository to viewModel.providerData.repositoryUrl,
         )
     }
 
@@ -182,7 +182,7 @@ internal fun ProviderInfoScreen(
                 if (viewModel.providerData.changelog != null) {
                     item {
                         NavigationItem(
-                            label = stringResource(id = UtilR.string.whats_new),
+                            label = stringResource(id = LocaleR.string.whats_new),
                             onClick = {
                                 navigator.seeWhatsNew(providerData = viewModel.providerData)
                             }
@@ -210,7 +210,7 @@ internal fun ProviderInfoScreen(
                         onClick = {
                             if (url != null) uriHandler.openUri(url)
                             else {
-                                context.showToast(context.getString(UtilR.string.null_repository_url_error))
+                                context.showToast(context.getString(LocaleR.string.null_repository_url_error))
                             }
                         }
                     )

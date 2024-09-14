@@ -33,7 +33,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -96,7 +96,7 @@ internal fun FilterBlock(
             AnimatedVisibility(visible = isSelected) {
                 Icon(
                     imageVector = Icons.Rounded.Check,
-                    contentDescription = stringResource(UtilR.string.check_indicator_content_desc),
+                    contentDescription = stringResource(LocaleR.string.check_indicator_content_desc),
                     modifier = Modifier
                         .size(16.dp)
                 )

@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun SeasonPill(
@@ -37,7 +37,7 @@ internal fun SeasonPill(
 ) {
     val context = LocalContext.current
 
-    val text = remember { UiText.StringResource(UtilR.string.season_number_formatter, season).asString(context) }
+    val text = remember { UiText.StringResource(LocaleR.string.season_number_formatter, season).asString(context) }
     val contentColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.surface else LocalContentColor.current.onMediumEmphasis(),
         label = ""

@@ -33,7 +33,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.model.provider.Status
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun BottomCardContent(
@@ -88,7 +88,7 @@ internal fun BottomCardContent(
                 )
             ) {
                 Text(
-                    text = stringResource(UtilR.string.uninstall),
+                    text = stringResource(LocaleR.string.uninstall),
                     style = MaterialTheme.typography.labelMedium
                 )
             }
@@ -100,7 +100,7 @@ internal fun BottomCardContent(
             ) {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.provider_settings),
-                    contentDescription = stringResource(id = UtilR.string.provider_settings),
+                    contentDescription = stringResource(id = LocaleR.string.provider_settings),
                     modifier = Modifier
                         .scale(0.8F)
                 )

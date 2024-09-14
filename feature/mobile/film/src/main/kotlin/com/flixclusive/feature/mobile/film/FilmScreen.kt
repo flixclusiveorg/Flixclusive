@@ -67,12 +67,12 @@ import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 internal enum class FilmTab(val stringId: Int) {
-    Episodes(UtilR.string.episodes),
-    MoreLikeThis(UtilR.string.more_like_this),
-    Collections(UtilR.string.collections)
+    Episodes(LocaleR.string.episodes),
+    MoreLikeThis(LocaleR.string.more_like_this),
+    Collections(LocaleR.string.collections)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -382,7 +382,7 @@ private fun CollapsibleTopBar(
                 IconButton(onClick = onNavigationIconClick) {
                     Icon(
                         painter = painterResource(R.drawable.left_arrow),
-                        contentDescription = stringResource(UtilR.string.navigate_up)
+                        contentDescription = stringResource(LocaleR.string.navigate_up)
                     )
                 }
 

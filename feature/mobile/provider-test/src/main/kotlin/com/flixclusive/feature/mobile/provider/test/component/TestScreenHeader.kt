@@ -36,7 +36,7 @@ import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderD
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.domain.provider.test.TestStage
 import com.flixclusive.domain.provider.test.TestStage.Idle.Companion.isIdle
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 private val HeaderLabelSpacing = 50.dp
 
@@ -76,7 +76,7 @@ internal fun TestScreenHeader(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stringResource(UtilR.string.provider_test_stage_idle),
+                            text = stringResource(LocaleR.string.provider_test_stage_idle),
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 textAlign = TextAlign.Center
                             ),
@@ -95,10 +95,10 @@ private fun HeaderLabels(
 ) {
     val context = LocalContext.current
     val testingLabel = remember {
-        context.getString(UtilR.string.currently_testing).uppercase()
+        context.getString(LocaleR.string.currently_testing).uppercase()
     }
     val testingStageLabel = remember {
-        context.getString(UtilR.string.stage).uppercase()
+        context.getString(LocaleR.string.stage).uppercase()
     }
 
     val stageLabelColor = when (stage) {

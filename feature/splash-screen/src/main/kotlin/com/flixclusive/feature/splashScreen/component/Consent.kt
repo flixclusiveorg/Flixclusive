@@ -43,7 +43,7 @@ import androidx.compose.material3.Button as MobileButton
 import androidx.compose.material3.ButtonDefaults as MobileButtonDefaults
 import androidx.tv.material3.Button as TvButton
 import androidx.tv.material3.ButtonDefaults as TvButtonDefaults
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -163,7 +163,7 @@ internal fun Consent(
                     .focusOnInitialVisibility()
             ) {
                 Text(
-                    text = buttonLabel ?: stringResource(id = UtilR.string.understood),
+                    text = buttonLabel ?: stringResource(id = LocaleR.string.understood),
                     style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier
                         .align(Alignment.CenterVertically)
@@ -182,7 +182,7 @@ internal fun Consent(
                     .heightIn(min = buttonMinHeight)
             ) {
                 Text(
-                    text = buttonLabel ?: stringResource(id = UtilR.string.understood),
+                    text = buttonLabel ?: stringResource(id = LocaleR.string.understood),
                     style = MaterialTheme.typography.labelLarge,
                 )
             }
@@ -197,7 +197,7 @@ private fun ConsentPreview() {
     FlixclusiveTheme {
         Surface {
             Consent(
-                header = stringResource(id = UtilR.string.privacy_notice),
+                header = stringResource(id = LocaleR.string.privacy_notice),
                 consentContent = """
                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean vel laoreet dui. In hac habitasse platea dictumst. Maecenas neque dui, pretium ac dui eu, condimentum sollicitudin arcu. Sed ac interdum sem, consequat posuere enim. Proin vitae lacus quis augue porttitor luctus. Proin consequat lobortis neque, ac malesuada massa lobortis ut. Vestibulum vel augue consequat nulla fringilla porttitor sit amet quis mauris. Nunc et nisi in sapien interdum euismod id in urna. Curabitur pretium malesuada diam, vel accumsan velit commodo ut. Aenean ac efficitur ligula, vel dictum felis. Nunc placerat tortor nec metus venenatis, a malesuada neque volutpat.
 
@@ -205,7 +205,7 @@ Nam quis efficitur nulla. Nulla venenatis non augue et viverra. Vivamus sit amet
 
 Integer efficitur viverra mauris. Mauris bibendum ipsum quis quam vehicula interdum. Ut aliquam mauris tempor iaculis pulvinar. Integer porttitor, mi vitae congue mollis, sapien libero rhoncus velit, id semper odio risus ullamcorper ligula. Suspendisse potenti. Nam tincidunt elit in ex ornare venenatis. Etiam laoreet enim sed nibh suscipit mattis. Proin mauris nunc, molestie id consequat ac, convallis vel neque. 
                 """.trimIndent(),
-                optInLabel = stringResource(id = UtilR.string.privacy_notice_opt_in),
+                optInLabel = stringResource(id = LocaleR.string.privacy_notice_opt_in),
                 goNext = {}
             )
         }

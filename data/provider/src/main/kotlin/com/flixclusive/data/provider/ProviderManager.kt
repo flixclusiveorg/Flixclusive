@@ -38,7 +38,7 @@ import java.io.IOException
 import java.io.InputStreamReader
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 const val PROVIDERS_FOLDER = "flx_providers"
@@ -217,11 +217,11 @@ class ProviderManager @Inject constructor(
         } else if (providerName != "oat") { // Some roms create this
             if (providerFile.isDirectory) {
                 context.showToast(
-                    String.format(context.getString(UtilR.string.invalid_provider_file_directory_msg_format), providerName)
+                    String.format(context.getString(LocaleR.string.invalid_provider_file_directory_msg_format), providerName)
                 )
             } else if (providerName.equals("classes.dex") || providerName.endsWith(".json")) {
                 context.showToast(
-                    String.format(context.getString(UtilR.string.invalid_provider_file_dex_json_msg_format), providerName)
+                    String.format(context.getString(LocaleR.string.invalid_provider_file_dex_json_msg_format), providerName)
                 )
             }
             rmrf(providerFile)

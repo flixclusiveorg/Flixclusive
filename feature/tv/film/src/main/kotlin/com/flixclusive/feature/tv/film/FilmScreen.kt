@@ -76,7 +76,7 @@ import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalAnimationApi::class)
 @Destination(
@@ -192,7 +192,7 @@ internal fun FilmScreen(
                         .height(400.dp),
                     model = it,
                     imageLoader = LocalContext.current.imageLoader,
-                    contentDescription = stringResource(id = UtilR.string.film_item_content_description)
+                    contentDescription = stringResource(id = LocaleR.string.film_item_content_description)
                 )
             }
         }
@@ -361,7 +361,7 @@ internal fun FilmScreen(
                                 FilmsRow(
                                     films = film!!.recommendations,
                                     hasFocus = otherFilmsHasFocus,
-                                    label = UiText.StringResource(UtilR.string.other_films_message),
+                                    label = UiText.StringResource(LocaleR.string.other_films_message),
                                     iconId = R.drawable.round_dashboard_24,
                                     currentFilm = film!!,
                                     goBack = navigator::goBack,

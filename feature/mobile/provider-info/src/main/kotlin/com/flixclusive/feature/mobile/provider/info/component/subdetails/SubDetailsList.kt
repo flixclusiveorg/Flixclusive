@@ -25,7 +25,7 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.feature.mobile.provider.info.HORIZONTAL_PADDING
 import com.flixclusive.model.provider.ProviderData
 import java.util.Locale
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 private fun String.capitalize(): String {
     return replaceFirstChar {
@@ -40,10 +40,10 @@ internal fun SubDetailsList(
 ) {
     val subDetails = remember(providerData) {
         listOf(
-            providerData.versionName to UiText.StringResource(UtilR.string.version),
-            providerData.status.toString() to UiText.StringResource(UtilR.string.status),
-            Locale(providerData.language.languageCode).displayLanguage.capitalize() to UiText.StringResource(UtilR.string.language),
-            providerData.providerType.type to UiText.StringResource(UtilR.string.content),
+            providerData.versionName to UiText.StringResource(LocaleR.string.version),
+            providerData.status.toString() to UiText.StringResource(LocaleR.string.status),
+            Locale(providerData.language.languageCode).displayLanguage.capitalize() to UiText.StringResource(LocaleR.string.language),
+            providerData.providerType.type to UiText.StringResource(LocaleR.string.content),
         )
     }
 

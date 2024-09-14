@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 val LARGE_ERROR = 480.dp
 val SMALL_ERROR = 110.dp
@@ -43,7 +43,7 @@ fun RetryButton(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = error ?: stringResource(id = UtilR.string.pagination_error_message),
+                    text = error ?: stringResource(id = LocaleR.string.pagination_error_message),
                     style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -55,7 +55,7 @@ fun RetryButton(
                     shape = ShapeDefaults.Medium
                 ) {
                     Text(
-                        text = stringResource(UtilR.string.retry),
+                        text = stringResource(LocaleR.string.retry),
                         style = MaterialTheme.typography.labelLarge
                     )
                 }

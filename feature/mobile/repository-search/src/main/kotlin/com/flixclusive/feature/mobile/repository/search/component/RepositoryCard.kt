@@ -30,7 +30,7 @@ import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.mobile.R as UiMobileR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -69,7 +69,7 @@ internal fun RepositoryCard(
                 placeholderModifier = Modifier.size(40.dp),
                 urlImage = if (repository.url.contains("github")) "https://github.com/${repository.owner}.png" else null,
                 placeholderId = UiCommonR.drawable.repository,
-                contentDescId = UtilR.string.owner_avatar_content_desc
+                contentDescId = LocaleR.string.owner_avatar_content_desc
             )
 
             Column(
@@ -103,7 +103,7 @@ internal fun RepositoryCard(
 
             Icon(
                 painter = painterResource(id = UiMobileR.drawable.right_arrow),
-                contentDescription = stringResource(id = UtilR.string.navigate_to_repository_content_desc)
+                contentDescription = stringResource(id = LocaleR.string.navigate_to_repository_content_desc)
             )
         }
     }

@@ -24,7 +24,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.provider.info.HORIZONTAL_PADDING
 import com.flixclusive.feature.mobile.provider.info.LABEL_SIZE_IN_DP
 import com.flixclusive.core.ui.mobile.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun NavigationItem(
@@ -50,7 +50,7 @@ internal fun NavigationItem(
             Box {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.right_arrow),
-                    contentDescription = stringResource(id = UtilR.string.see_all),
+                    contentDescription = stringResource(id = LocaleR.string.see_all),
                     tint = LocalContentColor.current.onMediumEmphasis(),
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -68,7 +68,7 @@ private fun NavigationItemPreview() {
     FlixclusiveTheme {
         Surface {
             NavigationItem(
-                label = stringResource(id = UtilR.string.whats_new),
+                label = stringResource(id = LocaleR.string.whats_new),
                 onClick = {}
             )
         }

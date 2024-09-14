@@ -65,7 +65,7 @@ import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.core.ui.common.util.formatMinutes
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 internal val WatchedFilmCardHeight = 250.dp
 private val WatchedFilmCardWidth = 400.dp
@@ -201,7 +201,7 @@ private fun CardImage(
             model = painter,
             imageLoader = LocalContext.current.imageLoader,
             contentScale = ContentScale.FillBounds,
-            contentDescription = stringResource(id = UtilR.string.film_item_content_description),
+            contentDescription = stringResource(id = LocaleR.string.film_item_content_description),
             onSuccess = { onImageLoad(it.result.drawable) },
             modifier = Modifier
                 .aspectRatio(FilmCover.Backdrop.ratio)
@@ -295,7 +295,7 @@ private fun CardOverview(
                     }
 
                     if(seasons != null) {
-                        var seasonsRuntime = UiText.StringResource(UtilR.string.season_runtime_formatter, seasons!!).asString(context)
+                        var seasonsRuntime = UiText.StringResource(LocaleR.string.season_runtime_formatter, seasons!!).asString(context)
 
                         if(seasons!! > 1)
                             seasonsRuntime += 's'
@@ -306,7 +306,7 @@ private fun CardOverview(
 
                     val totalEpisodes = episodes.values.sum()
                     if (totalEpisodes > 0) {
-                        var episodesRuntime = UiText.StringResource(UtilR.string.episode_runtime_formatter, totalEpisodes).asString(context)
+                        var episodesRuntime = UiText.StringResource(LocaleR.string.episode_runtime_formatter, totalEpisodes).asString(context)
 
                         if(totalEpisodes > 1)
                             episodesRuntime += 's'

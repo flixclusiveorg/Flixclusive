@@ -36,7 +36,7 @@ import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun EpisodesScreen(
@@ -78,7 +78,7 @@ internal fun EpisodesScreen(
             ) {
                 EnlargedTouchableButton(
                     iconId = UiCommonR.drawable.round_close_24,
-                    contentDescription = stringResource(id = UtilR.string.close_label),
+                    contentDescription = stringResource(id = LocaleR.string.close_label),
                     size = 45.dp,
                     onClick = onClose
                 )
