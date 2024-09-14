@@ -117,7 +117,7 @@ private fun RepositoryHeaderPreview() {
                 repository = Repository(
                     "rhenwinch",
                     "Flixclusive plugins-templates",
-                    "https://github.com/rhenwinch/providers",
+                    "https://github.com/flixclusiveorg/providers",
                     ""
                 ),
                 toggleSnackbar = {}

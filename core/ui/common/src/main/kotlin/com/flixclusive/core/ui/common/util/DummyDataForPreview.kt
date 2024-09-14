@@ -20,8 +20,8 @@ object DummyDataForPreview {
     fun getDummyProviderData() = remember {
         ProviderData(
             authors = List(5) { Author("FLX $it") },
-            repositoryUrl = "https://github.com/flixclusive/123Movies",
-            buildUrl = "https://raw.githubusercontent.com/Flixclusive/plugins-template/builds/updater.json",
+            repositoryUrl = "https://github.com/flixclusiveorg/123Movies",
+            buildUrl = "https://raw.githubusercontent.com/flixclusiveorg/plugins-template/builds/updater.json",
             changelog = """
                 # v1.0.0
                 
