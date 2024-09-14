@@ -20,11 +20,22 @@ jobs:
         with:
           path: "Flixclusive"
 
+      - name: Generate access token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_KEY }}
+          owner: Flixclusive
+          repositories: |
+            api
+
       - name: Checkout API Reference Repository
         uses: actions/checkout@master
         with:
           repository: 'Flixclusive/api'
           path: 'api'
+          token: ${{ steps.generate_token.outputs.token }}
 
       - name: Setup Android SDK
         run: |
