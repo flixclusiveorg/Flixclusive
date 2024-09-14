@@ -7,7 +7,7 @@ import kotlinx.serialization.json.Json
 import java.io.InputStream
 import java.io.OutputStream
 
-internal abstract class BaseSettingsSerializer<T>(
+abstract class BaseSettingsSerializer<T>(
     private val serializer: KSerializer<T>
 ) : Serializer<T> {
     override suspend fun readFrom(input: InputStream): T {

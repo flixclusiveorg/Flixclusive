@@ -3,7 +3,7 @@ package com.flixclusive.core.database.migration
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-class Schema4to5 : Migration(4, 5) {
+internal class Schema4to5 : Migration(4, 5) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("""
             CREATE TABLE IF NOT EXISTS `search_history` (
