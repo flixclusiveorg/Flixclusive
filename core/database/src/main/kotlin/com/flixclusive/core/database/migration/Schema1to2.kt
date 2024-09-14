@@ -3,7 +3,7 @@ package com.flixclusive.core.database.migration
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-class Schema1to2 : Migration(startVersion = 1, endVersion = 2) {
+internal class Schema1to2 : Migration(startVersion = 1, endVersion = 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         // Add watchlist table
         db.execSQL("CREATE TABLE IF NOT EXISTS `watchlist` (`ownerId` INTEGER NOT NULL, `id` INTEGER PRIMARY KEY NOT NULL, `film` TEXT NOT NULL)")

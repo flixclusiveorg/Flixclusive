@@ -15,8 +15,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-const val TMDB_API_BASE_URL = "https://api.themoviedb.org/3/"
-const val TMDB_APPEND_TO_RESPONSE = "images,recommendations,external_ids,credits"
+internal const val TMDB_API_BASE_URL = "https://api.themoviedb.org/3/"
+internal const val TMDB_APPEND_TO_RESPONSE = "images,recommendations,external_ids,credits"
 
 interface TMDBApiService {
     @GET("movie/{id}")

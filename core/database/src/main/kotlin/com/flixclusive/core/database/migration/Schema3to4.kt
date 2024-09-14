@@ -5,7 +5,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flixclusive.core.util.exception.safeCall
 
-class Schema3to4 : Migration(startVersion = 3, endVersion = 4) {
+internal class Schema3to4 : Migration(startVersion = 3, endVersion = 4) {
     override fun migrate(db: SupportSQLiteDatabase) {
         // Edit `id` column to be string data type
         safeCall {

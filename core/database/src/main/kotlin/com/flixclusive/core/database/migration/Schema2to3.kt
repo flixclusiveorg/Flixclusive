@@ -4,7 +4,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import java.util.Date
 
-class Schema2to3 : Migration(startVersion = 2, endVersion = 3) {
+internal class Schema2to3 : Migration(startVersion = 2, endVersion = 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val timeToday = Date().time
 

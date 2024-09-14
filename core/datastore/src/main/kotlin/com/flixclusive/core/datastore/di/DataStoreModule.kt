@@ -17,13 +17,13 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 
+val Context.appSettings by dataStore("app-preferences.json", AppSettingsSerializer)
+val Context.appProviderSettings by dataStore("app-provider-preferences.json", AppSettingsProviderSerializer)
+val Context.onBoardingPreferences by dataStore("on-boarding-preferences.json", OnBoardingPreferencesSerializer)
+
 @Module
 @InstallIn(SingletonComponent::class)
 internal object DataStoreModule {
-    private val Context.appSettings by dataStore("app-preferences.json", AppSettingsSerializer)
-    private val Context.appProviderSettings by dataStore("app-provider-preferences.json", AppSettingsProviderSerializer)
-    private val Context.onBoardingPreferences by dataStore("on-boarding-preferences.json", OnBoardingPreferencesSerializer)
-
     @Provides
     @Singleton
     fun providesUserPreferencesDataStore(
