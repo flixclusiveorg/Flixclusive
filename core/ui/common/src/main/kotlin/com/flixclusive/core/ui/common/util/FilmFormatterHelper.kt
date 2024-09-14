@@ -1,13 +1,42 @@
 package com.flixclusive.core.ui.common.util
 
 import android.content.Context
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.film.formatMinutes
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
-import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.util.FilmType
+import java.util.Locale
 import com.flixclusive.core.util.R as UtilR
+
+
+fun formatMinutes(totalMinutes: Int?): UiText {
+    if (totalMinutes == null || totalMinutes <= 0)
+        return UiText.StringResource(UtilR.string.no_runtime)
+
+    val hours = totalMinutes / 60
+    val minutes = totalMinutes % 60
+
+    val hoursText = if (hours > 0) "${hours}h " else ""
+    val minutesText = if (minutes > 0) "${minutes}m" else ""
+
+    return UiText.StringValue((hoursText + minutesText).trim())
+}
+
+fun formatRating(number: Double?): UiText {
+    val noRatingsMessage = UiText.StringResource(UtilR.string.no_ratings)
+
+    if (number == null)
+        return noRatingsMessage
+
+    val ratings = if (number % 1 == 0.0) {
+        String.format(Locale.ROOT, "%.1f", number)
+    } else {
+        String.format(Locale.ROOT, "%.2f", number)
+    }
+
+    return if(ratings == "0.0") noRatingsMessage else UiText.StringValue(ratings)
+}
 
 fun formatTvRuntime(
     context: Context,

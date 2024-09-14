@@ -12,38 +12,34 @@ import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.PagingState
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.film.filter.BottomSheetComponent
-import com.flixclusive.core.util.film.filter.FilterGroup
-import com.flixclusive.core.util.film.filter.FilterList
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.ui.common.util.PagingState
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
+import com.flixclusive.model.provider.filter.BottomSheetComponent
+import com.flixclusive.model.provider.filter.FilterGroup
+import com.flixclusive.model.provider.filter.FilterList
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
-import com.flixclusive.gradle.entities.Status
+import com.flixclusive.model.provider.Status
 import com.flixclusive.model.database.SearchHistory
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.SearchResponseData
 import com.flixclusive.provider.ProviderApi
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 internal class SearchExpandedScreenViewModel @Inject constructor(
-    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
     private val tmdbRepository: TMDBRepository,
     private val searchHistoryRepository: SearchHistoryRepository,
     providerManager: ProviderManager,
@@ -226,7 +222,7 @@ internal class SearchExpandedScreenViewModel @Inject constructor(
             )
         } else {
             try {
-                val result = withContext(ioDispatcher) {
+                val result = withIOContext {
                     getSelectedProvider()!!.search(
                         page = page,
                         title = searchQuery,

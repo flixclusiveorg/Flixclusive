@@ -1,8 +1,8 @@
 package com.flixclusive.model.database.util
 
-import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Episode
 
 private const val FINISHED_WATCHING_THRESHOLD = 95L
 

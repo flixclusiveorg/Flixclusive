@@ -29,11 +29,11 @@ import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.shouldPaginate
-import com.flixclusive.core.util.common.ui.PagingState
+import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.home.PaginationStateInfo
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.category.Category
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.provider.Catalog
 
 internal const val HOME_FOCUS_KEY_FORMAT = "row=%d, column=%d"
 
@@ -41,7 +41,7 @@ internal const val HOME_FOCUS_KEY_FORMAT = "row=%d, column=%d"
 @Composable
 internal fun HomeFilmsRow(
     modifier: Modifier = Modifier,
-    categoryItem: Category,
+    catalogItem: Catalog,
     paginationState: PaginationStateInfo,
     films: List<Film>,
     rowIndex: Int,
@@ -88,7 +88,7 @@ internal fun HomeFilmsRow(
             .heightIn(min = FilmPadding.bottom + 18.dp + FilmCardHeight)
     ) {
         Text(
-            text = categoryItem.name,
+            text = catalogItem.name,
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp

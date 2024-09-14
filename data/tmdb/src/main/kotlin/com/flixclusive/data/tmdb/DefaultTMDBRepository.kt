@@ -1,36 +1,29 @@
 package com.flixclusive.data.tmdb
 
 import com.flixclusive.core.network.retrofit.TMDBApiService
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
-import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.network.retrofit.TMDB_API_BASE_URL
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.exception.actualMessage
-import com.flixclusive.core.util.exception.toNetworkException
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.tmdb.TmdbFilters.Companion.getMediaTypeFromInt
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.SearchResponseData
-import com.flixclusive.model.tmdb.TMDBCollection
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.tv.Episode
-import com.flixclusive.model.tmdb.common.tv.Season
-import com.flixclusive.model.tmdb.util.TMDB_API_BASE_URL
-import com.flixclusive.model.tmdb.util.filterOutUnreleasedFilms
-import com.flixclusive.model.tmdb.util.filterOutUnreleasedSeasons
-import com.flixclusive.model.tmdb.util.filterOutZeroSeasons
-import com.flixclusive.model.tmdb.util.formatGenreIds
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.Genre
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.SearchResponseData
+import com.flixclusive.model.film.TMDBCollection
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.film.util.filterOutUnreleasedFilms
 import retrofit2.HttpException
 import javax.inject.Inject
 
 internal class DefaultTMDBRepository @Inject constructor(
     private val tmdbApiService: TMDBApiService,
-    private val configurationProvider: AppConfigurationManager,
-    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
+    private val configurationProvider: AppConfigurationManager
 ) : TMDBRepository {
     override val tmdbApiKey: String
         get() = configurationProvider.appConfig!!.tmdbApiKey
@@ -40,7 +33,7 @@ internal class DefaultTMDBRepository @Inject constructor(
         timeWindow: String,
         page: Int,
     ): Resource<SearchResponseData<FilmSearchItem>> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             try {
                 val response = tmdbApiService.getTrending(
                     mediaType = mediaType,
@@ -64,7 +57,7 @@ internal class DefaultTMDBRepository @Inject constructor(
         withGenres: List<Genre>?,
         sortBy: SortOptions,
     ): Resource<SearchResponseData<FilmSearchItem>> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             try {
                 val sortOption = when (sortBy) {
                     SortOptions.POPULARITY -> "popularity.desc"
@@ -93,10 +86,10 @@ internal class DefaultTMDBRepository @Inject constructor(
         page: Int,
         filter: Int,
     ): Resource<SearchResponseData<FilmSearchItem>> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             try {
                 if (query.isEmpty()) {
-                    return@withContext Resource.Failure("Search query should not be empty!")
+                    return@withIOContext Resource.Failure("Search query should not be empty!")
                 }
 
                 val response = tmdbApiService.search(
@@ -117,7 +110,7 @@ internal class DefaultTMDBRepository @Inject constructor(
         mediaType: String,
         id: Int,
     ): Resource<String> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             try {
                 val response =  tmdbApiService.getImages(
                     mediaType = mediaType,
@@ -136,7 +129,7 @@ internal class DefaultTMDBRepository @Inject constructor(
     }
 
     override suspend fun getMovie(id: Int): Resource<Movie> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             try {
                 val movie = tmdbApiService.getMovie(
                     id = id, apiKey = tmdbApiKey
@@ -156,7 +149,7 @@ internal class DefaultTMDBRepository @Inject constructor(
                 val newGenres = formatGenreIds(
                     genreIds = movie.genres.map { it.id },
                     genresList = configurationProvider
-                        .searchCategoriesData!!.genres.map {
+                        .searchCatalogsData!!.genres.map {
                             Genre(
                                 id = it.id,
                                 name = it.name,
@@ -180,7 +173,7 @@ internal class DefaultTMDBRepository @Inject constructor(
     }
 
     override suspend fun getTvShow(id: Int): Resource<TvShow> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             try {
                 val tvShow = tmdbApiService.getTvShow(
                     id = id, apiKey = tmdbApiKey
@@ -193,7 +186,7 @@ internal class DefaultTMDBRepository @Inject constructor(
                 val newGenres = formatGenreIds(
                     genreIds = tvShow.genres.map { it.id },
                     genresList = configurationProvider
-                        .searchCategoriesData!!.genres.map {
+                        .searchCatalogsData!!.genres.map {
                             Genre(
                                 id = it.id,
                                 name = it.name,
@@ -216,7 +209,7 @@ internal class DefaultTMDBRepository @Inject constructor(
     }
 
     override suspend fun getSeason(id: Int, seasonNumber: Int): Resource<Season> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             try {
                 val season = tmdbApiService.getSeason(
                     id = id, seasonNumber = seasonNumber, apiKey = tmdbApiKey
@@ -235,11 +228,11 @@ internal class DefaultTMDBRepository @Inject constructor(
         episodeNumber: Int,
     ): Resource<Episode?> {
         return try {
-            withContext(ioDispatcher) {
+            withIOContext {
                 val season = getSeason(id, seasonNumber)
 
                 if (season is Resource.Failure)
-                    return@withContext Resource.Failure(season.error)
+                    return@withIOContext Resource.Failure(season.error)
 
                 val episodeId = season.data!!.episodes.find {
                     it.season == seasonNumber
@@ -253,7 +246,7 @@ internal class DefaultTMDBRepository @Inject constructor(
     }
 
     override suspend fun getCollection(id: Int): Resource<TMDBCollection> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             try {
                 val response = tmdbApiService.getCollection(
                     id = id, apiKey = tmdbApiKey
@@ -270,7 +263,7 @@ internal class DefaultTMDBRepository @Inject constructor(
         url: String,
         page: Int,
     ): Resource<SearchResponseData<FilmSearchItem>> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             val fullUrl = "$TMDB_API_BASE_URL$url&page=$page&api_key=$tmdbApiKey"
 
             try {
@@ -285,5 +278,19 @@ internal class DefaultTMDBRepository @Inject constructor(
                 Resource.Failure(e.actualMessage)
             }
         }
+    }
+
+    private fun List<Season>.filterOutUnreleasedSeasons()
+        = filterNot { it.isUnreleased }
+
+    private fun List<Season>.filterOutZeroSeasons()
+        = filterNot { it.number == 0 }
+
+    private fun formatGenreIds(
+        genreIds: List<Int>,
+        genresList: List<Genre>
+    ): List<Genre> {
+        val genreMap = genresList.associateBy({ it.id }, { it })
+        return genreIds.mapNotNull { genreMap[it] }
     }
 }

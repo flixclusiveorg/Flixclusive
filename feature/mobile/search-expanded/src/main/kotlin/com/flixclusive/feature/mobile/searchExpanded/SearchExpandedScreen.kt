@@ -26,8 +26,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
 import com.flixclusive.core.ui.mobile.util.shouldPaginate
-import com.flixclusive.core.util.common.ui.PagingState
-import com.flixclusive.core.util.film.filter.FilterList
+import com.flixclusive.core.ui.common.util.PagingState
+import com.flixclusive.model.provider.filter.FilterList
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchBarInput
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchFilmsGridView
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchProvidersView
@@ -35,7 +35,7 @@ import com.flixclusive.feature.mobile.searchExpanded.component.SearchSearchHisto
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.FilterBottomSheet
 import com.flixclusive.feature.mobile.searchExpanded.util.Constant
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 

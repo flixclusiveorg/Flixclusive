@@ -21,8 +21,8 @@ import androidx.compose.ui.Modifier
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.feature.mobile.player.R
 import com.flixclusive.feature.mobile.player.controls.dialogs.audio_and_subtitle.PlayerAudioAndSubtitleDialog
 import com.flixclusive.feature.mobile.player.controls.dialogs.servers.PlayerServersDialog
@@ -33,10 +33,10 @@ import com.flixclusive.feature.mobile.player.controls.gestures.SeekerAndSliderGe
 import com.flixclusive.feature.mobile.player.util.rememberBrightnessManager
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.model.provider.Stream
-import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.tmdb.common.tv.Episode
-import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.model.provider.link.Subtitle
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR

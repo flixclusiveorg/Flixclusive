@@ -1,7 +1,7 @@
 package com.flixclusive.provider.util
 
-import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
-import com.flixclusive.model.tmdb.Movie
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.model.film.Movie
 import com.flixclusive.provider.ProviderApi
 
 /**

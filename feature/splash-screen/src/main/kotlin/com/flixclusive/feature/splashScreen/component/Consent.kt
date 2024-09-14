@@ -35,10 +35,10 @@ import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Surface
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.theme.util.TvModeChecker.isTvMode
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.core.util.android.getActivity
-import com.flixclusive.core.util.android.isTvMode
 import androidx.compose.material3.Button as MobileButton
 import androidx.compose.material3.ButtonDefaults as MobileButtonDefaults
 import androidx.tv.material3.Button as TvButton

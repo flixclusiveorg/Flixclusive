@@ -4,20 +4,17 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.util.android.notify
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
-import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.domain.updater.util.findProviderData
-import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.provider.Provider
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import java.util.Collections
 import java.util.concurrent.TimeUnit
@@ -34,7 +31,6 @@ private const val CHANNEL_UPDATER_NAME = "PROVIDER_UPDATER_CHANNEL"
 @Singleton
 class ProviderUpdaterUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
-    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
     private val providerManager: ProviderManager,
     private val appSettingsManager: AppSettingsManager,
     private val client: OkHttpClient,
@@ -153,11 +149,11 @@ class ProviderUpdaterUseCase @Inject constructor(
             return cached.data.findProviderData(name)
         }
 
-        val updaterJsonRequest = withContext(ioDispatcher) {
+        val updaterJsonRequest = withIOContext {
             client.request(manifest.updateUrl!!)
                 .execute()
                 .body?.string()
-                ?: return@withContext null
+                ?: return@withIOContext null
         } ?: return null
 
         val updaterJson = fromJson<List<ProviderData>>(updaterJsonRequest)

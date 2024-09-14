@@ -17,12 +17,11 @@ import com.flixclusive.core.database.migration.Schema4to5
 import com.flixclusive.core.database.util.DateConverter
 import com.flixclusive.core.database.util.FilmDataConverter
 import com.flixclusive.core.database.util.WatchHistoryItemConverter
-import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
+import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.model.database.User
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.WatchlistItem
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -46,8 +45,7 @@ internal abstract class AppDatabase : RoomDatabase() {
         private var INSTANCE: AppDatabase? = null
 
         fun getInstance(
-            context: Context,
-            @ApplicationScope scope: CoroutineScope
+            context: Context
         ): AppDatabase {
             // For migration (1 to 2)
             context.updateOldDatabase()
@@ -69,7 +67,7 @@ internal abstract class AppDatabase : RoomDatabase() {
                         object: Callback() {
                             private fun prepopulateUsers() {
                                 INSTANCE?.let {
-                                    scope.launch {
+                                    AppDispatchers.Default.scope.launch {
                                         val thereAreNoUsers = it.userDao().getAllItems().isEmpty()
 
                                         if(thereAreNoUsers) {

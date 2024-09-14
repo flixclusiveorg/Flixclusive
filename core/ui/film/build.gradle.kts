@@ -11,8 +11,8 @@ android {
 
 dependencies {
     api(projects.core.datastore)
+    api(projects.core.ui.common)
     api(projects.core.ui.tv)
-    api(projects.core.util)
     api(projects.data.watchHistory)
     api(projects.domain.database)
     api(projects.domain.tmdb)

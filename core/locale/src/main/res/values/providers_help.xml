@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="providers_screen_help">
+        <item>Understanding Providers</item>
+        <item>
+            <![CDATA[
+            ## Table of Contents\n\n
+
+            - What is a provider?\n
+            - Provider structure\n
+            - So… where do I get providers?\n\n
+
+            Technical questions:\n
+            - How to configure a provider?\n
+            - How to troubleshoot a broken provider?\n\n
+
+            Other questions:\n
+            - Is it required to install providers?\n
+            - Is there a security drawback for installing a provider?\n
+            - Why implement the provider system? It is confusing\n
+            - Other apps have better extension system. Why should I use this?\n
+            ---\n\n
+
+            ### What is a provider?\n\n
+
+            > The app acts as the browser while a provider acts as a browser extension\n\n
+            
+            How do you use your desktop browsers? Do you have AdBlocks on it? If so, providers are the _same_.\n\n
+            
+            To keep it simple and short, a **provider** is an optional extension of the app\'s vanilla capabilities to provide you with what content you best prefer.\n\n
+
+            ### Provider structure\n\n
+
+            ![Provider\'s pictograph](https://i.imgur.com/Ll6grYS.png)\n\n
+
+            1. **Provider information (summarized)**\n
+                \t- Logo of the provider\n
+                \t- Name of the provider\n
+                \t- Author/s of the providers\n
+                \t- Content provided\n
+            2. **Version of the provider**\n
+                \t- The provider system recommends using [semantic versioning (semver)](https://semver.org/) for the versions of the providers.\n
+            3. **Provider toggle**\n
+                \t- In the app, you are allowed to disable/enable providers.\n
+                \t- Disabling providers means that the app will not use it for content generation.\n
+                \t- For instance, if a provider contains catalogs and it is disabled, it will not be rendered on the home and search screens.\n
+            4. **Provider\'s settings**\n
+                \t- Providers have their own settings which means that they are dynamically configurable based on user and author preferences.\n
+                \t- If a provider asks for a configuration, then check its provider settings.\n
+            5. **Provider\'s status**\n
+                \t- Providers will tell you if they are working or not. The list of available statuses are:\n
+                    \t\t- 🟢 _Working_\n
+                    \t\t- 🔴 _Down_\n
+                    \t\t- 🟡 _Maintenance_\n
+                    \t\t- 🔵 _Beta_\n
+            6. **Drag icon**\n
+                \t- The app lets you organize and order which provider will be called up first when generating content.\n
+                \t- To organize providers, press and hold a provider card then drag it to the desired order.\n
+
+            ### So… where do I get providers?\n\n
+            
+            Providers are made by other developers/programmers and, currently, _GitHub repositories_ are the main source of these providers. Similar sites like GitLab and Codeberg are not yet fully supported.\n\n
+
+            ---\n\n
+
+            # Technical questions\n\n
+
+            ### How to configure a provider?\n\n
+
+            When a provider asks for a configuration, follow the instructions it will provide you with.\n\n
+
+            Usually its configurations are included inside its provider settings which can be opened by clicking the settings button on its provider card or provider detailed information screen.\n
+            ![Provider\'s settings button](https://i.imgur.com/s7H7HZD.png)\n\n
+
+            ### How to troubleshoot a broken provider?\n\n
+
+            Unfortunately, issues that pertains to providers must be reported to the author/s of the provider, not to the app\'s repository itself.\n\n
+
+            However, the app recommends the following steps for you to be able to help and debug the provider:\n
+            1. Test the provider.\n
+                \t- Click the provider card of the provider you want to test. There should be a button to test the provider.\n
+                \t![Test provider button preview](https://i.imgur.com/8SjVNWy.png)\n
+            2. Get the error logs of the test.\n
+                \t- You can either open and copy the log or hold-press a test case item to copy it instantly.\n
+                \t![Test case item preview](https://i.imgur.com/xrL6MAu.png)\n
+            3. Report the logs.\n
+                \t- Click the provider card to open the provider\'s detailed information screen.\n
+                \t- On the bottom of the authors section, click the _\'Issue a bug\'_ button.\n
+                \t![Issue a bug button preview](https://i.imgur.com/sjRuK7T.png)\n
+                \t- Paste the logs and report it.\n\n
+
+            ---\n\n
+
+            # Other questions\n\n
+
+            ### Is it required to install providers?\n\n
+            
+            No. Like many browser extensions, they are purely optional to install, but you are free to do so.\n\n
+
+            ### Is there a security drawback for installing a provider?\n\n
+
+            Yes. Each provider accessible through the app is not securely monitored by the author(s) of the app.\n\n
+
+            When you install a provider, _it can access the whole context of the app_ such as device storage, notifications, etc. which is considerably a common security flaw for android apps.\n\n
+
+            Installing a provider is entirely up to your judgment, with all risks and responsibilities falling on you. Trust or not to trust? It\'s up to you!\n\n
+            
+            ### Why implement the provider system? It is confusing.\n\n
+
+            It is to tailor the experiences and customize the user preferences. This way, we can also increase user engagement and have more people use the app.\n\n
+
+            It also prioritizes building a developer-friendly community. Nerds 🤓 and non-nerds can create a community based on their similar interests and needs that are related to the app.\n\n
+
+            Lastly, it is to separate the responsibilities of the providers from the app. Issues related to providers are incredibly hard to maintain.\n\n
+
+            ### Other apps have better _extension_ system. Why should I use this?\n\n
+
+            Yes, definitely! Use those apps instead for a better user experience. The app is still in its early stages, and we can not expect major updates in immediate time.\n
+            ]]>
+        </item>
+    </string-array>
+</resources>

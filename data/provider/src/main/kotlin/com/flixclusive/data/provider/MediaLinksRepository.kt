@@ -1,36 +1,29 @@
 package com.flixclusive.data.provider
 
-import com.flixclusive.core.util.R
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.util.exception.actualMessage
-import com.flixclusive.core.util.exception.toNetworkException
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.model.provider.Stream
-import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.provider.link.MediaLink
+import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.ProviderWebViewApi
 import com.flixclusive.provider.webview.ProviderWebView
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.flixclusive.core.util.R as UtilR
 
 @Singleton
-class MediaLinksRepository @Inject constructor(
-    @Dispatcher(AppDispatchers.IO)
-    private val ioDispatcher: CoroutineDispatcher,
-    @Dispatcher(AppDispatchers.Main)
-    private val mainDispatcher: CoroutineDispatcher,
-) {
+class MediaLinksRepository @Inject constructor() {
 
     /**
      *
@@ -51,12 +44,12 @@ class MediaLinksRepository @Inject constructor(
         episode: Episode?,
         onLinkFound: (MediaLink) -> Unit
     ): Resource<Unit> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             var webView: ProviderWebView? = null
 
             try {
                 if (api is ProviderWebViewApi) {
-                    withContext(mainDispatcher) {
+                    withMainContext {
                         webView = api.getWebView()
                     }
 
@@ -79,7 +72,7 @@ class MediaLinksRepository @Inject constructor(
             } catch (e: Throwable) {
                 e.toNetworkException()
             } finally {
-                withContext(mainDispatcher) {
+                withMainContext {
                     webView?.destroy()
                 }
             }
@@ -100,10 +93,10 @@ class MediaLinksRepository @Inject constructor(
         film: FilmDetails?,
         api: ProviderApi,
     ): Resource<String?> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             try {
                 if (film == null)
-                    return@withContext Resource.Failure(R.string.default_error)
+                    return@withIOContext Resource.Failure(UtilR.string.default_error)
 
                 var i = 1
                 var watchId: String? = null
@@ -111,7 +104,7 @@ class MediaLinksRepository @Inject constructor(
 
                 while (watchId == null) {
                     if (i > maxPage) {
-                        return@withContext Resource.Success(null)
+                        return@withIOContext Resource.Success(null)
                     }
 
                     val searchResponse = api.search(
@@ -123,7 +116,7 @@ class MediaLinksRepository @Inject constructor(
                     )
 
                     if (searchResponse.results.isEmpty())
-                        return@withContext Resource.Success(null)
+                        return@withIOContext Resource.Success(null)
 
 
                     for (item in searchResponse.results) {
@@ -173,7 +166,7 @@ class MediaLinksRepository @Inject constructor(
                 errorLog(e)
                 Resource.Failure(
                     UiText.StringResource(
-                        R.string.failed_to_fetch_media_id_message,
+                        UtilR.string.failed_to_fetch_media_id_message,
                         e.actualMessage
                     )
                 )

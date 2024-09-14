@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.core.ui.mobile.component.provider.ButtonWithCircularProgressIndicator
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.gradle.entities.Repository
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.model.provider.Repository
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 

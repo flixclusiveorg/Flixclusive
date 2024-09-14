@@ -10,6 +10,7 @@ android {
 
 dependencies {
     api(projects.core.util)
+    api(projects.core.locale)
     api(projects.model.database)
 
     implementation(projects.core.database)

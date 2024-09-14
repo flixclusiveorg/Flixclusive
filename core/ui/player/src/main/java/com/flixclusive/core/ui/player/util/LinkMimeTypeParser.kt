@@ -1,7 +1,7 @@
 package com.flixclusive.core.ui.player.util
 
 import androidx.media3.common.MimeTypes
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.link.Subtitle
 
 object MimeTypeParser {
 

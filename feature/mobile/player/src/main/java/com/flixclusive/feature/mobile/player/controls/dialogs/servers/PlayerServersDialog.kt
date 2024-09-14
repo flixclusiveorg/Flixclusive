@@ -23,7 +23,7 @@ import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.feature.mobile.player.controls.common.BasePlayerDialog
 import com.flixclusive.feature.mobile.player.controls.common.ListContentHolder
 import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
-import com.flixclusive.model.provider.Stream
+import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR

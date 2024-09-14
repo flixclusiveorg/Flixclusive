@@ -10,9 +10,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.film.filter.Filter
-import com.flixclusive.core.util.film.filter.FilterGroup
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.model.provider.filter.Filter
+import com.flixclusive.model.provider.filter.FilterGroup
 
 internal object FilterHelper {
 

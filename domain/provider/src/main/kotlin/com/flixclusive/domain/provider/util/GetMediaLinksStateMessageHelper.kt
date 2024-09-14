@@ -1,7 +1,7 @@
 package com.flixclusive.domain.provider.util
 
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.model.provider.MediaLinkResourceState
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import kotlinx.coroutines.channels.ProducerScope
 import com.flixclusive.core.util.R as UtilR
 

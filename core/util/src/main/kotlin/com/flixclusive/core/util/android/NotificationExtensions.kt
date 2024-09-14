@@ -11,10 +11,8 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.NotificationWithIdAndTag
-import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.core.content.getSystemService
-import com.flixclusive.core.util.R
 
 val Context.notificationManager: NotificationManager
     get() = getSystemService()!!
@@ -66,10 +64,12 @@ fun Context.cancelNotification(id: Int) {
 }
 
 fun Context.notificationBuilder(
-    channelId: String, block: (NotificationCompat.Builder.() -> Unit)? = null
+    channelId: String, block: (NotificationCompat.Builder.() -> Unit)? = null,
+    color: Int = Color.parseColor("#B39DDB"),
 ): NotificationCompat.Builder {
     val builder = NotificationCompat.Builder(this, channelId)
-        .setColor(ContextCompat.getColor(this, R.color.md_theme_dark_primary))
+        .setColor(color)
+
     if (block != null) {
         builder.block()
     }

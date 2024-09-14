@@ -2,11 +2,10 @@ package com.flixclusive.crash
 
 import android.content.Context
 import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
-import com.flixclusive.core.util.network.HttpMethod
-import com.flixclusive.core.util.network.formRequest
+import com.flixclusive.core.util.coroutines.AppDispatchers
+import com.flixclusive.core.util.network.okhttp.HttpMethod
+import com.flixclusive.core.util.network.okhttp.formRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import javax.inject.Inject
@@ -28,11 +27,10 @@ interface CrashReportSender {
 
 internal class DefaultCrashReportSender @Inject constructor(
     private val client: OkHttpClient,
-    @ApplicationContext private val context: Context,
-    @ApplicationScope private val scope: CoroutineScope
+    @ApplicationContext private val context: Context
 ) : CrashReportSender {
     override fun send(errorLog: String) {
-        scope.launch {
+        AppDispatchers.Default.scope.launch {
             val response = client.formRequest(
                 url = errorReportFormUrl,
                 method = HttpMethod.POST,

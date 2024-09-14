@@ -15,7 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.model.tmdb.Genre
+import com.flixclusive.model.film.Genre
 
 @Composable
 fun GenreButton(

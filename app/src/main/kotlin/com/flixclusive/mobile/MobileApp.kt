@@ -43,7 +43,7 @@ import androidx.navigation.compose.rememberNavController
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
 import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.util.webview.WebViewDriver
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
@@ -54,7 +54,7 @@ import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
 import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.FilmCoverPreview
 import com.flixclusive.mobile.component.FilmPreviewBottomSheet
-import com.flixclusive.model.provider.MediaLinkResourceState
+import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.util.AppNavHost
 import com.flixclusive.util.currentScreenAsState
 import com.flixclusive.util.navigateIfResumed

@@ -46,8 +46,8 @@ import com.flixclusive.R
 import com.flixclusive.core.theme.starColor
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.film.formatRating
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.core.ui.common.util.formatRating
+import com.flixclusive.model.film.Film
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.mobile.R as UiMobileR
 import com.flixclusive.core.util.R as UtilR

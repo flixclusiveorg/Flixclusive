@@ -12,7 +12,7 @@ android {
 dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.ui.mobile)
-    implementation(projects.domain.category)
+    implementation(projects.domain.catalog)
     implementation(projects.model.configuration)
 
     implementation(libs.compose.foundation)

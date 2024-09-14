@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.getProviderStatusColor
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.gradle.entities.Status
+import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.Status
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 

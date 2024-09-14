@@ -19,11 +19,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.mobile.component.RetryButton
-import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.tmdb.common.tv.Season
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.film.common.tv.Episode
 
 @Composable
 internal fun EpisodesRow(

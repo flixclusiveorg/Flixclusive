@@ -29,8 +29,8 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManag
 import com.flixclusive.feature.mobile.player.controls.common.BasePlayerDialog
 import com.flixclusive.feature.mobile.player.controls.common.ListContentHolder
 import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
-import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.provider.SubtitleSource
+import com.flixclusive.model.provider.link.Subtitle
+import com.flixclusive.model.provider.link.SubtitleSource
 import com.hippo.unifile.UniFile
 import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.util.R as UtilR

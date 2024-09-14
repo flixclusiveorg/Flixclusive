@@ -17,7 +17,7 @@ dependencies {
     api(projects.core.util)
     api(projects.model.datastore)
     api(projects.model.provider)
-    api(projects.model.tmdb)
+    api(projects.model.film)
     api(projects.provider)
 
     implementation(libs.okhttp)

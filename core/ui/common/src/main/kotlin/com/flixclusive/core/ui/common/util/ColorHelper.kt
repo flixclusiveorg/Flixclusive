@@ -2,7 +2,7 @@ package com.flixclusive.core.ui.common.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.flixclusive.gradle.entities.Status
+import com.flixclusive.model.provider.Status
 
 @Composable
 fun Color.onMediumEmphasis(

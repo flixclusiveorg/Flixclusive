@@ -1,35 +1,31 @@
 package com.flixclusive.data.watchlist
 
 import com.flixclusive.core.database.dao.WatchlistDao
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.model.database.WatchlistItem
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal class DefaultWatchlistRepository @Inject constructor(
-    private val watchlistDao: WatchlistDao,
-    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher
+    private val watchlistDao: WatchlistDao
 ) : WatchlistRepository {
-    override suspend fun insert(item: WatchlistItem) = withContext(ioDispatcher) {
+    override suspend fun insert(item: WatchlistItem) = withIOContext {
         watchlistDao.insert(item)
     }
 
-    override suspend fun remove(item: WatchlistItem) = withContext(ioDispatcher) {
+    override suspend fun remove(item: WatchlistItem) = withIOContext {
         watchlistDao.delete(item)
     }
 
-    override suspend fun removeById(itemId: String, ownerId: Int) = withContext(ioDispatcher) {
+    override suspend fun removeById(itemId: String, ownerId: Int) = withIOContext {
         watchlistDao.deleteById(itemId, ownerId)
     }
 
-    override suspend fun getWatchlistItemById(itemId: String, ownerId: Int): WatchlistItem? = withContext(ioDispatcher) {
+    override suspend fun getWatchlistItemById(itemId: String, ownerId: Int): WatchlistItem? = withIOContext {
         watchlistDao.getWatchlistItemById(itemId, ownerId)
     }
 
-    override suspend fun getAllItems(ownerId: Int): List<WatchlistItem> = withContext(ioDispatcher) {
+    override suspend fun getAllItems(ownerId: Int): List<WatchlistItem> = withIOContext {
         watchlistDao.getAllItems(ownerId)
     }
 

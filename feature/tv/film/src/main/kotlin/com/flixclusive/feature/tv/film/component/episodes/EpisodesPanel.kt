@@ -53,11 +53,11 @@ import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.hasPressedLeft
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
-import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.tmdb.common.tv.Season
-import com.flixclusive.model.tmdb.common.tv.Episode
-import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.TvShow
 
 private const val EPISODES_PANEL_FOCUS_KEY_FORMAT = "row=%d, column=%d"
 

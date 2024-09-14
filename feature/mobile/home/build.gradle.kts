@@ -14,7 +14,7 @@ dependencies {
     implementation(projects.core.ui.home)
     implementation(projects.model.configuration)
     implementation(projects.model.database)
-    implementation(projects.model.tmdb)
+    implementation(projects.model.film)
 
     implementation(libs.coil.compose)
     implementation(libs.compose.foundation)

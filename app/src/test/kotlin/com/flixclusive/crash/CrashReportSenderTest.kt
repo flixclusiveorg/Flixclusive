@@ -1,8 +1,8 @@
 package com.flixclusive.crash
 
-import com.flixclusive.core.util.network.HttpMethod
-import com.flixclusive.core.util.network.ignoreAllSSLErrors
-import com.flixclusive.core.util.network.formRequest
+import com.flixclusive.core.util.network.okhttp.HttpMethod
+import com.flixclusive.core.util.network.okhttp.ignoreAllSSLErrors
+import com.flixclusive.core.util.network.okhttp.formRequest
 import okhttp3.OkHttpClient
 import org.junit.Before
 import org.junit.Test

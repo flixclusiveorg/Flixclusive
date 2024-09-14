@@ -21,8 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.common.configuration.GITHUB_LATEST_RELEASE
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.common.GithubConstant.GITHUB_LATEST_RELEASE
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.feature.mobile.preferences.R
 import com.flixclusive.core.util.R as UtilR
 

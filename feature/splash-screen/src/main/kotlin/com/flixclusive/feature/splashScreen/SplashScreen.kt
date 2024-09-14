@@ -47,8 +47,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.util.android.hasAllPermissionGranted
-import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.configuration.UpdateStatus
 import com.flixclusive.feature.splashScreen.component.ErrorDialog
 import com.flixclusive.feature.splashScreen.component.PrivacyNotice

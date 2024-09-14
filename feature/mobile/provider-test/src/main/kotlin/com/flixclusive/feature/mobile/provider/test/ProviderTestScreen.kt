@@ -66,7 +66,7 @@ import com.flixclusive.feature.mobile.provider.test.component.RepetitiveTestNoti
 import com.flixclusive.feature.mobile.provider.test.component.SortBottomSheet
 import com.flixclusive.feature.mobile.provider.test.component.TestResultCard
 import com.flixclusive.feature.mobile.provider.test.component.TestScreenHeader
-import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.model.provider.id
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.util.R as UtilR

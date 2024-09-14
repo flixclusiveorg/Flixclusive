@@ -51,10 +51,10 @@ import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.SMALL_ERROR
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
-import com.flixclusive.core.util.common.ui.PagingState
+import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.film.Film
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR

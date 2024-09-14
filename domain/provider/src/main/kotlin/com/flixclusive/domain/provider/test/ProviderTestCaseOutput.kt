@@ -1,7 +1,7 @@
 package com.flixclusive.domain.provider.test
 
 import androidx.annotation.DrawableRes
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.domain.provider.test.TestStatus.FAILURE
 import com.flixclusive.domain.provider.test.TestStatus.NOT_IMPLEMENTED
 import com.flixclusive.domain.provider.test.TestStatus.RUNNING

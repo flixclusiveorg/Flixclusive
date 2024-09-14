@@ -7,15 +7,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.PagingState
-import com.flixclusive.core.util.film.SearchFilter
-import com.flixclusive.core.util.film.replaceTypeInUrl
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.domain.search.GetSearchRecommendedCardsUseCase
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.SearchResponseData
-import com.flixclusive.model.tmdb.category.SearchCategory
+import com.flixclusive.model.configuration.catalog.SearchCatalog
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.SearchResponseData
+import com.flixclusive.model.film.util.replaceTypeInUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,7 +26,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class SearchScreenViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
-    private val getSearchRecommendedCardsUseCase: GetSearchRecommendedCardsUseCase
+    getSearchRecommendedCardsUseCase: GetSearchRecommendedCardsUseCase
 ) : ViewModel() {
     val searchResults = mutableStateListOf<FilmSearchItem>()
     val searchSuggestions = mutableStateListOf<String>()
@@ -46,12 +45,12 @@ internal class SearchScreenViewModel @Inject constructor(
 
     var searchQuery by mutableStateOf("")
         private set
-    var selectedCategory: SearchCategory? by mutableStateOf(null)
+    var selectedCatalog: SearchCatalog? by mutableStateOf(null)
         private set
     var isError by mutableStateOf(false)
         private set
 
-    val categories = getSearchRecommendedCardsUseCase.cards
+    val catalogs = getSearchRecommendedCardsUseCase.cards
         .map { value ->
             if (value is Resource.Success) {
                 Resource.Success(value.data?.filterNot { it.id == -1 })
@@ -97,18 +96,18 @@ internal class SearchScreenViewModel @Inject constructor(
     }
 
     fun onQueryChange(query: String) {
-        selectedCategory = null // remove selected category
+        selectedCatalog = null // remove selected catalog
 
         searchQuery = query
     }
 
-    fun onCategoryChange(item: SearchCategory) {
-        selectedCategory = item
+    fun onCatalogChange(item: SearchCatalog) {
+        selectedCatalog = item
     }
 
     fun paginate() {
         when {
-            selectedCategory != null -> getCategoryItems()
+            selectedCatalog != null -> getCatalogItems()
             searchQuery.isNotBlank() -> getSearchItems()
             else -> loadRecentlyTrending()
         }
@@ -172,12 +171,12 @@ internal class SearchScreenViewModel @Inject constructor(
         }
     }
 
-    private fun getCategoryItems() {
+    private fun getCatalogItems() {
         viewModelScope.launch {
-            val filmTypeCouldBeBoth = selectedCategory!!.mediaType == "all"
+            val filmTypeCouldBeBoth = selectedCatalog!!.mediaType == "all"
             val urlQuery = if(filmTypeCouldBeBoth && currentFilterSelected != SearchFilter.ALL) {
-                selectedCategory!!.url.replaceTypeInUrl(currentFilterSelected.type)
-            } else selectedCategory!!.url
+                selectedCatalog!!.url.replaceTypeInUrl(currentFilterSelected.type)
+            } else selectedCatalog!!.url
 
 
             loadItems(

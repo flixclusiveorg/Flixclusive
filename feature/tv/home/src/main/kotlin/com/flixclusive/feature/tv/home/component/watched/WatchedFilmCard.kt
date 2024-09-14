@@ -52,6 +52,7 @@ import androidx.tv.material3.StandardCardLayout
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import coil.imageLoader
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -59,13 +60,12 @@ import com.flixclusive.core.ui.tv.component.CustomLinearProgressIndicator
 import com.flixclusive.core.ui.tv.component.DotSeparatedText
 import com.flixclusive.core.ui.tv.component.FilmCardShape
 import com.flixclusive.core.ui.tv.component.FilmPadding
-import com.flixclusive.core.util.R
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.film.formatMinutes
 import com.flixclusive.feature.tv.home.component.util.useLocalImmersiveBackgroundColor
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.core.ui.common.util.formatMinutes
+import com.flixclusive.core.util.R as UtilR
 
 internal val WatchedFilmCardHeight = 250.dp
 private val WatchedFilmCardWidth = 400.dp
@@ -201,7 +201,7 @@ private fun CardImage(
             model = painter,
             imageLoader = LocalContext.current.imageLoader,
             contentScale = ContentScale.FillBounds,
-            contentDescription = stringResource(id = R.string.film_item_content_description),
+            contentDescription = stringResource(id = UtilR.string.film_item_content_description),
             onSuccess = { onImageLoad(it.result.drawable) },
             modifier = Modifier
                 .aspectRatio(FilmCover.Backdrop.ratio)
@@ -295,7 +295,7 @@ private fun CardOverview(
                     }
 
                     if(seasons != null) {
-                        var seasonsRuntime = UiText.StringResource(R.string.season_runtime_formatter, seasons!!).asString(context)
+                        var seasonsRuntime = UiText.StringResource(UtilR.string.season_runtime_formatter, seasons!!).asString(context)
 
                         if(seasons!! > 1)
                             seasonsRuntime += 's'
@@ -306,7 +306,7 @@ private fun CardOverview(
 
                     val totalEpisodes = episodes.values.sum()
                     if (totalEpisodes > 0) {
-                        var episodesRuntime = UiText.StringResource(R.string.episode_runtime_formatter, totalEpisodes).asString(context)
+                        var episodesRuntime = UiText.StringResource(UtilR.string.episode_runtime_formatter, totalEpisodes).asString(context)
 
                         if(totalEpisodes > 1)
                             episodesRuntime += 's'

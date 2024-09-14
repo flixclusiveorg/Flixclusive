@@ -1,17 +1,16 @@
 package com.flixclusive.core.network.retrofit.dto
 
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.film.extractYear
-import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.Person
-import com.flixclusive.model.tmdb.SearchResponseData
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.details.Company
-import com.flixclusive.model.tmdb.common.tv.Season
-import com.flixclusive.model.tmdb.util.filterOutUnreleasedFilms
-import com.flixclusive.model.tmdb.util.formatAirDates
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.Genre
+import com.flixclusive.model.film.Person
+import com.flixclusive.model.film.SearchResponseData
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.details.Company
+import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.film.util.extractYear
+import com.flixclusive.model.film.util.filterOutUnreleasedFilms
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
@@ -80,4 +79,19 @@ internal fun TMDBTvShow.toTvShowDetails(): TvShow {
         totalEpisodes = totalEpisodes,
         totalSeasons = totalSeasons,
     )
+}
+
+private fun formatAirDates(
+    firstAirDate: String,
+    lastAirDate: String,
+    inProduction: Boolean?,
+): String {
+    if (firstAirDate.isEmpty() && lastAirDate.isEmpty()) {
+        return "No air dates"
+    }
+
+    val firstYear = firstAirDate.substring(0, 4)
+    val lastYear = if (inProduction == true) "present" else lastAirDate.substring(0, 4)
+
+    return "$firstYear-$lastYear"
 }

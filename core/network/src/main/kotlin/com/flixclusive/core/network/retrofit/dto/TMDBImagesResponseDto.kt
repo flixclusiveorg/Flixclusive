@@ -1,6 +1,6 @@
 package com.flixclusive.core.network.retrofit.dto
 
-import com.flixclusive.model.tmdb.common.details.FilmImage
+import com.flixclusive.model.film.common.details.FilmImage
 import kotlinx.serialization.Serializable
 
 @Serializable

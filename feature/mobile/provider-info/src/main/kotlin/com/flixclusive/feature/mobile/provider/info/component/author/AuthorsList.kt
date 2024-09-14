@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.provider.info.HORIZONTAL_PADDING
 import com.flixclusive.feature.mobile.provider.info.component.Title
-import com.flixclusive.gradle.entities.Author
+import com.flixclusive.model.provider.Author
 import com.flixclusive.core.util.R as UtilR
 
 @Composable

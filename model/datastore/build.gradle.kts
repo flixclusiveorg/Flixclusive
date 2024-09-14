@@ -10,4 +10,5 @@ android {
 dependencies {
     api(libs.gson)
     api(projects.provider)
+    implementation(projects.core.locale)
 }

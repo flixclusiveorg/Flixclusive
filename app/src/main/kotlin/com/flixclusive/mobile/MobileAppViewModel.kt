@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.mobile.KeyEventHandler
-import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.webview.WebViewDriverManager
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.util.InternetMonitor
@@ -16,12 +16,12 @@ import com.flixclusive.data.watchlist.WatchlistRepository
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
 import com.flixclusive.model.database.toWatchlistItem
-import com.flixclusive.model.provider.CachedLinks
-import com.flixclusive.model.provider.MediaLinkResourceState
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.common.tv.Episode
-import com.flixclusive.model.tmdb.toFilmInstance
+import com.flixclusive.domain.provider.CachedLinks
+import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.toFilmInstance
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow

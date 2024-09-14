@@ -11,7 +11,8 @@ android {
 
 dependencies {
     api(projects.core.util)
-    api(projects.model.tmdb)
+    api(projects.core.locale)
+    api(projects.model.film)
 
     implementation(libs.coroutines.test)
     implementation(libs.mockk)

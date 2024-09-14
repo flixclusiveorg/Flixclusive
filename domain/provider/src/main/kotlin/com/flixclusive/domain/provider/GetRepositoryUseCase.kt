@@ -1,18 +1,15 @@
 package com.flixclusive.domain.provider
 
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
-import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
 import com.flixclusive.domain.provider.util.isProviderBranchValid
-import com.flixclusive.gradle.entities.Repository
-import com.flixclusive.gradle.entities.Repository.Companion.toValidRepositoryLink
-import kotlinx.coroutines.CoroutineDispatcher
+import com.flixclusive.model.provider.Repository
+import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 import com.flixclusive.core.util.R as UtilR
@@ -27,15 +24,13 @@ import com.flixclusive.core.util.R as UtilR
  * repository object is returned.
  *
  * @param client The OkHttpClient instance used to make network requests.
- * @param ioDispatcher The dispatcher used to run the network call on a background thread.
  */
 class GetRepositoryUseCase @Inject constructor(
     private val client: OkHttpClient,
-    private val appSettingsManager: AppSettingsManager,
-    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher
+    private val appSettingsManager: AppSettingsManager
 ) {
     suspend operator fun invoke(url: String): Resource<Repository> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             safeCall {
                 val repositories = appSettingsManager.providerSettings.data
                     .map { it.repositories }.first()
@@ -43,7 +38,7 @@ class GetRepositoryUseCase @Inject constructor(
 
                 val isAlreadyAdded = repositories.any { it.owner.equals(username, true) && it.name == repositoryName }
                 if (isAlreadyAdded) {
-                    return@withContext Resource.Failure(UtilR.string.already_added_repo_error)
+                    return@withIOContext Resource.Failure(UtilR.string.already_added_repo_error)
                 }
 
                 val repository = url.toValidRepositoryLink()
@@ -53,10 +48,10 @@ class GetRepositoryUseCase @Inject constructor(
                 )
 
                 if (!client.isProviderBranchValid(providerBranch)) {
-                    return@withContext Resource.Failure(UtilR.string.invalid_repository)
+                    return@withIOContext Resource.Failure(UtilR.string.invalid_repository)
                 }
 
-                return@withContext Resource.Success(repository)
+                return@withIOContext Resource.Success(repository)
             } ?: Resource.Failure(UtilR.string.invalid_repo_link)
         }
     }

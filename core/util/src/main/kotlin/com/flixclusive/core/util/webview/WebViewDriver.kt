@@ -6,7 +6,7 @@ import android.webkit.CookieManager
 import android.webkit.WebStorage
 import android.webkit.WebView
 import androidx.annotation.MainThread
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.launchOnMain
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnMain
 
 /**
  *

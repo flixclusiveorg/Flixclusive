@@ -11,8 +11,7 @@ object TestTmdbDomainModule {
     ): FilmProviderUseCase {
         return FilmProviderUseCase(
             tmdbRepository = getMockTMDBRepository(),
-            providerApiRepository = getMockProviderApiRepository(),
-            ioDispatcher = dispatcher
+            providerApiRepository = getMockProviderApiRepository()
         )
     }
 }

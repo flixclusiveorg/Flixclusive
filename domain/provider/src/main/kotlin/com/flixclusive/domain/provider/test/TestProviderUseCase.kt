@@ -2,9 +2,7 @@ package com.flixclusive.domain.provider.test
 
 import android.content.Context
 import androidx.compose.runtime.mutableStateListOf
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
-import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
+import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.domain.provider.test.ProviderTestCases.ProviderTestCase
@@ -12,12 +10,9 @@ import com.flixclusive.domain.provider.test.ProviderTestCases.methodTestCases
 import com.flixclusive.domain.provider.test.ProviderTestCases.propertyTestCases
 import com.flixclusive.domain.provider.util.StringHelper.createString
 import com.flixclusive.domain.provider.util.StringHelper.getString
-import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.model.provider.id
+import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.provider.ProviderApi
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,9 +34,7 @@ class TestProviderUseCase @Inject constructor(
     private val providerApiRepository: ProviderApiRepository,
     private val providerManager: ProviderManager,
     private val client: OkHttpClient,
-    @ApplicationContext private val context: Context,
-    @ApplicationScope private val scope: CoroutineScope,
-    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
+    @ApplicationContext private val context: Context
 ) {
     private val _testStage = MutableStateFlow<TestStage>(TestStage.Idle(providerOnTest = null))
     val testStage = _testStage.asStateFlow()
@@ -61,7 +54,7 @@ class TestProviderUseCase @Inject constructor(
     operator fun invoke(
         providers: ArrayList<ProviderData>
     ) {
-        testJob = scope.launchPausing {
+        testJob = AppDispatchers.IO.scope.launchPausing {
             _testJobState.value = TestJobState.RUNNING
 
             for (i in providers.indices) {
@@ -201,7 +194,7 @@ class TestProviderUseCase @Inject constructor(
                 )
             )
 
-            val finalOutput = withContext(ioDispatcher.pausing()) {
+            val finalOutput = withContext(AppDispatchers.IO.dispatcher.pausing()) {
                 testCase.test(
                     /* testName = */ testCase.name,
                     /* providerApi = */ api,

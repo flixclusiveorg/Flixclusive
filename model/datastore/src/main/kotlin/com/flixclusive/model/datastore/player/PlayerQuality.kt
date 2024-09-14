@@ -1,7 +1,7 @@
 package com.flixclusive.model.datastore.player
 
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.model.provider.Stream
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.core.util.R as UtilR
 
 enum class PlayerQuality(

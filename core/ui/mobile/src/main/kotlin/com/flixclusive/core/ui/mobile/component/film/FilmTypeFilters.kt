@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
@@ -76,3 +76,9 @@ fun FilmTypeFilters(
         }
     }
 }
+
+private val FilmType.stringId: Int
+    get() = when (this) {
+        FilmType.MOVIE -> UtilR.string.movie
+        FilmType.TV_SHOW -> UtilR.string.tv_show
+    }

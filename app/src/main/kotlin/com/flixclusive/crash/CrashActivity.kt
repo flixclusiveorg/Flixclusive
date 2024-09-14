@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.util.android.isTvMode
+import com.flixclusive.core.theme.util.TvModeChecker.isTvMode
 import com.flixclusive.feature.mobile.crash.CrashMobileScreen
 import com.flixclusive.mobile.MobileActivity
 import dagger.hilt.android.AndroidEntryPoint

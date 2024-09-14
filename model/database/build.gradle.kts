@@ -11,5 +11,5 @@ android {
 dependencies {
     api(libs.gson)
     api(projects.core.util)
-    api(projects.model.tmdb)
+    api(projects.model.film)
 }

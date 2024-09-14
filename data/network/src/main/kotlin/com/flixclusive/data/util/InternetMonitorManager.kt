@@ -8,9 +8,8 @@ import android.net.NetworkRequest
 import android.net.NetworkRequest.Builder
 import android.os.Build
 import androidx.core.content.getSystemService
-import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
+import com.flixclusive.core.util.coroutines.AppDispatchers
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,8 +19,7 @@ import kotlinx.coroutines.flow.shareIn
 import javax.inject.Inject
 
 internal class InternetMonitorManager @Inject constructor(
-    @ApplicationContext private val context: Context,
-    @ApplicationScope private val scope: CoroutineScope
+    @ApplicationContext private val context: Context
 ) : InternetMonitor {
     override val isOnline: Flow<Boolean> = callbackFlow {
         val connectivityManager = context.getSystemService<ConnectivityManager>()
@@ -66,7 +64,7 @@ internal class InternetMonitorManager @Inject constructor(
     }
         .conflate()
         .shareIn(
-            scope = scope,
+            scope = AppDispatchers.Default.scope,
             replay = 1,
             started = SharingStarted.WhileSubscribed(),
         )

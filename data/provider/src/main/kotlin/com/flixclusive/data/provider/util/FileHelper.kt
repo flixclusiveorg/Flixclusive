@@ -4,9 +4,9 @@ import android.content.Context
 import com.flixclusive.core.util.android.saveTo
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.core.util.network.request
+import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.data.provider.PROVIDERS_FOLDER
-import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.model.provider.ProviderData
 import okhttp3.OkHttpClient
 import java.io.File
 import java.nio.charset.StandardCharsets

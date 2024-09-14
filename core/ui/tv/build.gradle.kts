@@ -10,8 +10,7 @@ android {
 
 dependencies {
     api(projects.core.ui.common)
-    api(projects.core.util)
-    implementation(projects.model.tmdb)
+    implementation(projects.model.film)
     implementation(projects.model.provider)
     implementation(projects.model.database)
 

@@ -1,10 +1,10 @@
 package com.flixclusive.data.tmdb
 
-import com.flixclusive.core.util.R
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.film.filter.Filter
-import com.flixclusive.core.util.film.filter.FilterGroup
-import com.flixclusive.core.util.film.filter.FilterList
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.model.provider.filter.Filter
+import com.flixclusive.model.provider.filter.FilterGroup
+import com.flixclusive.model.provider.filter.FilterList
+import com.flixclusive.core.util.R as UtilR
 
 private const val TMDB_FILTER_LABEL = "Media type"
 internal const val FILTER_ALL = 0
@@ -26,9 +26,9 @@ class TmdbFilters(
             = FilterList(
             TmdbFilters(
                 options = listOf(
-                    UiText.StringResource(R.string.all),
-                    UiText.StringResource(R.string.tv_show),
-                    UiText.StringResource(R.string.movie)
+                    UiText.StringResource(UtilR.string.all),
+                    UiText.StringResource(UtilR.string.tv_show),
+                    UiText.StringResource(UtilR.string.movie)
                 )
             ),
         )

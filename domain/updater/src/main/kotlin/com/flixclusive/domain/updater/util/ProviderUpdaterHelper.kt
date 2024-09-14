@@ -1,6 +1,6 @@
 package com.flixclusive.domain.updater.util
 
-import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.model.provider.ProviderData
 
 internal fun List<ProviderData>.findProviderData(
     providerName: String

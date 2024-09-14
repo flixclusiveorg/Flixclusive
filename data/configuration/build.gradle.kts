@@ -14,5 +14,6 @@ dependencies {
     api(projects.model.configuration)
 
     implementation(libs.mockk)
+    implementation(projects.core.locale)
     implementation(projects.core.network)
 }

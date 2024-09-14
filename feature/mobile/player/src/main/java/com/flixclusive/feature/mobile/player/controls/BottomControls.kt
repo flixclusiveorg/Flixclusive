@@ -52,7 +52,7 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManag
 import com.flixclusive.feature.mobile.player.R
 import com.flixclusive.feature.mobile.player.controls.common.slider.CustomSlider
 import com.flixclusive.feature.mobile.player.controls.common.slider.CustomSliderDefaults
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Episode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.player.R as PlayerR

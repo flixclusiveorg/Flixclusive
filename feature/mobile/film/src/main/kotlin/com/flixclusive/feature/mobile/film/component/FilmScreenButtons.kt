@@ -37,7 +37,7 @@ import com.flixclusive.core.ui.common.util.formatPlayButtonLabel
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.tmdb.FilmReleaseStatus
+import com.flixclusive.model.film.FilmReleaseStatus
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 

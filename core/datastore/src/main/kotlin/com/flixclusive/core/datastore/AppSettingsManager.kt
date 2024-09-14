@@ -1,11 +1,10 @@
 package com.flixclusive.core.datastore
 
 import androidx.datastore.core.DataStore
-import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
+import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.AppSettingsProvider
 import com.flixclusive.model.datastore.OnBoardingPreferences
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -13,8 +12,7 @@ import javax.inject.Inject
 class AppSettingsManager @Inject constructor(
     val appSettings: DataStore<AppSettings>,
     val providerSettings: DataStore<AppSettingsProvider>,
-    val onBoardingPreferences: DataStore<OnBoardingPreferences>,
-    @ApplicationScope private val scope: CoroutineScope
+    val onBoardingPreferences: DataStore<OnBoardingPreferences>
 ) {
     /**
      *
@@ -31,7 +29,7 @@ class AppSettingsManager @Inject constructor(
         private set
 
     init {
-        scope.launch {
+        AppDispatchers.Default.scope.launch {
             cachedAppSettings = appSettings.data.first()
             cachedProviderSettings = providerSettings.data.first()
         }

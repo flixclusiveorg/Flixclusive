@@ -30,8 +30,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
