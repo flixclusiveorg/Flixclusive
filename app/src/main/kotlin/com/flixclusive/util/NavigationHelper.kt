@@ -23,8 +23,8 @@ import androidx.navigation.NavOptionsBuilder
 import com.flixclusive.ROOT
 import com.flixclusive.mobile.MobileAppNavigator
 import com.flixclusive.mobile.MobileNavGraphs
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.tv.AppTvNavigator
 import com.flixclusive.tv.TvNavGraphs
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi

@@ -24,7 +24,7 @@ import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.tv.component.FilmOverview
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.drawScrimOnForeground
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.film.Film
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable

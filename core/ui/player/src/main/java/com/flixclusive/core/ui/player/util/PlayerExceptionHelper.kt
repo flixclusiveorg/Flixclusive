@@ -5,7 +5,7 @@ import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.HttpDataSource
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.util.log.errorLog
 
 internal fun String?.isDdosProtection(): Boolean {

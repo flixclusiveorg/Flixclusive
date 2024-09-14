@@ -11,7 +11,7 @@ android {
 dependencies {
     api(projects.data.watchHistory)
     api(projects.data.watchlist)
-    api(projects.model.tmdb)
+    api(projects.model.film)
 
     implementation(projects.core.util)
 }

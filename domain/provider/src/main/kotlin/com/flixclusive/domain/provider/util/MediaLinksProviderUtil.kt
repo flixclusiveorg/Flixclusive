@@ -1,8 +1,8 @@
 package com.flixclusive.domain.provider.util
 
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.model.provider.CachedLinks
-import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.domain.provider.CachedLinks
+import com.flixclusive.model.provider.link.MediaLink
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import com.flixclusive.core.util.R as UtilR
 

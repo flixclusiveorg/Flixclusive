@@ -1,14 +1,14 @@
 package com.flixclusive.data.tmdb
 
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.SearchResponseData
-import com.flixclusive.model.tmdb.TMDBCollection
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.tv.Episode
-import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.Genre
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.SearchResponseData
+import com.flixclusive.model.film.TMDBCollection
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
 
 enum class SortOptions {
     POPULARITY,
@@ -67,7 +67,7 @@ interface TMDBRepository {
 
     /**
     * A GET request function for custom queries from
-    * the HomeCategoriesConfig item
+    * the HomeCatalogsConfig item
     */
     suspend fun paginateConfigItems(url: String, page: Int): Resource<SearchResponseData<FilmSearchItem>>
 }

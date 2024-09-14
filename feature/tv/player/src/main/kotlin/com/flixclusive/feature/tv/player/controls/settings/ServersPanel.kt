@@ -23,7 +23,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.core.ui.tv.util.hasPressedRight
 import com.flixclusive.feature.tv.player.controls.settings.common.ListContentHolder
-import com.flixclusive.model.provider.Stream
+import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.util.R as UtilR
 

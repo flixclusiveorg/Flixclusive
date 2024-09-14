@@ -45,7 +45,7 @@ import coil.imageLoader
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.core.util.R as UtilR
 
 @Composable

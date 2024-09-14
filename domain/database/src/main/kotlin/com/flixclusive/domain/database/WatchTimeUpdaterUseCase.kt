@@ -4,7 +4,7 @@ import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.model.database.EpisodeWatched
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.isFinishedWatching
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Episode
 import java.util.Date
 import javax.inject.Inject
 

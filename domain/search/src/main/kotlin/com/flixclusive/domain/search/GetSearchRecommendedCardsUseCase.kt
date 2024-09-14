@@ -1,14 +1,13 @@
 package com.flixclusive.domain.search
 
-import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.tmdb.TMDBRepository
+import com.flixclusive.model.configuration.catalog.SearchCatalog
 import com.flixclusive.model.provider.ProviderCatalog
-import com.flixclusive.model.tmdb.category.SearchCategory
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
@@ -26,14 +25,13 @@ import com.flixclusive.core.util.R as UtilR
 
 @Singleton
 class GetSearchRecommendedCardsUseCase @Inject constructor(
-    @ApplicationScope private val scope: CoroutineScope,
     private val tmdbRepository: TMDBRepository,
     private val configurationManager: AppConfigurationManager,
-    private val providerManager: ProviderManager,
+    providerManager: ProviderManager,
 ) {
     private val usedPosterPaths = mutableSetOf<String>()
 
-    private val _tvShowNetworkCards = MutableStateFlow<List<SearchCategory>>(emptyList())
+    private val _tvShowNetworkCards = MutableStateFlow<List<SearchCatalog>>(emptyList())
     val tvShowNetworkCards = _tvShowNetworkCards.asStateFlow()
 
     val providersCatalogsCards: Flow<List<ProviderCatalog>>
@@ -41,10 +39,10 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
             list.flatMap { it.catalogs }
         }
     
-    private val _movieCompanyCards = MutableStateFlow<List<SearchCategory>>(emptyList())
+    private val _movieCompanyCards = MutableStateFlow<List<SearchCatalog>>(emptyList())
     val movieCompanyCards = _movieCompanyCards.asStateFlow()
 
-    private val _cards = MutableStateFlow<Resource<List<SearchCategory>>>(Resource.Loading)
+    private val _cards = MutableStateFlow<Resource<List<SearchCatalog>>>(Resource.Loading)
     val cards = _cards.asStateFlow()
 
     private var initializationJob: Job? = null
@@ -55,23 +53,23 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
     }
 
     operator fun invoke() {
-        val isAlreadyInitialized = configurationManager.searchCategoriesData?.run {
+        val isAlreadyInitialized = configurationManager.searchCatalogsData?.run {
             (type.size + genres.size) == _cards.value.data?.size
         } ?: false
 
         if(initializationJob?.isActive == true || isAlreadyInitialized)
             return
 
-        initializationJob = scope.launch {
-            var newList = emptyList<SearchCategory>()
+        initializationJob = AppDispatchers.Default.scope.launch {
+            var newList = emptyList<SearchCatalog>()
 
-            configurationManager.searchCategoriesData?.run {
+            configurationManager.searchCatalogsData?.run {
                 val defaultErrorMessage = Resource.Failure(UtilR.string.failed_to_initialize_search_items)
 
                 _cards.value = Resource.Loading
-                _tvShowNetworkCards.value = configurationManager.searchCategoriesData?.networks?.shuffled()
+                _tvShowNetworkCards.value = configurationManager.searchCatalogsData?.networks?.shuffled()
                     ?: return@launch _cards.emit(defaultErrorMessage)
-                _movieCompanyCards.value = configurationManager.searchCategoriesData?.companies?.shuffled()
+                _movieCompanyCards.value = configurationManager.searchCatalogsData?.companies?.shuffled()
                     ?: return@launch _cards.emit(defaultErrorMessage)
 
                 (type + genres).map { item ->

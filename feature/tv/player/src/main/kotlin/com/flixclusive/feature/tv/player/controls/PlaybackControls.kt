@@ -56,9 +56,9 @@ import com.flixclusive.feature.tv.player.controls.settings.ServersPanel
 import com.flixclusive.feature.tv.player.controls.settings.SubtitleStylePanel
 import com.flixclusive.feature.tv.player.controls.settings.SubtitleSyncPanel
 import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.model.provider.MediaLinkResourceState
-import com.flixclusive.model.provider.Stream
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
+import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient

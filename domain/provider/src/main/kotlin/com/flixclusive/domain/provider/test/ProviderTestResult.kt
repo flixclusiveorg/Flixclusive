@@ -1,7 +1,7 @@
 package com.flixclusive.domain.provider.test
 
 import androidx.compose.runtime.mutableStateListOf
-import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.model.provider.ProviderData
 import java.util.Date
 
 /**

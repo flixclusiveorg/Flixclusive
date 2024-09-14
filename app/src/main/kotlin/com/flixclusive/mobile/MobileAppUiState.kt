@@ -1,6 +1,6 @@
 package com.flixclusive.mobile
 
-import com.flixclusive.model.provider.MediaLinkResourceState
+import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 
 internal data class MobileAppUiState(
     val isOnPlayerScreen: Boolean = false,

@@ -11,9 +11,10 @@ android {
 dependencies {
     api(projects.core.theme)
     api(projects.core.util)
+    api(projects.core.locale)
     implementation(projects.model.database)
     implementation(projects.model.provider)
-    implementation(projects.model.tmdb)
+    implementation(projects.model.film)
     implementation(projects.model.datastore)
 
     implementation(libs.coil.compose)

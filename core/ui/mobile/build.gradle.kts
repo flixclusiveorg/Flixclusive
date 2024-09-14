@@ -10,10 +10,9 @@ android {
 
 dependencies {
     api(projects.core.ui.common)
-    api(projects.core.util)
 
     implementation(projects.model.provider)
-    implementation(projects.model.tmdb)
+    implementation(projects.model.film)
 
     implementation(libs.coil.compose)
     implementation(libs.compose.material3)

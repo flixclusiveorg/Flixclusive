@@ -13,7 +13,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.mobile.component.SingleChoiceSegmentedButtonColumn
 import com.flixclusive.core.ui.mobile.component.VerticalSegmentedButton
 import com.flixclusive.core.ui.mobile.component.getVerticalSegmentedShape
-import com.flixclusive.core.util.film.filter.Filter
+import com.flixclusive.model.provider.filter.Filter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

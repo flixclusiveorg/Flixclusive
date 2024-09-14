@@ -28,7 +28,7 @@ import androidx.tv.material3.StandardCardLayout
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.util.Padding
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.film.Film
 
 val FilmCardWidth = 100.dp
 val FilmCardHeight = 150.dp

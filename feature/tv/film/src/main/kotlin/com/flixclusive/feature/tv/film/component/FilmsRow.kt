@@ -53,8 +53,8 @@ import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.hasPressedLeft
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.model.film.Film
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalTvMaterial3Api::class)
 @Composable

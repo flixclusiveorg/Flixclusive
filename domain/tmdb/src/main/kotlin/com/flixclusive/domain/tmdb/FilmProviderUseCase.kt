@@ -1,26 +1,22 @@
 package com.flixclusive.domain.tmdb
 
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.util.exception.actualMessage
-import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.FilmDetails
 import com.flixclusive.provider.ProviderApi
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import com.flixclusive.core.util.R as UtilR
 
 class FilmProviderUseCase @Inject constructor(
     private val tmdbRepository: TMDBRepository,
-    private val providerApiRepository: ProviderApiRepository,
-    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher
+    private val providerApiRepository: ProviderApiRepository
 ) {
     suspend operator fun invoke(partiallyDetailedFilm: Film): Resource<FilmDetails> {
         return partiallyDetailedFilm.run {
@@ -28,7 +24,7 @@ class FilmProviderUseCase @Inject constructor(
                 isMovie && isFromTmdb -> tmdbRepository.getMovie(id = tmdbId!!)
                 isTvShow && isFromTmdb -> tmdbRepository.getTvShow(id = tmdbId!!)
                 providerName != null -> {
-                    withContext(ioDispatcher) {
+                    withIOContext {
                         try {
                             val api = providerName!!.providerApi!!
                             val detailedFilm = api.getFilmDetails(film = this@run)

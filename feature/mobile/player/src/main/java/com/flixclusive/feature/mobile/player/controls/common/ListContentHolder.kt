@@ -28,8 +28,8 @@ import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.player.PlayerProviderState
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.provider.Stream
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.provider.ProviderApi
 
 @Composable

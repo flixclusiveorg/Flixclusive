@@ -46,7 +46,6 @@ import androidx.tv.foundation.PivotOffsets
 import androidx.tv.foundation.lazy.list.TvLazyColumn
 import coil.compose.AsyncImage
 import coil.imageLoader
-import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenTvNavigator
 import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
@@ -63,8 +62,8 @@ import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.useLocalCurrentRoute
 import com.flixclusive.core.ui.tv.util.useLocalFocusTransferredOnLaunch
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemPerDestination
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.feature.tv.film.component.FilmErrorSnackbar
 import com.flixclusive.feature.tv.film.component.FilmsRow
 import com.flixclusive.feature.tv.film.component.buttons.EPISODES_BUTTON_KEY
@@ -72,10 +71,9 @@ import com.flixclusive.feature.tv.film.component.buttons.MainButtons
 import com.flixclusive.feature.tv.film.component.buttons.PLAY_BUTTON_KEY
 import com.flixclusive.feature.tv.film.component.episodes.EpisodesPanel
 import com.flixclusive.feature.tv.player.PlayerScreen
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR

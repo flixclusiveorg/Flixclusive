@@ -28,13 +28,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.noIndicationClickable
-import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.feature.mobile.player.controls.common.EnlargedTouchableButton
 import com.flixclusive.feature.mobile.player.controls.episodes.composables.EpisodesRow
 import com.flixclusive.feature.mobile.player.controls.episodes.composables.SeasonsRow
 import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.tmdb.common.tv.Episode
-import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 

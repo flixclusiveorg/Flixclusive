@@ -12,7 +12,7 @@ android {
 dependencies {
     implementation(projects.core.util)
     implementation(projects.model.database)
-    implementation(projects.model.tmdb)
+    implementation(projects.model.film)
 
     implementation(libs.gson)
 }

@@ -49,8 +49,8 @@ import com.flixclusive.feature.mobile.provider.info.component.ProviderInfoHeader
 import com.flixclusive.feature.mobile.provider.info.component.ProviderInfoTopBar
 import com.flixclusive.feature.mobile.provider.info.component.author.AuthorsList
 import com.flixclusive.feature.mobile.provider.info.component.subdetails.SubDetailsList
-import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.gradle.entities.Repository
+import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.Repository
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.util.R as UtilR
 

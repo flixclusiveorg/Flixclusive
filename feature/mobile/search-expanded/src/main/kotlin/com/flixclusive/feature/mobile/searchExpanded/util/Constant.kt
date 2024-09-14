@@ -1,10 +1,10 @@
 package com.flixclusive.feature.mobile.searchExpanded.util
 
-import com.flixclusive.gradle.entities.Language
-import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.gradle.entities.ProviderType
-import com.flixclusive.gradle.entities.Status
-import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.model.provider.Language
+import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderType
+import com.flixclusive.model.provider.Status
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 
 internal object Constant {
     val tmdbProviderData = ProviderData(

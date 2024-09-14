@@ -9,19 +9,19 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.navigation.navargs.SeeAllScreenNavArgs
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.PagingState
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.film.FilmType.Companion.toFilmType
-import com.flixclusive.core.util.film.replaceTypeInUrl
-import com.flixclusive.domain.category.CategoryItemsProviderUseCase
+import com.flixclusive.core.ui.common.util.PagingState
+import com.flixclusive.domain.catalog.CatalogItemsProviderUseCase
+import com.flixclusive.model.configuration.catalog.HomeCatalog
+import com.flixclusive.model.configuration.catalog.SearchCatalog
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.film.util.FilmType.Companion.toFilmType
+import com.flixclusive.model.film.util.replaceTypeInUrl
+import com.flixclusive.model.provider.Catalog
+import com.flixclusive.model.provider.DEFAULT_CATALOG_MEDIA_TYPE
 import com.flixclusive.model.provider.ProviderCatalog
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.category.Category
-import com.flixclusive.model.tmdb.category.DEFAULT_CATEGORY_MEDIA_TYPE
-import com.flixclusive.model.tmdb.category.HomeCategory
-import com.flixclusive.model.tmdb.category.SearchCategory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -30,7 +30,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class SeeAllViewModel @Inject constructor(
-    private val categoryItemsProviderUseCase: CategoryItemsProviderUseCase,
+    private val catalogItemsProviderUseCase: CatalogItemsProviderUseCase,
     savedStateHandle: SavedStateHandle,
     appSettingsManager: AppSettingsManager,
 ) : ViewModel() {
@@ -43,17 +43,17 @@ internal class SeeAllViewModel @Inject constructor(
         )
 
     private val args = savedStateHandle.navArgs<SeeAllScreenNavArgs>()
-    var category: Category = args.item
+    var catalog: Catalog = args.item
     val films = mutableStateListOf<FilmSearchItem>()
-    val isMediaTypeDefault = category.mediaType == DEFAULT_CATEGORY_MEDIA_TYPE
-    val isProviderCatalog = category is ProviderCatalog
+    val isMediaTypeDefault = catalog.mediaType == DEFAULT_CATALOG_MEDIA_TYPE
+    val isProviderCatalog = catalog is ProviderCatalog
 
     private var page by mutableIntStateOf(1)
     private var maxPage by mutableIntStateOf(1)
     var currentFilterSelected by mutableStateOf(
         when {
-            isMediaTypeDefault -> category.url.type
-            else -> category.mediaType.toFilmType()
+            isMediaTypeDefault -> catalog.url.type
+            else -> catalog.mediaType.toFilmType()
         }
     )
         private set
@@ -80,11 +80,11 @@ internal class SeeAllViewModel @Inject constructor(
                 else -> PagingState.PAGINATING
             }
 
-            val category = category.parseCorrectTmdbUrl()
+            val catalog = catalog.parseCorrectTmdbUrl()
 
             when (
-                val result = categoryItemsProviderUseCase(
-                    category = category,
+                val result = catalogItemsProviderUseCase(
+                    catalog = catalog,
                     page = page
                 )
             ) {
@@ -136,12 +136,12 @@ internal class SeeAllViewModel @Inject constructor(
     private val hasNextPage: Boolean
         get() = page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE)
 
-    private fun Category.getCorrectQuery() = url.replace("all/", "${currentFilterSelected.type}/")
+    private fun Catalog.getCorrectQuery() = url.replace("all/", "${currentFilterSelected.type}/")
 
     private val String.type: FilmType
         get() = if (contains("tv?")) FilmType.TV_SHOW else FilmType.MOVIE
 
-    private fun Category.parseCorrectTmdbUrl(): Category {
+    private fun Catalog.parseCorrectTmdbUrl(): Catalog {
         if (this is ProviderCatalog)
             return this
 
@@ -152,8 +152,8 @@ internal class SeeAllViewModel @Inject constructor(
         }
 
         return when (this) {
-            is HomeCategory -> copy(url = correctUrl)
-            is SearchCategory -> copy(url = correctUrl)
+            is HomeCatalog -> copy(url = correctUrl)
+            is SearchCatalog -> copy(url = correctUrl)
             else -> this
         }
     }

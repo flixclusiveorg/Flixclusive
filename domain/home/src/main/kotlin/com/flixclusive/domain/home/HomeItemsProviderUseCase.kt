@@ -1,23 +1,22 @@
 package com.flixclusive.domain.home
 
-import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.PagingState
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.ui.common.util.PagingState
+import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.watch_history.WatchHistoryRepository
-import com.flixclusive.domain.category.CategoryItemsProviderUseCase
+import com.flixclusive.domain.catalog.CatalogItemsProviderUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
+import com.flixclusive.model.configuration.catalog.HomeCatalog
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.SearchResponseData
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderCatalog
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.SearchResponseData
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.category.Category
-import com.flixclusive.model.tmdb.category.HomeCategory
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -45,9 +44,8 @@ class HomeItemsProviderUseCase @Inject constructor(
     private val filmProviderUseCase: FilmProviderUseCase,
     private val watchHistoryRepository: WatchHistoryRepository,
     private val configurationProvider: AppConfigurationManager,
-    private val categoryItemsProviderUseCase: CategoryItemsProviderUseCase,
-    private val providerManager: ProviderManager,
-    @ApplicationScope private val scope: CoroutineScope,
+    private val catalogItemsProviderUseCase: CatalogItemsProviderUseCase,
+    private val providerManager: ProviderManager
 ) {
     private val _state = MutableStateFlow(HomeState())
     val state = _state.asStateFlow()
@@ -57,25 +55,25 @@ class HomeItemsProviderUseCase @Inject constructor(
     }
 
     operator fun invoke() {
-        scope.launch {
+        AppDispatchers.Default.scope.launch {
             _state.update { it.copy(status = Resource.Loading) }
             try {
-                val categories = getHomeRecommendations()
+                val catalogs = getHomeRecommendations()
                 _state.update {
                     it.copy(
-                        categories = categories,
-                        rowItems = List(categories.size) { emptyList() },
-                        rowItemsPagingState = categories.map { category ->
+                        catalogs = catalogs,
+                        rowItems = List(catalogs.size) { emptyList() },
+                        rowItemsPagingState = catalogs.map { catalog ->
                             PaginationStateInfo(
-                                canPaginate = category.canPaginate,
-                                pagingState = if (!category.canPaginate) PagingState.PAGINATING_EXHAUST else PagingState.IDLE,
+                                canPaginate = catalog.canPaginate,
+                                pagingState = if (!catalog.canPaginate) PagingState.PAGINATING_EXHAUST else PagingState.IDLE,
                                 currentPage = 1
                             )
                         }
                     )
                 }
 
-                val headerItem = getHeaderItem(categories)
+                val headerItem = getHeaderItem(catalogs)
                 _state.update {
                     it.copy(
                         headerItem = headerItem!!,
@@ -88,13 +86,13 @@ class HomeItemsProviderUseCase @Inject constructor(
         }
     }
 
-    suspend fun getCategoryItems(
-        category: Category,
+    suspend fun getCatalogItems(
+        catalog: Catalog,
         index: Int,
         page: Int
     ) {
-        when (val result = categoryItemsProviderUseCase(category, page)) {
-            is Resource.Success -> handleCategoryItemsSuccess(result.data!!, category, index, page)
+        when (val result = catalogItemsProviderUseCase(catalog, page)) {
+            is Resource.Success -> handleCatalogItemsSuccess(result.data!!, catalog, index, page)
             is Resource.Failure -> updatePagingState(index) { it.copy(pagingState = PagingState.ERROR) }
             Resource.Loading -> Unit
         }
@@ -112,7 +110,7 @@ class HomeItemsProviderUseCase @Inject constructor(
             it.flatMap { api -> api.catalogs }
         }.distinctUntilChanged()
 
-        scope.launch {
+        AppDispatchers.Default.scope.launch {
             configurationProvider.configurationStatus
                 .combine(catalogs) { configStatus, catalogs ->
                     configStatus to catalogs
@@ -126,29 +124,29 @@ class HomeItemsProviderUseCase @Inject constructor(
         }
     }
 
-    private suspend fun getHomeRecommendations(): List<Category> {
-        val tmdbCategories = configurationProvider.homeCategoriesData!!
-        val allTmdbCategories = tmdbCategories.all + tmdbCategories.tv + tmdbCategories.movie
-        val requiredCategories = allTmdbCategories.filter { it.required }
+    private suspend fun getHomeRecommendations(): List<Catalog> {
+        val tmdbCatalogs = configurationProvider.homeCatalogsData!!
+        val allTmdbCatalogs = tmdbCatalogs.all + tmdbCatalogs.tv + tmdbCatalogs.movie
+        val requiredCatalogs = allTmdbCatalogs.filter { it.required }
 
         val countOfItemsToFetch = Random.nextInt(PREFERRED_MINIMUM_HOME_ITEMS, PREFERRED_MAXIMUM_HOME_ITEMS)
-        val filteredTmdbCategories = allTmdbCategories
+        val filteredTmdbCatalogs = allTmdbCatalogs
             .filterNot { it.required }
             .shuffled()
             .take(countOfItemsToFetch)
 
-        return (requiredCategories +
+        return (requiredCatalogs +
                 getUserRecommendations() +
-                filteredTmdbCategories +
+                filteredTmdbCatalogs +
                 state.value.providerCatalogs)
             .shuffled()
             .distinctBy { it.name }
             .sortedByDescending {
-                it is HomeCategory && it.url.contains("trending/all")
+                it is HomeCatalog && it.url.contains("trending/all")
             }
     }
 
-    private suspend fun getUserRecommendations(userId: Int = 1): List<HomeCategory> {
+    private suspend fun getUserRecommendations(userId: Int = 1): List<HomeCatalog> {
         val randomWatchedFilms = watchHistoryRepository.getRandomWatchHistoryItems(
             ownerId = userId,
             count = Random.nextInt(1, 4)
@@ -157,7 +155,7 @@ class HomeItemsProviderUseCase @Inject constructor(
         return randomWatchedFilms.mapNotNull { item ->
             with(item.film) {
                 if (recommendations.size >= 10 && isFromTmdb) {
-                    HomeCategory(
+                    HomeCatalog(
                         name = "If you liked $title",
                         mediaType = filmType.type,
                         required = false,
@@ -168,21 +166,21 @@ class HomeItemsProviderUseCase @Inject constructor(
             }
         }
     }
-    private suspend fun getHeaderItem(categories: List<Category>): Film? {
-        val traversedCategories = mutableSetOf<Int>()
+    private suspend fun getHeaderItem(catalogs: List<Catalog>): Film? {
+        val traversedCatalogs = mutableSetOf<Int>()
         val traversedFilms = mutableSetOf<String>()
 
         for (attempt in 0..5) {
             var headerItem: Film? = null
-            var categoryAttempts = 0
+            var catalogAttempts = 0
 
-            while (headerItem == null && categoryAttempts < HOME_MAX_PAGE) {
-                val randomIndex = Random.nextInt(categories.size)
-                val category = categories[randomIndex]
+            while (headerItem == null && catalogAttempts < HOME_MAX_PAGE) {
+                val randomIndex = Random.nextInt(catalogs.size)
+                val catalog = catalogs[randomIndex]
 
-                if (category !is ProviderCatalog && !traversedCategories.contains(randomIndex)) {
-                    getCategoryItems(category, randomIndex, 1)
-                    traversedCategories.add(randomIndex)
+                if (catalog !is ProviderCatalog && !traversedCatalogs.contains(randomIndex)) {
+                    getCatalogItems(catalog, randomIndex, 1)
+                    traversedCatalogs.add(randomIndex)
                 }
 
                 headerItem = state.value.rowItems.getOrNull(randomIndex)?.randomOrNull()
@@ -199,7 +197,7 @@ class HomeItemsProviderUseCase @Inject constructor(
                 }
 
                 headerItem = null
-                categoryAttempts++
+                catalogAttempts++
             }
         }
 
@@ -217,14 +215,14 @@ class HomeItemsProviderUseCase @Inject constructor(
         }
     }
 
-    private fun handleCategoryItemsSuccess(
+    private fun handleCatalogItemsSuccess(
         data: SearchResponseData<FilmSearchItem>,
-        category: Category,
+        catalog: Catalog,
         index: Int,
         page: Int
     ) {
         val maxPage = minOf(HOME_MAX_PAGE, data.totalPages)
-        val canPaginate = data.results.size == 20 && page < maxPage && category.canPaginate
+        val canPaginate = data.results.size == 20 && page < maxPage && catalog.canPaginate
 
         _state.update { currentState ->
             val updatedRowItems = currentState.rowItems.toMutableList()

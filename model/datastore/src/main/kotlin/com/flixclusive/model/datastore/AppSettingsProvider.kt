@@ -1,8 +1,8 @@
 package com.flixclusive.model.datastore
 
-import com.flixclusive.core.util.common.configuration.GITHUB_BUILT_IN_PROVIDERS_REPOSITORY
-import com.flixclusive.gradle.entities.Repository
-import com.flixclusive.gradle.entities.Repository.Companion.toValidRepositoryLink
+import com.flixclusive.core.util.common.GithubConstant.GITHUB_BUILT_IN_PROVIDERS_REPOSITORY
+import com.flixclusive.model.provider.Repository
+import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import com.flixclusive.model.datastore.provider.ProviderPreference
 import kotlinx.serialization.Serializable
 

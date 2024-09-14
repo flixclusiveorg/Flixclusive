@@ -3,7 +3,7 @@ package com.flixclusive.provider
 import android.content.Context
 import android.content.res.Resources
 import androidx.compose.runtime.Composable
-import com.flixclusive.gradle.entities.ProviderManifest
+import com.flixclusive.model.provider.ProviderManifest
 import com.flixclusive.provider.settings.ProviderSettings
 import okhttp3.OkHttpClient
 

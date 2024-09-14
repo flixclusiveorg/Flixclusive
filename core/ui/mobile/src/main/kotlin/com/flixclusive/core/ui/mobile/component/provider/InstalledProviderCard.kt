@@ -23,8 +23,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
-import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.gradle.entities.Status
+import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.Status
 
 @Composable
 fun InstalledProviderCard(

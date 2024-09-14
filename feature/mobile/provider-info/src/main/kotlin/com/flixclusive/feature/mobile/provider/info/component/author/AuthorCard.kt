@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.feature.mobile.provider.info.SUB_LABEL_SIZE
-import com.flixclusive.gradle.entities.Author
+import com.flixclusive.model.provider.Author
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 

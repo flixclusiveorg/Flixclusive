@@ -1,18 +1,15 @@
 package com.flixclusive.domain.provider
 
-import com.flixclusive.core.util.R
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
-import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
-import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.gradle.entities.Repository
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.Repository
 import okhttp3.OkHttpClient
 import javax.inject.Inject
+import com.flixclusive.core.util.R as UtilR
 
 
 /**
@@ -22,14 +19,12 @@ import javax.inject.Inject
  * execution until the data is fetched. The data is then returned as a [Resource] object.
  *
  * @param client The OkHttpClient instance used to make network requests.
- * @param ioDispatcher The dispatcher used to run the network call on a background thread.
  */
 class GetOnlineProvidersUseCase @Inject constructor(
-    private val client: OkHttpClient,
-    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher
+    private val client: OkHttpClient
 ) {
     suspend operator fun invoke(repository: Repository): Resource<List<ProviderData>> {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             safeCall {
                 val updaterJsonUrl = repository.getRawLink(
                     filename = "updater.json",
@@ -43,8 +38,8 @@ class GetOnlineProvidersUseCase @Inject constructor(
                 }
 
 
-                return@withContext Resource.Success(onlineProviders)
-            } ?: Resource.Failure(R.string.failed_to_load_online_providers)
+                return@withIOContext Resource.Success(onlineProviders)
+            } ?: Resource.Failure(UtilR.string.failed_to_load_online_providers)
         }
     }
 

@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.film.BaseFilmScreenViewModel
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.ToggleWatchlistStatusUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase

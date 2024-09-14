@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.util.film.filter.FilterGroup
+import com.flixclusive.model.provider.filter.FilterGroup
 import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
 
 @OptIn(ExperimentalMaterial3Api::class)

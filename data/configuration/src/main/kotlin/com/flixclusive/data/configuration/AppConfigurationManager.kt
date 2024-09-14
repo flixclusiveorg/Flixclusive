@@ -1,21 +1,19 @@
 package com.flixclusive.data.configuration
 
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.retrofit.GithubApiService
 import com.flixclusive.core.network.retrofit.GithubRawApiService
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
 import com.flixclusive.core.network.util.okhttp.UserAgentManager
-import com.flixclusive.core.util.R
-import com.flixclusive.core.util.common.configuration.GITHUB_REPOSITORY
-import com.flixclusive.core.util.common.configuration.GITHUB_USERNAME
-import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.exception.toNetworkException
+import com.flixclusive.core.util.common.GithubConstant.GITHUB_REPOSITORY
+import com.flixclusive.core.util.common.GithubConstant.GITHUB_USERNAME
+import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.model.configuration.AppConfig
-import com.flixclusive.model.tmdb.category.HomeCategoriesData
-import com.flixclusive.model.tmdb.category.SearchCategoriesData
-import kotlinx.coroutines.CoroutineScope
+import com.flixclusive.model.configuration.catalog.HomeCatalogsData
+import com.flixclusive.model.configuration.catalog.SearchCatalogsData
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +25,7 @@ import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.flixclusive.core.util.R as UtilR
 
 sealed class UpdateStatus(
     val errorMessage: UiText? = null
@@ -58,7 +57,6 @@ class AppConfigurationManager @Inject constructor(
     private val githubRawApiService: GithubRawApiService,
     private val githubApiService: GithubApiService,
     private val appSettingsManager: AppSettingsManager,
-    @ApplicationScope private val scope: CoroutineScope,
     client: OkHttpClient,
 ) {
     private val userAgentManager = UserAgentManager(client)
@@ -75,15 +73,15 @@ class AppConfigurationManager @Inject constructor(
         private set
 
     var appConfig: AppConfig? = null
-    var homeCategoriesData: HomeCategoriesData? = null
-    var searchCategoriesData: SearchCategoriesData? = null
+    var homeCatalogsData: HomeCatalogsData? = null
+    var searchCatalogsData: SearchCatalogsData? = null
 
     private val Resource<Unit>.needsToInitialize: Boolean
         get() = (this is Resource.Success
-                && (appConfig == null || homeCategoriesData == null || searchCategoriesData == null))
+                && (appConfig == null || homeCatalogsData == null || searchCatalogsData == null))
 
     init {
-        scope.launch {
+        AppDispatchers.Default.scope.launch {
             _configurationStatus.collectLatest {
                 if(it.needsToInitialize)
                     initialize(currentAppBuild)
@@ -98,7 +96,7 @@ class AppConfigurationManager @Inject constructor(
         if(this.currentAppBuild == null)
             this.currentAppBuild = appBuild
 
-        fetchJob = scope.launch {
+        fetchJob = AppDispatchers.Default.scope.launch {
             val retryDelay = 3000L
             for (i in 0..MAX_RETRIES) {
                 _configurationStatus.update { Resource.Loading }
@@ -107,8 +105,8 @@ class AppConfigurationManager @Inject constructor(
                     checkForUpdates()
 
                     userAgentManager.loadLatestUserAgents()
-                    homeCategoriesData = githubRawApiService.getHomeCategoriesConfig()
-                    searchCategoriesData = githubRawApiService.getSearchCategoriesConfig()
+                    homeCatalogsData = githubRawApiService.getHomeCatalogsConfig()
+                    searchCatalogsData = githubRawApiService.getSearchCatalogsConfig()
 
                     return@launch _configurationStatus.update { Resource.Success(Unit) }
                 } catch (e: Exception) {
@@ -125,7 +123,7 @@ class AppConfigurationManager @Inject constructor(
             }
 
             _configurationStatus.update {
-                Resource.Failure(R.string.failed_to_init_app)
+                Resource.Failure(UtilR.string.failed_to_init_app)
             }
         }
     }

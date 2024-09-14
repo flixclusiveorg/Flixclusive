@@ -1,7 +1,7 @@
 package com.flixclusive.core.network.retrofit
 
-import com.flixclusive.core.util.common.configuration.GITHUB_REPOSITORY
-import com.flixclusive.core.util.common.configuration.GITHUB_USERNAME
+import com.flixclusive.core.util.common.GithubConstant.GITHUB_REPOSITORY
+import com.flixclusive.core.util.common.GithubConstant.GITHUB_USERNAME
 import com.flixclusive.model.configuration.GithubBranchInfo
 import com.flixclusive.model.configuration.GithubReleaseInfo
 import com.flixclusive.model.configuration.GithubTagInfo

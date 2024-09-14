@@ -10,16 +10,15 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.common.navigation.navargs.RepositoryScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
-import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.coroutines.AppDispatchers
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.domain.provider.GetOnlineProvidersUseCase
 import com.flixclusive.domain.updater.ProviderUpdaterUseCase
-import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.model.provider.ProviderData
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -34,7 +33,6 @@ internal class RepositoryScreenViewModel @Inject constructor(
     private val providerUpdaterUseCase: ProviderUpdaterUseCase,
     private val getOnlineProvidersUseCase: GetOnlineProvidersUseCase,
     private val appSettingsManager: AppSettingsManager,
-    @ApplicationScope private val scope: CoroutineScope,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     val repository = savedStateHandle.navArgs<RepositoryScreenNavArgs>().repository
@@ -106,7 +104,7 @@ internal class RepositoryScreenViewModel @Inject constructor(
             return
         }
 
-        installAllJob = scope.launch {
+        installAllJob = AppDispatchers.Default.scope.launch {
             val failedToInstallProviders = arrayListOf<String>()
 
             onlineProviderMap.forEach { (data, state) ->
@@ -135,7 +133,7 @@ internal class RepositoryScreenViewModel @Inject constructor(
             return
         }
 
-        installJob = scope.launch {
+        installJob = AppDispatchers.Default.scope.launch {
             when (onlineProviderMap[providerData]) {
                 ProviderInstallationStatus.NotInstalled -> installProvider(providerData)
                 ProviderInstallationStatus.Installed -> uninstallProvider(providerData)

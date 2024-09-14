@@ -37,7 +37,7 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.util.R as UtilR
 
 @Composable

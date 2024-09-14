@@ -2,7 +2,7 @@ package com.flixclusive.core.network.util.serializers
 
 import com.flixclusive.core.network.retrofit.dto.TMDBMovie
 import com.flixclusive.core.network.retrofit.dto.toMovieDetails
-import com.flixclusive.model.tmdb.Movie
+import com.flixclusive.model.film.Movie
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement

@@ -33,8 +33,8 @@ import com.flixclusive.core.ui.player.PlayerProviderState
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.provider.Stream
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.provider.ProviderApi
 
 @OptIn(ExperimentalTvMaterial3Api::class, ExperimentalFoundationApi::class)

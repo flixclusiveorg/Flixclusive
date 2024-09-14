@@ -8,7 +8,7 @@ import com.flixclusive.core.ui.common.navigation.navigator.HomeScreenTvNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.tv.film.destinations.FilmScreenDestination
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.film.Film
 import com.flixclusive.util.navGraph
 import com.flixclusive.util.navigateIfResumed
 import com.ramcosta.composedestinations.dynamic.within

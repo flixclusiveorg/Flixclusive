@@ -1,22 +1,18 @@
 package com.flixclusive.data.user
 
 import com.flixclusive.core.database.dao.UserDao
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.model.database.User
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal class DefaultUserRepository @Inject constructor(
-    private val userDao: UserDao,
-    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher
+    private val userDao: UserDao
 ) : UserRepository {
     override fun getAllUsers(): Flow<List<User>> = userDao.getAllItemsInFlow()
 
     override suspend fun getUserById(id: Int): User? {
-        return withContext(ioDispatcher) {
+        return withIOContext {
             userDao.getUserById(id)
         }
     }
@@ -24,13 +20,13 @@ internal class DefaultUserRepository @Inject constructor(
     override fun getUserByIdFlow(id: Int): Flow<User?> = userDao.getUserByIdInFlow(id)
 
     override suspend fun insert(user: User) {
-        withContext(ioDispatcher) {
+        withIOContext {
             userDao.insert(user)
         }
     }
 
     override suspend fun deleteById(id: Int) {
-        withContext(ioDispatcher) {
+        withIOContext {
             userDao.deleteById(id)
         }
     }

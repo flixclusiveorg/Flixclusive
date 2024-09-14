@@ -25,9 +25,9 @@ import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.common.configuration.GITHUB_REPOSITORY_URL
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.util.common.GithubConstant.GITHUB_REPOSITORY_URL
 import com.flixclusive.core.util.R as UtilR
 
 @Composable

@@ -40,12 +40,12 @@ import com.flixclusive.core.ui.tv.component.SourceDataDialog
 import com.flixclusive.core.ui.tv.util.LocalDirectionalFocusRequesterProvider
 import com.flixclusive.core.ui.tv.util.handleDPadKeyEvents
 import com.flixclusive.core.util.android.getActivity
-import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.feature.tv.player.controls.PlaybackControls
-import com.flixclusive.model.provider.MediaLinkResourceState
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Episode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

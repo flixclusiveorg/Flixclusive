@@ -46,7 +46,7 @@ import com.flixclusive.feature.tv.home.component.util.LocalImmersiveBackgroundCo
 import com.flixclusive.feature.tv.home.component.util.useLocalImmersiveBackgroundColor
 import com.flixclusive.feature.tv.home.component.watched.HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT
 import com.flixclusive.feature.tv.home.component.watched.HomeContinueWatchingRow
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
 import java.util.Locale
@@ -66,7 +66,7 @@ internal fun HomeScreen(
     val uiState by viewModel.state.collectAsStateWithLifecycle()
 
     val headerItem = uiState.headerItem
-    val homeCategories = uiState.categories
+    val homeCategories = uiState.catalogs
     val homeRowItemsPagingState = uiState.rowItemsPagingState
     val homeRowItems = uiState.rowItems
     val continueWatchingList by viewModel.continueWatchingList.collectAsStateWithLifecycle()
@@ -181,7 +181,7 @@ internal fun HomeScreen(
 
                         LaunchedEffect(shouldStartPaginate) {
                             if(shouldStartPaginate) {
-                                viewModel.onPaginateCategories()
+                                viewModel.onPaginateCatalogs()
                             }
                         }
 
@@ -212,10 +212,10 @@ internal fun HomeScreen(
                                 key = { it % homeCategories.size }
                             ) { i ->
                                 val rowIndex = i % homeCategories.size
-                                val category = homeCategories[rowIndex]
+                                val catalog = homeCategories[rowIndex]
 
                                 HomeFilmsRow(
-                                    categoryItem = category,
+                                    catalogItem = catalog,
                                     paginationState = homeRowItemsPagingState[rowIndex],
                                     films = homeRowItems[rowIndex],
                                     rowIndex = i + if (continueWatchingList.isNotEmpty()) 1 else 0,
@@ -225,7 +225,7 @@ internal fun HomeScreen(
                                     },
                                     paginate = { page ->
                                         viewModel.onPaginateFilms(
-                                            category = category,
+                                            catalog = catalog,
                                             page = page,
                                             index = i
                                         )

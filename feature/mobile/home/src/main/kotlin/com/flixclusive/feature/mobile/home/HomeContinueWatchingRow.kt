@@ -42,11 +42,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.film.formatMinutes
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.ui.common.util.formatMinutes
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.film.Film
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 

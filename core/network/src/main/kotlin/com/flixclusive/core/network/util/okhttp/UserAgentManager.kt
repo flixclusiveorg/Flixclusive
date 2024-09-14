@@ -1,8 +1,8 @@
 package com.flixclusive.core.network.util.okhttp
 
-import com.flixclusive.core.util.network.USER_AGENT
-import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
+import com.flixclusive.core.util.network.okhttp.USER_AGENT
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.core.util.network.okhttp.request
 import okhttp3.OkHttpClient
 import kotlin.random.Random
 

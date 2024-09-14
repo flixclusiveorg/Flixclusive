@@ -3,9 +3,9 @@ package com.flixclusive.provider.webview
 import android.content.Context
 import androidx.annotation.MainThread
 import com.flixclusive.core.util.webview.WebViewDriver
-import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.provider.link.MediaLink
+import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.common.tv.Episode
 
 @Suppress("unused")
 @MainThread

@@ -1,12 +1,12 @@
 package com.flixclusive.core.network.retrofit
 
 import com.flixclusive.core.network.retrofit.dto.TMDBImagesResponseDto
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.SearchResponseData
-import com.flixclusive.model.tmdb.TMDBCollection
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.SearchResponseData
+import com.flixclusive.model.film.TMDBCollection
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Season
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -15,7 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-internal const val TMDB_API_BASE_URL = "https://api.themoviedb.org/3/"
+const val TMDB_API_BASE_URL = "https://api.themoviedb.org/3/"
 internal const val TMDB_APPEND_TO_RESPONSE = "images,recommendations,external_ids,credits"
 
 interface TMDBApiService {

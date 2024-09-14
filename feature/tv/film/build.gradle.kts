@@ -14,7 +14,7 @@ dependencies {
     implementation(projects.core.ui.player)
     implementation(projects.core.ui.tv)
     implementation(projects.model.database)
-    implementation(projects.model.tmdb)
+    implementation(projects.model.film)
     implementation(projects.feature.tv.player)
 
     implementation(libs.coil.compose)

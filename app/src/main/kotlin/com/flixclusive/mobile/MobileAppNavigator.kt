@@ -31,12 +31,12 @@ import com.flixclusive.feature.mobile.settings.destinations.SettingsScreenDestin
 import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
-import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.gradle.entities.Repository
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.category.Category
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.Repository
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.Genre
+import com.flixclusive.model.provider.Catalog
+import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.util.navGraph
 import com.flixclusive.util.navigateIfResumed
 import com.ramcosta.composedestinations.dynamic.within
@@ -60,7 +60,7 @@ internal class MobileAppNavigator(
         navController.navigateIfResumed(SearchExpandedScreenDestination within destination.navGraph())
     }
 
-    override fun openSeeAllScreen(item: Category) {
+    override fun openSeeAllScreen(item: Catalog) {
         navController.navigateIfResumed(SeeAllScreenDestination(item = item) within destination.navGraph())
     }
 

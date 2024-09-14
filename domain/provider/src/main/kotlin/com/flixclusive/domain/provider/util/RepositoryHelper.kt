@@ -1,6 +1,6 @@
 package com.flixclusive.domain.provider.util
 
-import com.flixclusive.core.util.network.request
+import com.flixclusive.core.util.network.okhttp.request
 import okhttp3.OkHttpClient
 import java.util.regex.Pattern
 

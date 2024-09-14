@@ -54,18 +54,18 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.feature.mobile.film.component.EpisodeCard
 import com.flixclusive.feature.mobile.film.component.EpisodeCardPlaceholder
 import com.flixclusive.feature.mobile.film.component.FilmOverview
 import com.flixclusive.feature.mobile.film.component.FilmScreenButtons
 import com.flixclusive.feature.mobile.film.component.FilmScreenHeader
 import com.flixclusive.feature.mobile.film.component.TvShowSeasonDropdown
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.util.R as UtilR
 

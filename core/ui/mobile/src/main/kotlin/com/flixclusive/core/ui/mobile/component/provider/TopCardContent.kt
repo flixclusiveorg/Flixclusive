@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.R
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
-import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 

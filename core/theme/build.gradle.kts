@@ -14,4 +14,6 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
     implementation(libs.core.ktx)
+    implementation(libs.core.splashscreen)
+    implementation(libs.material)
 }

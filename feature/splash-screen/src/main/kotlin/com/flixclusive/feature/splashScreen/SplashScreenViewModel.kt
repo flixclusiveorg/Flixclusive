@@ -3,7 +3,7 @@ package com.flixclusive.feature.splashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.util.common.resource.Resource
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.home.PREFERRED_MINIMUM_HOME_ITEMS

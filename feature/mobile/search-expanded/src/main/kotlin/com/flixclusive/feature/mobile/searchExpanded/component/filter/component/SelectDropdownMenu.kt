@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.film.filter.Filter.Select.Companion.getOptionName
+import com.flixclusive.model.provider.filter.Filter.Select.Companion.getOptionName
 import com.flixclusive.core.util.R as UtilR
 
 /**

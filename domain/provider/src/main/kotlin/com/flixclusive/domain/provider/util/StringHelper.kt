@@ -1,7 +1,7 @@
 package com.flixclusive.domain.provider.util
 
 import androidx.annotation.StringRes
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.locale.UiText
 
 internal object StringHelper {
     fun createString(string: String): UiText.StringValue {

@@ -1,10 +1,10 @@
 package com.flixclusive.core.network.retrofit.dto
 
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.film.extractYear
-import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.Genre
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.film.util.extractYear
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.Genre
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 

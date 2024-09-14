@@ -1,8 +1,9 @@
 package com.flixclusive.domain.provider
 
 import androidx.compose.runtime.mutableStateMapOf
-import com.flixclusive.core.util.common.resource.Resource
-import com.flixclusive.core.util.common.ui.UiText
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.data.provider.MediaLinksRepository
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.tmdb.TMDBRepository
@@ -19,12 +20,10 @@ import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.getNoLinksLoa
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.isCached
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
-import com.flixclusive.model.provider.CachedLinks
-import com.flixclusive.model.provider.MediaLinkResourceState
-import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.FilmDetails.Companion.isTvShow
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.FilmDetails.Companion.isTvShow
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.ProviderWebViewApi
 import kotlinx.coroutines.flow.Flow

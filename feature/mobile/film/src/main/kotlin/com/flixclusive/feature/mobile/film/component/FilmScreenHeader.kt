@@ -45,12 +45,12 @@ import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.core.ui.common.util.formatTvRuntime
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.film.GenreButton
-import com.flixclusive.core.util.film.formatMinutes
-import com.flixclusive.core.util.film.formatRating
+import com.flixclusive.core.ui.common.util.formatMinutes
+import com.flixclusive.core.ui.common.util.formatRating
 import com.flixclusive.feature.mobile.film.R
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.Genre
+import com.flixclusive.model.film.TvShow
 import com.flixclusive.core.util.R as UtilR
 
 @OptIn(ExperimentalLayoutApi::class)

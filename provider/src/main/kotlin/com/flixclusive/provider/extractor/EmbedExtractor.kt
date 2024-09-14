@@ -1,6 +1,6 @@
 package com.flixclusive.provider.extractor
 
-import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.model.provider.link.MediaLink
 import okhttp3.OkHttpClient
 
 /**

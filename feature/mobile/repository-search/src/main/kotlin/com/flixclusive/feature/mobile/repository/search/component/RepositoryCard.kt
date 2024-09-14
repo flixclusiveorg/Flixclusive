@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
-import com.flixclusive.gradle.entities.Repository
+import com.flixclusive.model.provider.Repository
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.mobile.R as UiMobileR
 import com.flixclusive.core.util.R as UtilR

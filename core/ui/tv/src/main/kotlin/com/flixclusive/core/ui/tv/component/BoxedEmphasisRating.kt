@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import com.flixclusive.core.util.film.formatRating
+import com.flixclusive.core.ui.common.util.formatRating
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable

@@ -34,7 +34,7 @@ import com.flixclusive.core.ui.common.util.buildImageUrl
 import com.flixclusive.feature.mobile.searchExpanded.SearchItemViewType
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.getButtonColors
-import com.flixclusive.gradle.entities.ProviderData
+import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable

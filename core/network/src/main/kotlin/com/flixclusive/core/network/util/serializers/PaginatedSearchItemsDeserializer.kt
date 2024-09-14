@@ -1,7 +1,7 @@
 package com.flixclusive.core.network.util.serializers
 
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.SearchResponseData
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement

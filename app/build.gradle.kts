@@ -11,8 +11,8 @@ plugins {
 
 // Version
 val versionMajor = 2
-val versionMinor = 0
-val versionPatch = 1
+val versionMinor = 1
+val versionPatch = 0
 val versionBuild = 0
 val applicationName: String = libs.versions.applicationName.get()
 val _applicationId: String = libs.versions.applicationId.get()
@@ -117,8 +117,6 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.constraintlayout.compose)
-    implementation(libs.core.splashscreen)
     implementation(libs.hilt.navigation)
     implementation(libs.lifecycle.runtimeCompose)
-    implementation(libs.material)
 }

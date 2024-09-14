@@ -5,15 +5,13 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshotFlow
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.withIOContext
-import com.flixclusive.core.util.common.dispatcher.Dispatcher
-import com.flixclusive.core.util.common.dispatcher.di.ApplicationScope
+import com.flixclusive.core.util.coroutines.AppDispatchers
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
-import com.flixclusive.core.util.network.fromJson
+import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.data.provider.util.CrashHelper.getApiCrashMessage
 import com.flixclusive.data.provider.util.CrashHelper.isCrashingOnGetApiMethod
 import com.flixclusive.data.provider.util.DynamicResourceLoader
@@ -23,20 +21,17 @@ import com.flixclusive.data.provider.util.downloadFile
 import com.flixclusive.data.provider.util.provideValidProviderPath
 import com.flixclusive.data.provider.util.replaceLastAfterSlash
 import com.flixclusive.data.provider.util.rmrf
-import com.flixclusive.gradle.entities.ProviderData
-import com.flixclusive.gradle.entities.ProviderManifest
-import com.flixclusive.gradle.entities.Repository.Companion.toValidRepositoryLink
-import com.flixclusive.gradle.entities.Status
 import com.flixclusive.model.datastore.provider.ProviderPreference
+import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderManifest
+import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
+import com.flixclusive.model.provider.Status
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.settings.ProviderSettings
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import java.io.File
 import java.io.IOException
@@ -52,8 +47,6 @@ private const val UPDATER_JSON_FILE = "/updater.json"
 @Singleton
 class ProviderManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    @ApplicationScope private val scope: CoroutineScope,
-    @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher,
     private val appSettingsManager: AppSettingsManager,
     private val client: OkHttpClient,
     private val providerApiRepository: ProviderApiRepository
@@ -97,7 +90,7 @@ class ProviderManager @Inject constructor(
     }
 
     fun initialize() {
-        scope.launch {
+        AppDispatchers.Default.scope.launch {
             initializeLocalProviders()
 
             val providerSettings = appSettingsManager.providerSettings.data.first()
@@ -243,14 +236,14 @@ class ProviderManager @Inject constructor(
         val updaterJsonFile = File(file.parent!!.plus(UPDATER_JSON_FILE))
 
         // Download provider
-        val isProviderDownloadSuccess = withContext(ioDispatcher) {
+        val isProviderDownloadSuccess = withIOContext {
             client.downloadFile(
                 file = file, downloadUrl = buildUrl
             )
         }
 
         // Download updater.json
-        val isUpdaterJsonDownloadSuccess = withContext(ioDispatcher) {
+        val isUpdaterJsonDownloadSuccess = withIOContext {
             client.downloadFile(
                 file = updaterJsonFile, downloadUrl = updaterJsonUrl
             )

@@ -34,8 +34,8 @@ import com.flixclusive.core.ui.home.HomeScreenViewModel
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import com.flixclusive.core.util.R as UtilR
@@ -55,7 +55,7 @@ internal fun HomeScreen(
     val uiState by viewModel.state.collectAsStateWithLifecycle()
 
     val headerItem = uiState.headerItem
-    val homeCategories = uiState.categories
+    val homeCategories = uiState.catalogs
     val homeRowItemsPagingState = uiState.rowItemsPagingState
     val homeRowItems = uiState.rowItems
     val watchHistoryItems by viewModel.continueWatchingList.collectAsStateWithLifecycle()
@@ -120,7 +120,7 @@ internal fun HomeScreen(
                     key = { _, item -> item.name }
                 ) { i, item ->
                     HomeFilmsRow(
-                        categoryItem = item,
+                        catalogItem = item,
                         paginationState = homeRowItemsPagingState[i],
                         films = homeRowItems[i],
                         onFilmClick = navigator::openFilmScreen,
@@ -128,7 +128,7 @@ internal fun HomeScreen(
                         onFilmLongClick = previewFilm,
                         paginate = {
                             viewModel.onPaginateFilms(
-                                category = item,
+                                catalog = item,
                                 index = i,
                                 page = it
                             )

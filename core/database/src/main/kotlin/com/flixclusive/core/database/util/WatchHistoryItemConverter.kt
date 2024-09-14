@@ -1,7 +1,7 @@
 package com.flixclusive.core.database.util
 
 import androidx.room.TypeConverter
-import com.flixclusive.core.util.network.fromJson
+import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.model.database.EpisodeWatched
 import com.google.gson.Gson
 

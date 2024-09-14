@@ -26,13 +26,13 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.formatTvRuntime
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.FilmLogo
-import com.flixclusive.core.util.common.ui.UiText
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.film.formatMinutes
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.core.ui.common.util.formatMinutes
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.TvShow
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable

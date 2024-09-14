@@ -2,25 +2,36 @@
 plugins {
     alias(libs.plugins.flixclusive.library)
     alias(libs.plugins.flixclusive.compose)
+    `maven-publish`
 }
 
 android {
     namespace = "com.flixclusive.model.provider"
 }
 
-//configurations.all {
-//    resolutionStrategy.cacheChangingModulesFor(6, TimeUnit.HOURS)
-//}
-
 
 dependencies {
-    api(libs.compose.runtime)
     api(libs.gson)
-    api(libs.flixclusive.gradle)
-//    {
-//        isChanging = true
-//    }
+}
 
-    implementation(projects.core.util)
-    implementation(projects.model.tmdb)
+val sourcesJar = tasks.register<Jar>("sourcesJar") {
+    archiveClassifier.set("sources")
+    from("src/main/kotlin")
+}
+
+
+publishing {
+    repositories {
+        mavenLocal()
+    }
+
+    publications {
+        create<MavenPublication>("release") {
+            groupId = "com.flixclusive"
+            artifactId = "model-provider"
+            version = "1.0.0"
+            artifact(sourcesJar)
+            artifact("build/outputs/aar/provider-release.aar")
+        }
+    }
 }

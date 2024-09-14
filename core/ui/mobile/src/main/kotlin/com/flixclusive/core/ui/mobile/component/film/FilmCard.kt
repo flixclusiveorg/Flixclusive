@@ -30,7 +30,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyFilm
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.film.Film
 
 @Composable
 fun FilmCard(

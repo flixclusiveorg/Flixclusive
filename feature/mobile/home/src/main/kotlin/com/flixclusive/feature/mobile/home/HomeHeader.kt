@@ -53,9 +53,9 @@ import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.mobile.component.film.GenreButton
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.film.formatRating
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.Genre
+import com.flixclusive.core.ui.common.util.formatRating
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.Genre
 import kotlin.random.Random
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
