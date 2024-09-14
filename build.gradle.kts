@@ -1,4 +1,3 @@
-
 import org.jetbrains.dokka.DokkaConfiguration
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import java.net.URL
@@ -56,14 +55,14 @@ tasks.register<Jar>("generateStubsJar") {
     subprojects.forEach { project ->
         if (project.subprojects.size == 0) {
             val projectPath = "." + project.path.replace(":", "/")
-            val classesJar = File("${projectPath}/build/intermediates/compile_app_classes_jar/release/classes.jar")
+            val classesJar =
+                File("${projectPath}/build/intermediates/compile_app_classes_jar/release/classes.jar")
 
             if (classesJar.exists()) {
                 from(zipTree(classesJar)) {
                     duplicatesStrategy = DuplicatesStrategy.INCLUDE
                 }
-            }
-            else {
+            } else {
                 from({
                     project.configurations.getByName("archives")
                         .allArtifacts.files
@@ -81,11 +80,13 @@ tasks.register<Jar>("generateStubsJar") {
 }
 
 subprojects {
-    if (subprojects.size == 0) {
+    val projectModuleName = getModuleNameForDokka(project = this@subprojects)
+
+    if (subprojects.size == 0 && !isModuleExcludedFromDokka(moduleName = projectModuleName)) {
         apply(plugin = "org.jetbrains.dokka")
 
         tasks.withType<DokkaTaskPartial>().configureEach {
-            moduleName.set(getModuleNameForDokka(project = this@subprojects))
+            moduleName.set(projectModuleName)
 
             dokkaSourceSets.configureEach {
                 documentedVisibilities.set(
@@ -137,4 +138,22 @@ fun getSrcDir(project: Project): Pair<File, String> {
     } catch (e: Throwable) {
         project.projectDir.resolve(javaSrc) to javaSrc
     }
+}
+
+fun isModuleExcludedFromDokka(moduleName: String): Boolean {
+    /**
+     * List of modules that should not generate dokka.
+     * */
+    val excludedModules = listOf(
+        "app",
+        "feature",
+        "data-", // Add a dash after the name of the module
+        "domain",
+        "service",
+        "core-theme",
+        "core-ui-home",
+        "core-ui-film"
+    )
+
+    return moduleName in excludedModules || excludedModules.any { moduleName.contains(it) }
 }
