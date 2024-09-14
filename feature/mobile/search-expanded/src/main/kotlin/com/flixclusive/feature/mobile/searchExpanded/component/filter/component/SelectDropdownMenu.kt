@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.model.provider.filter.Filter.Select.Companion.getOptionName
+import com.flixclusive.feature.mobile.searchExpanded.component.filter.util.toOptionString
 import com.flixclusive.core.locale.R as LocaleR
 
 /**
@@ -70,10 +70,7 @@ internal fun <T> SelectDropdownMenu(
 
         val option = options[selected]!!
 
-        getOptionName(
-            option = option,
-            context = context
-        )
+        option.toOptionString(context = context)
     }
 
     Box(modifier = modifier.height(IntrinsicSize.Min)) {
@@ -139,10 +136,7 @@ internal fun <T> SelectDropdownMenu(
                         val selectedItem = index == selected
 
                         SelectDropdownMenuItem(
-                            text = getOptionName(
-                                option = option!!,
-                                context = context
-                            ),
+                            text = option.toOptionString(),
                             selected = selectedItem,
                             enabled = !selectedItem,
                             onClick = {

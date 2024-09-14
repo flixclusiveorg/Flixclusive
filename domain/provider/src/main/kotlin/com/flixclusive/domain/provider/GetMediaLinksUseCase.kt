@@ -21,7 +21,6 @@ import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.isCached
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.film.FilmDetails
-import com.flixclusive.model.film.FilmDetails.Companion.isTvShow
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.provider.ProviderApi

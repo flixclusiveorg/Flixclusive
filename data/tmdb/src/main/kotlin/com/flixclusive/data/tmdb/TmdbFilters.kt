@@ -1,9 +1,9 @@
 package com.flixclusive.data.tmdb
 
 import com.flixclusive.core.locale.UiText
-import com.flixclusive.model.provider.filter.Filter
-import com.flixclusive.model.provider.filter.FilterGroup
-import com.flixclusive.model.provider.filter.FilterList
+import com.flixclusive.provider.filter.Filter
+import com.flixclusive.provider.filter.FilterGroup
+import com.flixclusive.provider.filter.FilterList
 import com.flixclusive.core.locale.R as LocaleR
 
 private const val TMDB_FILTER_LABEL = "Media type"

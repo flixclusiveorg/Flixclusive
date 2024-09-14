@@ -2,7 +2,6 @@ package com.flixclusive.domain.provider.test
 
 import android.content.Context
 import com.flixclusive.model.provider.ProviderData
-import com.flixclusive.model.provider.id
 import com.flixclusive.core.locale.R as LocaleR
 
 

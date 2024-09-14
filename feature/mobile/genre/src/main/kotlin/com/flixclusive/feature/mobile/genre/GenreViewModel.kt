@@ -9,14 +9,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.ui.common.navigation.navargs.GenreScreenNavArgs
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.ui.common.navigation.navargs.GenreScreenNavArgs
 import com.flixclusive.core.ui.common.util.PagingState
-import com.flixclusive.model.film.util.FilmType
-import com.flixclusive.model.film.util.FilmType.Companion.toFilmType
 import com.flixclusive.data.tmdb.SortOptions
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.film.util.FilmType.Companion.toFilmType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -76,15 +76,15 @@ internal class GenreViewModel @Inject constructor(
                     sortBy = SortOptions.POPULARITY
                 )
             ) {
-                is com.flixclusive.core.network.util.Resource.Failure -> {
+                is Resource.Failure -> {
                     pagingState = when (page) {
                         1 -> PagingState.ERROR
                         else -> PagingState.PAGINATING_EXHAUST
                     }
                 }
 
-                com.flixclusive.core.network.util.Resource.Loading -> Unit
-                is com.flixclusive.core.network.util.Resource.Success -> {
+                Resource.Loading -> Unit
+                is Resource.Success -> {
                     result.data?.run {
                         maxPage = totalPages
                         canPaginate = results.size == 20 || page < maxPage

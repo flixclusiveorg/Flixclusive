@@ -11,8 +11,8 @@ import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.locale.UiText
-import com.flixclusive.model.provider.filter.Filter
-import com.flixclusive.model.provider.filter.FilterGroup
+import com.flixclusive.provider.filter.Filter
+import com.flixclusive.provider.filter.FilterGroup
 
 internal object FilterHelper {
 

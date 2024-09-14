@@ -1,15 +1,15 @@
 package com.flixclusive.service.update
 
+import android.app.PendingIntent
 import android.content.Context
 import android.net.Uri
 import androidx.core.app.NotificationCompat
 import com.flixclusive.core.util.android.installApkActivity
-import com.flixclusive.core.util.android.installApkPendingActivity
 import com.flixclusive.core.util.android.notificationBuilder
 import com.flixclusive.core.util.android.notify
 import com.flixclusive.service.R
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 class AppUpdateNotificationBuilder(
     private val context: Context
@@ -52,7 +52,13 @@ class AppUpdateNotificationBuilder(
 
     fun promptInstall(uri: Uri) {
         val installIntent = installApkActivity(uri)
-        val installPendingIntent = installApkPendingActivity(context, uri)
+        val intent = installApkActivity(uri)
+        val installPendingIntent = PendingIntent.getActivity(
+            /* context = */ context,
+            /* requestCode = */ 0,
+            /* intent = */ intent,
+            /* flags = */ PendingIntent.FLAG_IMMUTABLE
+        )
 
         with(notificationBuilder) {
             setContentText(context.getString(LocaleR.string.download_completed))
