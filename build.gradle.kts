@@ -1,7 +1,3 @@
-import org.jetbrains.dokka.DokkaConfiguration
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
-import java.net.URL
-
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
@@ -21,7 +17,7 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.room) apply false
-    alias(libs.plugins.dokka)
+    alias(libs.plugins.dokka) apply false
     id("com.osacky.doctor") version "0.9.1"
 }
 
@@ -78,83 +74,4 @@ tasks.register<Jar>("generateStubsJar") {
             }
         }
     }
-}
-
-subprojects {
-    val projectModuleName = getModuleNameForDokka(project = this@subprojects)
-
-    if (subprojects.size == 0 && !isModuleExcludedFromDokka(moduleName = projectModuleName)) {
-        apply(plugin = "org.jetbrains.dokka")
-
-        tasks.withType<DokkaTaskPartial>().configureEach {
-            moduleName.set(projectModuleName)
-
-            dokkaSourceSets.configureEach {
-                documentedVisibilities.set(
-                    setOf(
-                        DokkaConfiguration.Visibility.PUBLIC,
-                        DokkaConfiguration.Visibility.PROTECTED
-                    )
-                )
-
-                sourceLink {
-                    val branch = "master"
-                    val repository = "https://github.com/flixclusiveorg/Flixclusive/tree"
-                    val remoteDirPath = projectDir.path.split("Flixclusive/").last()
-                    val (localSrcDir, remoteSrcDir) = getSrcDir(this@subprojects)
-
-                    localDirectory.set(localSrcDir)
-                    remoteUrl.set(URL("$repository/$branch/$remoteDirPath/$remoteSrcDir"))
-                    remoteLineSuffix.set("#L")
-                }
-            }
-        }
-    }
-}
-
-tasks.dokkaHtmlMultiModule {
-    moduleName.set("Flixclusive API Reference")
-}
-
-fun getModuleNameForDokka(project: Project): String {
-    var parentProject = project.parent
-    val parentNames = arrayListOf("")
-    while (!parentProject?.name.equals(rootProject.name)) {
-        parentNames.add(parentProject?.name ?: "")
-        parentProject = parentProject?.parent
-    }
-
-    val moduleNamePrefix = parentNames.reversed()
-        .joinToString("-")
-
-    return moduleNamePrefix + project.name
-}
-
-fun getSrcDir(project: Project): Pair<File, String> {
-    val kotlinSrc = "src/main/kotlin"
-    val javaSrc = "src/main/kotlin"
-
-    return try {
-        project.projectDir.resolve(kotlinSrc) to kotlinSrc
-    } catch (e: Throwable) {
-        project.projectDir.resolve(javaSrc) to javaSrc
-    }
-}
-
-fun isModuleExcludedFromDokka(moduleName: String): Boolean {
-    /**
-     * List of modules that should not generate dokka.
-     * */
-    val excludedModules = listOf(
-        "app",
-        "feature",
-        "data-", // Add a dash after the name of the module
-        "domain",
-        "service",
-        "core-theme",
-        "core-ui-home",
-        "core-ui-film"
-    )
-
-    return moduleName in excludedModules || excludedModules.any { moduleName.contains(it) }
 }
