@@ -69,5 +69,5 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add .
-          git commit -m "docs(dokka): update API references [rhenwinch/Flixclusive@${GITHUB_SHA}]" || exit 0
+          git commit -m "docs(dokka): update API references [flixclusiveorg/Flixclusive@${GITHUB_SHA}]" || exit 0
           git push
