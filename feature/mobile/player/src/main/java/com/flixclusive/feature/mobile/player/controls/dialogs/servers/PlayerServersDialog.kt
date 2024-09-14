@@ -27,7 +27,7 @@ import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun PlayerServersDialog(
@@ -53,8 +53,8 @@ internal fun PlayerServersDialog(
                 modifier = Modifier
                     .weight(1F),
                 icon = painterResource(id = UiCommonR.drawable.database_icon),
-                contentDescription = stringResource(id = UtilR.string.providers),
-                label = stringResource(id = UtilR.string.providers),
+                contentDescription = stringResource(id = LocaleR.string.providers),
+                label = stringResource(id = LocaleR.string.providers),
                 items = providers,
                 selectedIndex = selectedProviderIndex,
                 itemState = state.selectedProviderState,
@@ -76,8 +76,8 @@ internal fun PlayerServersDialog(
                 modifier = Modifier
                     .weight(1F),
                 icon = painterResource(id = PlayerR.drawable.round_cloud_queue_24),
-                contentDescription = stringResource(id = UtilR.string.servers),
-                label = stringResource(id = UtilR.string.servers),
+                contentDescription = stringResource(id = LocaleR.string.servers),
+                label = stringResource(id = LocaleR.string.servers),
                 items = servers,
                 selectedIndex = state.selectedSourceLink,
                 onItemClick = {
@@ -89,7 +89,7 @@ internal fun PlayerServersDialog(
         PlayerDialogButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd),
-            label = stringResource(UtilR.string.close_label),
+            label = stringResource(LocaleR.string.close_label),
             onClick = onDismissSheet
         )
     }

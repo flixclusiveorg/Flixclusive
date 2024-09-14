@@ -46,7 +46,7 @@ import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.film.common.tv.Episode
 import kotlin.random.Random
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun EpisodeCard(
@@ -113,7 +113,7 @@ internal fun EpisodeCard(
                 imageSize = "w227_and_h127_bestv2",
                 showPlaceholder = false,
                 contentDescription = stringResource(
-                    UtilR.string.episode_image_content_desc_format,
+                    LocaleR.string.episode_image_content_desc_format,
                     data.number,
                     data.title
                 ),
@@ -138,7 +138,7 @@ internal fun EpisodeCard(
                 ) {
                     Icon(
                         painter = painterResource(id = UiCommonR.drawable.play),
-                        contentDescription = stringResource(id = UtilR.string.play_button),
+                        contentDescription = stringResource(id = LocaleR.string.play_button),
                         modifier = Modifier
                             .size(20.dp)
                             .align(Alignment.Center),

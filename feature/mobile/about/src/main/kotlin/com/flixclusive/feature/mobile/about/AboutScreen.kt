@@ -15,7 +15,7 @@ import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.feature.mobile.about.component.BodyContent
 import com.flixclusive.feature.mobile.about.component.Header
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Destination
 @Composable
@@ -31,7 +31,7 @@ internal fun AboutScreen(
             .verticalScroll(rememberScrollState()),
     ) {
         CommonTopBar(
-            headerTitle = stringResource(id = UtilR.string.about),
+            headerTitle = stringResource(id = LocaleR.string.about),
             onNavigationIconClick = navigator::goBack
         )
 

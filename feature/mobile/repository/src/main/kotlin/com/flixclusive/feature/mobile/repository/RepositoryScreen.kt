@@ -59,7 +59,7 @@ import com.flixclusive.model.provider.ProviderData
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -176,7 +176,7 @@ internal fun RepositoryScreen(
                             modifier = Modifier.fillMaxSize(),
                             shouldShowError = viewModel.uiState.error != null,
                             error = viewModel.uiState.error?.asString()
-                                ?: stringResource(UtilR.string.failed_to_load_online_providers),
+                                ?: stringResource(LocaleR.string.failed_to_load_online_providers),
                             onRetry = viewModel::initialize
                         )
                     }
@@ -203,7 +203,7 @@ internal fun RepositoryScreen(
                             },
                             iconId = UiCommonR.drawable.download,
                             isLoading = viewModel.installAllJob?.isActive == true,
-                            label = stringResource(id = UtilR.string.install_all),
+                            label = stringResource(id = LocaleR.string.install_all),
                             enabled = canInstallAll,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -281,9 +281,9 @@ internal fun RepositoryScreen(
     if (providerToUninstall != null) {
         IconAlertDialog(
             painter = painterResource(id = UiCommonR.drawable.warning),
-            contentDescription = stringResource(id = UtilR.string.warning_content_description),
+            contentDescription = stringResource(id = LocaleR.string.warning_content_description),
             description = buildAnnotatedString {
-                append(context.getString(UtilR.string.warning_uninstall_message_first_half))
+                append(context.getString(LocaleR.string.warning_uninstall_message_first_half))
                 append(" ")
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
                     append(providerToUninstall!!.name)

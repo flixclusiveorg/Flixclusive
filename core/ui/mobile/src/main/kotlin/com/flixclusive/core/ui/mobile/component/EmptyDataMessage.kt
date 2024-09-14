@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 private fun getDefaultTitleStyle()
@@ -47,8 +47,8 @@ private fun getDefaultDescriptionStyle()
 @Composable
 fun EmptyDataMessage(
     modifier: Modifier = Modifier,
-    title: String = stringResource(id = UtilR.string.empty_data_default_label),
-    description: String = stringResource(id = UtilR.string.empty_data_default_sub_label),
+    title: String = stringResource(id = LocaleR.string.empty_data_default_label),
+    description: String = stringResource(id = LocaleR.string.empty_data_default_sub_label),
     titleStyle: TextStyle = getDefaultTitleStyle(),
     descriptionStyle: TextStyle = getDefaultDescriptionStyle(),
     alignment: Alignment = Alignment.Center,

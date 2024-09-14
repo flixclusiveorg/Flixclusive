@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import kotlin.math.max
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 abstract class BasePlayerViewModel(
     args: PlayerScreenNavArgs,
@@ -384,7 +384,7 @@ abstract class BasePlayerViewModel(
         if(nextEpisode == null && !isThereANextSeason) {
             onError?.invoke(
                 UiText.StringResource(
-                    UtilR.string.episode_non_existent_error_message_format,
+                    LocaleR.string.episode_non_existent_error_message_format,
                     nextEpisodeNumberToWatch,
                     seasonToUse.data!!.number
                 )
@@ -401,7 +401,7 @@ abstract class BasePlayerViewModel(
      */
     fun onEpisodeClick(episodeToWatch: Episode? = null) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
-            showErrorSnackbar(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
+            showErrorSnackbar(UiText.StringResource(LocaleR.string.load_link_job_active_error_message))
             return
         }
 
@@ -444,7 +444,7 @@ abstract class BasePlayerViewModel(
         episodeToWatch: Episode? = null
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
-            showErrorSnackbar(UiText.StringResource(UtilR.string.load_link_job_active_error_message))
+            showErrorSnackbar(UiText.StringResource(LocaleR.string.load_link_job_active_error_message))
             return
         }
 

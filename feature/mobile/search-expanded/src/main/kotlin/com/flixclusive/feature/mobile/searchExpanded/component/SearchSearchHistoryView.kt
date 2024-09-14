@@ -26,7 +26,7 @@ import com.flixclusive.core.ui.common.dialog.TextAlertDialog
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenViewModel
 import com.flixclusive.model.database.SearchHistory
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -49,7 +49,7 @@ internal fun SearchSearchHistoryView(
                     .padding(bottom = 5.dp)
             ) {
                 Text(
-                    text = stringResource(id = UtilR.string.search_history),
+                    text = stringResource(id = LocaleR.string.search_history),
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Black,
@@ -83,8 +83,8 @@ internal fun SearchSearchHistoryView(
 
     if (searchHistoryToDelete != null) {
         TextAlertDialog(
-            label = stringResource(id = UtilR.string.delete_search_history_item),
-            description = stringResource(id = UtilR.string.delete_search_history_item_message),
+            label = stringResource(id = LocaleR.string.delete_search_history_item),
+            description = stringResource(id = LocaleR.string.delete_search_history_item_message),
             onConfirm = { viewModel.deleteSearchHistoryItem(searchHistoryToDelete!!) },
             onDismiss = { searchHistoryToDelete = null }
         )

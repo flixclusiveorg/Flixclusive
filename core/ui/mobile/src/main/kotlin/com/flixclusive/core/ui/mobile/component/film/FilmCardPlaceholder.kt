@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 fun FilmCardPlaceholder(
@@ -69,7 +70,7 @@ fun FilmCardPlaceholder(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.movie_icon),
-                            contentDescription = stringResource(id = com.flixclusive.core.util.R.string.film_item_content_description),
+                            contentDescription = stringResource(id = LocaleR.string.film_item_content_description),
                             tint = contentColor,
                             modifier = Modifier
                                 .size(40.dp)

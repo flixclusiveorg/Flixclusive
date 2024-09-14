@@ -29,7 +29,7 @@ import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionSizePreference.Companion.getDp
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun SubtitlePreview(
@@ -45,7 +45,7 @@ internal fun SubtitlePreview(
         ) {
             Image(
                 painter = painterResource(id = UiCommonR.drawable.sample_movie_subtitle_preview),
-                contentDescription = stringResource(UtilR.string.sample_movie_content_desc),
+                contentDescription = stringResource(LocaleR.string.sample_movie_content_desc),
                 contentScale = ContentScale.Crop,
                 alignment = Alignment.BottomCenter,
                 modifier = Modifier
@@ -68,7 +68,7 @@ internal fun SubtitlePreview(
                                 .background(Color(appSettings.subtitleBackgroundColor))
                         ) {
                             Text(
-                                text = stringResource(id = UtilR.string.sample_subtitle_text),
+                                text = stringResource(id = LocaleR.string.sample_subtitle_text),
                                 style = appSettings.subtitleFontStyle.getTextStyle().copy(
                                     color = Color(appSettings.subtitleColor),
                                     fontSize = appSettings.subtitleSize.getDp().sp,
@@ -85,7 +85,7 @@ internal fun SubtitlePreview(
 
                     CaptionEdgeTypePreference.Outline -> {
                         BorderedText(
-                            text = stringResource(id = UtilR.string.sample_subtitle_text),
+                            text = stringResource(id = LocaleR.string.sample_subtitle_text),
                             borderColor = Color(appSettings.subtitleEdgeType.color),
                             style = appSettings.subtitleFontStyle.getTextStyle().copy(
                                 color = Color(appSettings.subtitleColor),

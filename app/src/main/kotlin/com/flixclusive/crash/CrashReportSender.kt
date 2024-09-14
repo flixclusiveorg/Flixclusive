@@ -9,7 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import javax.inject.Inject
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 internal const val errorReportFormUrl = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSfTVmgiOeF7RlDbjBR10RQG6C6uKioSk-toqKecPvpkAe9ffw/formResponse?pli=1"
 
@@ -43,7 +43,7 @@ internal class DefaultCrashReportSender @Inject constructor(
 
             if(!isSent) {
                 context.run {
-                    showToast(getString(UtilR.string.fail_sending_error_log))
+                    showToast(getString(LocaleR.string.fail_sending_error_log))
                 }
             }
         }

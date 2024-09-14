@@ -59,7 +59,7 @@ import com.google.accompanist.permissions.shouldShowRationale
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 @OptIn(ExperimentalAnimationGraphicsApi::class, ExperimentalPermissionsApi::class,
@@ -116,7 +116,7 @@ internal fun SplashScreen(
             ) {
                 Image(
                     painter = rememberAnimatedVectorPainter(image, atEnd),
-                    contentDescription = stringResource(id = UtilR.string.animated_tag_content_desc),
+                    contentDescription = stringResource(id = LocaleR.string.animated_tag_content_desc),
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .width(300.dp)
@@ -222,16 +222,16 @@ internal fun SplashScreen(
             )
 
             val textToShow = if (notificationsPermissionState.status.shouldShowRationale) {
-                stringResource(UtilR.string.notification_persist_request_message)
+                stringResource(LocaleR.string.notification_persist_request_message)
             } else {
-                stringResource(UtilR.string.notification_request_message)
+                stringResource(LocaleR.string.notification_request_message)
             }
 
             if (!notificationsPermissionState.status.isGranted) {
                 ErrorDialog(
-                    title = stringResource(UtilR.string.splash_notice_permissions_header),
+                    title = stringResource(LocaleR.string.splash_notice_permissions_header),
                     description = textToShow,
-                    dismissButtonLabel = stringResource(UtilR.string.allow),
+                    dismissButtonLabel = stringResource(LocaleR.string.allow),
                     onDismiss = notificationsPermissionState::launchPermissionRequest
                 )
             }
@@ -257,8 +257,8 @@ internal fun SplashScreen(
             {
                 val (title, description) = if (updateStatus == UpdateStatus.Maintenance) {
                     Pair(
-                        stringResource(UtilR.string.splash_maintenance_header),
-                        stringResource(UtilR.string.splash_maintenance_message)
+                        stringResource(LocaleR.string.splash_maintenance_header),
+                        stringResource(LocaleR.string.splash_maintenance_message)
                     )
                 } else {
                     val errorMessage = if (updateStatus is UpdateStatus.Error)
@@ -266,7 +266,7 @@ internal fun SplashScreen(
                     else (configurationStatus as Resource.Failure).error
 
                     Pair(
-                        stringResource(UtilR.string.something_went_wrong),
+                        stringResource(LocaleR.string.something_went_wrong),
                         errorMessage!!.asString()
                     )
                 }

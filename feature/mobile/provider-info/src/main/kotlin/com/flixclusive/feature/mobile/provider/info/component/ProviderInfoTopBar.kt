@@ -26,7 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun ProviderInfoTopBar(
@@ -58,7 +58,7 @@ internal fun ProviderInfoTopBar(
                 IconButton(onClick = onNavigationIconClick) {
                     Icon(
                         painter = painterResource(UiCommonR.drawable.left_arrow),
-                        contentDescription = stringResource(UtilR.string.navigate_up)
+                        contentDescription = stringResource(LocaleR.string.navigate_up)
                     )
                 }
 
@@ -71,7 +71,7 @@ internal fun ProviderInfoTopBar(
                 IconButton(onClick = onSettingsClick) {
                     Icon(
                         painter = painterResource(UiCommonR.drawable.provider_settings),
-                        contentDescription = stringResource(UtilR.string.open_web_icon),
+                        contentDescription = stringResource(LocaleR.string.open_web_icon),
                     )
                 }
             }

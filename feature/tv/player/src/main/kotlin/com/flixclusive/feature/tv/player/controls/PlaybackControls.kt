@@ -64,7 +64,7 @@ import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient
 import kotlin.math.abs
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -377,7 +377,7 @@ private fun PlaybackControlsPreview() {
                 Box {
                     Image(
                         painter = painterResource(id = UiCommonR.drawable.sample_movie_subtitle_preview),
-                        contentDescription = stringResource(UtilR.string.sample_movie_content_desc),
+                        contentDescription = stringResource(LocaleR.string.sample_movie_content_desc),
                         modifier = Modifier
                             .fillMaxSize()
                     )

@@ -43,7 +43,7 @@ import com.flixclusive.core.ui.tv.util.glowOnFocus
 import com.flixclusive.core.ui.tv.util.useLocalDirectionalFocusRequester
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 internal val PlaybackButtonsSize = 24.dp
 
@@ -212,7 +212,7 @@ internal fun TopControls(
                     ) {
                         Icon(
                             painter = painterResource(id = PlayerR.drawable.round_cloud_queue_24),
-                            contentDescription = stringResource(id = UtilR.string.servers),
+                            contentDescription = stringResource(id = LocaleR.string.servers),
                             modifier = Modifier
                                 .size(PlaybackButtonsSize)
                         )

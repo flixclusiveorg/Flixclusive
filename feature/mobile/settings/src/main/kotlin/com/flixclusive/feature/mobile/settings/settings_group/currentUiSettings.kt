@@ -9,7 +9,7 @@ import androidx.compose.ui.res.stringResource
 import com.flixclusive.feature.mobile.settings.SettingsItem
 import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun currentUiSettings(): List<SettingsItem> {
@@ -18,8 +18,8 @@ internal fun currentUiSettings(): List<SettingsItem> {
 
     return listOf(
         SettingsItem(
-            title = stringResource(UtilR.string.film_card_titles),
-            description = stringResource(UtilR.string.film_card_titles_label),
+            title = stringResource(LocaleR.string.film_card_titles),
+            description = stringResource(LocaleR.string.film_card_titles_label),
             onClick = {
                 onChangeSettings(appSettings.copy(isShowingFilmCardTitle = !appSettings.isShowingFilmCardTitle))
             },

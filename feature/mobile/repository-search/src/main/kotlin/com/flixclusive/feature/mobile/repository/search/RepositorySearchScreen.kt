@@ -37,7 +37,7 @@ import com.flixclusive.feature.mobile.repository.search.component.RemoveAlertDia
 import com.flixclusive.feature.mobile.repository.search.component.RepositoryCard
 import com.flixclusive.feature.mobile.repository.search.component.RepositorySearchTopBar
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Destination
 @Composable
@@ -75,7 +75,7 @@ internal fun RepositorySearchScreen(
     LaunchedEffect(viewModel.errorMessage.value) {
         if (viewModel.errorMessage.value != null) {
             val message = viewModel.errorMessage.value!!.error?.asString(context)
-                ?: context.getString(UtilR.string.default_error)
+                ?: context.getString(LocaleR.string.default_error)
 
             snackbarHostState.showMessage(message)
         }

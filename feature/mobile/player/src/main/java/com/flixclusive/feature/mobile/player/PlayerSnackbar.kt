@@ -25,7 +25,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.player.PlayerSnackbarMessage
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun PlayerSnackbar(
@@ -78,7 +78,7 @@ internal fun PlayerSnackbar(
 
             if (type != PlayerSnackbarMessageType.Episode) {
                 Text(
-                    text = stringResource(id = UtilR.string.ok),
+                    text = stringResource(id = LocaleR.string.ok),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,

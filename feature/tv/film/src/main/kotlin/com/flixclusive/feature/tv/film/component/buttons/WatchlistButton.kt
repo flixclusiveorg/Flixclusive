@@ -39,7 +39,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.IconResource
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -62,15 +62,15 @@ internal fun WatchlistButton(
         return@remember when {
             isInWatchlist && isButtonFocused -> Pair(
                 IconResource.fromImageVector(Icons.Rounded.Close),
-                UtilR.string.remove_from_watchlist
+                LocaleR.string.remove_from_watchlist
             )
             isInWatchlist -> Pair(
                 IconResource.fromImageVector(Icons.Rounded.Check),
-                UtilR.string.remove_from_watchlist
+                LocaleR.string.remove_from_watchlist
             )
             !isInWatchlist -> Pair(
                 IconResource.fromDrawableResource(UiCommonR.drawable.round_add_24),
-                UtilR.string.add_to_watchlist
+                LocaleR.string.add_to_watchlist
             )
             else -> throw IllegalStateException("Invalid state for watchlist button.")
         }

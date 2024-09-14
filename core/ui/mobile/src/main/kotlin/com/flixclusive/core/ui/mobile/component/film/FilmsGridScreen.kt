@@ -57,7 +57,7 @@ import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.film.Film
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 fun FilmsGridScreen(
@@ -166,7 +166,7 @@ fun FilmsGridScreen(
                         .height(errorHeight)
                         .fillMaxWidth(),
                     shouldShowError = pagingState == PagingState.ERROR,
-                    error = stringResource(id = UtilR.string.pagination_error_message),
+                    error = stringResource(id = LocaleR.string.pagination_error_message),
                     onRetry = onRetry
                 )
             }
@@ -203,7 +203,7 @@ private fun FilmsGridHeader(
                 IconButton(onClick = onNavigationIconClick) {
                     Icon(
                         painter = painterResource(UiCommonR.drawable.left_arrow),
-                        contentDescription = stringResource(UtilR.string.navigate_up)
+                        contentDescription = stringResource(LocaleR.string.navigate_up)
                     )
                 }
             }
@@ -228,7 +228,7 @@ private fun FilmsGridHeader(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.filter),
-                        contentDescription = stringResource(UtilR.string.filter_button)
+                        contentDescription = stringResource(LocaleR.string.filter_button)
                     )
                 }
             }

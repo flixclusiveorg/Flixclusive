@@ -27,7 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +54,7 @@ internal fun RemoveAlertDialog(
                         .padding(10.dp)
                 ) {
                     Text(
-                        text = stringResource(id = UtilR.string.remove_repositories),
+                        text = stringResource(id = LocaleR.string.remove_repositories),
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
@@ -63,7 +63,7 @@ internal fun RemoveAlertDialog(
                     )
 
                     Text(
-                        text = stringResource(id = UtilR.string.remove_repositories_notice_msg),
+                        text = stringResource(id = LocaleR.string.remove_repositories_notice_msg),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.onMediumEmphasis(),
                         textAlign = TextAlign.Center,
@@ -91,7 +91,7 @@ internal fun RemoveAlertDialog(
                                 .padding(5.dp)
                         ) {
                             Text(
-                                text = stringResource(UtilR.string.remove),
+                                text = stringResource(LocaleR.string.remove),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Medium
                             )
@@ -110,7 +110,7 @@ internal fun RemoveAlertDialog(
                                 .padding(5.dp)
                         ) {
                             Text(
-                                text = stringResource(UtilR.string.cancel),
+                                text = stringResource(LocaleR.string.cancel),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Light,
                             )

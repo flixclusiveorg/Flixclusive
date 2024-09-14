@@ -6,18 +6,18 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.ui.mobile.KeyEventHandler
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
+import com.flixclusive.core.ui.mobile.KeyEventHandler
 import com.flixclusive.core.util.webview.WebViewDriverManager
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.util.InternetMonitor
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.data.watchlist.WatchlistRepository
+import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
 import com.flixclusive.model.database.toWatchlistItem
-import com.flixclusive.domain.provider.CachedLinks
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmDetails
 import com.flixclusive.model.film.common.tv.Episode
@@ -37,7 +37,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @HiltViewModel
 internal class MobileAppViewModel @Inject constructor(
@@ -184,7 +184,7 @@ internal class MobileAppViewModel @Inject constructor(
             return
 
         onPlayClickJob = viewModelScope.launch {
-            updateVideoDataDialogState(MediaLinkResourceState.Fetching(UtilR.string.film_data_fetching))
+            updateVideoDataDialogState(MediaLinkResourceState.Fetching(LocaleR.string.film_data_fetching))
 
             var filmToShow = film ?: _filmToPreview.value ?: return@launch
 
@@ -195,7 +195,7 @@ internal class MobileAppViewModel @Inject constructor(
                 else -> Resource.Success(filmToShow)
             }
 
-            val errorFetchingFilm = MediaLinkResourceState.Error(UtilR.string.film_data_fetch_failed)
+            val errorFetchingFilm = MediaLinkResourceState.Error(LocaleR.string.film_data_fetch_failed)
             if(response !is Resource.Success) {
                 return@launch updateVideoDataDialogState(errorFetchingFilm)
             }

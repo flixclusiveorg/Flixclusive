@@ -57,7 +57,7 @@ import com.flixclusive.core.ui.tv.util.handleDPadKeyEvents
 import com.flixclusive.core.ui.tv.util.useLocalDirectionalFocusRequester
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(
     ExperimentalComposeUiApi::class,
@@ -186,7 +186,7 @@ internal fun BottomControls(
 
                 Icon(
                     painter = painterResource(id = iconId),
-                    contentDescription = stringResource(id = UtilR.string.play_button),
+                    contentDescription = stringResource(id = LocaleR.string.play_button),
                     modifier = Modifier
                         .size(38.dp)
                         .glowOnFocus(
@@ -256,7 +256,7 @@ internal fun BottomControls(
                     label = "${player.playbackSpeed.coerceAtLeast(1F)}x",
                     onClick = onSpeedometerPanelOpen,
                     iconId = null,
-                    contentDescription = stringResource(id = UtilR.string.playback_speed),
+                    contentDescription = stringResource(id = LocaleR.string.playback_speed),
                     modifier = Modifier
                         .focusRequester(speedometerFocusRequester)
                         .onFocusChanged { focusState ->
@@ -275,7 +275,7 @@ internal fun BottomControls(
                     label = selectedSubtitle ?: "No subtitles",
                     onClick = { selectedSubtitle?.let { onSubtitlesPanelOpen() } },
                     iconId = PlayerR.drawable.outline_subtitles_24,
-                    contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
+                    contentDescription = stringResource(id = LocaleR.string.subtitle_icon_content_desc),
                     modifier = Modifier
                         .onFocusChanged { focusState ->
                             if (focusState.isFocused) {
@@ -289,10 +289,10 @@ internal fun BottomControls(
                 )
 
                 OptionButton(
-                    label = stringResource(id = UtilR.string.sync),
+                    label = stringResource(id = LocaleR.string.sync),
                     onClick = onSyncSubtitlesPanelOpen,
                     iconId = PlayerR.drawable.sync_black_24dp,
-                    contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
+                    contentDescription = stringResource(id = LocaleR.string.subtitle_icon_content_desc),
                     modifier = Modifier
                         .onFocusChanged { focusState ->
                             if (focusState.isFocused) {
@@ -309,7 +309,7 @@ internal fun BottomControls(
                     label = null,
                     onClick = onSubtitleStylePanelOpen,
                     iconId = PlayerR.drawable.style_icon,
-                    contentDescription = stringResource(id = UtilR.string.subtitle_icon_content_desc),
+                    contentDescription = stringResource(id = LocaleR.string.subtitle_icon_content_desc),
                     modifier = Modifier
                         .onFocusChanged { focusState ->
                             if (focusState.isFocused) {

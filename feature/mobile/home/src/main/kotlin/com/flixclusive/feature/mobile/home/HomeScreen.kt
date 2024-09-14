@@ -38,7 +38,7 @@ import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Destination
 @Composable
@@ -82,7 +82,7 @@ internal fun HomeScreen(
         RetryButton(
             modifier = Modifier.fillMaxSize(),
             shouldShowError = uiState.status.error != null,
-            error = uiState.status.error?.asString() ?: stringResource(UtilR.string.error_on_initialization),
+            error = uiState.status.error?.asString() ?: stringResource(LocaleR.string.error_on_initialization),
             onRetry = viewModel::initialize
         )
 

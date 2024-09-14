@@ -29,7 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun RepositorySearchTopBar(
@@ -87,12 +87,12 @@ private fun CollapsedTopBar(
         IconButton(onClick = onNavigationIconClick) {
             Icon(
                 painter = painterResource(UiCommonR.drawable.left_arrow),
-                contentDescription = stringResource(UtilR.string.navigate_up)
+                contentDescription = stringResource(LocaleR.string.navigate_up)
             )
         }
 
         Text(
-            text = stringResource(id = UtilR.string.add_provider),
+            text = stringResource(id = LocaleR.string.add_provider),
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontWeight = FontWeight.SemiBold
             ),
@@ -121,12 +121,12 @@ private fun ExpandedTopBar(
         IconButton(onClick = onCollapseTopBar) {
             Icon(
                 painter = painterResource(UiCommonR.drawable.round_close_24),
-                contentDescription = stringResource(UtilR.string.close_label)
+                contentDescription = stringResource(LocaleR.string.close_label)
             )
         }
 
         Text(
-            text = stringResource(UtilR.string.count_selection_format, selectCount),
+            text = stringResource(LocaleR.string.count_selection_format, selectCount),
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontWeight = FontWeight.SemiBold
             ),
@@ -142,7 +142,7 @@ private fun ExpandedTopBar(
         ) {
             Icon(
                 painter = painterResource(UiCommonR.drawable.delete),
-                contentDescription = stringResource(UtilR.string.remove)
+                contentDescription = stringResource(LocaleR.string.remove)
             )
         }
     }

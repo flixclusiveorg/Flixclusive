@@ -1,7 +1,7 @@
 package com.flixclusive.feature.tv.search
 
 import androidx.annotation.StringRes
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 @Deprecated("Use SearchFilterSet")
@@ -11,14 +11,14 @@ enum class SearchFilter(
 ) {
     ALL(
         type = "multi",
-        resId = UtilR.string.all
+        resId = LocaleR.string.all
     ),
     MOVIE(
         type = "movie",
-        resId = UtilR.string.movie
+        resId = LocaleR.string.movie
     ),
     TV_SHOW(
         type = "tv",
-        resId = UtilR.string.tv_show
+        resId = LocaleR.string.tv_show
     );
 }

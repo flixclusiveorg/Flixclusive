@@ -24,7 +24,7 @@ import com.flixclusive.feature.mobile.preferences.component.PreferencesItem
 import com.flixclusive.feature.mobile.preferences.component.ShareHeader
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Destination
 @Composable
@@ -35,27 +35,27 @@ internal fun PreferencesScreen(
         listOf(
             PreferencesNavigationItem(
                 iconId = UiCommonR.drawable.round_library,
-                labelId = UtilR.string.watchlist,
+                labelId = LocaleR.string.watchlist,
                 navigationAction = navigator::openWatchlistScreen
             ),
             PreferencesNavigationItem(
                 iconId = R.drawable.time_circle,
-                labelId = UtilR.string.recently_watched,
+                labelId = LocaleR.string.recently_watched,
                 navigationAction = navigator::openRecentlyWatchedScreen
             ),
             PreferencesNavigationItem(
                 iconId = UiCommonR.drawable.settings_filled,
-                labelId = UtilR.string.settings,
+                labelId = LocaleR.string.settings,
                 navigationAction = navigator::openSettingsScreen
             ),
             PreferencesNavigationItem(
                 iconId = UiCommonR.drawable.round_update_24,
-                labelId = UtilR.string.check_for_updates,
+                labelId = LocaleR.string.check_for_updates,
                 navigationAction = navigator::checkForUpdates
             ),
             PreferencesNavigationItem(
                 iconId = R.drawable.round_info_24,
-                labelId = UtilR.string.about,
+                labelId = LocaleR.string.about,
                 navigationAction = navigator::openAboutScreen
             )
         )
@@ -73,7 +73,7 @@ internal fun PreferencesScreen(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
-                    text = stringResource(id = UtilR.string.preferences),
+                    text = stringResource(id = LocaleR.string.preferences),
                     style = MaterialTheme.typography.headlineMedium,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1

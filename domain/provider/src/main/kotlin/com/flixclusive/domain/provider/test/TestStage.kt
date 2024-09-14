@@ -3,7 +3,7 @@ package com.flixclusive.domain.provider.test
 import android.content.Context
 import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.model.provider.id
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 /**
@@ -35,9 +35,9 @@ sealed class TestStage(val providerOnTest: ProviderData? = null) {
     fun toString(context: Context): String {
         return when (this) {
             is Idle -> ""
-            is Stage1 -> context.getString(UtilR.string.provider_test_stage_stage1)
-            is Stage2 -> context.getString(UtilR.string.provider_test_stage_stage2)
-            is Done -> context.getString(UtilR.string.provider_test_stage_done)
+            is Stage1 -> context.getString(LocaleR.string.provider_test_stage_stage1)
+            is Stage2 -> context.getString(LocaleR.string.provider_test_stage_stage2)
+            is Done -> context.getString(LocaleR.string.provider_test_stage_done)
         }
     }
 

@@ -2,7 +2,7 @@ package com.flixclusive.model.datastore.player
 
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.model.provider.link.Stream
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 enum class PlayerQuality(
     val qualityName: UiText,
@@ -45,7 +45,7 @@ enum class PlayerQuality(
         regex = Regex("144p|144", RegexOption.IGNORE_CASE)
     ),
     QualityAuto(
-        qualityName = UiText.StringResource(UtilR.string.auto_option),
+        qualityName = UiText.StringResource(LocaleR.string.auto_option),
         regex = Regex("auto|hls|dash", RegexOption.IGNORE_CASE)
     );
 

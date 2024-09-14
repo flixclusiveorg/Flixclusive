@@ -12,7 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun ProfileHandlerButtons(
@@ -29,7 +29,7 @@ internal fun ProfileHandlerButtons(
         CustomButton(
             onClick = onImport,
             iconId = UiCommonR.drawable.upload,
-            label = stringResource(id = UtilR.string.import_label),
+            label = stringResource(id = LocaleR.string.import_label),
             modifier = Modifier
                 .weight(1F)
         )
@@ -37,7 +37,7 @@ internal fun ProfileHandlerButtons(
         CustomButton(
             onClick = onExport,
             iconId = UiCommonR.drawable.download,
-            label = stringResource(id = UtilR.string.export_label),
+            label = stringResource(id = LocaleR.string.export_label),
             modifier = Modifier
                 .weight(1F)
         )

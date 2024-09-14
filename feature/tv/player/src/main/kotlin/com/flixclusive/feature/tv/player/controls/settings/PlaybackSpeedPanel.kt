@@ -51,7 +51,7 @@ import com.flixclusive.feature.tv.player.controls.settings.common.ConfirmButton
 import com.flixclusive.model.datastore.AppSettings
 import okhttp3.OkHttpClient
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -89,7 +89,7 @@ internal fun PlaybackSpeedPanel(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(UtilR.string.current_playback_speed_format, player.playbackSpeed),
+            text = stringResource(LocaleR.string.current_playback_speed_format, player.playbackSpeed),
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontSize = 25.sp,
                 textAlign = TextAlign.Center,
@@ -143,7 +143,7 @@ internal fun PlaybackSpeedPanel(
         }
 
         ConfirmButton(
-            label = stringResource(id = UtilR.string.close_label),
+            label = stringResource(id = LocaleR.string.close_label),
             isEmphasis = false,
             onClick = hidePanel,
             modifier = Modifier.focusOnInitialVisibility()
@@ -175,7 +175,7 @@ private fun PlaybackSpeedPanelPreview() {
                 Box {
                     Image(
                         painter = painterResource(id = UiCommonR.drawable.sample_movie_subtitle_preview),
-                        contentDescription = stringResource(UtilR.string.sample_movie_content_desc),
+                        contentDescription = stringResource(LocaleR.string.sample_movie_content_desc),
                         modifier = Modifier
                             .fillMaxSize()
                     )

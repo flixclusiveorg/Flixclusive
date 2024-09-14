@@ -65,7 +65,7 @@ import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -170,7 +170,7 @@ internal fun MobileActivity.MobileApp(
             hasBeenDisconnected = true
             snackbarHostState.showSnackbar(
                 InternetMonitorSnackbarVisuals(
-                    message = UiText.StringResource(UtilR.string.offline_message).asString(context),
+                    message = UiText.StringResource(LocaleR.string.offline_message).asString(context),
                     isDisconnected = true
                 )
             )
@@ -178,7 +178,7 @@ internal fun MobileActivity.MobileApp(
             hasBeenDisconnected = false
             snackbarHostState.showSnackbar(
                 InternetMonitorSnackbarVisuals(
-                    message = UiText.StringResource(UtilR.string.online_message).asString(context),
+                    message = UiText.StringResource(LocaleR.string.online_message).asString(context),
                     isDisconnected = false
                 )
             )

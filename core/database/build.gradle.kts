@@ -10,9 +10,9 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.util)
+    implementation(libs.stubs.util)
     implementation(projects.model.database)
-    implementation(projects.model.film)
+    implementation(libs.stubs.model.film)
 
     implementation(libs.gson)
 }

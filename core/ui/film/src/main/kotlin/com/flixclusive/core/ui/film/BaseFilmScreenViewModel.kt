@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 abstract class BaseFilmScreenViewModel(
     private val partiallyDetailedFilm: Film,
@@ -96,7 +96,7 @@ abstract class BaseFilmScreenViewModel(
                         it.copy(
                             isLoading = false,
                             errorMessage = result.error
-                                ?: UiText.StringResource(UtilR.string.error_film_message)
+                                ?: UiText.StringResource(LocaleR.string.error_film_message)
                         )
                     }
                 }

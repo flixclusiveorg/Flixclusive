@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun TvShowSeasonDropdown(
@@ -78,7 +78,7 @@ private fun SeasonDropdownMenu(
     val currentSeasonName = remember(selectedSeason) {
         seasons.find { it.number == selectedSeason }
             ?.name?.run { UiText.StringValue(this) }
-            ?: UiText.StringResource(UtilR.string.unknown_season)
+            ?: UiText.StringResource(LocaleR.string.unknown_season)
     }
 
     Box(
@@ -118,7 +118,7 @@ private fun SeasonDropdownMenu(
             if (seasons.isNotEmpty()) {
                 Icon(
                     painter = painterResource(dropdownIcon),
-                    contentDescription = stringResource(UtilR.string.down_arrow_season_dropdown_content_desc),
+                    contentDescription = stringResource(LocaleR.string.down_arrow_season_dropdown_content_desc),
                     modifier = Modifier
                         .scale(0.6F)
                         .padding(end = 15.dp)

@@ -47,7 +47,7 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManag
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.feature.tv.player.controls.settings.common.ConfirmButton
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -79,7 +79,7 @@ internal fun SubtitleSyncPanel(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(id = UtilR.string.sync_subtitles),
+            text = stringResource(id = LocaleR.string.sync_subtitles),
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontSize = 25.sp,
                 textAlign = TextAlign.Center,
@@ -95,7 +95,7 @@ internal fun SubtitleSyncPanel(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = stringResource(id = UtilR.string.add_sync_offset_message),
+                text = stringResource(id = LocaleR.string.add_sync_offset_message),
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,
@@ -106,7 +106,7 @@ internal fun SubtitleSyncPanel(
             )
 
             Text(
-                text = stringResource(id = UtilR.string.subtract_sync_offset_message),
+                text = stringResource(id = LocaleR.string.subtract_sync_offset_message),
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,
@@ -126,7 +126,7 @@ internal fun SubtitleSyncPanel(
         ) {
             OffsetButton(
                 drawableId = PlayerR.drawable.keyboard_double_arrow_left_thin,
-                contentDescription = stringResource(UtilR.string.subtract_1000ms_content_description),
+                contentDescription = stringResource(LocaleR.string.subtract_1000ms_content_description),
                 size = smallOffsetButton,
                 changeOffset = {
                     player.onSubtitleOffsetChange(player.subtitleOffset - 1000)
@@ -135,7 +135,7 @@ internal fun SubtitleSyncPanel(
 
             OffsetButton(
                 drawableId = PlayerR.drawable.chevron_left_thin,
-                contentDescription = stringResource(UtilR.string.subtract_500ms_content_description),
+                contentDescription = stringResource(LocaleR.string.subtract_500ms_content_description),
                 size = bigOffsetButton,
                 changeOffset = {
                     player.onSubtitleOffsetChange(player.subtitleOffset - 500)
@@ -167,7 +167,7 @@ internal fun SubtitleSyncPanel(
 
             OffsetButton(
                 drawableId = PlayerR.drawable.chevron_right_thin,
-                contentDescription = stringResource(UtilR.string.add_500ms_content_description),
+                contentDescription = stringResource(LocaleR.string.add_500ms_content_description),
                 size = bigOffsetButton,
                 changeOffset = {
                     player.onSubtitleOffsetChange(player.subtitleOffset + 500)
@@ -176,7 +176,7 @@ internal fun SubtitleSyncPanel(
 
             OffsetButton(
                 drawableId = PlayerR.drawable.keyboard_double_arrow_right_thin,
-                contentDescription = stringResource(UtilR.string.add_1000ms_content_description),
+                contentDescription = stringResource(LocaleR.string.add_1000ms_content_description),
                 size = smallOffsetButton,
                 changeOffset = {
                     player.onSubtitleOffsetChange(player.subtitleOffset + 1000)
@@ -193,7 +193,7 @@ internal fun SubtitleSyncPanel(
             ConfirmButton(
                 onClick = hidePanel,
                 isEmphasis = true,
-                label = stringResource(id = UtilR.string.save)
+                label = stringResource(id = LocaleR.string.save)
             )
 
             ConfirmButton(
@@ -202,7 +202,7 @@ internal fun SubtitleSyncPanel(
                     hidePanel()
                 },
                 isEmphasis = false,
-                label = stringResource(id = UtilR.string.cancel),
+                label = stringResource(id = LocaleR.string.cancel),
                 modifier = Modifier
                     .focusOnInitialVisibility()
             )

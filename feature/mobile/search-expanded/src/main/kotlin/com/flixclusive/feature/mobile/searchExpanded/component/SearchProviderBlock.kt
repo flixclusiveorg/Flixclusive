@@ -33,7 +33,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun SearchProviderBlock(
@@ -60,7 +60,7 @@ internal fun SearchProviderBlock(
                 placeholderModifier = Modifier.size(30.dp),
                 urlImage = providerData.iconUrl,
                 placeholderId = UiCommonR.drawable.provider_logo,
-                contentDescId = com.flixclusive.core.util.R.string.provider_icon_content_desc,
+                contentDescId = LocaleR.string.provider_icon_content_desc,
                 shape = MaterialTheme.shapes.small
             )
 
@@ -80,7 +80,7 @@ internal fun SearchProviderBlock(
                 )
 
                 Text(
-                    text = providerData.providerType?.toString() ?: stringResource(com.flixclusive.core.util.R.string.unknown_provider_type),
+                    text = providerData.providerType?.toString() ?: stringResource(LocaleR.string.unknown_provider_type),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -98,7 +98,7 @@ internal fun SearchProviderBlock(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Check,
-                    contentDescription = stringResource(UtilR.string.check_indicator_content_desc),
+                    contentDescription = stringResource(LocaleR.string.check_indicator_content_desc),
                     modifier = Modifier.size(25.dp)
                 )
             }

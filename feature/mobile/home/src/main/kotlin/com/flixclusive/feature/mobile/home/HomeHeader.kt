@@ -58,7 +58,7 @@ import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Genre
 import kotlin.random.Random
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -102,7 +102,7 @@ internal fun HomeHeader(
             imageLoader = LocalContext.current.imageLoader,
             placeholder = painterResource(UiCommonR.drawable.movie_placeholder),
             error = painterResource(UiCommonR.drawable.movie_placeholder),
-            contentDescription = stringResource(UtilR.string.popular),
+            contentDescription = stringResource(LocaleR.string.popular),
             contentScale = ContentScale.Crop,
             modifier = modifier
                 .combinedClickable(
@@ -175,7 +175,7 @@ internal fun HomeHeader(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Star,
-                        contentDescription = stringResource(UtilR.string.rating_icon),
+                        contentDescription = stringResource(LocaleR.string.rating_icon),
                         modifier = Modifier.scale(0.6F),
                         tint = starColor
                     )

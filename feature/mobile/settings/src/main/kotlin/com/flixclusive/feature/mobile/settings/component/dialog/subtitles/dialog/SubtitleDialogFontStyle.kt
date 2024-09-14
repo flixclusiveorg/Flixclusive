@@ -19,7 +19,7 @@ import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.Subtit
 import com.flixclusive.core.ui.common.util.getTextStyle
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.player.CaptionStylePreference
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun SubtitleDialogFontStyle(
@@ -31,7 +31,7 @@ internal fun SubtitleDialogFontStyle(
 
     SubtitleSettingsDialog(
         appSettings = appSettings,
-        title = stringResource(id = UtilR.string.subtitles_font_style),
+        title = stringResource(id = LocaleR.string.subtitles_font_style),
         onDismissRequest = onDismissRequest
     ) {
         Column {

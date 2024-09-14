@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 /**
  *
@@ -158,7 +158,7 @@ class GetMediaLinksUseCase @Inject constructor(
             if (watchIdResource.data.isNullOrBlank()) {
                 if (canStopLooping) {
                     val error = watchIdResource.error
-                        ?: UiText.StringResource(UtilR.string.blank_media_id_error_message)
+                        ?: UiText.StringResource(LocaleR.string.blank_media_id_error_message)
 
                     onError?.invoke(error)
                     throwUnavailableError(error)
@@ -289,7 +289,7 @@ class GetMediaLinksUseCase @Inject constructor(
             }
 
             if (episode == null) {
-                return Resource.Failure(UtilR.string.unavailable_episode)
+                return Resource.Failure(LocaleR.string.unavailable_episode)
             }
 
             Resource.Success(episode)
@@ -302,14 +302,14 @@ class GetMediaLinksUseCase @Inject constructor(
         episodeNumber: Int,
     ): Resource<Episode?> {
         return tmdbRepository.getEpisode(
-            id = tmdbId ?: return Resource.Failure(UtilR.string.invalid_tmdb_id),
+            id = tmdbId ?: return Resource.Failure(LocaleR.string.invalid_tmdb_id),
             seasonNumber = seasonNumber,
             episodeNumber = episodeNumber
         ).also {
             if (it is Resource.Failure) {
                 return it
             } else if (it is Resource.Success && it.data == null) {
-                return Resource.Failure(UtilR.string.unavailable_episode)
+                return Resource.Failure(LocaleR.string.unavailable_episode)
             }
         }
     }

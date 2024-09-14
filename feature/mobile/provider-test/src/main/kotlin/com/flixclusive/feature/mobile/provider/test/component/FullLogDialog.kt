@@ -51,7 +51,7 @@ import com.flixclusive.model.provider.ProviderData
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun FullLogDialog(
@@ -93,7 +93,7 @@ internal fun FullLogDialog(
                         .fillMaxWidth()
                 ) {
                     Text(
-                        text = stringResource(id = UtilR.string.close_label),
+                        text = stringResource(id = LocaleR.string.close_label),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Light
                     )
@@ -134,7 +134,7 @@ internal fun FullLogDialog(
                             testName = testCaseOutput.name.asString(context),
                             otherLabels = labels,
                             fullLog = testCaseOutput.fullLog?.asString(context)
-                                ?: context.getString(UtilR.string.no_full_log)
+                                ?: context.getString(LocaleR.string.no_full_log)
                         )
 
                         clipboardManager.setText(toCopy)
@@ -144,7 +144,7 @@ internal fun FullLogDialog(
                     Icon(
                         painter = painterResource(id = UiCommonR.drawable.round_content_copy_24),
                         tint = LocalContentColor.current.onMediumEmphasis(),
-                        contentDescription = stringResource(id = UtilR.string.copy_full_logs_button),
+                        contentDescription = stringResource(id = LocaleR.string.copy_full_logs_button),
                         modifier = Modifier.size(23.dp)
                     )
                 }
@@ -162,7 +162,7 @@ internal fun FullLogDialog(
 
             TextField(
                 value = testCaseOutput.fullLog?.asString()
-                    ?: stringResource(id = UtilR.string.no_full_log),
+                    ?: stringResource(id = LocaleR.string.no_full_log),
                 onValueChange = {},
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 11.sp,
@@ -232,20 +232,20 @@ internal fun getFullLogOtherLabels(
 
     return listOf(
         labelValueStringBuilder(
-            label = UtilR.string.full_log_provider_used_format,
+            label = LocaleR.string.full_log_provider_used_format,
             value = provider.name
         ),
         labelValueStringBuilder(
-            label = UtilR.string.full_log_version_used_format,
+            label = LocaleR.string.full_log_version_used_format,
             value = "${provider.versionName} (${provider.versionCode})"
         ),
         labelValueStringBuilder(
-            label = UtilR.string.full_log_short_log_used_format,
+            label = LocaleR.string.full_log_short_log_used_format,
             value = testCaseOutput.shortLog?.asString(context)
-                ?: stringResource(UtilR.string.no_short_log)
+                ?: stringResource(LocaleR.string.no_short_log)
         ),
         labelValueStringBuilder(
-            label = UtilR.string.full_log_time_taken_format,
+            label = LocaleR.string.full_log_time_taken_format,
             value = testCaseOutput.timeTaken.toString(unit = DurationUnit.MILLISECONDS)
         )
     )

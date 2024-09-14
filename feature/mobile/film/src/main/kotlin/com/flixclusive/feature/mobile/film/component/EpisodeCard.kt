@@ -44,7 +44,7 @@ import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun EpisodeCard(
@@ -106,7 +106,7 @@ internal fun EpisodeCard(
                 ),
                 imageLoader = LocalContext.current.imageLoader,
                 contentDescription = stringResource(
-                    UtilR.string.episode_image_content_desc,
+                    LocaleR.string.episode_image_content_desc,
                     episode.number,
                     episode.title
                 ),
@@ -127,7 +127,7 @@ internal fun EpisodeCard(
             ) {
                 Icon(
                     painter = painterResource(UiCommonR.drawable.play),
-                    contentDescription = stringResource(UtilR.string.play_button),
+                    contentDescription = stringResource(LocaleR.string.play_button),
                     modifier = Modifier.scale(1.5F)
                 )
             }

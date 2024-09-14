@@ -21,7 +21,7 @@ import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
 import com.flixclusive.core.ui.mobile.component.film.FilmsGridScreen
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Destination
 @Composable
@@ -43,7 +43,7 @@ internal fun WatchlistScreen(
                 topBar = {
                     CommonTopBar(
                         modifier = Modifier.align(Alignment.TopStart),
-                        headerTitle = stringResource(id = UtilR.string.watchlist),
+                        headerTitle = stringResource(id = LocaleR.string.watchlist),
                         onNavigationIconClick = navigator::goBack
                     )
                 }
@@ -55,7 +55,7 @@ internal fun WatchlistScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(UtilR.string.watchlist_empty_message),
+                        text = stringResource(LocaleR.string.watchlist_empty_message),
                         textAlign = TextAlign.Center
                     )
                 }
@@ -69,7 +69,7 @@ internal fun WatchlistScreen(
         ) {
             FilmsGridScreen(
                 modifier = Modifier.fillMaxSize(),
-                screenTitle = stringResource(UtilR.string.watchlist),
+                screenTitle = stringResource(LocaleR.string.watchlist),
                 films = watchlist,
                 isShowingFilmCardTitle = appSettings.isShowingFilmCardTitle,
                 onFilmClick = navigator::openFilmScreen,

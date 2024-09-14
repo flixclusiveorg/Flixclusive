@@ -23,7 +23,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenViewModel
 import com.flixclusive.feature.mobile.searchExpanded.util.Constant
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -52,7 +52,7 @@ internal fun SearchProvidersView(
                     .padding(bottom = 5.dp)
             ) {
                 Text(
-                    text = stringResource(id = UtilR.string.get_search_results_from),
+                    text = stringResource(id = LocaleR.string.get_search_results_from),
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Black,

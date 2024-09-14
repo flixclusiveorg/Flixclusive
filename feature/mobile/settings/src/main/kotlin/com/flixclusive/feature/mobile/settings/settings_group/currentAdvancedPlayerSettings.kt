@@ -16,7 +16,7 @@ import com.flixclusive.feature.mobile.settings.KEY_PLAYER_DISK_CACHE_DIALOG
 import com.flixclusive.feature.mobile.settings.SettingsItem
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun currentAdvancedPlayerSettings(
@@ -28,27 +28,27 @@ internal fun currentAdvancedPlayerSettings(
 
     return listOf(
         SettingsItem(
-            title = stringResource(UtilR.string.decoder_priority),
-            description = stringResource(UtilR.string.decoder_priority_description),
+            title = stringResource(LocaleR.string.decoder_priority),
+            description = stringResource(LocaleR.string.decoder_priority_description),
             dialogKey = KEY_DECODER_PRIORITY_DIALOG,
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.video_cache_size),
-            description = stringResource(UtilR.string.video_cache_size_label),
+            title = stringResource(LocaleR.string.video_cache_size),
+            description = stringResource(LocaleR.string.video_cache_size_label),
             dialogKey = KEY_PLAYER_DISK_CACHE_DIALOG,
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.video_buffer_size),
-            description = stringResource(UtilR.string.video_buffer_size_label),
+            title = stringResource(LocaleR.string.video_buffer_size),
+            description = stringResource(LocaleR.string.video_buffer_size_label),
             dialogKey = KEY_PLAYER_BUFFER_SIZE_DIALOG,
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.video_buffer_max_length),
-            description = stringResource(UtilR.string.video_buffer_max_length_desc),
+            title = stringResource(LocaleR.string.video_buffer_max_length),
+            description = stringResource(LocaleR.string.video_buffer_max_length_desc),
             dialogKey = KEY_PLAYER_BUFFER_LENGTH_DIALOG,
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.clear_app_cache),
+            title = stringResource(LocaleR.string.clear_app_cache),
             description = sizeSummary,
             onClick = {
                 safeCall {
@@ -59,7 +59,7 @@ internal fun currentAdvancedPlayerSettings(
             previewContent = {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.broom_clean),
-                    contentDescription = stringResource(id = UtilR.string.clear_cache_content_desc),
+                    contentDescription = stringResource(id = LocaleR.string.clear_cache_content_desc),
                     tint = LocalContentColor.current.onMediumEmphasis(0.8F)
                 )
             }

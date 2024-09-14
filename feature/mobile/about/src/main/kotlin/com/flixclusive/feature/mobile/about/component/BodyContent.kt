@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.common.GithubConstant.GITHUB_REPOSITORY_URL
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun BodyContent() {
@@ -37,12 +37,12 @@ internal fun BodyContent() {
 
     val fontSize = 13.sp
     val featureTitles = listOf(
-        stringResource(UtilR.string.extensive_library),
-        stringResource(UtilR.string.search_and_discover),
-        stringResource(UtilR.string.personalized_recommendations),
-        stringResource(UtilR.string.smart_watch_history),
-        stringResource(UtilR.string.high_quality_streaming),
-        stringResource(UtilR.string.subtitle_selections)
+        stringResource(LocaleR.string.extensive_library),
+        stringResource(LocaleR.string.search_and_discover),
+        stringResource(LocaleR.string.personalized_recommendations),
+        stringResource(LocaleR.string.smart_watch_history),
+        stringResource(LocaleR.string.high_quality_streaming),
+        stringResource(LocaleR.string.subtitle_selections)
     )
 
     Column(
@@ -64,7 +64,7 @@ internal fun BodyContent() {
                     )
                 ) {
                     withStyle(style = SpanStyle(fontSize = fontSize)) {
-                        append(UiText.StringResource(UtilR.string.app_description).asString(context))
+                        append(UiText.StringResource(LocaleR.string.app_description).asString(context))
                         append("\n")
                     }
                 }
@@ -80,7 +80,7 @@ internal fun BodyContent() {
                             fontWeight = FontWeight.Bold
                         )
                     ) {
-                        append(UiText.StringResource(UtilR.string.privacy_notice).asString(context))
+                        append(UiText.StringResource(LocaleR.string.privacy_notice).asString(context))
                         append("\n")
                     }
                 }
@@ -93,7 +93,7 @@ internal fun BodyContent() {
                     )
                 ) {
                     withStyle(style = SpanStyle(fontSize = fontSize)) {
-                        append(UiText.StringResource(UtilR.string.privacy_notice_crash_log_sender).asString(context))
+                        append(UiText.StringResource(LocaleR.string.privacy_notice_crash_log_sender).asString(context))
                         append("\n")
                     }
                 }
@@ -109,7 +109,7 @@ internal fun BodyContent() {
                             fontWeight = FontWeight.Bold
                         )
                     ) {
-                        append(UiText.StringResource(UtilR.string.provider_disclaimer).asString(context))
+                        append(UiText.StringResource(LocaleR.string.provider_disclaimer).asString(context))
                         append("\n")
                     }
                 }
@@ -122,7 +122,7 @@ internal fun BodyContent() {
                     )
                 ) {
                     withStyle(style = SpanStyle(fontSize = fontSize)) {
-                        append(UiText.StringResource(UtilR.string.disclaimer_provider_message).asString(context))
+                        append(UiText.StringResource(LocaleR.string.disclaimer_provider_message).asString(context))
                         append("\n")
                     }
                 }
@@ -139,7 +139,7 @@ internal fun BodyContent() {
                             fontWeight = FontWeight.Bold
                         )
                     ) {
-                        append(UiText.StringResource(UtilR.string.app_features).asString(context))
+                        append(UiText.StringResource(LocaleR.string.app_features).asString(context))
                         append("\n")
                     }
                 }
@@ -175,7 +175,7 @@ internal fun BodyContent() {
                 .heightIn(min = 50.dp)
         ) {
             Text(
-                text = stringResource(UtilR.string.github_repository),
+                text = stringResource(LocaleR.string.github_repository),
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontSize = 16.sp
                 ),

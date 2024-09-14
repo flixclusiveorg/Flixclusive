@@ -26,6 +26,7 @@ composeDestinations = "1.9.53"
 conscrypt = "2.5.2"
 constraintLayout = "1.0.1"
 coreKtx = "1.12.0"
+coreStubs = "1.0.0"
 coroutines = "1.7.3"
 dokka = "1.9.20"
 espresso-core = "3.6.1"
@@ -100,6 +101,12 @@ destinations-ksp = { module = "io.github.raamcosta.compose-destinations:ksp", ve
 
 # Palette API
 palette = { module = "androidx.palette:palette", version.ref = "palette" }
+
+# Core-stubs
+stubs-model-film = { group = "com.github.flixclusiveorg.core-stubs", name = "model-film", version.ref = "coreStubs" }
+stubs-model-provider = { group = "com.github.flixclusiveorg.core-stubs", name = "model-provider", version.ref = "coreStubs" }
+stubs-provider = { group = "com.github.flixclusiveorg.core-stubs", name = "provider", version.ref = "coreStubs" }
+stubs-util = { group = "com.github.flixclusiveorg.core-stubs", name = "core-util", version.ref = "coreStubs" }
 
 # Jsoup
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }

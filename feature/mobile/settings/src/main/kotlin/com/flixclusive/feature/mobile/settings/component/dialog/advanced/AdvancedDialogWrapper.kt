@@ -9,7 +9,7 @@ import com.flixclusive.feature.mobile.settings.KEY_DOH_DIALOG
 import com.flixclusive.feature.mobile.settings.component.dialog.advanced.dialog.AdvancedDialogDoH
 import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun AdvancedDialogWrapper(
@@ -27,7 +27,7 @@ internal fun AdvancedDialogWrapper(
                 onChange = {
                     onChangeSettings(appSettings.copy(dns = it))
                     onDismissDialog(KEY_DOH_DIALOG)
-                    context.showToast(UiText.StringResource(UtilR.string.restart_app_for_changes_message).asString(context))
+                    context.showToast(UiText.StringResource(LocaleR.string.restart_app_for_changes_message).asString(context))
                 },
                 onDismissRequest = {
                     onDismissDialog(KEY_DOH_DIALOG)

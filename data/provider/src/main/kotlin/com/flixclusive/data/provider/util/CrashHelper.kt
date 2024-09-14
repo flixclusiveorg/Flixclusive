@@ -1,7 +1,7 @@
 package com.flixclusive.data.provider.util
 
 import android.content.Context
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 object CrashHelper {
     fun isCrashingOnGetApiMethod(e: Throwable): Boolean {
@@ -9,5 +9,5 @@ object CrashHelper {
     }
 
     fun Context.getApiCrashMessage(provider: String): String
-        = getString(UtilR.string.failed_to_load_provider_on_api, provider)
+        = getString(LocaleR.string.failed_to_load_provider_on_api, provider)
 }

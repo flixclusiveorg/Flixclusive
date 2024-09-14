@@ -70,7 +70,7 @@ import com.flixclusive.service.update.AppUpdaterService
 import com.flixclusive.service.update.AppUpdaterService.Companion.startAppUpdater
 import com.ramcosta.composedestinations.annotation.Destination
 import dev.jeziellago.compose.markdowntext.MarkdownText
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Destination(
     navArgsDelegate = UpdateScreenNavArgs::class
@@ -126,7 +126,7 @@ internal fun UpdateScreen(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.flixclusive_tag),
-                contentDescription = stringResource(UtilR.string.flixclusive_tag_content_desc),
+                contentDescription = stringResource(LocaleR.string.flixclusive_tag_content_desc),
                 contentScale = ContentScale.FillHeight,
                 alignment = Alignment.CenterStart,
                 modifier = Modifier
@@ -141,7 +141,7 @@ internal fun UpdateScreen(
             )
 
             Text(
-                text = stringResource(id = UtilR.string.update_out_now_format, args.newVersion),
+                text = stringResource(id = LocaleR.string.update_out_now_format, args.newVersion),
                 modifier = Modifier.padding(bottom = 10.dp),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontSize = 25.sp, fontWeight = FontWeight.Bold
@@ -149,7 +149,7 @@ internal fun UpdateScreen(
             )
 
             MarkdownText(
-                markdown = args.updateInfo?.fromGitmoji() ?: stringResource(id = UtilR.string.default_update_info_message),
+                markdown = args.updateInfo?.fromGitmoji() ?: stringResource(id = LocaleR.string.default_update_info_message),
                 isTextSelectable = true,
                 linkColor = Color(0xFF5890FF),
                 linkifyMask = Linkify.WEB_URLS or Linkify.EMAIL_ADDRESSES,
@@ -206,7 +206,7 @@ internal fun UpdateScreen(
                                 .padding(buttonPaddingValues)
                         ) {
                             Text(
-                                text = stringResource(UtilR.string.update_label),
+                                text = stringResource(LocaleR.string.update_label),
                                 style = MaterialTheme.typography.labelLarge.copy(
                                     fontSize = 16.sp
                                 ),
@@ -231,7 +231,7 @@ internal fun UpdateScreen(
                                 .padding(buttonPaddingValues)
                         ) {
                             Text(
-                                text = stringResource(UtilR.string.not_now_label),
+                                text = stringResource(LocaleR.string.not_now_label),
                                 style = MaterialTheme.typography.labelLarge.copy(
                                     fontSize = 16.sp
                                 ),
@@ -247,10 +247,10 @@ internal fun UpdateScreen(
                             .background(MaterialTheme.colorScheme.surface)
                             .height(70.dp)
                     ) {
-                        var labelToUse = stringResource(UtilR.string.update_label)
+                        var labelToUse = stringResource(LocaleR.string.update_label)
 
                         if (readyToInstall) {
-                            labelToUse = stringResource(UtilR.string.install)
+                            labelToUse = stringResource(LocaleR.string.install)
                         } else if (downloadProgress != null && downloadProgress!! > -1) {
                             labelToUse = "$downloadProgress%"
                         }

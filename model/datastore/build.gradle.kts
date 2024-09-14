@@ -9,6 +9,6 @@ android {
 
 dependencies {
     api(libs.gson)
-    api(projects.provider)
+    api(libs.stubs.provider)
     implementation(projects.core.locale)
 }

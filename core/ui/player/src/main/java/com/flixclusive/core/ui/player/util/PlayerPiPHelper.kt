@@ -15,7 +15,7 @@ import androidx.annotation.StringRes
 import com.flixclusive.core.ui.player.PlayerEvents
 import com.flixclusive.core.ui.player.R
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 const val ACTION_PIP_CONTROL = "player_pip_control"
 const val PLAYER_PIP_EVENT = "player_pip_event"
@@ -72,17 +72,17 @@ fun Activity.updatePiPParams(
         val actions = arrayListOf(
             getRemoteAction(
                 icon = backwardSeekIcon,
-                label = UtilR.string.backward_button_content_description,
+                label = LocaleR.string.backward_button_content_description,
                 event = PlayerEvents.FORWARD
             ),
             getRemoteAction(
                 icon = playPauseIcon,
-                label = UtilR.string.play_pause_button_content_description,
+                label = LocaleR.string.play_pause_button_content_description,
                 event = eventCode
             ),
             getRemoteAction(
                 icon = forwardSeekIcon,
-                label = UtilR.string.forward_button_content_description,
+                label = LocaleR.string.forward_button_content_description,
                 event = PlayerEvents.FORWARD
             ).also {
                 it.isEnabled = !hasEnded

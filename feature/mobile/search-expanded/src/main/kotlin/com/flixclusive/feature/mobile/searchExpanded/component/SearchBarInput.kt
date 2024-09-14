@@ -63,7 +63,7 @@ import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.getFormat
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
 import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun SearchBarInput(
@@ -145,13 +145,13 @@ internal fun SearchBarInput(
                 IconButton(onClick = onNavigationIconClick) {
                     Icon(
                         painter = painterResource(UiCommonR.drawable.left_arrow),
-                        contentDescription = stringResource(UtilR.string.navigate_up)
+                        contentDescription = stringResource(LocaleR.string.navigate_up)
                     )
                 }
             },
             placeholder = {
                 Text(
-                    text = stringResource(UtilR.string.search_suggestion),
+                    text = stringResource(LocaleR.string.search_suggestion),
                     style = MaterialTheme.typography.bodyMedium,
                     color = LocalContentColor.current.onMediumEmphasis(),
                     overflow = TextOverflow.Ellipsis,
@@ -162,7 +162,7 @@ internal fun SearchBarInput(
                 if (isError) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(UtilR.string.empty_query_error_msg),
+                        text = stringResource(LocaleR.string.empty_query_error_msg),
                         color = MaterialTheme.colorScheme.error,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
@@ -181,7 +181,7 @@ internal fun SearchBarInput(
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.outline_close_square),
-                            contentDescription = stringResource(UtilR.string.clear_text_button)
+                            contentDescription = stringResource(LocaleR.string.clear_text_button)
                         )
                     }
                 }
@@ -213,7 +213,7 @@ internal fun SearchBarInput(
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.filter_list_off),
-                            contentDescription = stringResource(UtilR.string.filter_button)
+                            contentDescription = stringResource(LocaleR.string.filter_button)
                         )
                     }
                 }

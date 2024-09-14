@@ -10,7 +10,7 @@ android {
 
 dependencies {
     api(projects.core.datastore)
-    api(projects.core.util)
+    api(libs.stubs.util)
     api(projects.model.configuration)
 
     implementation(libs.mockk)

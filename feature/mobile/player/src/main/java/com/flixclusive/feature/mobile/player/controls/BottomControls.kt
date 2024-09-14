@@ -56,7 +56,7 @@ import com.flixclusive.model.film.common.tv.Episode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -230,8 +230,8 @@ internal fun BottomControls(
                     CustomIconButton(
                         modifier = buttonModifier,
                         iconId = PlayerR.drawable.outline_video_library_24,
-                        label = UtilR.string.episodes,
-                        contentDescription = stringResource(UtilR.string.episodes_button_desc),
+                        label = LocaleR.string.episodes,
+                        contentDescription = stringResource(LocaleR.string.episodes_button_desc),
                         onClick = { onEpisodesClick() }
                     )
                 }
@@ -239,16 +239,16 @@ internal fun BottomControls(
                 CustomIconButton(
                     modifier = buttonModifier,
                     iconId = R.drawable.outline_lock_24,
-                    label = UtilR.string.lock,
-                    contentDescription = stringResource(UtilR.string.lock_button_desc),
+                    label = LocaleR.string.lock,
+                    contentDescription = stringResource(LocaleR.string.lock_button_desc),
                     onClick = { onLockClick() }
                 )
 
                 CustomIconButton(
                     modifier = buttonModifier,
                     iconId = PlayerR.drawable.outline_subtitles_24,
-                    label = UtilR.string.audio_and_subtitle,
-                    contentDescription = stringResource(id = UtilR.string.audio_and_subtitle_button_desc),
+                    label = LocaleR.string.audio_and_subtitle,
+                    contentDescription = stringResource(id = LocaleR.string.audio_and_subtitle_button_desc),
                     onClick = { onAudioAndDisplayClick() }
                 )
 
@@ -257,8 +257,8 @@ internal fun BottomControls(
                         modifier = buttonModifier,
                         iconModifier = Modifier.padding(end = 5.dp),
                         iconId = PlayerR.drawable.round_skip_next_24,
-                        label = UtilR.string.next_episode,
-                        contentDescription = stringResource(id = UtilR.string.next_episode_button_desc),
+                        label = LocaleR.string.next_episode,
+                        contentDescription = stringResource(id = LocaleR.string.next_episode_button_desc),
                         onClick = { onNextEpisodeClick(null) }
                     )
                 }
@@ -424,8 +424,8 @@ private fun PlayerSeekSlider() {
                             CustomIconButton(
                                 modifier = buttonModifier,
                                 iconId = PlayerR.drawable.outline_video_library_24,
-                                label = UtilR.string.episodes,
-                                contentDescription = stringResource(UtilR.string.episodes_button_desc),
+                                label = LocaleR.string.episodes,
+                                contentDescription = stringResource(LocaleR.string.episodes_button_desc),
                                 onClick = {  }
                             )
                         }
@@ -433,16 +433,16 @@ private fun PlayerSeekSlider() {
                         CustomIconButton(
                             modifier = buttonModifier,
                             iconId = R.drawable.outline_lock_24,
-                            label = UtilR.string.lock,
-                            contentDescription = stringResource(UtilR.string.lock_button_desc),
+                            label = LocaleR.string.lock,
+                            contentDescription = stringResource(LocaleR.string.lock_button_desc),
                             onClick = {  }
                         )
 
                         CustomIconButton(
                             modifier = buttonModifier,
                             iconId = PlayerR.drawable.outline_subtitles_24,
-                            label = UtilR.string.audio_and_subtitle,
-                            contentDescription = stringResource(UtilR.string.audio_and_subtitle_button_desc),
+                            label = LocaleR.string.audio_and_subtitle,
+                            contentDescription = stringResource(LocaleR.string.audio_and_subtitle_button_desc),
                             onClick = { }
                         )
 
@@ -451,8 +451,8 @@ private fun PlayerSeekSlider() {
                                 modifier = buttonModifier,
                                 iconModifier = Modifier.padding(end = 5.dp),
                                 iconId = PlayerR.drawable.round_skip_next_24,
-                                label = UtilR.string.next_episode,
-                                contentDescription = stringResource(id = UtilR.string.next_episode_button_desc),
+                                label = LocaleR.string.next_episode,
+                                contentDescription = stringResource(id = LocaleR.string.next_episode_button_desc),
                                 onClick = {  }
                             )
                         }

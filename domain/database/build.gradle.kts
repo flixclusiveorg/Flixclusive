@@ -11,7 +11,7 @@ android {
 dependencies {
     api(projects.data.watchHistory)
     api(projects.data.watchlist)
-    api(projects.model.film)
+    api(libs.stubs.model.film)
 
-    implementation(projects.core.util)
+    implementation(libs.stubs.util)
 }

@@ -9,5 +9,5 @@ android {
 }
 
 dependencies {
-    api(projects.core.util)
+    api(libs.stubs.util)
 }

@@ -33,7 +33,7 @@ import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.Subtit
 import com.flixclusive.feature.mobile.settings.util.ColorPickerHelper.AlphaBar
 import com.flixclusive.model.datastore.AppSettings
 import kotlin.math.abs
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun SubtitleDialogFontBackgroundColor(
@@ -71,7 +71,7 @@ internal fun SubtitleDialogFontBackgroundColor(
 
     SubtitleSettingsDialog(
         appSettings = appSettings,
-        title = stringResource(id = UtilR.string.subtitles_background_color),
+        title = stringResource(id = LocaleR.string.subtitles_background_color),
         onDismissRequest = onDismissRequest
     ) {
         Column(

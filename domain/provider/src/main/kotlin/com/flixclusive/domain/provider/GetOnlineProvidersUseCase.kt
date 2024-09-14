@@ -9,7 +9,7 @@ import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.model.provider.Repository
 import okhttp3.OkHttpClient
 import javax.inject.Inject
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 /**
@@ -39,7 +39,7 @@ class GetOnlineProvidersUseCase @Inject constructor(
 
 
                 return@withIOContext Resource.Success(onlineProviders)
-            } ?: Resource.Failure(UtilR.string.failed_to_load_online_providers)
+            } ?: Resource.Failure(LocaleR.string.failed_to_load_online_providers)
         }
     }
 

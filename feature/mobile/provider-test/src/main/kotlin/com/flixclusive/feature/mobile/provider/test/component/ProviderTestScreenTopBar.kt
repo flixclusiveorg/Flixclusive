@@ -18,7 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.COMMON_TOP_BAR_HEIGHT
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun ProviderTestScreenTopBar(
@@ -44,7 +44,7 @@ internal fun ProviderTestScreenTopBar(
             IconButton(onClick = onNavigationIconClick) {
                 Icon(
                     painter = painterResource(UiCommonR.drawable.left_arrow),
-                    contentDescription = stringResource(UtilR.string.navigate_up)
+                    contentDescription = stringResource(LocaleR.string.navigate_up)
                 )
             }
             
@@ -53,7 +53,7 @@ internal fun ProviderTestScreenTopBar(
             IconButton(onClick = onOpenSortBottomSheet) {
                 Icon(
                     painter = painterResource(UiCommonR.drawable.filter_list),
-                    contentDescription = stringResource(UtilR.string.settings)
+                    contentDescription = stringResource(LocaleR.string.settings)
                 )
             }
         }

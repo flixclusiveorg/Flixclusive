@@ -54,7 +54,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(UnstableApi::class)
 object PlayerUiUtil {
@@ -67,7 +67,7 @@ object PlayerUiUtil {
     fun rememberLocalPlayerManager(): State<FlixclusivePlayerManager> {
         val player = LocalPlayerManager.current
         check(player != null) {
-            stringResource(id = UtilR.string.player_not_initialized)
+            stringResource(id = LocaleR.string.player_not_initialized)
         }
 
         return rememberUpdatedState(player)
@@ -499,14 +499,14 @@ object PlayerUiUtil {
 
                         if (secondsLeft <= 0L) {
                             showSnackbar(
-                                UiText.StringResource(UtilR.string.loading_next_episode),
+                                UiText.StringResource(LocaleR.string.loading_next_episode),
                                 PlayerSnackbarMessageType.Episode
                             )
                             return@LaunchedEffect
                         }
 
                         showSnackbar(
-                            UiText.StringResource(UtilR.string.next_episode_on_format, secondsLeft),
+                            UiText.StringResource(LocaleR.string.next_episode_on_format, secondsLeft),
                             PlayerSnackbarMessageType.Episode
                         )
                     }

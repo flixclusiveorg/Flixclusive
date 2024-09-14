@@ -8,7 +8,7 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.net.ssl.SSLException
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 /**
  * A sealed class representing a resource that can be in one of three states: Success, Failure, or Loading.
@@ -55,9 +55,9 @@ sealed class Resource<out T>(
              */
             fun Throwable.toNetworkException(): Failure {
                 return when (this) {
-                    is SocketTimeoutException -> Failure(UtilR.string.connection_timeout)
+                    is SocketTimeoutException -> Failure(LocaleR.string.connection_timeout)
                     is ConnectException, is UnknownHostException -> Failure(
-                        UtilR.string.connection_failed)
+                        LocaleR.string.connection_failed)
                     is HttpException -> {
                         val errorMessage = "HTTP Code: ${code()}"
                         errorLog(errorMessage)

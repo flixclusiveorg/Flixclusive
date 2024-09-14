@@ -21,7 +21,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.max
 import kotlin.random.Random
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Singleton
 class GetSearchRecommendedCardsUseCase @Inject constructor(
@@ -64,7 +64,7 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
             var newList = emptyList<SearchCatalog>()
 
             configurationManager.searchCatalogsData?.run {
-                val defaultErrorMessage = Resource.Failure(UtilR.string.failed_to_initialize_search_items)
+                val defaultErrorMessage = Resource.Failure(LocaleR.string.failed_to_initialize_search_items)
 
                 _cards.value = Resource.Loading
                 _tvShowNetworkCards.value = configurationManager.searchCatalogsData?.networks?.shuffled()
@@ -111,7 +111,7 @@ class GetSearchRecommendedCardsUseCase @Inject constructor(
                         else -> Unit
                     }
                 }
-            } ?: _cards.emit(Resource.Failure(error = UiText.StringResource(UtilR.string.failed_to_init_app)))
+            } ?: _cards.emit(Resource.Failure(error = UiText.StringResource(LocaleR.string.failed_to_init_app)))
         }
     }
 }

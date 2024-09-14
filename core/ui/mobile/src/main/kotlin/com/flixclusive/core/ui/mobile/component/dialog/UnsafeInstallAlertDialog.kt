@@ -39,7 +39,7 @@ import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.CustomCheckbox
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 fun UnsafeInstallAlertDialog(
@@ -59,8 +59,8 @@ fun UnsafeInstallAlertDialog(
 
     val context = LocalContext.current
     val message = context.resources.getQuantityString(
-        UtilR.plurals.warning_install_message_first_half, quantity, formattedName
-    ) + " " + context.getString(UtilR.string.warning_install_message_second_half)
+        LocaleR.plurals.warning_install_message_first_half, quantity, formattedName
+    ) + " " + context.getString(LocaleR.string.warning_install_message_second_half)
 
     CustomBaseAlertDialog(
         onDismiss = onDismiss,
@@ -93,7 +93,7 @@ fun UnsafeInstallAlertDialog(
                         .heightIn(min = buttonMinHeight)
                 ) {
                     Text(
-                        text = stringResource(id = UtilR.string.proceed),
+                        text = stringResource(id = LocaleR.string.proceed),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -115,7 +115,7 @@ fun UnsafeInstallAlertDialog(
                         .heightIn(min = buttonMinHeight)
                 ) {
                     Text(
-                        text = stringResource(id = UtilR.string.cancel),
+                        text = stringResource(id = LocaleR.string.cancel),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Light
                     )
@@ -124,7 +124,7 @@ fun UnsafeInstallAlertDialog(
         }
     ) {
         Text(
-            text = stringResource(id = UtilR.string.unsafe_and_untrusted),
+            text = stringResource(id = LocaleR.string.unsafe_and_untrusted),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Bold,
@@ -172,7 +172,7 @@ fun UnsafeInstallAlertDialog(
                 )
 
                 Text(
-                    text = stringResource(id = UtilR.string.disable_warning),
+                    text = stringResource(id = LocaleR.string.disable_warning),
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = mediumEmphasis

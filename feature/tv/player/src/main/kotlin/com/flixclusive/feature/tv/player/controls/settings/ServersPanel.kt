@@ -25,7 +25,7 @@ import com.flixclusive.core.ui.tv.util.hasPressedRight
 import com.flixclusive.feature.tv.player.controls.settings.common.ListContentHolder
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun ServersPanel(
@@ -73,8 +73,8 @@ internal fun ServersPanel(
                         isFirstItemFullyFocused = false
                         false
                     },
-                contentDescription = stringResource(id = UtilR.string.providers),
-                label = stringResource(id = UtilR.string.providers),
+                contentDescription = stringResource(id = LocaleR.string.providers),
+                label = stringResource(id = LocaleR.string.providers),
                 items = apis,
                 selectedIndex = selectedProviderIndex,
                 itemState = state.selectedProviderState,
@@ -94,8 +94,8 @@ internal fun ServersPanel(
 
                         false
                     },
-                contentDescription = stringResource(id = UtilR.string.servers),
-                label = stringResource(id = UtilR.string.servers),
+                contentDescription = stringResource(id = LocaleR.string.servers),
+                label = stringResource(id = LocaleR.string.servers),
                 items = servers,
                 initializeFocus = true,
                 selectedIndex = state.selectedSourceLink,

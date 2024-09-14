@@ -17,8 +17,8 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(projects.core.datastore)
     implementation(projects.core.locale)
-    implementation(projects.core.util)
+    implementation(libs.stubs.util)
     implementation(projects.model.configuration)
     implementation(projects.model.datastore)
-    implementation(projects.model.film)
+    implementation(libs.stubs.model.film)
 }

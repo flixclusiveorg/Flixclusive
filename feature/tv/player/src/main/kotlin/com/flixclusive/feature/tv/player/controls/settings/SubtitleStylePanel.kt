@@ -56,7 +56,7 @@ import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionSizePreference
 import com.flixclusive.model.datastore.player.CaptionSizePreference.Companion.getDp
 import com.flixclusive.model.datastore.player.CaptionStylePreference
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 
 private val styleItemSize = 20.dp
@@ -87,7 +87,7 @@ internal fun SubtitleStylePanel(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(id = UtilR.string.sample_subtitle_text),
+            text = stringResource(id = LocaleR.string.sample_subtitle_text),
             style = currentAppSettings.subtitleFontStyle.getTextStyle().copy(
                 color = Color(currentAppSettings.subtitleColor),
                 fontSize = currentAppSettings.subtitleSize.getDp(isTv = true).sp,
@@ -107,7 +107,7 @@ internal fun SubtitleStylePanel(
                 .padding(top = 20.dp)
         ) {
             SubtitleStyle(
-                label = stringResource(UtilR.string.subtitles_size)
+                label = stringResource(LocaleR.string.subtitles_size)
             ) {
                 CaptionSizePreference.entries.forEach {
                     StyleItem(
@@ -130,7 +130,7 @@ internal fun SubtitleStylePanel(
             }
 
             SubtitleStyle(
-                label = stringResource(UtilR.string.subtitles_edge_type)
+                label = stringResource(LocaleR.string.subtitles_edge_type)
             ) {
                 CaptionEdgeTypePreference.entries.forEach {
                     StyleItem(
@@ -174,7 +174,7 @@ internal fun SubtitleStylePanel(
             }
 
             SubtitleStyle(
-                label = stringResource(UtilR.string.subtitles_font_style)
+                label = stringResource(LocaleR.string.subtitles_font_style)
             ) {
                 CaptionStylePreference.entries.forEach {
                     StyleItem(
@@ -204,7 +204,7 @@ internal fun SubtitleStylePanel(
                 .focusGroup()
         ) {
             SubtitleStyle(
-                label = stringResource(UtilR.string.subtitles_color)
+                label = stringResource(LocaleR.string.subtitles_color)
             ) {
                 subtitleColors.forEach { (_, color) ->
                     StyleItem(
@@ -225,7 +225,7 @@ internal fun SubtitleStylePanel(
             }
 
             SubtitleStyle(
-                label = stringResource(UtilR.string.subtitles_background_color)
+                label = stringResource(LocaleR.string.subtitles_background_color)
             ) {
                 subtitleBackgroundColors.forEach { (_, color) ->
                     StyleItem(
@@ -266,13 +266,13 @@ internal fun SubtitleStylePanel(
                     hidePanel()
                 },
                 isEmphasis = true,
-                label = stringResource(id = UtilR.string.save)
+                label = stringResource(id = LocaleR.string.save)
             )
 
             ConfirmButton(
                 onClick = hidePanel,
                 isEmphasis = false,
-                label = stringResource(id = UtilR.string.cancel),
+                label = stringResource(id = LocaleR.string.cancel),
                 modifier = Modifier
                     .focusOnInitialVisibility()
             )

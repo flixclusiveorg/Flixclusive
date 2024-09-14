@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import okhttp3.OkHttpClient
 import javax.inject.Inject
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 /**
  * Use case to validate and retrieve a [Repository] from a given URL.
@@ -38,7 +38,7 @@ class GetRepositoryUseCase @Inject constructor(
 
                 val isAlreadyAdded = repositories.any { it.owner.equals(username, true) && it.name == repositoryName }
                 if (isAlreadyAdded) {
-                    return@withIOContext Resource.Failure(UtilR.string.already_added_repo_error)
+                    return@withIOContext Resource.Failure(LocaleR.string.already_added_repo_error)
                 }
 
                 val repository = url.toValidRepositoryLink()
@@ -48,11 +48,11 @@ class GetRepositoryUseCase @Inject constructor(
                 )
 
                 if (!client.isProviderBranchValid(providerBranch)) {
-                    return@withIOContext Resource.Failure(UtilR.string.invalid_repository)
+                    return@withIOContext Resource.Failure(LocaleR.string.invalid_repository)
                 }
 
                 return@withIOContext Resource.Success(repository)
-            } ?: Resource.Failure(UtilR.string.invalid_repo_link)
+            } ?: Resource.Failure(LocaleR.string.invalid_repo_link)
         }
     }
 

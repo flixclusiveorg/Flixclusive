@@ -4,7 +4,7 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.model.provider.filter.Filter
 import com.flixclusive.model.provider.filter.FilterGroup
 import com.flixclusive.model.provider.filter.FilterList
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 private const val TMDB_FILTER_LABEL = "Media type"
 internal const val FILTER_ALL = 0
@@ -26,9 +26,9 @@ class TmdbFilters(
             = FilterList(
             TmdbFilters(
                 options = listOf(
-                    UiText.StringResource(UtilR.string.all),
-                    UiText.StringResource(UtilR.string.tv_show),
-                    UiText.StringResource(UtilR.string.movie)
+                    UiText.StringResource(LocaleR.string.all),
+                    UiText.StringResource(LocaleR.string.tv_show),
+                    UiText.StringResource(LocaleR.string.movie)
                 )
             ),
         )

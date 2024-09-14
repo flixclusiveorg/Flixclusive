@@ -39,7 +39,7 @@ import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -328,7 +328,7 @@ internal fun PlayerControls(
                 onProviderChange(provider)
                 triggerSnackbar(
                     provider,
-                    UtilR.string.provider_snackbar_message,
+                    LocaleR.string.provider_snackbar_message,
                     PlayerSnackbarMessageType.Provider
                 )
             },
@@ -336,7 +336,7 @@ internal fun PlayerControls(
                 onVideoServerChange(i)
                 triggerSnackbar(
                     message,
-                    UtilR.string.server_snackbar_message,
+                    LocaleR.string.server_snackbar_message,
                     PlayerSnackbarMessageType.Server
                 )
             },

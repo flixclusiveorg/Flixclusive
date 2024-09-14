@@ -24,7 +24,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.common.GithubConstant.GITHUB_LATEST_RELEASE
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.feature.mobile.preferences.R
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun ShareHeader() {
@@ -44,7 +44,7 @@ internal fun ShareHeader() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = stringResource(id = UtilR.string.share_the_app),
+            text = stringResource(id = LocaleR.string.share_the_app),
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
@@ -58,7 +58,7 @@ internal fun ShareHeader() {
 
         HeaderButton(
             iconId = com.flixclusive.core.ui.common.R.drawable.round_content_copy_24,
-            contentDescription = stringResource(id = UtilR.string.copy_button),
+            contentDescription = stringResource(id = LocaleR.string.copy_button),
             onClick =  {
                 clipboardManager.setText(AnnotatedString(GITHUB_LATEST_RELEASE))
             }
@@ -66,11 +66,11 @@ internal fun ShareHeader() {
 
         HeaderButton(
             iconId = R.drawable.round_share_24,
-            contentDescription = stringResource(UtilR.string.share_button),
+            contentDescription = stringResource(LocaleR.string.share_button),
             onClick =  {
                 val type = "text/plain"
-                val subject =  UiText.StringResource(UtilR.string.share_message_subject).asString(context)
-                val extraText = UiText.StringResource(UtilR.string.share_message, GITHUB_LATEST_RELEASE).asString(context)
+                val subject =  UiText.StringResource(LocaleR.string.share_message_subject).asString(context)
+                val extraText = UiText.StringResource(LocaleR.string.share_message, GITHUB_LATEST_RELEASE).asString(context)
                 val shareWith = "ShareWith"
 
                 val intent = Intent(Intent.ACTION_SEND)

@@ -19,7 +19,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.provider.info.HORIZONTAL_PADDING
 import com.flixclusive.feature.mobile.provider.info.component.Title
 import com.flixclusive.model.provider.Author
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun AuthorsList(
@@ -30,7 +30,7 @@ internal fun AuthorsList(
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Title(
-            text = stringResource(id = UtilR.string.authors),
+            text = stringResource(id = LocaleR.string.authors),
             modifier = Modifier
                 .padding(horizontal = HORIZONTAL_PADDING)
         )

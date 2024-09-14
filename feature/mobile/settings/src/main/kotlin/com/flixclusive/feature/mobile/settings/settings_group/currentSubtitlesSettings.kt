@@ -29,7 +29,7 @@ import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAp
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionStylePreference
 import java.util.Locale
-import com.flixclusive.core.util.R as UtilR
+import com.flixclusive.core.locale.R as LocaleR
 
 private const val DEFAULT_TEXT_PREVIEW = "Abc"
 
@@ -40,8 +40,8 @@ internal fun currentSubtitlesSettings(): List<SettingsItem> {
 
     return listOf(
         SettingsItem(
-            title = stringResource(UtilR.string.subtitle),
-            description = stringResource(id = UtilR.string.subtitles_toggle_desc),
+            title = stringResource(LocaleR.string.subtitle),
+            description = stringResource(id = LocaleR.string.subtitles_toggle_desc),
             onClick = {
                 onChangeSettings(appSettings.copy(isSubtitleEnabled = !appSettings.isSubtitleEnabled))
             },
@@ -56,19 +56,19 @@ internal fun currentSubtitlesSettings(): List<SettingsItem> {
             }
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.subtitles_language),
+            title = stringResource(LocaleR.string.subtitles_language),
             description = Locale(appSettings.subtitleLanguage).displayLanguage,
             enabled = appSettings.isSubtitleEnabled,
             dialogKey = KEY_SUBTITLE_LANGUAGE_DIALOG,
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.subtitles_size),
+            title = stringResource(LocaleR.string.subtitles_size),
             description = appSettings.subtitleSize.toString(),
             enabled = appSettings.isSubtitleEnabled,
             dialogKey = KEY_SUBTITLE_SIZE_DIALOG
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.subtitles_font_style),
+            title = stringResource(LocaleR.string.subtitles_font_style),
             description = appSettings.subtitleFontStyle.toString(),
             enabled = appSettings.isSubtitleEnabled,
             dialogKey = KEY_SUBTITLE_FONT_STYLE_DIALOG,
@@ -98,8 +98,8 @@ internal fun currentSubtitlesSettings(): List<SettingsItem> {
             }
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.subtitles_color),
-            description = stringResource(UtilR.string.subtitles_color_desc),
+            title = stringResource(LocaleR.string.subtitles_color),
+            description = stringResource(LocaleR.string.subtitles_color_desc),
             enabled = appSettings.isSubtitleEnabled,
             dialogKey = KEY_SUBTITLE_COLOR_DIALOG,
             previewContent = {
@@ -110,8 +110,8 @@ internal fun currentSubtitlesSettings(): List<SettingsItem> {
             }
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.subtitles_background_color),
-            description = stringResource(UtilR.string.subtitles_background_color_desc),
+            title = stringResource(LocaleR.string.subtitles_background_color),
+            description = stringResource(LocaleR.string.subtitles_background_color_desc),
             enabled = appSettings.isSubtitleEnabled,
             dialogKey = KEY_SUBTITLE_BACKGROUND_COLOR_DIALOG,
             previewContent = {
@@ -122,7 +122,7 @@ internal fun currentSubtitlesSettings(): List<SettingsItem> {
             }
         ),
         SettingsItem(
-            title = stringResource(UtilR.string.subtitles_edge_type),
+            title = stringResource(LocaleR.string.subtitles_edge_type),
             description = appSettings.subtitleEdgeType.toString(),
             enabled = appSettings.isSubtitleEnabled,
             dialogKey = KEY_SUBTITLE_EDGE_TYPE_DIALOG,
