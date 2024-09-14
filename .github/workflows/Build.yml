@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout master
         uses: actions/checkout@v4
 
-      - name: Checkout
+      - name: Checkout archives
         uses: actions/checkout@v4
         with:
           ref: "archives"
@@ -43,12 +43,7 @@ jobs:
       - name: Build release artifacts
         uses: gradle/gradle-command-action@v2
         with:
-          arguments: assembleRelease bundleReleaseClassesToCompileJar
-
-      - name: Generate provider stubs
-        run: |
-          chmod +x .github/create_provider_stubs.sh
-          .github/create_provider_stubs.sh
+          arguments: :app:assembleRelease
 
       - name: Sign release APK
         uses: r0adkll/sign-android-release@v1
@@ -116,7 +111,6 @@ jobs:
             | release | ${{ env.RELEASE_SHA }} |
           files: |
             flixclusive-release.apk
-            build/stubs/provider-stubs.aar
           draft: false
           prerelease: true
         env:
