@@ -36,6 +36,7 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
 import com.flixclusive.core.ui.player.util.MimeTypeParser
 import com.flixclusive.core.ui.player.util.MimeTypeParser.toMimeType
@@ -49,7 +50,6 @@ import com.flixclusive.core.ui.player.util.getCacheFactory
 import com.flixclusive.core.ui.player.util.getLoadControl
 import com.flixclusive.core.ui.player.util.getRenderers
 import com.flixclusive.core.ui.player.util.handleError
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
@@ -102,6 +102,9 @@ class FlixclusivePlayerManager(
     private val showErrorCallback: (message: UiText) -> Unit
 ) : Player.Listener {
     private var mediaSession: MediaSession? = null
+    private var currentStreamPlaying: Stream? = null
+    private var areTracksInitialized: Boolean = false
+
     var player: ExoPlayer? by mutableStateOf(null)
         private set
     var hasBeenInitialized by mutableStateOf(false)
@@ -183,24 +186,6 @@ class FlixclusivePlayerManager(
                 playWhenReady = this@FlixclusivePlayerManager.playWhenReady
             }
         }
-    }
-
-    override fun onTracksChanged(tracks: Tracks) {
-        extractAudios()
-        extractEmbeddedSubtitles()
-
-        selectedSubtitleIndex = when {
-            !appSettings.isSubtitleEnabled -> 0 // == Off subtitles
-            else -> availableSubtitles.getIndexOfPreferredLanguage(
-                preferredLanguage = preferredSubtitleLanguage,
-                languageExtractor = { it.language }
-            )
-        }
-
-        selectedAudioIndex = availableAudios.getIndexOfPreferredLanguage(
-            preferredLanguage = preferredAudioLanguage,
-            languageExtractor = { it }
-        )
     }
 
     override fun onAudioSessionIdChanged(audioSessionId: Int) {
@@ -289,6 +274,11 @@ class FlixclusivePlayerManager(
         player?.run {
             infoLog("Preparing the player...")
 
+            if (link != currentStreamPlaying) {
+                currentStreamPlaying = link
+                areTracksInitialized = false
+            }
+
             val mediaItem = createMediaItem(
                 url = link.url,
                 title = title
@@ -332,24 +322,30 @@ class FlixclusivePlayerManager(
 
     private fun onReady() {
         player?.run {
-            extractAudios()
-            extractEmbeddedSubtitles()
+            if (!areTracksInitialized) {
+                extractAudios()
+                extractEmbeddedSubtitles()
 
-            selectedSubtitleIndex = when {
-                !appSettings.isSubtitleEnabled -> 0 // == Off subtitles
-                else -> availableSubtitles.getIndexOfPreferredLanguage(
-                    preferredLanguage = preferredSubtitleLanguage,
-                    languageExtractor = { it.language }
+                val subtitleIndex = when {
+                    !appSettings.isSubtitleEnabled -> 0 // == Off subtitles
+                    else -> availableSubtitles.getIndexOfPreferredLanguage(
+                        preferredLanguage = preferredSubtitleLanguage,
+                        languageExtractor = { it.language }
+                    )
+                }
+                val audioIndex = availableAudios.getIndexOfPreferredLanguage(
+                    preferredLanguage = preferredAudioLanguage,
+                    languageExtractor = { it }
                 )
+
+                onSubtitleChange(index = subtitleIndex)
+                onAudioChange(index = audioIndex)
+
+                areTracksInitialized = true
             }
-            selectedAudioIndex = availableAudios.getIndexOfPreferredLanguage(
-                preferredLanguage = preferredAudioLanguage,
-                languageExtractor = { it }
-            )
+
             setPlaybackSpeed(playbackSpeed)
             currentTextRenderer?.setRenderOffsetMs(offset = subtitleOffset)
-            onSubtitleChange(index = selectedSubtitleIndex)
-            onAudioChange(index = selectedAudioIndex)
 
             hasBeenInitialized = true
         }
