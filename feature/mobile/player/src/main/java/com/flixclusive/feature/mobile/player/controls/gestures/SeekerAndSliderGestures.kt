@@ -17,9 +17,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -167,7 +167,7 @@ internal fun SeekerAndSliderGestures(
             .fillMaxHeight()
             .indication(
                 interactionSource,
-                rememberRipple(bounded = false, radius = screenWidth.div(2F))
+                ripple(bounded = false, radius = screenWidth.div(2F))
             )
             .onPlaced {
                 screenHeightPx = it.size.height

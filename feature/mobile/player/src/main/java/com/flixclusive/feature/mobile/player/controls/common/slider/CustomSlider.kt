@@ -27,11 +27,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.requiredSizeIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.progressSemantics
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -528,7 +528,7 @@ internal object CustomSliderDefaults {
                     .size(thumbSize)
                     .indication(
                         interactionSource = interactionSource,
-                        indication = rememberRipple(
+                        indication = ripple(
                             bounded = false,
                             radius = SliderTokens.StateLayerSize / 2
                         )

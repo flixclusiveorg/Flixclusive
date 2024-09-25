@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -26,6 +25,7 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -45,12 +45,12 @@ import androidx.constraintlayout.compose.Dimension
 import com.flixclusive.R
 import com.flixclusive.core.theme.starColor
 import com.flixclusive.core.ui.common.FilmCover
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.formatRating
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.model.film.Film
+import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.mobile.R as UiMobileR
-import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -284,7 +284,7 @@ internal fun IconButtonWithLabel(
                 enabled = enabled,
                 role = Role.Button,
                 interactionSource = interactionSource,
-                indication = rememberRipple(
+                indication = ripple(
                     bounded = false,
                     radius = size / 2
                 )
