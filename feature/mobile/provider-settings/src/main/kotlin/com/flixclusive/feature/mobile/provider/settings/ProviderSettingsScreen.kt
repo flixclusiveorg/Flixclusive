@@ -5,14 +5,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.ui.common.COMMON_TOP_BAR_HEIGHT
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavArgs
+import com.flixclusive.provider.util.res.LocalResources
 import com.ramcosta.composedestinations.annotation.Destination
 
 @Destination(
@@ -23,6 +26,7 @@ internal fun ProviderSettingsScreen(
     navigator: GoBackAction,
     args: ProviderInfoScreenNavArgs
 ) {
+    val context = LocalContext.current
     val viewModel = hiltViewModel<ProviderSettingsScreenViewModel>()
 
     Box(
@@ -47,7 +51,11 @@ internal fun ProviderSettingsScreen(
                         }
                 }
 
-                method?.invoke(viewModel.providerInstance, currentComposer, 0)
+                CompositionLocalProvider(
+                    LocalResources provides (viewModel.providerInstance.resources ?: context.resources)
+                ) {
+                    method?.invoke(viewModel.providerInstance, currentComposer, 0)
+                }
             }
         }
 

@@ -26,7 +26,7 @@ composeDestinations = "1.9.53"
 conscrypt = "2.5.2"
 constraintLayout = "1.0.1"
 coreKtx = "1.12.0"
-coreStubs = "1.0.5"
+coreStubs = "1.1.1"
 coroutines = "1.7.3"
 dokka = "1.9.20"
 espresso-core = "3.6.1"
@@ -152,9 +152,6 @@ conscrypt = { module = "org.conscrypt:conscrypt-android", version.ref = "conscry
 # OkHttp
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-dnsoverhttps = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttp" }
-
-# Flixclusive
-flixclusive-gradle = { module = "com.github.Flixclusive.providers-gradle:providers-gradle", version.ref = "providersGradle" }
 
 # Retrofit
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
