@@ -65,7 +65,7 @@ internal fun SearchSearchHistoryView(
             key = { it.id }
         ) { item ->
             SearchHistoryBlock(
-                modifier = Modifier.animateItemPlacement(),
+                modifier = Modifier.animateItem(),
                 item = item,
                 onClick = {
                     viewModel.onQueryChange(item.query)

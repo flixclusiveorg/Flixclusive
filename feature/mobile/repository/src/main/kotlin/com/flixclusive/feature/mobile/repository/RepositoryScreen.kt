@@ -58,8 +58,8 @@ import com.flixclusive.feature.mobile.repository.component.RepositoryTopBar
 import com.flixclusive.model.provider.ProviderData
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -231,7 +231,7 @@ internal fun RepositoryScreen(
                             },
                             modifier = Modifier
                                 .padding(vertical = 5.dp)
-                                .animateItemPlacement()
+                                .animateItem()
                         )
                     }
                 }
