@@ -1,11 +1,9 @@
-name: Pre-release CI
+name: APK Release CI
 
 on:
   push:
-    branches:
-      - master
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+    branches: [master]
 
 permissions:
   contents: write
@@ -16,25 +14,20 @@ concurrency:
 
 jobs:
   build:
-    name: Build app
+    name: Build APK
     runs-on: ubuntu-latest
-
+    outputs:
+      release_sha: ${{ steps.prepare_artifact.outputs.release_sha }}
+      short_sha: ${{ steps.prepare_artifact.outputs.short_sha }}
     steps:
-      - name: Checkout master
+      - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Checkout archives
-        uses: actions/checkout@v4
-        with:
-          ref: "archives"
-          path: "archives"
 
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v1
 
       - name: Setup Android SDK
-        run: |
-          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "build-tools;29.0.3"
+        run: ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "build-tools;29.0.3"
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -42,7 +35,7 @@ jobs:
           java-version: 17
           distribution: adopt
 
-      - name: Build release artifacts
+      - name: Assemble release APK
         uses: gradle/gradle-command-action@v2
         with:
           arguments: :app:assembleRelease
@@ -56,12 +49,41 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Clean up build artifacts
+      - name: Prepare release artifact
+        id: prepare_artifact
         run: |
-          set -e
           mv app/build/outputs/apk/release/app-release-unsigned-signed.apk flixclusive-release.apk
-          sha=`sha256sum flixclusive-release.apk | awk '{ print $1 }'`
-          echo "RELEASE_SHA=$sha" >> $GITHUB_ENV
+          echo "release_sha=$(sha256sum flixclusive-release.apk | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
+          echo "short_sha=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-apk
+          path: flixclusive-release.apk
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: release-apk
+
+      - name: Get previous tag
+        id: previousTag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          name=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
+          echo "previousTag: $name"
+          echo "previousTag=$name" >> $GITHUB_ENV
 
       - name: Generate changelogs
         id: changelog
@@ -69,84 +91,96 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fromTag: ${{ github.ref_name }}
-          toTag: pre-release
-          excludeTypes: ''
+          toTag: ${{ startsWith(github.ref, 'refs/tags/') && env.previousTag || 'pre-release' }}
+          excludeTypes: ${{ startsWith(github.ref, 'refs/tags/') && 'build,docs,other,style' || '' }}
           writeToFile: false
 
-      - name: Write changelogs to file
+      - name: Manage pre-release
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "##### _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
-          
+          gh release delete pre-release --yes || true
+          gh release create pre-release \
+            --title "PR-${{ needs.build.outputs.short_sha }}" \
+            --notes "$(cat << EOF
+          ##### _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
+
           ---
-          
+
           ### 🐞 Known issues
           - TV focus crashes. Compose TV is bugged af; we wait til the new update.
-          
+
           ${{ steps.changelog.outputs.changes }}
           ---
-          
+
           ### Checksums
 
           | Variant | SHA-256 |
           | ------- | ------- |
-          | release | ${{ env.RELEASE_SHA }} |" > ${{ github.workspace }}-CHANGELOG.txt
+          | release | ${{ needs.build.outputs.release_sha }} |
+          EOF
+          )" \
+            --prerelease \
+            flixclusive-release.apk
 
-      - name: Delete old pre-release
-        uses: cb80/delrel@latest
-        with:
-          tag: pre-release
-
-      - name: Update old pre-release tag
-        uses: EndBug/latest-tag@latest
-        with:
-          ref: pre-release
-
-      - name: Get short SHA
-        run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
-
-      - name: Get PRE-RELEASE version
+      - name: Manage stable release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          chmod +x .github/parse_version.sh
+          gh release create ${{ github.ref_name }} \
+            --title "${{ github.ref_name }}" \
+            --notes "$(cat << EOF
+          ##### _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
+
+          ---
+
+          ### 🐞 Known issues
+          - TV focus crashes. Compose TV is bugged af; we wait til the new update.
+
+          ${{ steps.changelog.outputs.changes }}
+          ---
+
+          ### Checksums
+
+          | Variant | SHA-256 |
+          | ------- | ------- |
+          | release | ${{ needs.build.outputs.release_sha }} |
+          EOF
+          )" \
+            flixclusive-release.apk
+
+
+  archive:
+    name: Archive APK
+    needs: [build, release]
+    if: "!startsWith(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout archives
+        uses: actions/checkout@v4
+        with:
+          ref: "archives"
+          path: "archives"
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: release-apk
+
+      - name: Archive pre-release APK
+        run: |
           version=$(.github/parse_version.sh)
-          echo "PRE-RELEASE Version: $version-[${{ env.SHORT_SHA }}]"
-          echo "PRE_RELEASE_VERSION=$version" >> $GITHUB_ENV
-
-      - name: Upload new PRE-RELEASE
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: pre-release
-          name: PR-${{ env.SHORT_SHA }}
-          body_path: ${{ github.workspace }}-CHANGELOG.txt
-          files: flixclusive-release.apk
-          draft: false
-          prerelease: true
-
-      - name: Get STABLE version
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          set -x
-          echo "STABLE_VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-          echo "STABLE Version: ${{ env.STABLE_VERSION_TAG }}"
-
-      - name: Upload new STABLE
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          body_path: ${{ github.workspace }}-CHANGELOG.txt
-          files: flixclusive-release.apk
-          draft: false
-          prerelease: false
-
-      - name: Push pre-release apk to archives branch
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/archives/${{ env.PRE_RELEASE_VERSION }}
-          ARCHIVE_DATE=$(date +"%Y-%m-%d %H:%M:%S")
-          
-          cp flixclusive-release.apk "$GITHUB_WORKSPACE/archives/${{ env.PRE_RELEASE_VERSION }}/PR-${{ env.SHORT_SHA }} $ARCHIVE_DATE.apk"
-          
+          archive_dir="$GITHUB_WORKSPACE/archives/$version"
+          mkdir -p "$archive_dir"
+          cp flixclusive-release.apk "$archive_dir/PR-${{ needs.build.outputs.short_sha }} $(date +'%Y-%m-%d %H:%M:%S').apk"
           cd $GITHUB_WORKSPACE/archives
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
-          git add "$GITHUB_WORKSPACE/archives/${{ env.PRE_RELEASE_VERSION }}/PR-${{ env.SHORT_SHA }} $ARCHIVE_DATE.apk"
-          git commit -m "Archive $(date +"%Y-%m-%d") [flixclusiveorg/Flixclusive@${GITHUB_SHA}]" || exit 0
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "Archive $(date +'%Y-%m-%d') [flixclusiveorg/Flixclusive@${GITHUB_SHA}]" || true
           git push
