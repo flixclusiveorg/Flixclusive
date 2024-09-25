@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - master
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
 
 permissions:
   contents: write
 
 concurrency:
-  group: "pre-release"
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -61,13 +63,6 @@ jobs:
           sha=`sha256sum flixclusive-release.apk | awk '{ print $1 }'`
           echo "RELEASE_SHA=$sha" >> $GITHUB_ENV
 
-      - name: Get soon-latest version
-        run: |
-          chmod +x .github/parse_version.sh
-          version=$(.github/parse_version.sh)
-          echo "Version: $version"
-          echo "VERSION=$version" >> $GITHUB_ENV
-
       - name: Generate changelogs
         id: changelog
         uses: requarks/changelog-action@v1
@@ -77,6 +72,24 @@ jobs:
           toTag: pre-release
           excludeTypes: ''
           writeToFile: false
+
+      - name: Write changelogs to file
+        run: |
+          echo "##### _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
+          
+          ---
+          
+          ### 🐞 Known issues
+          - TV focus crashes. Compose TV is bugged af; we wait til the new update.
+          
+          ${{ steps.changelog.outputs.changes }}
+          ---
+          
+          ### Checksums
+
+          | Variant | SHA-256 |
+          | ------- | ------- |
+          | release | ${{ env.RELEASE_SHA }} |" > ${{ github.workspace }}-CHANGELOG.txt
 
       - name: Delete old pre-release
         uses: cb80/delrel@latest
@@ -88,51 +101,52 @@ jobs:
         with:
           ref: pre-release
 
-      - name: Upload new pre-release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: pre-release
-          name: Pre-release for v${{ env.VERSION }}
-          body: |
-            ##### _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
-            
-            ---
-            
-            ### 🐞 Known issues
-            - TV focus crashes. Compose TV is bugged af; we wait til the new update.
-            
-            ${{ steps.changelog.outputs.changes }}
-            ---
-            
-            ### Checksums
-
-            | Variant | SHA-256 |
-            | ------- | ------- |
-            | release | ${{ env.RELEASE_SHA }} |
-          files: |
-            flixclusive-release.apk
-          draft: false
-          prerelease: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Get short SHA
         run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
 
-      - name: Get current date and time for archive purposes
+      - name: Get PRE-RELEASE version
         run: |
-          echo "ARCHIVE_DATE=$(date +"%Y-%m-%d %H:%M:%S")" >> $GITHUB_ENV
+          chmod +x .github/parse_version.sh
+          version=$(.github/parse_version.sh)
+          echo "PRE-RELEASE Version: $version-[${{ env.SHORT_SHA }}]"
+          echo "PRE_RELEASE_VERSION=$version" >> $GITHUB_ENV
 
-      - name: Backup pre-release on archives branch
+      - name: Upload new PRE-RELEASE
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: pre-release
+          name: PR-${{ env.SHORT_SHA }}
+          body_path: ${{ github.workspace }}-CHANGELOG.txt
+          files: flixclusive-release.apk
+          draft: false
+          prerelease: true
+
+      - name: Get STABLE version
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
-          mkdir -p $GITHUB_WORKSPACE/archives/${{ env.VERSION }}
-          cp flixclusive-release.apk "$GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }} ${{ env.ARCHIVE_DATE }}.apk"
+          set -x
+          echo "STABLE_VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+          echo "STABLE Version: ${{ env.STABLE_VERSION_TAG }}"
+
+      - name: Upload new STABLE
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          body_path: ${{ github.workspace }}-CHANGELOG.txt
+          files: flixclusive-release.apk
+          draft: false
+          prerelease: false
 
       - name: Push pre-release apk to archives branch
         run: |
+          mkdir -p $GITHUB_WORKSPACE/archives/${{ env.PRE_RELEASE_VERSION }}
+          ARCHIVE_DATE=$(date +"%Y-%m-%d %H:%M:%S")
+          
+          cp flixclusive-release.apk "$GITHUB_WORKSPACE/archives/${{ env.PRE_RELEASE_VERSION }}/PR-${{ env.SHORT_SHA }} $ARCHIVE_DATE.apk"
+          
           cd $GITHUB_WORKSPACE/archives
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
-          git add "$GITHUB_WORKSPACE/archives/${{ env.VERSION }}/PR-${{ env.SHORT_SHA }} ${{ env.ARCHIVE_DATE }}.apk"
-          git commit -m "Archive PR-${{ env.SHORT_SHA }} $(date +"%Y-%m-%d")" || exit 0
+          git add "$GITHUB_WORKSPACE/archives/${{ env.PRE_RELEASE_VERSION }}/PR-${{ env.SHORT_SHA }} $ARCHIVE_DATE.apk"
+          git commit -m "Archive $(date +"%Y-%m-%d") [flixclusiveorg/Flixclusive@${GITHUB_SHA}]" || exit 0
           git push
