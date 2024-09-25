@@ -13,9 +13,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,11 +40,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -55,8 +59,8 @@ import com.flixclusive.feature.mobile.player.controls.common.slider.CustomSlider
 import com.flixclusive.model.film.common.tv.Episode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.player.R as PlayerR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,6 +79,9 @@ internal fun BottomControls(
 ) {
     val player by rememberLocalPlayerManager()
     val scope = rememberCoroutineScope()
+
+    val localDensity = LocalDensity.current
+    var buttonsRowHeight by remember { mutableStateOf(0.dp) }
 
     val isInHours = remember(player.duration) {
         player.duration.formatMinSec().count { it == ':' } == 2
@@ -125,19 +132,17 @@ internal fun BottomControls(
         inactiveTrackColor = Color.White.onMediumEmphasis(emphasis = 0.3F)
     )
 
-    Box(
+    Column(
         modifier = modifier
             .background(bottomFadeEdge)
             .fillMaxWidth()
-            .fillMaxHeight(0.3F)
-            .padding(horizontal = 25.dp)
+            .padding(horizontal = 25.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(top = 15.dp)
-                .align(Alignment.TopCenter),
+                .padding(horizontal = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -222,8 +227,11 @@ internal fun BottomControls(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 10.dp)
-                    .align(Alignment.BottomCenter),
+                    .padding(bottom = 10.dp, top = 5.dp)
+                    .onGloballyPositioned { coordinates ->
+                        val height = with(localDensity) { coordinates.size.height.toDp() }
+                        buttonsRowHeight = max(buttonsRowHeight, height + 15.dp)
+                    },
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 if (isTvShow) {
@@ -263,6 +271,8 @@ internal fun BottomControls(
                     )
                 }
             }
+        } else {
+            Spacer(modifier = Modifier.height(buttonsRowHeight))
         }
     }
 }
@@ -303,7 +313,7 @@ private fun CustomIconButton(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(device = "spec:parent=pixel_5,orientation=landscape")
+@Preview(device = "spec:id=reference_tablet,shape=Normal,width=1280,height=800,unit=dp,dpi=240")
 @Composable
 private fun PlayerSeekSlider() {
     val (value, onValueChange) = remember { mutableFloatStateOf(0F) }
