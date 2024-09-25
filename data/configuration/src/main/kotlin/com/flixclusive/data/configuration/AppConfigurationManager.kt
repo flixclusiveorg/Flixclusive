@@ -6,11 +6,11 @@ import com.flixclusive.core.network.retrofit.GithubApiService
 import com.flixclusive.core.network.retrofit.GithubRawApiService
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
-import com.flixclusive.core.network.util.okhttp.UserAgentManager
 import com.flixclusive.core.util.common.GithubConstant.GITHUB_REPOSITORY
 import com.flixclusive.core.util.common.GithubConstant.GITHUB_USERNAME
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.log.errorLog
+import com.flixclusive.core.util.network.okhttp.UserAgentManager
 import com.flixclusive.model.configuration.AppConfig
 import com.flixclusive.model.configuration.catalog.HomeCatalogsData
 import com.flixclusive.model.configuration.catalog.SearchCatalogsData
