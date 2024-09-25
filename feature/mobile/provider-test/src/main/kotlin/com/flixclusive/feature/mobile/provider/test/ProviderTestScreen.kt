@@ -243,7 +243,7 @@ internal fun ProviderTestScreen(
                     testResult = data,
                     onToggle = { viewModel.toggleCard(id = data.provider.id) },
                     showFullLog = { testCaseOutputToShow = data.provider to it },
-                    modifier = Modifier.animateItemPlacement()
+                    modifier = Modifier.animateItem()
                 )
             }
         }
