@@ -18,6 +18,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -44,8 +45,8 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.repository.search.util.parseGithubUrl
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun AddRepositoryBar(
@@ -58,6 +59,9 @@ internal fun AddRepositoryBar(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val clipboardManager = LocalClipboardManager.current
+
+    val containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+    val focusedContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp)
 
     var textFieldValue by remember {
         val text = clipboardManager.getText()
@@ -103,6 +107,9 @@ internal fun AddRepositoryBar(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
             shape = MaterialTheme.shapes.extraSmall,
             colors = TextFieldDefaults.colors(
+                focusedContainerColor = focusedContainerColor,
+                unfocusedContainerColor = containerColor,
+                errorContainerColor = containerColor,
                 disabledTextColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
