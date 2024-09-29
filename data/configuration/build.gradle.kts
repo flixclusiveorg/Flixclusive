@@ -9,11 +9,14 @@ android {
 }
 
 dependencies {
-    api(projects.core.datastore)
     api(libs.stubs.util)
+    api(projects.core.datastore)
     api(projects.model.configuration)
 
     implementation(libs.mockk)
     implementation(projects.core.locale)
     implementation(projects.core.network)
+
+
+    testImplementation(libs.retrofit.gson)
 }

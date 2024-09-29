@@ -32,8 +32,8 @@ import com.flixclusive.core.ui.common.navigation.navigator.UpdateDialogNavigator
 import com.flixclusive.data.configuration.UpdateStatus
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.spec.DestinationStyle
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal object DismissibleDialog : DestinationStyle.Dialog {
     override val properties = DialogProperties(
@@ -56,7 +56,7 @@ internal fun UpdateDialog(
 
     LaunchedEffect(updateStatus) {
         if (
-            updateStatus == UpdateStatus.Outdated
+            updateStatus is UpdateStatus.Outdated
             && viewModel.appUpdateCheckerUseCase.updateUrl != null
             && viewModel.appUpdateCheckerUseCase.newVersion != null
         ) {
@@ -140,7 +140,7 @@ internal fun UpdateDialog(
                 }
 
                 AnimatedVisibility(
-                    visible = updateStatus == UpdateStatus.UpToDate,
+                    visible = updateStatus is UpdateStatus.UpToDate,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {

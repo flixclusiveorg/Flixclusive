@@ -9,11 +9,11 @@ class AppUpdateCheckerUseCase @Inject constructor(
     private val appConfigurationManager: AppConfigurationManager,
 ) {
     val newVersion: String?
-        get() = appConfigurationManager.appConfig?.versionName
+        get() = appConfigurationManager.appUpdateInfo?.versionName
     val updateInfo: String?
-        get() = appConfigurationManager.appConfig?.updateInfo
+        get() = appConfigurationManager.appUpdateInfo?.updateInfo
     val updateUrl: String?
-        get() = appConfigurationManager.appConfig?.updateUrl
+        get() = appConfigurationManager.appUpdateInfo?.updateUrl
 
     val updateStatus = appConfigurationManager.updateStatus
 

@@ -2,7 +2,6 @@ package com.flixclusive.core.network.retrofit
 
 import com.flixclusive.core.util.common.GithubConstant.GITHUB_CONFIG_REPOSITORY
 import com.flixclusive.core.util.common.GithubConstant.GITHUB_USERNAME
-import com.flixclusive.model.configuration.AppConfig
 import com.flixclusive.model.configuration.catalog.HomeCatalogsData
 import com.flixclusive.model.configuration.catalog.SearchCatalogsData
 import retrofit2.http.GET
@@ -20,6 +19,4 @@ interface GithubRawApiService {
     @GET("$GITHUB_USERNAME/$GITHUB_CONFIG_REPOSITORY/main/search_items_config.json")
     suspend fun getSearchCatalogsConfig(): SearchCatalogsData
 
-    @GET("$GITHUB_USERNAME/$GITHUB_CONFIG_REPOSITORY/main/app.json")
-    suspend fun getAppConfig(): AppConfig
 }
