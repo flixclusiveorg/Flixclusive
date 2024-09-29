@@ -2,7 +2,6 @@ package com.flixclusive.feature.splashScreen
 
 import android.os.Build
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
@@ -43,11 +42,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.configuration.UpdateStatus
 import com.flixclusive.feature.splashScreen.component.ErrorDialog
 import com.flixclusive.feature.splashScreen.component.PrivacyNotice
@@ -58,13 +57,11 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 
-@OptIn(ExperimentalAnimationGraphicsApi::class, ExperimentalPermissionsApi::class,
-    ExperimentalAnimationApi::class
-)
+@OptIn(ExperimentalAnimationGraphicsApi::class, ExperimentalPermissionsApi::class)
 @Destination
 @Composable
 internal fun SplashScreen(
@@ -243,7 +240,7 @@ internal fun SplashScreen(
         } else areAllPermissionsGranted = true
 
         if (areAllPermissionsGranted && isDoneAnimating && !onBoardingPreferences.isFirstTimeUserLaunch_) {
-            if (updateStatus == UpdateStatus.Outdated && appSettings.isUsingAutoUpdateAppFeature) {
+            if (updateStatus is UpdateStatus.Outdated && appSettings.isUsingAutoUpdateAppFeature) {
                 navigator.openUpdateScreen(
                     newVersion = viewModel.appUpdateCheckerUseCase.newVersion!!,
                     updateInfo = viewModel.appUpdateCheckerUseCase.updateInfo,
@@ -251,33 +248,20 @@ internal fun SplashScreen(
                     isComingFromSplashScreen = true,
                 )
             } else if (
-               ((updateStatus is UpdateStatus.Error || updateStatus == UpdateStatus.Maintenance) && appSettings.isUsingAutoUpdateAppFeature)
+               ((updateStatus is UpdateStatus.Error) && appSettings.isUsingAutoUpdateAppFeature)
                 || configurationStatus is Resource.Failure
-            )
-            {
-                val (title, description) = if (updateStatus == UpdateStatus.Maintenance) {
-                    Pair(
-                        stringResource(LocaleR.string.splash_maintenance_header),
-                        stringResource(LocaleR.string.splash_maintenance_message)
-                    )
-                } else {
-                    val errorMessage = if (updateStatus is UpdateStatus.Error)
-                        updateStatus.errorMessage
-                    else (configurationStatus as Resource.Failure).error
-
-                    Pair(
-                        stringResource(LocaleR.string.something_went_wrong),
-                        errorMessage!!.asString()
-                    )
-                }
+            ) {
+                val errorMessage = if (updateStatus is UpdateStatus.Error)
+                    updateStatus.errorMessage
+                else (configurationStatus as Resource.Failure).error
 
                 ErrorDialog(
-                    title = title,
-                    description = description,
+                    title = stringResource(LocaleR.string.something_went_wrong),
+                    description = errorMessage!!.asString(),
                     onDismiss = navigator::onExitApplication
                 )
             } else if (
-                (((updateStatus == UpdateStatus.UpToDate) && appSettings.isUsingAutoUpdateAppFeature)
+                (((updateStatus is UpdateStatus.UpToDate) && appSettings.isUsingAutoUpdateAppFeature)
                     || configurationStatus is Resource.Success)
                 && uiState is SplashScreenUiState.Okay
             ) {

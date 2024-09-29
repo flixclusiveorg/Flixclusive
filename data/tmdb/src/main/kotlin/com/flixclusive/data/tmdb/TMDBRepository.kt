@@ -16,8 +16,6 @@ enum class SortOptions {
 }
 
 interface TMDBRepository {
-    val tmdbApiKey: String
-
     suspend fun getMovie(
         id: Int
     ): Resource<Movie>

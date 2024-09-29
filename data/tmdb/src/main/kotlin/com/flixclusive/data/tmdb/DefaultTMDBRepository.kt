@@ -21,13 +21,12 @@ import com.flixclusive.model.film.util.filterOutUnreleasedFilms
 import retrofit2.HttpException
 import javax.inject.Inject
 
+const val TMDB_API_KEY: String = "8d6d91941230817f7807d643736e8a49"
+
 internal class DefaultTMDBRepository @Inject constructor(
     private val tmdbApiService: TMDBApiService,
     private val configurationProvider: AppConfigurationManager
 ) : TMDBRepository {
-    override val tmdbApiKey: String
-        get() = configurationProvider.appConfig!!.tmdbApiKey
-
     override suspend fun getTrending(
         mediaType: String,
         timeWindow: String,
@@ -38,7 +37,7 @@ internal class DefaultTMDBRepository @Inject constructor(
                 val response = tmdbApiService.getTrending(
                     mediaType = mediaType,
                     timeWindow = timeWindow,
-                    apiKey = tmdbApiKey,
+                    apiKey = TMDB_API_KEY,
                     page = page
                 )
 
@@ -66,7 +65,7 @@ internal class DefaultTMDBRepository @Inject constructor(
 
                 val response = tmdbApiService.discoverFilms(
                     mediaType = mediaType,
-                    apiKey = tmdbApiKey,
+                    apiKey = TMDB_API_KEY,
                     page = page,
                     sortBy = sortOption,
                     networks = withNetworks?.joinToString(",") ?: "",
@@ -94,7 +93,7 @@ internal class DefaultTMDBRepository @Inject constructor(
 
                 val response = tmdbApiService.search(
                     mediaType = getMediaTypeFromInt(filter),
-                    apiKey = tmdbApiKey,
+                    apiKey = TMDB_API_KEY,
                     page = page,
                     query = query
                 )
@@ -114,7 +113,7 @@ internal class DefaultTMDBRepository @Inject constructor(
             try {
                 val response =  tmdbApiService.getImages(
                     mediaType = mediaType,
-                    apiKey = tmdbApiKey,
+                    apiKey = TMDB_API_KEY,
                     id = id
                 )
 
@@ -132,7 +131,7 @@ internal class DefaultTMDBRepository @Inject constructor(
         return withIOContext {
             try {
                 val movie = tmdbApiService.getMovie(
-                    id = id, apiKey = tmdbApiKey
+                    id = id, apiKey = TMDB_API_KEY
                 )
 
                 val collection: TMDBCollection? = if (movie.collection != null) {
@@ -176,7 +175,7 @@ internal class DefaultTMDBRepository @Inject constructor(
         return withIOContext {
             try {
                 val tvShow = tmdbApiService.getTvShow(
-                    id = id, apiKey = tmdbApiKey
+                    id = id, apiKey = TMDB_API_KEY
                 )
 
                 val filteredSeasons = tvShow.seasons
@@ -212,7 +211,7 @@ internal class DefaultTMDBRepository @Inject constructor(
         return withIOContext {
             try {
                 val season = tmdbApiService.getSeason(
-                    id = id, seasonNumber = seasonNumber, apiKey = tmdbApiKey
+                    id = id, seasonNumber = seasonNumber, apiKey = TMDB_API_KEY
                 )
 
                 Resource.Success(season)
@@ -249,7 +248,7 @@ internal class DefaultTMDBRepository @Inject constructor(
         return withIOContext {
             try {
                 val response = tmdbApiService.getCollection(
-                    id = id, apiKey = tmdbApiKey
+                    id = id, apiKey = TMDB_API_KEY
                 )
 
                 Resource.Success(response)
@@ -264,7 +263,7 @@ internal class DefaultTMDBRepository @Inject constructor(
         page: Int,
     ): Resource<SearchResponseData<FilmSearchItem>> {
         return withIOContext {
-            val fullUrl = "$TMDB_API_BASE_URL$url&page=$page&api_key=$tmdbApiKey"
+            val fullUrl = "$TMDB_API_BASE_URL$url&page=$page&api_key=$TMDB_API_KEY"
 
             try {
                 val response = tmdbApiService.get(fullUrl)
