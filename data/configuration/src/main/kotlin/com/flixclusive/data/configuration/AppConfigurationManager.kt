@@ -5,7 +5,6 @@ import com.flixclusive.core.network.retrofit.GithubRawApiService
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
 import com.flixclusive.core.util.coroutines.AppDispatchers
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.okhttp.UserAgentManager
 import com.flixclusive.model.configuration.catalog.HomeCatalogsData
@@ -14,7 +13,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -62,20 +60,6 @@ class AppConfigurationManager @Inject constructor(
     var homeCatalogsData: HomeCatalogsData? = null
     var searchCatalogsData: SearchCatalogsData? = null
 
-    private val Resource<Unit>.needsToInitialize: Boolean
-        get() = (this is Resource.Success
-            && (appUpdateInfo == null || homeCatalogsData == null || searchCatalogsData == null))
-            || this is Resource.Failure
-
-    init {
-        launchOnIO {
-            _configurationStatus.collectLatest {
-                if(it.needsToInitialize)
-                    initialize(currentAppBuild)
-            }
-        }
-    }
-
     fun initialize(appBuild: AppBuild? = null) {
         if(fetchJob?.isActive == true)
             return
@@ -91,9 +75,17 @@ class AppConfigurationManager @Inject constructor(
                 try {
                     checkForUpdates()
 
-                    userAgentManager.loadLatestUserAgents()
-                    homeCatalogsData = githubRawApiService.getHomeCatalogsConfig()
-                    searchCatalogsData = githubRawApiService.getSearchCatalogsConfig()
+                    if (UserAgentManager.desktopUserAgents.isEmpty()) {
+                        userAgentManager.loadLatestUserAgents()
+                    }
+
+                    if (homeCatalogsData == null) {
+                        homeCatalogsData = githubRawApiService.getHomeCatalogsConfig()
+                    }
+
+                    if (searchCatalogsData == null) {
+                        searchCatalogsData = githubRawApiService.getSearchCatalogsConfig()
+                    }
 
                     return@launch _configurationStatus.update { Resource.Success(Unit) }
                 } catch (e: Exception) {
