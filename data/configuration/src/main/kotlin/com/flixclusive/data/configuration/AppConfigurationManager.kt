@@ -132,7 +132,7 @@ class AppConfigurationManager @Inject constructor(
                 )
             }
 
-            if (status is UpdateStatus.Outdated) {
+            if (status is UpdateStatus.Outdated || status is UpdateStatus.UpToDate) {
                 appUpdateInfo = status.updateInfo
             }
 
