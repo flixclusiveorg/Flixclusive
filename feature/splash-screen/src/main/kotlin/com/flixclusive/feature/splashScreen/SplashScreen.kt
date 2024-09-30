@@ -47,6 +47,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.core.ui.common.util.ifElse
+import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.data.configuration.UpdateStatus
 import com.flixclusive.feature.splashScreen.component.ErrorDialog
 import com.flixclusive.feature.splashScreen.component.PrivacyNotice
@@ -248,23 +249,35 @@ internal fun SplashScreen(
                     isComingFromSplashScreen = true,
                 )
             } else if (
-               ((updateStatus is UpdateStatus.Error) && appSettings.isUsingAutoUpdateAppFeature)
+                ((updateStatus is UpdateStatus.Error) && appSettings.isUsingAutoUpdateAppFeature)
                 || configurationStatus is Resource.Failure
             ) {
-                val errorMessage = if (updateStatus is UpdateStatus.Error)
-                    updateStatus.errorMessage
-                else (configurationStatus as Resource.Failure).error
+                val (title, errorMessage) = if (updateStatus is UpdateStatus.Error)
+                    stringResource(LocaleR.string.failed_to_get_app_updates) to updateStatus.errorMessage
+                else stringResource(LocaleR.string.something_went_wrong) to (configurationStatus as Resource.Failure).error
 
                 ErrorDialog(
-                    title = stringResource(LocaleR.string.something_went_wrong),
+                    title = title,
                     description = errorMessage!!.asString(),
-                    onDismiss = navigator::onExitApplication
+                    dismissButtonLabel = stringResource(LocaleR.string.close_label),
+                    onDismiss = navigator::openHomeScreen
                 )
             } else if (
                 (((updateStatus is UpdateStatus.UpToDate) && appSettings.isUsingAutoUpdateAppFeature)
                     || configurationStatus is Resource.Success)
                 && uiState is SplashScreenUiState.Okay
             ) {
+                if (updateStatus is UpdateStatus.Error) {
+                    LocalContext.current
+                        .showToast(
+                            message = """
+                                ${stringResource(LocaleR.string.failed_to_get_app_updates)}: ${updateStatus.errorMessage?.asString()}
+                            """.trimIndent()
+                        )
+                }
+
+                navigator.openHomeScreen()
+            } else {
                 navigator.openHomeScreen()
             }
         }
