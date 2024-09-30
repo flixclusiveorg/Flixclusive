@@ -43,10 +43,12 @@
     <string name="error_on_initialization">UNKNOWN ERR: Failed to initialize data</string>
     <string name="error_on_search">Error while searching</string>
     <string name="error_search_history_is_already_cleared">Search history is already cleared!</string>
+    <string name="context_null_error">Specified context could not be found!</string>
     <string name="fail_sending_error_log">Couldn\'t send error logs to server</string>
     <string name="failed_checking_for_updates">Failed to check for updates</string>
     <string name="failed_to_auto_update_providers_error_message">Something went wrong while auto updating providers.</string>
     <string name="failed_to_extract">Failed to extract, try again later</string>
+    <string name="failed_to_get_app_updates">Failed to get app updates</string>
     <string name="failed_to_init_app">Couldn\'t initialize the app.</string>
     <string name="failed_to_initialize_home_items">Failed to initialize home items</string>
     <string name="failed_to_initialize_search_items">Failed to initialize search items</string>
@@ -59,12 +61,12 @@
     <string name="invalid_repository">Repository does not have `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
     <string name="invalid_tmdb_id">The TMDB ID shouldn\'t be null or must be an integer.</string>
     <string name="load_link_job_active_error_message">Still processing the last request…</string>
-    <string name="context_null_error">Specified context could not be found!</string>
     <string name="null_repository_url_error">No repository url has been given for this provider</string>
     <string name="pagination_error_message">Error while fetching items</string>
     <string name="player_not_initialized">Player has not been initialized</string>
     <string name="repetitive_test_warning_description">It seems like some providers has been already tested. Skipping them is the recommended option. However, if you know what you\'re doing, you can re-test them.</string>
     <string name="repetitive_test_warning_label">Repetitive tests</string>
+    <string name="something_went_wrong">Something went wrong</string>
     <string name="splash_default_error_message">An error occurred while initializing the app.</string>
     <string name="splash_maintenance_message">Sorry for the inconvenience. We\'re performing a quick update. Be back soon!</string>
     <string name="unknown_season">Unknown season</string>
@@ -219,7 +221,6 @@
     <string name="share_the_app">Share the App!</string>
     <string name="sign_up_prerelease">Use pre-release updates</string>
     <string name="skip">Skip</string>
-    <string name="something_went_wrong">Something went wrong</string>
     <string name="sort_date">Sort by date</string>
     <string name="sort_name">Sort by name</string>
     <string name="sort_score">Sort by score</string>
