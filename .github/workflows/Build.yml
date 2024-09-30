@@ -54,7 +54,7 @@ jobs:
         run: |
           mv app/build/outputs/apk/release/app-release-unsigned-signed.apk flixclusive-release.apk
           echo "release_sha=$(sha256sum flixclusive-release.apk | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
-          echo "short_sha=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -100,7 +100,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete pre-release --yes || true
+          echo "Attempting to delete pre-release tag..."
+    
+          git tag -d pre-release || echo "Local tag 'pre-release' does not exist."
+          git push origin :refs/tags/pre-release || echo "Remote tag 'pre-release' does not exist."
+    
+          echo "Creating new pre-release..."
           gh release create pre-release \
             --title "PR-${{ needs.build.outputs.short_sha }}" \
             --notes "$(cat << EOF
