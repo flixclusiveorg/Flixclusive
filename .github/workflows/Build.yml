@@ -106,6 +106,7 @@ jobs:
           git push origin :refs/tags/pre-release || echo "Remote tag 'pre-release' does not exist."
     
           echo "Creating new pre-release..."
+          gh release delete pre-release --yes || echo "Failed to delete last pre-release."
           gh release create pre-release \
             --title "PR-${{ needs.build.outputs.short_sha }}" \
             --notes "$(cat << EOF
@@ -134,6 +135,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh release delete ${{ github.ref_name }} --yes || echo "Failed to delete ${{ github.ref_name }} release."
           gh release create ${{ github.ref_name }} \
             --title "${{ github.ref_name }}" \
             --notes "$(cat << EOF
