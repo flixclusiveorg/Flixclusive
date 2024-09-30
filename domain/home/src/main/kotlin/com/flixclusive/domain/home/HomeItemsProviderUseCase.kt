@@ -2,7 +2,8 @@ package com.flixclusive.domain.home
 
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.util.PagingState
-import com.flixclusive.core.util.coroutines.AppDispatchers
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withDefaultContext
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.provider.ProviderManager
@@ -20,11 +21,9 @@ import com.flixclusive.model.provider.ProviderCatalog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.random.Random
@@ -55,20 +54,23 @@ class HomeItemsProviderUseCase @Inject constructor(
     }
 
     operator fun invoke() {
-        AppDispatchers.Default.scope.launch {
+        launchOnIO {
             _state.update { it.copy(status = Resource.Loading) }
+
             try {
-                val catalogs = getHomeRecommendations()
+                val catalogs = withDefaultContext { getHomeRecommendations() }
                 _state.update {
                     it.copy(
                         catalogs = catalogs,
                         rowItems = List(catalogs.size) { emptyList() },
-                        rowItemsPagingState = catalogs.map { catalog ->
-                            PaginationStateInfo(
-                                canPaginate = catalog.canPaginate,
-                                pagingState = if (!catalog.canPaginate) PagingState.PAGINATING_EXHAUST else PagingState.IDLE,
-                                currentPage = 1
-                            )
+                        rowItemsPagingState = withDefaultContext {
+                            catalogs.map { catalog ->
+                                PaginationStateInfo(
+                                    canPaginate = catalog.canPaginate,
+                                    pagingState = if (!catalog.canPaginate) PagingState.PAGINATING_EXHAUST else PagingState.IDLE,
+                                    currentPage = 1
+                                )
+                            }
                         }
                     )
                 }
@@ -110,17 +112,14 @@ class HomeItemsProviderUseCase @Inject constructor(
             it.flatMap { api -> api.catalogs }
         }.distinctUntilChanged()
 
-        AppDispatchers.Default.scope.launch {
-            configurationProvider.configurationStatus
-                .combine(catalogs) { configStatus, catalogs ->
-                    configStatus to catalogs
+        launchOnIO {
+            catalogs.collectLatest {
+                _state.update {  homeState ->
+                    homeState.copy(providerCatalogs = it)
                 }
-                .collectLatest { (configStatus, catalogs) ->
-                    if (configStatus is Resource.Success) {
-                        _state.update { it.copy(providerCatalogs = catalogs) }
-                        invoke()
-                    }
-                }
+
+                invoke()
+            }
         }
     }
 
@@ -166,6 +165,7 @@ class HomeItemsProviderUseCase @Inject constructor(
             }
         }
     }
+
     private suspend fun getHeaderItem(catalogs: List<Catalog>): Film? {
         val traversedCatalogs = mutableSetOf<Int>()
         val traversedFilms = mutableSetOf<String>()
