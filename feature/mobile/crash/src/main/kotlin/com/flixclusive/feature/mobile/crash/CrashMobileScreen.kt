@@ -39,8 +39,8 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 // TODO: Make this internal once TV UI gets its own CrashScreen
 @Composable
@@ -142,7 +142,7 @@ fun CrashMobileScreen(
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.round_content_copy_24),
-                            contentDescription = "Copy button for error stack trace",
+                            contentDescription = stringResource(LocaleR.string.copy_stack_trace_content_desc),
                         )
                     }
                 }

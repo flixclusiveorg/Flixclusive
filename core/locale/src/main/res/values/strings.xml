@@ -27,6 +27,7 @@
 
     <!--  Errors  -->
     <string name="already_added_repo_error">Repository has already been added!</string>
+    <string name="an_error_occurred">An error occurred</string>
     <string name="blank_media_id_error_message">Could not find media id from the provider</string>
     <string name="connection_failed">Connection failure</string>
     <string name="connection_timeout">Connection timeout</string>
@@ -153,6 +154,7 @@
     <string name="github_repository">Github Repository</string>
     <string name="heads_up">Heads up!</string>
     <string name="help">Help</string>
+    <string name="hide_error_logs">Hide error logs</string>
     <string name="ignore_warning_message">Don\'t warn me anymore.</string>
     <string name="import_label">Import</string>
     <string name="install">Install</string>
@@ -219,6 +221,7 @@
     <string name="servers">Servers</string>
     <string name="share_button">Share button</string>
     <string name="share_the_app">Share the App!</string>
+    <string name="show_error_logs">Show error logs</string>
     <string name="sign_up_prerelease">Use pre-release updates</string>
     <string name="skip">Skip</string>
     <string name="sort_date">Sort by date</string>
@@ -351,6 +354,7 @@
     <string name="clear_text_button">Clear text button</string>
     <string name="copy_button">Copy to clipboard button</string>
     <string name="copy_full_logs_button">Copy full logs to clipboard</string>
+    <string name="copy_stack_trace_content_desc">Copy button for error stack trace</string>
     <string name="decoder_priority_description">Preferred decoder for improved playback compatibility. May fix issues with high-quality streams and no-audio streams on devices with limited hardware support.</string>
     <string name="default_user_agent_description">Your user agent is like a digital ID for your browser or app, telling websites and servers who\'s asking for information.</string>
     <string name="delete_search_history_item_message">Are you sure you want to delete this search history item?</string>
