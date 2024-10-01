@@ -73,8 +73,8 @@ import com.flixclusive.model.provider.Status
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 private val FabButtonSize = 56.dp
 private fun Context.getHelpGuideTexts()
@@ -257,7 +257,10 @@ internal fun ProvidersScreen(
                             }
                         }
 
-                        itemsIndexed(items = filteredProviders ?: viewModel.providerDataList) { index, providerData ->
+                        itemsIndexed(
+                            items = filteredProviders ?: viewModel.providerDataList,
+                            key = { _, item -> item.id }
+                        ) { index, providerData ->
                             val displacementOffset =
                                 // +1 since there's a header
                                 if (index + 1 == dragDropListState.getCurrentIndexOfDraggedListItem()) {
@@ -269,6 +272,7 @@ internal fun ProvidersScreen(
                                 && (providerSettings.getOrNull(index)?.isDisabled?.not() ?: true)
 
                             InstalledProviderCard(
+                                modifier = Modifier.animateItem(),
                                 providerData = providerData,
                                 enabled = isEnabled,
                                 isDraggable = !searchExpanded.value,

@@ -29,6 +29,7 @@ import com.flixclusive.model.provider.Status
 
 @Composable
 fun InstalledProviderCard(
+    modifier: Modifier = Modifier,
     providerData: ProviderData,
     enabled: Boolean,
     isDraggable: Boolean,
@@ -51,7 +52,7 @@ fun InstalledProviderCard(
     val cardColor = MaterialTheme.colorScheme.surfaceColorAtElevation(elevation)
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .graphicsLayer { translationY = if (!isDraggable) 0F else displacementOffset ?: 0f }
             .fillMaxWidth(),
         contentAlignment = Alignment.Center
