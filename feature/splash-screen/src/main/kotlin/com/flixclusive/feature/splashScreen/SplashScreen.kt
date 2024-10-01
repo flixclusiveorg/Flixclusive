@@ -277,8 +277,6 @@ internal fun SplashScreen(
                 }
 
                 navigator.openHomeScreen()
-            } else {
-                navigator.openHomeScreen()
             }
         }
     }
