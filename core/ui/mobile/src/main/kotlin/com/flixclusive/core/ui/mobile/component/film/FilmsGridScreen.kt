@@ -45,19 +45,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.ui.mobile.R
 import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.SMALL_ERROR
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
-import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.util.FilmType
 import kotlinx.coroutines.launch
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 fun FilmsGridScreen(

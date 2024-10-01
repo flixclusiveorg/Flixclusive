@@ -37,7 +37,7 @@ sealed class Resource<out T>(
         constructor(error: Throwable?) : this(
             when (error) {
                 null -> null
-                else -> UiText.StringValue(error.localizedMessage ?: error.message ?: error.stackTraceToString())
+                else -> UiText.StringValue(error.stackTraceToString())
             }
         )
         constructor(error: String?) : this(
