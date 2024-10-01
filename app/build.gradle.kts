@@ -12,7 +12,7 @@ plugins {
 // Version
 val versionMajor = 2
 val versionMinor = 1
-val versionPatch = 2
+val versionPatch = 3
 val versionBuild = 0
 val applicationName: String = libs.versions.applicationName.get()
 val _applicationId: String = libs.versions.applicationId.get()
