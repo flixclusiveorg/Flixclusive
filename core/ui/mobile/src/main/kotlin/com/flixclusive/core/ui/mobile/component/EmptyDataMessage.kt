@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -80,33 +81,36 @@ fun EmptyDataMessage(
                 )
             }
 
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(
-                        ParagraphStyle(
-                            lineHeight = 20.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    ) {
-                        withStyle(
-                            style = titleStyle.toSpanStyle()
-                        ) {
-                            append(titleUppercase)
-                        }
 
-                        append("\n")
-
+            SelectionContainer {
+                Text(
+                    text = buildAnnotatedString {
                         withStyle(
-                            style = descriptionStyle.toSpanStyle()
+                            ParagraphStyle(
+                                lineHeight = 20.sp,
+                                textAlign = TextAlign.Center,
+                            )
                         ) {
-                            append(description)
+                            withStyle(
+                                style = titleStyle.toSpanStyle()
+                            ) {
+                                append(titleUppercase)
+                            }
+
+                            append("\n")
+
+                            withStyle(
+                                style = descriptionStyle.toSpanStyle()
+                            ) {
+                                append(description)
+                            }
                         }
-                    }
-                },
-                style = titleStyle,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-            )
+                    },
+                    style = titleStyle,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                )
+            }
         }
     }
 }
