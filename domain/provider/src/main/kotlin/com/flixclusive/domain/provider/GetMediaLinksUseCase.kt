@@ -1,6 +1,7 @@
 package com.flixclusive.domain.provider
 
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
@@ -8,6 +9,7 @@ import com.flixclusive.data.provider.MediaLinksRepository
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.finish
+import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.finishWithTrustedProviders
 import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.sendExtractingLinksMessage
 import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.sendFetchingEpisodeMessage
 import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.sendFetchingFilmMessage
@@ -20,9 +22,12 @@ import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.getNoLinksLoa
 import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.isCached
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmDetails
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.provider.link.Flag
+import com.flixclusive.model.provider.link.MediaLink.Companion.getOrNull
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.ProviderWebViewApi
 import kotlinx.coroutines.flow.Flow
@@ -98,12 +103,6 @@ class GetMediaLinksUseCase @Inject constructor(
             filmLanguage = film.language
         )
 
-        if (apis.isEmpty()) {
-            onError?.invoke(EMPTY_PROVIDER_MESSAGE)
-            throwError(EMPTY_PROVIDER_MESSAGE)
-            return@channelFlow
-        }
-
         val episodeToUse = when {
             film.isTvShow && episode == null -> {
                 sendFetchingEpisodeMessage()
@@ -128,6 +127,40 @@ class GetMediaLinksUseCase @Inject constructor(
             filmId = film.identifier,
             episode = episodeToUse
         )
+
+        if (apis.isEmpty()) {
+            if (film.tmdbId != null) {
+                val response = tmdbRepository.getWatchProviders(
+                    mediaType = film.filmType.type,
+                    id = film.tmdbId!!
+                )
+
+                if (response.data != null) {
+                    response.data?.fastForEach(cachedLinks::add)
+
+                    storeCache(
+                        filmId = film.identifier,
+                        episode = episode,
+                        cachedLinks = cachedLinks.copy(
+                            watchId = film.identifier,
+                            providerName = DEFAULT_FILM_SOURCE_NAME
+                        )
+                    )
+                    finishWithTrustedProviders()
+                    return@channelFlow
+                } else {
+                    onError?.invoke(response.error!!)
+                    throwError(response.error)
+                    return@channelFlow
+                }
+            }
+
+            onError?.invoke(EMPTY_PROVIDER_MESSAGE)
+            throwError(EMPTY_PROVIDER_MESSAGE)
+            return@channelFlow
+        }
+
+        clearTrustedCache(cachedLinks)
 
         if (cachedLinks.isCached(preferredProviderName)) {
             onSuccess(episodeToUse)
@@ -244,6 +277,12 @@ class GetMediaLinksUseCase @Inject constructor(
         episode: Episode?,
         cachedLinks: CachedLinks
     ) = cache.put(getFilmKey(filmId, episode), cachedLinks)
+
+    private fun clearTrustedCache(cachedLinks: CachedLinks) {
+        cachedLinks.streams.removeIf {
+            it.flags?.getOrNull(Flag.Trusted::class) != null
+        }
+    }
 
     /**
      *

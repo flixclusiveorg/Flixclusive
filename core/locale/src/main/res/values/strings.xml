@@ -232,6 +232,7 @@
     <string name="start">Start</string>
     <string name="status">Status</string>
     <string name="stop">Stop</string>
+    <string name="stream">Stream</string>
     <string name="subtitle">Subtitle</string>
     <string name="subtitles_background_color">Background color</string>
     <string name="subtitles_color">Font color</string>
@@ -311,11 +312,12 @@
     <string name="provider_test_stage_stage2">Testing API methods…</string>
     <string name="remove_repositories_notice_msg">Are you sure you want to remove the selected repositories?</string>
     <string name="restart_app_for_changes_message">Restart is required for this to take effect.</string>
-    <string name="skip_loading_message">Player can be played now!</string>
+    <string name="skip_loading_message">Skip loading links</string>
     <string name="source_data_dialog_state_error_default">Something went wrong trying to get links</string>
     <string name="source_data_dialog_state_extracting">Extracting video data…</string>
     <string name="source_data_dialog_state_fetching">Fetching video data…</string>
     <string name="source_data_dialog_state_success">Starting player…</string>
+    <string name="source_data_dialog_state_success_with_trusted_providers">Done providing links</string>
     <string name="source_data_dialog_state_unavailable_default">No links available</string>
     <string name="tooltip_providers_screen_help_guide">This guide contains all the useful information about the providers system. Check it out for more details!</string>
     <string name="unavailable_episode">Episode is not yet available</string>

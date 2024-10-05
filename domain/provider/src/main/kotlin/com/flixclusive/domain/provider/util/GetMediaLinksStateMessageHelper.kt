@@ -45,4 +45,6 @@ internal object GetMediaLinksStateMessageHelper {
         trySend(MediaLinkResourceState.Error(error))
 
     fun ProducerScope<MediaLinkResourceState>.finish() = trySend(MediaLinkResourceState.Success)
+
+    fun ProducerScope<MediaLinkResourceState>.finishWithTrustedProviders() = trySend(MediaLinkResourceState.SuccessWithTrustedProviders)
 }
