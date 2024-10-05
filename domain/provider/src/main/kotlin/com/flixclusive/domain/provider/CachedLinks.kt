@@ -2,6 +2,7 @@ package com.flixclusive.domain.provider
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.util.fastAny
 import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
@@ -26,12 +27,24 @@ data class CachedLinks(
     val streams: SnapshotStateList<Stream> = mutableStateListOf(),
     val subtitles: SnapshotStateList<Subtitle> = mutableStateListOf()
 ) : Serializable {
+    private fun containsStream(link: Stream): Boolean {
+        return streams.fastAny {
+            link.url.equals(it.url, true)
+        }
+    }
+
+    private fun containsSubtitle(link: Subtitle): Boolean {
+        return subtitles.fastAny {
+            link.url.equals(it.url, true)
+        }
+    }
+
     fun add(link: MediaLink) {
         when {
-            link is Stream && !streams.contains(link) -> {
+            link is Stream && !containsStream(link) -> {
                 streams.add(link)
             }
-            link is Subtitle && !subtitles.contains(link) -> {
+            link is Subtitle && !containsSubtitle(link) -> {
                 subtitles.add(link)
             }
         }

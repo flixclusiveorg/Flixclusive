@@ -14,6 +14,7 @@ dependencies {
     api(projects.model.database)
 
     implementation(projects.core.network)
-    implementation(libs.pauseCoroutineDispatcher)
+    implementation(libs.compose.ui.util)
     implementation(libs.mockk)
+    implementation(libs.pauseCoroutineDispatcher)
 }
