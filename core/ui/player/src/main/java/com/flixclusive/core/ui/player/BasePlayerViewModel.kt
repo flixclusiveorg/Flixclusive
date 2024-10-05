@@ -7,24 +7,24 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.ui.player.util.PlayerCacheManager
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.locale.UiText
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
+import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
+import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.toWatchHistoryItem
 import com.flixclusive.model.database.util.getSavedTimeForFilm
 import com.flixclusive.model.datastore.player.PlayerQuality.Companion.getIndexOfPreferredQuality
-import com.flixclusive.domain.provider.CachedLinks
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.model.film.FilmDetails
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.film.util.FilmType
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -242,6 +242,7 @@ abstract class BasePlayerViewModel(
                     MediaLinkResourceState.Idle,
                     is MediaLinkResourceState.Error,
                     is MediaLinkResourceState.Unavailable,
+                    is MediaLinkResourceState.SuccessWithTrustedProviders,
                     MediaLinkResourceState.Success -> _uiState.update {
                         it.copy(selectedProviderState = PlayerProviderState.SELECTED)
                     }

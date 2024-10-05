@@ -8,6 +8,7 @@ import com.flixclusive.core.ui.common.provider.MediaLinkResourceState.Fetching
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState.Idle
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState.Success
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState.Unavailable
+import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.core.locale.R as LocaleR
 
 
@@ -25,6 +26,8 @@ import com.flixclusive.core.locale.R as LocaleR
  * @see MediaLink
  */
 sealed class MediaLinkResourceState(val message: UiText) {
+    protected abstract val ordinal: Int
+
     constructor(message: String) : this(UiText.StringValue(message))
     constructor() : this(UiText.StringValue(""))
 
@@ -34,12 +37,23 @@ sealed class MediaLinkResourceState(val message: UiText) {
 
         @StringRes
         private val defaultErrorMessageId = LocaleR.string.source_data_dialog_state_error_default
+
+
+        val MediaLinkResourceState.isIdle get() = this is Idle
+        val MediaLinkResourceState.isSuccess get() = this is Success
+        val MediaLinkResourceState.isUnavailable get() = this is Unavailable
+        val MediaLinkResourceState.isExtracting get() = this is Extracting
+        val MediaLinkResourceState.isFetching get() = this is Fetching
+        val MediaLinkResourceState.isLoading get() = isFetching || isExtracting || isSuccess
+        val MediaLinkResourceState.isError get() = this is Error || isUnavailable
     }
 
     /**
      * The initial idle state.
      */
-    data object Idle : MediaLinkResourceState()
+    data object Idle : MediaLinkResourceState() {
+        override val ordinal = 0
+    }
 
     /**
      * The state when the resource is being fetched.
@@ -52,6 +66,8 @@ sealed class MediaLinkResourceState(val message: UiText) {
         message = message
             ?: UiText.StringResource(LocaleR.string.source_data_dialog_state_fetching)
     ) {
+        override val ordinal = 1
+
         /**
          * Constructor with a string resource ID for the message.
          *
@@ -73,6 +89,7 @@ sealed class MediaLinkResourceState(val message: UiText) {
         message = message
             ?: UiText.StringResource(LocaleR.string.source_data_dialog_state_extracting)
     ) {
+        override val ordinal = 2
         /**
          * Constructor with a custom string message.
          *
@@ -92,6 +109,7 @@ sealed class MediaLinkResourceState(val message: UiText) {
         message = errorMessage
             ?: UiText.StringResource(defaultErrorMessageId)
     ) {
+        override val ordinal = 3
         /**
          * Constructor with a string resource ID for the error message.
          *
@@ -117,6 +135,7 @@ sealed class MediaLinkResourceState(val message: UiText) {
             message = errorMessage
                 ?: UiText.StringResource(defaultUnavailableMessageId)
         ) {
+        override val ordinal = 4
         /**
          * Constructor with a string resource ID for the error message.
          *
@@ -130,8 +149,22 @@ sealed class MediaLinkResourceState(val message: UiText) {
     /**
      * The state when the resource has been successfully fetched and extracted.
      */
-    data object Success :
-        MediaLinkResourceState(
-            message = UiText.StringResource(LocaleR.string.source_data_dialog_state_success)
-        )
+    data object Success : MediaLinkResourceState(message = UiText.StringResource(LocaleR.string.source_data_dialog_state_success)) {
+        override val ordinal = 5
+    }
+
+    /**
+     * The state when the resource has been successfully fetched and extracted from trusted providers.
+     */
+    data object SuccessWithTrustedProviders : MediaLinkResourceState(
+        message = UiText.StringResource(LocaleR.string.source_data_dialog_state_success_with_trusted_providers)
+    ) {
+        override val ordinal = 6
+    }
+
+
+
+    operator fun compareTo(other: MediaLinkResourceState): Int {
+        return ordinal.compareTo(other.ordinal)
+    }
 }

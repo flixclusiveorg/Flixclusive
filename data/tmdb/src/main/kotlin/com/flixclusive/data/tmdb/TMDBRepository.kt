@@ -9,6 +9,7 @@ import com.flixclusive.model.film.TMDBCollection
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.provider.link.Stream
 
 enum class SortOptions {
     POPULARITY,
@@ -68,4 +69,6 @@ interface TMDBRepository {
     * the HomeCatalogsConfig item
     */
     suspend fun paginateConfigItems(url: String, page: Int): Resource<SearchResponseData<FilmSearchItem>>
+
+    suspend fun getWatchProviders(mediaType: String, id: Int): Resource<List<Stream>>
 }

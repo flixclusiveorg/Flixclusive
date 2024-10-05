@@ -105,4 +105,14 @@ class TMDBRepositoryTest {
         val response = tmdbRepository.getTvShow(id = tvShowId)
         response.verifyFilmDetails()
     }
+
+    @Test
+    fun `Get Watch Providers of Arcane TV Show` () = testScope.runTest {
+        val tvShowId = 94605 // Arcane
+        val response = tmdbRepository.getWatchProviders(mediaType = "tv", id = tvShowId)
+
+        assert(response is Resource.Success)
+        assert(response.data?.isNotEmpty() == true)
+        debugLog("☑\uFE0F ${response.data}")
+    }
 }
