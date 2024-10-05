@@ -42,7 +42,7 @@ internal object GetMediaLinksStateMessageHelper {
         trySend(MediaLinkResourceState.Error(error))
 
     fun ProducerScope<MediaLinkResourceState>.throwUnavailableError(error: UiText?) =
-        trySend(MediaLinkResourceState.Error(error))
+        trySend(MediaLinkResourceState.Unavailable(error))
 
     fun ProducerScope<MediaLinkResourceState>.finish() = trySend(MediaLinkResourceState.Success)
 
