@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableFloatStateOf
@@ -36,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.player.R
+import com.flixclusive.feature.mobile.player.controls.common.slider.CustomSlider
+import com.flixclusive.feature.mobile.player.controls.common.slider.CustomSliderDefaults
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +47,7 @@ internal fun PlayerVerticalSlider(
     onValueChange: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float>,
 ) {
-    val sliderColors = SliderDefaults.colors(
+    val sliderColors = CustomSliderDefaults.colors(
         thumbColor = Color.White,
         activeTrackColor = Color.White,
         inactiveTrackColor = Color.White.onMediumEmphasis(emphasis = 0.4F)
@@ -72,7 +72,7 @@ internal fun PlayerVerticalSlider(
                 tint = Color.White
             )
 
-            Slider(
+            CustomSlider(
                 modifier = Modifier
                     .graphicsLayer {
                         rotationZ = 270f
@@ -97,7 +97,15 @@ internal fun PlayerVerticalSlider(
                 value = value,
                 onValueChange = onValueChange,
                 colors = sliderColors,
-                thumb = {}
+                thumb = {},
+                track = {
+                    CustomSliderDefaults.Track(
+                        colors = sliderColors,
+                        customSliderPositions = it,
+                        gradient = false,
+                        enabled = true
+                    )
+                }
             )
         }
     }

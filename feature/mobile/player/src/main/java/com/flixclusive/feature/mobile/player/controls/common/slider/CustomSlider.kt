@@ -559,10 +559,11 @@ internal object CustomSliderDefaults {
         modifier: Modifier = Modifier,
         colors: CustomSliderColors = colors(),
         enabled: Boolean = true,
+        gradient: Boolean = true,
     ) {
         val inactiveTrackColor = colors.trackColor(enabled, active = false)
         val activeTrackColor = colors.trackColor(enabled, active = true)
-        val gradientedColor = if(enabled) {
+        val gradientedColor = if(gradient) {
             Brush.linearGradient(
                 colors = listOf(
                     MaterialTheme.colorScheme.primary,
