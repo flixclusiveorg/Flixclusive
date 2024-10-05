@@ -82,6 +82,16 @@ private fun CornerBasedShape.top(): CornerBasedShape {
 }
 
 @Composable
+internal fun getDefaultSegmentedButtonColors() = SegmentedButtonDefaults.colors().copy(
+    activeContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05F),
+    activeContentColor = MaterialTheme.colorScheme.primary,
+    inactiveContentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(),
+    disabledActiveContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05F),
+    disabledActiveContentColor = MaterialTheme.colorScheme.primary,
+    disabledInactiveContentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
+)
+
+@Composable
 @ExperimentalMaterial3Api
 fun VerticalSegmentedButton(
     selected: Boolean,
@@ -89,13 +99,7 @@ fun VerticalSegmentedButton(
     shape: Shape,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    colors: SegmentedButtonColors = SegmentedButtonDefaults.colors().copy(
-        activeContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05F),
-        activeContentColor = MaterialTheme.colorScheme.primary,
-        inactiveContentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(),
-        disabledActiveContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05F),
-        disabledActiveContentColor = MaterialTheme.colorScheme.primary
-    ),
+    colors: SegmentedButtonColors = getDefaultSegmentedButtonColors(),
     border: BorderStroke = SegmentedButtonDefaults.borderStroke(
         color = colors.activeBorderColor.copy(alpha = 0.5F),
         width = 1.2.dp
