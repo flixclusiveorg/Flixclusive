@@ -135,20 +135,20 @@ class GetMediaLinksUseCase @Inject constructor(
                     id = film.tmdbId!!
                 )
 
-                if (response.data != null) {
-                    response.data?.fastForEach(cachedLinks::add)
-
-                    storeCache(
-                        filmId = film.identifier,
-                        episode = episode,
-                        cachedLinks = cachedLinks.copy(
-                            watchId = film.identifier,
-                            providerName = DEFAULT_FILM_SOURCE_NAME
-                        )
+                response.data?.fastForEach(cachedLinks::add)
+                storeCache(
+                    filmId = film.identifier,
+                    episode = episode,
+                    cachedLinks = cachedLinks.copy(
+                        watchId = film.identifier,
+                        providerName = DEFAULT_FILM_SOURCE_NAME
                     )
+                )
+
+                if (response.data?.isNotEmpty() == true) {
                     finishWithTrustedProviders()
                     return@channelFlow
-                } else {
+                } else if (response.error != null) {
                     onError?.invoke(response.error!!)
                     throwError(response.error)
                     return@channelFlow
@@ -156,7 +156,7 @@ class GetMediaLinksUseCase @Inject constructor(
             }
 
             onError?.invoke(EMPTY_PROVIDER_MESSAGE)
-            throwError(EMPTY_PROVIDER_MESSAGE)
+            throwUnavailableError(EMPTY_PROVIDER_MESSAGE)
             return@channelFlow
         }
 

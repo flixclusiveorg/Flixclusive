@@ -301,7 +301,7 @@
     <string name="film_data_fetching">Fetching film details…</string>
     <string name="first_time_providers_screen_message">It seems like this is your first time using the providers system, would you like to read more about it?</string>
     <string name="loading_next_episode">Loading next episode…</string>
-    <string name="no_available_providers">No available source providers!</string>
+    <string name="no_available_providers">No available providers!</string>
     <string name="non_configurable_provider_message">This provider has is not configurable.</string>
     <string name="not_trusted_url">Hey! The app doesn\'t monitor external sites, so proceed with caution and use your best internet judgment.</string>
     <string name="offline_message">You\'re offline</string>
