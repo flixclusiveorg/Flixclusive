@@ -1,5 +1,6 @@
 package com.flixclusive.mobile
 
+import android.annotation.SuppressLint
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
@@ -40,10 +41,11 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
-import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.ui.mobile.component.provider.MediaLinksBottomSheet
 import com.flixclusive.core.util.webview.WebViewDriver
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
@@ -54,7 +56,6 @@ import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
 import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.FilmCoverPreview
 import com.flixclusive.mobile.component.FilmPreviewBottomSheet
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.util.AppNavHost
 import com.flixclusive.util.currentScreenAsState
 import com.flixclusive.util.navigateIfResumed
@@ -67,6 +68,7 @@ import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 import com.flixclusive.core.locale.R as LocaleR
 
+@SuppressLint("DiscouragedApi")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun MobileActivity.MobileApp(
@@ -294,19 +296,17 @@ internal fun MobileActivity.MobileApp(
 
         if (uiState.mediaLinkResourceState !is MediaLinkResourceState.Idle) {
             window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                ProviderResourceStateDialog(
-                    state = uiState.mediaLinkResourceState,
-                    canSkipExtractingPhase = cachedLinks?.streams?.isNotEmpty() == true,
-                    onSkipExtractingPhase = onStartPlayer,
-                    onConsumeDialog = {
-                        viewModel.onConsumeSourceDataDialog(isForceClosing = true)
-                        viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
-                    }
-                )
-            }
+            MediaLinksBottomSheet(
+                state = uiState.mediaLinkResourceState,
+                streams = cachedLinks?.streams ?: emptyList(),
+                subtitles = cachedLinks?.subtitles ?: emptyList(),
+                onLinkClick = {},
+                onSkipLoading = onStartPlayer,
+                onDismiss = {
+                    viewModel.onConsumeSourceDataDialog(isForceClosing = true)
+                    viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
+                }
+            )
         } else {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
