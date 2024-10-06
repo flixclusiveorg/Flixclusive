@@ -294,7 +294,7 @@ internal fun MobileActivity.MobileApp(
             )
         }
 
-        if (uiState.mediaLinkResourceState !is MediaLinkResourceState.Idle) {
+        if (!uiState.mediaLinkResourceState.isIdle) {
             window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             MediaLinksBottomSheet(
                 state = uiState.mediaLinkResourceState,

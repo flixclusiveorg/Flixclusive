@@ -37,15 +37,6 @@ sealed class MediaLinkResourceState(val message: UiText) {
 
         @StringRes
         private val defaultErrorMessageId = LocaleR.string.source_data_dialog_state_error_default
-
-
-        val MediaLinkResourceState.isIdle get() = this is Idle
-        val MediaLinkResourceState.isSuccess get() = this is Success
-        val MediaLinkResourceState.isUnavailable get() = this is Unavailable
-        val MediaLinkResourceState.isExtracting get() = this is Extracting
-        val MediaLinkResourceState.isFetching get() = this is Fetching
-        val MediaLinkResourceState.isLoading get() = isFetching || isExtracting || isSuccess
-        val MediaLinkResourceState.isError get() = this is Error || isUnavailable
     }
 
     /**
@@ -163,6 +154,14 @@ sealed class MediaLinkResourceState(val message: UiText) {
     }
 
 
+    val isIdle get() = this is Idle
+    val isSuccess get() = this is Success
+    val isSuccessWithTrustedProviders get() = this is SuccessWithTrustedProviders
+    val isUnavailable get() = this is Unavailable
+    val isExtracting get() = this is Extracting
+    val isFetching get() = this is Fetching
+    val isLoading get() = isFetching || isExtracting || isSuccess
+    val isError get() = this is Error || isUnavailable
 
     operator fun compareTo(other: MediaLinkResourceState): Int {
         return ordinal.compareTo(other.ordinal)
