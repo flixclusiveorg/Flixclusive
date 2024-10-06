@@ -31,8 +31,8 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 fun SourceDataDialog(
@@ -83,7 +83,7 @@ private fun SourceDataDialogContent(
                 contentAlignment = Alignment.Center
             ) {
                 this@Column.AnimatedVisibility(
-                    visible = state !is MediaLinkResourceState.Error && state !is MediaLinkResourceState.Unavailable,
+                    visible = !state.isError,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
@@ -112,7 +112,7 @@ private fun SourceDataDialogContent(
                 }
 
                 this@Column.AnimatedVisibility(
-                    visible = state is MediaLinkResourceState.Error || state is MediaLinkResourceState.Unavailable,
+                    visible = state.isError,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {

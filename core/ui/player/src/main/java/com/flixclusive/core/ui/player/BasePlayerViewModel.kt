@@ -238,16 +238,14 @@ abstract class BasePlayerViewModel(
                     showErrorSnackbar(it)
                 }
             ).collect { state ->
-                when (state) {
-                    MediaLinkResourceState.Idle,
-                    is MediaLinkResourceState.Error,
-                    is MediaLinkResourceState.Unavailable,
-                    is MediaLinkResourceState.SuccessWithTrustedProviders,
-                    MediaLinkResourceState.Success -> _uiState.update {
+                when {
+                    state.isIdle ||
+                    state.isError ||
+                    state.isSuccess ||
+                    state.isSuccessWithTrustedProviders -> _uiState.update {
                         it.copy(selectedProviderState = PlayerProviderState.SELECTED)
                     }
-
-                    is MediaLinkResourceState.Extracting, is MediaLinkResourceState.Fetching -> _uiState.update {
+                    state.isLoading -> _uiState.update {
                         it.copy(selectedProviderState = PlayerProviderState.LOADING)
                     }
                 }

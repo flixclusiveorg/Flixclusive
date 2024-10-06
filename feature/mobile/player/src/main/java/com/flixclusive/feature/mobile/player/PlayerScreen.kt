@@ -35,7 +35,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.ui.common.navigation.navigator.PlayerScreenNavigator
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.mobile.ListenKeyEvents
 import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
@@ -458,7 +457,7 @@ internal fun PlayerScreen(
         }
     }
 
-    if (dialogState !is MediaLinkResourceState.Idle) {
+    if (!dialogState.isIdle) {
         LaunchedEffect(Unit) {
             viewModel.player.run {
                 if (isPlaying) {
@@ -468,24 +467,18 @@ internal fun PlayerScreen(
             }
         }
 
-        Box(
-            contentAlignment = Alignment.Center
-        ) {
-            if (dialogState !is MediaLinkResourceState.Idle) {
-                ProviderResourceStateDialog(
-                    state = dialogState,
-                    onConsumeDialog = {
-                        scrapingJob?.cancel()
-                        scrapingJob = null
-                        viewModel.onConsumePlayerDialog()
+        ProviderResourceStateDialog(
+            state = dialogState,
+            onConsumeDialog = {
+                scrapingJob?.cancel()
+                scrapingJob = null
+                viewModel.onConsumePlayerDialog()
 
-                        if (viewModel.player.playWhenReady) {
-                            viewModel.player.play()
-                        }
-                    }
-                )
+                if (viewModel.player.playWhenReady) {
+                    viewModel.player.play()
+                }
             }
-        }
+        )
     } else {
         scrapingJob?.cancel()
         scrapingJob = null
