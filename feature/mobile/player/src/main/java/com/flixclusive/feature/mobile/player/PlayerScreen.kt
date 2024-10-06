@@ -6,7 +6,10 @@ import android.os.Build.VERSION.SDK_INT
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.annotation.OptIn
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,7 +40,6 @@ import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.ui.common.navigation.navigator.PlayerScreenNavigator
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.mobile.ListenKeyEvents
-import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
 import com.flixclusive.core.ui.mobile.rememberPipMode
 import com.flixclusive.core.ui.mobile.util.toggleSystemBars
 import com.flixclusive.core.ui.player.PLAYER_CONTROL_VISIBILITY_TIMEOUT
@@ -55,6 +57,7 @@ import com.flixclusive.core.ui.player.util.updatePiPParams
 import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.feature.mobile.player.controls.PlayerControls
+import com.flixclusive.feature.mobile.player.controls.dialogs.provider.ProviderResourceStateScreen
 import com.flixclusive.feature.mobile.player.util.BrightnessManager
 import com.flixclusive.feature.mobile.player.util.LocalBrightnessManager
 import com.flixclusive.feature.mobile.player.util.PlayerPipReceiver
@@ -82,12 +85,12 @@ internal fun PlayerScreen(
     val brightnessManager = remember { BrightnessManager(context) }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
+    val providerState by viewModel.dialogState.collectAsStateWithLifecycle()
 
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
 
-    val sourceData = viewModel.cachedLinks
+    val mediaData = viewModel.cachedLinks
     val providers by viewModel.providers.collectAsStateWithLifecycle(initialValue = emptyList())
     val seasonData by viewModel.season.collectAsStateWithLifecycle()
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
@@ -158,10 +161,10 @@ internal fun PlayerScreen(
      *
      * */
     LaunchedEffect(Unit) {
-        if (sourceData.watchId.isEmpty() || sourceData.providerName.isEmpty()) {
+        if (mediaData.watchId.isEmpty() || mediaData.providerName.isEmpty()) {
             when(args.film) {
                 is TvShow -> onEpisodeClick(args.episodeToPlay)
-                is Movie -> viewModel.loadSourceData()
+                is Movie -> viewModel.loadMediaLinks()
                 else -> throw IllegalStateException("Invalid film instance [${args.film.filmType}]: ${args.film}")
             }
         }
@@ -283,8 +286,8 @@ internal fun PlayerScreen(
         ObserveNewLinksAndSubtitles(
             selectedSourceLink = uiState.selectedSourceLink,
             currentPlayerTitle = currentPlayerTitle,
-            newLinks = sourceData.streams,
-            newSubtitles = sourceData.subtitles,
+            newLinks = mediaData.streams,
+            newSubtitles = mediaData.subtitles,
             getSavedTimeForCurrentSourceData = {
                 viewModel.getSavedTimeForSourceData(currentSelectedEpisode).first
             }
@@ -346,7 +349,7 @@ internal fun PlayerScreen(
                             = getSavedTimeForSourceData(currentSelectedEpisode)
 
                         player.initialize()
-                        sourceData.run {
+                        mediaData.run {
                             val getPossibleSourceLink = streams
                                 .getOrNull(uiState.selectedSourceLink)
                                 ?: streams.getOrNull(0)
@@ -389,7 +392,7 @@ internal fun PlayerScreen(
                 isDoubleTapping = isDoubleTapping,
                 isEpisodesSheetOpened = isEpisodesSheetOpened,
                 isAudiosAndSubtitlesDialogOpened = isAudiosAndSubtitlesDialogOpened,
-                servers = sourceData.streams,
+                servers = mediaData.streams,
                 isPlayerSettingsDialogOpened = isPlayerSettingsDialogOpened,
                 isServersDialogOpened = isServersDialogOpened,
                 watchHistoryItem = watchHistoryItem,
@@ -413,7 +416,7 @@ internal fun PlayerScreen(
                 toggleVideoTimeReverse = viewModel::toggleVideoTimeReverse,
                 showControls = { showControls(it) },
                 lockControls = { viewModel.areControlsLocked = it },
-                addSubtitle = { sourceData.subtitles.add(index = 0, element = it) },
+                addSubtitle = { mediaData.subtitles.add(index = 0, element = it) },
                 onEpisodeClick = {
                     viewModel.run {
                         updateWatchHistory(
@@ -457,30 +460,46 @@ internal fun PlayerScreen(
         }
     }
 
-    if (!dialogState.isIdle) {
-        LaunchedEffect(Unit) {
-            viewModel.player.run {
-                if (isPlaying) {
-                    pause()
-                    playWhenReady = true
+
+    AnimatedVisibility(
+        visible = !providerState.isIdle,
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        with(viewModel) {
+            DisposableEffect(Unit) {
+                if (player.isPlaying) {
+                    player.pause()
+                    player.playWhenReady = true
+                }
+
+                onDispose {
+                    scrapingJob?.cancel()
+                    scrapingJob = null
                 }
             }
+
+            ProviderResourceStateScreen(
+                state = providerState,
+                servers = mediaData.streams,
+                onSkipLoading = {
+                    updateWatchHistory(
+                        currentTime = player.currentPosition,
+                        duration = player.duration
+                    )
+
+                    onEpisodeClick()
+                },
+                onClose = {
+                    scrapingJob?.cancel()
+                    scrapingJob = null
+                    onConsumePlayerDialog()
+
+                    if (player.playWhenReady) {
+                        player.play()
+                    }
+                }
+            )
         }
-
-        ProviderResourceStateDialog(
-            state = dialogState,
-            onConsumeDialog = {
-                scrapingJob?.cancel()
-                scrapingJob = null
-                viewModel.onConsumePlayerDialog()
-
-                if (viewModel.player.playWhenReady) {
-                    viewModel.player.play()
-                }
-            }
-        )
-    } else {
-        scrapingJob?.cancel()
-        scrapingJob = null
     }
 }

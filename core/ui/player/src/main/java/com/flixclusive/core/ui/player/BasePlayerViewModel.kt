@@ -430,7 +430,7 @@ abstract class BasePlayerViewModel(
                 }
             }
 
-            loadSourceData(episode)
+            loadMediaLinks(episode)
         }
     }
 
@@ -439,7 +439,7 @@ abstract class BasePlayerViewModel(
      *
      * @param episodeToWatch an optional parameter for the episode to watch if film to be watched is a [TvShow]
      */
-    fun loadSourceData(
+    fun loadMediaLinks(
         episodeToWatch: Episode? = null
     ) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {

@@ -121,7 +121,7 @@ fun PlayerScreen(
                 episodeToWatch = episodeToPlay
             )
         } else {
-            viewModel.loadSourceData()
+            viewModel.loadMediaLinks()
         }
     }
 
