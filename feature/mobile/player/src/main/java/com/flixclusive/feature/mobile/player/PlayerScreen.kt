@@ -22,20 +22,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.ui.common.navigation.navigator.PlayerScreenNavigator
+import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.mobile.ListenKeyEvents
 import com.flixclusive.core.ui.mobile.component.provider.ProviderResourceStateDialog
@@ -63,7 +63,6 @@ import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.util.FilmType
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -94,7 +93,6 @@ internal fun PlayerScreen(
     val seasonData by viewModel.season.collectAsStateWithLifecycle()
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
-    val scope = rememberCoroutineScope()
     var scrapingJob by remember { mutableStateOf<Job?>(null) }
 
     val currentPlayerTitle = remember(currentSelectedEpisode) {
@@ -301,7 +299,7 @@ internal fun PlayerScreen(
          * Don't show it if its locked and its buffering.
          * Show controls when buffering
          *
-         * See local function (CTRL+F): [showControls]
+         * See local function (CTRL+F): showControls
          *
          * */
         LaunchedEffect(
