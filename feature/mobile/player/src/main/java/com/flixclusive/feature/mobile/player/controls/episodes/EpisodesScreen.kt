@@ -1,10 +1,7 @@
 package com.flixclusive.feature.mobile.player.controls.episodes
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,7 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -26,17 +22,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.feature.mobile.player.controls.common.BasePopupScreen
 import com.flixclusive.feature.mobile.player.controls.common.EnlargedTouchableButton
 import com.flixclusive.feature.mobile.player.controls.episodes.composables.EpisodesRow
 import com.flixclusive.feature.mobile.player.controls.episodes.composables.SeasonsRow
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun EpisodesScreen(
@@ -53,72 +49,57 @@ internal fun EpisodesScreen(
         mutableIntStateOf(seasonData.data?.number ?: currentEpisodeSelected.season)
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(0.9F))
+    BasePopupScreen(
+        modifier = modifier,
+        onDismiss = onClose
     ) {
-        // Block touches
-        Box(
+        Row(
             modifier = Modifier
-            .fillMaxSize()
-            .noIndicationClickable { }
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.TopStart),
-            verticalArrangement = Arrangement.spacedBy(15.dp),
+                .padding(start = 10.dp, top = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .padding(start = 10.dp, top = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                EnlargedTouchableButton(
-                    iconId = UiCommonR.drawable.round_close_24,
-                    contentDescription = stringResource(id = LocaleR.string.close_label),
-                    size = 45.dp,
-                    onClick = onClose
-                )
+            EnlargedTouchableButton(
+                iconId = UiCommonR.drawable.round_close_24,
+                contentDescription = stringResource(id = LocaleR.string.close_label),
+                size = 45.dp,
+                onClick = onClose
+            )
 
-                when (seasonData) {
-                    is Resource.Failure -> Unit
-                    Resource.Loading -> Unit
-                    is Resource.Success -> {
-                        Text(
-                            text = seasonData.data?.name ?: "Season ${seasonData.data?.number}",
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 22.sp
-                            ),
-                            modifier = Modifier
-                                .padding(start = 8.dp)
-                        )
-                    }
+            when (seasonData) {
+                is Resource.Failure -> Unit
+                Resource.Loading -> Unit
+                is Resource.Success -> {
+                    Text(
+                        text = seasonData.data?.name ?: "Season ${seasonData.data?.number}",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp
+                        ),
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                    )
                 }
             }
-
-            SeasonsRow(
-                availableSeasons = availableSeasons,
-                currentSeasonSelected = selectedSeason,
-                onSeasonChange = {
-                    selectedSeason = it
-                    onSeasonChange(it)
-                }
-            )
-
-            EpisodesRow(
-                seasonData = seasonData,
-                selectedSeason = selectedSeason,
-                currentEpisodeSelected = currentEpisodeSelected,
-                watchHistoryItem = watchHistoryItem,
-                onSeasonChange = onSeasonChange,
-                onEpisodeClick = onEpisodeClick,
-                onClose = onClose
-            )
         }
+
+        SeasonsRow(
+            availableSeasons = availableSeasons,
+            currentSeasonSelected = selectedSeason,
+            onSeasonChange = {
+                selectedSeason = it
+                onSeasonChange(it)
+            }
+        )
+
+        EpisodesRow(
+            seasonData = seasonData,
+            selectedSeason = selectedSeason,
+            currentEpisodeSelected = currentEpisodeSelected,
+            watchHistoryItem = watchHistoryItem,
+            onSeasonChange = onSeasonChange,
+            onEpisodeClick = onEpisodeClick,
+            onClose = onClose
+        )
     }
 }
 
