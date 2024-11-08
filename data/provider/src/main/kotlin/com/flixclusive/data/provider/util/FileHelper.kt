@@ -24,8 +24,9 @@ internal fun rmrf(file: File) {
 }
 
 fun Context.provideValidProviderPath(
-    providerData: ProviderData
-) = File("${filesDir}/$PROVIDERS_FOLDER/${buildValidFilename(providerData.repositoryUrl!!)}/${buildValidFilename(providerData.name)}.flx")
+    providerData: ProviderData,
+    localPrefix: String? = null
+) = File("${localPrefix ?: "${filesDir}/$PROVIDERS_FOLDER/"}${buildValidFilename(providerData.repositoryUrl!!)}/${buildValidFilename(providerData.name)}.flx")
 
 /**
  * Mutate the given filename to make it valid for a FAT filesystem,
