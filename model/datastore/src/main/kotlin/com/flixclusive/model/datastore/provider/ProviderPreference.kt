@@ -14,6 +14,7 @@ data class ProviderPreference(
     val name: String,
     val filePath: String,
     val isDisabled: Boolean,
+    // TODO: Add lastUsedForSearching property
 ) {
     override fun equals(other: Any?): Boolean {
         return when(other) {

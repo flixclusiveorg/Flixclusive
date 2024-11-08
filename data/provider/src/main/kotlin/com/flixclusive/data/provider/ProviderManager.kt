@@ -6,6 +6,7 @@ import androidx.compose.runtime.snapshotFlow
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.coroutines.AppDispatchers
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withDefaultContext
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
@@ -36,6 +37,7 @@ import okhttp3.OkHttpClient
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
+import java.util.Collections
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.flixclusive.core.locale.R as LocaleR
@@ -52,10 +54,10 @@ class ProviderManager @Inject constructor(
     private val providerApiRepository: ProviderApiRepository
 ) {
     /** Map containing all loaded providers  */
-    val providers: MutableMap<String, Provider> = LinkedHashMap()
-    private val classLoaders: MutableMap<PathClassLoader, Provider> = HashMap()
+    val providers: MutableMap<String, Provider> = Collections.synchronizedMap(LinkedHashMap())
+    private val classLoaders: MutableMap<PathClassLoader, Provider> = Collections.synchronizedMap(HashMap())
 
-    private var notificationChannelHasBeensInitialized = false
+    private var notificationChannelHasBeenInitialized = false
 
     /**
      * An observable map of provider data
@@ -72,6 +74,7 @@ class ProviderManager @Inject constructor(
     private val updaterJsonMap = HashMap<String, List<ProviderData>>()
 
     private val dynamicResourceLoader = DynamicResourceLoader(context = context)
+    private val LOCAL_PATH_PREFIX = context.getExternalFilesDir(null)?.absolutePath + "/providers/"
 
     val workingApis = snapshotFlow {
         providerDataList
@@ -108,18 +111,17 @@ class ProviderManager @Inject constructor(
 
             if (failedToLoad.isNotEmpty()) {
                 context.notifyOnError(
-                    shouldInitializeChannel = !notificationChannelHasBeensInitialized,
+                    shouldInitializeChannel = !notificationChannelHasBeenInitialized,
                     providers = failedToLoad.keys,
                 )
 
-                notificationChannelHasBeensInitialized = true
+                notificationChannelHasBeenInitialized = true
             }
         }
     }
 
     private suspend fun initializeLocalProviders() {
-        val localPath = context.getExternalFilesDir(null)?.absolutePath + "/providers/"
-        val localDir = File(localPath)
+        val localDir = File(LOCAL_PATH_PREFIX)
 
         if (!localDir.exists()) {
             val isSuccess = localDir.mkdirs()
@@ -275,11 +277,11 @@ class ProviderManager @Inject constructor(
         val hasNewErrors = needsDownload && failedToLoad.size - initialFailedToLoadProviders > 0
         if (hasNewErrors) {
             context.notifyOnError(
-                shouldInitializeChannel = !notificationChannelHasBeensInitialized,
+                shouldInitializeChannel = !notificationChannelHasBeenInitialized,
                 providers = failedToLoad.keys,
             )
 
-            notificationChannelHasBeensInitialized = true
+            notificationChannelHasBeenInitialized = true
         }
     }
 
@@ -290,11 +292,16 @@ class ProviderManager @Inject constructor(
      * @param providerData      The provider information
      */
     @Suppress("UNCHECKED_CAST")
-    private suspend fun loadProvider(file: File, providerData: ProviderData) {
+    private suspend fun loadProvider(
+        file: File,
+        providerData: ProviderData
+    ) {
         val name = file.nameWithoutExtension
         val filePath = file.absolutePath
 
-        var providerPreference = getProviderPreference(name)
+        val providerPosition = getPositionIndexFromSettings(
+            name = name
+        )
 
         infoLog("Loading provider: $name")
 
@@ -343,14 +350,16 @@ class ProviderManager @Inject constructor(
                 }
             }
 
-            if (providerPreference == null) {
-                providerPreference = ProviderPreference(
+            val providerPreference = if (providerPosition > -1) {
+                appSettingsManager.cachedProviderSettings.providers[providerPosition]
+            } else {
+                ProviderPreference(
                     name = name,
                     filePath = filePath,
                     isDisabled = false
-                )
-
-                loadProviderOnSettings(providerPreference)
+                ).also {
+                    loadProviderOnSettings(it)
+                }
             }
 
             if (!providerPreference.isDisabled) {
@@ -362,9 +371,16 @@ class ProviderManager @Inject constructor(
                 )
             }
 
-            providerDataList.add(providerData)
             providers[name] = providerInstance
             classLoaders[loader] = providerInstance
+
+            if (providerPosition > -1) {
+                providerDataList.add(
+                    index = providerPosition, element = providerData
+                )
+            } else {
+                providerDataList.add(element = providerData)
+            }
         } catch (e: Throwable) {
             if (isCrashingOnGetApiMethod(e)) {
                 val message = context.getApiCrashMessage(provider = name)
@@ -384,10 +400,21 @@ class ProviderManager @Inject constructor(
         }
     }
 
-    private suspend fun loadProviderOnSettings(providerPreference: ProviderPreference) {
+    private suspend fun loadProviderOnSettings(
+        provider: ProviderPreference,
+        index: Int = -1
+    ) {
         appSettingsManager.updateProviderSettings {
+            val providersList = it.providers.toMutableList()
+
+            if (index > -1) {
+                providersList[index] = provider
+            } else {
+                providersList.add(provider)
+            }
+
             it.copy(
-                providers = it.providers + listOf(providerPreference)
+                providers = providersList.toList()
             )
         }
     }
@@ -402,15 +429,13 @@ class ProviderManager @Inject constructor(
         providerData: ProviderData,
         unloadOnSettings: Boolean = true
     ) {
-        val provider = providers[providerData.name]
-        val file = context.provideValidProviderPath(providerData)
+        val index = getPositionIndexFromSettings(providerData.name)
+        val providerPreference = appSettingsManager.cachedProviderSettings.providers[index]
 
-        if (provider == null || !file.exists()) {
-            errorLog("Provider [${providerData.name}] not found. Cannot be unloaded")
-            return
-        }
-
-        unloadProvider(provider, file, unloadOnSettings)
+        unloadProvider(
+            providerPreference = providerPreference,
+            unloadOnSettings = unloadOnSettings
+        )
     }
 
     /**
@@ -453,7 +478,10 @@ class ProviderManager @Inject constructor(
             providerApiRepository.remove(provider.name)
             providers.remove(provider.name)
             if (unloadOnSettings) {
-                unloadProviderOnSettings(file.absolutePath)
+                unloadProviderOnSettings(
+                    name = provider.name,
+                    path = file.absolutePath
+                )
             }
             file.delete()
             
@@ -469,51 +497,60 @@ class ProviderManager @Inject constructor(
         }
     }
 
-    private suspend fun unloadProviderOnSettings(path: String) {
+    private suspend fun unloadProviderOnSettings(name: String, path: String) {
         appSettingsManager.updateProviderSettings {
             val newList = it.providers.toMutableList()
             newList.removeIf { providerPref ->
-                providerPref.equals(path)
+                providerPref.filePath == path
+                && providerPref.name == name
             }
 
             it.copy(providers = newList)
         }
     }
-    
-    private suspend fun reloadProviderOnSettings(providerPreference: ProviderPreference) {
-        appSettingsManager.updateProviderSettings {
-            val newList = it.providers.toMutableList()
-            val indexOfProviderToReload = newList.indexOfFirst { savedProviderPreference ->
-                providerPreference.name.equals(savedProviderPreference.name, true)
-                && providerPreference.filePath.equals(savedProviderPreference.filePath, true)
-            }
 
-            newList[indexOfProviderToReload] = newList[indexOfProviderToReload].copy(
-                name = providerPreference.name // Need to do this because name changes might occur for some instances.
-            )
+    private suspend fun reloadProviderOnSettings(
+        oldProviderData: ProviderData,
+        newProviderData: ProviderData
+    ) {
+        val oldOrderPosition = getPositionIndexFromSettings(oldProviderData.name)
+        val oldPreference = appSettingsManager.cachedProviderSettings.providers[oldOrderPosition]
 
-            it.copy(providers = newList)
-        }
-    }
-
-    suspend fun reloadProvider(providerData: ProviderData) {
-        if (!providers.containsKey(providerData.name)) throw IllegalArgumentException("No such provider: ${providerData.name}")
-        
-        unloadProvider(
-            providerData = providerData,
-            unloadOnSettings = false
+        val localPrefix = if (oldPreference.filePath.contains(LOCAL_PATH_PREFIX)) LOCAL_PATH_PREFIX else null
+        val newPath = context.provideValidProviderPath(
+            newProviderData,
+            localPrefix = localPrefix
         )
-        loadProvider(
-            providerData = providerData,
-            needsDownload = true
+
+        loadProviderOnSettings(
+            provider = oldPreference.copy(
+                name = newProviderData.name,
+                filePath = newPath.absolutePath
+            ),
+            index = oldOrderPosition
+        )
+    }
+
+    suspend fun reloadProvider(
+        oldProviderData: ProviderData,
+        newProviderData: ProviderData
+    ) {
+        if (!providers.containsKey(oldProviderData.name))
+            throw IllegalArgumentException("No such provider: ${oldProviderData.name}")
+
+        unloadProvider(
+            providerData = oldProviderData,
+            unloadOnSettings = false
         )
 
         reloadProviderOnSettings(
-            providerPreference = ProviderPreference(
-                name = providerData.name,
-                filePath = context.provideValidProviderPath(providerData).absolutePath,
-                isDisabled = false
-            )
+            oldProviderData = oldProviderData,
+            newProviderData = newProviderData
+        )
+
+        loadProvider(
+            providerData = newProviderData,
+            needsDownload = true
         )
     }
 
@@ -557,7 +594,8 @@ class ProviderManager @Inject constructor(
             providerApiRepository.remove(providerData.name)
         } else {
             try {
-                val api = providers[providerData.name]?.getApi(context, client)
+                val api = providers[providerData.name]
+                    ?.getApi(context, client)
 
                 if (api != null) {
                     providerApiRepository.add(
@@ -580,23 +618,27 @@ class ProviderManager @Inject constructor(
         isDisabled: Boolean
     ) {
         appSettingsManager.updateProviderSettings {
-            val listOfSavedProviders = it.providers.toMutableList()
+            withDefaultContext {
+                val listOfSavedProviders = it.providers.toMutableList()
 
-            val indexOfProvider = listOfSavedProviders.indexOfFirst { provider ->
-                provider.name.equals(name, true)
+                val indexOfProvider = listOfSavedProviders.indexOfFirst { provider ->
+                    provider.name.equals(name, true)
+                }
+                val provider = listOfSavedProviders[indexOfProvider]
+
+                listOfSavedProviders[indexOfProvider] = provider.copy(isDisabled = isDisabled)
+
+                it.copy(providers = listOfSavedProviders.toList())
             }
-            val provider = listOfSavedProviders[indexOfProvider]
-
-            listOfSavedProviders[indexOfProvider] = provider.copy(isDisabled = isDisabled)
-
-            it.copy(providers = listOfSavedProviders.toList())
         }
     }
 
-    private fun getProviderPreference(name: String): ProviderPreference? {
-        return appSettingsManager.cachedProviderSettings
-            .providers
-            .find { it.name.equals(name, true) }
+    private suspend fun getPositionIndexFromSettings(name: String): Int {
+        return withDefaultContext {
+            appSettingsManager.cachedProviderSettings
+                .providers
+                .indexOfFirst { it.name.equals(name, true) }
+        }
     }
 
     /**

@@ -20,8 +20,8 @@ import java.util.Collections
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 
 private typealias VersionCode = Long
@@ -180,15 +180,18 @@ class ProviderUpdaterUseCase @Inject constructor(
     }
 
     suspend fun updateProvider(providerName: String): Boolean {
-        val providerData = providerManager.providerDataList.find {
+        val oldProviderData = providerManager.providerDataList.find {
             it.name.equals(providerName, true)
         } ?: throw NoSuchElementException("No such provider data: $providerName")
 
-        val updateInfo = getLatestProviderData(providerName)
+        val newProviderData = getLatestProviderData(providerName)
             ?: return false
 
-        providerManager.reloadProvider(providerData)
-        updatedProvidersMap[providerName] = updateInfo.versionCode
+        providerManager.reloadProvider(
+            oldProviderData,
+            newProviderData
+        )
+        updatedProvidersMap[providerName] = newProviderData.versionCode
         return true
     }
 
