@@ -43,6 +43,10 @@ class ProviderUpdaterUseCase @Inject constructor(
     private var notificationChannelHasBeenInitialized = false
 
     suspend fun checkForUpdates(notify: Boolean) {
+        // Wait for providers to be initialized
+        // To avoid ConcurrentModificationException
+        providerManager.initialization.await()
+
         val appSettingsProvider = appSettingsManager.providerSettings.data.first()
 
         outdatedProviders.clear()

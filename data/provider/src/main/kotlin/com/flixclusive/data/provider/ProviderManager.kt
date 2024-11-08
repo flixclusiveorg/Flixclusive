@@ -31,6 +31,7 @@ import com.flixclusive.provider.Provider
 import com.flixclusive.provider.settings.ProviderSettings
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -58,6 +59,7 @@ class ProviderManager @Inject constructor(
     private val classLoaders: MutableMap<PathClassLoader, Provider> = Collections.synchronizedMap(HashMap())
 
     private var notificationChannelHasBeenInitialized = false
+    val initialization = CompletableDeferred<Unit>()
 
     /**
      * An observable map of provider data
@@ -117,6 +119,8 @@ class ProviderManager @Inject constructor(
 
                 notificationChannelHasBeenInitialized = true
             }
+
+            initialization.complete(Unit)
         }
     }
 
