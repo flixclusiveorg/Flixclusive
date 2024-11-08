@@ -260,13 +260,15 @@ class ProviderManager @Inject constructor(
 
     suspend fun loadProvider(
         providerData: ProviderData,
-        needsDownload: Boolean = false
+        needsDownload: Boolean = false,
+        filePath: String? = null
     ) {
         check(providerData.repositoryUrl != null) {
             "Repository URL must not be null if using this overloaded method."
         }
 
-        val file = context.provideValidProviderPath(providerData)
+        val file = filePath?.let { File(it) } 
+            ?: context.provideValidProviderPath(providerData)
 
         if (needsDownload && !downloadProvider(file, providerData.buildUrl!!)) {
             throw IOException("Something went wrong trying to download the provider.")
@@ -516,7 +518,7 @@ class ProviderManager @Inject constructor(
     private suspend fun reloadProviderOnSettings(
         oldProviderData: ProviderData,
         newProviderData: ProviderData
-    ) {
+    ): ProviderPreference {
         val oldOrderPosition = getPositionIndexFromSettings(oldProviderData.name)
         val oldPreference = appSettingsManager.cachedProviderSettings.providers[oldOrderPosition]
 
@@ -525,14 +527,17 @@ class ProviderManager @Inject constructor(
             newProviderData,
             localPrefix = localPrefix
         )
+        val newPreference = oldPreference.copy(
+            name = newProviderData.name,
+            filePath = newPath.absolutePath
+        )
 
         loadProviderOnSettings(
-            provider = oldPreference.copy(
-                name = newProviderData.name,
-                filePath = newPath.absolutePath
-            ),
+            provider = newPreference,
             index = oldOrderPosition
         )
+        
+        return newPreference
     }
 
     suspend fun reloadProvider(
@@ -547,13 +552,14 @@ class ProviderManager @Inject constructor(
             unloadOnSettings = false
         )
 
-        reloadProviderOnSettings(
+        val newProviderPreference = reloadProviderOnSettings(
             oldProviderData = oldProviderData,
             newProviderData = newProviderData
         )
 
         loadProvider(
             providerData = newProviderData,
+            filePath = newProviderPreference.filePath,
             needsDownload = true
         )
     }
