@@ -27,12 +27,7 @@ jobs:
           java-version: 17
           distribution: adopt
 
-      - name: Build release artifacts
+      - name: Assemble release APK
         uses: gradle/gradle-command-action@v2
         with:
-          arguments: assembleRelease bundleReleaseClassesToCompileJar
-
-      - name: Generate provider stubs
-        run: |
-          chmod +x .github/create_provider_stubs.sh
-          .github/create_provider_stubs.sh
+          arguments: :app:assembleRelease
