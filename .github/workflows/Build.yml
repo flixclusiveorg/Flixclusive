@@ -104,6 +104,8 @@ jobs:
     
           git tag -d pre-release || echo "Local tag 'pre-release' does not exist."
           git push origin :refs/tags/pre-release || echo "Remote tag 'pre-release' does not exist."
+          
+          CLEANED_CHANGES=$(echo '${{ steps.changelog.outputs.changes }}' | sed 's/`/`/g')
     
           echo "Creating new pre-release..."
           gh release delete pre-release --yes || echo "Failed to delete last pre-release."
@@ -117,7 +119,7 @@ jobs:
           ### 🐞 Known issues
           - TV focus crashes. Compose TV is bugged af; we wait til the new update.
 
-          ${{ steps.changelog.outputs.changes }}
+          ${CLEANED_CHANGES}
           ---
 
           ### Checksums
@@ -136,6 +138,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release delete ${{ github.ref_name }} --yes || echo "Failed to delete ${{ github.ref_name }} release."
+          
+          CLEANED_CHANGES=$(echo '${{ steps.changelog.outputs.changes }}' | sed 's/`/`/g')
+          
           gh release create ${{ github.ref_name }} \
             --title "${{ github.ref_name }}" \
             --notes "$(cat << EOF
@@ -146,7 +151,7 @@ jobs:
           ### 🐞 Known issues
           - TV focus crashes. Compose TV is bugged af; we wait til the new update.
 
-          ${{ steps.changelog.outputs.changes }}
+          ${CLEANED_CHANGES}
           ---
 
           ### Checksums
@@ -165,14 +170,25 @@ jobs:
     if: "!startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
     steps:
+      - name: Generate access token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_KEY }}
+          owner: flixclusiveorg
+          repositories: |
+            apk-archive
+
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Checkout archives
+      - name: Checkout archive repository
         uses: actions/checkout@v4
         with:
-          ref: "archives"
-          path: "archives"
+          repository: ${{ github.repository_owner }}/apk-archive
+          token: ${{ steps.generate_token.outputs.token }}
+          path: "apk-archive"
 
       - name: Download artifact
         uses: actions/download-artifact@v3
@@ -183,7 +199,7 @@ jobs:
         run: |
           chmod +x .github/parse_version.sh
           version=$(.github/parse_version.sh)
-          archive_dir="$GITHUB_WORKSPACE/archives/$version"
+          archive_dir="$GITHUB_WORKSPACE/apk-archive/$version"
           mkdir -p "$archive_dir"
           cp flixclusive-release.apk "$archive_dir/PR-${{ needs.build.outputs.short_sha }} $(date +'%Y-%m-%d %H:%M:%S').apk"
           cd $GITHUB_WORKSPACE/archives
