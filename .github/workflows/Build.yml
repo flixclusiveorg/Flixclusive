@@ -2,8 +2,10 @@ name: APK Release CI
 
 on:
   push:
-    tags: ['[0-9]+.[0-9]+.[0-9]+']
-    branches: [master]
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'  # Stable release tags (e.g., 1.2.3)
+      - 'PR-[a-f0-9]{7}'        # Pre-release tags with 7-char commit SHA (e.g., PR-abc1234)
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -65,6 +67,7 @@ jobs:
   release:
     name: Create Release
     needs: build
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -79,7 +82,6 @@ jobs:
 
       - name: Get previous tag
         id: previousTag
-        if: startsWith(github.ref, 'refs/tags/')
         run: |
           name=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
           echo "previousTag: $name"
@@ -91,12 +93,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fromTag: ${{ github.ref_name }}
-          toTag: ${{ startsWith(github.ref, 'refs/tags/') && env.previousTag || 'pre-release' }}
-          excludeTypes: ${{ startsWith(github.ref, 'refs/tags/') && 'build,docs,other,style' || '' }}
+          toTag: ${{ env.previousTag || 'HEAD' }}
+          excludeTypes: ${{ !startsWith(github.ref, 'refs/tags/PR-') && 'build,docs,other,style' || '' }}
           writeToFile: false
 
       - name: Manage pre-release
-        if: "!startsWith(github.ref, 'refs/tags/')"
+        if: startsWith(github.ref, 'refs/tags/PR-')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -110,7 +112,7 @@ jobs:
           echo "Creating new pre-release..."
           gh release delete pre-release --yes || echo "Failed to delete last pre-release."
           gh release create pre-release \
-            --title "PR-${{ needs.build.outputs.short_sha }}" \
+            --title "${{ github.ref_name }}" \
             --notes "$(cat << EOF
           ##### _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
 
@@ -133,7 +135,7 @@ jobs:
             flixclusive-release.apk
 
       - name: Manage stable release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: "!startsWith(github.ref, 'refs/tags/PR-')"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -164,10 +166,11 @@ jobs:
             flixclusive-release.apk
 
 
+
   archive:
     name: Archive APK
     needs: [build, release]
-    if: "!startsWith(github.ref, 'refs/tags/')"
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - name: Generate access token
@@ -176,7 +179,7 @@ jobs:
         with:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.APP_KEY }}
-          owner: flixclusiveorg
+          owner: ${{ github.repository_owner }}
           repositories: |
             apk-archive
 
@@ -202,7 +205,7 @@ jobs:
           archive_dir="$GITHUB_WORKSPACE/apk-archive/$version"
           mkdir -p "$archive_dir"
           cp flixclusive-release.apk "$archive_dir/PR-${{ needs.build.outputs.short_sha }} $(date +'%Y-%m-%d %H:%M:%S').apk"
-          cd $GITHUB_WORKSPACE/archives
+          cd $GITHUB_WORKSPACE/apk-archive
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
