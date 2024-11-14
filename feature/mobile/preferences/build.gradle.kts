@@ -10,10 +10,13 @@ android {
 }
 
 dependencies {
+    implementation(projects.data.user)
     implementation(projects.core.ui.mobile)
 
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
+    implementation(libs.compose.ui.tooling)
+    implementation(libs.compose.ui.tooling.preview)
 }

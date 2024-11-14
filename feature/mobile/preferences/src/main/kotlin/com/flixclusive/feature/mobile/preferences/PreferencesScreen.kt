@@ -23,8 +23,10 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.preferences.component.PreferencesItem
 import com.flixclusive.feature.mobile.preferences.component.ShareHeader
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
+
+internal val UserScreenHorizontalPadding = 16.dp
 
 @Destination
 @Composable
