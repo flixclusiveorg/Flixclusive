@@ -100,7 +100,10 @@
     <string name="add_provider">Add provider</string>
     <string name="add_sync_offset_message">Add if subs are delayed.</string>
     <string name="add_to_watchlist">Add to Watchlist</string>
+    <string name="advanced">Advanced</string>
     <string name="allow">Allow</string>
+    <string name="appearance">Appearance</string>
+    <string name="application">APPLICATION</string>
     <string name="asserting">Asserting…</string>
     <string name="audio">Audio</string>
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
@@ -127,6 +130,7 @@
     <string name="continue_watching">Continue Watching</string>
     <string name="copy_link">Copy link</string>
     <string name="currently_testing">Currently Testing</string>
+    <string name="data_and_backup">Data and backup</string>
     <string name="debug">DEBUG</string>
     <string name="decoder_device_only">Device decoders</string>
     <string name="decoder_prefer_app">FFMPEG decoders</string>
@@ -141,6 +145,7 @@
     <string name="episodes">Episodes</string>
     <string name="exit">Exit</string>
     <string name="export_label">Export</string>
+    <string name="feature_request">Feature request</string>
     <string name="film_card_titles">Film card titles</string>
     <string name="film_filter">Film Type</string>
     <string name="first_time_providers_screen_title">Welcome to the Providers Screen!</string>
@@ -149,8 +154,10 @@
     <string name="gender_male">Male</string>
     <string name="gender_non_binary">Non-binary</string>
     <string name="gender_none">Not specified</string>
+    <string name="general">General</string>
     <string name="genres">Genres</string>
     <string name="get_search_results_from">Get search results from:</string>
+    <string name="github">GITHUB</string>
     <string name="github_repository">Github Repository</string>
     <string name="heads_up">Heads up!</string>
     <string name="help">Help</string>
@@ -186,6 +193,7 @@
     <string name="pip_mode">PiP mode</string>
     <string name="play">Play</string>
     <string name="playback_speed">Playback speed</string>
+    <string name="player">Player</string>
     <string name="popular">Popular</string>
     <string name="pre_release">PRE-RELEASE</string>
     <string name="preferred_audio_language">Preferred audio language</string>

@@ -15,14 +15,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.feature.mobile.preferences.util.UiUtil.getMediumEmphasizedLabel
+
+internal val NavigationButtonHeight = 50.dp
 
 @Composable
-internal fun PreferencesItem(
+internal fun SettingsNavigationButton(
     @DrawableRes iconId: Int,
     @StringRes labelId: Int,
     onClick: () -> Unit,
@@ -30,14 +33,14 @@ internal fun PreferencesItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(55.dp)
+            .height(NavigationButtonHeight)
+            .clip(MaterialTheme.shapes.extraSmall)
             .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .width(35.dp)
-                .padding(start = 15.dp),
+                .width(35.dp),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -48,12 +51,9 @@ internal fun PreferencesItem(
 
         Text(
             text = stringResource(id = labelId),
-            style = MaterialTheme.typography.titleSmall.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp
-            ),
+            style = getMediumEmphasizedLabel(size = 16.sp),
             modifier = Modifier
-                .padding(start = 12.dp)
+                .padding(start = 13.dp)
         )
     }
 }
