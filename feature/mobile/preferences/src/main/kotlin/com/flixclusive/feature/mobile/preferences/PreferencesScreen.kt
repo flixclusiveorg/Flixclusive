@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.PreferencesScreenNavigator
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.feature.mobile.preferences.component.AppVersionFooter
 import com.flixclusive.feature.mobile.preferences.component.SettingsNavigationButton
 import com.flixclusive.feature.mobile.preferences.user.UserProfilePicture
 import com.flixclusive.feature.mobile.preferences.util.UiUtil.getEmphasizedLabel
@@ -165,6 +166,15 @@ internal fun PreferencesScreen(
                     .padding(vertical = 15.dp),
                 thickness = 1.dp,
                 color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.2F)
+            )
+        }
+
+        item {
+            AppVersionFooter(
+                versionName = "1.0.0",
+                commitVersion = "a1e62eq",
+                isInDebugMode = false,
+                isOnPreRelease = false
             )
         }
     }
