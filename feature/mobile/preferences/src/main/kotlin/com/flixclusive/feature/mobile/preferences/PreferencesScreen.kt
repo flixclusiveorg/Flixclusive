@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.preferences
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,17 +18,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
+import androidx.palette.graphics.Palette
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.PreferencesScreenNavigator
+import com.flixclusive.core.ui.common.user.getAvatarResource
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.preferences.component.AppVersionFooter
 import com.flixclusive.feature.mobile.preferences.component.SettingsNavigationButton
-import com.flixclusive.feature.mobile.preferences.user.UserProfilePicture
+import com.flixclusive.feature.mobile.preferences.user.AvatarBlock
 import com.flixclusive.feature.mobile.preferences.util.UiUtil.getEmphasizedLabel
 import com.flixclusive.model.database.User
 import com.ramcosta.composedestinations.annotation.Destination
@@ -95,8 +103,40 @@ internal fun PreferencesScreen(
         )
     }
 
+    val context = LocalContext.current
+    val currentUser = remember { User(image = 1) }
+
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val avatarId = remember(currentUser.image) {
+        context.getAvatarResource(currentUser.image)
+    }
+
+    val backgroundColor = remember {
+        val drawable = ContextCompat.getDrawable(context, avatarId)!!
+        val palette = Palette
+            .from(drawable.toBitmap())
+            .generate()
+
+        val swatch = palette.let {
+            it.vibrantSwatch
+            ?: it.lightVibrantSwatch
+            ?: it.lightMutedSwatch
+        }
+
+        val color = swatch?.rgb?.let { Color(it) }
+            ?: primaryColor
+
+        Brush.verticalGradient(
+            0F to color.copy(0.3F),
+            0.4F to surfaceColor
+        )
+    }
+
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor),
         contentPadding = PaddingValues(horizontal = UserScreenHorizontalPadding),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -118,8 +158,8 @@ internal fun PreferencesScreen(
         }
 
         item {
-            UserProfilePicture(
-                currentUser = User(),
+            AvatarBlock(
+                currentUser = currentUser,
                 onChangeUser = { /*TODO*/ },
                 modifier = Modifier
                     .padding(bottom = 20.dp)

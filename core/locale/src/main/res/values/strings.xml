@@ -260,6 +260,7 @@
     <string name="unsafe_and_untrusted">Unsafe and Untrusted</string>
     <string name="update_info">Update information</string>
     <string name="update_label">Update</string>
+    <string name="user_avatar">User avatar</string>
     <string name="version">Version</string>
     <string name="video_buffer_max_length">Maximum time to buffer</string>
     <string name="video_buffer_size">Player\'s buffer size</string>

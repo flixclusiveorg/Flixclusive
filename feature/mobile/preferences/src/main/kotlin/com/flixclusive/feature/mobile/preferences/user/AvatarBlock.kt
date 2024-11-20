@@ -1,19 +1,14 @@
 package com.flixclusive.feature.mobile.preferences.user
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -22,13 +17,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.feature.mobile.preferences.util.UiUtil.getEmphasizedLabel
 import com.flixclusive.model.database.User
 
-private val ProfilePictureSize = 100.dp
-
 @Composable
-internal fun UserProfilePicture(
+internal fun AvatarBlock(
     modifier: Modifier = Modifier,
     currentUser: User,
     onChangeUser: () -> Unit,
@@ -39,7 +33,7 @@ internal fun UserProfilePicture(
         modifier = modifier
             .statusBarsPadding()
     ) {
-        ProfilePicture(user = currentUser)
+        UserAvatar(user = currentUser)
 
         Box(
             modifier = Modifier
@@ -58,30 +52,6 @@ internal fun UserProfilePicture(
 
 }
 
-@Composable
-private fun ProfilePicture(
-    modifier: Modifier = Modifier,
-    user: User
-) {
-    val userImage = remember(user.image) {
-        // TODO: Get proper profile image
-        -1
-    }
-
-    Box(modifier = modifier) {
-        Box(
-            modifier = Modifier
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-                    shape = MaterialTheme.shapes.small
-                )
-                .size(ProfilePictureSize)
-        ) {
-            // TODO: Display user image
-        }
-    }
-}
-
 @Preview
 @Composable
 private fun UsersPagerPreview() {
@@ -92,7 +62,7 @@ private fun UsersPagerPreview() {
                 .fillMaxWidth()
         ) {
             Box(contentAlignment = Alignment.Center) {
-                UserProfilePicture(
+                AvatarBlock(
                     currentUser = User(name = "John Doe"),
                     onChangeUser = {}
                 )
