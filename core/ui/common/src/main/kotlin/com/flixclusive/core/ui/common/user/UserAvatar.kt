@@ -45,13 +45,13 @@ fun UserAvatar(
     user: User
 ) {
     val context = LocalContext.current
-    val avatarId = remember {
+    val avatarId = remember(user.image) {
         context.getAvatarResource(user.image)
     }
 
     val shape = MaterialTheme.shapes.small
     val primaryColor = MaterialTheme.colorScheme.primary
-    val borderColor = remember {
+    val borderColor = remember(avatarId) {
         val drawable = ContextCompat.getDrawable(context, avatarId)!!
 
         val palette = Palette

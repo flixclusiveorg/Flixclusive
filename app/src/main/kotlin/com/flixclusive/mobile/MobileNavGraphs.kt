@@ -2,12 +2,11 @@ package com.flixclusive.mobile
 
 import com.flixclusive.ROOT
 import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
-import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.destinations.HomeScreenDestination
+import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
-import com.flixclusive.feature.mobile.preferences.destinations.PreferencesScreenDestination
 import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
@@ -18,6 +17,7 @@ import com.flixclusive.feature.mobile.repository.search.destinations.RepositoryS
 import com.flixclusive.feature.mobile.search.destinations.SearchScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
+import com.flixclusive.feature.mobile.settings.destinations.PreferencesScreenDestination
 import com.flixclusive.feature.mobile.settings.destinations.SettingsScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination

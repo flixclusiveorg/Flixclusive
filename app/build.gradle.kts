@@ -74,7 +74,6 @@ dependencies {
     implementation(projects.feature.mobile.genre)
     implementation(projects.feature.mobile.home)
     implementation(projects.feature.mobile.player)
-    implementation(projects.feature.mobile.preferences)
     implementation(projects.feature.mobile.providerInfo)
     implementation(projects.feature.mobile.providerList)
     implementation(projects.feature.mobile.providerSettings)
