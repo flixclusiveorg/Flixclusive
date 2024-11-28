@@ -69,7 +69,9 @@ internal fun EpisodeCard(
         val episodeProgress = watchHistoryItem
             .episodesWatched
             .find {
-                it.episodeId == data.id
+                it.episodeId == data.id &&
+                it.seasonNumber == data.season &&
+                it.episodeNumber == data.number
             }
 
         when {
