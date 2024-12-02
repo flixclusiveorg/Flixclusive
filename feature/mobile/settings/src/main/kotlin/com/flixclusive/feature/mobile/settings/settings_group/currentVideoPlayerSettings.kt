@@ -16,8 +16,8 @@ import com.flixclusive.feature.mobile.settings.KEY_PLAYER_QUALITY_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_RESIZE_MODE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG
 import com.flixclusive.feature.mobile.settings.SettingsItem
-import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
-import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberAppSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberLocalAppSettings
 import com.flixclusive.model.datastore.player.ResizeMode
 import java.util.Locale
 import com.flixclusive.core.locale.R as LocaleR

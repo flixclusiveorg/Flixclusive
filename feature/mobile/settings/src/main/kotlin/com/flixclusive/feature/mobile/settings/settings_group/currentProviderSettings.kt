@@ -7,8 +7,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import com.flixclusive.feature.mobile.settings.SettingsItem
-import com.flixclusive.feature.mobile.settings.util.ProviderSettingsHelper.rememberAppSettingsProviderChanger
-import com.flixclusive.feature.mobile.settings.util.ProviderSettingsHelper.rememberLocalAppSettingsProvider
 import com.flixclusive.core.locale.R as LocaleR
 
 @Composable

@@ -2,6 +2,7 @@
 plugins {
     alias(libs.plugins.flixclusive.library)
     alias(libs.plugins.flixclusive.hilt)
+    alias(libs.plugins.flixclusive.testing)
 }
 
 android {

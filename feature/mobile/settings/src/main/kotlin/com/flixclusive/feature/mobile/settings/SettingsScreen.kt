@@ -12,7 +12,11 @@ import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
@@ -21,17 +25,36 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.palette.graphics.Palette
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.user.getAvatarResource
 import com.flixclusive.feature.mobile.settings.screen.general.GeneralSettingsScreen
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_AUDIO_LANGUAGE_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_DECODER_PRIORITY_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_DOH_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_BUFFER_LENGTH_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_BUFFER_SIZE_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_DISK_CACHE_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_QUALITY_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_RESIZE_MODE_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PREFERRED_SERVER_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SEARCH_HISTORY_NOTICE_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_BACKGROUND_COLOR_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_COLOR_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_EDGE_TYPE_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_FONT_STYLE_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_LANGUAGE_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_SIZE_DIALOG
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalDialogKeyMap
 import com.flixclusive.model.database.User
 
 @SuppressLint("UnusedContentLambdaTargetStateParameter")
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 internal fun SettingsScreen() {
-    val currentUser = remember { User() }
+    val viewModel = hiltViewModel<SettingsViewModel>()
 
     val navigator = rememberListDetailPaneScaffoldNavigator<ListItem>()
     val isListAndDetailVisible =
@@ -39,6 +62,8 @@ internal fun SettingsScreen() {
         && navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
 
     val backgroundBrush = getAdaptiveBackground(currentUser)
+
+    val dialogKeyMap = rememberSaveable { getDialogKeys() }
 
     BackHandler(navigator.canNavigateBack()) {
         navigator.navigateBack()
@@ -76,20 +101,24 @@ internal fun SettingsScreen() {
                     navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
 
                 AnimatedPane {
-                    DetailsScaffold(
-                        isListAndDetailVisible = isListAndDetailVisible,
-                        isDetailsVisible = !isListVisible,
-                        navigateBack = {
-                            if (navigator.canNavigateBack()) {
-                                navigator.navigateBack()
+                    CompositionLocalProvider(
+                        LocalDialogKeyMap provides dialogKeyMap
+                    ) {
+                        DetailsScaffold(
+                            isListAndDetailVisible = isListAndDetailVisible,
+                            isDetailsVisible = !isListVisible,
+                            navigateBack = {
+                                if (navigator.canNavigateBack()) {
+                                    navigator.navigateBack()
+                                }
+                            },
+                            content = {
+                                navigator.currentDestination?.content?.let { item ->
+                                    NavigatedScreen(listItem = item)
+                                }
                             }
-                        },
-                        content = {
-                            navigator.currentDestination?.content?.let { item ->
-                                NavigatedScreen(listItem = item)
-                            }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         )
@@ -144,6 +173,28 @@ private fun NavigatedScreen(
         ListItem.FEATURE_REQUEST -> TODO()
         ListItem.REPOSITORY -> TODO()
     }
+}
+
+private fun getDialogKeys(): SnapshotStateMap<String, Boolean> {
+    return mutableStateMapOf(
+        KEY_PREFERRED_SERVER_DIALOG to false,
+        KEY_SUBTITLE_LANGUAGE_DIALOG to false,
+        KEY_SUBTITLE_COLOR_DIALOG to false,
+        KEY_SUBTITLE_SIZE_DIALOG to false,
+        KEY_SUBTITLE_FONT_STYLE_DIALOG to false,
+        KEY_SUBTITLE_BACKGROUND_COLOR_DIALOG to false,
+        KEY_SUBTITLE_EDGE_TYPE_DIALOG to false,
+        KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG to false,
+        KEY_PLAYER_QUALITY_DIALOG to false,
+        KEY_PLAYER_RESIZE_MODE_DIALOG to false,
+        KEY_DOH_DIALOG to false,
+        KEY_PLAYER_DISK_CACHE_DIALOG to false,
+        KEY_PLAYER_BUFFER_SIZE_DIALOG to false,
+        KEY_PLAYER_BUFFER_LENGTH_DIALOG to false,
+        KEY_SEARCH_HISTORY_NOTICE_DIALOG to false,
+        KEY_AUDIO_LANGUAGE_DIALOG to false,
+        KEY_DECODER_PRIORITY_DIALOG to false,
+    )
 }
 
 @Preview(device = "spec:width=1280dp,height=800dp,dpi=240")

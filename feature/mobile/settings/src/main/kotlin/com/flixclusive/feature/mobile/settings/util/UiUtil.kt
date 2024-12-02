@@ -3,6 +3,7 @@ package com.flixclusive.feature.mobile.settings.util
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
@@ -36,4 +37,8 @@ internal object UiUtil {
             color = LocalContentColor.current.onMediumEmphasis(),
             fontSize = size
         )
+
+    fun SnapshotStateMap<String, Boolean>.toggle(key: String) {
+        this[key] = !this[key]!!
+    }
 }

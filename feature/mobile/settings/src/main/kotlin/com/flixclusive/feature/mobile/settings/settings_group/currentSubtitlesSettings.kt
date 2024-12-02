@@ -23,9 +23,9 @@ import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_LANGUAGE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_SUBTITLE_SIZE_DIALOG
 import com.flixclusive.feature.mobile.settings.SettingsItem
 import com.flixclusive.feature.mobile.settings.component.dialog.subtitles.BorderedText
-import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberAppSettingsChanger
-import com.flixclusive.feature.mobile.settings.util.AppSettingsHelper.rememberLocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.ColorPickerHelper
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberAppSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberLocalAppSettings
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionStylePreference
 import java.util.Locale

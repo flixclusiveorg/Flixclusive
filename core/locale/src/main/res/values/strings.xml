@@ -348,6 +348,7 @@
     <string name="providers_updated_format">The following provider(s) have been updated: %1$s</string>
 
     <!--  Content descriptions  -->
+    <string name="general_settings_content_desc">This contains all the general settings that are not related any of the specified groups on the settings navigation.</string>
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>
     <string name="add_500ms_content_description">Add 500ms on subtitle delay</string>
     <string name="add_to_watchlist_button">Add to watchlist button</string>
