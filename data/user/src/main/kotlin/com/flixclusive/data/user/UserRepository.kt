@@ -4,13 +4,13 @@ import com.flixclusive.model.database.User
 import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
-    fun getAllUsers(): Flow<List<User>>
+    fun observeUsers(): Flow<List<User>>
 
-    suspend fun getUserById(id: Int): User?
+    fun observeUser(id: Int): Flow<User?>
 
-    fun getUserByIdFlow(id: Int): Flow<User?>
+    suspend fun addUser(user: User)
 
-    suspend fun insert(user: User)
+    suspend fun deleteUser(id: Int)
 
-    suspend fun deleteById(id: Int)
+    suspend fun getUser(id: Int): User?
 }

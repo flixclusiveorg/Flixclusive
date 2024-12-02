@@ -9,23 +9,23 @@ import javax.inject.Inject
 internal class DefaultUserRepository @Inject constructor(
     private val userDao: UserDao
 ) : UserRepository {
-    override fun getAllUsers(): Flow<List<User>> = userDao.getAllItemsInFlow()
+    override fun observeUsers(): Flow<List<User>> = userDao.getAllItemsInFlow()
 
-    override suspend fun getUserById(id: Int): User? {
+    override suspend fun getUser(id: Int): User? {
         return withIOContext {
             userDao.getUserById(id)
         }
     }
 
-    override fun getUserByIdFlow(id: Int): Flow<User?> = userDao.getUserByIdInFlow(id)
+    override fun observeUser(id: Int): Flow<User?> = userDao.getUserByIdInFlow(id)
 
-    override suspend fun insert(user: User) {
+    override suspend fun addUser(user: User) {
         withIOContext {
             userDao.insert(user)
         }
     }
 
-    override suspend fun deleteById(id: Int) {
+    override suspend fun deleteUser(id: Int) {
         withIOContext {
             userDao.deleteById(id)
         }
