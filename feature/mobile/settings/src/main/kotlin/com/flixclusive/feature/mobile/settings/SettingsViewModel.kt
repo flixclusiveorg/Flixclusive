@@ -20,8 +20,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class SettingsViewModel @Inject constructor(
+    val userSessionManager: UserSessionManager,
     private val userRepository: UserRepository,
-    private val userSessionManager: UserSessionManager,
     private val appSettingsManager: AppSettingsManager,
     private val searchHistoryRepository: SearchHistoryRepository,
     private val getMediaLinksUseCase: GetMediaLinksUseCase

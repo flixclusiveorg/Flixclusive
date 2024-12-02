@@ -1,6 +1,8 @@
 package com.flixclusive.feature.mobile.settings.screen.general
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import com.flixclusive.feature.mobile.settings.SettingsItem
 import com.flixclusive.feature.mobile.settings.component.BaseSubScreen
@@ -12,8 +14,7 @@ import com.flixclusive.core.locale.R as LocaleR
 @Composable
 internal fun GeneralSettingsScreen(
     searchHistoryCount: Int,
-    onClearSearchHistory: () -> Unit,
-    onUsePrereleaseUpdatesChange: (Boolean) -> Unit
+    onClearSearchHistory: () -> Unit
 ) {
     val dialogKeyMap = LocalDialogKeyMap.current
     val onItemClick = fun (item: SettingsItem) {
@@ -23,6 +24,8 @@ internal fun GeneralSettingsScreen(
         }
     }
 
+    val usePreReleaseUpdates = rememberSaveable { mutableStateOf(false) }
+
     BaseSubScreen(
         title = stringResource(LocaleR.string.general),
         description = stringResource(LocaleR.string.general_settings_content_desc)
@@ -31,7 +34,9 @@ internal fun GeneralSettingsScreen(
             SettingsGroup(
                 items = currentGeneralSettings(
                     searchHistoryCount = searchHistoryCount,
-                    onUsePrereleaseUpdatesChange = onUsePrereleaseUpdatesChange
+                    onUsePrereleaseUpdatesChange = {
+                        usePreReleaseUpdates.value = !usePreReleaseUpdates.value
+                    }
                 ),
                 onItemClick = onItemClick
             )
@@ -39,6 +44,7 @@ internal fun GeneralSettingsScreen(
     }
 
     GeneralDialogWrapper(
-        onClearSearchHistory = onClearSearchHistory
+        onClearSearchHistory = onClearSearchHistory,
+        usePreReleaseUpdates = usePreReleaseUpdates
     )
 }
