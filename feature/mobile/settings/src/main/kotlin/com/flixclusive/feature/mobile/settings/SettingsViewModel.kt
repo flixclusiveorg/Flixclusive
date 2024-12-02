@@ -8,6 +8,7 @@ import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
+import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.AppSettingsProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class SettingsViewModel @Inject constructor(
     private val userRepository: UserRepository,
+    private val userSessionManager: UserSessionManager,
     private val appSettingsManager: AppSettingsManager,
     private val searchHistoryRepository: SearchHistoryRepository,
     private val getMediaLinksUseCase: GetMediaLinksUseCase

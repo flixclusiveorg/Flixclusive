@@ -3,6 +3,7 @@ package com.flixclusive.core.datastore.di
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
+import com.flixclusive.core.datastore.DefaultUserSessionDataStore
 import com.flixclusive.core.datastore.serializer.AppSettingsProviderSerializer
 import com.flixclusive.core.datastore.serializer.AppSettingsSerializer
 import com.flixclusive.core.datastore.serializer.OnBoardingPreferencesSerializer
@@ -41,4 +42,10 @@ internal object DataStoreModule {
     fun providesOnBoardingPreferencesDataStore(
         @ApplicationContext context: Context,
     ): DataStore<OnBoardingPreferences> = context.onBoardingPreferences
+
+    @Provides
+    @Singleton
+    fun providesUserSessionDataStore(
+        @ApplicationContext context: Context
+    ) = DefaultUserSessionDataStore(context)
 }

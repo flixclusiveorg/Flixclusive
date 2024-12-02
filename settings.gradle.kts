@@ -70,6 +70,7 @@ include(":domain:provider")
 include(":domain:search")
 include(":domain:tmdb")
 include(":domain:updater")
+include(":domain:user")
 
 include(":data:configuration")
 include(":data:network")

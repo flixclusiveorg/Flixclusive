@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.data.searchHistory)
     implementation(projects.data.user)
     implementation(projects.domain.provider)
+    implementation(projects.domain.user)
 
     implementation(libs.compose.adaptive)
     implementation(libs.compose.adaptive.layout)

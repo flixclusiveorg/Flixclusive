@@ -55,6 +55,7 @@
             <option value="$PROJECT_DIR$/domain/search" />
             <option value="$PROJECT_DIR$/domain/tmdb" />
             <option value="$PROJECT_DIR$/domain/updater" />
+            <option value="$PROJECT_DIR$/domain/user" />
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/mobile" />
             <option value="$PROJECT_DIR$/feature/mobile/about" />
