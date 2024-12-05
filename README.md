@@ -26,9 +26,9 @@
 </div>
 
 ## Preview
-<img src="./docs/images/homepage.jpg" alt="Homepage" width="48"> <label>Homepage</label>
-<img src="./docs/images/movie.jpg" alt="Movie" width="48"> <label>Movie</label>
-<img src="./docs/images/search.jpg" alt="Search" width="48"> <label>Search</label>
+<img src="./docs/images/homepage.jpg" alt="Homepage" width="200"><br><label>Homepage</label><br>
+<img src="./docs/images/movie.jpg" alt="Movie" width="200"><br><label>Movie</label><br>
+<img src="./docs/images/search.jpg" alt="Search" width="200"><br><label>Search</label><br>
 
 ## Disclaimer
 The app **DOES NOT** host and contain movies and tv shows streaming links!
