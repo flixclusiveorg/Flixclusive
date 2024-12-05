@@ -65,9 +65,9 @@
     </thead>
     <tbody>
         <tr>
-            <td><img  src="./docs/images/homepage.jpg"  alt="Homepage"  width="200"></td>
-            <td><img  src="./docs/images/movie.jpg"  alt="Movie"  width="200"></td>
-            <td><img  src="./docs/images/search.jpg"  alt="Search"  width="200"></td>
+            <td><img  src="./docs/images/homepage.jpg"  alt="Homepage"  width="33%"></td>
+            <td><img  src="./docs/images/movie.jpg"  alt="Movie"  width="33%"></td>
+            <td><img  src="./docs/images/search.jpg"  alt="Search"  width="33%"></td>
         </tr>
     </tbody>
 </table>
