@@ -2,23 +2,33 @@ package com.flixclusive.domain.user
 
 import com.flixclusive.model.database.User
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
-class UserSessionManagerTest {
+class DefaultUserSessionManagerTest {
     private lateinit var userSessionManager: UserSessionManager
+    private lateinit var fakeUserRepository: FakeUserRepository
+    private lateinit var fakeUserSessionDataStore: FakeUserSessionDataStore
 
     @Before
     fun setup() {
-        userSessionManager = FakeUserSessionManager(
+        fakeUserRepository = FakeUserRepository(
             users = listOf(
                 User(id = 1, name = "Test User"),
                 User(id = 2, name = "Another User")
             ),
-            dataStore = FakeUserSessionDataStore()
+            dispatcher = UnconfinedTestDispatcher()
+        )
+
+        fakeUserSessionDataStore = FakeUserSessionDataStore()
+
+        userSessionManager = DefaultUserSessionManager(
+            userRepository = fakeUserRepository,
+            dataStoreManager = fakeUserSessionDataStore
         )
     }
 

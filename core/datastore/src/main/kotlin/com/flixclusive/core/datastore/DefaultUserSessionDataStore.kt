@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 
 private const val USER_SESSION_FILE_NAME = "user_session"
 
-class DefaultUserSessionDataStore(
+internal class DefaultUserSessionDataStore(
     private val context: Context
 ) : UserSessionDataStore {
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = USER_SESSION_FILE_NAME)

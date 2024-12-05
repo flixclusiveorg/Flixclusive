@@ -5,7 +5,7 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class FakeUserSessionDataStore : UserSessionDataStore {
+internal class FakeUserSessionDataStore : UserSessionDataStore {
     private val preferences = mutableMapOf<String, Int?>()
 
     override val currentUserId: Flow<Int?> = flow {

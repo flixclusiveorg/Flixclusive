@@ -1,6 +1,6 @@
 package com.flixclusive.domain.user
 
-import com.flixclusive.core.datastore.DefaultUserSessionDataStore
+import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.model.database.User
@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 class DefaultUserSessionManager @Inject constructor(
     private val userRepository: UserRepository,
-    private val dataStoreManager: DefaultUserSessionDataStore
+    private val dataStoreManager: UserSessionDataStore
 ) : UserSessionManager {
     private val _currentUser = MutableStateFlow<User?>(null)
     override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
