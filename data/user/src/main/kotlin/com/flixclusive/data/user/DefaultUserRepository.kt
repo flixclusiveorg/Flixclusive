@@ -1,33 +1,25 @@
 package com.flixclusive.data.user
 
-import com.flixclusive.core.database.dao.UserDao
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
+import com.flixclusive.data.user.local.UserDataSource
 import com.flixclusive.model.database.User
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 internal class DefaultUserRepository @Inject constructor(
-    private val userDao: UserDao
+    private val dataSource: UserDataSource
 ) : UserRepository {
-    override fun observeUsers(): Flow<List<User>> = userDao.getAllItemsInFlow()
+    override fun observeUsers(): Flow<List<User>>
+        = dataSource.observeUsers()
 
-    override suspend fun getUser(id: Int): User? {
-        return withIOContext {
-            userDao.getUserById(id)
-        }
-    }
+    override suspend fun getUser(id: Int)
+        = dataSource.getUser(id)
 
-    override fun observeUser(id: Int): Flow<User?> = userDao.getUserByIdInFlow(id)
+    override fun observeUser(id: Int): Flow<User?>
+        = dataSource.observeUser(id)
 
-    override suspend fun addUser(user: User) {
-        withIOContext {
-            userDao.insert(user)
-        }
-    }
+    override suspend fun addUser(user: User)
+        = dataSource.addUser(user)
 
-    override suspend fun deleteUser(id: Int) {
-        withIOContext {
-            userDao.deleteById(id)
-        }
-    }
+    override suspend fun deleteUser(id: Int)
+        = dataSource.deleteUser(id)
 }
