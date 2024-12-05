@@ -20,7 +20,7 @@ import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
-internal fun currentGeneralSettings(
+internal fun generalItems(
     searchHistoryCount: Int,
     onUsePrereleaseUpdatesChange: (Boolean) -> Unit
 ): List<SettingsItem> {

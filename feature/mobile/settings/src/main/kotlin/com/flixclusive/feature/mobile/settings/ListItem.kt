@@ -1,5 +1,7 @@
 package com.flixclusive.feature.mobile.settings
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -46,4 +48,15 @@ enum class ListItem(
         iconId = UiCommonR.drawable.github_outline,
         labelId = LocaleR.string.repository
     )
+}
+
+/**
+ * Tachiyomi/Mihon reference
+ * */
+interface SettingsCategory {
+    @Composable
+    @ReadOnlyComposable
+    fun getTitle(): String
+
+    fun getTweaks(): List<ListItem>
 }

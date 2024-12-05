@@ -36,6 +36,7 @@ hiltNavigation = "1.2.0"
 jsoup = "1.16.1"
 junit = "4.13.2"
 kotlin = "1.9.10"
+kotlinxImmutables = "0.3.8"
 ksp = "1.9.10-1.0.13"
 lifecycleRuntime = "2.8.3"
 localbroadcastmanager = "1.1.0"
@@ -115,6 +116,9 @@ jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 
 # Gson
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
+# Immutables
+kotlinx-immutables = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxImmutables" }
 
 # Data Store
 dataStore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "androidxDataStore" }

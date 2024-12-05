@@ -19,10 +19,10 @@ import com.flixclusive.feature.mobile.settings.KEY_PLAYER_RESIZE_MODE_DIALOG
 import com.flixclusive.feature.mobile.settings.KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG
 import com.flixclusive.feature.mobile.settings.component.dialog.CommonSettingsDialog
 import com.flixclusive.feature.mobile.settings.component.dialog.LanguageDialog
-import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.availableSeekIncrementMs
-import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.playerBufferLengths
-import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.playerBufferSizes
-import com.flixclusive.feature.mobile.settings.component.dialog.player.Constant.playerCacheSizes
+import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.availableSeekIncrementMs
+import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.playerBufferLengths
+import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.playerBufferSizes
+import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.playerCacheSizes
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberAppSettingsChanger
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberLocalAppSettings
 import com.flixclusive.model.datastore.DEFAULT_PLAYER_BUFFER_AMOUNT

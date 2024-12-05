@@ -207,7 +207,7 @@
     <string name="rating">Rating</string>
     <string name="re_test">Re-test</string>
     <string name="release">RELEASE</string>
-    <string name="release_player">Release player on app minimize</string>
+    <string name="release_player">Release player on memory</string>
     <string name="remove">Remove</string>
     <string name="remove_from_watchlist">Remove from Watchlist</string>
     <string name="remove_repositories">Remove repositories</string>
@@ -215,6 +215,9 @@
     <string name="reset">Reset</string>
     <string name="reset_settings">Reset settings</string>
     <string name="resize_mode">Resize mode</string>
+    <string name="resize_mode_center_crop">Center crop</string>
+    <string name="resize_mode_fit">Fit</string>
+    <string name="resize_mode_stretch">Stretch</string>
     <string name="restart">Restart</string>
     <string name="resume">Resume</string>
     <string name="retry">Retry</string>
@@ -262,8 +265,9 @@
     <string name="update_label">Update</string>
     <string name="user_avatar">User avatar</string>
     <string name="version">Version</string>
+    <string name="video">Video</string>
     <string name="video_buffer_max_length">Maximum time to buffer</string>
-    <string name="video_buffer_size">Player\'s buffer size</string>
+    <string name="video_buffer_size">Buffer size</string>
     <string name="volume_booster">Volume booster</string>
     <string name="warn_on_unsafe_install">Warn for unsafe provider installation</string>
     <string name="warning">Warning</string>
@@ -286,7 +290,7 @@
     <string name="full_log_short_log_used_format">Short log: </string>
     <string name="full_log_version_used_format">Version (code): </string>
     <string name="full_log_time_taken_format">Time taken: </string>
-
+    <string name="n_seconds_format">%1$d seconds</string>
 
 
     <!--  State messages  -->
@@ -349,6 +353,7 @@
 
     <!--  Content descriptions  -->
     <string name="general_settings_content_desc">This contains all the general settings that are not related any of the specified groups on the settings navigation.</string>
+    <string name="player_settings_content_desc">This contains all the settings that are related to the player including subtitles, audio and UI.</string>
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>
     <string name="add_500ms_content_description">Add 500ms on subtitle delay</string>
     <string name="add_to_watchlist_button">Add to watchlist button</string>
@@ -404,7 +409,7 @@
     <string name="provider_updates_log">Provider\'s update logs</string>
     <string name="quality_snackbar_message">Quality set to %1$s</string>
     <string name="rating_icon">Rating Icon</string>
-    <string name="release_player_desc">For seamless playback, turn this off. Though, this is required to free device memory.</string>
+    <string name="release_player_desc">Releases player when minimizing the app. For seamless playback, turn this off. Though, this is required to free device memory.</string>
     <string name="replay_button">Replay button</string>
     <string name="repository_icon_content_desc">Repository icon</string>
     <string name="reset_settings_msg">This will reset all app settings.</string>
@@ -428,7 +433,7 @@
     <string name="use_search_history_item_icon">An icon to use a search history item</string>
     <string name="video_buffer_max_length_desc">The default maximum duration of media that the player will attempt to ensure is buffered at all times.</string>
     <string name="video_buffer_size_label">The target size to always buffer. Setting this too high could cause device problems.</string>
-    <string name="video_cache_size">Player\'s dedicated cache size</string>
+    <string name="video_cache_size">Stream cache size</string>
     <string name="video_cache_size_label">The dedicated video cache for the player. Always limit the cache if you have limited storage space.</string>
     <string name="volume_booster_desc">Adds an additional volume (dB) to the player. However, it might cause device to not play the audio properly.</string>
     <string name="warning_content_description">Warning icon</string>

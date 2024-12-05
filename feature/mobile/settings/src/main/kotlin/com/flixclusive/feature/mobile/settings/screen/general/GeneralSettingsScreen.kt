@@ -32,7 +32,7 @@ internal fun GeneralSettingsScreen(
     ) {
         item {
             SettingsGroup(
-                items = currentGeneralSettings(
+                items = generalItems(
                     searchHistoryCount = searchHistoryCount,
                     onUsePrereleaseUpdatesChange = {
                         usePreReleaseUpdates.value = !usePreReleaseUpdates.value

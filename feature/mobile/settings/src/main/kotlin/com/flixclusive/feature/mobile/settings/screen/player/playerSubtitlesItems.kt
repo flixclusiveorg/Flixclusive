@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.settings.settings_group
+package com.flixclusive.feature.mobile.settings.screen.player
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -34,7 +34,7 @@ import com.flixclusive.core.locale.R as LocaleR
 private const val DEFAULT_TEXT_PREVIEW = "Abc"
 
 @Composable
-internal fun currentSubtitlesSettings(): List<SettingsItem> {
+internal fun playerSubtitlesItems(): List<SettingsItem> {
     val appSettings by rememberLocalAppSettings()
     val onChangeSettings by rememberAppSettingsChanger()
 
