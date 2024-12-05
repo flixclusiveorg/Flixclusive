@@ -27,9 +27,9 @@
 
 ## Preview
 
-<img href="./docs/images/homepage.png"><label>Homepage</label>
-<img href="./docs/images/movie.png"><label>Movie</label>
-<img href="./docs/images/search.png"><label>Search</label>
+![Homepage](./docs/images/homepage.png)<label>Homepage</label>
+![Movie](./docs/images/movie.png)<label>Movie</label>
+![Search](./docs/images/search.png)<label>Search</label>
 
 ## Disclaimer
 The app **DOES NOT** host and contain movies and tv shows streaming links!
