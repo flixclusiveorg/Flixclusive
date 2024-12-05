@@ -26,10 +26,9 @@
 </div>
 
 ## Preview
-
-![Homepage](./docs/images/homepage.jpg)<label>Homepage</label>
-![Movie](./docs/images/movie.jpg)<label>Movie</label>
-![Search](./docs/images/search.jpg)<label>Search</label>
+<img src="./docs/images/homepage.jpg" alt="Homepage" width="48"> <label>Homepage</label>
+<img src="./docs/images/movie.jpg" alt="Movie" width="48"> <label>Movie</label>
+<img src="./docs/images/search.jpg" alt="Search" width="48"> <label>Search</label>
 
 ## Disclaimer
 The app **DOES NOT** host and contain movies and tv shows streaming links!
