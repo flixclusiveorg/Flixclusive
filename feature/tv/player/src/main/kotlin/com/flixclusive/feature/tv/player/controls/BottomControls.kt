@@ -55,9 +55,9 @@ import com.flixclusive.core.ui.tv.util.getGlowRadialGradient
 import com.flixclusive.core.ui.tv.util.glowOnFocus
 import com.flixclusive.core.ui.tv.util.handleDPadKeyEvents
 import com.flixclusive.core.ui.tv.util.useLocalDirectionalFocusRequester
+import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(
     ExperimentalComposeUiApi::class,
@@ -274,7 +274,7 @@ internal fun BottomControls(
                 OptionButton(
                     label = selectedSubtitle ?: "No subtitles",
                     onClick = { selectedSubtitle?.let { onSubtitlesPanelOpen() } },
-                    iconId = PlayerR.drawable.outline_subtitles_24,
+                    iconId = UiCommonR.drawable.outline_subtitles_24,
                     contentDescription = stringResource(id = LocaleR.string.subtitle_icon_content_desc),
                     modifier = Modifier
                         .onFocusChanged { focusState ->

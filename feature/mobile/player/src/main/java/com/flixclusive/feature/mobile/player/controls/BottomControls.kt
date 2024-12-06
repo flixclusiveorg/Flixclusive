@@ -60,6 +60,7 @@ import com.flixclusive.model.film.common.tv.Episode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -254,7 +255,7 @@ internal fun BottomControls(
 
                 CustomIconButton(
                     modifier = buttonModifier,
-                    iconId = PlayerR.drawable.outline_subtitles_24,
+                    iconId = UiCommonR.drawable.outline_subtitles_24,
                     label = LocaleR.string.audio_and_subtitle,
                     contentDescription = stringResource(id = LocaleR.string.audio_and_subtitle_button_desc),
                     onClick = { onAudioAndDisplayClick() }
@@ -313,7 +314,7 @@ private fun CustomIconButton(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(device = "spec:id=reference_tablet,shape=Normal,width=1280,height=800,unit=dp,dpi=240")
+@Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
 @Composable
 private fun PlayerSeekSlider() {
     val (value, onValueChange) = remember { mutableFloatStateOf(0F) }
@@ -450,7 +451,7 @@ private fun PlayerSeekSlider() {
 
                         CustomIconButton(
                             modifier = buttonModifier,
-                            iconId = PlayerR.drawable.outline_subtitles_24,
+                            iconId = UiCommonR.drawable.outline_subtitles_24,
                             label = LocaleR.string.audio_and_subtitle,
                             contentDescription = stringResource(LocaleR.string.audio_and_subtitle_button_desc),
                             onClick = { }
