@@ -1,5 +1,7 @@
 package com.flixclusive.feature.mobile.settings.screen.player
 
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
@@ -8,8 +10,8 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import com.flixclusive.feature.mobile.settings.SettingsItem
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
@@ -17,7 +19,8 @@ import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.getAvailableBufferSizes
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.getAvailableCacheSizes
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.playerBufferLengths
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_DISK_CACHE_DIALOG
+import com.flixclusive.feature.mobile.settings.screen.subtitles.SubtitlesTweakScreen
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberAppSettingsChanger
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberLocalAppSettings
 import com.flixclusive.model.datastore.player.DecoderPriority
@@ -25,10 +28,13 @@ import com.flixclusive.model.datastore.player.PlayerQuality
 import com.flixclusive.model.datastore.player.ResizeMode
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.collections.immutable.toPersistentMap
+import java.util.Locale
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
-object SettingsPlayerTweakScreen : BaseTweakScreen {
+internal object PlayerTweakScreen : BaseTweakScreen {
     @Composable
     @ReadOnlyComposable
     override fun getTitle()
@@ -40,12 +46,15 @@ object SettingsPlayerTweakScreen : BaseTweakScreen {
         = stringResource(LocaleR.string.player_settings_content_desc)
 
     @Composable
+    override fun getIconPainter()
+        = painterResource(UiCommonR.drawable.play_outline_circle)
+
+    @Composable
     override fun getTweaks(): List<Tweak> {
         return listOf(
-            getVideoTweaks(),
-            getAdvancedTweaks(),
-            getSubtitleTweaks(),
+            getGeneralTweaks(),
             getAudioTweaks(),
+            getAdvancedTweaks(),
             // getNetworkTweaks()
         )
     }
@@ -55,9 +64,12 @@ object SettingsPlayerTweakScreen : BaseTweakScreen {
         TODO("Not yet implemented")
     }
 
+    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
     @Composable
-    private fun getVideoTweaks(): TweakGroup {
+    private fun getGeneralTweaks(): TweakGroup {
         val context = LocalContext.current
+        val navigator = LocalScaffoldNavigator.current!!
+
         val appSettings by rememberLocalAppSettings()
         val onTweaked by rememberAppSettingsChanger()
 
@@ -124,7 +136,49 @@ object SettingsPlayerTweakScreen : BaseTweakScreen {
                         onTweaked(appSettings.copy(preferredSeekAmount = it))
                         true
                     }
+                ),
+                TweakUI.ClickableTweak(
+                    title = stringResource(LocaleR.string.subtitle),
+                    description = stringResource(LocaleR.string.subtitles_settings_content_desc),
+                    iconId = UiCommonR.drawable.outline_subtitles_24,
+                    onClick = {
+                        navigator.navigateTo(
+                            pane = ListDetailPaneScaffoldRole.Detail,
+                            content = SubtitlesTweakScreen
+                        )
+                    }
                 )
+            )
+        )
+    }
+
+    @Composable
+    private fun getUiTweaks(): TweakGroup {
+        val appSettings by rememberLocalAppSettings()
+        val onTweaked by rememberAppSettingsChanger()
+
+        return TweakGroup(
+            title = stringResource(LocaleR.string.user_interface),
+            tweaks = persistentListOf(
+                TweakUI.SwitchTweak(
+                    title = stringResource(LocaleR.string.reverse_player_time),
+                    description = stringResource(LocaleR.string.reverse_player_time_desc),
+                    value = remember { mutableStateOf(appSettings.isPlayerTimeReversed) },
+                    onTweaked = {
+                        onTweaked(appSettings.copy(isPlayerTimeReversed = it))
+                        true
+                    }
+                ),
+                TweakUI.SwitchTweak(
+                    title = stringResource(LocaleR.string.pip_mode),
+                    description = stringResource(LocaleR.string.pip_mode_desc),
+                    value = remember { mutableStateOf(appSettings.isPiPModeEnabled) },
+                    onTweaked = {
+                        onTweaked(appSettings.copy(isPiPModeEnabled = it))
+                        true
+                    }
+                ),
+
             )
         )
     }
@@ -141,11 +195,6 @@ object SettingsPlayerTweakScreen : BaseTweakScreen {
                 .associateWith { it.toUiText().asString(context) }
                 .toPersistentMap()
         }
-        SettingsItem(
-            title = stringResource(LocaleR.string.video_cache_size),
-            description = stringResource(LocaleR.string.video_cache_size_label),
-            dialogKey = KEY_PLAYER_DISK_CACHE_DIALOG,
-        )
 
         return TweakGroup(
             title = stringResource(LocaleR.string.advanced),
@@ -155,9 +204,7 @@ object SettingsPlayerTweakScreen : BaseTweakScreen {
                     description = stringResource(LocaleR.string.release_player_desc),
                     value = remember { mutableStateOf(appSettings.shouldReleasePlayer) },
                     onTweaked = {
-                        onTweaked(
-                            appSettings.copy(isUsingVolumeBoost = !appSettings.isUsingVolumeBoost)
-                        )
+                        onTweaked(appSettings.copy(shouldReleasePlayer = it))
                         true
                     }
                 ),
@@ -206,13 +253,45 @@ object SettingsPlayerTweakScreen : BaseTweakScreen {
     }
 
     @Composable
-    private fun getSubtitleTweaks(): TweakGroup {
-        TODO("Support subtitle tweaks on player")
-    }
-
-    @Composable
     private fun getAudioTweaks(): TweakGroup {
-        TODO("Support audio tweaks on player")
+        val appSettings by rememberLocalAppSettings()
+        val onTweaked by rememberAppSettingsChanger()
+
+        val languages = remember {
+            Locale.getAvailableLocales()
+                .distinctBy { it.language }
+                .associate {
+                    it.language to "${it.displayLanguage} [${it.language}]"
+                }
+                .toImmutableMap()
+        }
+
+        val useVolumeBooster = remember { mutableStateOf(appSettings.isUsingVolumeBoost) }
+
+        return TweakGroup(
+            title = stringResource(LocaleR.string.audio),
+            tweaks = persistentListOf(
+                TweakUI.SwitchTweak(
+                    title = stringResource(LocaleR.string.volume_booster),
+                    description = stringResource(LocaleR.string.volume_booster_desc),
+                    value = useVolumeBooster,
+                    onTweaked = {
+                        onTweaked(appSettings.copy(isUsingVolumeBoost = it))
+                        true
+                    },
+                ),
+                TweakUI.ListTweak(
+                    title = stringResource(LocaleR.string.preferred_audio_language),
+                    description = Locale(appSettings.preferredAudioLanguage).displayLanguage,
+                    value = remember { mutableStateOf(appSettings.preferredAudioLanguage) },
+                    options = languages,
+                    onTweaked = {
+                        onTweaked(appSettings.copy(preferredAudioLanguage = it))
+                        true
+                    }
+                )
+            )
+        )
     }
 
     @Composable

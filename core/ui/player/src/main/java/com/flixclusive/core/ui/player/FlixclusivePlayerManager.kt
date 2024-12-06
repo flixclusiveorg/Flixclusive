@@ -55,7 +55,6 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.okhttp.USER_AGENT
 import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.model.datastore.player.CaptionSizePreference.Companion.getDp
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.model.provider.link.SubtitleSource
@@ -660,7 +659,7 @@ class FlixclusivePlayerManager(
 
             val fontSize = if (isInPictureInPictureMode)
                 FONT_SIZE_PIP_MODE
-            else appSettings.subtitleSize.getDp(isInTv)
+            else appSettings.subtitleSize
 
             setApplyEmbeddedFontSizes(false)
             setApplyEmbeddedStyles(false)

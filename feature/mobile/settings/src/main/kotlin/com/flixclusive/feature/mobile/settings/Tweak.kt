@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.settings
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
@@ -69,12 +70,13 @@ sealed class TweakUI<T> : Tweak() {
         override val description: String? = null,
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
-        override val onTweaked: suspend (newValue: Boolean) -> Boolean = { true }
-    ) : TweakUI<Boolean>()
+        override val onTweaked: suspend (newValue: Float) -> Boolean = { true }
+    ) : TweakUI<Float>()
 
     data class ListTweak<T>(
         val value: MutableState<T>,
         val options: ImmutableMap<T, String>,
+        val endContent: @Composable (() -> Unit)? = null,
         override val title: String,
         override val description: String? = null,
         override val iconId: Int? = null,
@@ -85,6 +87,7 @@ sealed class TweakUI<T> : Tweak() {
     data class MultiSelectListTweak<T>(
         val value: MutableState<Set<T>>,
         val options: ImmutableMap<T, String>,
+        val endContent: @Composable (() -> Unit)? = null,
         override val title: String,
         override val description: String? = null,
         override val iconId: Int? = null,
@@ -99,5 +102,15 @@ sealed class TweakUI<T> : Tweak() {
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
         override val onTweaked: suspend (newValue: T) -> Boolean = { true }
+    ) : TweakUI<T>()
+
+    data class CustomContentTweak<T>(
+        val value: MutableState<T>,
+        override val title: String,
+        override val description: String? = null,
+        override val iconId: Int? = null,
+        override val enabled: Boolean = true,
+        override val onTweaked: suspend (newValue: T) -> Boolean = { true },
+        val content: @Composable () -> Unit
     ) : TweakUI<T>()
 }

@@ -71,7 +71,7 @@ internal fun SubtitlePreview(
                                 text = stringResource(id = LocaleR.string.sample_subtitle_text),
                                 style = appSettings.subtitleFontStyle.getTextStyle().copy(
                                     color = Color(appSettings.subtitleColor),
-                                    fontSize = appSettings.subtitleSize.getDp().sp,
+                                    fontSize = appSettings.subtitleSize.sp.sp,
                                     shadow = Shadow(
                                         offset = Offset(6F, 6F),
                                         blurRadius = 3f,
@@ -89,7 +89,7 @@ internal fun SubtitlePreview(
                             borderColor = Color(appSettings.subtitleEdgeType.color),
                             style = appSettings.subtitleFontStyle.getTextStyle().copy(
                                 color = Color(appSettings.subtitleColor),
-                                fontSize = appSettings.subtitleSize.getDp().sp,
+                                fontSize = appSettings.subtitleSize.sp.sp,
                                 background = Color(appSettings.subtitleBackgroundColor),
                                 textAlign = TextAlign.Center
                             )

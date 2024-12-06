@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.user.getAvatarResource
+import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.general.GeneralSettingsScreen
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_AUDIO_LANGUAGE_DIALOG
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_DECODER_PRIORITY_DIALOG
@@ -50,6 +51,7 @@ import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBT
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_LANGUAGE_DIALOG
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_SIZE_DIALOG
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalDialogKeyMap
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalScaffoldNavigator
 import com.flixclusive.model.database.User
 
 @SuppressLint("UnusedContentLambdaTargetStateParameter")
@@ -59,7 +61,7 @@ internal fun SettingsScreen() {
     val viewModel = hiltViewModel<SettingsViewModel>()
     val currentUser by viewModel.userSessionManager.currentUser.collectAsStateWithLifecycle()
 
-    val navigator = rememberListDetailPaneScaffoldNavigator<ListItem>()
+    val navigator = rememberListDetailPaneScaffoldNavigator<BaseTweakScreen>()
     val isListAndDetailVisible =
         navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
         && navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
@@ -72,63 +74,68 @@ internal fun SettingsScreen() {
         navigator.navigateBack()
     }
 
-    AnimatedContent(targetState = isListAndDetailVisible, label = "settings screen") {
-        ListDetailPaneScaffold(
-            modifier = Modifier.drawBehind {
-                if (isListAndDetailVisible) {
-                    drawRect(backgroundBrush)
-                }
-            },
-            directive = navigator.scaffoldDirective,
-            value = navigator.scaffoldValue,
-            listPane = {
-                val isDetailVisible =
-                    navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
+    CompositionLocalProvider(
+        LocalScaffoldNavigator provides navigator
+    ) {
+        AnimatedContent(targetState = isListAndDetailVisible, label = "settings screen") {
+            ListDetailPaneScaffold(
+                modifier = Modifier.drawBehind {
+                    if (isListAndDetailVisible) {
+                        drawRect(backgroundBrush)
+                    }
+                },
+                directive = navigator.scaffoldDirective,
+                value = navigator.scaffoldValue,
+                listPane = {
+                    val isDetailVisible =
+                        navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
 
-                AnimatedPane {
-                    ListContent(
-                        currentUser = { currentUser!! },
-                        onItemClick = { item ->
-                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
-                        },
-                        modifier = Modifier.drawBehind {
-                            if (!isListAndDetailVisible) {
-                                drawRect(backgroundBrush)
-                            }
-                        },
-                    )
-                }
-            },
-            detailPane = {
-                val isListVisible =
-                    navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
-
-                AnimatedPane {
-                    CompositionLocalProvider(
-                        LocalDialogKeyMap provides dialogKeyMap
-                    ) {
-                        DetailsScaffold(
-                            isListAndDetailVisible = isListAndDetailVisible,
-                            isDetailsVisible = !isListVisible,
-                            navigateBack = {
-                                if (navigator.canNavigateBack()) {
-                                    navigator.navigateBack()
+                    AnimatedPane {
+                        ListContent(
+                            currentUser = { currentUser!! },
+                            onItemClick = { item ->
+                                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
+                            },
+                            modifier = Modifier.drawBehind {
+                                if (!isListAndDetailVisible) {
+                                    drawRect(backgroundBrush)
                                 }
                             },
-                            content = {
-                                navigator.currentDestination?.content?.let { item ->
-                                    NavigatedScreen(
-                                        listItem = item,
-                                        viewModel = viewModel
-                                    )
-                                }
-                            }
                         )
                     }
+                },
+                detailPane = {
+                    val isListVisible =
+                        navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
+
+                    AnimatedPane {
+                        CompositionLocalProvider(
+                            LocalDialogKeyMap provides dialogKeyMap
+                        ) {
+                            DetailsScaffold(
+                                isListAndDetailVisible = isListAndDetailVisible,
+                                isDetailsVisible = !isListVisible,
+                                navigateBack = {
+                                    if (navigator.canNavigateBack()) {
+                                        navigator.navigateBack()
+                                    }
+                                },
+                                content = {
+                                    navigator.currentDestination?.content?.let { item ->
+                                        NavigatedScreen(
+                                            listItem = item,
+                                            viewModel = viewModel
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
-            }
-        )
+            )
+        }
     }
+
 }
 
 @Composable

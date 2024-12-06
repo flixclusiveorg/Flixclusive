@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.getTextStyle
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
-import com.flixclusive.model.datastore.player.CaptionSizePreference.Companion.getDp
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -71,7 +70,7 @@ internal fun SubtitlePreview(
                                 text = stringResource(id = LocaleR.string.sample_subtitle_text),
                                 style = appSettings.subtitleFontStyle.getTextStyle().copy(
                                     color = Color(appSettings.subtitleColor),
-                                    fontSize = appSettings.subtitleSize.getDp().sp,
+                                    fontSize = appSettings.subtitleSize.sp.sp,
                                     shadow = Shadow(
                                         offset = Offset(6F, 6F),
                                         blurRadius = 3f,
@@ -89,7 +88,7 @@ internal fun SubtitlePreview(
                             borderColor = Color(appSettings.subtitleEdgeType.color),
                             style = appSettings.subtitleFontStyle.getTextStyle().copy(
                                 color = Color(appSettings.subtitleColor),
-                                fontSize = appSettings.subtitleSize.getDp().sp,
+                                fontSize = appSettings.subtitleSize.sp.sp,
                                 background = Color(appSettings.subtitleBackgroundColor),
                                 textAlign = TextAlign.Center
                             )

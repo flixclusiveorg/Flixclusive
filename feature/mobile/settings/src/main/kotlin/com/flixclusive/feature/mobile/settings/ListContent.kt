@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.player.PlayerTweakScreen
 import com.flixclusive.feature.mobile.settings.util.UiUtil.getEmphasizedLabel
 import com.flixclusive.feature.mobile.settings.util.UiUtil.getMediumEmphasizedLabel
 import com.flixclusive.model.database.User
@@ -53,7 +55,7 @@ private val NavigationButtonHeight = 50.dp
 internal fun ListContent(
     modifier: Modifier = Modifier,
     currentUser: () -> User,
-    onItemClick: (ListItem) -> Unit,
+    onItemClick: (BaseTweakScreen) -> Unit,
 ) {
     val items = remember {
         mapOf(
@@ -61,7 +63,7 @@ internal fun ListContent(
                 ListItem.GENERAL_SETTINGS,
                 ListItem.PROVIDERS,
                 ListItem.APPEARANCE,
-                ListItem.PLAYER,
+                PlayerTweakScreen,
                 ListItem.DATA_AND_BACKUP,
                 ListItem.ADVANCED
             ),

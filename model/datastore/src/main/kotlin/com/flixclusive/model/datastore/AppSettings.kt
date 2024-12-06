@@ -4,7 +4,6 @@ import android.graphics.Color
 import com.flixclusive.core.util.network.okhttp.USER_AGENT
 import com.flixclusive.model.datastore.network.DoHPreference
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
-import com.flixclusive.model.datastore.player.CaptionSizePreference
 import com.flixclusive.model.datastore.player.CaptionStylePreference
 import com.flixclusive.model.datastore.player.DecoderPriority
 import com.flixclusive.model.datastore.player.PlayerQuality
@@ -31,7 +30,7 @@ data class AppSettings(
     val isSubtitleEnabled: Boolean = true,
     val subtitleLanguage: String = "en",
     val subtitleColor: Int = Color.WHITE,
-    val subtitleSize: CaptionSizePreference = CaptionSizePreference.Medium,
+    val subtitleSize: Float = 20F,
     val subtitleFontStyle: CaptionStylePreference = CaptionStylePreference.Bold,
     val subtitleBackgroundColor: Int = Color.TRANSPARENT,
     val subtitleEdgeType: CaptionEdgeTypePreference = CaptionEdgeTypePreference.Drop_Shadow,
