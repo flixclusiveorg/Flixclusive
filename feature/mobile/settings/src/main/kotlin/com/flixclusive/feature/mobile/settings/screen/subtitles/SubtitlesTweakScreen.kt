@@ -17,8 +17,8 @@ import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberAppSettingsChanger
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberLocalAppSettings
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionStylePreference
 import kotlinx.collections.immutable.persistentListOf
@@ -30,18 +30,16 @@ private const val DEFAULT_TEXT_PREVIEW = "Abc"
 
 internal object SubtitlesTweakScreen : BaseTweakScreen {
     @Composable
-    override fun getTitle(): String {
-        TODO("Not yet implemented")
-    }
+    override fun getTitle(): String
+        = stringResource(LocaleR.string.subtitle)
 
     @Composable
-    override fun getDescription(): String {
-        TODO("Not yet implemented")
-    }
+    override fun getDescription(): String
+        = stringResource(LocaleR.string.subtitles_settings_content_desc)
 
     @Composable
     override fun getTweaks(): List<Tweak> {
-        val appSettings by rememberLocalAppSettings()
+        val appSettings = LocalAppSettings.current
         val onTweaked by rememberAppSettingsChanger()
 
         val areSubtitlesAvailable = remember { mutableStateOf(appSettings.isSubtitleEnabled) }
@@ -87,7 +85,7 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
 
     @Composable
     private fun getUiTweaks(): TweakGroup {
-        val appSettings by rememberLocalAppSettings()
+        val appSettings = LocalAppSettings.current
         val onTweaked by rememberAppSettingsChanger()
 
         val fontStyle = remember { mutableStateOf(appSettings.subtitleFontStyle) }

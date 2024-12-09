@@ -20,9 +20,9 @@ import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValue
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.getAvailableCacheSizes
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.playerBufferLengths
 import com.flixclusive.feature.mobile.settings.screen.subtitles.SubtitlesTweakScreen
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberAppSettingsChanger
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberLocalAppSettings
 import com.flixclusive.model.datastore.player.DecoderPriority
 import com.flixclusive.model.datastore.player.PlayerQuality
 import com.flixclusive.model.datastore.player.ResizeMode
@@ -54,8 +54,7 @@ internal object PlayerTweakScreen : BaseTweakScreen {
         return listOf(
             getGeneralTweaks(),
             getAudioTweaks(),
-            getAdvancedTweaks(),
-            // getNetworkTweaks()
+            getAdvancedTweaks()
         )
     }
 
@@ -70,7 +69,7 @@ internal object PlayerTweakScreen : BaseTweakScreen {
         val context = LocalContext.current
         val navigator = LocalScaffoldNavigator.current!!
 
-        val appSettings by rememberLocalAppSettings()
+        val appSettings = LocalAppSettings.current
         val onTweaked by rememberAppSettingsChanger()
 
         val formatInSeconds = fun (amount: Long): String {
@@ -154,7 +153,7 @@ internal object PlayerTweakScreen : BaseTweakScreen {
 
     @Composable
     private fun getUiTweaks(): TweakGroup {
-        val appSettings by rememberLocalAppSettings()
+        val appSettings = LocalAppSettings.current
         val onTweaked by rememberAppSettingsChanger()
 
         return TweakGroup(
@@ -184,10 +183,52 @@ internal object PlayerTweakScreen : BaseTweakScreen {
     }
 
     @Composable
+    private fun getAudioTweaks(): TweakGroup {
+        val appSettings = LocalAppSettings.current
+        val onTweaked by rememberAppSettingsChanger()
+
+        val languages = remember {
+            Locale.getAvailableLocales()
+                .distinctBy { it.language }
+                .associate {
+                    it.language to "${it.displayLanguage} [${it.language}]"
+                }
+                .toImmutableMap()
+        }
+
+        val useVolumeBooster = remember { mutableStateOf(appSettings.isUsingVolumeBoost) }
+
+        return TweakGroup(
+            title = stringResource(LocaleR.string.audio),
+            tweaks = persistentListOf(
+                TweakUI.SwitchTweak(
+                    title = stringResource(LocaleR.string.volume_booster),
+                    description = stringResource(LocaleR.string.volume_booster_desc),
+                    value = useVolumeBooster,
+                    onTweaked = {
+                        onTweaked(appSettings.copy(isUsingVolumeBoost = it))
+                        true
+                    },
+                ),
+                TweakUI.ListTweak(
+                    title = stringResource(LocaleR.string.preferred_audio_language),
+                    description = Locale(appSettings.preferredAudioLanguage).displayLanguage,
+                    value = remember { mutableStateOf(appSettings.preferredAudioLanguage) },
+                    options = languages,
+                    onTweaked = {
+                        onTweaked(appSettings.copy(preferredAudioLanguage = it))
+                        true
+                    }
+                )
+            )
+        )
+    }
+
+    @Composable
     private fun getAdvancedTweaks(): TweakGroup {
         val context = LocalContext.current
 
-        val appSettings by rememberLocalAppSettings()
+        val appSettings = LocalAppSettings.current
         val onTweaked by rememberAppSettingsChanger()
 
         val availableDecoders = remember {
@@ -250,53 +291,6 @@ internal object PlayerTweakScreen : BaseTweakScreen {
                 )
             )
         )
-    }
-
-    @Composable
-    private fun getAudioTweaks(): TweakGroup {
-        val appSettings by rememberLocalAppSettings()
-        val onTweaked by rememberAppSettingsChanger()
-
-        val languages = remember {
-            Locale.getAvailableLocales()
-                .distinctBy { it.language }
-                .associate {
-                    it.language to "${it.displayLanguage} [${it.language}]"
-                }
-                .toImmutableMap()
-        }
-
-        val useVolumeBooster = remember { mutableStateOf(appSettings.isUsingVolumeBoost) }
-
-        return TweakGroup(
-            title = stringResource(LocaleR.string.audio),
-            tweaks = persistentListOf(
-                TweakUI.SwitchTweak(
-                    title = stringResource(LocaleR.string.volume_booster),
-                    description = stringResource(LocaleR.string.volume_booster_desc),
-                    value = useVolumeBooster,
-                    onTweaked = {
-                        onTweaked(appSettings.copy(isUsingVolumeBoost = it))
-                        true
-                    },
-                ),
-                TweakUI.ListTweak(
-                    title = stringResource(LocaleR.string.preferred_audio_language),
-                    description = Locale(appSettings.preferredAudioLanguage).displayLanguage,
-                    value = remember { mutableStateOf(appSettings.preferredAudioLanguage) },
-                    options = languages,
-                    onTweaked = {
-                        onTweaked(appSettings.copy(preferredAudioLanguage = it))
-                        true
-                    }
-                )
-            )
-        )
-    }
-
-    @Composable
-    private fun getNetworkTweaks(): TweakGroup {
-        TODO("Support network tweaks on player")
     }
 
 }

@@ -41,6 +41,8 @@ data class AppSettings(
     val userAgent: String = USER_AGENT,
     // ==
 
+    val isIncognito: Boolean = false,
+
     // == player
     val shouldReleasePlayer: Boolean = true,
     val isPlayerTimeReversed: Boolean = true,

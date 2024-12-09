@@ -2,7 +2,6 @@ package com.flixclusive.core.theme
 
 import android.content.Context
 import androidx.compose.ui.graphics.Color
-import kotlinx.collections.immutable.persistentMapOf
 import com.flixclusive.core.locale.R as LocaleR
 
 val lightGray = Color.LightGray.copy(0.2F)
@@ -80,7 +79,7 @@ val md_theme_mobile_dark_surfaceVariant = Color(0xFF282828)
 val md_theme_mobile_dark_onSurfaceVariant = Color(0xFFE7E4EE)
 
 fun getAvailableSubtitleColors(context: Context)
-    = persistentMapOf(
+    = mapOf(
         Color(0xFFFFFFFF) to context.getString(LocaleR.string.white),
         Color(0xFFFFFF00) to context.getString(LocaleR.string.yellow),
         Color(0xFF00FFFF) to context.getString(LocaleR.string.cyan),

@@ -14,10 +14,7 @@ import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
@@ -30,52 +27,49 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
 import com.flixclusive.core.ui.common.user.getAvatarResource
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.general.GeneralSettingsScreen
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_AUDIO_LANGUAGE_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_DECODER_PRIORITY_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_DOH_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_BUFFER_LENGTH_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_BUFFER_SIZE_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_DISK_CACHE_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_QUALITY_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_RESIZE_MODE_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_PREFERRED_SERVER_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SEARCH_HISTORY_NOTICE_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_BACKGROUND_COLOR_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_COLOR_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_EDGE_TYPE_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_FONT_STYLE_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_LANGUAGE_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.KEY_SUBTITLE_SIZE_DIALOG
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalDialogKeyMap
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettingsProvider
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettingsProviderChanger
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalScaffoldNavigator
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalSettingsViewModel
 import com.flixclusive.model.database.User
+import com.ramcosta.composedestinations.annotation.Destination
 
 @SuppressLint("UnusedContentLambdaTargetStateParameter")
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@Destination
 @Composable
-internal fun SettingsScreen() {
+internal fun SettingsScreen(
+    navigator: SettingsScreenNavigator
+) {
     val viewModel = hiltViewModel<SettingsViewModel>()
+    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val appSettingsProvider by viewModel.appSettingsProvider.collectAsStateWithLifecycle()
     val currentUser by viewModel.userSessionManager.currentUser.collectAsStateWithLifecycle()
+    val searchHistoryCount by viewModel.searchHistoryCount.collectAsStateWithLifecycle()
 
-    val navigator = rememberListDetailPaneScaffoldNavigator<BaseTweakScreen>()
+    val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<BaseTweakScreen>()
     val isListAndDetailVisible =
-        navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
-        && navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
+        scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
+        && scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
 
     val backgroundBrush = getAdaptiveBackground(currentUser)
 
-    val dialogKeyMap = rememberSaveable { getDialogKeys() }
-
-    BackHandler(navigator.canNavigateBack()) {
-        navigator.navigateBack()
+    BackHandler(scaffoldNavigator.canNavigateBack()) {
+        scaffoldNavigator.navigateBack()
     }
 
     CompositionLocalProvider(
-        LocalScaffoldNavigator provides navigator
+        LocalScaffoldNavigator provides scaffoldNavigator,
+        LocalSettingsViewModel provides viewModel,
+        LocalAppSettings provides appSettings,
+        LocalAppSettingsProvider provides appSettingsProvider,
+        LocalAppSettingsChanger provides viewModel::onChangeAppSettings,
+        LocalAppSettingsProviderChanger provides viewModel::onChangeAppSettingsProvider,
     ) {
         AnimatedContent(targetState = isListAndDetailVisible, label = "settings screen") {
             ListDetailPaneScaffold(
@@ -84,17 +78,20 @@ internal fun SettingsScreen() {
                         drawRect(backgroundBrush)
                     }
                 },
-                directive = navigator.scaffoldDirective,
-                value = navigator.scaffoldValue,
+                directive = scaffoldNavigator.scaffoldDirective,
+                value = scaffoldNavigator.scaffoldValue,
                 listPane = {
                     val isDetailVisible =
-                        navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
+                        scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
 
                     AnimatedPane {
                         ListContent(
                             currentUser = { currentUser!! },
+                            searchHistoryCount = searchHistoryCount,
+                            onClearSearchHistory = viewModel::clearSearchHistory,
+                            navigator = navigator,
                             onItemClick = { item ->
-                                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
+                                scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
                             },
                             modifier = Modifier.drawBehind {
                                 if (!isListAndDetailVisible) {
@@ -106,30 +103,21 @@ internal fun SettingsScreen() {
                 },
                 detailPane = {
                     val isListVisible =
-                        navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
+                        scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
 
                     AnimatedPane {
-                        CompositionLocalProvider(
-                            LocalDialogKeyMap provides dialogKeyMap
-                        ) {
-                            DetailsScaffold(
-                                isListAndDetailVisible = isListAndDetailVisible,
-                                isDetailsVisible = !isListVisible,
-                                navigateBack = {
-                                    if (navigator.canNavigateBack()) {
-                                        navigator.navigateBack()
-                                    }
-                                },
-                                content = {
-                                    navigator.currentDestination?.content?.let { item ->
-                                        NavigatedScreen(
-                                            listItem = item,
-                                            viewModel = viewModel
-                                        )
-                                    }
+                        DetailsScaffold(
+                            isListAndDetailVisible = isListAndDetailVisible,
+                            isDetailsVisible = !isListVisible,
+                            navigateBack = {
+                                if (scaffoldNavigator.canNavigateBack()) {
+                                    scaffoldNavigator.navigateBack()
                                 }
-                            )
-                        }
+                            },
+                            content = {
+                                scaffoldNavigator.currentDestination?.content?.Content()
+                            }
+                        )
                     }
                 }
             )
@@ -173,67 +161,10 @@ private fun getAdaptiveBackground(
     }
 }
 
-@Composable
-private fun NavigatedScreen(
-    listItem: ListItem,
-    viewModel: SettingsViewModel
-) {
-    when (listItem) {
-        ListItem.GENERAL_SETTINGS -> {
-            val searchHistoryCount by viewModel.searchHistoryCount.collectAsStateWithLifecycle()
-
-            GeneralSettingsScreen(
-                searchHistoryCount = searchHistoryCount,
-                onClearSearchHistory = viewModel::clearSearchHistory
-            )
-        }
-        ListItem.PROVIDERS -> {
-            /*TODO()*/
-        }
-        ListItem.APPEARANCE -> {
-            /*TODO()*/
-        }
-        ListItem.PLAYER -> {
-            /*TODO()*/
-        }
-        ListItem.DATA_AND_BACKUP -> {
-            /*TODO()*/
-        }
-        ListItem.ADVANCED -> {
-            /*TODO()*/
-        }
-        ListItem.ISSUE_A_BUG -> {
-            /*TODO()*/
-        }
-        ListItem.FEATURE_REQUEST -> {
-            /*TODO()*/
-        }
-        ListItem.REPOSITORY -> {
-            /*TODO()*/
-        }
-    }
-}
-
-private fun getDialogKeys(): SnapshotStateMap<String, Boolean> {
-    return mutableStateMapOf(
-        KEY_PREFERRED_SERVER_DIALOG to false,
-        KEY_SUBTITLE_LANGUAGE_DIALOG to false,
-        KEY_SUBTITLE_COLOR_DIALOG to false,
-        KEY_SUBTITLE_SIZE_DIALOG to false,
-        KEY_SUBTITLE_FONT_STYLE_DIALOG to false,
-        KEY_SUBTITLE_BACKGROUND_COLOR_DIALOG to false,
-        KEY_SUBTITLE_EDGE_TYPE_DIALOG to false,
-        KEY_PLAYER_SEEK_INCREMENT_MS_DIALOG to false,
-        KEY_PLAYER_QUALITY_DIALOG to false,
-        KEY_PLAYER_RESIZE_MODE_DIALOG to false,
-        KEY_DOH_DIALOG to false,
-        KEY_PLAYER_DISK_CACHE_DIALOG to false,
-        KEY_PLAYER_BUFFER_SIZE_DIALOG to false,
-        KEY_PLAYER_BUFFER_LENGTH_DIALOG to false,
-        KEY_SEARCH_HISTORY_NOTICE_DIALOG to false,
-        KEY_AUDIO_LANGUAGE_DIALOG to false,
-        KEY_DECODER_PRIORITY_DIALOG to false,
-    )
+internal fun getNavigatorPreview() = object : SettingsScreenNavigator {
+    override fun openProvidersScreen() = Unit
+    override fun openLink(url: String) = Unit
+    override fun goBack() = Unit
 }
 
 @Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
@@ -241,7 +172,9 @@ private fun getDialogKeys(): SnapshotStateMap<String, Boolean> {
 private fun TabletPreview() {
     FlixclusiveTheme {
         Surface {
-            SettingsScreen()
+            SettingsScreen(
+                navigator = getNavigatorPreview()
+            )
         }
     }
 }
@@ -251,7 +184,9 @@ private fun TabletPreview() {
 private fun PhonePreview() {
     FlixclusiveTheme {
         Surface {
-            SettingsScreen()
+            SettingsScreen(
+                navigator = getNavigatorPreview()
+            )
         }
     }
 }

@@ -1,7 +1,5 @@
 package com.flixclusive.feature.mobile.settings
 
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,8 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -39,10 +37,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.advanced.AdvancedTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.appearance.AppearanceTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.data.DataTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.general.GeneralTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.github.FeatureRequestTweakNavigation
+import com.flixclusive.feature.mobile.settings.screen.github.IssueBugTweakNavigation
+import com.flixclusive.feature.mobile.settings.screen.github.RepositoryTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.providers.ProvidersTweakNavigation
 import com.flixclusive.feature.mobile.settings.util.UiUtil.getEmphasizedLabel
 import com.flixclusive.feature.mobile.settings.util.UiUtil.getMediumEmphasizedLabel
 import com.flixclusive.model.database.User
@@ -55,22 +63,28 @@ private val NavigationButtonHeight = 50.dp
 internal fun ListContent(
     modifier: Modifier = Modifier,
     currentUser: () -> User,
+    searchHistoryCount: Int = 0,
+    onClearSearchHistory: () -> Unit,
+    navigator: SettingsScreenNavigator,
     onItemClick: (BaseTweakScreen) -> Unit,
 ) {
     val items = remember {
         mapOf(
             LocaleR.string.application to listOf(
-                ListItem.GENERAL_SETTINGS,
-                ListItem.PROVIDERS,
-                ListItem.APPEARANCE,
+                GeneralTweakScreen,
+                ProvidersTweakNavigation,
+                AppearanceTweakScreen,
                 PlayerTweakScreen,
-                ListItem.DATA_AND_BACKUP,
-                ListItem.ADVANCED
+                DataTweakScreen(
+                    searchHistoryCount = searchHistoryCount,
+                    onClearSearchHistory = onClearSearchHistory
+                ),
+                AdvancedTweakScreen
             ),
             LocaleR.string.github to listOf(
-                ListItem.ISSUE_A_BUG,
-                ListItem.FEATURE_REQUEST,
-                ListItem.REPOSITORY
+                IssueBugTweakNavigation,
+                FeatureRequestTweakNavigation,
+                RepositoryTweakNavigation
             )
         )
     }
@@ -135,9 +149,16 @@ internal fun ListContent(
 
             items(buttons) { navigation ->
                 MenuItem(
-                    iconId = navigation.iconId,
-                    labelId = navigation.labelId,
-                    onClick = { onItemClick(navigation) }
+                    icon = navigation.getIconPainter()!!,
+                    label = navigation.getTitle(),
+                    onClick = {
+                        if (navigation is BaseTweakNavigation) {
+                            navigation.onClick(navigator)
+                            return@MenuItem
+                        }
+
+                        onItemClick(navigation)
+                    }
                 )
             }
         }
@@ -238,8 +259,8 @@ private fun ListContentHeader(
 
 @Composable
 private fun MenuItem(
-    @DrawableRes iconId: Int,
-    @StringRes labelId: Int,
+    icon: Painter,
+    label: String,
     onClick: () -> Unit,
 ) {
     Row(
@@ -256,13 +277,13 @@ private fun MenuItem(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(id = iconId),
-                contentDescription = stringResource(id = labelId)
+                painter = icon,
+                contentDescription = label
             )
         }
 
         Text(
-            text = stringResource(id = labelId),
+            text = label,
             style = getMediumEmphasizedLabel(size = 16.sp),
             modifier = Modifier
                 .padding(start = 13.dp)
@@ -280,6 +301,9 @@ private fun PreferencesScreenPreview() {
         ) {
             ListContent(
                 currentUser = { User() },
+                searchHistoryCount = 1,
+                onClearSearchHistory = {},
+                navigator = getNavigatorPreview(),
                 onItemClick = {}
             )
         }

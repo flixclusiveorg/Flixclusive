@@ -30,6 +30,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,8 +43,8 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.NonInteractiveSurfaceDefaults
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import com.flixclusive.core.theme.getAvailableSubtitleColors
 import com.flixclusive.core.theme.subtitleBackgroundColors
-import com.flixclusive.core.theme.subtitleColors
 import com.flixclusive.core.ui.common.util.getTextStyle
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -90,7 +91,7 @@ internal fun SubtitleStylePanel(
             text = stringResource(id = LocaleR.string.sample_subtitle_text),
             style = currentAppSettings.subtitleFontStyle.getTextStyle().copy(
                 color = Color(currentAppSettings.subtitleColor),
-                fontSize = currentAppSettings.subtitleSize.getDp(isTv = true).sp,
+                fontSize = currentAppSettings.subtitleSize.sp,
                 background = Color(currentAppSettings.subtitleBackgroundColor),
                 shadow = Shadow(
                     offset = Offset(6F, 6F),
@@ -113,7 +114,7 @@ internal fun SubtitleStylePanel(
                     StyleItem(
                         onClick = {
                             updateToSaveAppSettings(
-                                currentAppSettings.copy(subtitleSize = it)
+                                currentAppSettings.copy(subtitleSize = it.getDp(true))
                             )
                         }
                     ) {
@@ -206,7 +207,7 @@ internal fun SubtitleStylePanel(
             SubtitleStyle(
                 label = stringResource(LocaleR.string.subtitles_color)
             ) {
-                subtitleColors.forEach { (_, color) ->
+                getAvailableSubtitleColors(context = LocalContext.current).forEach { (color, _) ->
                     StyleItem(
                         onClick = {
                             updateToSaveAppSettings(

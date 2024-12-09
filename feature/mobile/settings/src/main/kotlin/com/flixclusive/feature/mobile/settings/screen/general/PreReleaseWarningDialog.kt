@@ -27,7 +27,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
-internal fun PreReleaseUpdatesWarningDialog(
+internal fun PreReleaseWarningDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -119,7 +119,7 @@ internal fun PreReleaseUpdatesWarningDialog(
 private fun PreReleaseUpdatesWarningDialogPreview() {
     FlixclusiveTheme {
         Surface {
-            PreReleaseUpdatesWarningDialog(
+            PreReleaseWarningDialog(
                 onConfirm = {},
                 onDismiss = {}
             )

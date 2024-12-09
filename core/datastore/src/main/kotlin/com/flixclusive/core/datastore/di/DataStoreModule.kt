@@ -3,15 +3,12 @@ package com.flixclusive.core.datastore.di
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
-import com.flixclusive.core.datastore.DefaultUserSessionDataStore
-import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.serializer.AppSettingsProviderSerializer
 import com.flixclusive.core.datastore.serializer.AppSettingsSerializer
 import com.flixclusive.core.datastore.serializer.OnBoardingPreferencesSerializer
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.AppSettingsProvider
 import com.flixclusive.model.datastore.OnBoardingPreferences
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,14 +41,4 @@ internal object DataStoreModule {
     fun providesOnBoardingPreferencesDataStore(
         @ApplicationContext context: Context,
     ): DataStore<OnBoardingPreferences> = context.onBoardingPreferences
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
-internal abstract class BoundedDataStoreModule {
-    @Singleton
-    @Binds
-    abstract fun providesUserSessionDataStore(
-        userDataStore: DefaultUserSessionDataStore
-    ): UserSessionDataStore
 }

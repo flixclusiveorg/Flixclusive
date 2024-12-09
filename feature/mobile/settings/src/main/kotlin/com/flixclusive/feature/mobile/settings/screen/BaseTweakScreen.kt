@@ -5,7 +5,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.painter.Painter
 import com.flixclusive.feature.mobile.settings.Tweak
 
-interface BaseTweakScreen {
+internal interface BaseTweakScreen {
     @Composable
     @ReadOnlyComposable
     fun getTitle(): String
