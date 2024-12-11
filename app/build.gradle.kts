@@ -1,6 +1,5 @@
 import java.io.ByteArrayOutputStream
 
-@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.flixclusive.application)
     alias(libs.plugins.flixclusive.compose)

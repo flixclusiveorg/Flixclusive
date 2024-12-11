@@ -127,7 +127,7 @@ internal fun RemoveAlertDialog(
 private fun RemoveAlertDialogPreview() {
     FlixclusiveTheme {
         Surface {
-            RemoveAlertDialog(confirm = { /*TODO*/ }) {
+            RemoveAlertDialog(confirm = {  }) {
 
             }
         }

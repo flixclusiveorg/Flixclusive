@@ -224,7 +224,7 @@ private fun DrawScope.drawCheck(
         checkPath.moveTo(width * leftX, width * gravitatedLeftY)
         checkPath.lineTo(width * gravitatedCrossX, width * gravitatedCrossY)
         checkPath.lineTo(width * rightX, width * gravitatedRightY)
-        // TODO: replace with proper declarative non-android alternative when ready (b/158188351)
+        // TO-DO: replace with proper declarative non-android alternative when ready (b/158188351)
         pathMeasure.setPath(checkPath, false)
         pathToDraw.reset()
         pathMeasure.getSegment(

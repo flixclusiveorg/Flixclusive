@@ -312,7 +312,7 @@ private fun TopBarPreview() {
                 },
                 floatingActionButton = {
                     ExtendedFloatingActionButton(
-                        onClick = { /*TODO*/ },
+                        onClick = {  },
                         containerColor = MaterialTheme.colorScheme.surface,
                         text = {
                             Text(text = stringResource(LocaleR.string.add_provider))

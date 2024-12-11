@@ -195,8 +195,7 @@ public class NonFinalTextRenderer extends BaseRenderer implements Callback {
      * @param streamEndPositionUs The position to stop rendering at or {@link C#LENGTH_UNSET} to
      *                            render until the end of the current stream.
      */
-    // TODO(internal b/181312195): Remove this when it's no longer needed once subtitles are decoded
-    // on the loading side of SampleQueue.
+    // TO-DO(internal b/181312195): Remove this when it's no longer needed once subtitles are decoded on the loading side of SampleQueue.
     public void setFinalStreamEndPositionUs(long streamEndPositionUs) {
         checkState(isCurrentStreamFinal());
         this.finalStreamEndPositionUs = streamEndPositionUs;
