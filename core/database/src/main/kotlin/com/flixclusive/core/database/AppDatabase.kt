@@ -5,7 +5,6 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.database.dao.WatchHistoryDao
@@ -17,12 +16,10 @@ import com.flixclusive.core.database.migration.Schema4to5
 import com.flixclusive.core.database.util.DateConverter
 import com.flixclusive.core.database.util.FilmDataConverter
 import com.flixclusive.core.database.util.WatchHistoryItemConverter
-import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.model.database.User
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.WatchlistItem
-import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -56,42 +53,14 @@ internal abstract class AppDatabase : RoomDatabase() {
                     context,
                     AppDatabase::class.java,
                     APP_DATABASE
+                ).addMigrations(
+                    Schema1to2(),
+                    Schema2to3(),
+                    Schema3to4(),
+                    Schema4to5(),
                 )
-                    .addMigrations(
-                        Schema1to2(),
-                        Schema2to3(),
-                        Schema3to4(),
-                        Schema4to5(),
-                    )
-                    .addCallback(
-                        object: Callback() {
-                            private fun prepopulateUsers() {
-                                INSTANCE?.let {
-                                    AppDispatchers.Default.scope.launch {
-                                        val thereAreNoUsers = it.userDao().getAllItems().isEmpty()
-
-                                        if(thereAreNoUsers) {
-                                            it.userDao().insert(User())
-                                        }
-                                    }
-                                }
-                            }
-
-                            override fun onCreate(db: SupportSQLiteDatabase) {
-                                super.onCreate(db)
-                                prepopulateUsers()
-                            }
-
-                            override fun onOpen(db: SupportSQLiteDatabase) {
-                                super.onOpen(db)
-                                prepopulateUsers()
-                            }
-                        }
-                    )
-                    .build()
-                    .also {
-                        INSTANCE = it
-                    }
+                .build()
+                .also { INSTANCE = it }
             }
         }
 

@@ -71,6 +71,7 @@ import com.flixclusive.service.update.AppUpdaterService.Companion.startAppUpdate
 import com.ramcosta.composedestinations.annotation.Destination
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Destination(
     navArgsDelegate = UpdateScreenNavArgs::class
@@ -124,8 +125,9 @@ internal fun UpdateScreen(
                     start = 20.dp
                 )
         ) {
+            // TODO: Fix image tag here
             Image(
-                painter = painterResource(id = R.drawable.flixclusive_tag),
+                painter = painterResource(id = UiCommonR.drawable.flixclusive_tag),
                 contentDescription = stringResource(LocaleR.string.flixclusive_tag_content_desc),
                 contentScale = ContentScale.FillHeight,
                 alignment = Alignment.CenterStart,

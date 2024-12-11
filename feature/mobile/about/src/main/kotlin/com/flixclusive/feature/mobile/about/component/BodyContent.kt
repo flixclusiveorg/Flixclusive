@@ -109,7 +109,7 @@ internal fun BodyContent() {
                             fontWeight = FontWeight.Bold
                         )
                     ) {
-                        append(UiText.StringResource(LocaleR.string.provider_disclaimer).asString(context))
+                        append(UiText.StringResource(LocaleR.string.providers_disclaimer).asString(context))
                         append("\n")
                     }
                 }
@@ -122,7 +122,7 @@ internal fun BodyContent() {
                     )
                 ) {
                     withStyle(style = SpanStyle(fontSize = fontSize)) {
-                        append(UiText.StringResource(LocaleR.string.disclaimer_provider_message).asString(context))
+                        append(UiText.StringResource(LocaleR.string.provider_disclaimer_message).asString(context))
                         append("\n")
                     }
                 }

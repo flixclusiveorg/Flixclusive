@@ -31,8 +31,8 @@ internal sealed class SplashScreenUiState {
 internal class SplashScreenViewModel @Inject constructor(
     homeItemsProviderUseCase: HomeItemsProviderUseCase,
     appConfigurationManager: AppConfigurationManager,
-    private val appSettingsManager: AppSettingsManager,
     val appUpdateCheckerUseCase: AppUpdateCheckerUseCase,
+    private val appSettingsManager: AppSettingsManager,
     private val providerUpdaterUseCase: ProviderUpdaterUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<SplashScreenUiState>(SplashScreenUiState.Loading)
@@ -41,8 +41,7 @@ internal class SplashScreenViewModel @Inject constructor(
     val configurationStatus = appConfigurationManager.configurationStatus
 
     val appSettings = appSettingsManager
-        .appSettings
-        .data
+        .appSettings.data
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -50,12 +49,11 @@ internal class SplashScreenViewModel @Inject constructor(
         )
 
     val onBoardingPreferences = appSettingsManager
-        .onBoardingPreferences
-        .data
+        .onBoardingPreferences.data
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = OnBoardingPreferences()
+            initialValue = appSettingsManager.cachedOnBoardingPreferences
         )
 
     init {

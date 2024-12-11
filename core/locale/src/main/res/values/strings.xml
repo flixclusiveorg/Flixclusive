@@ -202,8 +202,8 @@
     <string name="preferred_resize_mode">Preferred resize mode</string>
     <string name="privacy_notice">Privacy notice</string>
     <string name="proceed">Proceed</string>
-    <string name="provider_disclaimer">Providers Disclaimer</string>
     <string name="provider_settings">Provider Settings</string>
+    <string name="providers_disclaimer">Providers disclaimer</string>
     <string name="randomize">Randomize</string>
     <string name="rating">Rating</string>
     <string name="re_test">Re-test</string>
@@ -470,15 +470,13 @@
     <!--  Disclaimer/Privacy Notice messages  -->
     <string name="privacy_notice_crash_log_sender">
         <![CDATA[
-        The app collects crash data, including stacktrace and device model/brand (SDK), solely to diagnose and fix software issues. Your data\'s security is paramount, and Flixclusive employs industry-standard measures to protect it. You can opt out of automatic crash logs sender in app settings.\n\n
-
-        Flixclusive prioritizes access to a wider range of content providers by foregoing SSL verification, which can restrict access to some providers. While this decision enhances accessibility, users should be aware of potential security risks and exercise caution when accessing content.
+        The app collects crash data automatically to help improve your experience. You can opt out of crash data collection in the settings. Please note, the app uses an unsafe network client (e.g., ignoring SSL verification and other security mechanisms) to fully integrate with third-party providers. Use at your own risk.
         ]]>
     </string>
-    <string name="disclaimer_provider_message">
-        <![CDATA[
-        The app utilizes the services of movie/TV show providers obtained from the internet. It does not host these providers; instead, it utilizes their services. The app assumes no responsibility for the content displayed. Legal issues pertaining to the movies/TV shows should be addressed directly with the respective third-party providers.\n\nPlease note that while some of the providers will be trusted, others may not be. Users are advised to exercise caution.
-        ]]>
+    <string name="provider_disclaimer_message">
+        The app <b>DOES NOT</b> host or provide direct streaming links to movies and TV shows. It serves solely as a platform for accessing third-party extensions developed by independent developers in the open-source community.\n\nThe authors of this application are completely separate and legally distinct from the authors of the extensions available within the app. We do not endorse, support, or take responsibility for the content or actions of these third-party extensions.\n\n<i>Use at Your Own Risk</i>\n\n
+
+        By using this application, you acknowledge and agree to these terms.
     </string>
     <string name="privacy_notice_opt_in">Opt-in to crash data collection</string>
 

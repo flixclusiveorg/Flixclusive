@@ -1,12 +1,11 @@
 package com.flixclusive.core.datastore
 
 import androidx.datastore.core.DataStore
-import com.flixclusive.core.util.coroutines.AppDispatchers
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.AppSettingsProvider
 import com.flixclusive.model.datastore.OnBoardingPreferences
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class AppSettingsManager @Inject constructor(
@@ -28,10 +27,18 @@ class AppSettingsManager @Inject constructor(
     var cachedProviderSettings: AppSettingsProvider = AppSettingsProvider()
         private set
 
+    /**
+     *
+     * Used for initial [cachedOnBoardingPreferences] values.
+     * */
+    var cachedOnBoardingPreferences: OnBoardingPreferences = OnBoardingPreferences()
+        private set
+
     init {
-        AppDispatchers.Default.scope.launch {
+        launchOnIO {
             cachedAppSettings = appSettings.data.first()
             cachedProviderSettings = providerSettings.data.first()
+            cachedOnBoardingPreferences = onBoardingPreferences.data.first()
         }
     }
 
@@ -60,6 +67,8 @@ class AppSettingsManager @Inject constructor(
     suspend fun updateOnBoardingPreferences(transform: suspend (t: OnBoardingPreferences) -> OnBoardingPreferences) {
         onBoardingPreferences.updateData {
             val newSettings = transform(it)
+
+            cachedOnBoardingPreferences = newSettings
             newSettings
         }
     }
