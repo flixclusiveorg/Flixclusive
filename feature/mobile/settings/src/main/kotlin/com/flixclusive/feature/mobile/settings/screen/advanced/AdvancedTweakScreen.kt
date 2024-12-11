@@ -1,7 +1,6 @@
 package com.flixclusive.feature.mobile.settings.screen.advanced
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.painter.Painter
@@ -14,7 +13,7 @@ import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberAppSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.getCurrentSettingsViewModel
 import com.flixclusive.model.datastore.network.DoHPreference
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
@@ -48,7 +47,8 @@ internal object AdvancedTweakScreen : BaseTweakScreen {
         val context = LocalContext.current
 
         val appSettings = LocalAppSettings.current
-        val onTweaked by rememberAppSettingsChanger()
+        val viewModel = getCurrentSettingsViewModel()
+        val onTweaked = viewModel::onChangeAppSettings
 
         val currentDoH = remember { mutableStateOf(appSettings.dns) }
         val availableDoHServers = remember {

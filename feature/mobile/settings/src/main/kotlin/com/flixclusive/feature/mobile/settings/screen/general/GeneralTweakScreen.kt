@@ -2,7 +2,6 @@ package com.flixclusive.feature.mobile.settings.screen.general
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -13,7 +12,7 @@ import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberAppSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.getCurrentSettingsViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import com.flixclusive.core.locale.R as LocaleR
@@ -40,7 +39,8 @@ internal object GeneralTweakScreen : BaseTweakScreen {
     @Composable
     override fun Content() {
         val appSettings = LocalAppSettings.current
-        val onTweaked by rememberAppSettingsChanger()
+        val viewModel = getCurrentSettingsViewModel()
+        val onTweaked = viewModel::onChangeAppSettings
 
         val usePreReleaseUpdates = rememberSaveable { mutableStateOf(false) }
 
@@ -60,7 +60,8 @@ internal object GeneralTweakScreen : BaseTweakScreen {
         showPreReleaseWarningDialog: MutableState<Boolean> = remember { mutableStateOf(false) },
     ): ImmutableList<TweakUI<out Any>> {
         val appSettings = LocalAppSettings.current
-        val onTweaked by rememberAppSettingsChanger()
+        val viewModel = getCurrentSettingsViewModel()
+        val onTweaked = viewModel::onChangeAppSettings
 
         val usePreReleaseUpdates = remember { mutableStateOf(appSettings.isUsingPrereleaseUpdates) }
 

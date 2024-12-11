@@ -3,7 +3,6 @@ package com.flixclusive.feature.mobile.settings.screen.subtitles
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,7 +17,7 @@ import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberAppSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.getCurrentSettingsViewModel
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionStylePreference
 import kotlinx.collections.immutable.persistentListOf
@@ -40,7 +39,8 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
     @Composable
     override fun getTweaks(): List<Tweak> {
         val appSettings = LocalAppSettings.current
-        val onTweaked by rememberAppSettingsChanger()
+        val viewModel = getCurrentSettingsViewModel()
+        val onTweaked = viewModel::onChangeAppSettings
 
         val areSubtitlesAvailable = remember { mutableStateOf(appSettings.isSubtitleEnabled) }
 
@@ -86,7 +86,8 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
     @Composable
     private fun getUiTweaks(): TweakGroup {
         val appSettings = LocalAppSettings.current
-        val onTweaked by rememberAppSettingsChanger()
+        val viewModel = getCurrentSettingsViewModel()
+        val onTweaked = viewModel::onChangeAppSettings
 
         val fontStyle = remember { mutableStateOf(appSettings.subtitleFontStyle) }
         val edgeType = remember { mutableStateOf(appSettings.subtitleEdgeType) }

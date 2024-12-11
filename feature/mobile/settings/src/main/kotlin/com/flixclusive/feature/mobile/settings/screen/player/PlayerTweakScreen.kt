@@ -4,7 +4,6 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -22,7 +21,7 @@ import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValue
 import com.flixclusive.feature.mobile.settings.screen.subtitles.SubtitlesTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalScaffoldNavigator
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.rememberAppSettingsChanger
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.getCurrentSettingsViewModel
 import com.flixclusive.model.datastore.player.DecoderPriority
 import com.flixclusive.model.datastore.player.PlayerQuality
 import com.flixclusive.model.datastore.player.ResizeMode
@@ -70,7 +69,8 @@ internal object PlayerTweakScreen : BaseTweakScreen {
         val navigator = LocalScaffoldNavigator.current!!
 
         val appSettings = LocalAppSettings.current
-        val onTweaked by rememberAppSettingsChanger()
+        val viewModel = getCurrentSettingsViewModel()
+        val onTweaked = viewModel::onChangeAppSettings
 
         val formatInSeconds = fun (amount: Long): String {
             return context.getString(LocaleR.string.n_seconds_format, amount)
@@ -154,7 +154,8 @@ internal object PlayerTweakScreen : BaseTweakScreen {
     @Composable
     private fun getUiTweaks(): TweakGroup {
         val appSettings = LocalAppSettings.current
-        val onTweaked by rememberAppSettingsChanger()
+        val viewModel = getCurrentSettingsViewModel()
+        val onTweaked = viewModel::onChangeAppSettings
 
         return TweakGroup(
             title = stringResource(LocaleR.string.user_interface),
@@ -185,7 +186,8 @@ internal object PlayerTweakScreen : BaseTweakScreen {
     @Composable
     private fun getAudioTweaks(): TweakGroup {
         val appSettings = LocalAppSettings.current
-        val onTweaked by rememberAppSettingsChanger()
+        val viewModel = getCurrentSettingsViewModel()
+        val onTweaked = viewModel::onChangeAppSettings
 
         val languages = remember {
             Locale.getAvailableLocales()
@@ -229,7 +231,8 @@ internal object PlayerTweakScreen : BaseTweakScreen {
         val context = LocalContext.current
 
         val appSettings = LocalAppSettings.current
-        val onTweaked by rememberAppSettingsChanger()
+        val viewModel = getCurrentSettingsViewModel()
+        val onTweaked = viewModel::onChangeAppSettings
 
         val availableDecoders = remember {
             DecoderPriority.entries

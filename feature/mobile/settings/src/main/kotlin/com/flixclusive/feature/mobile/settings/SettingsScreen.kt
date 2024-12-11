@@ -31,9 +31,7 @@ import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigat
 import com.flixclusive.core.ui.common.user.getAvatarResource
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettingsChanger
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettingsProvider
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettingsProviderChanger
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalSettingsViewModel
 import com.flixclusive.model.database.User
@@ -64,12 +62,10 @@ internal fun SettingsScreen(
     }
 
     CompositionLocalProvider(
-        LocalScaffoldNavigator provides scaffoldNavigator,
-        LocalSettingsViewModel provides viewModel,
         LocalAppSettings provides appSettings,
         LocalAppSettingsProvider provides appSettingsProvider,
-        LocalAppSettingsChanger provides viewModel::onChangeAppSettings,
-        LocalAppSettingsProviderChanger provides viewModel::onChangeAppSettingsProvider,
+        LocalScaffoldNavigator provides scaffoldNavigator,
+        LocalSettingsViewModel provides viewModel,
     ) {
         AnimatedContent(targetState = isListAndDetailVisible, label = "settings screen") {
             ListDetailPaneScaffold(
