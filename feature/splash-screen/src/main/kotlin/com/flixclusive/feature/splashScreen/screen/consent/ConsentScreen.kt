@@ -1,4 +1,4 @@
-package com.flixclusive.feature.splashScreen.component.consent
+package com.flixclusive.feature.splashScreen.screen.consent
 
 import android.content.Context
 import androidx.compose.animation.AnimatedContent

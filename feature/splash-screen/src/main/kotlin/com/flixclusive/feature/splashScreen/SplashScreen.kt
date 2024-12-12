@@ -30,7 +30,7 @@ import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.data.configuration.UpdateStatus
 import com.flixclusive.feature.splashScreen.component.ErrorDialog
 import com.flixclusive.feature.splashScreen.component.LoadingTag
-import com.flixclusive.feature.splashScreen.component.consent.ConsentScreen
+import com.flixclusive.feature.splashScreen.screen.consent.ConsentScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState

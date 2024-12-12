@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
+import com.flixclusive.core.ui.common.user.DefaultAvatarSize
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
@@ -239,7 +241,11 @@ private fun ListContentHeader(
         modifier = modifier
             .statusBarsPadding()
     ) {
-        UserAvatar(user = currentUser())
+        UserAvatar(
+            user = currentUser(),
+            modifier = Modifier
+                .size(DefaultAvatarSize)
+        )
 
         Box(
             modifier = Modifier

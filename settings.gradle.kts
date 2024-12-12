@@ -50,6 +50,7 @@ include(":feature:mobile:search")
 include(":feature:mobile:search-expanded")
 include(":feature:mobile:see-all")
 include(":feature:mobile:update")
+include(":feature:mobile:user")
 include(":feature:mobile:watchlist")
 
 // TV features

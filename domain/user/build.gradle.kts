@@ -9,6 +9,7 @@ android {
 }
 
 dependencies {
+    api(projects.data.user)
+
     implementation(projects.core.datastore)
-    implementation(projects.data.user)
 }

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -27,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
@@ -36,13 +36,15 @@ import com.flixclusive.core.ui.common.util.boxShadow
 import com.flixclusive.model.database.User
 import com.flixclusive.core.locale.R as LocaleR
 
-val AvatarSize = 100.dp
+val DefaultAvatarSize = 100.dp
 const val AVATAR_PREFIX = "avatar"
+const val AVATARS_IMAGE_COUNT = 10
 
 @Composable
 fun UserAvatar(
     modifier: Modifier = Modifier,
-    user: User
+    user: User,
+    boxShadowBlur: Dp = 16.dp
 ) {
     val context = LocalContext.current
     val avatarId = remember(user.image) {
@@ -70,22 +72,22 @@ fun UserAvatar(
 
     Box(
         modifier = modifier
-            .border(
-                width = 0.5.dp,
-                color = borderColor.copy(0.6F),
-                shape = shape
-            )
-            .boxShadow(
-                color = MaterialTheme.colorScheme.surface.copy(0.5F),
-                shape = shape,
-                blurRadius = 15.dp
-            )
     ) {
         Image(
             painter = painterResource(avatarId),
             contentDescription = stringResource(LocaleR.string.user_avatar),
             modifier = Modifier
-                .size(AvatarSize)
+                .matchParentSize()
+                .border(
+                    width = 0.5.dp,
+                    color = borderColor.copy(0.6F),
+                    shape = shape
+                )
+                .boxShadow(
+                    color = MaterialTheme.colorScheme.surface.copy(0.5F),
+                    shape = shape,
+                    blurRadius = boxShadowBlur
+                )
         )
     }
 }
@@ -140,7 +142,7 @@ private fun UserAvatarPreview() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(AvatarSize * 3)
+                .height(DefaultAvatarSize * 3)
                 .background(largeRadialGradient),
             contentAlignment = Alignment.Center
         ) {
@@ -148,6 +150,7 @@ private fun UserAvatarPreview() {
                 UserAvatar(
                     user = User(image = 0),
                     modifier = Modifier
+                        .size(DefaultAvatarSize)
                         .align(Alignment.Center)
                 )
             }
@@ -173,24 +176,26 @@ private fun UserAvatarPreview2() {
     }
 
     FlixclusiveTheme {
-        Surface(
+        val surface = MaterialTheme.colorScheme.surface
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(AvatarSize * 3)
+                .height(DefaultAvatarSize * 3)
                 .drawBehind {
-                    Brush.radialGradient(
-                        0.2F to Color.Transparent,
-                        0.6F to Color(backgroundColor)
+                    drawRect(
+                        Brush.radialGradient(
+                            0.2F to Color(backgroundColor).copy(0.05F),
+                            0.8F to surface
+                        )
                     )
                 }
         ) {
-            Box {
-                UserAvatar(
-                    user = User(image = 1),
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                )
-            }
+            UserAvatar(
+                user = User(image = 1),
+                modifier = Modifier
+                    .size(DefaultAvatarSize)
+                    .align(Alignment.Center)
+            )
         }
     }
 }
