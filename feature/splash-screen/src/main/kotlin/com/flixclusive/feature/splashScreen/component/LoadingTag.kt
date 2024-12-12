@@ -1,6 +1,7 @@
 package com.flixclusive.feature.splashScreen.component
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -72,21 +73,18 @@ internal fun LoadingTag(
             sharedTransitionScope = sharedTransitionScope
         )
 
-        with(animatedScope) {
-            if (isLoading) {
-                GradientCircularProgressIndicator(
-                    colors = gradientColors,
-                    modifier = Modifier
-                        .animateEnterExit(
-                            enter = fadeIn(
-                                animationSpec = tween(durationMillis = EXIT_DELAY)
-                            ) + scaleIn(),
-                            exit = scaleOut(
-                                animationSpec = tween(durationMillis = ENTER_DELAY)
-                            ) + fadeOut(),
-                        )
-                )
-            }
+        AnimatedVisibility(
+            visible = isLoading,
+            enter = fadeIn(
+                animationSpec = tween(durationMillis = EXIT_DELAY)
+            ) + scaleIn(),
+            exit = scaleOut(
+                animationSpec = tween(durationMillis = ENTER_DELAY)
+            ) + fadeOut(),
+        ) {
+            GradientCircularProgressIndicator(
+                colors = gradientColors
+            )
         }
     }
 }
