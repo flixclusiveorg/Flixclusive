@@ -22,11 +22,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlurEffect
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -38,6 +37,8 @@ import com.flixclusive.core.ui.common.navigation.navigator.UserProfilesNavigator
 import com.flixclusive.core.ui.common.user.AVATARS_IMAGE_COUNT
 import com.flixclusive.core.ui.common.user.DefaultAvatarSize
 import com.flixclusive.core.ui.common.user.UserAvatar
+import com.flixclusive.feature.mobile.user.util.ModifierUtil.getPagerBlur
+import com.flixclusive.feature.mobile.user.util.ModifierUtil.scaleDownOnPress
 import com.flixclusive.feature.mobile.user.util.StylesUtil.getNonEmphasizedLabel
 import com.flixclusive.model.database.User
 import com.ramcosta.composedestinations.annotation.Destination
@@ -58,6 +59,7 @@ internal fun UserProfilesScreen(
         }
     }
 
+    val indexPressed = remember { mutableStateOf<Int?>(null) }
     val pageCount = if (list.size <= 2) {
         list.size
     } else Int.MAX_VALUE
@@ -104,31 +106,27 @@ internal fun UserProfilesScreen(
                         boxShadowBlur = 30.dp,
                         modifier = Modifier
                             .size(DefaultAvatarSize * 2)
+                            .scaleDownOnPress(
+                                index = page,
+                                pressState = indexPressed
+                            )
                             .graphicsLayer {
-                                val blurRadius = lerp(
-                                    start = 10F,
-                                    stop = 0F,
-                                    fraction = 1F - pageOffset
-                                ).dp.toPx()
-                                val clip = true
-                                val tileMode = TileMode.Clamp
-
+                                this.clip = true
                                 this.shape = blurShape
-                                this.clip = clip
-                                this.renderEffect = if (blurRadius > 0f) {
-                                    BlurEffect(blurRadius, blurRadius, tileMode)
-                                } else null
+                                this.renderEffect = getPagerBlur(pageOffset = pageOffset)
 
-                                val scale = lerp(
-                                    start = 0.7f,
-                                    stop = 1f,
-                                    fraction = 1f - pageOffset
-                                )
+                                val scale =
+                                    if (indexPressed.value == page) 0.95F
+                                    else lerp(
+                                        start = 0.7f,
+                                        stop = 1f,
+                                        fraction = 1f - pageOffset
+                                    )
 
-                                scaleX = scale
-                                scaleY = scale
+                                this.scaleX = scale
+                                this.scaleY = scale
 
-                                alpha = lerp(
+                                this.alpha = lerp(
                                     start = 0.2f,
                                     stop = 1f,
                                     fraction = 1f - pageOffset
