@@ -20,4 +20,5 @@ data class User(
     val id: Int = 1,
     val name: String = USER_DEFAULT_NAME,
     val image: Int = 0
+    // TODO: Add pin column
 )

@@ -1,53 +1,63 @@
 package com.flixclusive.feature.mobile.user
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RichTooltip
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.lerp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.navigation.navargs.UserProfilesNavArgs
 import com.flixclusive.core.ui.common.navigation.navigator.UserProfilesNavigator
 import com.flixclusive.core.ui.common.user.AVATARS_IMAGE_COUNT
-import com.flixclusive.core.ui.common.user.DefaultAvatarSize
-import com.flixclusive.core.ui.common.user.UserAvatar
-import com.flixclusive.feature.mobile.user.util.ModifierUtil.getPagerBlur
-import com.flixclusive.feature.mobile.user.util.ModifierUtil.scaleDownOnPress
-import com.flixclusive.feature.mobile.user.util.StylesUtil.getNonEmphasizedLabel
+import com.flixclusive.core.ui.mobile.util.ComposeUtil.DefaultScreenPaddingHorizontal
+import com.flixclusive.feature.mobile.user.util.StylesUtil.getSlidingTransition
 import com.flixclusive.model.database.User
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlin.math.absoluteValue
+import kotlinx.coroutines.launch
+import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
-@Destination
+@Destination(
+    navArgsDelegate = UserProfilesNavArgs::class
+)
 @Composable
 internal fun UserProfilesScreen(
-    navigator: UserProfilesNavigator
+    navigator: UserProfilesNavigator,
+    args: UserProfilesNavArgs
 ) {
     val list = remember {
         List(3) {
@@ -59,119 +69,161 @@ internal fun UserProfilesScreen(
         }
     }
 
-    val indexPressed = remember { mutableStateOf<Int?>(null) }
-    val pageCount = if (list.size <= 2) {
-        list.size
-    } else Int.MAX_VALUE
+    val addNewUserCallback = if (list.isNotEmpty()) {
+        fun () {
+            // TODO: Navigate to add user screen
+        }
+    } else null
 
-    val initialPage =
-        if (list.size <= 2) 0
-        else (Int.MAX_VALUE / 2) - 3
+    val viewMode = rememberSaveable { mutableStateOf(ViewMode.Pager) }
 
-    val pagerState = rememberPagerState(
-        initialPage = initialPage,
-        pageCount = { pageCount }
-    )
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.CenterVertically),
-        modifier = Modifier
-            .fillMaxSize()
+    Scaffold(
+        topBar = {
+            UserProfilesScreen(
+                viewMode = viewMode,
+                addNewUser = addNewUserCallback
+            )
+        }
     ) {
-        HorizontalPager(
-            modifier = Modifier.height(250.dp),
-            pageSpacing = (-(DefaultAvatarSize + 100.dp)),
-            state = pagerState
-        ) { page ->
-            list.getOrNull(
-                index = page % list.size
-            )?.let { item ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    val blurShape = MaterialTheme.shapes.small
-                    val pageOffset by remember {
-                        derivedStateOf {
-                            ((pagerState.currentPage - page) +
-                                    pagerState.currentPageOffsetFraction
-                                    ).absoluteValue
-                        }
-                    }
+        AnimatedContent(
+            label = "main_content",
+            targetState = viewMode.value,
+            transitionSpec = {
+                val enterDuration = 500
+                val exitDuration = 300
+                val enterTweenFloat = tween<Float>(durationMillis = enterDuration)
+                val enterTweenInt = tween<IntOffset>(durationMillis = enterDuration)
+                val exitTweenFloat = tween<Float>(durationMillis = exitDuration)
+                val exitTweenInt = tween<IntOffset>(durationMillis = exitDuration)
 
-                    UserAvatar(
-                        user = item,
-                        boxShadowBlur = 30.dp,
+                if (targetState == ViewMode.Grid) {
+                    slideInHorizontally(enterTweenInt) + fadeIn(enterTweenFloat) togetherWith
+                        scaleOut(exitTweenFloat) + fadeOut(exitTweenFloat)
+                } else {
+                    fadeIn(enterTweenFloat) + scaleIn(exitTweenFloat) togetherWith
+                        slideOutHorizontally(exitTweenInt) + fadeOut(exitTweenFloat)
+                }
+            },
+            modifier = Modifier.padding(it)
+        ) { state ->
+            when (state) {
+                ViewMode.Grid -> {
+                    // TODO: Add GridScreen view mode
+                }
+                ViewMode.Pager -> {
+                    PagerMode(
+                        profiles = list,
                         modifier = Modifier
-                            .size(DefaultAvatarSize * 2)
-                            .scaleDownOnPress(
-                                index = page,
-                                pressState = indexPressed
-                            )
-                            .graphicsLayer {
-                                this.clip = true
-                                this.shape = blurShape
-                                this.renderEffect = getPagerBlur(pageOffset = pageOffset)
-
-                                val scale =
-                                    if (indexPressed.value == page) 0.95F
-                                    else lerp(
-                                        start = 0.7f,
-                                        stop = 1f,
-                                        fraction = 1f - pageOffset
-                                    )
-
-                                this.scaleX = scale
-                                this.scaleY = scale
-
-                                this.alpha = lerp(
-                                    start = 0.2f,
-                                    stop = 1f,
-                                    fraction = 1f - pageOffset
-                                )
-                            }
+                            .padding(it)
                     )
                 }
             }
         }
+    }
+}
 
-        val currentPage by remember {
-            derivedStateOf {
-                pagerState.currentPage
-            }
+private enum class ViewMode {
+    Grid,
+    Pager;
+}
+
+@Composable
+private fun UserProfilesScreen(
+    viewMode: MutableState<ViewMode>,
+    addNewUser: (() -> Unit)? = null
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .statusBarsPadding()
+            .padding(horizontal = DefaultScreenPaddingHorizontal)
+    ) {
+        Box(
+            modifier = Modifier.weight(1F)
+        ) {
+            Text(
+                text = stringResource(id = LocaleR.string.profiles),
+                style = MaterialTheme.typography.headlineMedium,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
+            )
         }
 
         AnimatedContent(
-            targetState = currentPage,
+            label = "view_mode_icon",
+            targetState = viewMode.value,
             transitionSpec = {
-                val tweenInt = tween<IntOffset>(durationMillis = 300)
-                val tweenFloat = tween<Float>(durationMillis = 500)
-
-                if (targetState > initialState) {
-                    fadeIn(tweenFloat) + slideInHorizontally(animationSpec = tweenInt) { it } togetherWith
-                        fadeOut() + slideOutHorizontally { -it / 2 }
-                } else {
-                    fadeIn(tweenFloat) + slideInHorizontally(tweenInt) { -it } + fadeIn() togetherWith
-                            fadeOut() + slideOutHorizontally { it / 2 }
-                }.using(
-                    SizeTransform(clip = false)
-                )
-            },
-            label = "username_animation"
-        ) { page ->
-            val item = remember {
-                list.getOrNull(page % list.size)
-                    ?: throw NullPointerException("Scrolled user [$page] is null")
+                getSlidingTransition(isSlidingRight = targetState.ordinal > initialState.ordinal)
+            }
+        ) { state ->
+            val viewTypeDescription = stringResource(LocaleR.string.view_type_button_content_desc)
+            ActionButtonTooltip(description = viewTypeDescription) {
+                when (state) {
+                    ViewMode.Grid -> {
+                        IconButton(onClick = { viewMode.value = ViewMode.Pager }) {
+                            Icon(
+                                painter = painterResource(UiCommonR.drawable.view_grid),
+                                contentDescription = viewTypeDescription
+                            )
+                        }
+                    }
+                    ViewMode.Pager -> {
+                        IconButton(onClick = { viewMode.value = ViewMode.Grid }) {
+                            Icon(
+                                painter = painterResource(UiCommonR.drawable.view_array),
+                                contentDescription = viewTypeDescription
+                            )
+                        }
+                    }
+                }
             }
 
-            Text(
-                text = item.name,
-                style = getNonEmphasizedLabel(18.sp)
-            )
+        }
+
+        addNewUser?.let {
+            val addUserButton = stringResource(LocaleR.string.add_user_button_content_desc)
+            ActionButtonTooltip(
+                description = addUserButton
+            ) {
+                IconButton(onClick = it) {
+                    Icon(
+                        painter = painterResource(UiCommonR.drawable.add_person),
+                        contentDescription = addUserButton
+                    )
+                }
+            }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ActionButtonTooltip(
+    description: String,
+    content: @Composable () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val tooltipState = rememberTooltipState(isPersistent = true)
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        content = content,
+        tooltip = {
+            RichTooltip(
+                action = {
+                    TextButton(
+                        onClick = {
+                            scope.launch { tooltipState.dismiss() }
+                        }
+                    ) {
+                        Text(stringResource(id = LocaleR.string.ok))
+                    }
+                },
+            ) {
+                Text(text = description)
+            }
+        },
+        state = tooltipState
+    )
 }
 
 @Preview
@@ -189,7 +241,8 @@ private fun UserProfilesScreenPreview() {
                     override fun openAddUsersScreen() = Unit
                     override fun openEditUserScreen() = Unit
                     override fun openHomeScreen() = Unit
-                }
+                },
+                args = UserProfilesNavArgs(false)
             )
         }
     }

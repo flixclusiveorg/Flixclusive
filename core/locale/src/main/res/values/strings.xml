@@ -12,6 +12,7 @@
     <string name="providers">Providers</string>
     <string name="recently_watched">Recently Watched</string>
     <string name="search">Search</string>
+    <string name="profiles">Profiles</string>
     <string name="settings">Settings</string>
     <string name="watchlist">Watchlist</string>
 
@@ -397,6 +398,8 @@
     <string name="film_item_content_description">A film\'s backdrop, picture or poster.</string>
     <string name="filter_button">Filter button</string>
     <string name="flixclusive_icon_content_desc">Flixclusive icon</string>
+    <string name="add_user_button_content_desc">Add a new user profile</string>
+    <string name="view_type_button_content_desc">Change view type of list</string>
     <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>
     <string name="forward_button_content_description">Forward button for the player</string>
     <string name="general_settings_content_desc">This contains all the general settings that are not related any of the specified groups on the settings navigation.</string>
