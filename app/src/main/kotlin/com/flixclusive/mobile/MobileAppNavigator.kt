@@ -128,6 +128,10 @@ internal class MobileAppNavigator(
         }
     }
 
+    override fun openUsersProfileScreen() {
+        TODO("Not yet implemented")
+    }
+
     override fun onExitApplication() {
         closeApp()
     }

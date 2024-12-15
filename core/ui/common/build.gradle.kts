@@ -17,6 +17,7 @@ dependencies {
     implementation(projects.model.datastore)
 
     implementation(libs.coil.compose)
+    implementation(libs.compose.adaptive)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)

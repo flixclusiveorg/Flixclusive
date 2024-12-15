@@ -13,6 +13,7 @@ dependencies {
     implementation(projects.data.configuration)
     implementation(projects.domain.user)
 
+    implementation(libs.compose.adaptive)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)

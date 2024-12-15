@@ -15,7 +15,8 @@ import androidx.compose.ui.util.lerp
 internal object ModifierUtil {
     fun Modifier.scaleDownOnPress(
         index: Int,
-        pressState: MutableState<Int?>
+        pressState: MutableState<Int?>,
+        onClick: () -> Unit
     ) = composed {
         this
             .pointerInput(Unit) {
@@ -24,9 +25,10 @@ internal object ModifierUtil {
                         // Scale down when pressed
                         pressState.value = index
                         tryAwaitRelease()
+                        onClick()
                         // Scale back up when released
                         pressState.value = null
-                    }
+                    },
                 )
             }
     }

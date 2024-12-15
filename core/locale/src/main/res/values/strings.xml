@@ -117,6 +117,7 @@
     <string name="browse_providers_catalogs">Your providers\' catalogs</string>
     <string name="browse_repository">Browse repository</string>
     <string name="browse_tv_networks">Top TV networks</string>
+    <string name="edit">Edit</string>
     <string name="cancel">Cancel</string>
     <string name="change_logs">CHANGE LOGS</string>
     <string name="check_for_updates">Check for updates</string>
@@ -283,6 +284,7 @@
     <string name="watchlisted">Added</string>
     <string name="whats_new">What\'s new</string>
     <string name="network">Network</string>
+    <string name="whos_watching">Who\'s watching?</string>
 
     <!--  Color  -->
     <string name="white">White</string>
@@ -320,6 +322,7 @@
     <string name="download_completed">Download completed</string>
     <string name="download_in_progress">Downloading</string>
     <string name="empty_list_default_message">No items found.</string>
+    <string name="empty_user_profiles_list_message">Create a profile now!</string>
     <string name="empty_providers_list_message">No providers installed</string>
     <string name="empty_recently_watched_list_message">Start watching now!</string>
     <string name="failed_to_get_media_id_error_msg">Failed to get media id. This might not be available yet.</string>
@@ -408,6 +411,9 @@
     <string name="data_and_backup_settings_content_desc">This contains all the settings to customize how your data is handled.</string>
     <string name="subtitles_settings_content_desc">This contains all the settings to customize how subtitles are displayed.</string>
     <string name="lock_button_desc">An icon for locking the player</string>
+    <string name="edit_profile_button_desc">Edit profile</string>
+    <string name="edit_profile_cancel_button_desc">Stop editing profiles</string>
+    <string name="locked_profile_button_desc">Profile has a pin lock</string>
     <string name="missing_providers_logo_content_description">Missing providers logo</string>
     <string name="navigate_to_film">Go see details of film button</string>
     <string name="navigate_to_repository_content_desc">Open repository screen</string>

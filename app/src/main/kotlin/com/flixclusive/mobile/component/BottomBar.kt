@@ -176,6 +176,12 @@ private val mobileNavigationItems = listOf(
         label = LocaleR.string.search
     ),
     AppNavigationItem(
+        screen = MobileNavGraphs.providers,
+        iconSelected = UiCommonR.drawable.provider_logo_fill,
+        iconUnselected = UiCommonR.drawable.provider_logo,
+        label = LocaleR.string.providers
+    ),
+    AppNavigationItem(
         screen = MobileNavGraphs.settings,
         iconSelected = UiCommonR.drawable.settings_filled,
         iconUnselected = UiCommonR.drawable.settings,

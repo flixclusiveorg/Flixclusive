@@ -53,6 +53,23 @@ internal object MobileNavGraphs {
             .associateBy { it.route }
     }
 
+    val providers = object : NavGraphSpec {
+        override val route = "providers"
+
+        override val startRoute = ProvidersScreenDestination routedIn this
+
+        override val destinationsByRoute = listOf<DestinationSpec<*>>(
+            ProvidersScreenDestination,
+            RepositorySearchScreenDestination,
+            RepositoryScreenDestination,
+            ProviderInfoScreenDestination,
+            ProviderSettingsScreenDestination,
+            MarkdownScreenDestination,
+            ProviderTestScreenDestination
+        ).routedIn(this)
+            .associateBy { it.route }
+    }
+
     val settings = object : NavGraphSpec {
         override val route = "settings"
 
@@ -86,6 +103,7 @@ internal object MobileNavGraphs {
         override val nestedNavGraphs = listOf(
             home,
             search,
+            providers,
             settings,
         )
     }

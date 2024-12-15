@@ -82,7 +82,7 @@ internal fun SettingsScreen(
 
                     AnimatedPane {
                         ListContent(
-                            currentUser = { currentUser!! },
+                            currentUser = { currentUser ?: User() /*TODO: Remove elvis fallback */ },
                             searchHistoryCount = searchHistoryCount,
                             onClearSearchHistory = viewModel::clearSearchHistory,
                             navigator = navigator,

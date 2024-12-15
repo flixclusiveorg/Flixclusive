@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -22,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RadialGradientShader
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -36,6 +38,7 @@ import com.flixclusive.core.ui.common.util.boxShadow
 import com.flixclusive.model.database.User
 import com.flixclusive.core.locale.R as LocaleR
 
+val DefaultAvatarShape = RoundedCornerShape(8.0.dp)
 val DefaultAvatarSize = 100.dp
 const val AVATAR_PREFIX = "avatar"
 const val AVATARS_IMAGE_COUNT = 10
@@ -44,14 +47,14 @@ const val AVATARS_IMAGE_COUNT = 10
 fun UserAvatar(
     modifier: Modifier = Modifier,
     user: User,
-    boxShadowBlur: Dp = 16.dp
+    contentScale: ContentScale = ContentScale.Fit,
+    boxShadowBlur: Dp = 16.dp,
 ) {
     val context = LocalContext.current
     val avatarId = remember(user.image) {
         context.getAvatarResource(user.image)
     }
 
-    val shape = MaterialTheme.shapes.small
     val primaryColor = MaterialTheme.colorScheme.primary
     val borderColor = remember(avatarId) {
         val drawable = ContextCompat.getDrawable(context, avatarId)!!
@@ -76,16 +79,17 @@ fun UserAvatar(
         Image(
             painter = painterResource(avatarId),
             contentDescription = stringResource(LocaleR.string.user_avatar),
+            contentScale = contentScale,
             modifier = Modifier
                 .matchParentSize()
                 .border(
                     width = 0.5.dp,
                     color = borderColor.copy(0.6F),
-                    shape = shape
+                    shape = DefaultAvatarShape
                 )
                 .boxShadow(
                     color = MaterialTheme.colorScheme.surface.copy(0.5F),
-                    shape = shape,
+                    shape = DefaultAvatarShape,
                     blurRadius = boxShadowBlur
                 )
         )

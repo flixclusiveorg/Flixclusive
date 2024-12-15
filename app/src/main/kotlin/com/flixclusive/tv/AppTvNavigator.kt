@@ -105,6 +105,10 @@ internal class AppTvNavigator(
         }
     }
 
+    override fun openUsersProfileScreen() {
+        TODO("Not yet implemented")
+    }
+
     override fun onExitApplication() {
         closeApp()
     }
