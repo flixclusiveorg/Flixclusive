@@ -108,6 +108,55 @@ fun Context.getAvatarResource(imageIndex: Int): Int {
     return id
 }
 
+@Composable
+fun getAdaptiveBackground(
+    user: User,
+    strength: Float = 0.05F,
+    useBigRadialGradient: Boolean = false
+): Brush {
+    val context = LocalContext.current
+
+    val primaryColor = MaterialTheme.colorScheme.primary
+
+    val avatarId = context.getAvatarResource(user.image)
+    val drawable = ContextCompat.getDrawable(context, avatarId)!!
+
+    val palette = Palette
+        .from(drawable.toBitmap())
+        .generate()
+
+    val swatch = palette.let {
+        it.vibrantSwatch
+            ?: it.lightVibrantSwatch
+            ?: it.lightMutedSwatch
+    }
+
+    val color = swatch?.rgb?.let { Color(it) }
+        ?: primaryColor
+
+    return if (useBigRadialGradient) {
+        object : ShaderBrush() {
+            override fun createShader(size: Size): Shader {
+                val biggerDimension = maxOf(size.height, size.width)
+                return RadialGradientShader(
+                    colors = listOf(
+                        color.copy(alpha = strength),
+                        Color.Transparent
+                    ),
+                    center = size.center,
+                    radius = biggerDimension / 2f,
+                    colorStops = listOf(0f, 0.95f)
+                )
+            }
+        }
+    } else {
+        Brush.radialGradient(
+            0.2F to color.copy(strength),
+            0.8F to Color.Transparent
+        )
+    }
+}
+
 @Preview
 @Composable
 private fun UserAvatarPreview() {

@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.user
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,8 +22,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +55,8 @@ import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveSemiEmphasizedLabel
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
+import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalAnimatedVisibilityScope
+import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalSharedTransitionScope
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.user.component.EditButton
 import com.flixclusive.model.database.User
@@ -67,6 +72,7 @@ private val CompactLabelSize = 12.sp
 @Composable
 internal fun GridMode(
     modifier: Modifier = Modifier,
+    listState: LazyGridState,
     profiles: List<User>,
     onSelect: (User) -> Unit,
     onEdit: (User) -> Unit
@@ -98,6 +104,7 @@ internal fun GridMode(
         Box {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(columnsSize),
+                state = listState,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 contentPadding = PaddingValues(vertical = scrimOverlayAdaptiveHeight),
@@ -111,6 +118,7 @@ internal fun GridMode(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         UserAvatarWithEdit(
+                            modifier = Modifier.animateItem(),
                             user = it,
                             isEditing = isEditing,
                             onSelect = {
@@ -233,22 +241,33 @@ private fun UsernameTag(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun UserAvatarWithEdit(
+    modifier: Modifier = Modifier,
     user: User,
     isEditing: Boolean,
     onSelect: (User) -> Unit,
 ) {
+    val sharedTransitionScope = getLocalSharedTransitionScope()
+    val animatedVisibilityScope = getLocalAnimatedVisibilityScope()
+
     val fadeDuration = 200
     val avatarModifier = Modifier
         .aspectRatio(1F)
         .clickable { onSelect(user) }
 
-    Box(contentAlignment = Alignment.Center) {
-        UserAvatar(
-            user = user,
-            modifier = avatarModifier
-        )
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        with(sharedTransitionScope) {
+            UserAvatar(
+                user = user,
+                modifier = avatarModifier
+                    .sharedElement(
+                        state = rememberSharedContentState(key = "${user.id}-grid"),
+                        animatedVisibilityScope = animatedVisibilityScope,
+                    )
+            )
+        }
 
         AnimatedVisibility(
             visible = isEditing,
@@ -288,6 +307,7 @@ private fun GridModeBasePreview() {
             GridMode(
                 onEdit = {},
                 onSelect = {},
+                listState = rememberLazyGridState(),
                 profiles = List(20) {
                     User(
                         id = it,

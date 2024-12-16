@@ -43,4 +43,21 @@ object AdaptiveStylesUtil {
             )
         )
     }
+
+    @Composable
+    fun getAdaptiveEmphasizedLabel(
+        compactFontSize: TextUnit = 14.sp,
+        mediumFontSize: TextUnit = (compactFontSize.value + 4).sp,
+        expandedFontSize: TextUnit = (mediumFontSize.value + 4).sp
+    ): TextStyle {
+        return MaterialTheme.typography.labelLarge.copy(
+            fontWeight = FontWeight.Black,
+            color = LocalContentColor.current,
+            fontSize = AdaptiveUiUtil.getAdaptiveTextUnit(
+                compact = compactFontSize,
+                medium = mediumFontSize,
+                expanded = expandedFontSize
+            )
+        )
+    }
 }

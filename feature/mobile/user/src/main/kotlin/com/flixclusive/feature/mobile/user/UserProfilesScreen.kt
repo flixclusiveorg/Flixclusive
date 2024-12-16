@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,10 +35,12 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -55,6 +59,8 @@ import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.navargs.UserProfilesNavArgs
 import com.flixclusive.core.ui.common.navigation.navigator.UserProfilesNavigator
 import com.flixclusive.core.ui.common.user.AVATARS_IMAGE_COUNT
+import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
+import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.ui.mobile.util.ComposeUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.feature.mobile.user.util.UxUtil.getSlidingTransition
 import com.flixclusive.model.database.User
@@ -81,13 +87,30 @@ internal fun UserProfilesScreen(
         }
     }
 
-    val viewMode = rememberSaveable { mutableStateOf(ViewMode.Pager) }
+    val pageCount = if (list.size <= 2) {
+        list.size
+    } else Int.MAX_VALUE
+
+    val initialPage =
+        if (list.size <= 2) 0
+        else (Int.MAX_VALUE / 2) - 3
+
+    val listState = rememberLazyGridState()
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { pageCount }
+    )
+
+    val screenType = rememberSaveable { mutableStateOf(ScreenType.Pager) }
+    val lastScreenTypeUsed = rememberSaveable { mutableStateOf(ScreenType.Pager) }
+    var clickedProfile by remember { mutableStateOf<User?>(null) }
 
     Scaffold(
         topBar = {
             TopBar(
-                areProfilesEmpty = list.isEmpty(),
-                viewMode = viewMode,
+                showTag = list.isEmpty() || screenType.value == ScreenType.ContinueScreen,
+                screenType = screenType,
+                lastScreenTypeUsed = lastScreenTypeUsed,
                 isComingFromSplashScreen = args.isComingFromSplashScreen,
                 addNewUser = navigator::openAddUsersScreen,
                 onBack = navigator::goBack
@@ -95,45 +118,71 @@ internal fun UserProfilesScreen(
         }
     ) {
         if (list.isNotEmpty()) {
-            AnimatedContent(
-                label = "main_content",
-                targetState = viewMode.value,
-                transitionSpec = {
-                    val enterDuration = 500
-                    val exitDuration = 300
-                    val enterTweenFloat = tween<Float>(durationMillis = enterDuration)
-                    val enterTweenInt = tween<IntOffset>(durationMillis = enterDuration)
-                    val exitTweenFloat = tween<Float>(durationMillis = exitDuration)
-                    val exitTweenInt = tween<IntOffset>(durationMillis = exitDuration)
+            ProvideSharedTransitionScope {
+                AnimatedContent(
+                    label = "main_content",
+                    targetState = screenType.value,
+                    transitionSpec = {
+                        val enterDuration = 500
+                        val exitDuration = 300
+                        val enterTweenFloat = tween<Float>(durationMillis = enterDuration)
+                        val enterTweenInt = tween<IntOffset>(durationMillis = enterDuration)
+                        val exitTweenFloat = tween<Float>(durationMillis = exitDuration)
+                        val exitTweenInt = tween<IntOffset>(durationMillis = exitDuration)
 
-                    if (targetState == ViewMode.Grid) {
-                        slideInHorizontally(enterTweenInt) + fadeIn(enterTweenFloat) togetherWith
-                                scaleOut(exitTweenFloat) + fadeOut(exitTweenFloat)
-                    } else {
-                        fadeIn(enterTweenFloat) + scaleIn(exitTweenFloat) togetherWith
-                                slideOutHorizontally(exitTweenInt) + fadeOut(exitTweenFloat)
-                    }
-                },
-                modifier = Modifier.padding(it)
-            ) { state ->
-                when (state) {
-                    ViewMode.Grid -> {
-                        GridMode(
-                            profiles = list,
-                            onSelect = { /*TODO: Navigate to home/settings screen*/ },
-                            onEdit = { /*TODO: Navigate to edit screen*/ },
-                            modifier = Modifier
-                                .padding(it)
-                        )
-                    }
-                    ViewMode.Pager -> {
-                        PagerMode(
-                            profiles = list,
-                            onSelect = { /*TODO: Navigate to home/settings screen*/ },
-                            onEdit = { /*TODO: Navigate to edit screen*/ },
-                            modifier = Modifier
-                                .padding(it)
-                        )
+                        if (initialState != ScreenType.ContinueScreen) {
+                            if (targetState == ScreenType.Grid) {
+                                slideInHorizontally(enterTweenInt) + fadeIn(enterTweenFloat) togetherWith
+                                        scaleOut(exitTweenFloat) + fadeOut(exitTweenFloat)
+                            }
+                            else {
+                                fadeIn(enterTweenFloat) + scaleIn(exitTweenFloat) togetherWith
+                                        slideOutHorizontally(exitTweenInt) + fadeOut(exitTweenFloat)
+                            }
+                        }
+                        else {
+                            fadeIn(enterTweenFloat) + scaleIn(exitTweenFloat) togetherWith
+                                    fadeOut(exitTweenFloat)
+                        }
+                    },
+                    modifier = Modifier.padding(it)
+                ) { state ->
+                    ProvideAnimatedVisibilityScope {
+                        val onSelect = fun (user: User) {
+                            lastScreenTypeUsed.value = screenType.value
+                            screenType.value = ScreenType.ContinueScreen
+                            clickedProfile = user
+                        }
+                        when (state) {
+                            ScreenType.Grid -> {
+                                GridMode(
+                                    profiles = list,
+                                    onSelect = onSelect,
+                                    listState = listState,
+                                    onEdit = { /*TODO: Navigate to edit screen*/ }
+                                )
+                            }
+                            ScreenType.Pager -> {
+                                PagerMode(
+                                    profiles = list,
+                                    onSelect = onSelect,
+                                    pagerState = pagerState,
+                                    onEdit = { /*TODO: Navigate to edit screen*/ }
+                                )
+                            }
+                            ScreenType.ContinueScreen -> {
+                                clickedProfile?.let { profile ->
+                                    ClickedProfileScreen(
+                                        clickedProfile = profile,
+                                        onUseAsDefault = { /*TODO: Add toggle for onUseAsDefault profile */ },
+                                        onConfirm = { /*TODO: Navigate to home/settings screen */ },
+                                        onBack = {
+                                            screenType.value = lastScreenTypeUsed.value
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -146,8 +195,9 @@ internal fun UserProfilesScreen(
     }
 }
 
-private enum class ViewMode {
+private enum class ScreenType {
     Grid,
+    ContinueScreen,
     Pager;
 }
 
@@ -156,92 +206,108 @@ internal val TopBarHeight = 50.dp
 @Composable
 private fun TopBar(
     isComingFromSplashScreen: Boolean,
-    viewMode: MutableState<ViewMode>,
-    areProfilesEmpty: Boolean,
+    screenType: MutableState<ScreenType>,
+    lastScreenTypeUsed: MutableState<ScreenType>,
+    showTag: Boolean,
     onBack: () -> Unit,
     addNewUser: () -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .height(TopBarHeight)
-            .statusBarsPadding()
-    ) {
-
-        if (areProfilesEmpty) {
-            val gradientColors = listOf(
-                MaterialTheme.colorScheme.primary,
-                MaterialTheme.colorScheme.tertiary,
-            )
-
-            Box(
-                modifier = Modifier.weight(1F),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(UiCommonR.drawable.flixclusive_tag),
-                    contentDescription = stringResource(id = com.flixclusive.core.locale.R.string.flixclusive_tag_content_desc),
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .height(30.dp)
-                        .graphicsLayer(alpha = 0.99F)
-                        .drawWithCache {
-                            onDrawWithContent {
-                                drawContent()
-                                drawRect(
-                                    brush = Brush.linearGradient(colors = gradientColors),
-                                    blendMode = BlendMode.SrcAtop
-                                )
-                            }
-                        }
+    AnimatedContent(
+        targetState = showTag,
+        label = "TopBar"
+    ) { state ->
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .height(TopBarHeight)
+                .statusBarsPadding()
+        ) {
+            if (state) {
+                val gradientColors = listOf(
+                    MaterialTheme.colorScheme.primary,
+                    MaterialTheme.colorScheme.tertiary,
                 )
-            }
-        } else {
-            TopBarForNonEmptyScreen(
-                modifier = Modifier.weight(1F),
-                isComingFromSplashScreen = isComingFromSplashScreen,
-                onBack = onBack
-            ) {
-                AnimatedContent(
-                    label = "view_mode_icon",
-                    targetState = viewMode.value,
-                    transitionSpec = {
-                        getSlidingTransition(isSlidingRight = targetState.ordinal > initialState.ordinal)
-                    }
-                ) { state ->
-                    val viewTypeDescription = stringResource(LocaleR.string.view_type_button_content_desc)
-                    ActionButtonTooltip(description = viewTypeDescription) {
-                        when (state) {
-                            ViewMode.Grid -> {
-                                IconButton(onClick = { viewMode.value = ViewMode.Pager }) {
-                                    Icon(
-                                        painter = painterResource(UiCommonR.drawable.view_array),
-                                        contentDescription = viewTypeDescription
+
+                Box(
+                    modifier = Modifier.weight(1F),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(UiCommonR.drawable.flixclusive_tag),
+                        contentDescription = stringResource(id = com.flixclusive.core.locale.R.string.flixclusive_tag_content_desc),
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .height(30.dp)
+                            .graphicsLayer(alpha = 0.99F)
+                            .drawWithCache {
+                                onDrawWithContent {
+                                    drawContent()
+                                    drawRect(
+                                        brush = Brush.linearGradient(colors = gradientColors),
+                                        blendMode = BlendMode.SrcAtop
                                     )
                                 }
                             }
-                            ViewMode.Pager -> {
-                                IconButton(onClick = { viewMode.value = ViewMode.Grid }) {
-                                    Icon(
-                                        painter = painterResource(UiCommonR.drawable.view_grid),
-                                        contentDescription = viewTypeDescription
-                                    )
+                    )
+                }
+            } else {
+                TopBarForNonEmptyScreen(
+                    modifier = Modifier.weight(1F),
+                    isComingFromSplashScreen = isComingFromSplashScreen,
+                    onBack = onBack
+                ) {
+                    AnimatedContent(
+                        label = "view_mode_icon",
+                        targetState = screenType.value,
+                        transitionSpec = {
+                            getSlidingTransition(isSlidingRight = targetState.ordinal > initialState.ordinal)
+                        }
+                    ) { state ->
+                        val viewTypeDescription = stringResource(LocaleR.string.view_type_button_content_desc)
+                        ActionButtonTooltip(description = viewTypeDescription) {
+                            when (state) {
+                                ScreenType.Grid -> {
+                                    IconButton(
+                                        onClick = {
+                                            lastScreenTypeUsed.value = screenType.value
+                                            screenType.value = ScreenType.Pager
+                                        }
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(UiCommonR.drawable.view_array),
+                                            contentDescription = viewTypeDescription
+                                        )
+                                    }
                                 }
+                                ScreenType.Pager -> {
+                                    IconButton(
+                                        onClick = {
+                                            lastScreenTypeUsed.value = screenType.value
+                                            screenType.value = ScreenType.Grid
+                                        }
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(UiCommonR.drawable.view_grid),
+                                            contentDescription = viewTypeDescription
+                                        )
+                                    }
+                                }
+                                ScreenType.ContinueScreen -> Unit
                             }
                         }
+
                     }
 
-                }
-
-                val addUserButton = stringResource(LocaleR.string.add_user_button_content_desc)
-                ActionButtonTooltip(
-                    description = addUserButton
-                ) {
-                    IconButton(onClick = addNewUser) {
-                        Icon(
-                            painter = painterResource(UiCommonR.drawable.add_person),
-                            contentDescription = addUserButton
-                        )
+                    val addUserButton = stringResource(LocaleR.string.add_user_button_content_desc)
+                    ActionButtonTooltip(
+                        description = addUserButton
+                    ) {
+                        IconButton(onClick = addNewUser) {
+                            Icon(
+                                painter = painterResource(UiCommonR.drawable.add_person),
+                                contentDescription = addUserButton
+                            )
+                        }
                     }
                 }
             }

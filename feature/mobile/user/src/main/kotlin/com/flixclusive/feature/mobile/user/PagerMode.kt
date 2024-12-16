@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.user
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -52,6 +54,8 @@ import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveNonEmphasizedLabel
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
+import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalAnimatedVisibilityScope
+import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalSharedTransitionScope
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.user.component.EditButton
 import com.flixclusive.feature.mobile.user.util.ModifierUtil.getPagerBlur
@@ -65,31 +69,25 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 
 private val PagerAvatarSize = DefaultAvatarSize * 2
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun PagerMode(
     modifier: Modifier = Modifier,
+    pagerState: PagerState,
     profiles: List<User>,
     onSelect: (User) -> Unit,
     onEdit: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
+    val sharedTransitionScope = getLocalSharedTransitionScope()
+    val animatedVisibilityScope = getLocalAnimatedVisibilityScope()
 
     val indexPressed = remember { mutableStateOf<Int?>(null) }
-    val pageCount = if (profiles.size <= 2) {
-        profiles.size
-    } else Int.MAX_VALUE
 
-    val initialPage =
-        if (profiles.size <= 2) 0
-        else (Int.MAX_VALUE / 2) - 3
 
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp
     val pageWidth = (screenWidthDp / 3f).dp
-    val pagerState = rememberPagerState(
-        initialPage = initialPage,
-        pageCount = { pageCount }
-    )
 
     var showEditButton by remember { mutableStateOf(true) }
 
@@ -165,52 +163,58 @@ internal fun PagerMode(
                             }
                         }
 
-                        UserAvatar(
-                            user = item,
-                            boxShadowBlur = 30.dp,
-                            modifier = Modifier
-                                .size(pageWidth)
-                                .scaleDownOnPress(
-                                    index = page,
-                                    pressState = indexPressed
-                                ) {
-                                    if (pagerState.currentPage == page) {
-                                        onSelect(item)
-                                    } else {
-                                        scope.launch {
-                                            pagerState.animateScrollToPage(
-                                                page = page,
-                                                animationSpec = tween(durationMillis = 500)
-                                            )
+                        with(sharedTransitionScope) {
+                            UserAvatar(
+                                user = item,
+                                boxShadowBlur = 30.dp,
+                                modifier = Modifier
+                                    .sharedElement(
+                                        state = rememberSharedContentState(key = "${item.id}-pager"),
+                                        animatedVisibilityScope = animatedVisibilityScope,
+                                    )
+                                    .size(pageWidth)
+                                    .scaleDownOnPress(
+                                        index = page,
+                                        pressState = indexPressed
+                                    ) {
+                                        if (pagerState.currentPage == page) {
                                             onSelect(item)
+                                        } else {
+                                            scope.launch {
+                                                pagerState.animateScrollToPage(
+                                                    page = page,
+                                                    animationSpec = tween(durationMillis = 500)
+                                                )
+                                                onSelect(item)
+                                            }
                                         }
                                     }
-                                }
-                                .graphicsLayer {
-                                    scaleX = scaleValueOnPress
-                                    scaleY = scaleValueOnPress
-                                }
-                                .graphicsLayer {
-                                    this.clip = true
-                                    this.shape = blurShape
-                                    this.renderEffect = getPagerBlur(pageOffset = pageOffset)
+                                    .graphicsLayer {
+                                        scaleX = scaleValueOnPress
+                                        scaleY = scaleValueOnPress
+                                    }
+                                    .graphicsLayer {
+                                        this.clip = true
+                                        this.shape = blurShape
+                                        this.renderEffect = getPagerBlur(pageOffset = pageOffset)
 
-                                    val scale = lerp(
-                                        start = 0.7f,
-                                        stop = 1f,
-                                        fraction = 1f - pageOffset
-                                    )
+                                        val scale = lerp(
+                                            start = 0.7f,
+                                            stop = 1f,
+                                            fraction = 1f - pageOffset
+                                        )
 
-                                    this.scaleX = scale
-                                    this.scaleY = scale
+                                        this.scaleX = scale
+                                        this.scaleY = scale
 
-                                    this.alpha = lerp(
-                                        start = 0.2f,
-                                        stop = 1f,
-                                        fraction = 1f - pageOffset
-                                    )
-                                }
-                        )
+                                        this.alpha = lerp(
+                                            start = 0.2f,
+                                            stop = 1f,
+                                            fraction = 1f - pageOffset
+                                        )
+                                    }
+                            )
+                        }
                     }
                 }
             }
@@ -291,6 +295,26 @@ private fun UsernameTag(
 @Preview(device = "id:pixel_9_pro")
 @Composable
 private fun PagerModeBasePreview() {
+    val profiles = List(10) {
+        User(
+            id = it,
+            image = it % AVATARS_IMAGE_COUNT,
+            name = "User $it"
+        )
+    }
+    val pageCount = if (profiles.size <= 2) {
+        profiles.size
+    } else Int.MAX_VALUE
+
+    val initialPage =
+        if (profiles.size <= 2) 0
+        else (Int.MAX_VALUE / 2) - 3
+
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { pageCount }
+    )
+
     FlixclusiveTheme {
         Surface(
             modifier = Modifier
@@ -299,13 +323,8 @@ private fun PagerModeBasePreview() {
             PagerMode(
                 onEdit = {},
                 onSelect = {},
-                profiles = List(10) {
-                    User(
-                        id = it,
-                        image = it % AVATARS_IMAGE_COUNT,
-                        name = "User $it"
-                    )
-                }
+                profiles = profiles,
+                pagerState = pagerState
             )
         }
     }
