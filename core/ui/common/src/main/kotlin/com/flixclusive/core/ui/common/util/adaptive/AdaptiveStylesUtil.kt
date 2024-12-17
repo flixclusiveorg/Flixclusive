@@ -12,51 +12,51 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 object AdaptiveStylesUtil {
     @Composable
     fun getAdaptiveNonEmphasizedLabel(
-        compactFontSize: TextUnit = 14.sp,
-        mediumFontSize: TextUnit = (compactFontSize.value + 4).sp,
-        expandedFontSize: TextUnit = (mediumFontSize.value + 4).sp
+        compact: TextUnit = 14.sp,
+        medium: TextUnit = (compact.value + 4).sp,
+        expanded: TextUnit = (medium.value + 4).sp
     ): TextStyle {
         return MaterialTheme.typography.labelLarge.copy(
             fontWeight = FontWeight.Normal,
             color = LocalContentColor.current.onMediumEmphasis(),
             fontSize = AdaptiveUiUtil.getAdaptiveTextUnit(
-                compact = compactFontSize,
-                medium = mediumFontSize,
-                expanded = expandedFontSize
+                compact = compact,
+                medium = medium,
+                expanded = expanded
             )
         )
     }
 
     @Composable
     fun getAdaptiveSemiEmphasizedLabel(
-        compactFontSize: TextUnit = 14.sp,
-        mediumFontSize: TextUnit = (compactFontSize.value + 4).sp,
-        expandedFontSize: TextUnit = (mediumFontSize.value + 4).sp
+        compact: TextUnit = 14.sp,
+        medium: TextUnit = (compact.value + 4).sp,
+        expanded: TextUnit = (medium.value + 4).sp
     ): TextStyle {
         return MaterialTheme.typography.labelLarge.copy(
             fontWeight = FontWeight.Medium,
             color = LocalContentColor.current.onMediumEmphasis(0.8F),
             fontSize = AdaptiveUiUtil.getAdaptiveTextUnit(
-                compact = compactFontSize,
-                medium = mediumFontSize,
-                expanded = expandedFontSize
+                compact = compact,
+                medium = medium,
+                expanded = expanded
             )
         )
     }
 
     @Composable
     fun getAdaptiveEmphasizedLabel(
-        compactFontSize: TextUnit = 14.sp,
-        mediumFontSize: TextUnit = (compactFontSize.value + 4).sp,
-        expandedFontSize: TextUnit = (mediumFontSize.value + 4).sp
+        compact: TextUnit = 14.sp,
+        medium: TextUnit = (compact.value + 4).sp,
+        expanded: TextUnit = (medium.value + 4).sp
     ): TextStyle {
         return MaterialTheme.typography.labelLarge.copy(
             fontWeight = FontWeight.Black,
             color = LocalContentColor.current,
             fontSize = AdaptiveUiUtil.getAdaptiveTextUnit(
-                compact = compactFontSize,
-                medium = mediumFontSize,
-                expanded = expandedFontSize
+                compact = compact,
+                medium = medium,
+                expanded = expanded
             )
         )
     }

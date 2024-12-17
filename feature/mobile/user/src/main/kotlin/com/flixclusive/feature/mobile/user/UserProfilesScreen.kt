@@ -1,6 +1,8 @@
 package com.flixclusive.feature.mobile.user
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -8,15 +10,19 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -26,7 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RichTooltip
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,7 +63,8 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.navargs.UserProfilesNavArgs
 import com.flixclusive.core.ui.common.navigation.navigator.UserProfilesNavigator
-import com.flixclusive.core.ui.common.user.AVATARS_IMAGE_COUNT
+import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.ui.mobile.util.ComposeUtil.DefaultScreenPaddingHorizontal
@@ -103,95 +109,110 @@ internal fun UserProfilesScreen(
 
     val screenType = rememberSaveable { mutableStateOf(ScreenType.Pager) }
     val lastScreenTypeUsed = rememberSaveable { mutableStateOf(ScreenType.Pager) }
+    val isContinueScreenLoading = rememberSaveable { mutableStateOf(false) }
     var clickedProfile by remember { mutableStateOf<User?>(null) }
 
-    Scaffold(
-        topBar = {
-            TopBar(
-                showTag = list.isEmpty() || screenType.value == ScreenType.ContinueScreen,
-                screenType = screenType,
-                lastScreenTypeUsed = lastScreenTypeUsed,
-                isComingFromSplashScreen = args.isComingFromSplashScreen,
-                addNewUser = navigator::openAddUsersScreen,
-                onBack = navigator::goBack
-            )
-        }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
     ) {
-        if (list.isNotEmpty()) {
-            ProvideSharedTransitionScope {
-                AnimatedContent(
-                    label = "main_content",
-                    targetState = screenType.value,
-                    transitionSpec = {
-                        val enterDuration = 500
-                        val exitDuration = 300
-                        val enterTweenFloat = tween<Float>(durationMillis = enterDuration)
-                        val enterTweenInt = tween<IntOffset>(durationMillis = enterDuration)
-                        val exitTweenFloat = tween<Float>(durationMillis = exitDuration)
-                        val exitTweenInt = tween<IntOffset>(durationMillis = exitDuration)
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .align(Alignment.Center)
+        ) {
+            if (list.isNotEmpty()) {
+                ProvideSharedTransitionScope {
+                    AnimatedContent(
+                        label = "main_content",
+                        targetState = screenType.value,
+                        transitionSpec = {
+                            val enterDuration = 500
+                            val exitDuration = 300
+                            val enterTweenFloat = tween<Float>(durationMillis = enterDuration)
+                            val enterTweenInt = tween<IntOffset>(durationMillis = enterDuration)
+                            val exitTweenFloat = tween<Float>(durationMillis = exitDuration)
+                            val exitTweenInt = tween<IntOffset>(durationMillis = exitDuration)
 
-                        if (initialState != ScreenType.ContinueScreen) {
-                            if (targetState == ScreenType.Grid) {
+                            val isNotSelecting = initialState != ScreenType.ContinueScreen
+                            if (isNotSelecting && targetState == ScreenType.Grid) {
                                 slideInHorizontally(enterTweenInt) + fadeIn(enterTweenFloat) togetherWith
                                         scaleOut(exitTweenFloat) + fadeOut(exitTweenFloat)
                             }
-                            else {
+                            else if (isNotSelecting && targetState == ScreenType.Pager) {
                                 fadeIn(enterTweenFloat) + scaleIn(exitTweenFloat) togetherWith
                                         slideOutHorizontally(exitTweenInt) + fadeOut(exitTweenFloat)
                             }
-                        }
-                        else {
-                            fadeIn(enterTweenFloat) + scaleIn(exitTweenFloat) togetherWith
-                                    fadeOut(exitTweenFloat)
-                        }
-                    },
-                    modifier = Modifier.padding(it)
-                ) { state ->
-                    ProvideAnimatedVisibilityScope {
-                        val onSelect = fun (user: User) {
-                            lastScreenTypeUsed.value = screenType.value
-                            screenType.value = ScreenType.ContinueScreen
-                            clickedProfile = user
-                        }
-                        when (state) {
-                            ScreenType.Grid -> {
-                                GridMode(
-                                    profiles = list,
-                                    onSelect = onSelect,
-                                    listState = listState,
-                                    onEdit = { /*TODO: Navigate to edit screen*/ }
-                                )
+                            else {
+                                fadeIn() togetherWith fadeOut()
                             }
-                            ScreenType.Pager -> {
-                                PagerMode(
-                                    profiles = list,
-                                    onSelect = onSelect,
-                                    pagerState = pagerState,
-                                    onEdit = { /*TODO: Navigate to edit screen*/ }
-                                )
+                        }
+                    ) { state ->
+                        ProvideAnimatedVisibilityScope {
+                            val onSelect = fun (user: User) {
+                                lastScreenTypeUsed.value = screenType.value
+                                screenType.value = ScreenType.ContinueScreen
+                                clickedProfile = user
                             }
-                            ScreenType.ContinueScreen -> {
-                                clickedProfile?.let { profile ->
-                                    ClickedProfileScreen(
-                                        clickedProfile = profile,
-                                        onUseAsDefault = { /*TODO: Add toggle for onUseAsDefault profile */ },
-                                        onConfirm = { /*TODO: Navigate to home/settings screen */ },
-                                        onBack = {
-                                            screenType.value = lastScreenTypeUsed.value
-                                        }
+                            when (state) {
+                                ScreenType.Grid -> {
+                                    GridMode(
+                                        profiles = list,
+                                        onSelect = onSelect,
+                                        listState = listState,
+                                        onEdit = { /*TODO: Navigate to edit screen*/ }
                                     )
+                                }
+                                ScreenType.Pager -> {
+                                    PagerMode(
+                                        profiles = list,
+                                        onSelect = onSelect,
+                                        pagerState = pagerState,
+                                        onEdit = { /*TODO: Navigate to edit screen*/ }
+                                    )
+                                }
+                                ScreenType.ContinueScreen -> {
+                                    clickedProfile?.let { profile ->
+                                        ClickedProfileScreen(
+                                            clickedProfile = profile,
+                                            isLoading = isContinueScreenLoading,
+                                            onUseAsDefault = { /*TODO: Add toggle for onUseAsDefault profile */ },
+                                            onConfirm = { /*TODO: Navigate to home/settings screen */ },
+                                            onBack = {
+                                                screenType.value = lastScreenTypeUsed.value
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            } else {
+                EmptyScreen(
+                    onAdd = { navigator.openAddUsersScreen() }
+                )
             }
-        } else {
-            EmptyScreen(
-                onAdd = { navigator.openAddUsersScreen() },
-                modifier = Modifier.padding(it)
+        }
+
+        AnimatedVisibility(
+            visible = !isContinueScreenLoading.value,
+            enter = EnterTransition.None,
+            exit = slideOutVertically(tween(500)) + fadeOut()
+        ) {
+            TopBar(
+                showTagOnly = list.isEmpty() || screenType.value == ScreenType.ContinueScreen,
+                screenType = screenType,
+                lastScreenTypeUsed = lastScreenTypeUsed,
+                isComingFromSplashScreen = args.isComingFromSplashScreen,
+                addNewUser = navigator::openAddUsersScreen,
+                onBack = navigator::goBack,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
             )
         }
+
     }
 }
 
@@ -201,25 +222,28 @@ private enum class ScreenType {
     Pager;
 }
 
-internal val TopBarHeight = 50.dp
-
 @Composable
 private fun TopBar(
+    modifier: Modifier = Modifier,
     isComingFromSplashScreen: Boolean,
     screenType: MutableState<ScreenType>,
     lastScreenTypeUsed: MutableState<ScreenType>,
-    showTag: Boolean,
+    showTagOnly: Boolean,
     onBack: () -> Unit,
     addNewUser: () -> Unit,
 ) {
+    val defaultTopBarHeight = getAdaptiveDp(60.dp)
+
     AnimatedContent(
-        targetState = showTag,
-        label = "TopBar"
+        targetState = showTagOnly,
+        label = "TopBar",
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        modifier = modifier
     ) { state ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .height(TopBarHeight)
+                .height(defaultTopBarHeight)
                 .statusBarsPadding()
         ) {
             if (state) {
@@ -229,9 +253,24 @@ private fun TopBar(
                 )
 
                 Box(
-                    modifier = Modifier.weight(1F),
+                    modifier = Modifier
+                        .weight(1F)
+                        .height(defaultTopBarHeight * 2)
+                        .background(
+                            MaterialTheme.colorScheme.surface.copy(0.4F)
+                        )
+                        .padding(horizontal = getAdaptiveDp(20.dp)),
                     contentAlignment = Alignment.Center
                 ) {
+                    if (isComingFromSplashScreen || screenType.value == ScreenType.ContinueScreen) {
+                        BackButton(
+                            onBack = onBack,
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .statusBarsPadding()
+                        )
+                    }
+
                     Image(
                         painter = painterResource(UiCommonR.drawable.flixclusive_tag),
                         contentDescription = stringResource(id = com.flixclusive.core.locale.R.string.flixclusive_tag_content_desc),
@@ -316,6 +355,23 @@ private fun TopBar(
 }
 
 @Composable
+private fun BackButton(
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit
+) {
+    Box(modifier = modifier) {
+        Icon(
+            painter = painterResource(UiCommonR.drawable.left_arrow),
+            contentDescription = stringResource(LocaleR.string.navigate_up),
+            tint = MaterialTheme.colorScheme.onSurface.copy(0.7F),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(getAdaptiveDp(16.dp, 10.dp))
+        )
+    }
+}
+
+@Composable
 private fun RowScope.TopBarForNonEmptyScreen(
     modifier: Modifier = Modifier,
     isComingFromSplashScreen: Boolean,
@@ -382,9 +438,9 @@ private fun ActionButtonTooltip(
     )
 }
 
-@Preview(device = "id:Realme 5 ANDROID 10 [29]")
+@Preview
 @Composable
-private fun UserProfilesScreenPreview() {
+private fun UserProfilesScreenBasePreview() {
     FlixclusiveTheme {
         Surface(
             modifier = Modifier
@@ -402,4 +458,34 @@ private fun UserProfilesScreenPreview() {
             )
         }
     }
+}
+
+@Preview(device = "spec:parent=pixel_5,orientation=landscape")
+@Composable
+private fun UserProfilesScreenCompactLandscapePreview() {
+    UserProfilesScreenBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=portrait")
+@Composable
+private fun UserProfilesScreenMediumPortraitPreview() {
+    UserProfilesScreenBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=landscape")
+@Composable
+private fun UserProfilesScreenMediumLandscapePreview() {
+    UserProfilesScreenBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
+@Composable
+private fun UserProfilesScreenExtendedPortraitPreview() {
+    UserProfilesScreenBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
+@Composable
+private fun UserProfilesScreenExtendedLandscapePreview() {
+    UserProfilesScreenBasePreview()
 }

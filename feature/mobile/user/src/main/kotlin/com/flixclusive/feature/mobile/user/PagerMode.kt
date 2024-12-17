@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.user
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -27,6 +28,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -48,12 +50,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.user.AVATARS_IMAGE_COUNT
-import com.flixclusive.core.ui.common.user.DefaultAvatarSize
 import com.flixclusive.core.ui.common.user.UserAvatar
+import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
+import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveNonEmphasizedLabel
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.isCompact
+import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
+import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalSharedTransitionScope
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -84,10 +89,17 @@ internal fun PagerMode(
 
     val indexPressed = remember { mutableStateOf<Int?>(null) }
 
-
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp
-    val pageWidth = (screenWidthDp / 3f).dp
+
+    val isCompactAndLandscape
+        = windowSizeClass.windowHeightSizeClass.isCompact
+            && configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    val widthPercentage = if(isCompactAndLandscape) 0.5F else 1F
+    val pageWidth = ((screenWidthDp * widthPercentage) / 3).dp
+    val horizontalPadding = ((screenWidthDp / 2)).dp - (pageWidth / 1.9f)
 
     var showEditButton by remember { mutableStateOf(true) }
 
@@ -137,7 +149,7 @@ internal fun PagerMode(
 
             HorizontalPager(
                 modifier = Modifier.height(pageWidth),
-                contentPadding = PaddingValues(horizontal = pageWidth),
+                contentPadding = PaddingValues(horizontal = horizontalPadding),
                 state = pagerState
             ) { page ->
                 profiles.getOrNull(
@@ -146,7 +158,7 @@ internal fun PagerMode(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxWidth(),
                     ) {
                         val blurShape = MaterialTheme.shapes.small
                         val scaleValueOnPress by animateFloatAsState(
@@ -166,7 +178,7 @@ internal fun PagerMode(
                         with(sharedTransitionScope) {
                             UserAvatar(
                                 user = item,
-                                boxShadowBlur = 30.dp,
+                                shadowBlur = 30.dp,
                                 modifier = Modifier
                                     .sharedElement(
                                         state = rememberSharedContentState(key = "${item.id}-pager"),
@@ -274,7 +286,10 @@ private fun UsernameTag(
         ) {
             Text(
                 text = item.name,
-                style = getAdaptiveNonEmphasizedLabel(18.sp),
+                style = getAdaptiveNonEmphasizedLabel(
+                    18.sp,
+                    expanded = 30.sp
+                ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -285,7 +300,7 @@ private fun UsernameTag(
                     painter = painterResource(UiCommonR.drawable.lock_thin),
                     contentDescription = stringResource(LocaleR.string.locked_profile_button_desc),
                     tint = LocalContentColor.current.onMediumEmphasis(0.8F),
-                    modifier = Modifier.size(getAdaptiveDp(16.dp, 6.dp))
+                    modifier = Modifier.size(getAdaptiveDp(16.dp, 8.dp))
                 )
             }
         }
@@ -315,17 +330,23 @@ private fun PagerModeBasePreview() {
         pageCount = { pageCount }
     )
 
-    FlixclusiveTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            PagerMode(
-                onEdit = {},
-                onSelect = {},
-                profiles = profiles,
-                pagerState = pagerState
-            )
+    ProvideSharedTransitionScope {
+        FlixclusiveTheme {
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                AnimatedVisibility(true) {
+                    ProvideAnimatedVisibilityScope {
+                        PagerMode(
+                            onEdit = {},
+                            onSelect = {},
+                            profiles = profiles,
+                            pagerState = pagerState
+                        )
+                    }
+                }
+            }
         }
     }
 }

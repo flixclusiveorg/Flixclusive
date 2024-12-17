@@ -39,8 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
-import com.flixclusive.core.ui.common.user.DefaultAvatarSize
 import com.flixclusive.core.ui.common.user.UserAvatar
+import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen

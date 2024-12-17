@@ -5,7 +5,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -15,11 +14,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -27,16 +23,17 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -44,20 +41,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
-import com.flixclusive.core.ui.common.user.DefaultAvatarSize
 import com.flixclusive.core.ui.common.user.UserAvatar
-import com.flixclusive.core.ui.common.user.getAdaptiveBackground
+import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
+import com.flixclusive.core.ui.common.user.getUserBackgroundPalette
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveEmphasizedLabel
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalSharedTransitionScope
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.model.database.User
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import com.flixclusive.core.locale.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 private fun getAvatarSize(): Dp {
@@ -72,6 +70,7 @@ private fun getAvatarSize(): Dp {
 internal fun ClickedProfileScreen(
     modifier: Modifier = Modifier,
     clickedProfile: User,
+    isLoading: MutableState<Boolean>,
     onUseAsDefault: (Boolean) -> Unit,
     onConfirm: () -> Unit,
     onBack: () -> Unit
@@ -80,17 +79,28 @@ internal fun ClickedProfileScreen(
     val animatedVisibilityScope = getLocalAnimatedVisibilityScope()
 
     val isPressed = remember { mutableStateOf(false) }
-    val isLoading = rememberSaveable { mutableStateOf(false) }
-
-    val backgroundStrength by animateFloatAsState(
-        label = "BackgroundStrength",
-        animationSpec = tween(400),
-        targetValue = if (isPressed.value) 0.2F else 0.1F,
-    )
 
     BackHandler(
         enabled = !isLoading.value,
         onBack = onBack
+    )
+
+    val surface = MaterialTheme.colorScheme.surface
+    val palette = getUserBackgroundPalette(user = clickedProfile)
+
+    val dominantSwatch = palette.dominantSwatch
+    val lightVibrantSwatch = palette.darkVibrantSwatch
+    val defaultColor = MaterialTheme.colorScheme.primary
+
+    val backgroundColor = Color(dominantSwatch?.rgb ?: defaultColor.toArgb())
+    val tubeLightColor = Color(lightVibrantSwatch?.rgb ?: defaultColor.toArgb())
+
+    val brush = Brush.verticalGradient(
+        listOf(
+            tubeLightColor,
+            backgroundColor,
+            surface
+        )
     )
 
     Box(
@@ -108,33 +118,16 @@ internal fun ClickedProfileScreen(
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
         )
 
-        AnimatedVisibility(
-            visible = !isLoading.value,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .statusBarsPadding()
-                .padding(getAdaptiveDp(20.dp))
-        ) {
-            BackButton(
-                onBack = onBack
-            )
-        }
-
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    getAdaptiveBackground(
-                        user = clickedProfile,
-                        strength = backgroundStrength
-                    )
-                ),
+                .background(brush),
         ) {
             with(sharedTransitionScope) {
                 UserAvatar(
                     user = clickedProfile,
-                    boxShadowBlur = 30.dp,
+                    shadowBlur = 30.dp,
                     modifier = Modifier
                         .size(getAvatarSize())
                         .sharedElement(
@@ -145,6 +138,7 @@ internal fun ClickedProfileScreen(
                             state = rememberSharedContentState(key = "${clickedProfile.id}-grid"),
                             animatedVisibilityScope = animatedVisibilityScope
                         )
+                        .noIndicationClickable {  }
                 )
             }
         }
@@ -191,23 +185,6 @@ internal fun ClickedProfileScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun BackButton(
-    modifier: Modifier = Modifier,
-    onBack: () -> Unit
-) {
-    Box(modifier = modifier) {
-        Icon(
-            painter = painterResource(UiCommonR.drawable.left_arrow),
-            contentDescription = stringResource(LocaleR.string.navigate_up),
-            tint = MaterialTheme.colorScheme.onSurface.copy(0.7F),
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(getAdaptiveDp(20.dp, 10.dp))
-        )
     }
 }
 
@@ -268,7 +245,7 @@ private fun ContinueButton(
         Text(
             text = stringResource(LocaleR.string.continue_label),
             style = getAdaptiveEmphasizedLabel(
-                mediumFontSize = 20.sp,
+                medium = 20.sp,
             ).copy(
                 MaterialTheme.colorScheme.onSurface.copy(0.9F)
             )
@@ -276,21 +253,52 @@ private fun ContinueButton(
     }
 }
 
+/**
+ * Adjusts the brightness of a color represented as an Int.
+ *
+ * @param color The original color as an Int.
+ * @param factor The brightness factor:
+ *               - Greater than 1.0 brightens the color.
+ *               - Between 0.0 and 1.0 darkens the color.
+ * @return The adjusted color as an Int.
+ */
+@Stable
+private fun adjustBrightness(color: Int, factor: Float): Int {
+    // Extract the individual components (Alpha, Red, Green, Blue)
+    val alpha = android.graphics.Color.alpha(color)
+    val red = android.graphics.Color.red(color)
+    val green = android.graphics.Color.green(color)
+    val blue = android.graphics.Color.blue(color)
+
+    // Adjust each component, ensuring the values are clamped between 0 and 255
+    val newRed = (red * factor).coerceIn(0f, 255f).roundToInt()
+    val newGreen = (green * factor).coerceIn(0f, 255f).roundToInt()
+    val newBlue = (blue * factor).coerceIn(0f, 255f).roundToInt()
+
+    // Combine the adjusted components back into a color Int
+    return android.graphics.Color.argb(alpha, newRed, newGreen, newBlue)
+}
+
 @Preview
 @Composable
-private fun ClickedProfileScreenBasePreview() {
+private fun ClickedProfileScreenBasePreview(user: User = User(image = 0)) {
     FlixclusiveTheme {
         Surface(
             modifier = Modifier
                 .fillMaxSize()
         ) {
             ProvideSharedTransitionScope {
-                ClickedProfileScreen(
-                    clickedProfile = User(image = 5),
-                    onUseAsDefault = {},
-                    onConfirm = {},
-                    onBack = {}
-                )
+                AnimatedVisibility(true) {
+                    ProvideAnimatedVisibilityScope {
+                        ClickedProfileScreen(
+                            clickedProfile = user,
+                            isLoading = remember { mutableStateOf(false) },
+                            onUseAsDefault = {},
+                            onConfirm = {},
+                            onBack = {}
+                        )
+                    }
+                }
             }
         }
     }
@@ -299,29 +307,29 @@ private fun ClickedProfileScreenBasePreview() {
 @Preview(device = "spec:parent=pixel_5,orientation=landscape")
 @Composable
 private fun ClickedProfileScreenCompactLandscapePreview() {
-    ClickedProfileScreenBasePreview()
+    ClickedProfileScreenBasePreview(User(image = 1))
 }
 
 @Preview(device = "spec:parent=medium_tablet,orientation=portrait")
 @Composable
 private fun ClickedProfileScreenMediumPortraitPreview() {
-    ClickedProfileScreenBasePreview()
+    ClickedProfileScreenBasePreview(User(image = 2))
 }
 
 @Preview(device = "spec:parent=medium_tablet,orientation=landscape")
 @Composable
 private fun ClickedProfileScreenMediumLandscapePreview() {
-    ClickedProfileScreenBasePreview()
+    ClickedProfileScreenBasePreview(User(image = 3))
 }
 
 @Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
 @Composable
 private fun ClickedProfileScreenExtendedPortraitPreview() {
-    ClickedProfileScreenBasePreview()
+    ClickedProfileScreenBasePreview(User(image = 4))
 }
 
 @Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
 @Composable
 private fun ClickedProfileScreenExtendedLandscapePreview() {
-    ClickedProfileScreenBasePreview()
+    ClickedProfileScreenBasePreview(User(image = 5))
 }
