@@ -1,7 +1,6 @@
 package com.flixclusive.feature.mobile.user.component
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,12 +44,13 @@ internal fun EditButton(
         onClick = onEdit,
         shape = MaterialTheme.shapes.extraSmall,
         contentPadding = contentPadding,
-        border = BorderStroke(
+        border = ButtonDefaults.outlinedButtonBorder(enabled).copy(
             width = 0.5.dp,
-            color = mediumEmphasisColor,
+            brush = SolidColor(mediumEmphasisColor),
         ),
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = mediumEmphasisColor
+            contentColor = mediumEmphasisColor,
+            disabledContentColor = mediumEmphasisColor.copy(alpha = 0.5F)
         ),
         modifier = Modifier.height(buttonSize)
     ) {
@@ -71,7 +72,9 @@ internal fun EditButton(
 
                     Text(
                         text = stringResource(LocaleR.string.edit),
-                        style = getAdaptiveSemiEmphasizedLabel(fontSize),
+                        style = getAdaptiveSemiEmphasizedLabel(fontSize).copy(
+                            color = LocalContentColor.current
+                        ),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )

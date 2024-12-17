@@ -30,13 +30,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -66,7 +64,6 @@ import com.flixclusive.feature.mobile.user.component.EditButton
 import com.flixclusive.feature.mobile.user.util.ModifierUtil.getPagerBlur
 import com.flixclusive.feature.mobile.user.util.ModifierUtil.scaleDownOnPress
 import com.flixclusive.model.database.User
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import com.flixclusive.core.locale.R as LocaleR
@@ -101,17 +98,9 @@ internal fun PagerMode(
     val pageWidth = ((screenWidthDp * widthPercentage) / 3).dp
     val horizontalPadding = ((screenWidthDp / 2)).dp - (pageWidth / 1.9f)
 
-    var showEditButton by remember { mutableStateOf(true) }
-
-    /*
-    * UX HACK FOR EDIT BUTTON VISIBILITY
-    * */
-    LaunchedEffect(pagerState.isScrollInProgress) {
-        if (!pagerState.isScrollInProgress && !showEditButton) {
-            delay(800)
-            showEditButton = true
-        } else if (pagerState.isScrollInProgress && showEditButton) {
-            showEditButton = false
+    val enableEditButton by remember {
+        derivedStateOf {
+            !pagerState.isScrollInProgress
         }
     }
 
@@ -124,28 +113,27 @@ internal fun PagerMode(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            AnimatedVisibility(visible = showEditButton) {
-                EditButton(
-                    onEdit = onEdit,
-                    buttonSize = getAdaptiveDp(
-                        compact = 25.dp,
-                        medium = 35.dp,
-                        expanded = 45.dp
-                    ),
-                    iconSize = getAdaptiveDp(
-                        dp = 14.dp,
-                        incrementedDp = 6.dp
-                    ),
-                    spacing = getAdaptiveDp(5.dp, 2.dp),
-                    fontSize = getAdaptiveTextUnit(
-                        size = 12.sp,
-                        incrementedValue = 2
-                    ),
-                    contentPadding = PaddingValues(
-                        horizontal = getAdaptiveDp(5.dp, 6.dp)
-                    )
+            EditButton(
+                onEdit = onEdit,
+                enabled = enableEditButton,
+                buttonSize = getAdaptiveDp(
+                    compact = 25.dp,
+                    medium = 35.dp,
+                    expanded = 45.dp
+                ),
+                iconSize = getAdaptiveDp(
+                    dp = 14.dp,
+                    incrementedDp = 6.dp
+                ),
+                spacing = getAdaptiveDp(5.dp, 2.dp),
+                fontSize = getAdaptiveTextUnit(
+                    size = 12.sp,
+                    incrementedValue = 2
+                ),
+                contentPadding = PaddingValues(
+                    horizontal = getAdaptiveDp(5.dp, 6.dp)
                 )
-            }
+            )
 
             HorizontalPager(
                 modifier = Modifier.height(pageWidth),
