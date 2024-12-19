@@ -52,6 +52,7 @@ fun UserAvatar(
     user: User,
     contentScale: ContentScale = ContentScale.Fit,
     shape: Shape = DefaultAvatarShape,
+    borderWidth: Dp = 0.8.dp,
     shadowBlur: Dp = 50.dp,
     shadowSpread: Dp = 5.dp
 ) {
@@ -85,7 +86,7 @@ fun UserAvatar(
             modifier = Modifier
                 .matchParentSize()
                 .border(
-                    width = 0.8.dp,
+                    width = borderWidth,
                     color = borderColor,
                     shape = DefaultAvatarShape
                 )
