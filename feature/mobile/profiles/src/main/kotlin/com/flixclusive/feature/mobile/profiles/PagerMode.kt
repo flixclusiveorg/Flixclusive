@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.user
+package com.flixclusive.feature.mobile.profiles
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
@@ -60,9 +60,9 @@ import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideShared
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalSharedTransitionScope
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.user.component.EditButton
-import com.flixclusive.feature.mobile.user.util.ModifierUtil.getPagerBlur
-import com.flixclusive.feature.mobile.user.util.ModifierUtil.scaleDownOnPress
+import com.flixclusive.feature.mobile.profiles.component.EditButton
+import com.flixclusive.feature.mobile.profiles.util.ModifierUtil.getPagerBlur
+import com.flixclusive.feature.mobile.profiles.util.ModifierUtil.scaleDownOnPress
 import com.flixclusive.model.database.User
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue

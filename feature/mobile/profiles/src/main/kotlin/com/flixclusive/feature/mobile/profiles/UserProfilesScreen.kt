@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.user
+package com.flixclusive.feature.mobile.profiles
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -14,17 +14,16 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,16 +58,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.navargs.UserProfilesNavArgs
 import com.flixclusive.core.ui.common.navigation.navigator.UserProfilesNavigator
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
-import com.flixclusive.core.ui.mobile.util.ComposeUtil.DefaultScreenPaddingHorizontal
-import com.flixclusive.feature.mobile.user.util.UxUtil.getSlidingTransition
+import com.flixclusive.feature.mobile.profiles.util.UxUtil.getSlidingTransition
 import com.flixclusive.model.database.User
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
@@ -232,16 +232,15 @@ private fun TopBar(
     onBack: () -> Unit,
     addNewUser: () -> Unit,
 ) {
-    val defaultTopBarHeight = getAdaptiveDp(60.dp)
+    val defaultTopBarHeight = getAdaptiveDp(60.dp, 15.dp)
 
     AnimatedContent(
         targetState = showTagOnly,
         label = "TopBar",
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
-        modifier = modifier
+        transitionSpec = { fadeIn() togetherWith fadeOut() }
     ) { state ->
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
                 .height(defaultTopBarHeight)
                 .statusBarsPadding()
@@ -254,7 +253,7 @@ private fun TopBar(
 
                 Box(
                     modifier = Modifier
-                        .weight(1F)
+                        .fillMaxWidth()
                         .height(defaultTopBarHeight * 2)
                         .background(
                             MaterialTheme.colorScheme.surface.copy(0.4F)
@@ -276,7 +275,7 @@ private fun TopBar(
                         contentDescription = stringResource(id = com.flixclusive.core.locale.R.string.flixclusive_tag_content_desc),
                         contentScale = ContentScale.Fit,
                         modifier = Modifier
-                            .height(30.dp)
+                            .height(getAdaptiveDp(30.dp, 20.dp))
                             .graphicsLayer(alpha = 0.99F)
                             .drawWithCache {
                                 onDrawWithContent {
@@ -290,62 +289,78 @@ private fun TopBar(
                     )
                 }
             } else {
-                TopBarForNonEmptyScreen(
-                    modifier = Modifier.weight(1F),
-                    isComingFromSplashScreen = isComingFromSplashScreen,
-                    onBack = onBack
+                val iconSize = getAdaptiveDp(24.dp, 10.dp)
+                val sizeModifier = Modifier.size(iconSize)
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(getAdaptiveDp(0.dp, 20.dp)),
+                    modifier = Modifier
+                        .padding(
+                            start = getAdaptiveDp(10.dp),
+                            end = getAdaptiveDp(0.dp, 10.dp),
+                        )
                 ) {
-                    AnimatedContent(
-                        label = "view_mode_icon",
-                        targetState = screenType.value,
-                        transitionSpec = {
-                            getSlidingTransition(isSlidingRight = targetState.ordinal > initialState.ordinal)
-                        }
-                    ) { state ->
-                        val viewTypeDescription = stringResource(LocaleR.string.view_type_button_content_desc)
-                        ActionButtonTooltip(description = viewTypeDescription) {
-                            when (state) {
-                                ScreenType.Grid -> {
-                                    IconButton(
-                                        onClick = {
-                                            lastScreenTypeUsed.value = screenType.value
-                                            screenType.value = ScreenType.Pager
-                                        }
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(UiCommonR.drawable.view_array),
-                                            contentDescription = viewTypeDescription
-                                        )
-                                    }
-                                }
-                                ScreenType.Pager -> {
-                                    IconButton(
-                                        onClick = {
-                                            lastScreenTypeUsed.value = screenType.value
-                                            screenType.value = ScreenType.Grid
-                                        }
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(UiCommonR.drawable.view_grid),
-                                            contentDescription = viewTypeDescription
-                                        )
-                                    }
-                                }
-                                ScreenType.ContinueScreen -> Unit
-                            }
-                        }
-
-                    }
-
-                    val addUserButton = stringResource(LocaleR.string.add_user_button_content_desc)
-                    ActionButtonTooltip(
-                        description = addUserButton
+                    TopBarForNonEmptyScreen(
+                        modifier = Modifier.weight(1F),
+                        isComingFromSplashScreen = isComingFromSplashScreen,
+                        onBack = onBack
                     ) {
-                        IconButton(onClick = addNewUser) {
-                            Icon(
-                                painter = painterResource(UiCommonR.drawable.add_person),
-                                contentDescription = addUserButton
-                            )
+                        AnimatedContent(
+                            label = "view_mode_icon",
+                            targetState = screenType.value,
+                            transitionSpec = {
+                                getSlidingTransition(isSlidingRight = targetState.ordinal > initialState.ordinal)
+                            }
+                        ) { state ->
+                            val viewTypeDescription = stringResource(LocaleR.string.view_type_button_content_desc)
+                            ActionButtonTooltip(description = viewTypeDescription) {
+                                when (state) {
+                                    ScreenType.Grid -> {
+                                        IconButton(
+                                            onClick = {
+                                                lastScreenTypeUsed.value = screenType.value
+                                                screenType.value = ScreenType.Pager
+                                            }
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(UiCommonR.drawable.view_array),
+                                                contentDescription = viewTypeDescription,
+                                                modifier = sizeModifier
+                                            )
+                                        }
+                                    }
+                                    ScreenType.Pager -> {
+                                        IconButton(
+                                            onClick = {
+                                                lastScreenTypeUsed.value = screenType.value
+                                                screenType.value = ScreenType.Grid
+                                            }
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(UiCommonR.drawable.view_grid),
+                                                contentDescription = viewTypeDescription,
+                                                modifier = sizeModifier
+                                            )
+                                        }
+                                    }
+                                    ScreenType.ContinueScreen -> Unit
+                                }
+                            }
+
+                        }
+
+                        val addUserButton = stringResource(LocaleR.string.add_user_button_content_desc)
+                        ActionButtonTooltip(
+                            description = addUserButton
+                        ) {
+                            IconButton(onClick = addNewUser) {
+                                Icon(
+                                    painter = painterResource(UiCommonR.drawable.add_person),
+                                    contentDescription = addUserButton,
+                                    modifier = sizeModifier
+                                )
+                            }
                         }
                     }
                 }
@@ -388,23 +403,20 @@ private fun RowScope.TopBarForNonEmptyScreen(
             endContent = endContent
         )
     } else {
-        Spacer(Modifier.width(DefaultScreenPaddingHorizontal))
-
         Box(
             modifier = Modifier.weight(1F)
         ) {
             Text(
                 text = headerLabel,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = getAdaptiveTextUnit(24.sp, incrementedValue = 8)
+                ),
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1
             )
         }
 
         endContent()
-
-
-        Spacer(Modifier.width(DefaultScreenPaddingHorizontal))
     }
 }
 

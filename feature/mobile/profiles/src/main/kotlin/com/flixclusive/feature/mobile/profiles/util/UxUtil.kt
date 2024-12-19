@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.user.util
+package com.flixclusive.feature.mobile.profiles.util
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform

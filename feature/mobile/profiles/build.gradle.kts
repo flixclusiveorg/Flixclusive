@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.feature.mobile.user"
+    namespace = "com.flixclusive.feature.mobile.profiles"
 }
 
 dependencies {

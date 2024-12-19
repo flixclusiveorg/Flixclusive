@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.user.component
+package com.flixclusive.feature.mobile.profiles.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
