@@ -41,8 +41,8 @@ internal fun DetailsScaffold(
             AnimatedContent(isDetailsVisible, label = "DetailsScaffold top bar") { state ->
                 if (state) {
                     CommonTopBar(
-                        headerTitle = stringResource(id = R.string.recently_watched),
-                        onNavigationIconClick = navigateBack
+                        title = stringResource(id = R.string.recently_watched),
+                        onNavigate = navigateBack
                     )
                 }
             }

@@ -30,8 +30,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.COMMON_TOP_BAR_HEIGHT
 import com.flixclusive.core.ui.common.CommonTopBar
+import com.flixclusive.core.ui.common.CommonTopBarDefaults.DefaultTopBarHeight
 import com.flixclusive.core.ui.common.dialog.TextAlertDialog
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navargs.MarkdownNavArgs
@@ -62,7 +62,7 @@ internal fun MarkdownScreen(
         Column(
             modifier = Modifier
                 .statusBarsPadding()
-                .padding(top = COMMON_TOP_BAR_HEIGHT)
+                .padding(top = DefaultTopBarHeight)
                 .verticalScroll(rememberScrollState())
         ) {
             MarkdownText(
@@ -92,8 +92,8 @@ internal fun MarkdownScreen(
         }
 
         CommonTopBar(
-            headerTitle = args.title,
-            onNavigationIconClick = navigator::goBack
+            title = args.title,
+            onNavigate = navigator::goBack
         )
     }
 

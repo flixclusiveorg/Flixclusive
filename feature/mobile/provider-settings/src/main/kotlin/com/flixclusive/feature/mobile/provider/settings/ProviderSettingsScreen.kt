@@ -11,8 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.flixclusive.core.ui.common.COMMON_TOP_BAR_HEIGHT
 import com.flixclusive.core.ui.common.CommonTopBar
+import com.flixclusive.core.ui.common.CommonTopBarDefaults.DefaultTopBarHeight
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavArgs
 import com.flixclusive.provider.util.res.LocalResources
@@ -36,7 +36,7 @@ internal fun ProviderSettingsScreen(
         Box(
             modifier = Modifier
                 .statusBarsPadding()
-                .padding(top = COMMON_TOP_BAR_HEIGHT)
+                .padding(top = DefaultTopBarHeight)
         ) {
             if (viewModel.providerInstance != null) {
                 // Need to call the composable with the reflection way bc
@@ -60,8 +60,8 @@ internal fun ProviderSettingsScreen(
         }
 
         CommonTopBar(
-            headerTitle = args.providerData.name,
-            onNavigationIconClick = navigator::goBack
+            title = args.providerData.name,
+            onNavigate = navigator::goBack
         )
     }
 }

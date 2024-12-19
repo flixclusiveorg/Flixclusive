@@ -16,9 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.common.COMMON_TOP_BAR_HEIGHT
-import com.flixclusive.core.ui.common.R as UiCommonR
+import com.flixclusive.core.ui.common.CommonTopBarDefaults.DefaultTopBarHeight
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun ProviderTestScreenTopBar(
@@ -29,7 +29,7 @@ internal fun ProviderTestScreenTopBar(
     Box(
         modifier = modifier
             .statusBarsPadding()
-            .height(COMMON_TOP_BAR_HEIGHT),
+            .height(DefaultTopBarHeight),
         contentAlignment = Alignment.TopCenter
     ) {
         Spacer(modifier = Modifier.statusBarsPadding())

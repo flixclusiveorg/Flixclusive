@@ -43,8 +43,8 @@ internal fun WatchlistScreen(
                 topBar = {
                     CommonTopBar(
                         modifier = Modifier.align(Alignment.TopStart),
-                        headerTitle = stringResource(id = LocaleR.string.watchlist),
-                        onNavigationIconClick = navigator::goBack
+                        title = stringResource(id = LocaleR.string.watchlist),
+                        onNavigate = navigator::goBack
                     )
                 }
             ) {

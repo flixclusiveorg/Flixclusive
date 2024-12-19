@@ -31,8 +31,8 @@ internal fun AboutScreen(
             .verticalScroll(rememberScrollState()),
     ) {
         CommonTopBar(
-            headerTitle = stringResource(id = LocaleR.string.about),
-            onNavigationIconClick = navigator::goBack
+            title = stringResource(id = LocaleR.string.about),
+            onNavigate = navigator::goBack
         )
 
         viewModel.currentAppBuild?.run {

@@ -45,8 +45,8 @@ internal fun RecentlyWatchedScreen(
                 topBar = {
                     CommonTopBar(
                         modifier = Modifier.align(Alignment.TopStart),
-                        headerTitle = stringResource(id = LocaleR.string.recently_watched),
-                        onNavigationIconClick = navigator::goBack
+                        title = stringResource(id = LocaleR.string.recently_watched),
+                        onNavigate = navigator::goBack
                     )
                 }
             ) {
