@@ -121,6 +121,7 @@
     <string name="cancel">Cancel</string>
     <string name="change_logs">CHANGE LOGS</string>
     <string name="check_for_updates">Check for updates</string>
+    <string name="choose_an_avatar">Choose an avatar</string>
     <string name="clear_app_cache">Clear app cache</string>
     <string name="clear_cache_links">Clear cached links</string>
     <string name="pause_search_history">Pause search history</string>

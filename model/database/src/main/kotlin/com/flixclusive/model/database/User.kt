@@ -3,6 +3,7 @@ package com.flixclusive.model.database
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 
 private const val USER_DEFAULT_NAME = "User"
 
@@ -21,4 +22,4 @@ data class User(
     val name: String = USER_DEFAULT_NAME,
     val image: Int = 0
     // TODO: Add pin column
-)
+) : Serializable

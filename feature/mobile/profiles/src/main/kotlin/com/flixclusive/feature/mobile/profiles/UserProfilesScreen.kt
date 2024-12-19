@@ -398,8 +398,8 @@ private fun RowScope.TopBarForNonEmptyScreen(
     if (isComingFromSplashScreen) {
         CommonTopBar(
             modifier = modifier,
-            headerTitle = headerLabel,
-            onNavigationIconClick = onBack,
+            title = headerLabel,
+            onNavigate = onBack,
             endContent = endContent
         )
     } else {

@@ -63,9 +63,7 @@ import com.flixclusive.model.database.User
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-private val CompactAvatarGridSize = 90.dp
-private val MediumAvatarGridSize = 160.dp
-private val ExpandedAvatarGridSize = 230.dp
+private val DefaultAvatarGridSize = 90.dp
 
 private val CompactLabelSize = 12.sp
 
@@ -82,9 +80,8 @@ internal fun GridMode(
         .fillMaxWidth(widthFraction)
         .fillMaxHeight(0.65F)
     val columnsSize = getAdaptiveDp(
-        compact = CompactAvatarGridSize,
-        medium = MediumAvatarGridSize,
-        expanded = ExpandedAvatarGridSize
+        dp = DefaultAvatarGridSize,
+        incrementedDp = 70.dp
     )
 
     val surfaceColor = MaterialTheme.colorScheme.surface
@@ -203,9 +200,8 @@ private fun UsernameTag(
     user: User
 ) {
     val columnsSize = getAdaptiveDp(
-        compact = CompactAvatarGridSize,
-        medium = MediumAvatarGridSize,
-        expanded = ExpandedAvatarGridSize
+        dp = DefaultAvatarGridSize,
+        incrementedDp = 70.dp
     )
 
     Column(
