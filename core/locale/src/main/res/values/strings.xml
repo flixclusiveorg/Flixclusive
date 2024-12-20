@@ -381,6 +381,7 @@
     <string name="author_icon_content_desc">Author icon</string>
     <string name="automatic_crash_report">Automatic crash report</string>
     <string name="backward_button_content_description">Backward button for the player</string>
+    <string name="change_avatar_content_desc">Change user\'s avatar</string>
     <string name="cache_links_item_count">You have %1$d cached links</string>
     <string name="change_logs_image_content_desc">Change logs image logo</string>
     <string name="clear_cache_content_desc">Clear cache</string>
