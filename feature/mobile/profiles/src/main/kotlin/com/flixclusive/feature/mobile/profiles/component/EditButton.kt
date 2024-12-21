@@ -65,7 +65,7 @@ internal fun EditButton(
                 ) {
                     Icon(
                         painter = painterResource(UiCommonR.drawable.edit),
-                        contentDescription = stringResource(LocaleR.string.edit_profile_button_desc),
+                        contentDescription = stringResource(LocaleR.string.edit_profile),
                         modifier = Modifier
                             .size(iconSize)
                     )

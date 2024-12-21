@@ -66,7 +66,7 @@ fun CustomBaseAlertDialog(
 }
 
 @Composable
-internal fun CharSequenceText(
+fun CharSequenceText(
     modifier: Modifier = Modifier,
     text: CharSequence,
     style: TextStyle,

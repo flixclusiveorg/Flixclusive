@@ -286,7 +286,7 @@ private fun UserAvatarWithEdit(
             ) {
                 Icon(
                     painter = painterResource(UiCommonR.drawable.edit),
-                    contentDescription = stringResource(LocaleR.string.edit_profile_button_desc),
+                    contentDescription = stringResource(LocaleR.string.edit_profile),
                     modifier = Modifier.size(
                         getAdaptiveDp(30.dp, 30.dp)
                     )

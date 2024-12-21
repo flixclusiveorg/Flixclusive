@@ -41,6 +41,7 @@ fun CommonTopBar(
     endContent: (@Composable () -> Unit)? = null,
 ) {
     CommonTopBar(
+        modifier = modifier,
         navigationIcon = {
             val iconSize = getAdaptiveDp(16.dp, 3.dp)
             IconButton(onClick = onNavigate) {

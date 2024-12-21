@@ -126,6 +126,7 @@
     <string name="clear_cache_links">Clear cached links</string>
     <string name="pause_search_history">Pause search history</string>
     <string name="clear_search_history">Clear search history</string>
+    <string name="clear_library">Clear library</string>
     <string name="clear_tests">Clear tests</string>
     <string name="close_label">Close</string>
     <string name="collections">Collections</string>
@@ -135,6 +136,7 @@
     <string name="continue_watching">Continue Watching</string>
     <string name="copy_link">Copy link</string>
     <string name="currently_testing">Currently Testing</string>
+    <string name="data">Data</string>
     <string name="data_and_backup">Data and backup</string>
     <string name="debug">DEBUG</string>
     <string name="decoder_device_only">Device decoders</string>
@@ -147,6 +149,7 @@
     <string name="description">Description</string>
     <string name="disable_warning">Disable warning</string>
     <string name="doh">DNS over HTTPS</string>
+    <string name="edit_profile">Edit profile</string>
     <string name="episodes">Episodes</string>
     <string name="exit">Exit</string>
     <string name="export_label">Export</string>
@@ -189,6 +192,7 @@
     <string name="not_now_label">Not now</string>
     <string name="notify_about_new_app_updates">Notify about new app updates</string>
     <string name="off_subtitles">Off</string>
+    <string name="confirm">Confirm</string>
     <string name="ok">OK</string>
     <string name="open_web_icon">Open in Web</string>
     <string name="opt_in_prerelease">Ok 🗿</string>
@@ -281,6 +285,7 @@
     <string name="volume_booster">Volume booster</string>
     <string name="warn_on_unsafe_install">Warn for unsafe provider installation</string>
     <string name="warning">Warning</string>
+    <string name="what_to_remove">What do you want to remove?</string>
     <string name="watch">Watch</string>
     <string name="watch_again">Watch Again</string>
     <string name="watchlisted">Added</string>
@@ -414,7 +419,6 @@
     <string name="data_and_backup_settings_content_desc">This contains all the settings to customize how your data is handled.</string>
     <string name="subtitles_settings_content_desc">This contains all the settings to customize how subtitles are displayed.</string>
     <string name="lock_button_desc">An icon for locking the player</string>
-    <string name="edit_profile_button_desc">Edit profile</string>
     <string name="edit_profile_cancel_button_desc">Stop editing profiles</string>
     <string name="locked_profile_button_desc">Profile has a pin lock</string>
     <string name="missing_providers_logo_content_description">Missing providers logo</string>
