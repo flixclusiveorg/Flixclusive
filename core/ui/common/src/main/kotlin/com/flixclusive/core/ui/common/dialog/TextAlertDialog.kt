@@ -45,7 +45,8 @@ fun TextAlertDialog(
     val cornerSize = CornerSize(
         (ALERT_DIALOG_ROUNDNESS_PERCENTAGE * 2).dp
     )
-    val buttonShape = MaterialTheme.shapes.medium.let {
+    val baseShape = MaterialTheme.shapes.medium
+    val buttonShape = baseShape.let {
         val bottomEnd = when (dismissButtonLabel) {
             null -> cornerSize
             else -> it.bottomEnd
@@ -100,6 +101,7 @@ fun TextAlertDialog(
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                         shape = buttonShape.copy(
+                            bottomStart = baseShape.bottomStart,
                             bottomEnd = cornerSize,
                         ),
                         modifier = Modifier
