@@ -1,22 +1,22 @@
 package com.flixclusive.feature.mobile.user.edit
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,26 +25,30 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.createTextFieldValue
+import com.flixclusive.core.ui.common.util.noIndicationClickable
+import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
+import com.flixclusive.feature.mobile.user.edit.tweaks.data.DataTweak
+import com.flixclusive.feature.mobile.user.edit.tweaks.identity.IdentityTweak
+import com.flixclusive.feature.mobile.user.edit.tweaks.renderTweakUi
 import com.flixclusive.model.database.User
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.ResultRecipient
+import kotlinx.collections.immutable.persistentListOf
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -65,8 +69,37 @@ internal fun UserEditScreen(
     resultRecipient: ResultRecipient<UserAvatarSelectScreenDestination, Int>,
     userArg: UserEditScreenNavArgs
 ) {
+    val context = LocalContext.current
     var user by remember { mutableStateOf(userArg.user) }
-    var name by remember { mutableStateOf(userArg.user.name.createTextFieldValue()) }
+
+
+    val tweaks = remember {
+        persistentListOf(
+            IdentityTweak(
+                initialName = userArg.user.name,
+                onSetupPin = {
+                    context.showToast(
+                        context.getString(
+                            LocaleR.string.coming_soon_feature
+                        )
+                    )
+                },
+                onNameChange = {
+                    /*TODO: Implement ViewModel*/
+                    user = user.copy(name = it)
+                }
+            ),
+            DataTweak(
+                userId = userArg.user.id,
+                onClearSearchHistory = { /*TODO: Implement ViewModel*/ },
+                onDeleteProfile = { /*TODO: Implement ViewModel*/ },
+                onClearLibraries = { /*TODO: Implement ViewModel*/ },
+            )
+        )
+    }
+
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Scaffold(
         topBar = {
@@ -76,66 +109,58 @@ internal fun UserEditScreen(
             )
         }
     ) { padding ->
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Box(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .padding(getAdaptiveDp(5.dp))
-                ) {
-                    UserAvatar(
-                        user = user,
-                        borderWidth = 0.dp,
-                        shadowBlur = 0.dp,
-                        shadowSpread = 0.dp,
-                        modifier = Modifier
-                            .height(
-                                getAdaptiveDp(
-                                    dp = (DefaultAvatarSize.value * 1.5).dp,
-                                    incrementedDp = 100.dp
-                                )
+            LazyColumn(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                contentPadding = PaddingValues(getAdaptiveDp(10.dp)),
+                modifier = Modifier.fillMaxSize()
+                    .noIndicationClickable {
+                        keyboardController?.hide()
+                        focusManager.clearFocus(true)
+                    }
+            ) {
+                item {
+                    Box(
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .padding(getAdaptiveDp(5.dp))
+                        ) {
+                            UserAvatar(
+                                user = user,
+                                borderWidth = 0.dp,
+                                shadowBlur = 0.dp,
+                                shadowSpread = 0.dp,
+                                modifier = Modifier
+                                    .height(
+                                        getAdaptiveDp(
+                                            dp = (DefaultAvatarSize.value * 1.2).dp,
+                                            incrementedDp = 80.dp
+                                        )
+                                    )
+                                    .aspectRatio(1F)
                             )
-                            .aspectRatio(1F)
-                    )
+                        }
+
+                        ChangeImageButton(
+                            onClick = navigator::openUserAvatarSelectScreen,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                        )
+                    }
                 }
 
-                ChangeImageButton(
-                    onClick = {
-                        navigator.openUserAvatarSelectScreen()
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                )
+                tweaks.forEach {
+                    renderTweakUi(it)
+                }
             }
-
-            TextField(
-                value = name,
-                onValueChange = { name = it },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 11.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Normal,
-                ),
-                shape = MaterialTheme.shapes.extraSmall,
-                readOnly = true,
-                colors = TextFieldDefaults.colors(
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                ),
-                modifier = Modifier
-                    .height(
-                        getAdaptiveDp(
-                            dp = 65.dp,
-                            incrementedDp = 15.dp
-                        )
-                    )
-                    .fillMaxWidth()
-            )
         }
     }
 }
@@ -145,7 +170,7 @@ private fun ChangeImageButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val buttonSize = getAdaptiveDp(30.dp)
+    val buttonSize = getAdaptiveDp(30.dp, 10.dp)
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -178,6 +203,8 @@ private fun ChangeImageButton(
     }
 }
 
+@Suppress("OVERRIDE_DEPRECATION")
+@SuppressLint("ComposableNaming")
 @Preview
 @Composable
 private fun UserEditScreenBasePreview() {

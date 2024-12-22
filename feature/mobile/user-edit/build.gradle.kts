@@ -12,6 +12,7 @@ android {
 dependencies {
     implementation(projects.core.ui.mobile)
     implementation(projects.data.configuration)
+    implementation(projects.data.searchHistory)
     implementation(projects.domain.user)
 
     implementation(libs.compose.adaptive)
