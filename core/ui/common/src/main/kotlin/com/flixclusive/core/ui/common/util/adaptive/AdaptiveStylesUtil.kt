@@ -60,4 +60,21 @@ object AdaptiveStylesUtil {
             )
         )
     }
+
+    @Composable
+    fun getAdaptiveEmphasizedBody(
+        compact: TextUnit = 12.sp,
+        medium: TextUnit = (compact.value + 4).sp,
+        expanded: TextUnit = (medium.value + 4).sp
+    ): TextStyle {
+        return MaterialTheme.typography.bodyLarge.copy(
+            fontWeight = FontWeight.Normal,
+            color = LocalContentColor.current,
+            fontSize = AdaptiveUiUtil.getAdaptiveTextUnit(
+                compact = compact,
+                medium = medium,
+                expanded = expanded
+            )
+        )
+    }
 }
