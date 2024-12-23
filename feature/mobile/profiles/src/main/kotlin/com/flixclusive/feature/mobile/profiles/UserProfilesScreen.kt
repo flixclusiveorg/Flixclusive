@@ -63,7 +63,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
-import com.flixclusive.core.ui.common.navigation.navigator.UserProfilesNavigator
+import com.flixclusive.core.ui.common.navigation.GoBackAction
+import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
+import com.flixclusive.core.ui.common.navigation.navigator.ExitNavigator
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
@@ -74,6 +76,11 @@ import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
+
+interface UserProfilesNavigator : ExitNavigator, GoBackAction, StartHomeScreenAction {
+    fun openEditUserScreen(user: User)
+    fun openAddUserScreen()
+}
 
 data class UserProfilesNavArgs(
     val isComingFromSplashScreen: Boolean
@@ -413,7 +420,7 @@ private fun RowScope.TopBarForNonEmptyScreen(
             Text(
                 text = headerLabel,
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    fontSize = getAdaptiveTextUnit(24.sp, incrementedValue = 8)
+                    fontSize = getAdaptiveTextUnit(24.sp, increaseBy = 8)
                 ),
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1

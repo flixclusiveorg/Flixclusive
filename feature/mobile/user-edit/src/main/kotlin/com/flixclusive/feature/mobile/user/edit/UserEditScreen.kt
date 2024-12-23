@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
-import com.flixclusive.core.ui.common.navigation.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.CommonUserEditNavigator
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
@@ -53,10 +53,6 @@ import kotlinx.collections.immutable.persistentListOf
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface UserEditScreenNavigator : GoBackAction {
-    fun openUserAvatarSelectScreen()
-}
-
 data class UserEditScreenNavArgs(
     val user: User
 )
@@ -66,7 +62,7 @@ data class UserEditScreenNavArgs(
 )
 @Composable
 internal fun UserEditScreen(
-    navigator: UserEditScreenNavigator,
+    navigator: CommonUserEditNavigator,
     resultRecipient: ResultRecipient<UserAvatarSelectScreenDestination, Int>,
     userArg: UserEditScreenNavArgs
 ) {
@@ -155,7 +151,7 @@ internal fun UserEditScreen(
                                     .height(
                                         getAdaptiveDp(
                                             dp = (DefaultAvatarSize.value * 1.2).dp,
-                                            incrementedDp = 80.dp
+                                            increaseBy = 80.dp
                                         )
                                     )
                                     .aspectRatio(1F)
@@ -209,7 +205,7 @@ private fun ChangeImageButton(
             modifier = Modifier.size(
                 getAdaptiveDp(
                     dp = 18.dp,
-                    incrementedDp = 10.dp
+                    increaseBy = 10.dp
                 ),
             )
         )
@@ -227,7 +223,7 @@ private fun UserEditScreenBasePreview() {
                 .fillMaxSize()
         ) {
             UserEditScreen(
-                navigator = object: UserEditScreenNavigator {
+                navigator = object: CommonUserEditNavigator {
                     override fun openUserAvatarSelectScreen() = Unit
                     override fun goBack() = Unit
                 },

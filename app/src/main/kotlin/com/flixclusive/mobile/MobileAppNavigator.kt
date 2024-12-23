@@ -4,6 +4,7 @@ import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import com.flixclusive.core.ui.common.navigation.navargs.MarkdownNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.CommonUserEditNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.HomeNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.PlayerScreenNavigator
@@ -16,12 +17,12 @@ import com.flixclusive.core.ui.common.navigation.navigator.SearchScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.UpdateDialogNavigator
-import com.flixclusive.core.ui.common.navigation.navigator.UserProfilesNavigator
 import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
+import com.flixclusive.feature.mobile.profiles.UserProfilesNavigator
 import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
 import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
@@ -37,7 +38,6 @@ import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestinatio
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
-import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
 import com.flixclusive.model.database.User
 import com.flixclusive.model.film.Film
@@ -60,7 +60,7 @@ internal class MobileAppNavigator(
 ) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator,
     FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator, ProvidersScreenNavigator,
     RepositorySearchScreenNavigator, ProviderInfoNavigator, ProviderTestNavigator,
-    MarkdownNavigator, SettingsScreenNavigator, UserEditScreenNavigator, UserProfilesNavigator {
+    MarkdownNavigator, SettingsScreenNavigator, CommonUserEditNavigator, UserProfilesNavigator {
 
     override fun goBack() {
         navController.navigateUp()

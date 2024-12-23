@@ -33,7 +33,7 @@ internal fun UserAvatarSelectScreen(
     val avatarGridSize = 150.dp
     val columnsSize = getAdaptiveDp(
         dp = avatarGridSize,
-        incrementedDp = 70.dp
+        increaseBy = 70.dp
     )
 
     Scaffold(
@@ -48,7 +48,7 @@ internal fun UserAvatarSelectScreen(
             columns = GridCells.Adaptive(columnsSize),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(getAdaptiveDp(dp = 10.dp, incrementedDp = 2.dp)),
+            contentPadding = PaddingValues(getAdaptiveDp(dp = 10.dp, increaseBy = 2.dp)),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
