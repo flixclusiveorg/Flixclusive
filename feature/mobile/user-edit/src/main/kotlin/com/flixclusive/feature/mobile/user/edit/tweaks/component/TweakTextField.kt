@@ -23,14 +23,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveEmphasizedBody
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveEmphasizedLabel
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.user.edit.tweaks.ProfileTweakUI
 import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.DefaultShape
-import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.fillMaxAdaptiveWidth
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -67,13 +68,20 @@ internal fun TweakTextField(
             tweak.placeholder?.asString()?.let {
                 Text(
                     text = it,
-                    style = getAdaptiveEmphasizedLabel(14.sp).copy(
+                    style = getAdaptiveTextStyle(
+                        style = TypographyStyle.Label,
+                        mode = TextStyleMode.Emphasized,
+                    ).copy(
                         color = LocalContentColor.current.onMediumEmphasis(),
                     )
                 )
             }
         },
-        textStyle = getAdaptiveEmphasizedBody(16.sp).copy(
+        textStyle = getAdaptiveTextStyle(
+            size = 16.sp,
+            style = TypographyStyle.Body,
+            mode = TextStyleMode.Normal
+        ).copy(
             textAlign = TextAlign.Start
         ),
         singleLine = true,
@@ -88,10 +96,14 @@ internal fun TweakTextField(
             .height(
                 getAdaptiveDp(
                     dp = 65.dp,
-                    incrementedDp = 15.dp
+                    increaseBy = 15.dp
                 )
             )
-            .fillMaxAdaptiveWidth()
+            .fillMaxAdaptiveWidth(
+                compact = 1F,
+                medium = 1F,
+                expanded = 0.6F
+            )
     )
 }
 

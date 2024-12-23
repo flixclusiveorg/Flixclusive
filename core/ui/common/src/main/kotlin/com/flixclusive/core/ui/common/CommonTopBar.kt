@@ -109,7 +109,7 @@ object CommonTopBarDefaults {
     fun getAdaptiveTopBarHeight()
         = getAdaptiveDp(
             dp = DefaultTopBarHeight,
-            incrementedDp = DefaultTopBarHeightIncrementValue
+            increaseBy = DefaultTopBarHeightIncrementValue
         )
 }
 

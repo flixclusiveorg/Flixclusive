@@ -51,10 +51,12 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveNonEmphasizedLabel
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.isCompact
+import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalAnimatedVisibilityScope
@@ -129,12 +131,12 @@ internal fun PagerMode(
                 ),
                 iconSize = getAdaptiveDp(
                     dp = 14.dp,
-                    incrementedDp = 6.dp
+                    increaseBy = 6.dp
                 ),
                 spacing = getAdaptiveDp(5.dp, 2.dp),
                 fontSize = getAdaptiveTextUnit(
                     size = 12.sp,
-                    incrementedValue = 2
+                    increaseBy = 2
                 ),
                 contentPadding = PaddingValues(
                     horizontal = getAdaptiveDp(5.dp, 6.dp)
@@ -280,9 +282,11 @@ private fun UsernameTag(
         ) {
             Text(
                 text = item.name,
-                style = getAdaptiveNonEmphasizedLabel(
-                    18.sp,
-                    expanded = 30.sp
+                style = getAdaptiveTextStyle(
+                    compact = 18.sp,
+                    expanded = 30.sp,
+                    style = TypographyStyle.Label,
+                    mode = TextStyleMode.NonEmphasized
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis

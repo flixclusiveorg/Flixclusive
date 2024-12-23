@@ -44,8 +44,10 @@ import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.user.getUserBackgroundPalette
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveEmphasizedLabel
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalAnimatedVisibilityScope
@@ -61,7 +63,7 @@ import com.flixclusive.core.locale.R as LocaleR
 private fun getAvatarSize(): Dp {
     return getAdaptiveDp(
         dp = (DefaultAvatarSize.value * 1.5).dp,
-        incrementedDp = 100.dp
+        increaseBy = 100.dp
     )
 }
 
@@ -153,7 +155,7 @@ internal fun ClickedProfileScreen(
                     .height(
                         getAdaptiveDp(
                             dp = DefaultAvatarSize.times(2.5F),
-                            incrementedDp = 150.dp
+                            increaseBy = 150.dp
                         )
                     )
             )
@@ -244,10 +246,12 @@ private fun ContinueButton(
     ) {
         Text(
             text = stringResource(LocaleR.string.continue_label),
-            style = getAdaptiveEmphasizedLabel(
+            style = getAdaptiveTextStyle(
                 medium = 20.sp,
+                style = TypographyStyle.Label,
+                mode = TextStyleMode.Emphasized,
             ).copy(
-                MaterialTheme.colorScheme.onSurface.copy(0.9F)
+                color = MaterialTheme.colorScheme.onSurface.copy(0.9F)
             )
         )
     }

@@ -13,10 +13,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.common.util.IconResource
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveEmphasizedLabel
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.fillMaxAdaptiveWidth
 import com.flixclusive.feature.mobile.user.edit.tweaks.component.TweakButton
 import com.flixclusive.feature.mobile.user.edit.tweaks.component.TweakTextField
 
@@ -81,15 +83,22 @@ internal fun LazyListScope.renderTweakUi(
         Box(
             contentAlignment = Alignment.CenterStart,
             modifier = Modifier
-                .fillMaxAdaptiveWidth()
+                .fillMaxAdaptiveWidth(
+                    compact = 1F,
+                    medium = 1F,
+                    expanded = 0.6F
+                )
                 .padding(top = getAdaptiveDp(25.dp))
         ) {
             Text(
                 text = tweakCategory.getLabel(),
-                style = getAdaptiveEmphasizedLabel(16.sp)
-                    .copy(
-                        color = LocalContentColor.current.onMediumEmphasis(0.8F)
-                    )
+                style = getAdaptiveTextStyle(
+                    size = 16.sp,
+                    style = TypographyStyle.Label,
+                    mode = TextStyleMode.Emphasized,
+                ).copy(
+                    color = LocalContentColor.current.onMediumEmphasis(0.8F)
+                )
             )
         }
     }

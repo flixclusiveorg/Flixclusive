@@ -24,13 +24,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.dialog.TextAlertDialog
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveEmphasizedBody
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveEmphasizedLabel
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.user.edit.tweaks.ProfileTweakUI
 import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.DefaultShape
-import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.fillMaxAdaptiveWidth
 import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
@@ -78,7 +79,11 @@ internal fun TweakButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing),
             modifier = Modifier
-                .fillMaxAdaptiveWidth()
+                .fillMaxAdaptiveWidth(
+                    compact = 1F,
+                    medium = 1F,
+                    expanded = 0.6F
+                )
                 .padding(spacing)
         ) {
             Icon(
@@ -89,7 +94,7 @@ internal fun TweakButton(
                     .size(
                         getAdaptiveDp(
                             dp = 18.dp,
-                            incrementedDp = 4.dp
+                            increaseBy = 4.dp
                         ),
                     )
             )
@@ -99,12 +104,19 @@ internal fun TweakButton(
             ) {
                 Text(
                     text = tweak.label.asString(),
-                    style = getAdaptiveEmphasizedLabel(14.sp)
+                    style = getAdaptiveTextStyle(
+                        style = TypographyStyle.Label,
+                        mode = TextStyleMode.Emphasized,
+                    )
                 )
 
                 Text(
                     text = tweak.description.asString(),
-                    style = getAdaptiveEmphasizedBody()
+                    style = getAdaptiveTextStyle(
+                        size = 12.sp,
+                        style = TypographyStyle.Body,
+                        mode = TextStyleMode.Normal,
+                    )
                 )
             }
         }

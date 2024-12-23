@@ -52,9 +52,11 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarShape
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveSemiEmphasizedLabel
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
+import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalAnimatedVisibilityScope
@@ -83,7 +85,7 @@ internal fun GridMode(
         .fillMaxHeight(0.65F)
     val columnsSize = getAdaptiveDp(
         dp = DefaultAvatarGridSize,
-        incrementedDp = 70.dp
+        increaseBy = 70.dp
     )
 
     val surfaceColor = MaterialTheme.colorScheme.surface
@@ -182,12 +184,12 @@ internal fun GridMode(
             ),
             iconSize = getAdaptiveDp(
                 dp = 14.dp,
-                incrementedDp = 6.dp
+                increaseBy = 6.dp
             ),
             spacing = getAdaptiveDp(5.dp, 2.dp),
             fontSize = getAdaptiveTextUnit(
                 size = 12.sp,
-                incrementedValue = 2
+                increaseBy = 2
             ),
             contentPadding = PaddingValues(
                 horizontal = getAdaptiveDp(5.dp, 9.5.dp)
@@ -203,7 +205,7 @@ private fun UsernameTag(
 ) {
     val columnsSize = getAdaptiveDp(
         dp = DefaultAvatarGridSize,
-        incrementedDp = 70.dp
+        increaseBy = 70.dp
     )
 
     Column(
@@ -215,8 +217,10 @@ private fun UsernameTag(
     ) {
         Text(
             text = user.name,
-            style = getAdaptiveSemiEmphasizedLabel(
+            style = getAdaptiveTextStyle(
                 compact = CompactLabelSize,
+                style = TypographyStyle.Label,
+                mode = TextStyleMode.SemiEmphasized
             ),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
