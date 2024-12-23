@@ -63,6 +63,7 @@ internal fun SplashScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle()
     val configurationStatus by viewModel.configurationStatus.collectAsStateWithLifecycle()
+    val userLoggedIn by viewModel.userLoggedIn.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -120,7 +121,7 @@ internal fun SplashScreen(
                         }
                     }
 
-                    LaunchedEffect(updateStatus, configurationStatus, areAllPermissionsGranted, isDoneLoading) {
+                    LaunchedEffect(updateStatus, configurationStatus, areAllPermissionsGranted, isDoneLoading, userLoggedIn) {
                         if (areAllPermissionsGranted && isDoneLoading) {
                             val hasAutoUpdate = appSettings.isUsingAutoUpdateAppFeature
                             val isAppOutdated = updateStatus is UpdateStatus.Outdated
@@ -129,8 +130,11 @@ internal fun SplashScreen(
                             val isConfigFetched = configurationStatus is Resource.Success
                             val configHasErrors = configurationStatus is Resource.Failure
                             val isHomeScreenReady = uiState is SplashScreenUiState.Okay
+                            val hasOldUserSession = userLoggedIn != null
 
-                            val isNavigatingToHome = ((isAppUpdated && hasAutoUpdate) || isConfigFetched) && isHomeScreenReady
+                            val isNavigatingToHome = ((isAppUpdated && hasAutoUpdate) || isConfigFetched)
+                                    && isHomeScreenReady
+                                    && hasOldUserSession
                             hasErrors = (updateHasErrors && hasAutoUpdate) || configHasErrors
 
                             if (isAppOutdated && hasAutoUpdate) {
@@ -143,11 +147,15 @@ internal fun SplashScreen(
                                     )
                                 }
                             }
+                            else if (!hasOldUserSession) {
+                                navigator.selectProfileScreenFromSplashScreen()
+                            }
+                            else if (isNavigatingToHome) {
+                                if (updateHasErrors) {
+                                    val message = "${context.getString(LocaleR.string.failed_to_get_app_updates)}: ${updateStatus.errorMessage?.asString(context)}"
+                                    context.showToast(message = message)
+                                }
 
-                            if (isNavigatingToHome && updateHasErrors) {
-                                val message = "${context.getString(LocaleR.string.failed_to_get_app_updates)}: ${updateStatus.errorMessage?.asString(context)}"
-                                context.showToast(message = message)
-                            } else if (isNavigatingToHome) {
                                 navigator.openHomeScreen()
                             }
                         }

@@ -16,11 +16,13 @@ import com.flixclusive.core.ui.common.navigation.navigator.SearchScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.UpdateDialogNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.UserProfilesNavigator
 import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
+import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
 import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
@@ -33,7 +35,11 @@ import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestinatio
 import com.flixclusive.feature.mobile.settings.destinations.SettingsScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
+import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
+import com.flixclusive.model.database.User
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Genre
 import com.flixclusive.model.film.common.tv.Episode
@@ -54,7 +60,7 @@ internal class MobileAppNavigator(
 ) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator,
     FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator, ProvidersScreenNavigator,
     RepositorySearchScreenNavigator, ProviderInfoNavigator, ProviderTestNavigator,
-    MarkdownNavigator, SettingsScreenNavigator {
+    MarkdownNavigator, SettingsScreenNavigator, UserEditScreenNavigator, UserProfilesNavigator {
 
     override fun goBack() {
         navController.navigateUp()
@@ -128,8 +134,24 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openUsersProfileScreen() {
-        TODO("Not yet implemented")
+    override fun selectProfileScreenFromSplashScreen() {
+        navController.navigateIfResumed(
+            UserProfilesScreenDestination(
+                isComingFromSplashScreen = true
+            )
+        )
+    }
+
+    override fun openUserAvatarSelectScreen() {
+        navController.navigateIfResumed(UserAvatarSelectScreenDestination)
+    }
+
+    override fun openEditUserScreen(user: User) {
+        navController.navigateIfResumed(UserEditScreenDestination(user))
+    }
+
+    override fun openAddUserScreen() {
+        // TODO("Create AddUserScreen")
     }
 
     override fun onExitApplication() {

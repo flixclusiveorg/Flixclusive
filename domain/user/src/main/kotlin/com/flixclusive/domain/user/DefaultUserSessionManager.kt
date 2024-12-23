@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class DefaultUserSessionManager @Inject constructor(
     private val userRepository: UserRepository,
     private val dataStoreManager: UserSessionDataStore
@@ -21,10 +23,16 @@ class DefaultUserSessionManager @Inject constructor(
         withIOContext {
             // Attempt to restore user from last saved session
             val savedUserId = dataStoreManager.currentUserId.first()
+            val sessionTimeout = dataStoreManager.sessionTimeout.first()
+
+            if (sessionTimeout < System.currentTimeMillis()) {
+                return@withIOContext signOut()
+            }
 
             savedUserId?.let { userId ->
-                val user = userRepository.getUser(userId)
-                _currentUser.value = user
+                userRepository.getUser(id = userId)
+                    ?.let { signIn(it) }
+                    ?: signOut()
             }
         }
     }

@@ -32,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.GoBackAction
@@ -69,15 +70,15 @@ internal fun UserEditScreen(
     resultRecipient: ResultRecipient<UserAvatarSelectScreenDestination, Int>,
     userArg: UserEditScreenNavArgs
 ) {
+    val viewModel = hiltViewModel<UserEditViewModel>()
     val context = LocalContext.current
     var user by remember { mutableStateOf(userArg.user) }
-
 
     val tweaks = remember {
         persistentListOf(
             IdentityTweak(
                 initialName = userArg.user.name,
-                onSetupPin = {
+                onSetupPin = { /*TODO: Implement User PIN */
                     context.showToast(
                         context.getString(
                             LocaleR.string.coming_soon_feature
@@ -85,21 +86,33 @@ internal fun UserEditScreen(
                     )
                 },
                 onNameChange = {
-                    /*TODO: Implement ViewModel*/
                     user = user.copy(name = it)
+                    viewModel.onEditUser(user = user)
                 }
             ),
             DataTweak(
-                userId = userArg.user.id,
-                onClearSearchHistory = { /*TODO: Implement ViewModel*/ },
-                onDeleteProfile = { /*TODO: Implement ViewModel*/ },
-                onClearLibraries = { /*TODO: Implement ViewModel*/ },
+                onClearSearchHistory = { viewModel.onClearSearchHistory(user.id) },
+                onDeleteProfile = { viewModel.onRemoveUser(user.id) },
+                onClearLibraries = { /*TODO: Implement onClearLibraries*/
+                    context.showToast(
+                        context.getString(
+                            LocaleR.string.coming_soon_feature
+                        )
+                    )
+                },
             )
         )
     }
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    resultRecipient.onNavResult { result ->
+        if (result is NavResult.Value) {
+            user = user.copy(image = result.value)
+            viewModel.onEditUser(user = user)
+        }
+    }
 
     Scaffold(
         topBar = {

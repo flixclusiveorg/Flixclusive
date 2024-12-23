@@ -6,6 +6,7 @@ import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.destinations.HomeScreenDestination
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
+import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
 import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
@@ -17,6 +18,8 @@ import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpanded
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
 import com.flixclusive.feature.mobile.settings.destinations.SettingsScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
 import com.ramcosta.composedestinations.dynamic.routedIn
 import com.ramcosta.composedestinations.spec.DestinationSpec
@@ -97,6 +100,9 @@ internal object MobileNavGraphs {
             PlayerScreenDestination,
             SplashScreenDestination,
             UpdateScreenDestination,
+            UserEditScreenDestination,
+            UserProfilesScreenDestination,
+            UserAvatarSelectScreenDestination,
             MarkdownScreenDestination,
         ).associateBy { it.route }
 

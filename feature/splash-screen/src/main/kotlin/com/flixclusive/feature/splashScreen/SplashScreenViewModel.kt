@@ -9,6 +9,7 @@ import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.home.PREFERRED_MINIMUM_HOME_ITEMS
 import com.flixclusive.domain.updater.AppUpdateCheckerUseCase
 import com.flixclusive.domain.updater.ProviderUpdaterUseCase
+import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.OnBoardingPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,6 +33,7 @@ internal class SplashScreenViewModel @Inject constructor(
     homeItemsProviderUseCase: HomeItemsProviderUseCase,
     appConfigurationManager: AppConfigurationManager,
     val appUpdateCheckerUseCase: AppUpdateCheckerUseCase,
+    private val userSessionManager: UserSessionManager,
     private val appSettingsManager: AppSettingsManager,
     private val providerUpdaterUseCase: ProviderUpdaterUseCase,
 ) : ViewModel() {
@@ -54,6 +56,14 @@ internal class SplashScreenViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = appSettingsManager.cachedOnBoardingPreferences
+        )
+
+    val userLoggedIn = userSessionManager
+        .currentUser
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
         )
 
     init {
@@ -80,6 +90,14 @@ internal class SplashScreenViewModel @Inject constructor(
 
             launch {
                 providerUpdaterUseCase.checkForUpdates(notify = true)
+            }
+
+            launch {
+                userLoggedIn.collectLatest {
+                    if (it == null) {
+                        userSessionManager.restoreSession()
+                    }
+                }
             }
         }
     }

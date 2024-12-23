@@ -47,9 +47,8 @@ import com.flixclusive.feature.mobile.user.edit.tweaks.data.DataTweak.Companion.
 import kotlinx.coroutines.launch
 
 internal class DataTweak(
-    private val userId: Int,
-    private val onClearSearchHistory: (userId: Int) -> Unit,
-    private val onDeleteProfile: (userId: Int) -> Unit,
+    private val onClearSearchHistory: () -> Unit,
+    private val onDeleteProfile: () -> Unit,
     private val onClearLibraries: (libraries: List<Library>) -> Unit,
 ) : BaseProfileTweak {
     @Composable
@@ -63,9 +62,7 @@ internal class DataTweak(
                 description = UiText.StringResource(R.string.search_history_content_desc),
                 icon = IconResource.fromDrawableResource(com.flixclusive.core.ui.common.R.drawable.search_outlined),
                 needsConfirmation = true,
-                onClick = {
-                    onClearSearchHistory(userId)
-                }
+                onClick = onClearSearchHistory
             ),
             getDeleteDialog(),
             ProfileTweakUI.Button(
@@ -73,9 +70,7 @@ internal class DataTweak(
                 description = UiText.StringResource(R.string.delete_profile_content_desc),
                 icon = IconResource.fromDrawableResource(com.flixclusive.core.ui.common.R.drawable.delete_person),
                 needsConfirmation = true,
-                onClick = {
-                    onDeleteProfile(userId)
-                }
+                onClick = onDeleteProfile
             ),
         )
     }

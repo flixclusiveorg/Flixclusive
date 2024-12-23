@@ -31,11 +31,11 @@ internal sealed class Library {
 @HiltViewModel
 internal class UserEditViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val searchHistoryRepository: SearchHistoryRepository
+    private val searchHistoryRepository: SearchHistoryRepository,
 ) : ViewModel() {
-    fun onRemoveUser(user: User) {
+    fun onRemoveUser(userId: Int) {
         viewModelScope.launch {
-            userRepository.deleteUser(user.id)
+            userRepository.deleteUser(userId)
         }
     }
 
@@ -49,5 +49,9 @@ internal class UserEditViewModel @Inject constructor(
         viewModelScope.launch {
             searchHistoryRepository.clearAll(ownerId = userId)
         }
+    }
+
+    fun onClearLibraries(userId: Int, libraries: List<Library>) {
+
     }
 }

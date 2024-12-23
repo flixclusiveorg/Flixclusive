@@ -59,11 +59,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
-import com.flixclusive.core.ui.common.navigation.navargs.UserProfilesNavArgs
 import com.flixclusive.core.ui.common.navigation.navigator.UserProfilesNavigator
-import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
@@ -75,6 +75,10 @@ import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
+data class UserProfilesNavArgs(
+    val isComingFromSplashScreen: Boolean
+)
+
 @Destination(
     navArgsDelegate = UserProfilesNavArgs::class
 )
@@ -83,22 +87,17 @@ internal fun UserProfilesScreen(
     navigator: UserProfilesNavigator,
     args: UserProfilesNavArgs
 ) {
-    val list = remember {
-        List(15) {
-            User(
-                id = it,
-                image = it % AVATARS_IMAGE_COUNT,
-                name = "User $it"
-            )
-        }
-    }
+    val viewModel = hiltViewModel<UserProfilesViewModel>()
+    val profiles by viewModel.profiles.collectAsStateWithLifecycle()
 
-    val pageCount = if (list.size <= 2) {
-        list.size
+    val scope = rememberCoroutineScope()
+
+    val pageCount = if (profiles.size <= 2) {
+        profiles.size
     } else Int.MAX_VALUE
 
     val initialPage =
-        if (list.size <= 2) 0
+        if (profiles.size <= 2) 0
         else (Int.MAX_VALUE / 2) - 3
 
     val listState = rememberLazyGridState()
@@ -121,7 +120,7 @@ internal fun UserProfilesScreen(
             modifier = Modifier
                 .align(Alignment.Center)
         ) {
-            if (list.isNotEmpty()) {
+            if (profiles.isNotEmpty()) {
                 ProvideSharedTransitionScope {
                     AnimatedContent(
                         label = "main_content",
@@ -157,18 +156,18 @@ internal fun UserProfilesScreen(
                             when (state) {
                                 ScreenType.Grid -> {
                                     GridMode(
-                                        profiles = list,
+                                        profiles = profiles,
                                         onSelect = onSelect,
                                         listState = listState,
-                                        onEdit = { /*TODO: Navigate to edit screen*/ }
+                                        onEdit = navigator::openEditUserScreen
                                     )
                                 }
                                 ScreenType.Pager -> {
                                     PagerMode(
-                                        profiles = list,
+                                        profiles = profiles,
                                         onSelect = onSelect,
                                         pagerState = pagerState,
-                                        onEdit = { /*TODO: Navigate to edit screen*/ }
+                                        onEdit = navigator::openEditUserScreen
                                     )
                                 }
                                 ScreenType.ContinueScreen -> {
@@ -177,7 +176,12 @@ internal fun UserProfilesScreen(
                                             clickedProfile = profile,
                                             isLoading = isContinueScreenLoading,
                                             onUseAsDefault = { /*TODO: Add toggle for onUseAsDefault profile */ },
-                                            onConfirm = { /*TODO: Navigate to home/settings screen */ },
+                                            onConfirm = {
+                                                scope.launch {
+                                                    viewModel.onUseProfile(profile)
+                                                    navigator.openHomeScreen()
+                                                }
+                                            },
                                             onBack = {
                                                 screenType.value = lastScreenTypeUsed.value
                                             }
@@ -190,7 +194,7 @@ internal fun UserProfilesScreen(
                 }
             } else {
                 EmptyScreen(
-                    onAdd = { navigator.openAddUsersScreen() }
+                    onAdd = { navigator.openAddUserScreen() }
                 )
             }
         }
@@ -201,11 +205,11 @@ internal fun UserProfilesScreen(
             exit = slideOutVertically(tween(500)) + fadeOut()
         ) {
             TopBar(
-                showTagOnly = list.isEmpty() || screenType.value == ScreenType.ContinueScreen,
+                showTagOnly = profiles.isEmpty() || screenType.value == ScreenType.ContinueScreen,
                 screenType = screenType,
                 lastScreenTypeUsed = lastScreenTypeUsed,
                 isComingFromSplashScreen = args.isComingFromSplashScreen,
-                addNewUser = navigator::openAddUsersScreen,
+                addNewUser = navigator::openAddUserScreen,
                 onBack = navigator::goBack,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -462,8 +466,8 @@ private fun UserProfilesScreenBasePreview() {
                 navigator = object : UserProfilesNavigator {
                     override fun goBack() = Unit
                     override fun onExitApplication() = Unit
-                    override fun openAddUsersScreen() = Unit
-                    override fun openEditUserScreen() = Unit
+                    override fun openAddUserScreen() = Unit
+                    override fun openEditUserScreen(user: User) = Unit
                     override fun openHomeScreen() = Unit
                 },
                 args = UserProfilesNavArgs(false)

@@ -78,7 +78,7 @@ internal fun PagerMode(
     pagerState: PagerState,
     profiles: List<User>,
     onSelect: (User) -> Unit,
-    onEdit: () -> Unit
+    onEdit: (User) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val sharedTransitionScope = getLocalSharedTransitionScope()
@@ -114,7 +114,13 @@ internal fun PagerMode(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             EditButton(
-                onEdit = onEdit,
+                onEdit = {
+                    val selected = profiles.getOrNull(
+                        index = pagerState.currentPage % profiles.size
+                    ) ?: return@EditButton
+
+                    onEdit(selected)
+                },
                 enabled = enableEditButton,
                 buttonSize = getAdaptiveDp(
                     compact = 25.dp,
@@ -283,7 +289,7 @@ private fun UsernameTag(
             )
 
             // TODO: Add conditional statement if User is locked
-            if (true) {
+            if (false) {
                 Icon(
                     painter = painterResource(UiCommonR.drawable.lock_thin),
                     contentDescription = stringResource(LocaleR.string.locked_profile_button_desc),

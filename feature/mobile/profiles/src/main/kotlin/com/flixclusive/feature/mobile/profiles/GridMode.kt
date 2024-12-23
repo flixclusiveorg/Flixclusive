@@ -55,6 +55,8 @@ import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarShape
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveSemiEmphasizedLabel
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
+import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
+import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalSharedTransitionScope
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -224,7 +226,7 @@ private fun UsernameTag(
         )
 
         // TODO: Add conditional statement if User is locked
-        if (true) {
+        if (false) {
             Icon(
                 painter = painterResource(UiCommonR.drawable.lock_thin),
                 contentDescription = stringResource(LocaleR.string.locked_profile_button_desc),
@@ -301,18 +303,24 @@ private fun UserAvatarWithEdit(
 private fun GridModeBasePreview() {
     FlixclusiveTheme {
         Surface {
-            GridMode(
-                onEdit = {},
-                onSelect = {},
-                listState = rememberLazyGridState(),
-                profiles = List(20) {
-                    User(
-                        id = it,
-                        image = it % AVATARS_IMAGE_COUNT,
-                        name = "User $it"
-                    )
+            ProvideSharedTransitionScope {
+                AnimatedVisibility(true) {
+                    ProvideAnimatedVisibilityScope {
+                        GridMode(
+                            onEdit = {},
+                            onSelect = {},
+                            listState = rememberLazyGridState(),
+                            profiles = List(1) {
+                                User(
+                                    id = it,
+                                    image = it % AVATARS_IMAGE_COUNT,
+                                    name = "User $it"
+                                )
+                            }
+                        )
+                    }
                 }
-            )
+            }
         }
     }
 }
