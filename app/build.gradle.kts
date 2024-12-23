@@ -88,6 +88,7 @@ dependencies {
     implementation(projects.feature.splashScreen)
     implementation(projects.feature.mobile.update)
     implementation(projects.feature.mobile.profiles)
+    implementation(projects.feature.mobile.userAdd)
     implementation(projects.feature.mobile.userEdit)
     implementation(projects.feature.mobile.watchlist)
 

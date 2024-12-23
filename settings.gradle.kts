@@ -51,6 +51,7 @@ include(":feature:mobile:search-expanded")
 include(":feature:mobile:see-all")
 include(":feature:mobile:settings")
 include(":feature:mobile:update")
+include(":feature:mobile:user-add")
 include(":feature:mobile:user-edit")
 include(":feature:mobile:watchlist")
 

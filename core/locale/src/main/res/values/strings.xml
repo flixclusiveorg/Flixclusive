@@ -98,6 +98,7 @@
 
     <!--  Extra labels  -->
     <string name="add_own_subtitle">Add subs</string>
+    <string name="add_profile">Add profile</string>
     <string name="add_provider">Add provider</string>
     <string name="add_sync_offset_message">Add if subs are delayed.</string>
     <string name="add_to_watchlist">Add to Watchlist</string>
@@ -297,6 +298,10 @@
     <string name="whats_new">What\'s new</string>
     <string name="whos_watching">Who\'s watching?</string>
 
+    <!--  On-boarding messages  -->
+    <string name="onboarding_profile_name_title">Who will be watching?</string>
+    <string name="onboarding_profile_name_description">The first thing for a delightful enjoyment is to set up a name!</string>
+
     <!--  Color  -->
     <string name="cyan">Cyan</string>
     <string name="white">White</string>
@@ -424,6 +429,7 @@
     <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>
     <string name="forward_button_content_description">Forward button for the player</string>
     <string name="general_settings_content_desc">This contains all the general settings that are not related any of the specified groups on the settings navigation.</string>
+    <string name="icon_for_name_screen_content_desc">An emphasized icon for initializing profile\'s name</string>
     <string name="lock_button_desc">An icon for locking the player</string>
     <string name="locked_profile_button_desc">Profile has a pin lock</string>
     <string name="missing_providers_logo_content_description">Missing providers logo</string>
