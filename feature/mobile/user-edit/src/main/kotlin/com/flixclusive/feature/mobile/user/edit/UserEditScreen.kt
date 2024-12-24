@@ -53,27 +53,21 @@ import kotlinx.collections.immutable.persistentListOf
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-data class UserEditScreenNavArgs(
-    val user: User
-)
-
-@Destination(
-    navArgsDelegate = UserEditScreenNavArgs::class
-)
+@Destination
 @Composable
 internal fun UserEditScreen(
     navigator: CommonUserEditNavigator,
     resultRecipient: ResultRecipient<UserAvatarSelectScreenDestination, Int>,
-    userArg: UserEditScreenNavArgs
+    userArg: User
 ) {
     val viewModel = hiltViewModel<UserEditViewModel>()
     val context = LocalContext.current
-    var user by remember { mutableStateOf(userArg.user) }
+    var user by remember { mutableStateOf(userArg) }
 
     val tweaks = remember {
         persistentListOf(
             IdentityTweak(
-                initialName = userArg.user.name,
+                initialName = userArg.name,
                 onSetupPin = { /*TODO: Implement User PIN */
                     context.showToast(
                         context.getString(
@@ -159,7 +153,7 @@ internal fun UserEditScreen(
                         }
 
                         ChangeImageButton(
-                            onClick = navigator::openUserAvatarSelectScreen,
+                            onClick = { navigator.openUserAvatarSelectScreen(selected = user.image) },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                         )
@@ -225,6 +219,7 @@ private fun UserEditScreenBasePreview() {
             UserEditScreen(
                 navigator = object: CommonUserEditNavigator {
                     override fun openUserAvatarSelectScreen(selected: Int) = Unit
+                    override fun openUserPinSetupScreen() = Unit
                     override fun goBack() = Unit
                 },
                 resultRecipient = object : ResultRecipient<UserAvatarSelectScreenDestination, Int> {
@@ -233,12 +228,10 @@ private fun UserEditScreenBasePreview() {
                     @Composable
                     override fun onResult(listener: (Int) -> Unit) = Unit
                 },
-                userArg = UserEditScreenNavArgs(
-                    user = User(
-                        id = 0,
-                        image = 0,
-                        name = "John Doe"
-                    )
+                userArg = User(
+                    id = 0,
+                    image = 0,
+                    name = "John Doe"
                 )
             )
         }
