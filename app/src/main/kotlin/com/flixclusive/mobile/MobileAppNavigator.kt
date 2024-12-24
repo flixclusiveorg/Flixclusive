@@ -142,7 +142,7 @@ internal class MobileAppNavigator(
         )
     }
 
-    override fun openUserAvatarSelectScreen() {
+    override fun openUserAvatarSelectScreen(selected: Int) {
         navController.navigateIfResumed(UserAvatarSelectScreenDestination)
     }
 

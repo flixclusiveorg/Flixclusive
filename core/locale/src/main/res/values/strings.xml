@@ -186,6 +186,8 @@
     <string name="more_like_this">More like this</string>
     <string name="name">Name</string>
     <string name="network">Network</string>
+    <string name="finish">Finish</string>
+    <string name="next">Next</string>
     <string name="next_episode">Next episode</string>
     <string name="no_cache_limit_label">No cache limit (plz dont)</string>
     <string name="no_full_log">No full logs provided</string>
@@ -302,7 +304,7 @@
     <string name="onboarding_profile_name_title">Who will be watching?</string>
     <string name="onboarding_profile_avatar_title">Choosing an avatar</string>
     <string name="onboarding_profile_name_description">The first thing for a delightful enjoyment is to set up a name!</string>
-    <string name="onboarding_profile_avatar_description">An avatar resem</string>
+    <string name="onboarding_profile_avatar_description">The next step to personalize your journey is to pick an avatar that feels just right!</string>
 
     <!--  Color  -->
     <string name="cyan">Cyan</string>
@@ -310,6 +312,7 @@
     <string name="yellow">Yellow</string>
 
     <!--  Extra labels with formatting  -->
+    <string name="avatar_number">Avatar %1$d</string>
     <string name="continue_watching_tv_show">Continue Watching S%1$d E%2$d</string>
     <string name="count_selection_format">%1$d selected</string>
     <string name="current_playback_speed_format">Current playback speed: %1$sx</string>
@@ -386,6 +389,7 @@
     <string name="updates_out_now_provider_format">Updates for plugins are available: %1$s</string>
 
     <!--  Content descriptions  -->
+    <string name="avatar_chosen_content_desc">Avatar chosen</string>
     <string name="action_warning_format_message">Are you sure you want to do the following action: %1$s?</string>
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>
     <string name="add_500ms_content_description">Add 500ms on subtitle delay</string>
@@ -431,7 +435,7 @@
     <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>
     <string name="forward_button_content_description">Forward button for the player</string>
     <string name="general_settings_content_desc">This contains all the general settings that are not related any of the specified groups on the settings navigation.</string>
-    <string name="icon_for_name_screen_content_desc">An emphasized icon for initializing profile\'s name</string>
+    <string name="on_boarding_background_content_desc">A background image for this on-boarding screen</string>
     <string name="lock_button_desc">An icon for locking the player</string>
     <string name="locked_profile_button_desc">Profile has a pin lock</string>
     <string name="missing_providers_logo_content_description">Missing providers logo</string>

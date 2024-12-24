@@ -3,44 +3,71 @@ package com.flixclusive.feature.mobile.user.add
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.CommonUserEditNavigator
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
+import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.feature.mobile.user.add.component.AddUserScaffold
+import com.flixclusive.feature.mobile.user.add.component.NavigationButtons
+import com.flixclusive.feature.mobile.user.add.screens.AvatarScreen
 import com.flixclusive.feature.mobile.user.add.screens.NameScreen
+import com.flixclusive.feature.mobile.user.add.util.ModifierUtil.fillOnBoardingContentWidth
+import com.flixclusive.feature.mobile.user.add.util.ModifierUtil.getHorizontalPadding
 import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.ProvideUserToAdd
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.OpenResultRecipient
 import kotlinx.collections.immutable.persistentListOf
+import com.flixclusive.core.locale.R as LocaleR
 
+private const val PORTRAIT_BACKGROUND_HEIGHT_FRACTION = 0.65F
+private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 
 @Destination
 @Composable
@@ -48,95 +75,167 @@ internal fun AddUserScreen(
     navigator: CommonUserEditNavigator,
     resultRecipient: OpenResultRecipient<Int>
 ) {
-    var userAvatar by rememberSaveable { mutableIntStateOf(-1) }
 //    resultRecipient.onNavResult { result ->
 //        if (result is NavResult.Value) {
 //            userAvatar = result.value
 //        }
 //    }
 
-    var currentScreen by remember { mutableIntStateOf(0) }
+    val orientation = LocalConfiguration.current.orientation
+    val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    var currentScreen by remember { mutableIntStateOf(1) }
+    var canSkip by remember { mutableStateOf(false) }
     val screens = remember {
         persistentListOf(
             NameScreen,
+            AvatarScreen(navigator)
         )
     }
 
     ProvideUserToAdd {
         AddUserScaffold(
-            onBack = navigator::goBack
+            onBack = {
+                if (currentScreen == 0) {
+                    navigator.goBack()
+                } else currentScreen--
+            },
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
+            AnimatedContent(
+                targetState = currentScreen,
+                label = "OnBoardingBackground",
+                transitionSpec = {
+                    val tweenInt = tween<IntOffset>(durationMillis = 300)
+                    val tweenFloat = tween<Float>(durationMillis = 500)
+                    val widthDivisor = 6
+
+                    if (targetState > initialState) {
+                        fadeIn(tweenFloat) + slideInHorizontally(animationSpec = tweenInt) { it / widthDivisor } togetherWith
+                                fadeOut() + slideOutHorizontally { -it / widthDivisor }
+                    } else {
+                        fadeIn(tweenFloat) + slideInHorizontally(tweenInt) { -it / widthDivisor } + fadeIn() togetherWith
+                                fadeOut() + slideOutHorizontally { it / widthDivisor }
+                    }.using(
+                        SizeTransform(clip = false)
+                    )
+                },
+                modifier = Modifier.fillMaxSize(),
+            ) { position ->
+                val screen = screens[position]
+
+                OnBoardingBackground(
+                    backgroundUrl = "https://picsum.photos/1920/1080" /*TODO: Implement ViewModel*/,
+                    modifier = Modifier
+                        .fillMaxHeight(PORTRAIT_BACKGROUND_HEIGHT_FRACTION)
+                        .padding(top = getAdaptiveDp(60.dp))
+                )
+
+                if (screen is NameScreen) {
+                    val focusManager = LocalFocusManager.current
+                    val keyboardController = LocalSoftwareKeyboardController.current
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .noIndicationClickable {
+                                focusManager.clearFocus(true)
+                                keyboardController?.hide()
+                            }
+                    )
+                }
+            }
+
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(
+                    space = getAdaptiveDp(dp = 15.dp, increaseBy = 3.dp),
+                    alignment = if (isLandscape) Alignment.CenterVertically else Alignment.Top
+                ),
+                horizontalAlignment = if (isLandscape) Alignment.End else Alignment.Start,
                 modifier = Modifier
-                    .fillMaxSize()
+                    .align(if (isLandscape) Alignment.CenterEnd else Alignment.Center)
                     .padding(
-                        horizontal = getAdaptiveDp(16.dp)
+                        horizontal = getHorizontalPadding(),
+                        vertical = if (!isLandscape) getHorizontalPadding() else 0.dp
                     )
             ) {
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .noIndicationClickable {
-//                            focusManager.clearFocus(true)
-//                            keyboardController?.hide()
-//                        }
-//                )
-
+                val contentModifier = if (isLandscape) {
+                    Modifier.fillMaxWidth(LANDSCAPE_CONTENT_WIDTH_FRACTION)
+                } else Modifier.weight(1F)
 
                 AnimatedContent(
-                    targetState = screens[currentScreen],
-                    label = "OnBoardingProfileScreens",
-                    modifier = Modifier.fillMaxSize(),
-                ) { screen ->
-                    if (screen is NameScreen) {
-                        val focusManager = LocalFocusManager.current
-                        val keyboardController = LocalSoftwareKeyboardController.current
+                    targetState = currentScreen,
+                    label = "OnBoardingBackground",
+                    transitionSpec = {
+                        val tweenInt = tween<IntOffset>(durationMillis = 300)
+                        val tweenFloat = tween<Float>(durationMillis = 500)
+                        val widthDivisor = 6
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .noIndicationClickable {
-                                    focusManager.clearFocus(true)
-                                    keyboardController?.hide()
-                                }
+                        if (targetState > initialState) {
+                            fadeIn(tweenFloat) + slideInHorizontally(animationSpec = tweenInt) { it / widthDivisor } togetherWith
+                                    fadeOut() + slideOutHorizontally { -it / widthDivisor }
+                        } else {
+                            fadeIn(tweenFloat) + slideInHorizontally(tweenInt) { -it / widthDivisor } + fadeIn() togetherWith
+                                    fadeOut() + slideOutHorizontally { it / widthDivisor }
+                        }.using(
+                            SizeTransform(clip = false)
+                        )
+                    },
+                    modifier = contentModifier,
+                ) { position ->
+                    val screen = screens[position]
+
+                    LaunchedEffect(true) {
+                        canSkip = screen.canSkip
+                    }
+
+                    if (!isLandscape) {
+                        AddUserPortraitScreen(
+                            screen = screen,
+                            modifier = contentModifier
+                        )
+                    } else {
+                        AddUserLandscapeScreen(
+                            screen = screen,
+                            modifier = contentModifier
                         )
                     }
-
-                    with(screen) {
-                        val orientation = LocalConfiguration.current.orientation
-                        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                            AddUserPortraitScreen()
-                        } else {
-                            AddUserLandscapeScreen()
-                        }
-                    }
                 }
+
+                NavigationButtons(
+                    canSkip = canSkip,
+                    isFinalStep = currentScreen == screens.lastIndex,
+                    onNext = {
+                        if (currentScreen == screens.lastIndex) {
+                            navigator.goBack()
+                        } else currentScreen++
+                    },
+                    modifier = Modifier.fillMaxWidth(
+                        if (isLandscape) LANDSCAPE_CONTENT_WIDTH_FRACTION else 1F
+                    )
+                )
             }
         }
     }
 }
 
 @Composable
-private fun OnBoardingScreen.AddUserPortraitScreen() {
-    val widthModifier = Modifier.fillMaxAdaptiveWidth(
-        medium = 0.8F,
-        expanded = 0.9F
-    )
+private fun AddUserPortraitScreen(
+    modifier: Modifier = Modifier,
+    screen: OnBoardingScreen
+) {
+    val widthModifier = Modifier.fillOnBoardingContentWidth()
 
     Column(
         verticalArrangement = Arrangement.spacedBy(
             space = getAdaptiveDp(dp = 5.dp, increaseBy = 3.dp),
-            alignment = Alignment.CenterVertically
+            alignment = Alignment.Bottom
         ),
         horizontalAlignment = Alignment.Start,
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
     ) {
-        OnBoardingIcon()
-
         Text(
-            text = title.asString(),
+            text = screen.title.asString(),
             style = getAdaptiveTextStyle(
                 size = 22.sp,
                 increaseBy = 16.sp,
@@ -148,7 +247,7 @@ private fun OnBoardingScreen.AddUserPortraitScreen() {
         )
 
         Text(
-            text = description.asString(),
+            text = screen.description.asString(),
             style = getAdaptiveTextStyle(
                 size = 14.sp,
                 increaseBy = 10.sp,
@@ -159,52 +258,105 @@ private fun OnBoardingScreen.AddUserPortraitScreen() {
                 .padding(bottom = getAdaptiveDp(10.dp))
         )
 
-        Content(widthModifier)
+        Box(
+            contentAlignment = Alignment.CenterStart,
+            modifier = widthModifier
+        ) {
+            screen.Content()
+        }
     }
 }
 
 @Composable
-private fun OnBoardingScreen.AddUserLandscapeScreen() {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(25.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxSize()
+private fun AddUserLandscapeScreen(
+    modifier: Modifier = Modifier,
+    screen: OnBoardingScreen
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(5.dp),
+        horizontalAlignment = Alignment.Start,
+        modifier = modifier
     ) {
-        OnBoardingIcon()
+        Text(
+            text = screen.title.asString(),
+            style = getAdaptiveTextStyle(
+                size = 24.sp,
+                increaseBy = 6.sp,
+                style = TypographyStyle.Display,
+                mode = TextStyleMode.Emphasized
+            ),
+            modifier = Modifier
+                .padding(top = 20.dp)
+        )
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(5.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = title.asString(),
-                style = getAdaptiveTextStyle(
-                    size = 30.sp,
-                    increaseBy = 10.sp,
-                    style = TypographyStyle.Display,
-                    mode = TextStyleMode.Emphasized
-                ),
+        Text(
+            text = screen.description.asString(),
+            style = getAdaptiveTextStyle(
+                size = 16.sp,
+                increaseBy = 6.sp,
+                style = TypographyStyle.Body,
+                mode = TextStyleMode.NonEmphasized
+            ),
+            modifier = Modifier
+                .padding(bottom = 10.dp)
+        )
+
+        screen.Content()
+    }
+}
+
+@Composable
+internal fun AnimatedVisibilityScope.OnBoardingBackground(
+    modifier: Modifier = Modifier,
+    backgroundUrl: String
+) {
+    val surface = MaterialTheme.colorScheme.surface
+    val orientation = LocalConfiguration.current.orientation
+
+    Box(
+        modifier = modifier
+    ) {
+        ProvideAsyncImagePreviewHandler {
+            AsyncImage(
+                model = LocalContext.current.buildImageUrl(backgroundUrl),
+                contentDescription = stringResource(LocaleR.string.on_boarding_background_content_desc),
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .padding(top = 20.dp)
-            )
-
-            Text(
-                text = description.asString(),
-                style = getAdaptiveTextStyle(
-                    size = 20.sp,
-                    style = TypographyStyle.Body,
-                    mode = TextStyleMode.NonEmphasized
-                ),
-                modifier = Modifier
-                    .padding(bottom = 10.dp)
-            )
-
-            Content(
-                Modifier.fillMaxAdaptiveWidth(
-                    medium = 0.6F,
-                    expanded = 0.6F
-                )
+                    .fillMaxHeight()
+                    .drawWithContent {
+                        drawContent()
+                        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                            drawRect(
+                                Brush.verticalGradient(
+                                    0F to surface,
+                                    0.2F to surface.copy(0.8F),
+                                    0.5F to surface.copy(0.6F),
+                                    0.7F to surface
+                                )
+                            )
+                        } else {
+                            drawRect(
+                                Brush.verticalGradient(
+                                    0F to surface,
+                                    0.4F to surface.copy(0.3F),
+                                    1F to Color.Transparent
+                                )
+                            )
+                            drawRect(
+                                Brush.horizontalGradient(
+                                    0F to surface.copy(0.8F),
+                                    1F to surface
+                                )
+                            )
+                        }
+                    }
+                    .animateEnterExit(
+                        enter = fadeIn(animationSpec = tween(delayMillis = 800)),
+                        exit = fadeOut(
+                            animationSpec = tween(200),
+                            targetAlpha = 0.3F
+                        )
+                    )
             )
         }
     }
@@ -217,11 +369,11 @@ private fun AddUserScreenBasePreview() {
     FlixclusiveTheme {
         Surface {
             AddUserScreen(
-                navigator = object: CommonUserEditNavigator {
-                    override fun openUserAvatarSelectScreen() = Unit
+                navigator = object : CommonUserEditNavigator {
+                    override fun openUserAvatarSelectScreen(selected: Int) = Unit
                     override fun goBack() = Unit
                 },
-                resultRecipient = object: OpenResultRecipient<Int> {
+                resultRecipient = object : OpenResultRecipient<Int> {
                     @Composable
                     override fun onNavResult(listener: (NavResult<Int>) -> Unit) = Unit
                 }

@@ -224,7 +224,7 @@ private fun UserEditScreenBasePreview() {
         ) {
             UserEditScreen(
                 navigator = object: CommonUserEditNavigator {
-                    override fun openUserAvatarSelectScreen() = Unit
+                    override fun openUserAvatarSelectScreen(selected: Int) = Unit
                     override fun goBack() = Unit
                 },
                 resultRecipient = object : ResultRecipient<UserAvatarSelectScreenDestination, Int> {

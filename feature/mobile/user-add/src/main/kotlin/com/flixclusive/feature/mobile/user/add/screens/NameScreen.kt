@@ -1,10 +1,10 @@
 package com.flixclusive.feature.mobile.user.add.screens
 
-import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
@@ -26,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -55,7 +54,7 @@ internal object NameScreen : OnBoardingScreen {
     override val description: UiText = UiText.StringResource(LocaleR.string.onboarding_profile_name_description)
 
     @Composable
-    override fun Content(modifier: Modifier) {
+    override fun Content() {
         val userToAdd = LocalUserToAdd.current
 
         var isError by remember { mutableStateOf(false) }
@@ -70,6 +69,9 @@ internal object NameScreen : OnBoardingScreen {
 
         LaunchedEffect(name) {
             isError = name.text.isEmpty()
+            userToAdd.value = userToAdd.value.copy(
+                name = name.text
+            )
         }
 
         TextField(
@@ -114,7 +116,7 @@ internal object NameScreen : OnBoardingScreen {
             },
             textStyle = getAdaptiveTextStyle(
                 size = 16.sp,
-                increaseBy = 10.sp,
+                increaseBy = 6.sp,
                 style = TypographyStyle.Body,
                 mode = TextStyleMode.Normal,
             ).copy(
@@ -129,7 +131,8 @@ internal object NameScreen : OnBoardingScreen {
                 unfocusedIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
             ),
-            modifier = modifier
+            modifier = Modifier
+                .fillMaxWidth()
                 .height(
                     getAdaptiveDp(
                         dp = 65.dp,
@@ -138,23 +141,6 @@ internal object NameScreen : OnBoardingScreen {
                 )
         )
     }
-
-    @Composable
-    override fun OnBoardingIcon() {
-        val orientation = LocalConfiguration.current.orientation
-        val sizeDp = if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            getAdaptiveDp(150.dp, 100.dp)
-        } else getAdaptiveDp(250.dp, 300.dp, 500.dp)
-
-        Icon(
-            painter = painterResource(UiCommonR.drawable.happy_emphasized),
-            contentDescription = stringResource(LocaleR.string.icon_for_name_screen_content_desc),
-            tint = MaterialTheme.colorScheme.primary.onMediumEmphasis(0.8F),
-            modifier = Modifier
-                .size(sizeDp)
-        )
-    }
-
 }
 
 @Preview

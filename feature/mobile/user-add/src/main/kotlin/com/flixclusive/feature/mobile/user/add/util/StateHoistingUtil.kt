@@ -5,10 +5,14 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
 import com.flixclusive.model.database.User
+import kotlin.random.Random
 
 internal object StateHoistingUtil {
-    private val defaultUser = User(image = -1)
+    private val defaultUser = User(
+        image = Random.nextInt(AVATARS_IMAGE_COUNT)
+    )
     val LocalUserToAdd = compositionLocalOf { mutableStateOf(defaultUser) }
 
     @Composable
