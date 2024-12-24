@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.domain.tmdb)
 
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)

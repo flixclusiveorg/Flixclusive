@@ -1,8 +1,8 @@
 package com.flixclusive
 
 import android.app.Application
-import coil.ImageLoader
-import coil.ImageLoaderFactory
+import coil3.ImageLoader
+import coil3.ImageLoaderFactory
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.crash.GlobalCrashHandler
 import com.flixclusive.data.configuration.AppBuild

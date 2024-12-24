@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.stubs.model.film)
 
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)

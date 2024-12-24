@@ -50,11 +50,12 @@ import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.StandardCardLayout
 import androidx.tv.material3.Text
-import coil.compose.AsyncImage
-import coil.imageLoader
+import coil3.compose.AsyncImage
+import coil3.imageLoader
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.common.FilmCover
-import com.flixclusive.core.ui.common.util.buildImageUrl
+import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
+import com.flixclusive.core.ui.common.util.formatMinutes
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.component.CustomLinearProgressIndicator
 import com.flixclusive.core.ui.tv.component.DotSeparatedText
@@ -64,7 +65,6 @@ import com.flixclusive.feature.tv.home.component.util.useLocalImmersiveBackgroun
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.film.util.FilmType
-import com.flixclusive.core.ui.common.util.formatMinutes
 import com.flixclusive.core.locale.R as LocaleR
 
 internal val WatchedFilmCardHeight = 250.dp

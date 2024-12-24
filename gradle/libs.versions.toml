@@ -20,7 +20,7 @@ androidxTestExt = "1.1.5"
 androidxTestRules = "1.5.0"
 androidxTestRunner = "1.5.2"
 appcompat = "1.6.1"
-coil = "2.5.0"
+coil = "3.0.4"
 compose = "1.7.2"
 composeDestinations = "1.9.53"
 conscrypt = "2.5.2"
@@ -64,7 +64,8 @@ accompanist-navigation-animation = { module = "com.google.accompanist:accompanis
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
 
 # Coil
-coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 
 # TV UI (Compose)
 compose-tv-foundation = { module = "androidx.tv:tv-foundation", version.ref = "tvCompose"}

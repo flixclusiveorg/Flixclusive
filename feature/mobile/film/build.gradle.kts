@@ -13,6 +13,7 @@ dependencies {
     implementation(projects.core.ui.film)
 
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.compose.animation)
     implementation(libs.compose.animation.graphics)
     implementation(libs.compose.foundation)

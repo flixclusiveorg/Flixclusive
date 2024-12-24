@@ -42,23 +42,23 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
+import coil3.imageLoader
+import coil3.request.ImageRequest
 import com.flixclusive.core.theme.lightGray
 import com.flixclusive.core.theme.lightGrayElevated
 import com.flixclusive.core.theme.starColor
-import com.flixclusive.core.ui.common.util.buildImageUrl
+import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
+import com.flixclusive.core.ui.common.util.formatRating
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.mobile.component.film.GenreButton
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.common.util.formatRating
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Genre
 import kotlin.random.Random
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable

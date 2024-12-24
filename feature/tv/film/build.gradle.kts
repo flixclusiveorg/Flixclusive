@@ -17,6 +17,7 @@ dependencies {
     implementation(projects.feature.tv.player)
 
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.compose.tv.foundation)
     implementation(libs.compose.tv.material)
     implementation(libs.compose.runtime)

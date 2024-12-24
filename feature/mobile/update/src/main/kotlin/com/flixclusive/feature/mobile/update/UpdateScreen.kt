@@ -59,7 +59,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.imageLoader
+import coil3.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
 import com.flixclusive.core.ui.common.navigation.navargs.UpdateScreenNavArgs

@@ -43,11 +43,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.foundation.PivotOffsets
 import androidx.tv.foundation.lazy.list.TvLazyColumn
-import coil.compose.AsyncImage
-import coil.imageLoader
+import coil3.compose.AsyncImage
+import coil3.imageLoader
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenTvNavigator
-import com.flixclusive.core.ui.common.util.buildImageUrl
+import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.film.FilmScreenNavArgs

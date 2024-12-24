@@ -14,6 +14,8 @@ dependencies {
     implementation(projects.data.searchHistory)
     implementation(projects.domain.user)
 
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.compose.adaptive)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)

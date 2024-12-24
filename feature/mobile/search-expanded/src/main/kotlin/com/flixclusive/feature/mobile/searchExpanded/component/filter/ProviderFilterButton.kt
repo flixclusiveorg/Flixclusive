@@ -29,14 +29,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import com.flixclusive.core.ui.common.util.buildImageUrl
+import coil3.compose.AsyncImage
+import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.feature.mobile.searchExpanded.SearchItemViewType
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.getButtonColors
 import com.flixclusive.model.provider.ProviderData
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun ProviderFilterButton(

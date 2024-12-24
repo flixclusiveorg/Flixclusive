@@ -14,9 +14,9 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import coil.compose.AsyncImage
-import coil.imageLoader
-import com.flixclusive.core.ui.common.util.buildImageUrl
+import coil3.compose.AsyncImage
+import coil3.imageLoader
+import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.model.film.Film
 
 @OptIn(ExperimentalTvMaterial3Api::class)

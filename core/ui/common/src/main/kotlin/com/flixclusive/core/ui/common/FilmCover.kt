@@ -14,9 +14,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import coil.compose.AsyncImage
-import coil.imageLoader
-import com.flixclusive.core.ui.common.util.buildImageUrl
+import coil3.compose.AsyncImage
+import coil3.imageLoader
+import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.locale.R as LocaleR
 

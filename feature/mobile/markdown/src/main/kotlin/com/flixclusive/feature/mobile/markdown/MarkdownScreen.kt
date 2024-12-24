@@ -28,7 +28,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.imageLoader
+import coil3.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.CommonTopBarDefaults.DefaultTopBarHeight

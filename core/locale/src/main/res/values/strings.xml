@@ -300,7 +300,9 @@
 
     <!--  On-boarding messages  -->
     <string name="onboarding_profile_name_title">Who will be watching?</string>
+    <string name="onboarding_profile_avatar_title">Choosing an avatar</string>
     <string name="onboarding_profile_name_description">The first thing for a delightful enjoyment is to set up a name!</string>
+    <string name="onboarding_profile_avatar_description">An avatar resem</string>
 
     <!--  Color  -->
     <string name="cyan">Cyan</string>
