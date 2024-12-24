@@ -18,6 +18,7 @@ import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpanded
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
 import com.flixclusive.feature.mobile.settings.destinations.SettingsScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
+import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
@@ -103,6 +104,7 @@ internal object MobileNavGraphs {
             UserEditScreenDestination,
             UserProfilesScreenDestination,
             UserAvatarSelectScreenDestination,
+            AddUserScreenDestination,
             MarkdownScreenDestination,
         ).associateBy { it.route }
 

@@ -4,4 +4,5 @@ import com.flixclusive.core.ui.common.navigation.GoBackAction
 
 interface CommonUserEditNavigator : GoBackAction {
     fun openUserAvatarSelectScreen(selected: Int)
+    fun openUserPinSetupScreen()
 }

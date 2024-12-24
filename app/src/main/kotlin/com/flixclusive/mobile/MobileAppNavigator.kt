@@ -36,8 +36,8 @@ import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestinatio
 import com.flixclusive.feature.mobile.settings.destinations.SettingsScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
+import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
-import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
 import com.flixclusive.model.database.User
 import com.flixclusive.model.film.Film
@@ -143,7 +143,13 @@ internal class MobileAppNavigator(
     }
 
     override fun openUserAvatarSelectScreen(selected: Int) {
-        navController.navigateIfResumed(UserAvatarSelectScreenDestination)
+        navController.navigateIfResumed(
+            UserAvatarSelectScreenDestination(selected = selected)
+        )
+    }
+
+    override fun openUserPinSetupScreen() {
+        // TODO("Not yet implemented")
     }
 
     override fun openEditUserScreen(user: User) {
@@ -151,7 +157,7 @@ internal class MobileAppNavigator(
     }
 
     override fun openAddUserScreen() {
-        // TODO("Create AddUserScreen")
+        navController.navigateIfResumed(AddUserScreenDestination)
     }
 
     override fun onExitApplication() {

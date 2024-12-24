@@ -57,6 +57,7 @@ import com.flixclusive.feature.mobile.user.add.component.AddUserScaffold
 import com.flixclusive.feature.mobile.user.add.component.NavigationButtons
 import com.flixclusive.feature.mobile.user.add.screens.AvatarScreen
 import com.flixclusive.feature.mobile.user.add.screens.NameScreen
+import com.flixclusive.feature.mobile.user.add.screens.PinScreen
 import com.flixclusive.feature.mobile.user.add.util.ModifierUtil.fillOnBoardingContentWidth
 import com.flixclusive.feature.mobile.user.add.util.ModifierUtil.getHorizontalPadding
 import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.ProvideUserToAdd
@@ -84,12 +85,13 @@ internal fun AddUserScreen(
     val orientation = LocalConfiguration.current.orientation
     val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    var currentScreen by remember { mutableIntStateOf(1) }
+    var currentScreen by remember { mutableIntStateOf(2) }
     var canSkip by remember { mutableStateOf(false) }
     val screens = remember {
         persistentListOf(
             NameScreen,
-            AvatarScreen(navigator)
+            AvatarScreen(navigator),
+            PinScreen(navigator),
         )
     }
 
@@ -371,6 +373,7 @@ private fun AddUserScreenBasePreview() {
             AddUserScreen(
                 navigator = object : CommonUserEditNavigator {
                     override fun openUserAvatarSelectScreen(selected: Int) = Unit
+                    override fun openUserPinSetupScreen() = Unit
                     override fun goBack() = Unit
                 },
                 resultRecipient = object : OpenResultRecipient<Int> {

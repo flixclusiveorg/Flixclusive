@@ -207,6 +207,7 @@
     <string name="pause">Pause</string>
     <string name="pause_search_history">Pause search history</string>
     <string name="pin">PIN</string>
+    <string name="pin_setup">Setup PIN lock</string>
     <string name="pip_mode">PiP mode</string>
     <string name="play">Play</string>
     <string name="playback_speed">Playback speed</string>
@@ -286,6 +287,7 @@
     <string name="update_label">Update</string>
     <string name="user_avatar">User avatar</string>
     <string name="user_interface">User interface</string>
+    <string name="selected">Selected</string>
     <string name="version">Version</string>
     <string name="video">Video</string>
     <string name="video_buffer_max_length">Maximum time to buffer</string>
@@ -303,8 +305,10 @@
     <!--  On-boarding messages  -->
     <string name="onboarding_profile_name_title">Who will be watching?</string>
     <string name="onboarding_profile_avatar_title">Choosing an avatar</string>
+    <string name="onboarding_profile_pin_title">Need some privacy?</string>
     <string name="onboarding_profile_name_description">The first thing for a delightful enjoyment is to set up a name!</string>
     <string name="onboarding_profile_avatar_description">The next step to personalize your journey is to pick an avatar that feels just right!</string>
+    <string name="onboarding_profile_pin_description">To wrap things up, you can set a secure PIN lock to keep your profile safe and sound!</string>
 
     <!--  Color  -->
     <string name="cyan">Cyan</string>
@@ -449,6 +453,7 @@
     <string name="pause_button">Pause button</string>
     <string name="paused_search_history_content_desc">Pauses search history for incognito purposes.</string>
     <string name="pin_content_desc">Setup a pin lock for this profile</string>
+    <string name="selected_avatar_content_desc">Selected avatar</string>
     <string name="pip_mode_desc">Picture-in-picture (PiP) lets you watch videos while using other apps.</string>
     <string name="play_button">Play button</string>
     <string name="play_pause_button_content_description">Play or pause button</string>
