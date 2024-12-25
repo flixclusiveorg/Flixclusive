@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -38,7 +38,9 @@ internal fun AddUserScaffold(
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .systemBarsPadding()
     ) {
         content()
 
@@ -58,7 +60,6 @@ private fun FloatingBackButton(
 ) {
     Box(
         modifier = modifier
-            .statusBarsPadding()
             .padding(vertical = getAdaptiveDp(6.dp))
             .clip(MaterialTheme.shapes.small)
             .clickable {
