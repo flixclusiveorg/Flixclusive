@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.configuration.AppConfigurationManager
+import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.home.PREFERRED_MINIMUM_HOME_ITEMS
 import com.flixclusive.domain.updater.AppUpdateCheckerUseCase
@@ -17,9 +18,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 internal sealed class SplashScreenUiState {
@@ -34,6 +38,7 @@ internal class SplashScreenViewModel @Inject constructor(
     appConfigurationManager: AppConfigurationManager,
     val appUpdateCheckerUseCase: AppUpdateCheckerUseCase,
     private val userSessionManager: UserSessionManager,
+    private val userRepository: UserRepository,
     private val appSettingsManager: AppSettingsManager,
     private val providerUpdaterUseCase: ProviderUpdaterUseCase,
 ) : ViewModel() {
@@ -56,6 +61,15 @@ internal class SplashScreenViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = appSettingsManager.cachedOnBoardingPreferences
+        )
+
+    val noUsersFound = userRepository
+        .observeUsers()
+        .map { it.isEmpty() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking { userRepository.observeUsers().first().isEmpty() }
         )
 
     val userLoggedIn = userSessionManager

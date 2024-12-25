@@ -65,6 +65,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
+import com.flixclusive.core.ui.common.navigation.navigator.AddProfileNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.ExitNavigator
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
@@ -77,9 +78,9 @@ import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface UserProfilesNavigator : ExitNavigator, GoBackAction, StartHomeScreenAction {
+interface UserProfilesNavigator : ExitNavigator, GoBackAction, StartHomeScreenAction,
+    AddProfileNavigator {
     fun openEditUserScreen(user: User)
-    fun openAddUserScreen()
 }
 
 data class UserProfilesNavArgs(
@@ -201,7 +202,7 @@ internal fun UserProfilesScreen(
                 }
             } else {
                 EmptyScreen(
-                    onAdd = { navigator.openAddUserScreen() }
+                    onAdd = { navigator.openAddProfileScreen() }
                 )
             }
         }
@@ -216,7 +217,7 @@ internal fun UserProfilesScreen(
                 screenType = screenType,
                 lastScreenTypeUsed = lastScreenTypeUsed,
                 isComingFromSplashScreen = args.isComingFromSplashScreen,
-                addNewUser = navigator::openAddUserScreen,
+                addNewUser = navigator::openAddProfileScreen,
                 onBack = navigator::goBack,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -473,7 +474,7 @@ private fun UserProfilesScreenBasePreview() {
                 navigator = object : UserProfilesNavigator {
                     override fun goBack() = Unit
                     override fun onExitApplication() = Unit
-                    override fun openAddUserScreen() = Unit
+                    override fun openAddProfileScreen(isInitializing: Boolean) = Unit
                     override fun openEditUserScreen(user: User) = Unit
                     override fun openHomeScreen() = Unit
                 },

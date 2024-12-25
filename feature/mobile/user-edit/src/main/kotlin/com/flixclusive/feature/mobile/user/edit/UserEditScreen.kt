@@ -221,6 +221,7 @@ private fun UserEditScreenBasePreview() {
                     override fun openUserAvatarSelectScreen(selected: Int) = Unit
                     override fun openUserPinSetupScreen() = Unit
                     override fun goBack() = Unit
+                    override fun openHomeScreen() = Unit
                 },
                 resultRecipient = object : ResultRecipient<UserAvatarSelectScreenDestination, Int> {
                     @Composable

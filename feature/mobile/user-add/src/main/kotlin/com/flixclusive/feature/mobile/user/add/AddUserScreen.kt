@@ -60,6 +60,7 @@ import com.flixclusive.feature.mobile.user.add.screens.NameScreen
 import com.flixclusive.feature.mobile.user.add.screens.PinScreen
 import com.flixclusive.feature.mobile.user.add.util.ModifierUtil.fillOnBoardingContentWidth
 import com.flixclusive.feature.mobile.user.add.util.ModifierUtil.getHorizontalPadding
+import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.LocalUserToAdd
 import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.ProvideUserToAdd
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.NavResult
@@ -73,15 +74,10 @@ private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 @Destination
 @Composable
 internal fun AddUserScreen(
+    isInitializing: Boolean,
     navigator: CommonUserEditNavigator,
     resultRecipient: OpenResultRecipient<Int>
 ) {
-//    resultRecipient.onNavResult { result ->
-//        if (result is NavResult.Value) {
-//            userAvatar = result.value
-//        }
-//    }
-
     val orientation = LocalConfiguration.current.orientation
     val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
 
@@ -96,6 +92,15 @@ internal fun AddUserScreen(
     }
 
     ProvideUserToAdd {
+        val user = LocalUserToAdd.current
+        resultRecipient.onNavResult { result ->
+            if (result is NavResult.Value) {
+                user.value = user.value.copy(
+                    image = result.value
+                )
+            }
+        }
+
         AddUserScaffold(
             onBack = {
                 if (currentScreen == 0) {
@@ -208,7 +213,9 @@ internal fun AddUserScreen(
                     canSkip = canSkip,
                     isFinalStep = currentScreen == screens.lastIndex,
                     onNext = {
-                        if (currentScreen == screens.lastIndex) {
+                        if (currentScreen == screens.lastIndex && isInitializing) {
+                            navigator.openHomeScreen()
+                        } else if (currentScreen == screens.lastIndex) {
                             navigator.goBack()
                         } else currentScreen++
                     },
@@ -371,10 +378,12 @@ private fun AddUserScreenBasePreview() {
     FlixclusiveTheme {
         Surface {
             AddUserScreen(
+                isInitializing = false,
                 navigator = object : CommonUserEditNavigator {
                     override fun openUserAvatarSelectScreen(selected: Int) = Unit
                     override fun openUserPinSetupScreen() = Unit
                     override fun goBack() = Unit
+                    override fun openHomeScreen() = Unit
                 },
                 resultRecipient = object : OpenResultRecipient<Int> {
                     @Composable

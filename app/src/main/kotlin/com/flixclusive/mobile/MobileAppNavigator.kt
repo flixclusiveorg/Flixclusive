@@ -4,6 +4,7 @@ import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import com.flixclusive.core.ui.common.navigation.navargs.MarkdownNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.AddProfileNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.CommonUserEditNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.HomeNavigator
@@ -38,6 +39,7 @@ import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestinatio
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
 import com.flixclusive.model.database.User
 import com.flixclusive.model.film.Film
@@ -60,7 +62,8 @@ internal class MobileAppNavigator(
 ) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator,
     FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator, ProvidersScreenNavigator,
     RepositorySearchScreenNavigator, ProviderInfoNavigator, ProviderTestNavigator,
-    MarkdownNavigator, SettingsScreenNavigator, CommonUserEditNavigator, UserProfilesNavigator {
+    MarkdownNavigator, SettingsScreenNavigator, CommonUserEditNavigator, UserProfilesNavigator,
+    AddProfileNavigator {
 
     override fun goBack() {
         navController.navigateUp()
@@ -134,7 +137,7 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun selectProfileScreenFromSplashScreen() {
+    override fun openProfilesScreenFromSplashScreen() {
         navController.navigateIfResumed(
             UserProfilesScreenDestination(
                 isComingFromSplashScreen = true
@@ -153,11 +156,11 @@ internal class MobileAppNavigator(
     }
 
     override fun openEditUserScreen(user: User) {
-        navController.navigateIfResumed(UserEditScreenDestination(user))
+        navController.navigateIfResumed(UserEditScreenDestination(userArg = user))
     }
 
-    override fun openAddUserScreen() {
-        navController.navigateIfResumed(AddUserScreenDestination)
+    override fun openAddProfileScreen(isInitializing: Boolean) {
+        navController.navigateIfResumed(AddUserScreenDestination(isInitializing = isInitializing))
     }
 
     override fun onExitApplication() {

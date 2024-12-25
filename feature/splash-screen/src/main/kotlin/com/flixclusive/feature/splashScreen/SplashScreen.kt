@@ -64,6 +64,7 @@ internal fun SplashScreen(
     val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle()
     val configurationStatus by viewModel.configurationStatus.collectAsStateWithLifecycle()
     val userLoggedIn by viewModel.userLoggedIn.collectAsStateWithLifecycle()
+    val noUsersFound by viewModel.noUsersFound.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -147,8 +148,11 @@ internal fun SplashScreen(
                                     )
                                 }
                             }
+                            else if (noUsersFound) {
+                                navigator.openAddProfileScreen(isInitializing = true)
+                            }
                             else if (!hasOldUserSession) {
-                                navigator.selectProfileScreenFromSplashScreen()
+                                navigator.openProfilesScreenFromSplashScreen()
                             }
                             else if (isNavigatingToHome) {
                                 if (updateHasErrors) {

@@ -1,8 +1,9 @@
 package com.flixclusive.core.ui.common.navigation.navigator
 
 import com.flixclusive.core.ui.common.navigation.GoBackAction
+import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
 
-interface CommonUserEditNavigator : GoBackAction {
+interface CommonUserEditNavigator : GoBackAction, StartHomeScreenAction {
     fun openUserAvatarSelectScreen(selected: Int)
     fun openUserPinSetupScreen()
 }

@@ -50,8 +50,12 @@ import com.flixclusive.core.util.webview.WebViewDriver
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
+import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
+import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
 import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.FilmCoverPreview
@@ -61,6 +65,7 @@ import com.flixclusive.util.currentScreenAsState
 import com.flixclusive.util.navigateIfResumed
 import com.ramcosta.composedestinations.dynamic.within
 import com.ramcosta.composedestinations.navigation.navigate
+import com.ramcosta.composedestinations.spec.Route
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.delay
@@ -188,11 +193,7 @@ internal fun MobileActivity.MobileApp(
     }
 
     val useBottomBar = remember(currentSelectedScreen) {
-        currentSelectedScreen.route != SearchExpandedScreenDestination.within(MobileNavGraphs.search).route
-            && currentSelectedScreen != PlayerScreenDestination
-            && currentSelectedScreen != SplashScreenDestination
-            && currentSelectedScreen != UpdateScreenDestination
-            && currentSelectedScreen != MarkdownScreenDestination
+        shouldHideBottomBar(route = currentSelectedScreen)
     }
 
     val windowInsets = when (currentSelectedScreen) {
@@ -333,6 +334,22 @@ internal fun MobileActivity.MobileApp(
             onDismiss = viewModel::hideWebViewDriver
         )
     }
+}
+
+private fun shouldHideBottomBar(route: Route): Boolean {
+    val noBottomBarScreens = listOf(
+        PlayerScreenDestination,
+        SplashScreenDestination,
+        UpdateScreenDestination,
+        MarkdownScreenDestination,
+        AddUserScreenDestination,
+        UserEditScreenDestination,
+        UserAvatarSelectScreenDestination,
+        UserProfilesScreenDestination
+    )
+
+    return route.route != SearchExpandedScreenDestination.within(MobileNavGraphs.search).route
+        && noBottomBarScreens.none { it == route }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
