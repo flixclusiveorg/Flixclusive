@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,7 +74,7 @@ private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 
 @Destination
 @Composable
-internal fun AddUserScreen(
+fun AddUserScreen(
     isInitializing: Boolean,
     navigator: CommonUserEditNavigator,
     resultRecipient: OpenResultRecipient<Int>
@@ -81,8 +82,8 @@ internal fun AddUserScreen(
     val orientation = LocalConfiguration.current.orientation
     val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    var currentScreen by remember { mutableIntStateOf(2) }
-    var canSkip by remember { mutableStateOf(false) }
+    var currentScreen by rememberSaveable { mutableIntStateOf(0) }
+    var canSkip by rememberSaveable { mutableStateOf(false) }
     val screens = remember {
         persistentListOf(
             NameScreen,

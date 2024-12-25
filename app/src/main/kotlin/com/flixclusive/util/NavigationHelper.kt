@@ -22,6 +22,9 @@ import androidx.navigation.NavGraph
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
 import com.flixclusive.ROOT
+import com.flixclusive.feature.mobile.user.add.AddUserScreen
+import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.mobile.MobileAppNavigator
 import com.flixclusive.mobile.MobileNavGraphs
 import com.flixclusive.model.film.Film
@@ -32,8 +35,10 @@ import com.google.accompanist.navigation.material.ExperimentalMaterialNavigation
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.defaults.RootNavGraphDefaultAnimations
 import com.ramcosta.composedestinations.animations.rememberAnimatedNavHostEngine
+import com.ramcosta.composedestinations.manualcomposablecalls.composable
 import com.ramcosta.composedestinations.navigation.dependency
 import com.ramcosta.composedestinations.navigation.navigate
+import com.ramcosta.composedestinations.scope.resultRecipient
 import com.ramcosta.composedestinations.spec.Direction
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 
@@ -127,15 +132,42 @@ internal fun AppNavHost(
                 dependency(previewFilm)
                 dependency(play)
                 dependency(
-                    MobileAppNavigator(
-                        destination = navBackStackEntry.destination,
-                        navController = navController,
-                        uriHandler = LocalUriHandler.current,
-                        closeApp = closeApp
+                    mobileNavigator(
+                        navBackStackEntry = navBackStackEntry,
+                        closeApp = closeApp,
+                        navController = navController
                     )
                 )
             }
         }
+    ) {
+        if (!isTv) {
+            composable(AddUserScreenDestination) {
+                AddUserScreen(
+                    isInitializing = navArgs.isInitializing,
+                    navigator = mobileNavigator(
+                        navBackStackEntry = navBackStackEntry,
+                        closeApp = closeApp,
+                        navController = navController
+                    ),
+                    resultRecipient = resultRecipient<UserAvatarSelectScreenDestination, Int>()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun mobileNavigator(
+    navBackStackEntry: NavBackStackEntry,
+    closeApp: () -> Unit,
+    navController: NavHostController
+): MobileAppNavigator {
+    return MobileAppNavigator(
+        destination = navBackStackEntry.destination,
+        navController = navController,
+        uriHandler = LocalUriHandler.current,
+        closeApp = closeApp
     )
 }
 
