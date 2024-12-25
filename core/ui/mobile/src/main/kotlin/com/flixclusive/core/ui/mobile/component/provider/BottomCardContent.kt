@@ -32,8 +32,8 @@ import com.flixclusive.core.ui.common.util.getProviderStatusColor
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.model.provider.Status
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun BottomCardContent(

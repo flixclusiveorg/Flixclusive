@@ -40,7 +40,7 @@ kotlinxImmutables = "0.3.8"
 ksp = "1.9.10-1.0.13"
 lifecycleRuntime = "2.8.3"
 localbroadcastmanager = "1.1.0"
-markdown = "0.5.4"
+markdown = "0.5.5"
 material = "1.12.0"
 material3 = "1.1.2"
 media3 = "1.4.1"
@@ -141,7 +141,7 @@ media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "medi
 media3-ui-leanback = { group = "androidx.media3", name = "media3-ui-leanback", version.ref = "media3" }
 
 # Markdown
-markdown = { module = "com.github.jeziellago:compose-markdown", version.ref = "markdown" }
+markdown = { module = "com.github.rhenwinch:compose-markdown", version.ref = "markdown" }
 
 # Hilt
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt"}

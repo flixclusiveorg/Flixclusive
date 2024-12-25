@@ -12,6 +12,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -23,7 +24,6 @@ import androidx.tv.material3.CardLayoutDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Glow
 import androidx.tv.material3.MaterialTheme
-import androidx.tv.material3.ShapeDefaults
 import androidx.tv.material3.StandardCardLayout
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -32,7 +32,7 @@ import com.flixclusive.model.film.Film
 
 val FilmCardWidth = 100.dp
 val FilmCardHeight = 150.dp
-val FilmCardShape = ShapeDefaults.ExtraSmall
+val FilmCardShape = RoundedCornerShape(4.0.dp)
 val FilmPadding = Padding(3.dp)
 
 @Composable

@@ -2,7 +2,9 @@ package com.flixclusive
 
 import android.app.Application
 import coil3.ImageLoader
-import coil3.ImageLoaderFactory
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import com.flixclusive.core.datastore.AppSettingsManager
 import com.flixclusive.crash.GlobalCrashHandler
 import com.flixclusive.data.configuration.AppBuild
@@ -13,7 +15,7 @@ import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 @HiltAndroidApp
-internal class FlixclusiveApplication : Application(), ImageLoaderFactory {
+internal class FlixclusiveApplication : Application(), SingletonImageLoader.Factory {
     @Inject
     lateinit var providerManager: ProviderManager
     @Inject
@@ -22,12 +24,16 @@ internal class FlixclusiveApplication : Application(), ImageLoaderFactory {
     lateinit var appSettingsManager: AppSettingsManager
     @Inject
     lateinit var client: OkHttpClient
-    @Inject
-    lateinit var scope: OkHttpClient
 
-    override fun newImageLoader(): ImageLoader {
-        return ImageLoader.Builder(this)
-            .okHttpClient(client)
+    override fun newImageLoader(context: PlatformContext): ImageLoader {
+        return ImageLoader.Builder(context)
+            .components {
+                add(
+                    OkHttpNetworkFetcherFactory(
+                        callFactory = { client }
+                    )
+                )
+            }
             .build()
     }
 

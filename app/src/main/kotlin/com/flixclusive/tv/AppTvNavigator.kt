@@ -105,7 +105,7 @@ internal class AppTvNavigator(
         }
     }
 
-    override fun selectProfileScreenFromSplashScreen() {
+    override fun openProfilesScreenFromSplashScreen() {
         TODO("Not yet implemented")
     }
 

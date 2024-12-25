@@ -27,8 +27,8 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.R
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.model.provider.ProviderData
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 
 @Composable
@@ -140,7 +140,7 @@ private fun ProviderDetails(
         )
 
         Text(
-            text = providerData.providerType?.toString() ?: stringResource(LocaleR.string.unknown_provider_type),
+            text = providerData.providerType.toString(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.titleMedium.copy(

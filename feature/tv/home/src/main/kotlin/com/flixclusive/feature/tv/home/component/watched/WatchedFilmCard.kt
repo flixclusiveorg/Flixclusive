@@ -50,8 +50,10 @@ import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.StandardCardLayout
 import androidx.tv.material3.Text
+import coil3.asDrawable
 import coil3.compose.AsyncImage
 import coil3.imageLoader
+import coil3.request.allowHardware
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
@@ -202,7 +204,7 @@ private fun CardImage(
             imageLoader = LocalContext.current.imageLoader,
             contentScale = ContentScale.FillBounds,
             contentDescription = stringResource(id = LocaleR.string.film_item_content_description),
-            onSuccess = { onImageLoad(it.result.drawable) },
+            onSuccess = { onImageLoad(it.result.image.asDrawable(context.resources)) },
             modifier = Modifier
                 .aspectRatio(FilmCover.Backdrop.ratio)
                 .clip(MaterialTheme.shapes.extraSmall)
