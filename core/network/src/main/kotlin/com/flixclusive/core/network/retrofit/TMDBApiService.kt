@@ -91,7 +91,7 @@ interface TMDBApiService {
         @Path("media_type") mediaType: String, // movie, tv,
         @Path("id") id: Int,
         @Query("api_key") apiKey: String,
-        @Query("include_image_language") includeImageLanguage: String = "en"
+        @Query("include_image_language") includeImageLanguage: String? = "en"
     ): TMDBImagesResponseDto
 
     @GET("collection/{id}")

@@ -56,6 +56,11 @@ interface TMDBRepository {
         id: Int,
     ): Resource<String>
 
+    suspend fun getPosterWithoutLogo(
+        mediaType: String,
+        id: Int,
+    ): Resource<String>
+
     suspend fun getEpisode(
         id: Int,
         seasonNumber: Int,

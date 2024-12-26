@@ -136,6 +136,23 @@ internal class DefaultTMDBRepository @Inject constructor(
         }
     }
 
+    override suspend fun getPosterWithoutLogo(mediaType: String, id: Int): Resource<String> {
+        return withIOContext {
+            try {
+                val response =  tmdbApiService.getImages(
+                    mediaType = mediaType,
+                    apiKey = TMDB_API_KEY,
+                    id = id,
+                    includeImageLanguage = null
+                )
+
+                Resource.Success(response.posters!!.first().filePath)
+            } catch (e: Exception) {
+                e.toNetworkException()
+            }
+        }
+    }
+
     override suspend fun getMovie(id: Int): Resource<Movie> {
         return withIOContext {
             try {
