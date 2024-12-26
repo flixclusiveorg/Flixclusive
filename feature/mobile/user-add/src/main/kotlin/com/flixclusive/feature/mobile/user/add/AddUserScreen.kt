@@ -3,7 +3,6 @@ package com.flixclusive.feature.mobile.user.add
 import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -44,7 +43,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import coil3.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.CommonUserEditNavigator
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
@@ -69,7 +71,6 @@ import com.ramcosta.composedestinations.result.OpenResultRecipient
 import kotlinx.collections.immutable.persistentListOf
 import com.flixclusive.core.locale.R as LocaleR
 
-private const val PORTRAIT_BACKGROUND_HEIGHT_FRACTION = 0.65F
 private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 
 @Destination
@@ -77,10 +78,15 @@ private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 fun AddUserScreen(
     isInitializing: Boolean,
     navigator: CommonUserEditNavigator,
-    resultRecipient: OpenResultRecipient<Int>
+    resultRecipient: OpenResultRecipient<Int>,
 ) {
+    val context = LocalContext.current
     val orientation = LocalConfiguration.current.orientation
     val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    val viewModel = hiltViewModel<AddUserViewModel>()
+    val images by viewModel.images.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     var currentScreen by rememberSaveable { mutableIntStateOf(0) }
     var canSkip by rememberSaveable { mutableStateOf(false) }
@@ -90,6 +96,14 @@ fun AddUserScreen(
             AvatarScreen(navigator),
             PinScreen(navigator),
         )
+    }
+
+    LaunchedEffect(state) {
+        if (state is AddUserState.Added && isInitializing) {
+            navigator.openHomeScreen()
+        } else if (state is AddUserState.Added) {
+            navigator.goBack()
+        }
     }
 
     ProvideUserToAdd {
@@ -111,7 +125,7 @@ fun AddUserScreen(
         ) {
             AnimatedContent(
                 targetState = currentScreen,
-                label = "OnBoardingBackground",
+                label = "OnBoardingContent",
                 transitionSpec = {
                     val tweenInt = tween<IntOffset>(durationMillis = 300)
                     val tweenFloat = tween<Float>(durationMillis = 500)
@@ -131,11 +145,32 @@ fun AddUserScreen(
             ) { position ->
                 val screen = screens[position]
 
+                /*
+                * Enqueue next images
+                * */
+                LaunchedEffect(true) {
+                    val request = context.buildImageUrl(
+                        imagePath = images.getOrNull(currentScreen + 1),
+                        imageSize = "original"
+                    )
+
+                    if (request != null) {
+                        context.imageLoader.enqueue(request)
+                    }
+                }
+
                 OnBoardingBackground(
-                    backgroundUrl = "https://picsum.photos/1920/1080" /*TODO: Implement ViewModel*/,
-                    modifier = Modifier
-                        .fillMaxHeight(PORTRAIT_BACKGROUND_HEIGHT_FRACTION)
-                        .padding(top = getAdaptiveDp(60.dp))
+                    modifier = Modifier.animateEnterExit(
+                        enter = fadeIn(
+                            animationSpec = tween(500),
+                            initialAlpha = 0.4F
+                        ),
+                        exit = fadeOut(
+                            animationSpec = tween(500),
+                            targetAlpha = 0.4F
+                        )
+                    ),
+                    backgroundUrl = images.getOrNull(currentScreen)
                 )
 
                 if (screen is NameScreen) {
@@ -210,14 +245,12 @@ fun AddUserScreen(
                     }
                 }
 
-                NavigationButtons(
+                NavigationButtons( /* TODO: MAKE FINISH BUTTON DISABLED WHEN PIN SETUP IS NOT DONE */
                     canSkip = canSkip,
                     isFinalStep = currentScreen == screens.lastIndex,
                     onNext = {
-                        if (currentScreen == screens.lastIndex && isInitializing) {
-                            navigator.openHomeScreen()
-                        } else if (currentScreen == screens.lastIndex) {
-                            navigator.goBack()
+                        if (currentScreen == screens.lastIndex) {
+                            viewModel.addUser(user.value)
                         } else currentScreen++
                     },
                     modifier = Modifier.fillMaxWidth(
@@ -316,57 +349,54 @@ private fun AddUserLandscapeScreen(
 }
 
 @Composable
-internal fun AnimatedVisibilityScope.OnBoardingBackground(
+private fun OnBoardingBackground(
     modifier: Modifier = Modifier,
-    backgroundUrl: String
+    backgroundUrl: String?
 ) {
     val surface = MaterialTheme.colorScheme.surface
     val orientation = LocalConfiguration.current.orientation
 
     Box(
         modifier = modifier
+            .drawWithContent {
+                drawContent()
+                if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                    drawRect(
+                        Brush.verticalGradient(
+                            0F to surface,
+                            0.2F to surface.copy(0.8F),
+                            0.5F to surface.copy(0.6F),
+                            0.7F to surface
+                        )
+                    )
+                } else {
+                    drawRect(
+                        Brush.verticalGradient(
+                            0F to surface,
+                            0.4F to surface.copy(0.3F),
+                            1F to Color.Transparent
+                        )
+                    )
+                    drawRect(
+                        Brush.horizontalGradient(
+                            0F to surface.copy(0.8F),
+                            1F to surface
+                        )
+                    )
+                }
+            }
     ) {
         ProvideAsyncImagePreviewHandler {
             AsyncImage(
-                model = LocalContext.current.buildImageUrl(backgroundUrl),
+                model = LocalContext.current
+                    .buildImageUrl(
+                        imagePath = backgroundUrl,
+                        imageSize = "original"
+                    ),
                 contentDescription = stringResource(LocaleR.string.on_boarding_background_content_desc),
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxHeight()
-                    .drawWithContent {
-                        drawContent()
-                        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                            drawRect(
-                                Brush.verticalGradient(
-                                    0F to surface,
-                                    0.2F to surface.copy(0.8F),
-                                    0.5F to surface.copy(0.6F),
-                                    0.7F to surface
-                                )
-                            )
-                        } else {
-                            drawRect(
-                                Brush.verticalGradient(
-                                    0F to surface,
-                                    0.4F to surface.copy(0.3F),
-                                    1F to Color.Transparent
-                                )
-                            )
-                            drawRect(
-                                Brush.horizontalGradient(
-                                    0F to surface.copy(0.8F),
-                                    1F to surface
-                                )
-                            )
-                        }
-                    }
-                    .animateEnterExit(
-                        enter = fadeIn(animationSpec = tween(delayMillis = 800)),
-                        exit = fadeOut(
-                            animationSpec = tween(200),
-                            targetAlpha = 0.3F
-                        )
-                    )
             )
         }
     }

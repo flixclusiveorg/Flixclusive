@@ -39,6 +39,8 @@ internal class PinScreen(
         = UiText.StringResource(LocaleR.string.onboarding_profile_pin_title)
     override val description: UiText
         = UiText.StringResource(LocaleR.string.onboarding_profile_pin_description)
+    override val canSkip: Boolean
+        get() = super.canSkip /* TODO: CAN BE SKIPPED AFTER PIN INTRODUCTION */
 
     @Composable
     override fun Content() {

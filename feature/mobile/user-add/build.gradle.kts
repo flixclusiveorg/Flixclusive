@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.core.ui.mobile)
     implementation(projects.data.configuration)
     implementation(projects.data.searchHistory)
+    implementation(projects.domain.home)
     implementation(projects.domain.user)
 
     implementation(libs.coil.compose)
