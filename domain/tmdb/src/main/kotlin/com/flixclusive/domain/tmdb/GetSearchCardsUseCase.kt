@@ -1,4 +1,4 @@
-package com.flixclusive.domain.search
+package com.flixclusive.domain.tmdb
 
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
@@ -24,7 +24,7 @@ import kotlin.random.Random
 import com.flixclusive.core.locale.R as LocaleR
 
 @Singleton
-class GetSearchRecommendedCardsUseCase @Inject constructor(
+class GetSearchCardsUseCase @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     private val configurationManager: AppConfigurationManager,
     providerManager: ProviderManager,

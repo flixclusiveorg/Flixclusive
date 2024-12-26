@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.domain.search.GetSearchRecommendedCardsUseCase
+import com.flixclusive.domain.tmdb.GetSearchCardsUseCase
 import com.flixclusive.model.configuration.catalog.SearchCatalog
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData
@@ -26,7 +26,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class SearchScreenViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
-    getSearchRecommendedCardsUseCase: GetSearchRecommendedCardsUseCase
+    getSearchCardsUseCase: GetSearchCardsUseCase
 ) : ViewModel() {
     val searchResults = mutableStateListOf<FilmSearchItem>()
     val searchSuggestions = mutableStateListOf<String>()
@@ -50,7 +50,7 @@ internal class SearchScreenViewModel @Inject constructor(
     var isError by mutableStateOf(false)
         private set
 
-    val catalogs = getSearchRecommendedCardsUseCase.cards
+    val catalogs = getSearchCardsUseCase.cards
         .map { value ->
             if (value is Resource.Success) {
                 Resource.Success(value.data?.filterNot { it.id == -1 })

@@ -52,7 +52,6 @@
             <option value="$PROJECT_DIR$/domain/database" />
             <option value="$PROJECT_DIR$/domain/home" />
             <option value="$PROJECT_DIR$/domain/provider" />
-            <option value="$PROJECT_DIR$/domain/search" />
             <option value="$PROJECT_DIR$/domain/tmdb" />
             <option value="$PROJECT_DIR$/domain/updater" />
             <option value="$PROJECT_DIR$/domain/user" />

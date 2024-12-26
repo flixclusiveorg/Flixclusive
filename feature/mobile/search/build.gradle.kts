@@ -11,7 +11,7 @@ android {
 dependencies {
     implementation(projects.core.ui.mobile)
     implementation(projects.data.network)
-    implementation(projects.domain.search)
+    implementation(projects.domain.tmdb)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)

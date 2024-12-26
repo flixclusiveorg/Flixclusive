@@ -13,7 +13,6 @@ dependencies {
     implementation(projects.core.ui.home)
     implementation(projects.core.ui.tv)
     implementation(projects.data.tmdb)
-    implementation(projects.domain.search)
 
     implementation(libs.compose.tv.foundation)
     implementation(libs.compose.tv.material)

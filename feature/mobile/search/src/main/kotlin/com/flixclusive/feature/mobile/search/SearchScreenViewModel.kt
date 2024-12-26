@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.util.InternetMonitor
-import com.flixclusive.domain.search.GetSearchRecommendedCardsUseCase
+import com.flixclusive.domain.tmdb.GetSearchCardsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class SearchScreenViewModel @Inject constructor(
-    private val getSearchRecommendedCardsUseCase: GetSearchRecommendedCardsUseCase,
+    private val getSearchRecommendedCardsUseCase: GetSearchCardsUseCase,
     internetMonitor: InternetMonitor,
 ) : ViewModel() {
     val genreCards = getSearchRecommendedCardsUseCase.cards
