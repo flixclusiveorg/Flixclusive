@@ -96,11 +96,33 @@ internal fun GridMode(
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(
-            space = 25.dp,
+            space = 8.dp,
             alignment = Alignment.CenterVertically
         ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        EditButton(
+            isEditing = isEditing,
+            onEdit = { isEditing = !isEditing },
+            buttonSize = getAdaptiveDp(
+                compact = 25.dp,
+                medium = 40.dp,
+                expanded = 60.dp
+            ),
+            iconSize = getAdaptiveDp(
+                dp = 14.dp,
+                increaseBy = 6.dp
+            ),
+            spacing = getAdaptiveDp(5.dp, 2.dp),
+            fontSize = getAdaptiveTextUnit(
+                size = 12.sp,
+                increaseBy = 2
+            ),
+            contentPadding = PaddingValues(
+                horizontal = getAdaptiveDp(5.dp, 9.5.dp)
+            )
+        )
+
         Box {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(columnsSize),
@@ -172,28 +194,6 @@ internal fun GridMode(
                 )
             }
         }
-
-        EditButton(
-            isEditing = isEditing,
-            onEdit = { isEditing = !isEditing },
-            buttonSize = getAdaptiveDp(
-                compact = 25.dp,
-                medium = 40.dp,
-                expanded = 60.dp
-            ),
-            iconSize = getAdaptiveDp(
-                dp = 14.dp,
-                increaseBy = 6.dp
-            ),
-            spacing = getAdaptiveDp(5.dp, 2.dp),
-            fontSize = getAdaptiveTextUnit(
-                size = 12.sp,
-                increaseBy = 2
-            ),
-            contentPadding = PaddingValues(
-                horizontal = getAdaptiveDp(5.dp, 9.5.dp)
-            )
-        )
     }
 }
 
