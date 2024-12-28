@@ -271,7 +271,7 @@ private fun TopBar(
                 ) {
                     if (!isFromSplashScreen || screenType.value == ScreenType.ContinueScreen) {
                         BackButton(
-                            onBack = onBack,
+                            onBack = { screenType.value = lastScreenTypeUsed.value },
                             modifier = Modifier
                                 .align(Alignment.CenterStart)
                         )
