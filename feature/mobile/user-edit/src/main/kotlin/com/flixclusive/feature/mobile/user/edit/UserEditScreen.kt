@@ -35,12 +35,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
+import com.flixclusive.core.ui.common.navigation.PinWithHintResult
 import com.flixclusive.core.ui.common.navigation.navigator.CommonUserEditNavigator
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.common.util.showToast
+import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.edit.tweaks.data.DataTweak
 import com.flixclusive.feature.mobile.user.edit.tweaks.identity.IdentityTweak
@@ -49,7 +51,6 @@ import com.flixclusive.model.database.User
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.ResultRecipient
-import kotlinx.collections.immutable.persistentListOf
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -57,22 +58,23 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 @Composable
 internal fun UserEditScreen(
     navigator: CommonUserEditNavigator,
-    resultRecipient: ResultRecipient<UserAvatarSelectScreenDestination, Int>,
+    avatarResultRecipient: ResultRecipient<UserAvatarSelectScreenDestination, Int>,
+    pinResultRecipient: ResultRecipient<PinSetupScreenDestination, PinWithHintResult>,
     userArg: User
 ) {
     val viewModel = hiltViewModel<UserEditViewModel>()
     val context = LocalContext.current
     var user by remember { mutableStateOf(userArg) }
 
-    val tweaks = remember {
-        persistentListOf(
+    val tweaks = remember(user.pin) {
+        listOf(
             IdentityTweak(
-                initialName = userArg.name,
-                onSetupPin = { /*TODO: Implement User PIN */
-                    context.showToast(
-                        context.getString(
-                            LocaleR.string.coming_soon_feature
-                        )
+                initialName = user.name,
+                userHasPin = user.pin != null,
+                onSetupPin = { isRemovingPin ->
+                    navigator.openUserPinSetupScreen(
+                        currentPin = user.pin,
+                        isRemovingPin = isRemovingPin
                     )
                 },
                 onNameChange = {
@@ -97,9 +99,20 @@ internal fun UserEditScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    resultRecipient.onNavResult { result ->
+    avatarResultRecipient.onNavResult { result ->
         if (result is NavResult.Value) {
             user = user.copy(image = result.value)
+            viewModel.onEditUser(user = user)
+        }
+    }
+
+    pinResultRecipient.onNavResult { result ->
+        if (result is NavResult.Value) {
+            val (pin, hint) = result.value
+            user = user.copy(
+                pin = pin,
+                pinHint = hint
+            )
             viewModel.onEditUser(user = user)
         }
     }
@@ -219,15 +232,21 @@ private fun UserEditScreenBasePreview() {
             UserEditScreen(
                 navigator = object: CommonUserEditNavigator {
                     override fun openUserAvatarSelectScreen(selected: Int) = Unit
-                    override fun openUserPinSetupScreen() = Unit
+                    override fun openUserPinSetupScreen(currentPin: String?, isRemovingPin: Boolean) = Unit
                     override fun goBack() = Unit
                     override fun openHomeScreen() = Unit
                 },
-                resultRecipient = object : ResultRecipient<UserAvatarSelectScreenDestination, Int> {
+                avatarResultRecipient = object : ResultRecipient<UserAvatarSelectScreenDestination, Int> {
                     @Composable
                     override fun onNavResult(listener: (NavResult<Int>) -> Unit) = Unit
                     @Composable
                     override fun onResult(listener: (Int) -> Unit) = Unit
+                },
+                pinResultRecipient = object : ResultRecipient<PinSetupScreenDestination, PinWithHintResult> {
+                    @Composable
+                    override fun onNavResult(listener: (NavResult<PinWithHintResult>) -> Unit) = Unit
+                    @Composable
+                    override fun onResult(listener: (PinWithHintResult) -> Unit) = Unit
                 },
                 userArg = User(
                     id = 0,

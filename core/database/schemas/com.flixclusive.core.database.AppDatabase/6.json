@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 6,
-    "identityHash": "c8bbc33f88f8576cb316f7d304fbfc6c",
+    "identityHash": "7c32ec5f95b0b522b592d25fecfddec0",
     "entities": [
       {
         "tableName": "watch_history",
@@ -100,7 +100,7 @@
       },
       {
         "tableName": "User",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `image` INTEGER NOT NULL, `pin` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `image` INTEGER NOT NULL, `pin` TEXT, `pinHint` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -124,7 +124,13 @@
             "fieldPath": "pin",
             "columnName": "pin",
             "affinity": "TEXT",
-            "notNull": true
+            "notNull": false
+          },
+          {
+            "fieldPath": "pinHint",
+            "columnName": "pinHint",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -189,7 +195,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c8bbc33f88f8576cb316f7d304fbfc6c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7c32ec5f95b0b522b592d25fecfddec0')"
     ]
   }
 }

@@ -207,7 +207,10 @@
     <string name="pause">Pause</string>
     <string name="pause_search_history">Pause search history</string>
     <string name="pin">PIN</string>
-    <string name="pin_setup">Setup PIN lock</string>
+    <string name="pin_hint">PIN hint</string>
+    <string name="pin_confirm">Confirm PIN</string>
+    <string name="pin_setup">Setup PIN</string>
+    <string name="pin_verify">Enter your current PIN</string>
     <string name="pip_mode">PiP mode</string>
     <string name="play">Play</string>
     <string name="playback_speed">Playback speed</string>
@@ -422,6 +425,7 @@
     <string name="data_and_backup_settings_content_desc">This contains all the settings to customize how your data is handled.</string>
     <string name="decoder_priority_description">Preferred decoder for improved playback compatibility. May fix issues with high-quality streams and no-audio streams on devices with limited hardware support.</string>
     <string name="default_user_agent_description">Your user agent is like a digital ID for your browser or app, telling websites and servers who\'s asking for information.</string>
+    <string name="backspace_content_desc">Backspace button to delete text</string>
     <string name="delete_profile_content_desc">Deletes profile entirely from app</string>
     <string name="delete_search_history_item_message">Are you sure you want to delete this search history item?</string>
     <string name="doh_content_desc">DNS over HTTPS (DoH) can help bypass some ISP blocks by encrypting your DNS queries. However, it\'s important to note that this method is not foolproof and may not work in all cases</string>
@@ -451,9 +455,12 @@
     <string name="overview_collapse">Show less of the film\'s description</string>
     <string name="overview_expand">Expand all of the film\'s description</string>
     <string name="owner_avatar_content_desc">Avatar or picture of repository\'s owner</string>
+    <string name="pin_hint_description">Create a hint for your PIN</string>
+    <string name="pin_hint_sub_description">This will help you remember what your PIN is if you somehow forget it</string>
     <string name="pause_button">Pause button</string>
     <string name="paused_search_history_content_desc">Pauses search history for incognito purposes.</string>
     <string name="pin_content_desc">Setup a pin lock for this profile</string>
+    <string name="pin_remove_content_desc">Remove the pin lock for this profile</string>
     <string name="selected_avatar_content_desc">Selected avatar</string>
     <string name="pip_mode_desc">Picture-in-picture (PiP) lets you watch videos while using other apps.</string>
     <string name="play_button">Play button</string>

@@ -54,6 +54,7 @@ import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDe
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
@@ -345,7 +346,8 @@ private fun shouldHideBottomBar(route: Route): Boolean {
         AddUserScreenDestination,
         UserEditScreenDestination,
         UserAvatarSelectScreenDestination,
-        UserProfilesScreenDestination
+        UserProfilesScreenDestination,
+        PinSetupScreenDestination
     )
 
     return route.route != SearchExpandedScreenDestination.within(MobileNavGraphs.search).route

@@ -11,8 +11,9 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal class IdentityTweak(
     private val initialName: String,
+    private val userHasPin: Boolean,
     private val onNameChange: (String) -> Unit,
-    private val onSetupPin: () -> Unit,
+    private val onSetupPin: (isRemoving: Boolean) -> Unit,
 ) : BaseProfileTweak {
     @Composable
     override fun getLabel()
@@ -27,9 +28,9 @@ internal class IdentityTweak(
             ),
             ProfileTweakUI.Button(
                 label = UiText.StringResource(LocaleR.string.pin),
-                description = UiText.StringResource(LocaleR.string.pin_content_desc),
+                description = if (userHasPin) UiText.StringResource(LocaleR.string.pin_remove_content_desc) else UiText.StringResource(LocaleR.string.pin_content_desc),
                 icon = IconResource.fromDrawableResource(UiCommonR.drawable.pin_lock),
-                onClick = onSetupPin
+                onClick = { onSetupPin(userHasPin) }
             ),
         )
     }

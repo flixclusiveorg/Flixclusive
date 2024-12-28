@@ -5,5 +5,8 @@ import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
 
 interface CommonUserEditNavigator : GoBackAction, StartHomeScreenAction {
     fun openUserAvatarSelectScreen(selected: Int)
-    fun openUserPinSetupScreen()
+    fun openUserPinSetupScreen(
+        currentPin: String? = null,
+        isRemovingPin: Boolean = false
+    )
 }

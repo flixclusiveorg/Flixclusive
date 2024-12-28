@@ -48,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import coil3.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.navigation.PinWithHintResult
 import com.flixclusive.core.ui.common.navigation.navigator.CommonUserEditNavigator
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
@@ -78,7 +79,8 @@ private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 fun AddUserScreen(
     isInitializing: Boolean,
     navigator: CommonUserEditNavigator,
-    resultRecipient: OpenResultRecipient<Int>,
+    avatarResultRecipient: OpenResultRecipient<Int>,
+    pinResultRecipient: OpenResultRecipient<PinWithHintResult>,
 ) {
     val context = LocalContext.current
     val orientation = LocalConfiguration.current.orientation
@@ -108,10 +110,21 @@ fun AddUserScreen(
 
     ProvideUserToAdd(user = viewModel.user) {
         val user = LocalUserToAdd.current
-        resultRecipient.onNavResult { result ->
-            if (result is NavResult.Value) {
+
+        pinResultRecipient.onNavResult {
+            if (it is NavResult.Value) {
+                val (pin, hint) = it.value
                 user.value = user.value.copy(
-                    image = result.value
+                    pin = pin,
+                    pinHint = hint
+                )
+            }
+        }
+
+        avatarResultRecipient.onNavResult {
+            if (it is NavResult.Value) {
+                user.value = user.value.copy(
+                    image = it.value
                 )
             }
         }
@@ -406,13 +419,17 @@ private fun AddUserScreenBasePreview() {
                 isInitializing = false,
                 navigator = object : CommonUserEditNavigator {
                     override fun openUserAvatarSelectScreen(selected: Int) = Unit
-                    override fun openUserPinSetupScreen() = Unit
+                    override fun openUserPinSetupScreen(currentPin: String?, isRemovingPin: Boolean) = Unit
                     override fun goBack() = Unit
                     override fun openHomeScreen() = Unit
                 },
-                resultRecipient = object : OpenResultRecipient<Int> {
+                avatarResultRecipient = object : OpenResultRecipient<Int> {
                     @Composable
                     override fun onNavResult(listener: (NavResult<Int>) -> Unit) = Unit
+                },
+                pinResultRecipient = object : OpenResultRecipient<PinWithHintResult> {
+                    @Composable
+                    override fun onNavResult(listener: (NavResult<PinWithHintResult>) -> Unit) = Unit
                 }
             )
         }

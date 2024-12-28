@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.flixclusive.model.database.User
 import kotlinx.coroutines.flow.Flow
 
@@ -21,8 +22,11 @@ interface UserDao {
     @Query("SELECT * FROM user")
     fun getAllItemsInFlow(): Flow<List<User>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(item: User)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(item: User): Long
+
+    @Update
+    suspend fun update(item: User)
 
     @Query("DELETE FROM user WHERE userId = :id")
     suspend fun deleteById(id: Int)

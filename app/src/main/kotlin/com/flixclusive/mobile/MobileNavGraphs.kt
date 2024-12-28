@@ -19,6 +19,7 @@ import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestinatio
 import com.flixclusive.feature.mobile.settings.destinations.SettingsScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
@@ -106,6 +107,7 @@ internal object MobileNavGraphs {
             UserAvatarSelectScreenDestination,
             AddUserScreenDestination,
             MarkdownScreenDestination,
+            PinSetupScreenDestination,
         ).associateBy { it.route }
 
         override val nestedNavGraphs = listOf(

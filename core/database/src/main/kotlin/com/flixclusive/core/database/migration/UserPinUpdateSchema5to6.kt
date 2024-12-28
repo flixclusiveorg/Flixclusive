@@ -21,7 +21,8 @@ internal class UserPinUpdateSchema5to6 : Migration(5, 6) {
                     userId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                     name TEXT NOT NULL,
                     image INTEGER NOT NULL,
-                    pin TEXT NOT NULL DEFAULT ''
+                    pin TEXT DEFAULT NULL,
+                    pinHint TEXT DEFAULT NULL
                 )
             """.trimIndent()
         )
