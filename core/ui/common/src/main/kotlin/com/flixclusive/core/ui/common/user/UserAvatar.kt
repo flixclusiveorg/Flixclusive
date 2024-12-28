@@ -35,6 +35,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATAR_PREFIX
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarShape
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.core.ui.common.util.boxShadow
 import com.flixclusive.model.database.User
 import com.flixclusive.core.locale.R as LocaleR
@@ -128,7 +129,7 @@ fun getUserBackgroundPalette(user: User): Palette {
 @Preview
 @Composable
 private fun UserAvatarPreview() {
-    val user = User(image = 0)
+    val user = getDummyUser()
     val swatch = getUserBackgroundPalette(user)
         .dominantSwatch
     val defaultColor = MaterialTheme.colorScheme.primary

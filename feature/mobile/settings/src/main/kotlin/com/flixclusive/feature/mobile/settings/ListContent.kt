@@ -41,6 +41,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
@@ -306,7 +307,7 @@ private fun PreferencesScreenPreview() {
                 .fillMaxSize()
         ) {
             ListContent(
-                currentUser = { User() },
+                currentUser = { getDummyUser() },
                 searchHistoryCount = 1,
                 onClearSearchHistory = {},
                 navigator = getNavigatorPreview(),

@@ -1,7 +1,9 @@
 package com.flixclusive.feature.mobile.user.add
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.random.Random
 
 internal sealed class AddUserState {
     data object Added : AddUserState()
@@ -79,6 +82,15 @@ internal class AddUserViewModel @Inject constructor(
         }
     }
 
+    val user = mutableStateOf(
+        User(
+            id = 0,
+            name = "",
+            pin = "",
+            image = Random.nextInt(AVATARS_IMAGE_COUNT)
+        )
+    )
+
     private var addJob: Job? = null
 
     fun addUser(user: User) {
@@ -87,7 +99,7 @@ internal class AddUserViewModel @Inject constructor(
 
         addJob = viewModelScope.launch {
             userRepository.addUser(user)
-            userSessionManager.signIn(user)
+            userSessionManager.signIn(user) // TODO: ONLY SIGN UP IF WE'RE FROM SPLASH SCREEN
             _state.value = AddUserState.Added
         }
     }

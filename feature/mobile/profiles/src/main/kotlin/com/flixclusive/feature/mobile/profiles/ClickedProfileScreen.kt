@@ -44,6 +44,7 @@ import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.user.getUserBackgroundPalette
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
@@ -70,7 +71,6 @@ private fun getAvatarSize(): Dp {
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun ClickedProfileScreen(
-    modifier: Modifier = Modifier,
     clickedProfile: User,
     isLoading: MutableState<Boolean>,
     onConfirm: () -> Unit,
@@ -284,7 +284,7 @@ private fun adjustBrightness(color: Int, factor: Float): Int {
 
 @Preview
 @Composable
-private fun ClickedProfileScreenBasePreview(user: User = User(image = 0)) {
+private fun ClickedProfileScreenBasePreview(user: User = getDummyUser()) {
     FlixclusiveTheme {
         Surface(
             modifier = Modifier
@@ -309,29 +309,29 @@ private fun ClickedProfileScreenBasePreview(user: User = User(image = 0)) {
 @Preview(device = "spec:parent=pixel_5,orientation=landscape")
 @Composable
 private fun ClickedProfileScreenCompactLandscapePreview() {
-    ClickedProfileScreenBasePreview(User(image = 1))
+    ClickedProfileScreenBasePreview(getDummyUser(image = 1))
 }
 
 @Preview(device = "spec:parent=medium_tablet,orientation=portrait")
 @Composable
 private fun ClickedProfileScreenMediumPortraitPreview() {
-    ClickedProfileScreenBasePreview(User(image = 2))
+    ClickedProfileScreenBasePreview(getDummyUser(image = 2))
 }
 
 @Preview(device = "spec:parent=medium_tablet,orientation=landscape")
 @Composable
 private fun ClickedProfileScreenMediumLandscapePreview() {
-    ClickedProfileScreenBasePreview(User(image = 3))
+    ClickedProfileScreenBasePreview(getDummyUser(image = 3))
 }
 
 @Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
 @Composable
 private fun ClickedProfileScreenExtendedPortraitPreview() {
-    ClickedProfileScreenBasePreview(User(image = 4))
+    ClickedProfileScreenBasePreview(getDummyUser(image = 4))
 }
 
 @Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
 @Composable
 private fun ClickedProfileScreenExtendedLandscapePreview() {
-    ClickedProfileScreenBasePreview(User(image = 5))
+    ClickedProfileScreenBasePreview(getDummyUser(image = 5))
 }

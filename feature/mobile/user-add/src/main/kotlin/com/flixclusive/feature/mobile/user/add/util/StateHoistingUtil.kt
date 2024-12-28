@@ -2,25 +2,22 @@ package com.flixclusive.feature.mobile.user.add.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.model.database.User
-import kotlin.random.Random
 
 internal object StateHoistingUtil {
-    private val defaultUser = User(
-        image = Random.nextInt(AVATARS_IMAGE_COUNT)
-    )
-    val LocalUserToAdd = compositionLocalOf { mutableStateOf(defaultUser) }
+    val LocalUserToAdd = compositionLocalOf { mutableStateOf(getDummyUser()) }
 
     @Composable
     fun ProvideUserToAdd(
+        user: MutableState<User>,
         content: @Composable () -> Unit
     ) {
         CompositionLocalProvider(
-            LocalUserToAdd provides remember { mutableStateOf(defaultUser) },
+            LocalUserToAdd provides user,
             content = content,
         )
     }

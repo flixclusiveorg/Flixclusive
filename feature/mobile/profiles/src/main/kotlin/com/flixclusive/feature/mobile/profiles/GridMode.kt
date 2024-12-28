@@ -73,7 +73,6 @@ private val CompactLabelSize = 12.sp
 
 @Composable
 internal fun GridMode(
-    modifier: Modifier = Modifier,
     listState: LazyGridState,
     profiles: List<User>,
     onSelect: (User) -> Unit,

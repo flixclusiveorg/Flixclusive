@@ -29,6 +29,7 @@ import androidx.palette.graphics.Palette
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
 import com.flixclusive.core.ui.common.user.getAvatarResource
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettingsProvider
@@ -82,7 +83,7 @@ internal fun SettingsScreen(
 
                     AnimatedPane {
                         ListContent(
-                            currentUser = { currentUser ?: User() /*TODO: Remove elvis fallback */ },
+                            currentUser = { currentUser ?: getDummyUser() /*TODO: Remove elvis fallback */ },
                             searchHistoryCount = searchHistoryCount,
                             onClearSearchHistory = viewModel::clearSearchHistory,
                             navigator = navigator,

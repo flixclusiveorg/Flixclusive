@@ -3,14 +3,15 @@ package com.flixclusive.core.ui.common.util
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import com.flixclusive.model.database.User
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.provider.Author
 import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.model.provider.ProviderType
 import com.flixclusive.model.provider.Status
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
-import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import okhttp3.OkHttpClient
@@ -69,4 +70,9 @@ object DummyDataForPreview {
             homePage = null
         )
     }
+
+    fun getDummyUser(
+        name: String = "John Doe",
+        image: Int = 0
+    ) = User(id = 0, name = name, image = image)
 }

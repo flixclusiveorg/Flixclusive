@@ -30,11 +30,11 @@ import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.model.database.User
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 import com.flixclusive.core.locale.R as LocaleR
@@ -74,7 +74,7 @@ internal fun UserAvatarSelectScreen(
             items(AVATARS_IMAGE_COUNT) { i ->
                 Box {
                     UserAvatar(
-                        user = User(image = i),
+                        user = getDummyUser(image = i),
                         shadowBlur = 0.dp,
                         borderWidth = 0.dp,
                         shadowSpread = 0.dp,

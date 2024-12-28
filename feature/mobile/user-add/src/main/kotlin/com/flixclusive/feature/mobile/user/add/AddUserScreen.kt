@@ -106,7 +106,7 @@ fun AddUserScreen(
         }
     }
 
-    ProvideUserToAdd {
+    ProvideUserToAdd(user = viewModel.user) {
         val user = LocalUserToAdd.current
         resultRecipient.onNavResult { result ->
             if (result is NavResult.Value) {

@@ -212,10 +212,7 @@ internal fun UserProfilesScreen(
                 lastScreenTypeUsed = lastScreenTypeUsed,
                 isFromSplashScreen = isFromSplashScreen,
                 addNewUser = navigator::openAddProfileScreen,
-                onBack = navigator::goBack,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopCenter)
+                onBack = navigator::goBack
             )
         }
 
@@ -230,7 +227,6 @@ private enum class ScreenType {
 
 @Composable
 private fun TopBar(
-    modifier: Modifier = Modifier,
     isFromSplashScreen: Boolean,
     screenType: MutableState<ScreenType>,
     lastScreenTypeUsed: MutableState<ScreenType>,
@@ -384,6 +380,7 @@ private fun BackButton(
     modifier: Modifier = Modifier,
     onBack: () -> Unit
 ) {
+    // TODO: onBack not used here!
     Box(modifier = modifier) {
         Icon(
             painter = painterResource(UiCommonR.drawable.left_arrow),
