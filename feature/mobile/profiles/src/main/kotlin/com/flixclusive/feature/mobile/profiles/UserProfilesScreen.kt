@@ -97,13 +97,17 @@ internal fun UserProfilesScreen(
 
     val scope = rememberCoroutineScope()
 
-    val pageCount = if (profiles.size <= 2) {
-        profiles.size
-    } else Int.MAX_VALUE
 
-    val initialPage =
-        if (profiles.size <= 2) 0
-        else (Int.MAX_VALUE / 2) - 3
+    val (pageCount, initialPage) = remember(profiles.size) {
+        val pageCount = if (profiles.size <= 2) {
+            profiles.size
+        } else Int.MAX_VALUE
+
+        val initialPage = if (profiles.size <= 2) 0
+        else (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % profiles.size)
+
+        return@remember pageCount to initialPage
+    }
 
     val listState = rememberLazyGridState()
     val pagerState = rememberPagerState(

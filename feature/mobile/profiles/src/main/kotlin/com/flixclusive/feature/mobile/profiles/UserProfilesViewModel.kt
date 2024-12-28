@@ -2,11 +2,13 @@ package com.flixclusive.feature.mobile.profiles
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.runOnIO
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -15,11 +17,14 @@ internal class UserProfilesViewModel @Inject constructor(
     private val userSessionManager: UserSessionManager,
     userRepository: UserRepository,
 ) : ViewModel() {
-    val profiles = userRepository.observeUsers()
+    val profiles = userRepository
+        .observeUsers()
         .stateIn(
             scope = viewModelScope,
             started = WhileSubscribed(5000),
-            initialValue = emptyList()
+            initialValue = runOnIO {
+                userRepository.observeUsers().first()
+            }
         )
 
     suspend fun onUseProfile(user: User) {
