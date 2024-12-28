@@ -117,12 +117,17 @@ fun AddUserScreen(
         }
 
         AddUserScaffold(
+            hideBackButton = { isInitializing && currentScreen == 0 },
             onBack = {
                 if (currentScreen == 0) {
                     navigator.goBack()
                 } else currentScreen--
             },
         ) {
+            OnBoardingBackground(
+                backgroundUrl = images.getOrNull(currentScreen)
+            )
+
             AnimatedContent(
                 targetState = currentScreen,
                 label = "OnBoardingContent",
@@ -158,20 +163,6 @@ fun AddUserScreen(
                         context.imageLoader.enqueue(request)
                     }
                 }
-
-                OnBoardingBackground(
-                    modifier = Modifier.animateEnterExit(
-                        enter = fadeIn(
-                            animationSpec = tween(500),
-                            initialAlpha = 0.4F
-                        ),
-                        exit = fadeOut(
-                            animationSpec = tween(500),
-                            targetAlpha = 0.4F
-                        )
-                    ),
-                    backgroundUrl = images.getOrNull(currentScreen)
-                )
 
                 if (screen is NameScreen) {
                     val focusManager = LocalFocusManager.current
@@ -395,7 +386,7 @@ private fun OnBoardingBackground(
                     ),
                 contentDescription = stringResource(LocaleR.string.on_boarding_background_content_desc),
                 contentScale = ContentScale.Crop,
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxHeight()
             )
         }

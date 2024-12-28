@@ -78,22 +78,16 @@ import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface UserProfilesNavigator : ExitNavigator, GoBackAction, StartHomeScreenAction,
-    AddProfileNavigator {
+interface UserProfilesNavigator
+    : ExitNavigator, GoBackAction, StartHomeScreenAction, AddProfileNavigator {
     fun openEditUserScreen(user: User)
 }
 
-data class UserProfilesNavArgs(
-    val isComingFromSplashScreen: Boolean
-)
-
-@Destination(
-    navArgsDelegate = UserProfilesNavArgs::class
-)
+@Destination
 @Composable
 internal fun UserProfilesScreen(
     navigator: UserProfilesNavigator,
-    args: UserProfilesNavArgs
+    isFromSplashScreen: Boolean,
 ) {
     val viewModel = hiltViewModel<UserProfilesViewModel>()
     val profiles by viewModel.profiles.collectAsStateWithLifecycle()
@@ -215,7 +209,7 @@ internal fun UserProfilesScreen(
                 showTagOnly = profiles.isEmpty() || screenType.value == ScreenType.ContinueScreen,
                 screenType = screenType,
                 lastScreenTypeUsed = lastScreenTypeUsed,
-                isComingFromSplashScreen = args.isComingFromSplashScreen,
+                isFromSplashScreen = isFromSplashScreen,
                 addNewUser = navigator::openAddProfileScreen,
                 onBack = navigator::goBack,
                 modifier = Modifier
@@ -236,7 +230,7 @@ private enum class ScreenType {
 @Composable
 private fun TopBar(
     modifier: Modifier = Modifier,
-    isComingFromSplashScreen: Boolean,
+    isFromSplashScreen: Boolean,
     screenType: MutableState<ScreenType>,
     lastScreenTypeUsed: MutableState<ScreenType>,
     showTagOnly: Boolean,
@@ -272,7 +266,7 @@ private fun TopBar(
                         .padding(horizontal = getAdaptiveDp(20.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (isComingFromSplashScreen || screenType.value == ScreenType.ContinueScreen) {
+                    if (!isFromSplashScreen || screenType.value == ScreenType.ContinueScreen) {
                         BackButton(
                             onBack = onBack,
                             modifier = Modifier
@@ -314,7 +308,7 @@ private fun TopBar(
                 ) {
                     TopBarForNonEmptyScreen(
                         modifier = Modifier.weight(1F),
-                        isComingFromSplashScreen = isComingFromSplashScreen,
+                        isFromSplashScreen = isFromSplashScreen,
                         onBack = onBack
                     ) {
                         AnimatedContent(
@@ -400,13 +394,13 @@ private fun BackButton(
 @Composable
 private fun RowScope.TopBarForNonEmptyScreen(
     modifier: Modifier = Modifier,
-    isComingFromSplashScreen: Boolean,
+    isFromSplashScreen: Boolean,
     onBack: () -> Unit,
     endContent: @Composable () -> Unit
 ) {
     val headerLabel = stringResource(id = LocaleR.string.profiles)
 
-    if (isComingFromSplashScreen) {
+    if (!isFromSplashScreen) {
         CommonTopBar(
             modifier = modifier,
             title = headerLabel,
@@ -470,14 +464,14 @@ private fun UserProfilesScreenBasePreview() {
                 .fillMaxSize()
         ) {
             UserProfilesScreen(
+                isFromSplashScreen = false,
                 navigator = object : UserProfilesNavigator {
                     override fun goBack() = Unit
                     override fun onExitApplication() = Unit
                     override fun openAddProfileScreen(isInitializing: Boolean) = Unit
                     override fun openEditUserScreen(user: User) = Unit
                     override fun openHomeScreen() = Unit
-                },
-                args = UserProfilesNavArgs(false)
+                }
             )
         }
     }

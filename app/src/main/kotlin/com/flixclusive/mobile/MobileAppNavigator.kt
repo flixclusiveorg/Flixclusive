@@ -140,9 +140,16 @@ internal class MobileAppNavigator(
     override fun openProfilesScreenFromSplashScreen() {
         navController.navigateIfResumed(
             UserProfilesScreenDestination(
-                isComingFromSplashScreen = true
+                isFromSplashScreen = true
             )
-        )
+        ) {
+            popUpTo(MobileNavGraphs.root) {
+                saveState = true
+            }
+
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     override fun openUserAvatarSelectScreen(selected: Int) {
@@ -160,7 +167,16 @@ internal class MobileAppNavigator(
     }
 
     override fun openAddProfileScreen(isInitializing: Boolean) {
-        navController.navigateIfResumed(AddUserScreenDestination(isInitializing = isInitializing))
+        navController.navigateIfResumed(AddUserScreenDestination(isInitializing = isInitializing)) {
+            if (isInitializing) {
+                popUpTo(MobileNavGraphs.root) {
+                    saveState = true
+                }
+
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
     }
 
     override fun onExitApplication() {

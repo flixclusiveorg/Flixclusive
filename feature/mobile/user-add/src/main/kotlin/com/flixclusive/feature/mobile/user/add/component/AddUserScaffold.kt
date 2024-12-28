@@ -1,6 +1,8 @@
 package com.flixclusive.feature.mobile.user.add.component
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +35,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun AddUserScaffold(
+    hideBackButton: () -> Boolean,
     onBack: () -> Unit,
     content: @Composable (BoxScope.() -> Unit),
 ) {
@@ -44,12 +47,16 @@ internal fun AddUserScaffold(
     ) {
         content()
 
-        FloatingBackButton(
-            onClick = onBack,
+        AnimatedVisibility(
+            visible = !hideBackButton(),
+            enter = fadeIn(),
+            exit = fadeOut(),
             modifier = Modifier
                 .padding(horizontal = getHorizontalPadding())
                 .align(Alignment.TopStart)
-        )
+        ) {
+            FloatingBackButton(onClick = onBack)
+        }
     }
 }
 
@@ -98,6 +105,7 @@ private fun AddUserScaffoldBasePreview() {
         Surface {
             AnimatedVisibility(true) {
                 AddUserScaffold(
+                    hideBackButton = { false },
                     onBack = {},
                     content = {}
                 )
