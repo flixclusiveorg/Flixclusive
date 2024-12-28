@@ -14,6 +14,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -38,6 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -380,15 +382,26 @@ private fun BackButton(
     modifier: Modifier = Modifier,
     onBack: () -> Unit
 ) {
-    // TODO: onBack not used here!
-    Box(modifier = modifier) {
+    val iconSize = getAdaptiveDp(16.dp, 10.dp)
+
+    Box(
+        modifier = modifier
+            .clickable(
+                onClick = onBack,
+                interactionSource = null,
+                indication = ripple(
+                    radius = iconSize / 2,
+                    bounded = false,
+                )
+            )
+    ) {
         Icon(
             painter = painterResource(UiCommonR.drawable.left_arrow),
             contentDescription = stringResource(LocaleR.string.navigate_up),
             tint = MaterialTheme.colorScheme.onSurface.copy(0.7F),
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(getAdaptiveDp(16.dp, 10.dp))
+                .size(iconSize)
         )
     }
 }
