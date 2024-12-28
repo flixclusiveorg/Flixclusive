@@ -183,7 +183,6 @@ internal fun UserProfilesScreen(
                                         ClickedProfileScreen(
                                             clickedProfile = profile,
                                             isLoading = isContinueScreenLoading,
-                                            onUseAsDefault = { /*TODO: Add toggle for onUseAsDefault profile */ },
                                             onConfirm = {
                                                 scope.launch {
                                                     viewModel.onUseProfile(profile)

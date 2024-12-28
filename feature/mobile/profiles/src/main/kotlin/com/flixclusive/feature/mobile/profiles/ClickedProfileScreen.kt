@@ -73,7 +73,6 @@ internal fun ClickedProfileScreen(
     modifier: Modifier = Modifier,
     clickedProfile: User,
     isLoading: MutableState<Boolean>,
-    onUseAsDefault: (Boolean) -> Unit,
     onConfirm: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -297,7 +296,6 @@ private fun ClickedProfileScreenBasePreview(user: User = User(image = 0)) {
                         ClickedProfileScreen(
                             clickedProfile = user,
                             isLoading = remember { mutableStateOf(false) },
-                            onUseAsDefault = {},
                             onConfirm = {},
                             onBack = {}
                         )
