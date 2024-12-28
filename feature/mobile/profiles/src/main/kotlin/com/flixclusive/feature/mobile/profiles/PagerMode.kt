@@ -266,10 +266,8 @@ private fun UsernameTag(
         },
         label = "username_animation"
     ) { page ->
-        val item = remember {
-            profiles.getOrNull(page % profiles.size)
-                ?: throw NullPointerException("Scrolled user [$page] is null")
-        }
+        val item = profiles.getOrNull(page % profiles.size)
+            ?: throw NullPointerException("Scrolled user [$page] is null")
 
         Column(
             verticalArrangement = Arrangement.spacedBy(
