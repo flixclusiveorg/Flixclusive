@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -247,8 +248,7 @@ private fun TopBar(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .height(defaultTopBarHeight)
-                .statusBarsPadding()
+                .heightIn(defaultTopBarHeight)
         ) {
             if (state) {
                 val gradientColors = listOf(
@@ -259,10 +259,11 @@ private fun TopBar(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(defaultTopBarHeight * 2)
+                        .height(defaultTopBarHeight * 1.3F)
                         .background(
                             MaterialTheme.colorScheme.surface.copy(0.4F)
                         )
+                        .statusBarsPadding()
                         .padding(horizontal = getAdaptiveDp(20.dp)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -271,27 +272,30 @@ private fun TopBar(
                             onBack = onBack,
                             modifier = Modifier
                                 .align(Alignment.CenterStart)
-                                .statusBarsPadding()
                         )
                     }
 
-                    Image(
-                        painter = painterResource(UiCommonR.drawable.flixclusive_tag),
-                        contentDescription = stringResource(id = com.flixclusive.core.locale.R.string.flixclusive_tag_content_desc),
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .height(getAdaptiveDp(30.dp, 20.dp))
-                            .graphicsLayer(alpha = 0.99F)
-                            .drawWithCache {
-                                onDrawWithContent {
-                                    drawContent()
-                                    drawRect(
-                                        brush = Brush.linearGradient(colors = gradientColors),
-                                        blendMode = BlendMode.SrcAtop
-                                    )
+                    Box(
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(UiCommonR.drawable.flixclusive_tag),
+                            contentDescription = stringResource(id = com.flixclusive.core.locale.R.string.flixclusive_tag_content_desc),
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .height(getAdaptiveDp(30.dp, 20.dp))
+                                .graphicsLayer(alpha = 0.99F)
+                                .drawWithCache {
+                                    onDrawWithContent {
+                                        drawContent()
+                                        drawRect(
+                                            brush = Brush.linearGradient(colors = gradientColors),
+                                            blendMode = BlendMode.SrcAtop
+                                        )
+                                    }
                                 }
-                            }
-                    )
+                        )
+                    }
                 }
             } else {
                 val iconSize = getAdaptiveDp(24.dp, 10.dp)
@@ -301,6 +305,7 @@ private fun TopBar(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(getAdaptiveDp(0.dp, 20.dp)),
                     modifier = Modifier
+                        .statusBarsPadding()
                         .padding(
                             start = getAdaptiveDp(10.dp),
                             end = getAdaptiveDp(0.dp, 10.dp),
