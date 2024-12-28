@@ -1,8 +1,13 @@
 package com.flixclusive.feature.mobile.user.edit.tweaks.component
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,6 +42,8 @@ import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.DefaultShape
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 private const val ON_NAME_CHANGE_DELAY = 800L
 
@@ -75,6 +84,22 @@ internal fun TweakTextField(
                         color = LocalContentColor.current.onMediumEmphasis(),
                     )
                 )
+            }
+        },
+        trailingIcon = {
+            AnimatedVisibility(
+                visible = value.text.isNotEmpty(),
+                enter = scaleIn(),
+                exit = scaleOut(),
+            ) {
+                IconButton(
+                    onClick = { value = "".createTextFieldValue() }
+                ) {
+                    Icon(
+                        painter = painterResource(UiCommonR.drawable.outline_close_square),
+                        contentDescription = stringResource(LocaleR.string.clear_text_button)
+                    )
+                }
             }
         },
         textStyle = getAdaptiveTextStyle(
