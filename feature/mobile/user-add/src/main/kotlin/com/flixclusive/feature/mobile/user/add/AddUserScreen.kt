@@ -241,7 +241,10 @@ fun AddUserScreen(
                     isFinalStep = currentScreen == screens.lastIndex,
                     onNext = {
                         if (currentScreen == screens.lastIndex) {
-                            viewModel.addUser(user.value)
+                            viewModel.addUser(
+                                user = user.value,
+                                isSigningIn = isInitializing
+                            )
                         } else currentScreen++
                     },
                     modifier = Modifier.fillMaxWidth(

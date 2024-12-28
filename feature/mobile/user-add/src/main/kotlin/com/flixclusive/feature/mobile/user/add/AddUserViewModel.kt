@@ -93,13 +93,15 @@ internal class AddUserViewModel @Inject constructor(
 
     private var addJob: Job? = null
 
-    fun addUser(user: User) {
+    fun addUser(user: User, isSigningIn: Boolean) {
         if (addJob?.isActive == true)
             return
 
         addJob = viewModelScope.launch {
             userRepository.addUser(user)
-            userSessionManager.signIn(user) // TODO: ONLY SIGN UP IF WE'RE FROM SPLASH SCREEN
+            if (isSigningIn) {
+                userSessionManager.signIn(user)
+            }
             _state.value = AddUserState.Added
         }
     }
