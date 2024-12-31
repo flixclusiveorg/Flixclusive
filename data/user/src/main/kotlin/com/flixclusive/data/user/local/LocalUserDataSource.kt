@@ -9,7 +9,8 @@ import javax.inject.Inject
 internal class LocalUserDataSource @Inject constructor(
     private val userDao: UserDao
 ) : UserDataSource {
-    override fun observeUsers(): Flow<List<User>> = userDao.getAllItemsInFlow()
+    override fun observeUsers(): Flow<List<User>>
+        = userDao.getAllItemsInFlow()
 
     override suspend fun getUser(id: Int): User? {
         return withIOContext {
@@ -17,11 +18,18 @@ internal class LocalUserDataSource @Inject constructor(
         }
     }
 
-    override fun observeUser(id: Int): Flow<User?> = userDao.getUserByIdInFlow(id)
+    override fun observeUser(id: Int): Flow<User?>
+        = userDao.getUserByIdInFlow(id)
 
     override suspend fun addUser(user: User) {
         withIOContext {
             userDao.insert(user)
+        }
+    }
+
+    override suspend fun updateUser(user: User) {
+        withIOContext {
+            userDao.update(user)
         }
     }
 

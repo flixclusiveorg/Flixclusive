@@ -41,7 +41,7 @@ internal class UserEditViewModel @Inject constructor(
 
     fun onEditUser(user: User) {
         viewModelScope.launch {
-            userRepository.addUser(user)
+            userRepository.updateUser(user)
         }
     }
 

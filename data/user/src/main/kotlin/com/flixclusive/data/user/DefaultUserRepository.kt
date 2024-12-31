@@ -20,6 +20,9 @@ internal class DefaultUserRepository @Inject constructor(
     override suspend fun addUser(user: User)
         = dataSource.addUser(user)
 
+    override suspend fun updateUser(user: User)
+        = dataSource.updateUser(user)
+
     override suspend fun deleteUser(id: Int)
         = dataSource.deleteUser(id)
 }

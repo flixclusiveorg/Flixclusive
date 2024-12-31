@@ -10,6 +10,8 @@ interface UserDataSource {
 
     suspend fun addUser(user: User)
 
+    suspend fun updateUser(user: User)
+
     suspend fun deleteUser(id: Int)
 
     suspend fun getUser(id: Int): User?
