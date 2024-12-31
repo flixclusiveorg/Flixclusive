@@ -43,4 +43,7 @@ interface WatchHistoryDao {
 
     @Query("DELETE FROM watch_history WHERE id = :itemId AND ownerId = :ownerId")
     suspend fun deleteById(itemId: String, ownerId: Int)
+
+    @Query("DELETE FROM watch_history WHERE ownerId = :ownerId")
+    suspend fun deleteAll(ownerId: Int)
 }

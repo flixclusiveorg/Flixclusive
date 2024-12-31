@@ -15,4 +15,6 @@ interface WatchHistoryRepository {
     suspend fun insert(item: WatchHistoryItem)
 
     suspend fun deleteById(itemId: String, ownerId: Int)
+
+    suspend fun removeAll(ownerId: Int)
 }

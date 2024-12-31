@@ -25,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -41,7 +40,6 @@ import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.noIndicationClickable
-import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.edit.tweaks.data.DataTweak
@@ -63,7 +61,6 @@ internal fun UserEditScreen(
     userArg: User
 ) {
     val viewModel = hiltViewModel<UserEditViewModel>()
-    val context = LocalContext.current
     var user by remember { mutableStateOf(userArg) }
 
     val tweaks = remember(user.pin) {
@@ -85,11 +82,10 @@ internal fun UserEditScreen(
             DataTweak(
                 onClearSearchHistory = { viewModel.onClearSearchHistory(user.id) },
                 onDeleteProfile = { viewModel.onRemoveUser(user.id) },
-                onClearLibraries = { /*TODO: Implement onClearLibraries*/
-                    context.showToast(
-                        context.getString(
-                            LocaleR.string.coming_soon_feature
-                        )
+                onClearLibraries = { selection ->
+                    viewModel.onClearLibraries(
+                        userId = user.id,
+                        libraries = selection
                     )
                 },
             )

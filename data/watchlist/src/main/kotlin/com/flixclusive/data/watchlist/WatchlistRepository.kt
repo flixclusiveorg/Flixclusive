@@ -8,6 +8,8 @@ interface WatchlistRepository {
 
     suspend fun remove(item: WatchlistItem)
 
+    suspend fun removeAll(ownerId: Int)
+
     suspend fun removeById(itemId: String, ownerId: Int)
 
     suspend fun getWatchlistItemById(itemId: String, ownerId: Int): WatchlistItem?

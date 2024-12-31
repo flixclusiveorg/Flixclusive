@@ -13,6 +13,10 @@ internal class DefaultWatchlistRepository @Inject constructor(
         watchlistDao.insert(item)
     }
 
+    override suspend fun removeAll(ownerId: Int) = withIOContext {
+        watchlistDao.deleteAll(ownerId)
+    }
+
     override suspend fun remove(item: WatchlistItem) = withIOContext {
         watchlistDao.delete(item)
     }

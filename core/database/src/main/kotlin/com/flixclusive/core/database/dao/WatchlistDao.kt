@@ -16,6 +16,9 @@ interface WatchlistDao {
     @Delete
     suspend fun delete(item: WatchlistItem)
 
+    @Query("DELETE FROM watchlist WHERE ownerId = :ownerId")
+    suspend fun deleteAll(ownerId: Int)
+
     @Query("DELETE FROM watchlist WHERE id = :itemId AND ownerId = :ownerId")
     suspend fun deleteById(itemId: String, ownerId: Int)
 

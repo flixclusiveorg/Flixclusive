@@ -59,6 +59,14 @@ internal class UserEditViewModel @Inject constructor(
         userId: Int,
         libraries: List<Library>
     ) {
-
+        viewModelScope.launch {
+            libraries.forEach {
+                when (it) {
+                    is Library.Watchlist -> watchlistRepository.removeAll(userId)
+                    is Library.WatchHistory -> watchHistoryRepository.removeAll(userId)
+                    is Library.CustomList -> throw IllegalStateException("Custom libraries are not yet implemented")
+                }
+            }
+        }
     }
 }

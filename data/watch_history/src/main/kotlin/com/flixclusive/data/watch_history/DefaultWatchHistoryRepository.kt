@@ -32,4 +32,8 @@ internal class DefaultWatchHistoryRepository @Inject constructor(
     override suspend fun deleteById(itemId: String, ownerId: Int) = withIOContext {
         watchHistoryDao.deleteById(itemId, ownerId)
     }
+
+    override suspend fun removeAll(ownerId: Int) {
+        watchHistoryDao.deleteAll(ownerId)
+    }
 }
