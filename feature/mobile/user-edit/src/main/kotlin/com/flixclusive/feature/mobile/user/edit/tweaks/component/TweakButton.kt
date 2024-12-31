@@ -79,11 +79,7 @@ internal fun TweakButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing),
             modifier = Modifier
-                .fillMaxAdaptiveWidth(
-                    compact = 1F,
-                    medium = 1F,
-                    expanded = 0.6F
-                )
+                .fillMaxAdaptiveWidth()
                 .padding(spacing)
         ) {
             Icon(

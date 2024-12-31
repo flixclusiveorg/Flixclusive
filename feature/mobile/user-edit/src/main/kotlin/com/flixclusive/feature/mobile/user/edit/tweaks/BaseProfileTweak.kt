@@ -83,11 +83,7 @@ internal fun LazyListScope.renderTweakUi(
         Box(
             contentAlignment = Alignment.CenterStart,
             modifier = Modifier
-                .fillMaxAdaptiveWidth(
-                    compact = 1F,
-                    medium = 1F,
-                    expanded = 0.6F
-                )
+                .fillMaxAdaptiveWidth()
                 .padding(top = getAdaptiveDp(25.dp))
         ) {
             Text(

@@ -118,16 +118,12 @@ internal fun TweakTextField(
             focusedIndicatorColor = Color.Transparent,
         ),
         modifier = Modifier
+            .fillMaxAdaptiveWidth()
             .height(
                 getAdaptiveDp(
                     dp = 65.dp,
                     increaseBy = 15.dp
                 )
-            )
-            .fillMaxAdaptiveWidth(
-                compact = 1F,
-                medium = 1F,
-                expanded = 0.6F
             )
     )
 }
