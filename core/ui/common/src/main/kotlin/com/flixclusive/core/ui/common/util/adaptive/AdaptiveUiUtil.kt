@@ -41,7 +41,7 @@ object AdaptiveUiUtil {
 
         return when {
             windowWidthSizeClass.isCompact || windowHeightSizeClass.isCompact ->  compact
-            windowWidthSizeClass.isMedium -> medium
+            windowWidthSizeClass.isMedium || windowHeightSizeClass.isMedium -> medium
             windowWidthSizeClass.isExpanded -> expanded
             else -> compact
         }
@@ -70,7 +70,7 @@ object AdaptiveUiUtil {
 
         return when {
             windowWidthSizeClass.isCompact || windowHeightSizeClass.isCompact ->  compact
-            windowWidthSizeClass.isMedium -> medium
+            windowWidthSizeClass.isMedium || windowHeightSizeClass.isMedium -> medium
             windowWidthSizeClass.isExpanded -> expanded
             else -> compact
         }

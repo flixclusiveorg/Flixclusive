@@ -16,11 +16,12 @@ object AdaptiveModifierUtil {
     ): Modifier = composed {
         val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
         val windowWidthSizeClass = windowSizeClass.windowWidthSizeClass
+        val windowHeightSizeClass = windowSizeClass.windowHeightSizeClass
         val fraction = when {
-            windowWidthSizeClass.isCompact ->  compact
-            windowWidthSizeClass.isMedium -> medium
+            windowWidthSizeClass.isCompact || windowHeightSizeClass.isCompact ->  compact
+            windowWidthSizeClass.isMedium || windowHeightSizeClass.isMedium -> medium
             windowWidthSizeClass.isExpanded -> expanded
-            else -> 1F
+            else -> compact
         }
 
         return@composed fillMaxWidth(fraction)
