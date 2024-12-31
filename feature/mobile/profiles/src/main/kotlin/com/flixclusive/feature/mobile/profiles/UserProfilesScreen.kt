@@ -66,6 +66,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
+import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
 import com.flixclusive.core.ui.common.navigation.navigator.AddProfileNavigator
@@ -240,7 +241,7 @@ private fun TopBar(
     onBack: () -> Unit,
     addNewUser: () -> Unit,
 ) {
-    val defaultTopBarHeight = getAdaptiveDp(60.dp, 15.dp)
+    val defaultTopBarHeight = getAdaptiveDp(60.dp, 8.dp)
 
     AnimatedContent(
         targetState = showTagOnly,
@@ -278,14 +279,16 @@ private fun TopBar(
                     }
 
                     Box(
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .padding(bottom = getAdaptiveDp(10.dp, 6.dp))
                     ) {
                         Image(
                             painter = painterResource(UiCommonR.drawable.flixclusive_tag),
                             contentDescription = stringResource(id = com.flixclusive.core.locale.R.string.flixclusive_tag_content_desc),
                             contentScale = ContentScale.Fit,
                             modifier = Modifier
-                                .height(getAdaptiveDp(30.dp, 20.dp))
+                                .fillMaxWidth(0.4F)
                                 .graphicsLayer(alpha = 0.99F)
                                 .drawWithCache {
                                     onDrawWithContent {
@@ -386,26 +389,23 @@ private fun BackButton(
     modifier: Modifier = Modifier,
     onBack: () -> Unit
 ) {
-    val iconSize = getAdaptiveDp(16.dp, 10.dp)
-
     Box(
         modifier = modifier
             .clickable(
                 onClick = onBack,
                 interactionSource = null,
                 indication = ripple(
-                    radius = iconSize / 2,
+                    radius = 30.dp,
                     bounded = false,
                 )
             )
     ) {
-        Icon(
+        AdaptiveIcon(
             painter = painterResource(UiCommonR.drawable.left_arrow),
             contentDescription = stringResource(LocaleR.string.navigate_up),
             tint = MaterialTheme.colorScheme.onSurface.copy(0.7F),
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(iconSize)
         )
     }
 }

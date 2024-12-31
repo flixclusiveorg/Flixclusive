@@ -15,6 +15,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,12 +24,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -48,13 +47,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.isCompact
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
@@ -88,15 +87,13 @@ internal fun PagerMode(
 
     val indexPressed = remember { mutableStateOf<Int?>(null) }
 
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp
 
-    val isCompactAndLandscape
-        = windowSizeClass.windowHeightSizeClass.isCompact
-            && configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isLandscape
+        = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    val widthPercentage = if(isCompactAndLandscape) 0.5F else 1F
+    val widthPercentage = if(isLandscape) 0.5F else 1F
     val pageWidth = ((screenWidthDp * widthPercentage) / 3).dp
     val horizontalPadding = ((screenWidthDp / 2)).dp - (pageWidth / 1.9f)
 
@@ -291,12 +288,15 @@ private fun UsernameTag(
             )
 
             if (item.pin != null) {
-                Icon(
+                AdaptiveIcon(
                     painter = painterResource(UiCommonR.drawable.lock_thin),
                     contentDescription = stringResource(LocaleR.string.locked_profile_button_desc),
                     tint = LocalContentColor.current.onMediumEmphasis(0.8F),
-                    modifier = Modifier.size(getAdaptiveDp(16.dp, 8.dp))
+                    dp = 16.dp,
+                    increaseBy = 8.dp,
                 )
+            } else {
+                Spacer(modifier = Modifier.size(getAdaptiveDp(16.dp, 8.dp)))
             }
         }
     }
