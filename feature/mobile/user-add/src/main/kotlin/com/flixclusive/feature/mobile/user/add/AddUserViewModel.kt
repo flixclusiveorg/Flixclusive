@@ -86,7 +86,6 @@ internal class AddUserViewModel @Inject constructor(
         User(
             id = 0,
             name = "",
-            pin = "",
             image = Random.nextInt(AVATARS_IMAGE_COUNT)
         )
     )
