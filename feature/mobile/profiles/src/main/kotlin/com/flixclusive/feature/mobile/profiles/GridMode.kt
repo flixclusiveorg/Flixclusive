@@ -228,8 +228,7 @@ private fun UsernameTag(
                 .width(columnsSize)
         )
 
-        // TODO: Add conditional statement if User is locked
-        if (false) {
+        if (user.pin != null) {
             Icon(
                 painter = painterResource(UiCommonR.drawable.lock_thin),
                 contentDescription = stringResource(LocaleR.string.locked_profile_button_desc),
