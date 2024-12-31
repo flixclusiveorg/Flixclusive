@@ -11,7 +11,7 @@ import java.util.Date
 )
 data class SearchHistory(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val ownerId: Int = 1,
-    val searchedOn: Date = Date(),
-    val query: String
+    val query: String,
+    val ownerId: Int,
+    val searchedOn: Date = Date()
 )

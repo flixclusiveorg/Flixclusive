@@ -10,6 +10,7 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.util.InternetMonitor
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
+import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.film.Film
@@ -18,7 +19,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -46,6 +49,7 @@ private fun filterWatchedFilms(watchHistoryItem: WatchHistoryItem): Boolean {
 @HiltViewModel
 class HomeScreenViewModel @Inject constructor(
     private val homeItemsProviderUseCase: HomeItemsProviderUseCase,
+    private val userSessionManager: UserSessionManager,
     appSettingsManager: AppSettingsManager,
     internetMonitor: InternetMonitor,
     watchHistoryRepository: WatchHistoryRepository,
@@ -78,16 +82,19 @@ class HomeScreenViewModel @Inject constructor(
             initialValue = true
         )
 
-    val continueWatchingList = watchHistoryRepository
-        .getAllItemsInFlow()
-        .map { items ->
-            items.filterNot(::filterWatchedFilms)
+    val continueWatchingList = userSessionManager.currentUser
+        .filterNotNull()
+        .flatMapLatest { user ->
+            watchHistoryRepository.getAllItemsInFlow(ownerId = user.id)
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = runBlocking {
-                watchHistoryRepository.getAllItemsInFlow()
+                val userId = userSessionManager.currentUser.value?.id
+                    ?: return@runBlocking emptyList()
+
+                watchHistoryRepository.getAllItemsInFlow(userId)
                     .first()
                     .filterNot(::filterWatchedFilms)
             }
@@ -111,7 +118,10 @@ class HomeScreenViewModel @Inject constructor(
     }
 
     fun initialize() {
-        homeItemsProviderUseCase()
+        val userId = userSessionManager.currentUser.value?.id
+            ?: return
+
+        homeItemsProviderUseCase(userId = userId)
     }
 
     suspend fun loadFocusedFilm(film: Film) {

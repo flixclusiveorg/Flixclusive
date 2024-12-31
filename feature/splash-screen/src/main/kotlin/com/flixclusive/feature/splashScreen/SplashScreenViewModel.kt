@@ -17,7 +17,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -83,11 +85,14 @@ internal class SplashScreenViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             launch {
-                appConfigurationManager.configurationStatus.collectLatest {
-                    if (it is Resource.Success) {
-                        homeItemsProviderUseCase()
+                combine(
+                    appConfigurationManager.configurationStatus,
+                    userLoggedIn
+                ) { status, user ->
+                    if (status is Resource.Success && user != null) {
+                        homeItemsProviderUseCase(user.id)
                     }
-                }
+                }.collect()
             }
 
             launch {

@@ -6,7 +6,6 @@ import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withDefaultContext
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.configuration.AppConfigurationManager
-import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.catalog.CatalogItemsProviderUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
@@ -20,9 +19,6 @@ import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderCatalog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,22 +39,17 @@ class HomeItemsProviderUseCase @Inject constructor(
     private val filmProviderUseCase: FilmProviderUseCase,
     private val watchHistoryRepository: WatchHistoryRepository,
     private val configurationProvider: AppConfigurationManager,
-    private val catalogItemsProviderUseCase: CatalogItemsProviderUseCase,
-    private val providerManager: ProviderManager
+    private val catalogItemsProviderUseCase: CatalogItemsProviderUseCase
 ) {
     private val _state = MutableStateFlow(HomeState())
     val state = _state.asStateFlow()
 
-    init {
-        observeConfigurationAndProviders()
-    }
-
-    operator fun invoke() {
+    operator fun invoke(userId: Int) {
         launchOnIO {
             _state.update { it.copy(status = Resource.Loading) }
 
             try {
-                val catalogs = withDefaultContext { getHomeRecommendations() }
+                val catalogs = withDefaultContext { getHomeRecommendations(userId) }
                 _state.update {
                     it.copy(
                         catalogs = catalogs,
@@ -107,23 +98,24 @@ class HomeItemsProviderUseCase @Inject constructor(
         }
     }
 
-    private fun observeConfigurationAndProviders() {
-        val catalogs = providerManager.workingApis.map {
-            it.flatMap { api -> api.catalogs }
-        }.distinctUntilChanged()
+//    TODO: Implement this on ViewModel instead
+//    private fun observeConfigurationAndProviders() {
+//        val catalogs = providerManager.workingApis.map {
+//            it.flatMap { api -> api.catalogs }
+//        }.distinctUntilChanged()
+//
+//        launchOnIO {
+//            catalogs.collectLatest {
+//                _state.update { homeState ->
+//                    homeState.copy(providerCatalogs = it)
+//                }
+//
+//                invoke()
+//            }
+//        }
+//    }
 
-        launchOnIO {
-            catalogs.collectLatest {
-                _state.update {  homeState ->
-                    homeState.copy(providerCatalogs = it)
-                }
-
-                invoke()
-            }
-        }
-    }
-
-    private suspend fun getHomeRecommendations(): List<Catalog> {
+    private suspend fun getHomeRecommendations(userId: Int): List<Catalog> {
         val tmdbCatalogs = configurationProvider.homeCatalogsData!!
         val allTmdbCatalogs = tmdbCatalogs.all + tmdbCatalogs.tv + tmdbCatalogs.movie
         val requiredCatalogs = allTmdbCatalogs.filter { it.required }
@@ -135,7 +127,7 @@ class HomeItemsProviderUseCase @Inject constructor(
             .take(countOfItemsToFetch)
 
         return (requiredCatalogs +
-                getUserRecommendations() +
+                getUserRecommendations(userId) +
                 filteredTmdbCatalogs +
                 state.value.providerCatalogs)
             .shuffled()
@@ -145,7 +137,7 @@ class HomeItemsProviderUseCase @Inject constructor(
             }
     }
 
-    private suspend fun getUserRecommendations(userId: Int = 1): List<HomeCatalog> {
+    private suspend fun getUserRecommendations(userId: Int): List<HomeCatalog> {
         val randomWatchedFilms = watchHistoryRepository.getRandomWatchHistoryItems(
             ownerId = userId,
             count = Random.nextInt(1, 4)

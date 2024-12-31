@@ -6,36 +6,65 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.locale.UiText
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.ToggleWatchlistStatusUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
+import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.toWatchlistItem
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmDetails
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.film.util.FilmType
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 
+/*
+* TODO: Remove this ugly ass code
+* */
 abstract class BaseFilmScreenViewModel(
     private val partiallyDetailedFilm: Film,
-    watchHistoryRepository: WatchHistoryRepository,
+    private val watchHistoryRepository: WatchHistoryRepository,
     private val seasonProvider: SeasonProviderUseCase,
     private val filmProvider: FilmProviderUseCase,
     private val toggleWatchlistStatusUseCase: ToggleWatchlistStatusUseCase,
+    private val userSessionManager: UserSessionManager,
     appSettingsManager: AppSettingsManager
 ) : ViewModel() {
+    private val filmId: String = partiallyDetailedFilm.identifier
+
+    private var initializeJob: Job? = null
+
+    private var onSeasonChangeJob: Job? = null
+    private var toggleAsWatchList: Job? = null
+
+    private val _film = MutableStateFlow<Film?>(null)
+    val film = _film.asStateFlow()
+
+    private val _uiState = MutableStateFlow(FilmUiState())
+    val uiState = _uiState.asStateFlow()
+
+    private val _currentSeasonSelected = MutableStateFlow<Resource<Season>>(Resource.Loading)
+    val currentSeasonSelected = _currentSeasonSelected.asStateFlow()
+
+    var selectedSeasonNumber by mutableIntStateOf(value = 1)
+
     val appSettings = appSettingsManager.appSettings
         .data
         .stateIn(
@@ -44,33 +73,36 @@ abstract class BaseFilmScreenViewModel(
             initialValue = appSettingsManager.cachedAppSettings
         )
 
-    private val filmId: String = partiallyDetailedFilm.identifier
-
-    private var initializeJob: Job? = null
-    private var onSeasonChangeJob: Job? = null
-    private var onWatchlistClickJob: Job? = null
-
-    private val _uiState = MutableStateFlow(FilmUiState())
-    val uiState = _uiState.asStateFlow()
-
-    private val _film = MutableStateFlow<Film?>(null)
-    val film = _film.asStateFlow()
-
-    val watchHistoryItem = watchHistoryRepository
-        .getWatchHistoryItemByIdInFlow(filmId)
+    val watchHistoryItem = userSessionManager.currentUser
+        .filterNotNull()
+        .flatMapLatest { user ->
+            watchHistoryRepository.getWatchHistoryItemByIdInFlow(
+                itemId = filmId,
+                ownerId = user.id
+            )
+        }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.WhileSubscribed(5000),
             initialValue = null
         )
 
-    private val _currentSeasonSelected = MutableStateFlow<Resource<Season>>(Resource.Loading)
-    val currentSeasonSelected = _currentSeasonSelected.asStateFlow()
-
-    var selectedSeasonNumber by mutableIntStateOf(value = 1)
-
     init {
         initializeData(film = partiallyDetailedFilm)
+        viewModelScope.launch {
+            combine(
+                _film,
+                userSessionManager.currentUser
+            ) { film, user ->
+                if (film != null && user != null) {
+                    val isInWatchlist = toggleWatchlistStatusUseCase
+                        .isInWatchlist(film.identifier, user.id)
+
+                    _uiState.update { it.copy(isFilmInWatchlist = isInWatchlist) }
+                }
+            }.distinctUntilChanged()
+                .collect()
+        }
     }
 
     fun initializeData(film: Film = partiallyDetailedFilm) {
@@ -83,7 +115,7 @@ abstract class BaseFilmScreenViewModel(
 
         initializeJob = viewModelScope.launch {
             if (film is FilmDetails) {
-                film.onInitializeSuccess()
+                onSuccessResponse(film)
                 return@launch
             }
 
@@ -94,30 +126,26 @@ abstract class BaseFilmScreenViewModel(
                 is Resource.Failure -> {
                     _uiState.update {
                         it.copy(
-                            isLoading = false,
-                            errorMessage = result.error
+                            isLoading = false, errorMessage = result.error
                                 ?: UiText.StringResource(LocaleR.string.error_film_message)
                         )
                     }
                 }
                 Resource.Loading -> Unit
-                is Resource.Success -> result.data?.onInitializeSuccess()
+                is Resource.Success -> onSuccessResponse(result.data!!)
             }
         }
     }
 
-    private suspend fun Film.onInitializeSuccess() {
+    private fun onSuccessResponse(response: FilmDetails) {
+        _film.update { response }
         _uiState.update {
             it.copy(
-                isLoading = false,
-                errorMessage = null
+                isLoading = false, errorMessage = null
             )
         }
 
-        _film.update { this@onInitializeSuccess }
-        isFilmInWatchlist()
-
-        if (filmType == FilmType.TV_SHOW) {
+        if (response.filmType == FilmType.TV_SHOW) {
             var seasonToInitialize = watchHistoryItem.value?.episodesWatched?.lastOrNull()?.seasonNumber
 
             if (seasonToInitialize == null) {
@@ -125,14 +153,6 @@ abstract class BaseFilmScreenViewModel(
             }
 
             onSeasonChange(seasonToInitialize)
-        }
-    }
-
-    private suspend fun isFilmInWatchlist() {
-        _film.value?.let { film ->
-            _uiState.update {
-                it.copy(isFilmInWatchlist = toggleWatchlistStatusUseCase.isInWatchlist(film.identifier))
-            }
         }
     }
 
@@ -146,21 +166,42 @@ abstract class BaseFilmScreenViewModel(
             seasonProvider.asFlow(
                 tvShow = _film.value as TvShow,
                 seasonNumber = seasonNumber
-            ).collectLatest {
-                _currentSeasonSelected.value = it
+            ).collectLatest { result ->
+                if (result is Resource.Success) {
+                    watchHistoryItem.value?.let { item ->
+                        result.data?.episodes?.size?.let {
+                            val newEpisodesMap = item.episodes.toMutableMap()
+                            newEpisodesMap[seasonNumber] = it
+
+                            watchHistoryRepository.insert(item.copy(episodes = newEpisodesMap))
+                        }
+                    }
+                }
+
+                _currentSeasonSelected.value = result
             }
         }
     }
 
-    fun onWatchlistButtonClick() {
-        if (onWatchlistClickJob?.isActive == true)
+    fun toggleAsWatchList() {
+        if (toggleAsWatchList?.isActive == true)
             return
 
-        onWatchlistClickJob = viewModelScope.launch {
-            _film.value?.toWatchlistItem()?.let { film ->
-                val isInWatchlist = toggleWatchlistStatusUseCase(film)
-                _uiState.update {
-                    it.copy(isFilmInWatchlist = isInWatchlist)
+        toggleAsWatchList = viewModelScope.launch {
+            val userId = userSessionManager.currentUser.first()?.id ?: return@launch
+            val currentFilm = _film.value?.toWatchlistItem(userId) ?: return@launch
+
+            try {
+                val isInWatchlist = toggleWatchlistStatusUseCase(
+                    watchlistItem = currentFilm, ownerId = userId
+                )
+                _uiState.update { it.copy(isFilmInWatchlist = isInWatchlist) }
+            } catch (e: Exception) {
+                // Handle error - maybe update UI state with error message
+                if (e.message != null) {
+                    _uiState.update {
+                        it.copy(errorMessage = UiText.StringValue(e.message!!))
+                    }
                 }
             }
         }

@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.data.tmdb)
     implementation(projects.data.provider)
     implementation(projects.data.searchHistory)
+    implementation(projects.domain.user)
     implementation(projects.model.configuration)
 
     implementation(libs.coil.compose)

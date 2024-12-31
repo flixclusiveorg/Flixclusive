@@ -16,6 +16,7 @@ import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
+import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.toWatchHistoryItem
 import com.flixclusive.model.database.util.getSavedTimeForFilm
@@ -32,6 +33,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -45,11 +48,12 @@ abstract class BasePlayerViewModel(
     client: OkHttpClient,
     context: Context,
     playerCacheManager: PlayerCacheManager,
-    watchHistoryRepository: WatchHistoryRepository,
+    private val watchHistoryRepository: WatchHistoryRepository,
     private val appSettingsManager: AppSettingsManager,
     private val seasonProviderUseCase: SeasonProviderUseCase,
     private val getMediaLinksUseCase: GetMediaLinksUseCase,
     private val watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
+    private val userSessionManager: UserSessionManager,
 ) : ViewModel() {
     val film = args.film
 
@@ -98,12 +102,26 @@ abstract class BasePlayerViewModel(
     var isLastEpisode by mutableStateOf(film.filmType == FilmType.MOVIE)
         private set
 
-    val watchHistoryItem = watchHistoryRepository
-        .getWatchHistoryItemByIdInFlow(film.identifier)
+    private val userId: Int?
+        get() = userSessionManager.currentUser.value?.id
+
+    val watchHistoryItem = userSessionManager.currentUser
+        .filterNotNull()
+        .flatMapLatest { user ->
+            watchHistoryRepository
+                .getWatchHistoryItemByIdInFlow(
+                    itemId = film.identifier, ownerId = user.id
+                )
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking { watchHistoryRepository.getWatchHistoryItemById(film.identifier) ?: film.toWatchHistoryItem() }
+            initialValue = runBlocking {
+                userId?.let {
+                    watchHistoryRepository.getWatchHistoryItemById(film.identifier, it)
+                        ?: film.toWatchHistoryItem(ownerId = it)
+                }
+            }
         )
 
     val appSettings = appSettingsManager.appSettings
@@ -199,7 +217,25 @@ abstract class BasePlayerViewModel(
             seasonProviderUseCase.asFlow(
                 tvShow = film as TvShow,
                 seasonNumber = seasonNumber
-            ).collectLatest { _season.value = it }
+            ).collectLatest { result ->
+                if (result is Resource.Success) {
+                    val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(
+                        itemId = film.identifier,
+                        ownerId = userId ?: return@collectLatest
+                    )
+
+                    watchHistoryItem?.let { item ->
+                        result.data?.episodes?.size?.let {
+                            val newEpisodesMap = item.episodes.toMutableMap()
+                            newEpisodesMap[seasonNumber] = it
+
+                            watchHistoryRepository.insert(item.copy(episodes = newEpisodesMap))
+                        }
+                    }
+                }
+
+                _season.value = result
+            }
         }
     }
 
@@ -301,7 +337,10 @@ abstract class BasePlayerViewModel(
     ) {
         viewModelScope.launch {
             watchTimeUpdaterUseCase(
-                watchHistoryItem = watchHistoryItem.value ?: film.toWatchHistoryItem(),
+                watchHistoryItem = watchHistoryItem.value
+                    ?: film.toWatchHistoryItem(
+                        ownerId = userId ?: return@launch
+                    ),
                 currentTime = currentTime,
                 totalDuration = duration,
                 currentSelectedEpisode = currentSelectedEpisode.value
@@ -322,13 +361,10 @@ abstract class BasePlayerViewModel(
     private suspend fun fetchSeasonIfNeeded(seasonNumber: Int): Resource<Season?> {
         var currentLoadedSeasonNumber = _season.value
         if (currentLoadedSeasonNumber.data?.number != seasonNumber) {
-            _season.update {
-                fetchSeasonFromMetaProvider(
-                    seasonNumber = seasonNumber
-                )
-            }
+            val result = fetchSeasonFromMetaProvider(seasonNumber = seasonNumber)
 
-            currentLoadedSeasonNumber = _season.value
+            _season.value = result
+            currentLoadedSeasonNumber = result
         }
 
         return currentLoadedSeasonNumber
@@ -538,9 +574,20 @@ abstract class BasePlayerViewModel(
      * @param seasonNumber the season to be queried.
      *
      * */
-    protected suspend fun fetchSeasonFromMetaProvider(seasonNumber: Int)
-        = seasonProviderUseCase(
+    protected suspend fun fetchSeasonFromMetaProvider(seasonNumber: Int): Resource<Season> {
+        val result = seasonProviderUseCase(
             tvShow = film as TvShow,
             seasonNumber = seasonNumber
         )
+
+        watchHistoryItem.value?.let { item ->
+            result.data?.episodes?.size?.let {
+                val newEpisodesMap = item.episodes.toMutableMap()
+                newEpisodesMap[seasonNumber] = it
+                watchHistoryRepository.insert(item.copy(episodes = newEpisodesMap))
+            }
+        }
+
+        return result
+    }
 }

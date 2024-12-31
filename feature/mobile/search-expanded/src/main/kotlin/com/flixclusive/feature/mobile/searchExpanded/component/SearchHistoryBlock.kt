@@ -27,8 +27,8 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.model.database.SearchHistory
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -94,7 +94,8 @@ private fun SearchHistoryBlockPreview() {
         Surface {
             SearchHistoryBlock(
                 item = SearchHistory(
-                    query = "test"
+                    query = "test",
+                    ownerId = 0,
                 ),
                 onClick = {},
                 onArrowClick = {},

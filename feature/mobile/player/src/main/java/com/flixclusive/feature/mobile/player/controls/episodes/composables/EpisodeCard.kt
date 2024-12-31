@@ -43,10 +43,11 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.model.database.EpisodeWatched
 import com.flixclusive.model.database.WatchHistoryItem
+import com.flixclusive.model.film.DBFilm
 import com.flixclusive.model.film.common.tv.Episode
 import kotlin.random.Random
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun EpisodeCard(
@@ -265,6 +266,9 @@ internal fun EpisodeCardPlaceholder(
 @Composable
 private fun EpisodeCardPreview() {
     val sampleWatchHistoryItem = WatchHistoryItem(
+        id = "test",
+        ownerId = 0,
+        film = DBFilm(),
         episodesWatched = listOf(
             EpisodeWatched(
                 "",

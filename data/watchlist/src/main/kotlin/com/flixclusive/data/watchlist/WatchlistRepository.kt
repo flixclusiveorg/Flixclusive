@@ -8,11 +8,11 @@ interface WatchlistRepository {
 
     suspend fun remove(item: WatchlistItem)
 
-    suspend fun removeById(itemId: String, ownerId: Int = 1)
+    suspend fun removeById(itemId: String, ownerId: Int)
 
-    suspend fun getWatchlistItemById(itemId: String, ownerId: Int = 1): WatchlistItem?
+    suspend fun getWatchlistItemById(itemId: String, ownerId: Int): WatchlistItem?
 
-    suspend fun getAllItems(ownerId: Int = 1): List<WatchlistItem>
+    suspend fun getAllItems(ownerId: Int): List<WatchlistItem>
 
-    fun getAllItemsInFlow(ownerId: Int = 1): Flow<List<WatchlistItem>>
+    fun getAllItemsInFlow(ownerId: Int): Flow<List<WatchlistItem>>
 }

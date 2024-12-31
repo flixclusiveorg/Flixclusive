@@ -29,6 +29,7 @@ import com.flixclusive.feature.mobile.player.controls.common.EnlargedTouchableBu
 import com.flixclusive.feature.mobile.player.controls.episodes.composables.EpisodesRow
 import com.flixclusive.feature.mobile.player.controls.episodes.composables.SeasonsRow
 import com.flixclusive.model.database.WatchHistoryItem
+import com.flixclusive.model.film.DBFilm
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.core.locale.R as LocaleR
@@ -150,7 +151,11 @@ private fun EpisodesScreenPreview() {
                     seasonData = seasonData,
                     availableSeasons = 8,
                     currentEpisodeSelected = Episode(),
-                    watchHistoryItem = WatchHistoryItem(),
+                    watchHistoryItem = WatchHistoryItem(
+                        id = "test",
+                        ownerId = 0,
+                        film = DBFilm()
+                    ),
                     onSeasonChange = {},
                     onEpisodeClick = {},
                     onClose = {}

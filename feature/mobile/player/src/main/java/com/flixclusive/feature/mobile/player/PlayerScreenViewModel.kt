@@ -6,17 +6,18 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.player.BasePlayerViewModel
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.PlayerSnackbarMessage
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
+import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.film.TvShow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -37,6 +38,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     getMediaLinksUseCase: GetMediaLinksUseCase,
     watchHistoryRepository: WatchHistoryRepository,
     watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
+    userSessionManager: UserSessionManager,
 ) : BasePlayerViewModel(
     args = savedStateHandle.navArgs<PlayerScreenNavArgs>(),
     client = client,
@@ -47,6 +49,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     seasonProviderUseCase = seasonProvider,
     getMediaLinksUseCase = getMediaLinksUseCase,
     watchTimeUpdaterUseCase = watchTimeUpdaterUseCase,
+    userSessionManager = userSessionManager,
 ) {
     val snackbarQueue = mutableStateListOf<PlayerSnackbarMessage>()
 

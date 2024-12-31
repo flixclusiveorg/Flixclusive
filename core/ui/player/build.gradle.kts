@@ -16,6 +16,7 @@ dependencies {
     api(projects.domain.tmdb)
     api(projects.domain.database)
     api(projects.domain.provider)
+    api(projects.domain.user)
 
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)

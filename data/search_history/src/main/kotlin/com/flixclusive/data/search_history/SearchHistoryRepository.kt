@@ -6,9 +6,9 @@ import kotlinx.coroutines.flow.Flow
 interface SearchHistoryRepository {
     suspend fun insert(item: SearchHistory)
 
-    suspend fun remove(id: Int, ownerId: Int = 1)
+    suspend fun remove(id: Int, ownerId: Int)
 
-    fun getAllItemsInFlow(ownerId: Int = 1): Flow<List<SearchHistory>>
+    fun getAllItemsInFlow(ownerId: Int): Flow<List<SearchHistory>>
 
-    suspend fun clearAll(ownerId: Int = 1)
+    suspend fun clearAll(ownerId: Int)
 }

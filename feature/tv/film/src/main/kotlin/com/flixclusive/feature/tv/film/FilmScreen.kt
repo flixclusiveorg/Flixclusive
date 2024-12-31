@@ -305,7 +305,7 @@ internal fun FilmScreen(
                                         isOverviewShown = false
                                         isPlayerRunning = true
                                     },
-                                    onWatchlistClick = viewModel::onWatchlistButtonClick,
+                                    onWatchlistClick = viewModel::toggleAsWatchList,
                                     goBack = navigator::goBack,
                                     onSeeMoreEpisodes = {
                                         isOverviewShown = false

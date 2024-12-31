@@ -48,14 +48,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenNavigator
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.feature.mobile.film.component.EpisodeCard
 import com.flixclusive.feature.mobile.film.component.EpisodeCardPlaceholder
 import com.flixclusive.feature.mobile.film.component.FilmOverview
@@ -66,6 +65,7 @@ import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.util.FilmType
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
 
@@ -182,7 +182,7 @@ internal fun FilmScreen(
                                 onPlayClick = {
                                     play(film, null)
                                 },
-                                onWatchlistClick = viewModel::onWatchlistButtonClick
+                                onWatchlistClick = viewModel::toggleAsWatchList
                             )
                         }
 

@@ -13,6 +13,8 @@ import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.AppSettingsProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -26,8 +28,12 @@ internal class SettingsViewModel @Inject constructor(
     private val searchHistoryRepository: SearchHistoryRepository,
     private val getMediaLinksUseCase: GetMediaLinksUseCase
 ) : ViewModel() {
-    val searchHistoryCount = searchHistoryRepository.getAllItemsInFlow()
-        .map { it.size }
+    val searchHistoryCount = userSessionManager.currentUser
+        .filterNotNull()
+        .flatMapLatest { user ->
+            searchHistoryRepository.getAllItemsInFlow(ownerId = user.id)
+                .map { it.size }
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -68,7 +74,10 @@ internal class SettingsViewModel @Inject constructor(
 
     fun clearSearchHistory() {
         viewModelScope.launch {
-            searchHistoryRepository.clearAll()
+            val userId = userSessionManager.currentUser.value?.id
+                ?: return@launch
+
+            searchHistoryRepository.clearAll(userId)
         }
     }
 

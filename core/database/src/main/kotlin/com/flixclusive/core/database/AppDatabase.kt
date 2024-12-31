@@ -13,7 +13,8 @@ import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
 import com.flixclusive.core.database.migration.Schema4to5
-import com.flixclusive.core.database.migration.UserPinUpdateSchema5to6
+import com.flixclusive.core.database.migration.Schema5to6
+import com.flixclusive.core.database.migration.Schema6to7
 import com.flixclusive.core.database.util.DateConverter
 import com.flixclusive.core.database.util.FilmDataConverter
 import com.flixclusive.core.database.util.WatchHistoryItemConverter
@@ -28,7 +29,7 @@ private const val APP_DATABASE = "app_database"
 
 @Database(
     entities = [WatchHistoryItem::class, WatchlistItem::class, User::class, SearchHistory::class],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 @TypeConverters(FilmDataConverter::class, WatchHistoryItemConverter::class, DateConverter::class)
@@ -59,7 +60,8 @@ internal abstract class AppDatabase : RoomDatabase() {
                     Schema2to3(),
                     Schema3to4(),
                     Schema4to5(),
-                    UserPinUpdateSchema5to6(),
+                    Schema5to6(),
+                    Schema6to7(),
                 )
                 .build()
                 .also { INSTANCE = it }

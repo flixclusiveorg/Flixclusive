@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.user.UserRepository
+import com.flixclusive.data.watch_history.WatchHistoryRepository
+import com.flixclusive.data.watchlist.WatchlistRepository
 import com.flixclusive.model.database.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -32,6 +34,8 @@ internal sealed class Library {
 internal class UserEditViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val searchHistoryRepository: SearchHistoryRepository,
+    private val watchlistRepository: WatchlistRepository,
+    private val watchHistoryRepository: WatchHistoryRepository
 ) : ViewModel() {
     fun onRemoveUser(userId: Int) {
         viewModelScope.launch {
@@ -51,7 +55,10 @@ internal class UserEditViewModel @Inject constructor(
         }
     }
 
-    fun onClearLibraries(userId: Int, libraries: List<Library>) {
+    fun onClearLibraries(
+        userId: Int,
+        libraries: List<Library>
+    ) {
 
     }
 }

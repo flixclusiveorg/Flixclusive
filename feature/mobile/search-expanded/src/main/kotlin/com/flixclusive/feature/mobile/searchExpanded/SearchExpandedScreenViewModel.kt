@@ -12,28 +12,31 @@ import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.util.PagingState
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
-import com.flixclusive.provider.filter.BottomSheetComponent
-import com.flixclusive.provider.filter.FilterGroup
-import com.flixclusive.provider.filter.FilterList
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
+import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
-import com.flixclusive.model.provider.Status
 import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData
+import com.flixclusive.model.provider.Status
 import com.flixclusive.provider.ProviderApi
+import com.flixclusive.provider.filter.BottomSheetComponent
+import com.flixclusive.provider.filter.FilterGroup
+import com.flixclusive.provider.filter.FilterList
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -42,6 +45,7 @@ import javax.inject.Inject
 internal class SearchExpandedScreenViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     private val searchHistoryRepository: SearchHistoryRepository,
+    private val userSessionManager: UserSessionManager,
     providerManager: ProviderManager,
     appSettingsManager: AppSettingsManager
 ) : ViewModel() {
@@ -58,7 +62,12 @@ internal class SearchExpandedScreenViewModel @Inject constructor(
         }
     }
 
-    val searchHistory = searchHistoryRepository.getAllItemsInFlow()
+    val userId: Int? get() = userSessionManager.currentUser.value?.id
+    val searchHistory = userSessionManager.currentUser
+        .filterNotNull()
+        .flatMapLatest { user ->
+            searchHistoryRepository.getAllItemsInFlow(ownerId = user.id)
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -115,7 +124,10 @@ internal class SearchExpandedScreenViewModel @Inject constructor(
 
             if (searchQuery.isNotEmpty()) {
                 searchHistoryRepository.insert(
-                    SearchHistory(query = searchQuery)
+                    SearchHistory(
+                        query = searchQuery,
+                        ownerId = userId ?: return@launch
+                    )
                 )
             }
 
@@ -164,7 +176,10 @@ internal class SearchExpandedScreenViewModel @Inject constructor(
 
     fun deleteSearchHistoryItem(item: SearchHistory) {
         viewModelScope.launch {
-            searchHistoryRepository.remove(id = item.id)
+            searchHistoryRepository.remove(
+                id = item.id,
+                ownerId = userId ?: return@launch
+            )
         }
     }
 

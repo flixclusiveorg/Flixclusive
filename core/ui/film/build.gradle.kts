@@ -15,6 +15,7 @@ dependencies {
     api(projects.data.watchHistory)
     api(projects.domain.database)
     api(projects.domain.tmdb)
+    api(projects.domain.user)
 
     api(libs.lifecycle.viewModelCompose)
 }

@@ -9,14 +9,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.player.BasePlayerViewModel
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
+import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.feature.tv.player.di.ViewModelFactoryProvider
 import com.flixclusive.model.datastore.AppSettings
 import dagger.assisted.Assisted
@@ -47,6 +48,7 @@ internal class PlayerScreenViewModel @AssistedInject constructor(
     getMediaLinksUseCase: GetMediaLinksUseCase,
     watchHistoryRepository: WatchHistoryRepository,
     watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
+    userSessionManager: UserSessionManager
 ) : BasePlayerViewModel(
     appSettingsManager = appSettingsManager,
     args = args,
@@ -57,6 +59,7 @@ internal class PlayerScreenViewModel @AssistedInject constructor(
     getMediaLinksUseCase = getMediaLinksUseCase,
     watchHistoryRepository = watchHistoryRepository,
     watchTimeUpdaterUseCase = watchTimeUpdaterUseCase,
+    userSessionManager = userSessionManager,
 ) {
 
     @AssistedFactory

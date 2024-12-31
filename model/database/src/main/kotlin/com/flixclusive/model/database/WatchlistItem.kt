@@ -9,15 +9,16 @@ import java.util.Date
 
 @Entity(tableName = "watchlist")
 data class WatchlistItem(
-    @PrimaryKey val id: String = "",
-    val ownerId: Int = 1,
-    val addedOn: Date = Date(),
-    val film: DBFilm = DBFilm()
+    @PrimaryKey val id: String,
+    val ownerId: Int,
+    val film: DBFilm,
+    val addedOn: Date = Date()
 )
 
-fun Film.toWatchlistItem(): WatchlistItem {
+fun Film.toWatchlistItem(ownerId: Int): WatchlistItem {
     return WatchlistItem(
         id = identifier,
+        ownerId = ownerId,
         film = this.toFilmInstance()
     )
 }

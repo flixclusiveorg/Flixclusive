@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.core.ui.tv)
     implementation(projects.data.network)
     implementation(projects.data.watchHistory)
+    implementation(projects.domain.user)
 
     implementation(libs.compose.runtime)
     implementation(libs.lifecycle.viewModelCompose)

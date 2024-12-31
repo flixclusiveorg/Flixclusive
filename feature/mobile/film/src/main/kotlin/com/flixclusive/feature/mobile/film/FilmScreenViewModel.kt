@@ -8,6 +8,7 @@ import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.ToggleWatchlistStatusUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
+import com.flixclusive.domain.user.UserSessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -18,12 +19,14 @@ internal class FilmScreenViewModel @Inject constructor(
     filmProvider: FilmProviderUseCase,
     toggleWatchlistStatusUseCase: ToggleWatchlistStatusUseCase,
     savedStateHandle: SavedStateHandle,
-    appSettingsManager: AppSettingsManager
+    appSettingsManager: AppSettingsManager,
+    userSessionManager: UserSessionManager,
 ) : BaseFilmScreenViewModel(
     partiallyDetailedFilm = savedStateHandle.navArgs<FilmScreenNavArgs>().film,
     watchHistoryRepository = watchHistoryRepository,
     seasonProvider = seasonProvider,
     filmProvider = filmProvider,
     toggleWatchlistStatusUseCase = toggleWatchlistStatusUseCase,
-    appSettingsManager = appSettingsManager
+    appSettingsManager = appSettingsManager,
+    userSessionManager = userSessionManager
 )

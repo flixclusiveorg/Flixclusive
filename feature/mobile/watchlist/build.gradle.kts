@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.ui.mobile)
     implementation(projects.data.watchlist)
+    implementation(projects.domain.user)
 
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)

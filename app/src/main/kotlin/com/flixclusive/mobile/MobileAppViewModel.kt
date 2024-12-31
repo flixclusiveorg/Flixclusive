@@ -17,6 +17,7 @@ import com.flixclusive.data.watchlist.WatchlistRepository
 import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
+import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.toWatchlistItem
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmDetails
@@ -47,6 +48,7 @@ internal class MobileAppViewModel @Inject constructor(
     private val watchlistRepository: WatchlistRepository,
     private val appSettingsManager: AppSettingsManager,
     private val appConfigurationManager: AppConfigurationManager,
+    private val userSessionManager: UserSessionManager,
     internetMonitor: InternetMonitor,
 ) : ViewModel() {
     private var onFilmLongClickJob: Job? = null
@@ -116,8 +118,16 @@ internal class MobileAppViewModel @Inject constructor(
             return
 
         onFilmLongClickJob = viewModelScope.launch {
-            val isInWatchlist = watchlistRepository.getWatchlistItemById(film.identifier) != null
-            val isInWatchHistory = watchHistoryRepository.getWatchHistoryItemById(film.identifier) != null
+            val userId = getCurrentSignedInUserId() ?: return@launch
+
+            val isInWatchlist = watchlistRepository.getWatchlistItemById(
+                itemId = film.identifier,
+                ownerId = userId
+            ) != null
+            val isInWatchHistory = watchHistoryRepository.getWatchHistoryItemById(
+                itemId = film.identifier,
+                ownerId = userId
+            ) != null
 
             _filmToPreview.update { film }
             _uiState.update {
@@ -143,11 +153,15 @@ internal class MobileAppViewModel @Inject constructor(
 
         onWatchlistClickJob = viewModelScope.launch {
             _filmToPreview.value?.let { film ->
+                val userId = userSessionManager.currentUser.first()?.id ?: return@launch
+
                 val isInWatchlist = _uiState.value.isLongClickedFilmInWatchlist
                 if(isInWatchlist) {
-                    watchlistRepository.removeById(film.identifier)
+                    watchlistRepository.removeById(
+                        itemId = film.identifier, ownerId = userId
+                    )
                 } else {
-                    watchlistRepository.insert(film.toWatchlistItem())
+                    watchlistRepository.insert(film.toWatchlistItem(userId))
                 }
 
                 _uiState.update {
@@ -162,6 +176,7 @@ internal class MobileAppViewModel @Inject constructor(
             return
 
         onRemoveFromWatchHistoryJob = viewModelScope.launch {
+            val userId = getCurrentSignedInUserId() ?: return@launch
             val isLongClickedFilmInWatchHistory = _uiState.value.isLongClickedFilmInWatchHistory
 
             if(isLongClickedFilmInWatchHistory) {
@@ -170,7 +185,9 @@ internal class MobileAppViewModel @Inject constructor(
                         it.copy(isLongClickedFilmInWatchHistory = false)
                     }
 
-                    watchHistoryRepository.deleteById(film.identifier)
+                    watchHistoryRepository.deleteById(
+                        itemId = film.identifier, ownerId = userId
+                    )
                 }
             }
         }
@@ -187,6 +204,7 @@ internal class MobileAppViewModel @Inject constructor(
             updateVideoDataDialogState(MediaLinkResourceState.Fetching(LocaleR.string.film_data_fetching))
 
             var filmToShow = film ?: _filmToPreview.value ?: return@launch
+            val userId = getCurrentSignedInUserId() ?: return@launch
 
             val response = when {
                 filmToShow !is FilmDetails -> {
@@ -203,8 +221,9 @@ internal class MobileAppViewModel @Inject constructor(
             filmToShow = response.data
                 ?: return@launch updateVideoDataDialogState(errorFetchingFilm)
 
-            val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(filmToShow.identifier)
-                ?.copy(film = filmToShow.toFilmInstance())
+            val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(
+                itemId = filmToShow.identifier, ownerId = userId
+            )?.copy(film = filmToShow.toFilmInstance())
                 ?.also { item ->
                     viewModelScope.launch {
                         watchHistoryRepository.insert(item)
@@ -253,5 +272,8 @@ internal class MobileAppViewModel @Inject constructor(
             }
         }
     }
+
+    private fun getCurrentSignedInUserId(): Int?
+        = userSessionManager.currentUser.value?.id
 }
 
