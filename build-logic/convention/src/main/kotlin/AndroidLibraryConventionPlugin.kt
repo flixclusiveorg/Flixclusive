@@ -17,6 +17,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
             extensions.configure<LibraryExtension> {
                 configureKotlinAndroid(commonExtension = this)
+                testOptions.targetSdk = libs.findVersion("compileSdk").get().toString().toInt()
             }
 
             dependencies {
