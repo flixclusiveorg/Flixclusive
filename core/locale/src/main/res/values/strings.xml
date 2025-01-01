@@ -150,6 +150,8 @@
     <string name="description">Description</string>
     <string name="disable_warning">Disable warning</string>
     <string name="doh">DNS over HTTPS</string>
+    <string name="drop_shadow">Drop shadow</string>
+    <string name="outline">Outline</string>
     <string name="edit">Edit</string>
     <string name="edit_profile">Edit profile</string>
     <string name="episodes">Episodes</string>

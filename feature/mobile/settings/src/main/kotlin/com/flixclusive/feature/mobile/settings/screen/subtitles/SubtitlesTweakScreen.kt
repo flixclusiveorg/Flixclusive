@@ -1,7 +1,9 @@
 package com.flixclusive.feature.mobile.settings.screen.subtitles
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -17,6 +19,7 @@ import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
+import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.getCurrentSettingsViewModel
 import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.player.CaptionStylePreference
@@ -77,6 +80,17 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
         )
     }
 
+    @OptIn(ExperimentalMaterial3AdaptiveApi::class)
+    @Composable
+    override fun Content() {
+        val navigator = LocalScaffoldNavigator.current
+        BackHandler {
+            navigator?.navigateBack()
+        }
+
+        super.Content()
+    }
+
 
     @Composable
     private fun getUiTweaks(): TweakGroup {
@@ -104,9 +118,9 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
             tweaks = persistentListOf(
                 TweakUI.SliderTweak(
                     title = stringResource(LocaleR.string.subtitles_size),
-                    description = "${fontSize}sp",
+                    description = "${String.format(Locale.getDefault(), "%.2f", fontSize.floatValue)} sp",
                     value = fontSize,
-                    range = 20F..80F,
+                    range = 11F..80F,
                     onTweaked = {
                         onTweaked(appSettings.copy(subtitleSize = it))
                         true
@@ -114,7 +128,7 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
                 ),
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.subtitles_font_style),
-                    description = fontStyle.toString(),
+                    description = fontStyle.value.toString(),
                     value = fontStyle,
                     options = fontStyles,
                     endContent = {
@@ -145,7 +159,7 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
                 ),
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.subtitles_edge_type),
-                    description = appSettings.subtitleEdgeType.toString(),
+                    description = appSettings.subtitleEdgeType.toUiText().asString(),
                     value = edgeType,
                     options = edgeTypes,
                     onTweaked = {
