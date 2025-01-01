@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
@@ -44,6 +44,7 @@ import com.flixclusive.feature.mobile.settings.util.UiUtil.getEmphasizedLabel
 import kotlinx.coroutines.launch
 
 internal val TweakPaddingHorizontal = 10.dp
+private val TweakGroupSpacing = 25.dp
 
 @Composable
 internal fun TweakScaffold(
@@ -63,7 +64,7 @@ internal fun TweakScaffold(
         }
 
         item {
-            Spacer(modifier = Modifier.height(getAdaptiveDp(50.dp)))
+            Spacer(modifier = Modifier.height(TweakGroupSpacing))
         }
 
         renderTweak(tweaks)
@@ -77,8 +78,7 @@ private fun SubScreenHeader(
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(15.dp),
-        modifier = Modifier
-            .fillMaxAdaptiveWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = title,
@@ -113,10 +113,11 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                         title = tweak.title,
                         description = tweak.description,
                         titleStyle = getEmphasizedLabel(
-                            size = 20.sp, letterSpacing = 0.1.sp
-                        ),
+                            size = 20.sp, letterSpacing = 0.1.sp,
+                        ).copy(color = LocalContentColor.current.onMediumEmphasis(0.8F)),
                         modifier = Modifier.padding(
-                            bottom = 10.dp, top = 5.dp
+                            bottom = getAdaptiveDp(10.dp),
+                            top = TweakGroupSpacing
                         )
                     )
                 }
@@ -127,7 +128,7 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
 
                 item {
                     if (i < tweaks.lastIndex) {
-                        Spacer(modifier = Modifier.height(getAdaptiveDp(16.dp)))
+                        Spacer(modifier = Modifier.height(getAdaptiveDp(TweakGroupSpacing)))
                     }
                 }
             }

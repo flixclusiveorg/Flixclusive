@@ -49,6 +49,7 @@ internal object PlayerTweakScreen : BaseTweakScreen {
     override fun getIconPainter()
         = painterResource(UiCommonR.drawable.play_outline_circle)
 
+    /* TODO: Optimize Player settings screen */
     @Composable
     override fun getTweaks(): List<Tweak> {
         return listOf(
@@ -135,7 +136,6 @@ internal object PlayerTweakScreen : BaseTweakScreen {
                 TweakUI.ClickableTweak(
                     title = stringResource(LocaleR.string.subtitle),
                     description = stringResource(LocaleR.string.subtitles_settings_content_desc),
-                    iconId = UiCommonR.drawable.outline_subtitles_24,
                     onClick = {
                         navigator.navigateTo(
                             pane = ListDetailPaneScaffoldRole.Detail,
