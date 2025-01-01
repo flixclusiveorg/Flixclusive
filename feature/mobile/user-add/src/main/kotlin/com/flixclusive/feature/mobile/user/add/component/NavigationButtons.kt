@@ -23,13 +23,13 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdapti
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.LocalUserToAdd
 import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun NavigationButtons(
     modifier: Modifier = Modifier,
     canSkip: Boolean,
+    disableNextButton: Boolean,
     isFinalStep: Boolean,
     onNext: () -> Unit
 ) {
@@ -68,7 +68,7 @@ internal fun NavigationButtons(
 
         FilledTonalButton(
             onClick = onNext,
-            enabled = LocalUserToAdd.current.value.name.isNotEmpty(),
+            enabled = !disableNextButton,
             shape = MaterialTheme.shapes.large,
             modifier = adaptiveHeight
                 .weight(weight)

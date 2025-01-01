@@ -249,8 +249,15 @@ fun AddUserScreen(
                     }
                 }
 
-                NavigationButtons( /* TODO: MAKE FINISH BUTTON DISABLED WHEN PIN SETUP IS NOT DONE */
+                val disableNextButton = when (screens[currentScreen]) {
+                    is NameScreen -> user.value.name.isEmpty()
+                    is PinScreen -> user.value.pin == null
+                    else -> false
+                }
+
+                NavigationButtons(
                     canSkip = canSkip,
+                    disableNextButton = disableNextButton,
                     isFinalStep = currentScreen == screens.lastIndex,
                     onNext = {
                         if (currentScreen == screens.lastIndex) {
