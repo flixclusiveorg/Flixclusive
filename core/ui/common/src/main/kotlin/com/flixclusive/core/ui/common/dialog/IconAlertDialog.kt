@@ -48,7 +48,7 @@ fun IconAlertDialog(
 ) {
     val buttonMinHeight = 50.dp
     val cornerSize = CornerSize(
-        (ALERT_DIALOG_ROUNDNESS_PERCENTAGE * 2).dp
+        (ALERT_DIALOG_CORNER_SIZE * 2).dp
     )
     val baseShape = MaterialTheme.shapes.medium
     val buttonShape = baseShape.let {

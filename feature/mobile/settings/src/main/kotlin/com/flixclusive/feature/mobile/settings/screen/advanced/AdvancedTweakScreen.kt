@@ -38,11 +38,6 @@ internal object AdvancedTweakScreen : BaseTweakScreen {
         = listOf(getNetworkTweaks())
 
     @Composable
-    override fun Content() {
-        TODO("Not yet implemented")
-    }
-
-    @Composable
     private fun getNetworkTweaks(): TweakGroup {
         val context = LocalContext.current
 

@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.settings
+package com.flixclusive.feature.mobile.settings.screen.root
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
@@ -29,7 +29,6 @@ import androidx.palette.graphics.Palette
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
 import com.flixclusive.core.ui.common.user.getAvatarResource
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettingsProvider
@@ -62,65 +61,66 @@ internal fun SettingsScreen(
         scaffoldNavigator.navigateBack()
     }
 
-    CompositionLocalProvider(
-        LocalAppSettings provides appSettings,
-        LocalAppSettingsProvider provides appSettingsProvider,
-        LocalScaffoldNavigator provides scaffoldNavigator,
-        LocalSettingsViewModel provides viewModel,
-    ) {
-        AnimatedContent(targetState = isListAndDetailVisible, label = "settings screen") {
-            ListDetailPaneScaffold(
-                modifier = Modifier.drawBehind {
-                    if (isListAndDetailVisible) {
-                        drawRect(backgroundBrush)
-                    }
-                },
-                directive = scaffoldNavigator.scaffoldDirective,
-                value = scaffoldNavigator.scaffoldValue,
-                listPane = {
-                    val isDetailVisible =
-                        scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
+    if (currentUser != null) {
+        CompositionLocalProvider(
+            LocalAppSettings provides appSettings,
+            LocalAppSettingsProvider provides appSettingsProvider,
+            LocalScaffoldNavigator provides scaffoldNavigator,
+            LocalSettingsViewModel provides viewModel,
+        ) {
+            AnimatedContent(targetState = isListAndDetailVisible, label = "settings screen") {
+                ListDetailPaneScaffold(
+                    modifier = Modifier.drawBehind {
+                        if (isListAndDetailVisible) {
+                            drawRect(backgroundBrush)
+                        }
+                    },
+                    directive = scaffoldNavigator.scaffoldDirective,
+                    value = scaffoldNavigator.scaffoldValue,
+                    listPane = {
+                        val isDetailVisible =
+                            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
 
-                    AnimatedPane {
-                        ListContent(
-                            currentUser = { currentUser ?: getDummyUser() /*TODO: Remove elvis fallback */ },
-                            searchHistoryCount = searchHistoryCount,
-                            onClearSearchHistory = viewModel::clearSearchHistory,
-                            navigator = navigator,
-                            onItemClick = { item ->
-                                scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
-                            },
-                            modifier = Modifier.drawBehind {
-                                if (!isListAndDetailVisible) {
-                                    drawRect(backgroundBrush)
-                                }
-                            },
-                        )
-                    }
-                },
-                detailPane = {
-                    val isListVisible =
-                        scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
+                        AnimatedPane {
+                            ListContent(
+                                currentUser = { currentUser!! },
+                                searchHistoryCount = searchHistoryCount,
+                                onClearSearchHistory = viewModel::clearSearchHistory,
+                                navigator = navigator,
+                                onItemClick = { item ->
+                                    scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
+                                },
+                                modifier = Modifier.drawBehind {
+                                    if (!isListAndDetailVisible) {
+                                        drawRect(backgroundBrush)
+                                    }
+                                },
+                            )
+                        }
+                    },
+                    detailPane = {
+                        val isListVisible =
+                            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
 
-                    AnimatedPane {
-                        DetailsScaffold(
-                            isListAndDetailVisible = isListAndDetailVisible,
-                            isDetailsVisible = !isListVisible,
-                            navigateBack = {
-                                if (scaffoldNavigator.canNavigateBack()) {
-                                    scaffoldNavigator.navigateBack()
+                        AnimatedPane {
+                            DetailsScaffold(
+                                isListAndDetailVisible = isListAndDetailVisible,
+                                isDetailsVisible = !isListVisible,
+                                navigateBack = {
+                                    if (scaffoldNavigator.canNavigateBack()) {
+                                        scaffoldNavigator.navigateBack()
+                                    }
+                                },
+                                content = {
+                                    scaffoldNavigator.currentDestination?.content?.Content()
                                 }
-                            },
-                            content = {
-                                scaffoldNavigator.currentDestination?.content?.Content()
-                            }
-                        )
+                            )
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     }
-
 }
 
 @Composable

@@ -16,7 +16,7 @@ import com.flixclusive.feature.mobile.repository.search.destinations.RepositoryS
 import com.flixclusive.feature.mobile.search.destinations.SearchScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
-import com.flixclusive.feature.mobile.settings.destinations.SettingsScreenDestination
+import com.flixclusive.feature.mobile.settings.screen.root.destinations.SettingsScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination

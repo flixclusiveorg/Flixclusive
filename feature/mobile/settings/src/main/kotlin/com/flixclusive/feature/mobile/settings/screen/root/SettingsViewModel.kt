@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.settings
+package com.flixclusive.feature.mobile.settings.screen.root
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue

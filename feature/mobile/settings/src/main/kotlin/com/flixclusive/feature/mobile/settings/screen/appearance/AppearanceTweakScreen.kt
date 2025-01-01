@@ -34,11 +34,6 @@ internal object AppearanceTweakScreen : BaseTweakScreen {
         = listOf(getGeneralTweaks())
 
     @Composable
-    override fun Content() {
-        TODO("Not yet implemented")
-    }
-
-    @Composable
     private fun getGeneralTweaks(): TweakGroup {
         val appSettings = LocalAppSettings.current
         val viewModel = getCurrentSettingsViewModel()

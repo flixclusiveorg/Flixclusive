@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.painter.Painter
 import com.flixclusive.feature.mobile.settings.Tweak
+import com.flixclusive.feature.mobile.settings.TweakScaffold
 
 internal interface BaseTweakScreen {
     @Composable
@@ -22,5 +23,11 @@ internal interface BaseTweakScreen {
     fun getTweaks(): List<Tweak>
 
     @Composable
-    fun Content()
+    fun Content() {
+        TweakScaffold(
+            title = getTitle(),
+            description = getDescription(),
+            tweaksProvider = { getTweaks() }
+        )
+    }
 }

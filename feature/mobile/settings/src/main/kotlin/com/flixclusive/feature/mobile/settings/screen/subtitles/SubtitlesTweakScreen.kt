@@ -77,11 +77,6 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
         )
     }
 
-    @Composable
-    override fun Content() {
-        TODO("Not yet implemented")
-    }
-
 
     @Composable
     private fun getUiTweaks(): TweakGroup {

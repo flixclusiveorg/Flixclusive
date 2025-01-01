@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.settings
+package com.flixclusive.feature.mobile.settings.screen.root
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background

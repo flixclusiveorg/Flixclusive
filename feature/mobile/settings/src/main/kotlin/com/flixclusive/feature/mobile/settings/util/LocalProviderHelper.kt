@@ -4,8 +4,8 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
-import com.flixclusive.feature.mobile.settings.SettingsViewModel
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.root.SettingsViewModel
 import com.flixclusive.model.datastore.AppSettings
 import com.flixclusive.model.datastore.AppSettingsProvider
 

@@ -38,20 +38,20 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_ROUNDNESS_PERCENTAGE
+import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_CORNER_SIZE
 import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.domain.provider.test.ProviderTestCaseOutput
 import com.flixclusive.domain.provider.test.TestStatus
 import com.flixclusive.model.provider.ProviderData
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun FullLogDialog(
@@ -63,7 +63,7 @@ internal fun FullLogDialog(
     val clipboardManager = rememberClipboardManager()
 
     val bottomCornerSize = CornerSize(
-        (ALERT_DIALOG_ROUNDNESS_PERCENTAGE * 2.5).dp
+        (ALERT_DIALOG_CORNER_SIZE * 2.5).dp
     )
     val labels = getFullLogOtherLabels(
         provider = provider,

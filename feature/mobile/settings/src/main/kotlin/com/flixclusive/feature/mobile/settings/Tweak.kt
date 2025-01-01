@@ -48,9 +48,9 @@ sealed class TweakUI<T> : Tweak() {
         override val title: String,
         override val description: String? = null,
         override val iconId: Int? = null,
+        override val enabled: Boolean = true,
         val onClick: () -> Unit,
     ) : TweakUI<Unit>() {
-        override val enabled: Boolean = true
         override val onTweaked: suspend (newValue: Unit) -> Boolean = { true }
     }
 
@@ -73,36 +73,46 @@ sealed class TweakUI<T> : Tweak() {
         override val onTweaked: suspend (newValue: Float) -> Boolean = { true }
     ) : TweakUI<Float>()
 
-    data class ListTweak<T>(
-        val value: MutableState<T>,
-        val options: ImmutableMap<T, String>,
+    data class ListTweak<S>(
+        val value: MutableState<S>,
+        val options: ImmutableMap<S, String>,
         val endContent: @Composable (() -> Unit)? = null,
         override val title: String,
         override val description: String? = null,
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
-        override val onTweaked: suspend (newValue: T) -> Boolean = { true }
-    ) : TweakUI<T>()
+        override val onTweaked: suspend (newValue: S) -> Boolean = { true }
+    ) : TweakUI<S>() {
+        internal fun internalSet(newValue: Any) {
+            value.value = newValue as S
+        }
+        internal suspend fun internalOnValueChanged(newValue: Any) = onTweaked(newValue as S)
+    }
 
-    data class MultiSelectListTweak<T>(
-        val value: MutableState<Set<T>>,
-        val options: ImmutableMap<T, String>,
+    data class MultiSelectListTweak<S>(
+        val values: MutableState<Set<S>>,
+        val options: ImmutableMap<S, String>,
         val endContent: @Composable (() -> Unit)? = null,
         override val title: String,
         override val description: String? = null,
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
-        override val onTweaked: suspend (newValue: T) -> Boolean = { true }
-    ) : TweakUI<T>()
+        override val onTweaked: suspend (newValue: Set<S>) -> Boolean = { true }
+    ) : TweakUI<Set<S>>() {
+        internal fun internalSet(newValue: Set<Any?>) {
+            values.value = newValue as Set<S>
+        }
+        internal suspend fun internalOnValueChanged(newValue: Set<Any?>) = onTweaked(newValue as Set<S>)
+    }
 
-    data class EditTextTweak<T>(
+    data class TextFieldTweak(
         val value: MutableState<String>,
         override val title: String,
         override val description: String? = null,
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
-        override val onTweaked: suspend (newValue: T) -> Boolean = { true }
-    ) : TweakUI<T>()
+        override val onTweaked: suspend (newValue: String) -> Boolean = { true }
+    ) : TweakUI<String>()
 
     data class CustomContentTweak<T>(
         val value: MutableState<T>,

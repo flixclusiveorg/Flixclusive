@@ -23,7 +23,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 
-const val ALERT_DIALOG_ROUNDNESS_PERCENTAGE = 10
+const val ALERT_DIALOG_CORNER_SIZE = 10
+
+// TODO: Fix CornerSize UI issue
 
 /**
  *
@@ -38,10 +40,11 @@ fun CustomBaseAlertDialog(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     BasicAlertDialog(
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
+        properties = dialogProperties,
     ) {
         Surface(
-            shape = RoundedCornerShape(ALERT_DIALOG_ROUNDNESS_PERCENTAGE),
+            shape = RoundedCornerShape(ALERT_DIALOG_CORNER_SIZE),
         ) {
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,

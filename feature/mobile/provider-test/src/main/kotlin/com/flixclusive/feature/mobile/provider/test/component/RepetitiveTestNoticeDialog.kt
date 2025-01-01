@@ -21,7 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_ROUNDNESS_PERCENTAGE
+import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_CORNER_SIZE
 import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.locale.R as LocaleR
 
@@ -33,7 +33,7 @@ internal fun RepetitiveTestNoticeDialog(
 ) {
     val buttonMinHeight = 50.dp
     val buttonShape = MaterialTheme.shapes.medium
-    val bottomCornerSize = CornerSize((ALERT_DIALOG_ROUNDNESS_PERCENTAGE * 2).dp)
+    val bottomCornerSize = CornerSize((ALERT_DIALOG_CORNER_SIZE * 2).dp)
 
     CustomBaseAlertDialog(
         onDismiss = onDismiss,

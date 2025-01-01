@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.locale.R
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_ROUNDNESS_PERCENTAGE
+import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_CORNER_SIZE
 import com.flixclusive.core.ui.common.dialog.CharSequenceText
 import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.ui.common.util.IconResource
@@ -97,7 +97,7 @@ internal class DataTweak(
             val scope = rememberCoroutineScope()
             val buttonMinHeight = 50.dp
             val cornerSize = CornerSize(
-                (ALERT_DIALOG_ROUNDNESS_PERCENTAGE * 2).dp
+                (ALERT_DIALOG_CORNER_SIZE * 2).dp
             )
             val shape = MaterialTheme.shapes.medium
             val buttonShape = shape.let {

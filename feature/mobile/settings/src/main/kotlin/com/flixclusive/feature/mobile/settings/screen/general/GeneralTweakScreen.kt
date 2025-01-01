@@ -4,11 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.flixclusive.feature.mobile.settings.Tweak
+import com.flixclusive.feature.mobile.settings.TweakScaffold
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
@@ -18,7 +18,10 @@ import kotlinx.collections.immutable.persistentListOf
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-internal object GeneralTweakScreen : BaseTweakScreen {
+internal class GeneralTweakScreen(
+    val showPrereleaseWarning: MutableState<Boolean>
+) : BaseTweakScreen {
+
     @Composable
     override fun getTitle(): String
         = stringResource(LocaleR.string.general)
@@ -42,28 +45,32 @@ internal object GeneralTweakScreen : BaseTweakScreen {
         val viewModel = getCurrentSettingsViewModel()
         val onTweaked = viewModel::onChangeAppSettings
 
-        val usePreReleaseUpdates = rememberSaveable { mutableStateOf(false) }
-
-        if (usePreReleaseUpdates.value) {
+        if (showPrereleaseWarning.value) {
             PreReleaseWarningDialog(
                 onConfirm = {
                     onTweaked(appSettings.copy(isUsingPrereleaseUpdates = true))
-                    usePreReleaseUpdates.value = false
+                    showPrereleaseWarning.value = false
                 },
-                onDismiss = { usePreReleaseUpdates.value = false }
+                onDismiss = { showPrereleaseWarning.value = false }
             )
         }
+
+        TweakScaffold(
+            title = getTitle(),
+            description = getDescription(),
+            tweaksProvider = { getTweaks() }
+        )
     }
 
     @Composable
-    private fun getUpdatesTweaks(
-        showPreReleaseWarningDialog: MutableState<Boolean> = remember { mutableStateOf(false) },
-    ): ImmutableList<TweakUI<out Any>> {
+    private fun getUpdatesTweaks(): ImmutableList<TweakUI<out Any>> {
         val appSettings = LocalAppSettings.current
         val viewModel = getCurrentSettingsViewModel()
         val onTweaked = viewModel::onChangeAppSettings
 
-        val usePreReleaseUpdates = remember { mutableStateOf(appSettings.isUsingPrereleaseUpdates) }
+        val usePreReleaseUpdates = remember(appSettings.isUsingPrereleaseUpdates) {
+            mutableStateOf(appSettings.isUsingPrereleaseUpdates)
+        }
 
         return persistentListOf(
             TweakUI.SwitchTweak(
@@ -79,13 +86,13 @@ internal object GeneralTweakScreen : BaseTweakScreen {
                 title = stringResource(LocaleR.string.sign_up_prerelease),
                 description = stringResource(LocaleR.string.signup_prerelease_updates_desc),
                 onTweaked = { state ->
-                    if (!state) {
-                        showPreReleaseWarningDialog.value = true
+                    return@SwitchTweak if (state && !showPrereleaseWarning.value) {
+                        showPrereleaseWarning.value = true
+                        false
                     } else {
-                        onTweaked(appSettings.copy(isUsingPrereleaseUpdates = true))
+                        onTweaked(appSettings.copy(isUsingPrereleaseUpdates = false))
+                        true
                     }
-
-                    true
                 }
             ),
             TweakUI.SwitchTweak(

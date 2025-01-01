@@ -5,15 +5,26 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -33,6 +44,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
@@ -40,6 +52,59 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import com.flixclusive.core.theme.lightGray
 
+/**
+ * For TextField on AppBar, this modifier will request focus
+ * to the element the first time it's composed.
+ */
+fun Modifier.showSoftKeyboard(show: Boolean): Modifier = if (show) {
+    composed {
+        val focusRequester = remember { FocusRequester() }
+        var openKeyboard by rememberSaveable { mutableStateOf(show) }
+        LaunchedEffect(focusRequester) {
+            if (openKeyboard) {
+                focusRequester.requestFocus()
+                openKeyboard = false
+            }
+        }
+
+        Modifier.focusRequester(focusRequester)
+    }
+} else {
+    this
+}
+
+/**
+ * For TextField, this modifier will clear focus when soft
+ * keyboard is hidden.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+fun Modifier.clearFocusOnSoftKeyboardHide(
+    onFocusCleared: (() -> Unit)? = null,
+): Modifier = composed {
+    var isFocused by remember { mutableStateOf(false) }
+    var keyboardShowedSinceFocused by remember { mutableStateOf(false) }
+    if (isFocused) {
+        val imeVisible = WindowInsets.isImeVisible
+        val focusManager = LocalFocusManager.current
+        LaunchedEffect(imeVisible) {
+            if (imeVisible) {
+                keyboardShowedSinceFocused = true
+            } else if (keyboardShowedSinceFocused) {
+                focusManager.clearFocus()
+                onFocusCleared?.invoke()
+            }
+        }
+    }
+
+    Modifier.onFocusChanged {
+        if (isFocused != it.isFocused) {
+            if (isFocused) {
+                keyboardShowedSinceFocused = false
+            }
+            isFocused = it.isFocused
+        }
+    }
+}
 
 fun Modifier.fadingEdge(brush: Brush) = this
     .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
@@ -85,41 +150,7 @@ fun Modifier.noIndicationClickable(onClick: () -> Unit) = composed {
 }
 
 /**
- * Can be used for neumorphism
- * */
-fun Modifier.dropShadow(
-    color: Color = Color.Black,
-    offsetX: Dp = 0.dp,
-    offsetY: Dp = 0.dp,
-    blurRadius: Dp = 0.dp,
-) = then(
-    drawBehind {
-        drawIntoCanvas { canvas ->
-            val paint = Paint()
-            val frameworkPaint = paint.asFrameworkPaint()
-            if (blurRadius != 0.dp) {
-                frameworkPaint.maskFilter = (BlurMaskFilter(blurRadius.toPx(), BlurMaskFilter.Blur.NORMAL))
-            }
-            frameworkPaint.color = color.toArgb()
-
-            val leftPixel = offsetX.toPx()
-            val topPixel = offsetY.toPx()
-            val rightPixel = size.width + topPixel
-            val bottomPixel = size.height + leftPixel
-
-            canvas.drawRect(
-                left = leftPixel,
-                top = topPixel,
-                right = rightPixel,
-                bottom = bottomPixel,
-                paint = paint,
-            )
-        }
-    }
-)
-
-/**
- * Applies a shadow to the current box.
+ * Applies a box shadow.
  *
  * @param color The color of the shadow.
  *

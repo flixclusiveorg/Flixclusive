@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_ROUNDNESS_PERCENTAGE
+import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_CORNER_SIZE
 import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -54,7 +54,7 @@ fun UnsafeInstallAlertDialog(
     val buttonMinHeight = 50.dp
     val buttonShape = MaterialTheme.shapes.medium
     val cornerSize = CornerSize(
-        (ALERT_DIALOG_ROUNDNESS_PERCENTAGE * 2).dp
+        (ALERT_DIALOG_CORNER_SIZE * 2).dp
     )
 
     val context = LocalContext.current

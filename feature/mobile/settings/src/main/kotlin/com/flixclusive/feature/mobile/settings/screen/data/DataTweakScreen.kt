@@ -37,11 +37,6 @@ internal class DataTweakScreen(
         = listOf(getSearchTweaks())
 
     @Composable
-    override fun Content() {
-        TODO("Not yet implemented")
-    }
-
-    @Composable
     private fun getSearchTweaks(): TweakGroup {
         val appSettings = LocalAppSettings.current
         val viewModel = getCurrentSettingsViewModel()
