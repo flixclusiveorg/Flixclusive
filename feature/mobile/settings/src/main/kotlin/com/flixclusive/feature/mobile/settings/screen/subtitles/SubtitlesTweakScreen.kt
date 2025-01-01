@@ -71,6 +71,7 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
                 title = stringResource(LocaleR.string.language),
                 description = remember { Locale(appSettings.subtitleLanguage).displayLanguage },
                 value = remember { mutableStateOf(appSettings.subtitleLanguage) },
+                enabled = appSettings.isSubtitleEnabled,
                 options = languages,
                 onTweaked = {
                     onTweaked(appSettings.copy(subtitleLanguage = it))
@@ -115,12 +116,14 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
 
         return TweakGroup(
             title = stringResource(LocaleR.string.style),
+            enabled = appSettings.isSubtitleEnabled,
             tweaks = persistentListOf(
                 TweakUI.SliderTweak(
                     title = stringResource(LocaleR.string.subtitles_size),
                     description = "${String.format(Locale.getDefault(), "%.2f", fontSize.floatValue)} sp",
                     value = fontSize,
                     range = 11F..80F,
+                    enabled = appSettings.isSubtitleEnabled,
                     onTweaked = {
                         onTweaked(appSettings.copy(subtitleSize = it))
                         true
@@ -131,6 +134,7 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
                     description = fontStyle.value.toString(),
                     value = fontStyle,
                     options = fontStyles,
+                    enabled = appSettings.isSubtitleEnabled,
                     endContent = {
                         Text(
                             text = DEFAULT_TEXT_PREVIEW,
@@ -162,6 +166,7 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
                     description = appSettings.subtitleEdgeType.toUiText().asString(),
                     value = edgeType,
                     options = edgeTypes,
+                    enabled = appSettings.isSubtitleEnabled,
                     onTweaked = {
                         onTweaked(appSettings.copy(subtitleEdgeType = it))
                         true
@@ -171,6 +176,7 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
                     title = stringResource(LocaleR.string.subtitles_color),
                     description = stringResource(LocaleR.string.subtitles_color_desc),
                     value = fontColor,
+                    enabled = appSettings.isSubtitleEnabled,
                     onTweaked = {
                         onTweaked(appSettings.copy(subtitleColor = it.toArgb()))
                         true
@@ -183,6 +189,7 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
                     value = remember { mutableStateOf(Color(appSettings.subtitleBackgroundColor)) },
                     title = stringResource(LocaleR.string.subtitles_background_color),
                     description = stringResource(LocaleR.string.subtitles_background_color_desc),
+                    enabled = appSettings.isSubtitleEnabled,
                     content = {
                         // TODO("Create custom color picker for background color")
                     }

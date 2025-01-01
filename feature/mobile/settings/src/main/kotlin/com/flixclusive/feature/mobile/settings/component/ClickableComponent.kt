@@ -17,6 +17,7 @@ internal fun ClickableComponent(
     modifier: Modifier = Modifier,
     title: String,
     onClick: () -> Unit,
+    enabled: Boolean = true,
     description: String? = null,
     icon: Painter? = null,
     endContent: @Composable (() -> Unit)? = null,
@@ -26,6 +27,7 @@ internal fun ClickableComponent(
         title = title,
         description = description,
         endContent = endContent,
+        enabled = enabled,
         startContent =
             if (icon != null) {
                 {

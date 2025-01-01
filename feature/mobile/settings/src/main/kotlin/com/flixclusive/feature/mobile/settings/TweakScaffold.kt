@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.settings
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,8 +18,10 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -109,16 +112,23 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
             }
             is TweakGroup -> {
                 item {
+                    val alpha by animateFloatAsState(
+                        label = "alpha",
+                        targetValue = if (tweak.enabled) 1F else 0.6F,
+                    )
+
                     GroupLabel(
                         title = tweak.title,
                         description = tweak.description,
                         titleStyle = getEmphasizedLabel(
                             size = 20.sp, letterSpacing = 0.1.sp,
                         ).copy(color = LocalContentColor.current.onMediumEmphasis(0.8F)),
-                        modifier = Modifier.padding(
-                            bottom = getAdaptiveDp(10.dp),
-                            top = TweakGroupSpacing
-                        )
+                        modifier = Modifier
+                            .alpha(alpha)
+                            .padding(
+                                bottom = getAdaptiveDp(10.dp),
+                                top = TweakGroupSpacing
+                            )
                     )
                 }
 
@@ -146,6 +156,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
             BaseTweakComponent(
                 title = tweak.title,
                 description = tweak.description,
+                enabled = tweak.enabled,
                 startContent = {
                     AdaptiveIcon(
                         imageVector = Icons.Outlined.Info,
@@ -162,6 +173,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                 icon = icon,
                 selectedValue = tweak.value.value,
                 range = tweak.range,
+                enabled = tweak.enabled,
                 onValueChange = {
                     scope.launch {
                         if (tweak.onTweaked(it)) {
@@ -176,6 +188,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                 title = tweak.title,
                 description = tweak.description,
                 icon = icon,
+                enabled = tweak.enabled,
                 checked = tweak.value.value,
                 onCheckedChanged = {
                     scope.launch {
@@ -192,6 +205,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                 description = tweak.description,
                 icon = icon,
                 value = tweak.value.value,
+                enabled = tweak.enabled,
                 onValueChange = {
                     scope.launch {
                         if (tweak.onTweaked(it)) {
@@ -209,6 +223,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                 endContent = tweak.endContent,
                 options = tweak.options,
                 selectedValue = tweak.value.value,
+                enabled = tweak.enabled,
                 onValueChange = {
                     scope.launch {
                         if (tweak.internalOnValueChanged(it!!)) {
@@ -226,6 +241,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                 endContent = tweak.endContent,
                 options = tweak.options,
                 selectedValues = tweak.values.value,
+                enabled = tweak.enabled,
                 onValueChange = {
                     scope.launch {
                         if (tweak.internalOnValueChanged(it)) {
@@ -240,7 +256,8 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                 title = tweak.title,
                 description = tweak.description,
                 icon = icon,
-                onClick = tweak.onClick
+                onClick = tweak.onClick,
+                enabled = tweak.enabled,
             )
         }
         is TweakUI.CustomContentTweak<*> -> {

@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.settings.component
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,8 +11,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 
@@ -23,6 +26,7 @@ internal fun BaseTweakComponent(
     modifier: Modifier = Modifier,
     title: String,
     description: String? = null,
+    enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     extraContent: @Composable (() -> Unit)? = null,
     startContent: @Composable (() -> Unit)? = null,
@@ -30,21 +34,27 @@ internal fun BaseTweakComponent(
 ) {
     val defaultIconWidthSpace = getAdaptiveDp(TweakIconSize)
 
+    val alpha by animateFloatAsState(
+        label = "alpha",
+        targetValue = if (enabled) 1F else 0.6F,
+    )
+
     Column(
-        modifier = (if (extraContent != null) modifier else Modifier),
+        modifier = (if (extraContent != null) modifier else Modifier)
+            .alpha(alpha),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = (if (extraContent == null) modifier else Modifier)
-                .fillMaxWidth()
-                .heightIn(min = getAdaptiveDp(TweakTouchSize))
                 .clickable(
-                    enabled = onClick != null,
+                    enabled = onClick != null && enabled,
                     onClick = { onClick?.invoke() }
                 )
                 .padding(vertical = getAdaptiveDp(10.dp))
+                .fillMaxWidth()
+                .heightIn(min = getAdaptiveDp(TweakTouchSize))
         ) {
             if (startContent != null) {
                 Box(

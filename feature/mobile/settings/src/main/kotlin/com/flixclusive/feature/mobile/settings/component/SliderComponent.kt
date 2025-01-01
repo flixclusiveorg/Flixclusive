@@ -34,6 +34,7 @@ internal fun SliderComponent(
         modifier = modifier,
         title = title,
         description = description,
+        enabled = enabled,
         extraContent = {
             Slider(
                 enabled = enabled,

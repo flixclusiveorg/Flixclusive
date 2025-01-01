@@ -44,6 +44,7 @@ internal fun <T> ListSelectComponent(
     options: Map<out T, String>,
     description: String? = null,
     icon: Painter? = null,
+    enabled: Boolean = true,
     endContent: @Composable (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     onValueChange: (Set<T>) -> Unit,
@@ -57,6 +58,7 @@ internal fun <T> ListSelectComponent(
         title = title,
         description = description,
         endContent = endContent,
+        enabled = enabled,
         icon = icon,
         onClick = { isDialogShown = true },
     )

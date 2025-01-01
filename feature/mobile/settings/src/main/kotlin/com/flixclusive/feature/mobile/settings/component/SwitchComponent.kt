@@ -21,6 +21,7 @@ internal fun SwitchComponent(
     title: String,
     description: String? = null,
     icon: Painter? = null,
+    enabled: Boolean = true,
     checked: Boolean = false,
     onCheckedChanged: (Boolean) -> Unit,
 ) {
@@ -29,9 +30,11 @@ internal fun SwitchComponent(
         title = title,
         description = description,
         icon = icon,
+        enabled = enabled,
         endContent = {
             Switch(
                 checked = checked,
+                enabled = enabled,
                 onCheckedChange = onCheckedChanged,
                 modifier = Modifier.padding(end = getAdaptiveDp(10.dp)),
             )

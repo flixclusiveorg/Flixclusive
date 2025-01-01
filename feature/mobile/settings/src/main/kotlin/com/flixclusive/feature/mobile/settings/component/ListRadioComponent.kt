@@ -43,6 +43,7 @@ internal fun <T> ListRadioComponent(
     options: Map<out T, String>,
     description: String? = null,
     icon: Painter? = null,
+    enabled: Boolean = true,
     endContent: @Composable (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     onValueChange: (T) -> Unit,
@@ -56,6 +57,7 @@ internal fun <T> ListRadioComponent(
         title = title,
         description = description,
         endContent = endContent,
+        enabled = enabled,
         icon = icon,
         onClick = { isDialogShown = true },
     )

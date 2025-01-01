@@ -47,6 +47,7 @@ internal fun TextFieldComponent(
     value: String,
     description: String? = null,
     icon: Painter? = null,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit,
 ) {
@@ -58,6 +59,7 @@ internal fun TextFieldComponent(
         modifier = modifier,
         title = title,
         description = description,
+        enabled = enabled,
         icon = icon,
         onClick = { isDialogShown = true },
     )
