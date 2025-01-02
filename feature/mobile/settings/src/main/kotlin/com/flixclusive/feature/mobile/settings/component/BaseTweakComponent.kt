@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.feature.mobile.settings.TweakPaddingHorizontal
 
 internal val TweakTouchSize = 56.dp
 internal val TweakIconSize = 35.dp
@@ -32,6 +33,7 @@ internal fun BaseTweakComponent(
     startContent: @Composable (() -> Unit)? = null,
     endContent: @Composable (() -> Unit)? = null,
 ) {
+    val defaultHorizontalPadding = getAdaptiveDp(TweakPaddingHorizontal * 2F)
     val defaultIconWidthSpace = getAdaptiveDp(TweakIconSize)
 
     val alpha by animateFloatAsState(
@@ -46,13 +48,16 @@ internal fun BaseTweakComponent(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(defaultHorizontalPadding),
             modifier = (if (extraContent == null) modifier else Modifier)
                 .clickable(
                     enabled = onClick != null && enabled,
                     onClick = { onClick?.invoke() }
                 )
-                .padding(vertical = getAdaptiveDp(10.dp))
+                .padding(
+                    vertical = getAdaptiveDp(10.dp),
+                    horizontal = defaultHorizontalPadding
+                )
                 .fillMaxWidth()
                 .heightIn(min = getAdaptiveDp(TweakTouchSize))
         ) {
@@ -83,6 +88,14 @@ internal fun BaseTweakComponent(
             }
         }
 
-        extraContent?.invoke()
+        if (extraContent != null) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .padding(horizontal = defaultHorizontalPadding)
+            ) {
+                extraContent()
+            }
+        }
     }
 }

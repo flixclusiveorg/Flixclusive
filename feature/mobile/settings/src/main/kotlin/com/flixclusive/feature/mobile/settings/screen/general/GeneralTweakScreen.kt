@@ -19,7 +19,7 @@ import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal class GeneralTweakScreen(
-    val showPrereleaseWarning: MutableState<Boolean>
+    private val showPrereleaseWarning: MutableState<Boolean>
 ) : BaseTweakScreen {
 
     @Composable

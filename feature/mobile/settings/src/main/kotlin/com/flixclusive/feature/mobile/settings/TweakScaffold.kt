@@ -56,13 +56,16 @@ internal fun TweakScaffold(
     tweaksProvider: @Composable () -> List<Tweak>
 ) {
     val tweaks = tweaksProvider()
+    val screenPadding = getAdaptiveDp(TweakPaddingHorizontal)
     LazyColumn(
-        contentPadding = PaddingValues(getAdaptiveDp(TweakPaddingHorizontal))
+        contentPadding = PaddingValues(vertical = screenPadding)
     ) {
         item {
             SubScreenHeader(
                 title = title,
-                description = description
+                description = description,
+                modifier = Modifier
+                    .padding(horizontal = screenPadding)
             )
         }
 
@@ -78,10 +81,11 @@ internal fun TweakScaffold(
 private fun SubScreenHeader(
     title: String,
     description: String,
+    modifier: Modifier = Modifier,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(15.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Text(
             text = title,
@@ -129,6 +133,7 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                                 bottom = getAdaptiveDp(10.dp),
                                 top = TweakGroupSpacing
                             )
+                            .padding(horizontal = TweakPaddingHorizontal)
                     )
                 }
 

@@ -49,7 +49,6 @@ internal object PlayerTweakScreen : BaseTweakScreen {
     override fun getIconPainter()
         = painterResource(UiCommonR.drawable.play_outline_circle)
 
-    /* TODO: Optimize Player settings screen */
     @Composable
     override fun getTweaks(): List<Tweak> {
         return listOf(
