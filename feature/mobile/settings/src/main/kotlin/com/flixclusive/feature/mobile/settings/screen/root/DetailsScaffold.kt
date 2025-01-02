@@ -13,9 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.locale.R
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.util.ifElse
 
@@ -35,13 +33,13 @@ internal fun DetailsScaffold(
     )
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.fillMaxSize(),
         containerColor = Color.Transparent,
         topBar = {
             AnimatedContent(isDetailsVisible, label = "DetailsScaffold top bar") { state ->
                 if (state) {
                     CommonTopBar(
-                        title = stringResource(id = R.string.recently_watched),
+                        title = "",
                         onNavigate = navigateBack
                     )
                 }
@@ -50,8 +48,8 @@ internal fun DetailsScaffold(
     ) { padding ->
         Box(
             modifier = Modifier
-                .padding(padding)
                 .fillMaxSize()
+                .padding(top = padding.calculateTopPadding())
                 .ifElse(
                     condition = isListAndDetailVisible,
                     ifTrueModifier = Modifier
