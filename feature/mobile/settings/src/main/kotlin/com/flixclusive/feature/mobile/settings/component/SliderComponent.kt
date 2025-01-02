@@ -2,7 +2,6 @@ package com.flixclusive.feature.mobile.settings.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -18,13 +17,13 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SliderComponent(
     selectedValue: Float,
+    range: ClosedFloatingPointRange<Float>,
+    steps: Int,
     title: String,
     enabled: Boolean = true,
-    range: ClosedFloatingPointRange<Float> = 0F..1F,
     description: String? = null,
     icon: Painter? = null,
     modifier: Modifier = Modifier,
@@ -39,6 +38,7 @@ internal fun SliderComponent(
             Slider(
                 enabled = enabled,
                 value = selectedValue,
+                steps = steps,
                 valueRange = range,
                 onValueChange = onValueChange
             )
@@ -58,7 +58,7 @@ internal fun SliderComponent(
 @Preview
 @Composable
 private fun SliderComponentBasePreview() {
-    var value by remember { mutableFloatStateOf(0.5F) }
+    var value by remember { mutableFloatStateOf(0F) }
     var value2 by remember { mutableFloatStateOf(0F) }
 
     FlixclusiveTheme {
@@ -73,12 +73,16 @@ private fun SliderComponentBasePreview() {
                     icon = painterResource(UiCommonR.drawable.happy_emphasized),
                     selectedValue = value,
                     onValueChange = { value = it},
+                    range = 0F..100F,
+                    steps = 10
                 )
                 SliderComponent(
                     title = "Slider tweak",
                     description = "Slider tweak summary",
                     selectedValue = value2,
                     onValueChange = { value2 = it},
+                    range = 0F..1F,
+                    steps = 100
                 )
             }
         }

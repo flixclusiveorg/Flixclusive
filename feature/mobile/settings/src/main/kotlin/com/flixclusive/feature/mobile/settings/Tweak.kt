@@ -66,6 +66,7 @@ sealed class TweakUI<T> : Tweak() {
     data class SliderTweak(
         val value: MutableState<Float>,
         val range: ClosedFloatingPointRange<Float> = 0F..1F,
+        val steps: Int = 0,
         override val title: String,
         override val description: String? = null,
         override val iconId: Int? = null,

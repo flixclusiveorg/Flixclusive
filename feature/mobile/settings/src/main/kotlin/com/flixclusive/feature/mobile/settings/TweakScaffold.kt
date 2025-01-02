@@ -178,6 +178,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                 icon = icon,
                 selectedValue = tweak.value.value,
                 range = tweak.range,
+                steps = tweak.steps,
                 enabled = tweak.enabled,
                 onValueChange = {
                     scope.launch {

@@ -29,6 +29,8 @@ import java.util.Locale
 import com.flixclusive.core.locale.R as LocaleR
 
 private const val DEFAULT_TEXT_PREVIEW = "Abc"
+private const val MAX_SUBTITLE_SIZE = 80F
+private const val MIN_SUBTITLE_SIZE = 11F
 
 internal object SubtitlesTweakScreen : BaseTweakScreen {
     @Composable
@@ -122,7 +124,7 @@ internal object SubtitlesTweakScreen : BaseTweakScreen {
                     title = stringResource(LocaleR.string.subtitles_size),
                     description = "${String.format(Locale.getDefault(), "%.2f", fontSize.floatValue)} sp",
                     value = fontSize,
-                    range = 11F..80F,
+                    range = MIN_SUBTITLE_SIZE..MAX_SUBTITLE_SIZE,
                     enabled = appSettings.isSubtitleEnabled,
                     onTweaked = {
                         onTweaked(appSettings.copy(subtitleSize = it))
