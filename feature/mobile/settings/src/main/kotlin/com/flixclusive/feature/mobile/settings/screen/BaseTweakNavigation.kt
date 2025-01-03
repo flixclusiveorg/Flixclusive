@@ -8,7 +8,7 @@ import com.flixclusive.model.datastore.FlixclusivePrefs
 import kotlinx.coroutines.flow.StateFlow
 
 internal interface BaseTweakNavigation : BaseTweakScreen<FlixclusivePrefs> {
-    override val preferencesKey: Preferences.Key<String>
+    override val key: Preferences.Key<String>
         get() = throw NotImplementedError()
     override val preferencesAsState: StateFlow<FlixclusivePrefs>
         get() = throw NotImplementedError()

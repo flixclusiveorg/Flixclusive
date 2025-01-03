@@ -163,6 +163,7 @@ internal fun ConsentScreen(
     }
 }
 
+// TODO: Add Gen AI disclaimer
 internal fun Context.getConsents(): List<Consent> {
     return listOf(
         Consent(

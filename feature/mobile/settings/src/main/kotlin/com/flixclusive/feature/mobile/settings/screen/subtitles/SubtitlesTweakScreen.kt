@@ -40,11 +40,11 @@ private const val MIN_SUBTITLE_SIZE = 11F
 internal class SubtitlesTweakScreen(
     viewModel: SettingsViewModel
 ) : BaseTweakScreen<SubtitlesPreferences> {
-    override val preferencesKey = UserPreferences.SUBTITLES_PREFS_KEY
+    override val key = UserPreferences.SUBTITLES_PREFS_KEY
     override val preferencesAsState: StateFlow<SubtitlesPreferences>
-        = viewModel.getUserPrefsAsState<SubtitlesPreferences>(preferencesKey)
+        = viewModel.getUserPrefsAsState<SubtitlesPreferences>(key)
     override val onUpdatePreferences: suspend (suspend (SubtitlesPreferences) -> SubtitlesPreferences) -> Boolean
-        = { viewModel.updateUserPrefs(preferencesKey, it) }
+        = { viewModel.updateUserPrefs(key, it) }
 
     @Composable
     override fun getTitle(): String

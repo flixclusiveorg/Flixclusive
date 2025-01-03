@@ -23,11 +23,11 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 internal class AppearanceTweakScreen(
     viewModel: SettingsViewModel
 ) : BaseTweakScreen<UiPreferences> {
-    override val preferencesKey = UserPreferences.UI_PREFS_KEY
+    override val key = UserPreferences.UI_PREFS_KEY
     override val preferencesAsState: StateFlow<UiPreferences>
-        = viewModel.getUserPrefsAsState<UiPreferences>(preferencesKey)
+        = viewModel.getUserPrefsAsState<UiPreferences>(key)
     override val onUpdatePreferences: suspend (suspend (UiPreferences) -> UiPreferences) -> Boolean
-        = { viewModel.updateUserPrefs(preferencesKey, it) }
+        = { viewModel.updateUserPrefs(key, it) }
 
     @Composable
     override fun getTitle(): String

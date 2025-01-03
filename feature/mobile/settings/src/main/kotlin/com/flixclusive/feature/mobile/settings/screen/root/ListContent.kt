@@ -40,14 +40,6 @@ import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.appearance.AppearanceTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.data.DataTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.github.FeatureRequestTweakNavigation
-import com.flixclusive.feature.mobile.settings.screen.github.IssueBugTweakNavigation
-import com.flixclusive.feature.mobile.settings.screen.github.RepositoryTweakNavigation
-import com.flixclusive.feature.mobile.settings.screen.player.PlayerTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.providers.ProvidersTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.system.SystemTweakScreen
 import com.flixclusive.feature.mobile.settings.util.UiUtil.getEmphasizedLabel
 import com.flixclusive.feature.mobile.settings.util.UiUtil.getMediumEmphasizedLabel
 import com.flixclusive.model.database.User
@@ -60,28 +52,12 @@ private val NavigationButtonHeight = 50.dp
 @Composable
 internal fun ListContent(
     modifier: Modifier = Modifier,
+    items: Map<Int, List<BaseTweakScreen<out FlixclusivePrefs>>>,
     viewModel: SettingsViewModel,
     currentUser: () -> User,
     navigator: SettingsScreenNavigator,
-    onItemClick: (BaseTweakScreen<FlixclusivePrefs>) -> Unit,
+    onItemClick: (String) -> Unit,
 ) {
-    val items = remember {
-        mapOf(
-            LocaleR.string.application to listOf(
-                AppearanceTweakScreen(viewModel),
-                PlayerTweakScreen(viewModel),
-                DataTweakScreen(viewModel),
-                ProvidersTweakScreen(viewModel),
-                SystemTweakScreen(viewModel),
-            ),
-            LocaleR.string.github to listOf(
-                IssueBugTweakNavigation,
-                FeatureRequestTweakNavigation,
-                RepositoryTweakNavigation
-            )
-        )
-    }
-
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -109,7 +85,7 @@ internal fun ListContent(
         item {
             ListContentHeader(
                 currentUser = currentUser,
-                onChangeUser = { /*TODO*/ },
+                onChangeUser = { /*TODO: Implement change user event*/ },
                 modifier = Modifier
                     .padding(bottom = 20.dp)
             )
@@ -150,8 +126,7 @@ internal fun ListContent(
                             return@MenuItem
                         }
 
-                        @Suppress("UNCHECKED_CAST")
-                        onItemClick(navigation as BaseTweakScreen<FlixclusivePrefs>)
+                        onItemClick(navigation.key.name)
                     }
                 )
             }

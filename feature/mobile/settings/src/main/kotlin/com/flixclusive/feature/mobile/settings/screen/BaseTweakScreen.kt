@@ -10,7 +10,7 @@ import com.flixclusive.model.datastore.FlixclusivePrefs
 import kotlinx.coroutines.flow.StateFlow
 
 internal interface BaseTweakScreen<T : FlixclusivePrefs> {
-    val preferencesKey: Preferences.Key<String>
+    val key: Preferences.Key<String>
     val preferencesAsState: StateFlow<T>
     val onUpdatePreferences: suspend (suspend (T) -> T) -> Boolean
 

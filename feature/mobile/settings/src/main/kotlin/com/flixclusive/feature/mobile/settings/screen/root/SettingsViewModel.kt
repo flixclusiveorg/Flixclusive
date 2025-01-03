@@ -87,7 +87,7 @@ internal class SettingsViewModel @Inject constructor(
     fun deleteRepositories() {
         viewModelScope.launch {
             updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
-                it.copy(providers = emptyList())
+                it.copy(repositories = emptyList())
             }
         }
     }

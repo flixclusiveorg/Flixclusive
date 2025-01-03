@@ -25,11 +25,11 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 internal class ProvidersTweakScreen(
     private val viewModel: SettingsViewModel
 ) : BaseTweakScreen<ProviderPreferences> {
-    override val preferencesKey = UserPreferences.PROVIDER_PREFS_KEY
+    override val key = UserPreferences.PROVIDER_PREFS_KEY
     override val preferencesAsState: StateFlow<ProviderPreferences>
-        = viewModel.getUserPrefsAsState<ProviderPreferences>(preferencesKey)
+        = viewModel.getUserPrefsAsState<ProviderPreferences>(key)
     override val onUpdatePreferences: suspend (suspend (ProviderPreferences) -> ProviderPreferences) -> Boolean
-        = { viewModel.updateUserPrefs(preferencesKey, it) }
+        = { viewModel.updateUserPrefs(key, it) }
 
     @Composable
     override fun getTitle(): String

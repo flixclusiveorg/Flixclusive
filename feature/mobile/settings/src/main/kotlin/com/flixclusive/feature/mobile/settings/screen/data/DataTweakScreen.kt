@@ -23,11 +23,11 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 internal class DataTweakScreen(
     private val viewModel: SettingsViewModel,
 ) : BaseTweakScreen<DataPreferences> {
-    override val preferencesKey = UserPreferences.DATA_PREFS_KEY
+    override val key = UserPreferences.DATA_PREFS_KEY
     override val preferencesAsState: StateFlow<DataPreferences>
-        = viewModel.getUserPrefsAsState<DataPreferences>(preferencesKey)
+        = viewModel.getUserPrefsAsState<DataPreferences>(key)
     override val onUpdatePreferences: suspend (suspend (DataPreferences) -> DataPreferences) -> Boolean
-        = { viewModel.updateUserPrefs(preferencesKey, it) }
+        = { viewModel.updateUserPrefs(key, it) }
 
     @Composable
     override fun getTitle(): String

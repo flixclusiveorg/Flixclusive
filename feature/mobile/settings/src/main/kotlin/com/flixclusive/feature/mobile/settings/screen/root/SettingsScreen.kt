@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.util.fastFirstOrNull
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -30,12 +31,22 @@ import androidx.palette.graphics.Palette
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.user.getAvatarResource
+import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.appearance.AppearanceTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.data.DataTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.github.FeatureRequestTweakNavigation
+import com.flixclusive.feature.mobile.settings.screen.github.IssueBugTweakNavigation
+import com.flixclusive.feature.mobile.settings.screen.github.RepositoryTweakNavigation
+import com.flixclusive.feature.mobile.settings.screen.player.PlayerTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.providers.ProvidersTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.system.SystemTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
 import com.flixclusive.model.database.User
 import com.flixclusive.model.datastore.FlixclusivePrefs
 import com.ramcosta.composedestinations.annotation.Destination
+import com.flixclusive.core.locale.R as LocaleR
 
 @SuppressLint("UnusedContentLambdaTargetStateParameter")
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -47,12 +58,30 @@ internal fun SettingsScreen(
     val viewModel = hiltViewModel<SettingsViewModel>()
     val currentUser by viewModel.userSessionManager.currentUser.collectAsStateWithLifecycle()
 
-    val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<BaseTweakScreen<FlixclusivePrefs>>()
+    val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<String>()
     val isListAndDetailVisible =
         scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
         && scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
 
     val backgroundBrush = getAdaptiveBackground(currentUser)
+
+    val items = remember {
+        mapOf(
+            LocaleR.string.application to listOf(
+                AppearanceTweakScreen(viewModel),
+                PlayerTweakScreen(viewModel),
+                DataTweakScreen(viewModel),
+                ProvidersTweakScreen(viewModel),
+                SystemTweakScreen(viewModel),
+            ),
+            LocaleR.string.github to listOf(
+                IssueBugTweakNavigation,
+                FeatureRequestTweakNavigation,
+                RepositoryTweakNavigation
+            )
+        )
+    }
+    val navigationItems = remember { items.values.flatten() }
 
     BackHandler(scaffoldNavigator.canNavigateBack()) {
         scaffoldNavigator.navigateBack()
@@ -73,12 +102,10 @@ internal fun SettingsScreen(
                     directive = scaffoldNavigator.scaffoldDirective,
                     value = scaffoldNavigator.scaffoldValue,
                     listPane = {
-                        val isDetailVisible =
-                            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
-
                         AnimatedPane {
                             ListContent(
                                 viewModel = viewModel,
+                                items = items,
                                 currentUser = { currentUser!! },
                                 navigator = navigator,
                                 onItemClick = { item ->
@@ -108,7 +135,10 @@ internal fun SettingsScreen(
                                     }
                                 },
                                 content = {
-                                    scaffoldNavigator.currentDestination?.content?.Content()
+                                    RenderTweakScreen(
+                                        key = scaffoldNavigator.currentDestination?.content,
+                                        items = navigationItems
+                                    )
                                 }
                             )
                         }
@@ -117,6 +147,18 @@ internal fun SettingsScreen(
             }
         }
     }
+}
+
+@Composable
+private fun RenderTweakScreen(
+    key: String?, items: List<BaseTweakScreen<out FlixclusivePrefs>>
+) {
+    items.fastFirstOrNull {
+        if (it is BaseTweakNavigation)
+            return@fastFirstOrNull false
+
+        it.key.name == key
+    }?.Content()
 }
 
 @Composable

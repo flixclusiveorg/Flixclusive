@@ -21,9 +21,7 @@ import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValue
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.getAvailableCacheSizes
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.playerBufferLengths
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsViewModel
-import com.flixclusive.feature.mobile.settings.screen.subtitles.SubtitlesTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
-import com.flixclusive.model.datastore.FlixclusivePrefs
 import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.datastore.user.player.DecoderPriority
@@ -41,11 +39,11 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 internal class PlayerTweakScreen(
     private val viewModel: SettingsViewModel
 ) : BaseTweakScreen<PlayerPreferences> {
-    override val preferencesKey = UserPreferences.PLAYER_PREFS_KEY
+    override val key = UserPreferences.PLAYER_PREFS_KEY
     override val preferencesAsState: StateFlow<PlayerPreferences>
-        = viewModel.getUserPrefsAsState<PlayerPreferences>(preferencesKey)
+        = viewModel.getUserPrefsAsState<PlayerPreferences>(key)
     override val onUpdatePreferences: suspend (suspend (PlayerPreferences) -> PlayerPreferences) -> Boolean
-        = { viewModel.updateUserPrefs(preferencesKey, it) }
+        = { viewModel.updateUserPrefs(key, it) }
 
     @Composable
     @ReadOnlyComposable
@@ -151,10 +149,9 @@ internal class PlayerTweakScreen(
                     title = stringResource(LocaleR.string.subtitle),
                     description = stringResource(LocaleR.string.subtitles_settings_content_desc),
                     onClick = {
-                        @Suppress("UNCHECKED_CAST")
                         navigator.navigateTo(
                             pane = ListDetailPaneScaffoldRole.Detail,
-                            content = SubtitlesTweakScreen(viewModel) as BaseTweakScreen<FlixclusivePrefs>
+                            content = UserPreferences.SUBTITLES_PREFS_KEY.name
                         )
                     }
                 )

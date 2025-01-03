@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.feature.mobile.settings.Tweak
@@ -30,7 +31,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 internal class SystemTweakScreen(
     viewModel: SettingsViewModel
 ) : BaseTweakScreen<SystemPreferences> {
-    override val preferencesKey get() = throw NotImplementedError()
+    override val key = stringPreferencesKey("system_preferences")
     override val preferencesAsState: StateFlow<SystemPreferences>
         = viewModel.systemPreferences
     override val onUpdatePreferences: suspend (suspend (SystemPreferences) -> SystemPreferences) -> Boolean
