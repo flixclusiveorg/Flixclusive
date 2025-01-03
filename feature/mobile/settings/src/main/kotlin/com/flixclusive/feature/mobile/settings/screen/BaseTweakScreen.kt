@@ -14,6 +14,8 @@ internal interface BaseTweakScreen<T : FlixclusivePrefs> {
     val preferencesAsState: StateFlow<T>
     val onUpdatePreferences: suspend (suspend (T) -> T) -> Boolean
 
+    val isSubNavigation: Boolean get() = false
+
     @Composable
     @ReadOnlyComposable
     fun getTitle(): String

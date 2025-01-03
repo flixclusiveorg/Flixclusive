@@ -46,6 +46,8 @@ internal class SubtitlesTweakScreen(
     override val onUpdatePreferences: suspend (suspend (SubtitlesPreferences) -> SubtitlesPreferences) -> Boolean
         = { viewModel.updateUserPrefs(key, it) }
 
+    override val isSubNavigation: Boolean = true
+
     @Composable
     override fun getTitle(): String
         = stringResource(LocaleR.string.subtitle)

@@ -117,6 +117,8 @@ internal fun ListContent(
             }
 
             items(buttons) { navigation ->
+                if (navigation.isSubNavigation) return@items
+
                 MenuItem(
                     icon = navigation.getIconPainter()!!,
                     label = navigation.getTitle(),

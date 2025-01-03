@@ -40,6 +40,7 @@ import com.flixclusive.feature.mobile.settings.screen.github.IssueBugTweakNaviga
 import com.flixclusive.feature.mobile.settings.screen.github.RepositoryTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.providers.ProvidersTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.subtitles.SubtitlesTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.system.SystemTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
@@ -72,6 +73,7 @@ internal fun SettingsScreen(
                 PlayerTweakScreen(viewModel),
                 DataTweakScreen(viewModel),
                 ProvidersTweakScreen(viewModel),
+                SubtitlesTweakScreen(viewModel),
                 SystemTweakScreen(viewModel),
             ),
             LocaleR.string.github to listOf(
