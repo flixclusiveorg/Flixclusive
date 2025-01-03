@@ -5,7 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.awaitFirst
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.mobile.KeyEventHandler
@@ -19,6 +20,8 @@ import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.toWatchlistItem
+import com.flixclusive.model.datastore.user.PlayerPreferences
+import com.flixclusive.model.datastore.user.UserPreferences.Companion.PLAYER_PREFS_KEY
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmDetails
 import com.flixclusive.model.film.common.tv.Episode
@@ -32,7 +35,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,7 +49,7 @@ internal class MobileAppViewModel @Inject constructor(
     private val getMediaLinksUseCase: GetMediaLinksUseCase,
     private val watchHistoryRepository: WatchHistoryRepository,
     private val watchlistRepository: WatchlistRepository,
-    private val appSettingsManager: AppSettingsManager,
+    private val dataStoreManager: DataStoreManager,
     private val appConfigurationManager: AppConfigurationManager,
     private val userSessionManager: UserSessionManager,
     internetMonitor: InternetMonitor,
@@ -75,22 +78,22 @@ internal class MobileAppViewModel @Inject constructor(
         )
 
     val isPiPModeEnabled: Boolean
-        get() = appSettingsManager.cachedAppSettings.isPiPModeEnabled
+        get() = dataStoreManager
+            .getUserPrefs<PlayerPreferences>(PLAYER_PREFS_KEY)
+            .awaitFirst().isPiPModeEnabled
 
     val currentVersionCode: Long
         get() = appConfigurationManager.currentAppBuild?.build ?: -1
 
-    val hasSeenChangelogsForCurrentBuild = appSettingsManager
-        .onBoardingPreferences.data
-        .map {
-            currentVersionCode > it.lastSeenChangelogsVersion
-        }
+    val hasSeenNewChangelogs = with(dataStoreManager.systemPreferences.data) {
+        mapLatest { currentVersionCode > it.lastSeenChangelogs }
         .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = false
+            initialValue = currentVersionCode > awaitFirst().lastSeenChangelogs
         )
+    }
 
     private val _uiState = MutableStateFlow(MobileAppUiState())
     val uiState: StateFlow<MobileAppUiState> = _uiState.asStateFlow()
@@ -263,12 +266,10 @@ internal class MobileAppViewModel @Inject constructor(
         _uiState.update { it.copy(isOnPlayerScreen = isInPlayer) }
     }
 
-    fun onSaveLastSeenChangelogsVersion(version: Long) {
+    fun onSaveLastSeenChangelogs(version: Long) {
         viewModelScope.launch {
-            appSettingsManager.updateOnBoardingPreferences {
-                it.copy(
-                    lastSeenChangelogsVersion = version
-                )
+            dataStoreManager.updateSystemPrefs {
+                it.copy(lastSeenChangelogs = version)
             }
         }
     }

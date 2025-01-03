@@ -8,13 +8,16 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.navigation.navargs.SeeAllScreenNavArgs
 import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.domain.catalog.CatalogItemsProviderUseCase
 import com.flixclusive.model.configuration.catalog.HomeCatalog
 import com.flixclusive.model.configuration.catalog.SearchCatalog
+import com.flixclusive.model.datastore.user.UiPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.film.util.FilmType.Companion.toFilmType
@@ -23,8 +26,6 @@ import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.DEFAULT_CATALOG_MEDIA_TYPE
 import com.flixclusive.model.provider.ProviderCatalog
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -32,15 +33,11 @@ import javax.inject.Inject
 internal class SeeAllViewModel @Inject constructor(
     private val catalogItemsProviderUseCase: CatalogItemsProviderUseCase,
     savedStateHandle: SavedStateHandle,
-    appSettingsManager: AppSettingsManager,
+    dataStoreManager: DataStoreManager,
 ) : ViewModel() {
-    val appSettings = appSettingsManager.appSettings
-        .data
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.cachedAppSettings
-        )
+    val uiPreferences = dataStoreManager
+        .getUserPrefs<UiPreferences>(UserPreferences.UI_PREFS_KEY)
+        .asStateFlow(viewModelScope)
 
     private val args = savedStateHandle.navArgs<SeeAllScreenNavArgs>()
     var catalog: Catalog = args.item

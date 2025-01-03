@@ -14,12 +14,12 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun ClickableComponent(
-    modifier: Modifier = Modifier,
     title: String,
     onClick: () -> Unit,
     enabled: Boolean = true,
     description: String? = null,
     icon: Painter? = null,
+    modifier: Modifier = Modifier,
     endContent: @Composable (() -> Unit)? = null,
 ) {
     BaseTweakComponent(

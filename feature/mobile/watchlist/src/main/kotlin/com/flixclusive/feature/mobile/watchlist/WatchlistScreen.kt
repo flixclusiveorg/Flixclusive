@@ -30,7 +30,7 @@ internal fun WatchlistScreen(
     previewFilm: (Film) -> Unit,
 ) {
     val viewModel: WatchlistScreenViewModel = hiltViewModel()
-    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val uiPreferences by viewModel.uiPreferences.collectAsStateWithLifecycle()
     val watchlist by viewModel.items.collectAsStateWithLifecycle()
 
     Box {
@@ -71,7 +71,7 @@ internal fun WatchlistScreen(
                 modifier = Modifier.fillMaxSize(),
                 screenTitle = stringResource(LocaleR.string.watchlist),
                 films = watchlist,
-                isShowingFilmCardTitle = appSettings.isShowingFilmCardTitle,
+                isShowingFilmCardTitle = uiPreferences.showTitleOnCards,
                 onFilmClick = navigator::openFilmScreen,
                 onNavigationIconClick = navigator::goBack,
                 onFilmLongClick = previewFilm,

@@ -5,23 +5,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.model.datastore.user.UserOnBoarding
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 internal class ProvidersScreenViewModel @Inject constructor(
     private val providerManager: ProviderManager,
-    private val appSettingsManager: AppSettingsManager,
+    private val dataStoreManager: DataStoreManager,
 ) : ViewModel() {
     val providerDataList = providerManager.providerDataList
+    val providerPreferencesAsState = providerManager.providerPreferencesAsState
 
     private var uninstallJob: Job? = null
     private var toggleJob: Job? = null
@@ -30,23 +32,9 @@ internal class ProvidersScreenViewModel @Inject constructor(
     var searchQuery by mutableStateOf("")
         private set
 
-    val providerSettings = appSettingsManager.providerSettings
-        .data
-        .map { it.providers }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.cachedProviderSettings.providers
-        )
-
-    val isFirstTimeOnProvidersScreen = appSettingsManager.onBoardingPreferences
-        .data
-        .map { it.isFirstTimeOnProvidersScreen }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = false
-        )
+    val userOnBoardingPrefs = dataStoreManager
+        .getUserPrefs<UserOnBoarding>(UserPreferences.USER_ON_BOARDING_PREFS_KEY)
+        .asStateFlow(viewModelScope)
 
     fun onSearchQueryChange(newQuery: String) {
         searchQuery = newQuery
@@ -78,12 +66,14 @@ internal class ProvidersScreenViewModel @Inject constructor(
         }
 
         uninstallJob = viewModelScope.launch {
-            providerManager.unloadProvider(providerSettings.value[index])
+            with (providerManager) {
+                unloadProvider(providerPreferencesAsState.first().providers[index])
+            }
         }
     }
 
     suspend fun setFirstTimeOnProvidersScreen(state: Boolean) {
-        appSettingsManager.updateOnBoardingPreferences {
+        dataStoreManager.updateUserPrefs<UserOnBoarding>(UserPreferences.USER_ON_BOARDING_PREFS_KEY) {
             it.copy(
                 isFirstTimeOnProvidersScreen = state
             )

@@ -42,6 +42,17 @@ sealed class TweakUI<T> : Tweak() {
     }
 
     /**
+     * A tweak that is only used for displaying texts
+     * */
+    data object Divider : TweakUI<Unit>() {
+        override val title: String = ""
+        override val description: String? = null
+        override val enabled: Boolean = true
+        override val onTweaked: suspend (newValue: Unit) -> Boolean = { true }
+        override val iconId: Int? = null
+    }
+
+    /**
      * A tweak that is only used for custom onClick events
      * */
     data class ClickableTweak(
@@ -50,6 +61,19 @@ sealed class TweakUI<T> : Tweak() {
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
         val onClick: () -> Unit,
+    ) : TweakUI<Unit>() {
+        override val onTweaked: suspend (newValue: Unit) -> Boolean = { true }
+    }
+
+    data class DialogTweak(
+        override val title: String,
+        override val description: String? = null,
+        override val iconId: Int? = null,
+        override val enabled: Boolean = true,
+        val dismissOnConfirm: Boolean = true,
+        val dialogTitle: String = title,
+        val dialogMessage: String,
+        val onConfirm: () -> Unit,
     ) : TweakUI<Unit>() {
         override val onTweaked: suspend (newValue: Unit) -> Boolean = { true }
     }

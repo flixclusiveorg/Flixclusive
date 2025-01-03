@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,8 +13,8 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,11 +22,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEachIndexed
-import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
@@ -36,13 +33,13 @@ import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.settings.component.BaseTweakComponent
 import com.flixclusive.feature.mobile.settings.component.ClickableComponent
+import com.flixclusive.feature.mobile.settings.component.DialogComponent
 import com.flixclusive.feature.mobile.settings.component.GroupLabel
 import com.flixclusive.feature.mobile.settings.component.ListRadioComponent
 import com.flixclusive.feature.mobile.settings.component.ListSelectComponent
 import com.flixclusive.feature.mobile.settings.component.SliderComponent
 import com.flixclusive.feature.mobile.settings.component.SwitchComponent
 import com.flixclusive.feature.mobile.settings.component.TextFieldComponent
-import com.flixclusive.feature.mobile.settings.screen.advanced.AdvancedTweakScreen
 import com.flixclusive.feature.mobile.settings.util.UiUtil.getEmphasizedLabel
 import kotlinx.coroutines.launch
 
@@ -157,6 +154,16 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
     val icon = tweak.iconId?.let { painterResource(it) }
 
     when (tweak) {
+        is TweakUI.Divider -> {
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = LocalContentColor.current.onMediumEmphasis(0.3F),
+                modifier = Modifier.padding(
+                    horizontal = getAdaptiveDp(TweakPaddingHorizontal),
+                    vertical = getAdaptiveDp(TweakGroupSpacing / 2)
+                )
+            )
+        }
         is TweakUI.InformationTweak -> {
             BaseTweakComponent(
                 title = tweak.title,
@@ -266,55 +273,19 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                 enabled = tweak.enabled,
             )
         }
+        is TweakUI.DialogTweak -> {
+            DialogComponent(
+                title = tweak.title,
+                description = tweak.description,
+                dialogTitle = tweak.dialogTitle,
+                dialogMessage = tweak.dialogMessage,
+                icon = icon,
+                enabled = tweak.enabled,
+                onConfirm = tweak.onConfirm
+            )
+        }
         is TweakUI.CustomContentTweak<*> -> {
             tweak.content()
         }
     }
-}
-
-@Preview
-@Composable
-private fun TweakScaffoldBasePreview() {
-    FlixclusiveTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            TweakScaffold(
-                title = AdvancedTweakScreen.getTitle(),
-                description = AdvancedTweakScreen.getDescription(),
-                tweaksProvider = { AdvancedTweakScreen.getTweaks() }
-            )
-        }
-    }
-}
-
-@Preview(device = "spec:parent=pixel_5,orientation=landscape")
-@Composable
-private fun TweakScaffoldCompactLandscapePreview() {
-    TweakScaffoldBasePreview()
-}
-
-@Preview(device = "spec:parent=medium_tablet,orientation=portrait")
-@Composable
-private fun TweakScaffoldMediumPortraitPreview() {
-    TweakScaffoldBasePreview()
-}
-
-@Preview(device = "spec:parent=medium_tablet,orientation=landscape")
-@Composable
-private fun TweakScaffoldMediumLandscapePreview() {
-    TweakScaffoldBasePreview()
-}
-
-@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
-@Composable
-private fun TweakScaffoldExtendedPortraitPreview() {
-    TweakScaffoldBasePreview()
-}
-
-@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
-@Composable
-private fun TweakScaffoldExtendedLandscapePreview() {
-    TweakScaffoldBasePreview()
 }

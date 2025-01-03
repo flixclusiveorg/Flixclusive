@@ -2,7 +2,7 @@ package com.flixclusive.feature.mobile.settings.screen.player
 
 import android.content.Context
 import android.text.format.Formatter
-import com.flixclusive.model.datastore.DEFAULT_PLAYER_CACHE_SIZE_AMOUNT
+import com.flixclusive.model.datastore.user.DEFAULT_PLAYER_CACHE_SIZE_AMOUNT
 import kotlinx.collections.immutable.toImmutableMap
 import com.flixclusive.core.locale.R as LocaleR
 

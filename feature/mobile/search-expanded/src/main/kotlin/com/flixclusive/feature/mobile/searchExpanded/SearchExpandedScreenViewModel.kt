@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.searchExpanded
 
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -8,10 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
-import androidx.compose.ui.util.fastMapNotNull
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.util.PagingState
@@ -24,9 +23,10 @@ import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
 import com.flixclusive.model.database.SearchHistory
+import com.flixclusive.model.datastore.user.UiPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData
-import com.flixclusive.model.provider.Status
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.filter.BottomSheetComponent
 import com.flixclusive.provider.filter.FilterGroup
@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,23 +47,18 @@ internal class SearchExpandedScreenViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     private val searchHistoryRepository: SearchHistoryRepository,
     private val userSessionManager: UserSessionManager,
-    providerManager: ProviderManager,
-    appSettingsManager: AppSettingsManager
+    val providerManager: ProviderManager,
+    dataStoreManager: DataStoreManager
 ) : ViewModel() {
     private val providers = providerManager.workingApis
-    val providerDataList by derivedStateOf {
-        providerManager.providerDataList.fastMapNotNull { data ->
-            if (
-                data.status != Status.Maintenance
-                && data.status != Status.Down
-                && providerManager.isProviderEnabled(data.name)
-            ) return@fastMapNotNull data
+    val providerDataList = providerManager.workingProviders
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = runBlocking { providerManager.workingProviders.first() }
+        )
 
-            null
-        }
-    }
-
-    val userId: Int? get() = userSessionManager.currentUser.value?.id
+    private val userId: Int? get() = userSessionManager.currentUser.value?.id
     val searchHistory = userSessionManager.currentUser
         .filterNotNull()
         .flatMapLatest { user ->
@@ -74,13 +70,9 @@ internal class SearchExpandedScreenViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    val appSettings = appSettingsManager.appSettings
-        .data
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.cachedAppSettings
-        )
+    val uiPreferences = dataStoreManager
+        .getUserPrefs<UiPreferences>(UserPreferences.UI_PREFS_KEY)
+        .asStateFlow(viewModelScope)
 
     val searchResults = mutableStateListOf<FilmSearchItem>()
     var filters by mutableStateOf(getDefaultTmdbFilters())

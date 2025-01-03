@@ -170,7 +170,7 @@ class AppUpdaterService : Service() {
             val apkFile = File(externalCacheDir, "update.apk")
 
             if (response.isSuccessful) {
-                response.body?.source()?.saveTo(apkFile)
+                response.body.source().saveTo(apkFile)
                 response.close()
             } else {
                 response.close()

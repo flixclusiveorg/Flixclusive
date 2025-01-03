@@ -4,11 +4,12 @@ import android.app.Activity
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.player.BasePlayerViewModel
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
@@ -19,7 +20,7 @@ import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.feature.tv.player.di.ViewModelFactoryProvider
-import com.flixclusive.model.datastore.AppSettings
+import com.flixclusive.model.datastore.user.UserPreferences
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -40,7 +41,7 @@ internal fun playerScreenViewModel(args: PlayerScreenNavArgs): PlayerScreenViewM
 
 internal class PlayerScreenViewModel @AssistedInject constructor(
     @Assisted args: PlayerScreenNavArgs,
-    private val appSettingsManager: AppSettingsManager,
+    private val dataStoreManager: DataStoreManager,
     client: OkHttpClient,
     context: Context,
     playerCacheManager: PlayerCacheManager,
@@ -50,7 +51,7 @@ internal class PlayerScreenViewModel @AssistedInject constructor(
     watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
     userSessionManager: UserSessionManager
 ) : BasePlayerViewModel(
-    appSettingsManager = appSettingsManager,
+    dataStoreManager = dataStoreManager,
     args = args,
     client = client,
     context = context,
@@ -88,10 +89,12 @@ internal class PlayerScreenViewModel @AssistedInject constructor(
      *
      * Used for subtitle style updates.
      * */
-    fun updateAppSettings(newAppSettings: AppSettings) {
+    inline fun <reified T : UserPreferences> updatePreferences(
+        key: Preferences.Key<String>,
+        newPreferences: T,
+    ) {
         viewModelScope.launch {
-            appSettingsManager.updateSettings(newAppSettings)
-            player.updateAppSettings(newAppSettings)
+            dataStoreManager.updateUserPrefs<T>(key) { newPreferences }
         }
     }
 }

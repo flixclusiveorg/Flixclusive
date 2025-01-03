@@ -2,7 +2,7 @@ package com.flixclusive.domain.updater
 
 import android.content.Context
 import androidx.core.app.NotificationCompat
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.util.android.notify
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.log.errorLog
@@ -11,6 +11,8 @@ import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.domain.updater.util.findProviderData
+import com.flixclusive.model.datastore.user.ProviderPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.provider.Provider
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -32,22 +34,20 @@ private const val CHANNEL_UPDATER_NAME = "PROVIDER_UPDATER_CHANNEL"
 class ProviderUpdaterUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
     private val providerManager: ProviderManager,
-    private val appSettingsManager: AppSettingsManager,
+    private val dataStoreManager: DataStoreManager,
     private val client: OkHttpClient,
 ) {
     // Synchronized to avoid ConcurrentModificationException
-    val cachedProviders: MutableMap<String, CachedData> = Collections.synchronizedMap(HashMap())
-    val updatedProvidersMap: MutableMap<String, VersionCode> = Collections.synchronizedMap(HashMap())
-    val outdatedProviders: MutableList<String> = Collections.synchronizedList(ArrayList())
+    private val cachedProviders: MutableMap<String, CachedData> = Collections.synchronizedMap(HashMap())
+    private val updatedProvidersMap: MutableMap<String, VersionCode> = Collections.synchronizedMap(HashMap())
+    private val outdatedProviders: MutableList<String> = Collections.synchronizedList(ArrayList())
 
     private var notificationChannelHasBeenInitialized = false
 
     suspend fun checkForUpdates(notify: Boolean) {
-        // Wait for providers to be initialized
-        // To avoid ConcurrentModificationException
-        providerManager.initialization.await()
-
-        val appSettingsProvider = appSettingsManager.providerSettings.data.first()
+        val providerPreferences = dataStoreManager
+            .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
+            .first()
 
         outdatedProviders.clear()
         providerManager.providers.forEach { (name, provider) ->
@@ -62,7 +62,7 @@ class ProviderUpdaterUseCase @Inject constructor(
         val updatableProviders = outdatedProviders.joinToString(", ")
 
         val notificationBody = when {
-            appSettingsProvider.isUsingAutoUpdateProviderFeature -> {
+            providerPreferences.autoUpdate -> {
                 val res = updateAllProviders()
                 if (res == 0) return
 
@@ -155,10 +155,8 @@ class ProviderUpdaterUseCase @Inject constructor(
 
         val updaterJsonRequest = withIOContext {
             client.request(manifest.updateUrl!!)
-                .execute()
-                .body?.string()
-                ?: return@withIOContext null
-        } ?: return null
+                .execute().body.string()
+        }
 
         val updaterJson = fromJson<List<ProviderData>>(updaterJsonRequest)
         cachedProviders[manifest.updateUrl!!] = CachedData(updaterJson)

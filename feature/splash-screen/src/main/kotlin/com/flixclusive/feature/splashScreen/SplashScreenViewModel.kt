@@ -2,18 +2,21 @@ package com.flixclusive.feature.splashScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.data.configuration.AppConfigurationManager
+import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.home.PREFERRED_MINIMUM_HOME_ITEMS
 import com.flixclusive.domain.updater.AppUpdateCheckerUseCase
 import com.flixclusive.domain.updater.ProviderUpdaterUseCase
 import com.flixclusive.domain.user.UserSessionManager
-import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.model.datastore.OnBoardingPreferences
+import com.flixclusive.model.datastore.system.SystemPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,7 +44,8 @@ internal class SplashScreenViewModel @Inject constructor(
     val appUpdateCheckerUseCase: AppUpdateCheckerUseCase,
     private val userSessionManager: UserSessionManager,
     private val userRepository: UserRepository,
-    private val appSettingsManager: AppSettingsManager,
+    private val dataStoreManager: DataStoreManager,
+    private val providerManager: ProviderManager,
     private val providerUpdaterUseCase: ProviderUpdaterUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<SplashScreenUiState>(SplashScreenUiState.Loading)
@@ -49,21 +53,8 @@ internal class SplashScreenViewModel @Inject constructor(
 
     val configurationStatus = appConfigurationManager.configurationStatus
 
-    val appSettings = appSettingsManager
-        .appSettings.data
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.cachedAppSettings
-        )
-
-    val onBoardingPreferences = appSettingsManager
-        .onBoardingPreferences.data
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.cachedOnBoardingPreferences
-        )
+    val systemPreferences = dataStoreManager.systemPreferences
+        .asStateFlow(viewModelScope)
 
     val noUsersFound = userRepository
         .observeUsers()
@@ -107,13 +98,13 @@ internal class SplashScreenViewModel @Inject constructor(
                 }
             }
 
-            launch {
-                providerUpdaterUseCase.checkForUpdates(notify = true)
-            }
-
-            launch {
+            launch(AppDispatchers.IO.dispatcher) io@ {
                 userLoggedIn.collectLatest {
-                    if (it == null) {
+                    if (it != null) {
+                        providerManager.initialize()
+                        providerUpdaterUseCase.checkForUpdates(notify = true)
+                        this@io.cancel()
+                    } else {
                         userSessionManager.restoreSession()
                     }
                 }
@@ -121,18 +112,11 @@ internal class SplashScreenViewModel @Inject constructor(
         }
     }
 
-    fun updateSettings(newAppSettings: AppSettings) {
+    fun updateSettings(
+        transform: suspend (t: SystemPreferences) -> SystemPreferences
+    ) {
         viewModelScope.launch {
-            appSettingsManager.updateSettings(newAppSettings)
-        }
-    }
-
-    fun updateOnBoardingPreferences(transform: suspend (t: OnBoardingPreferences) -> OnBoardingPreferences) {
-        viewModelScope.launch {
-            appSettingsManager.updateOnBoardingPreferences {
-                val newSettings = transform(it)
-                newSettings
-            }
+            dataStoreManager.updateSystemPrefs(transform)
         }
     }
 }

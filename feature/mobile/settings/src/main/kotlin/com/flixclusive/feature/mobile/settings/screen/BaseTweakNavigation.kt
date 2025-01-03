@@ -1,10 +1,25 @@
 package com.flixclusive.feature.mobile.settings.screen
 
 import androidx.compose.runtime.Composable
-import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
+import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.feature.mobile.settings.Tweak
+import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
+import com.flixclusive.model.datastore.FlixclusivePrefs
+import kotlinx.coroutines.flow.StateFlow
 
-internal interface BaseTweakNavigation : BaseTweakScreen {
+internal interface BaseTweakNavigation : BaseTweakScreen<FlixclusivePrefs> {
+    override val preferencesKey: Preferences.Key<String>
+        get() = throw NotImplementedError()
+    override val preferencesAsState: StateFlow<FlixclusivePrefs>
+        get() = throw NotImplementedError()
+    override val onUpdatePreferences: suspend (suspend (FlixclusivePrefs) -> FlixclusivePrefs) -> Boolean
+        get() = throw NotImplementedError()
+
+    @Composable
+    override fun getTitle(): String {
+        TODO("Not yet implemented")
+    }
+
     fun onClick(navigator: SettingsScreenNavigator)
 
     @Composable

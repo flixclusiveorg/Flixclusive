@@ -119,7 +119,7 @@ internal fun UserAvatarSelectScreen(
                             )
 
                             Text(
-                                text = stringResource(LocaleR.string.selected),
+                                text = stringResource(LocaleR.string.selected_label),
                                 style = getAdaptiveTextStyle(
                                     mode = TextStyleMode.Normal,
                                     style = TypographyStyle.Title

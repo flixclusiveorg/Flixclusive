@@ -90,8 +90,8 @@ internal fun ProvidersScreen(
     val context = LocalContext.current
 
     val viewModel = hiltViewModel<ProvidersScreenViewModel>()
-    val providerSettings by viewModel.providerSettings.collectAsStateWithLifecycle()
-    val isFirstTimeOnProvidersScreen by viewModel.isFirstTimeOnProvidersScreen.collectAsStateWithLifecycle()
+    val providerPreferences by viewModel.providerPreferencesAsState.collectAsStateWithLifecycle()
+    val userOnBoardingPrefs by viewModel.userOnBoardingPrefs.collectAsStateWithLifecycle()
     val searchExpanded = rememberSaveable { mutableStateOf(false) }
     var indexOfProviderToUninstall by rememberSaveable { mutableStateOf<Int?>(null) }
 
@@ -270,7 +270,7 @@ internal fun ProvidersScreen(
 
                             val isEnabled = providerData.status != Status.Maintenance
                                 && providerData.status != Status.Down
-                                && (providerSettings.getOrNull(index)?.isDisabled?.not() ?: true)
+                                && (providerPreferences.providers.getOrNull(index)?.isDisabled?.not() ?: true)
 
                             InstalledProviderCard(
                                 modifier = Modifier.animateItem(),
@@ -312,7 +312,7 @@ internal fun ProvidersScreen(
         )
     }
 
-    if (isFirstTimeOnProvidersScreen) {
+    if (userOnBoardingPrefs.isFirstTimeOnProvidersScreen) {
         TextAlertDialog(
             label = stringResource(LocaleR.string.first_time_providers_screen_title),
             description = stringResource(LocaleR.string.first_time_providers_screen_message),

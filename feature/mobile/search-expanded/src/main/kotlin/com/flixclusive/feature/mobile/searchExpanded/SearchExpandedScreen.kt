@@ -25,9 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
-import com.flixclusive.core.ui.mobile.util.shouldPaginate
 import com.flixclusive.core.ui.common.util.PagingState
-import com.flixclusive.provider.filter.FilterList
+import com.flixclusive.core.ui.mobile.util.shouldPaginate
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchBarInput
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchFilmsGridView
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchProvidersView
@@ -36,6 +35,7 @@ import com.flixclusive.feature.mobile.searchExpanded.component.filter.FilterBott
 import com.flixclusive.feature.mobile.searchExpanded.util.Constant
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
 import com.flixclusive.model.film.Film
+import com.flixclusive.provider.filter.FilterList
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 
@@ -52,6 +52,7 @@ internal fun SearchExpandedScreen(
     previewFilm: (Film) -> Unit,
 ) {
     val viewModel: SearchExpandedScreenViewModel = hiltViewModel()
+    val providerDataList by viewModel.providerDataList.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyGridState()
@@ -61,7 +62,7 @@ internal fun SearchExpandedScreen(
         }
     }
 
-    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val uiPreferences by viewModel.uiPreferences.collectAsStateWithLifecycle()
 
     var filterGroupIndexToShow by remember { mutableStateOf<Int?>(null) }
 
@@ -71,7 +72,7 @@ internal fun SearchExpandedScreen(
     }
 
     val providerData = remember(viewModel.selectedProviderIndex) {
-        val providerData = viewModel.providerDataList
+        val providerData = providerDataList
             .getOrNull(viewModel.selectedProviderIndex - 1)
 
         if (providerData == null) {
@@ -152,7 +153,7 @@ internal fun SearchExpandedScreen(
                 SearchItemViewType.Films -> {
                     SearchFilmsGridView(
                         modifier = modifier,
-                        appSettings = appSettings,
+                        uiPreferences = uiPreferences,
                         listState = listState,
                         previewFilm = previewFilm,
                         viewModel = viewModel,

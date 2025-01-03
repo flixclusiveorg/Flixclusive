@@ -1,7 +1,7 @@
 package com.flixclusive.feature.mobile.film
 
 import androidx.lifecycle.SavedStateHandle
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.ui.film.BaseFilmScreenViewModel
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.data.watch_history.WatchHistoryRepository
@@ -19,7 +19,7 @@ internal class FilmScreenViewModel @Inject constructor(
     filmProvider: FilmProviderUseCase,
     toggleWatchlistStatusUseCase: ToggleWatchlistStatusUseCase,
     savedStateHandle: SavedStateHandle,
-    appSettingsManager: AppSettingsManager,
+    dataStoreManager: DataStoreManager,
     userSessionManager: UserSessionManager,
 ) : BaseFilmScreenViewModel(
     partiallyDetailedFilm = savedStateHandle.navArgs<FilmScreenNavArgs>().film,
@@ -27,6 +27,6 @@ internal class FilmScreenViewModel @Inject constructor(
     seasonProvider = seasonProvider,
     filmProvider = filmProvider,
     toggleWatchlistStatusUseCase = toggleWatchlistStatusUseCase,
-    appSettingsManager = appSettingsManager,
+    dataStoreManager = dataStoreManager,
     userSessionManager = userSessionManager
 )

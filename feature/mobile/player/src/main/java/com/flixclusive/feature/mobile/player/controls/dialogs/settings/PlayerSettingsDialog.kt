@@ -32,9 +32,9 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.availablePlaybackSpeeds
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.feature.mobile.player.controls.common.BasePlayerDialog
 import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
-import com.flixclusive.model.datastore.player.ResizeMode
-import com.flixclusive.core.ui.player.R as PlayerR
+import com.flixclusive.model.datastore.user.player.ResizeMode
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.player.R as PlayerR
 
 internal const val ELEVATED_VIDEO_SETTINGS_PANEL = 0.4F
 

@@ -20,7 +20,7 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.settings.TweakPaddingHorizontal
 
 internal val TweakTouchSize = 56.dp
-internal val TweakIconSize = 35.dp
+internal val TweakIconSize = 25.dp
 
 @Composable
 internal fun BaseTweakComponent(
@@ -75,6 +75,7 @@ internal fun BaseTweakComponent(
                 title = title,
                 description = description,
                 modifier = Modifier.weight(1F)
+                    .padding(end = defaultHorizontalPadding)
             )
 
             if (endContent != null) {

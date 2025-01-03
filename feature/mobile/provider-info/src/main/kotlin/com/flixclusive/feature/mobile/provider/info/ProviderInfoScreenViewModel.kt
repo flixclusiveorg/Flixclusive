@@ -6,16 +6,18 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.util.coroutines.AppDispatchers
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.domain.provider.GetRepositoryUseCase
 import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
 import com.flixclusive.domain.updater.ProviderUpdaterUseCase
+import com.flixclusive.model.datastore.user.ProviderPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -28,7 +30,7 @@ import com.flixclusive.core.locale.R as LocaleR
 
 @HiltViewModel
 internal class ProviderInfoScreenViewModel @Inject constructor(
-    private val appSettingsManager: AppSettingsManager,
+    private val dataStoreManager: DataStoreManager,
     private val getRepositoryUseCase: GetRepositoryUseCase,
     private val providerManager: ProviderManager,
     private val providerUpdaterUseCase: ProviderUpdaterUseCase,
@@ -48,7 +50,7 @@ internal class ProviderInfoScreenViewModel @Inject constructor(
     var repository: Repository? by mutableStateOf(null)
         private set
 
-    val warnOnInstall = appSettingsManager.providerSettings.data
+    val warnOnInstall = providerManager.providerPreferencesAsState
         .map { it.warnOnInstall }
         .stateIn(
             scope = viewModelScope,
@@ -136,7 +138,7 @@ internal class ProviderInfoScreenViewModel @Inject constructor(
     private suspend fun getRepository(url: String) {
         val (username, repositoryName) = extractGithubInfoFromLink(url) ?: return
 
-        repository = appSettingsManager.cachedProviderSettings.repositories.find {
+        repository = providerManager.providerPreferences.repositories.find {
             it.owner.equals(username, true) && it.name == repositoryName
         }
 
@@ -148,7 +150,7 @@ internal class ProviderInfoScreenViewModel @Inject constructor(
             Resource.Loading -> Unit
             is Resource.Success -> {
                 repository = onlineRepository.data
-                appSettingsManager.updateProviderSettings {
+                dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
                     it.copy(repositories = it.repositories + repository!!)
                 }
             }
@@ -161,10 +163,8 @@ internal class ProviderInfoScreenViewModel @Inject constructor(
 
     fun disableWarnOnInstall(state: Boolean) {
         viewModelScope.launch {
-            appSettingsManager.updateProviderSettings {
-                it.copy(
-                    warnOnInstall = state
-                )
+            dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
+                it.copy(warnOnInstall = state)
             }
         }
     }

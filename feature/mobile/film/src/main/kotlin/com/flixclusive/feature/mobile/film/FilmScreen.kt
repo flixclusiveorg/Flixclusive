@@ -86,7 +86,7 @@ internal fun FilmScreen(
     play: (Film, Episode?) -> Unit,
 ) {
     val viewModel: FilmScreenViewModel = hiltViewModel()
-    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val uiPreferences by viewModel.uiPreferences.collectAsStateWithLifecycle()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val film by viewModel.film.collectAsStateWithLifecycle()
     val currentSeasonSelected by viewModel.currentSeasonSelected.collectAsStateWithLifecycle()
@@ -280,8 +280,8 @@ internal fun FilmScreen(
                                 FilmCard(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .animateItemPlacement(),
-                                    isShowingTitle = appSettings.isShowingFilmCardTitle,
+                                        .animateItem(),
+                                    isShowingTitle = uiPreferences.showTitleOnCards,
                                     film = film,
                                     onClick = navigator::openFilmScreen,
                                     onLongClick = previewFilm

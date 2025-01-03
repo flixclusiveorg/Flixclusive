@@ -6,7 +6,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import com.flixclusive.model.datastore.player.CaptionStylePreference
+import com.flixclusive.model.datastore.user.player.CaptionStylePreference
 
 @Composable
 fun CaptionStylePreference.getTextStyle(): TextStyle {

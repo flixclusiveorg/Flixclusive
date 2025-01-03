@@ -7,16 +7,18 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.navigation.navargs.RepositoryScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.util.coroutines.AppDispatchers
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.domain.provider.GetOnlineProvidersUseCase
 import com.flixclusive.domain.updater.ProviderUpdaterUseCase
+import com.flixclusive.model.datastore.user.ProviderPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -32,7 +34,7 @@ internal class RepositoryScreenViewModel @Inject constructor(
     private val providerManager: ProviderManager,
     private val providerUpdaterUseCase: ProviderUpdaterUseCase,
     private val getOnlineProvidersUseCase: GetOnlineProvidersUseCase,
-    private val appSettingsManager: AppSettingsManager,
+    private val dataStoreManager: DataStoreManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     val repository = savedStateHandle.navArgs<RepositoryScreenNavArgs>().repository
@@ -46,7 +48,7 @@ internal class RepositoryScreenViewModel @Inject constructor(
         private set
     val onlineProviderMap = mutableStateMapOf<ProviderData, ProviderInstallationStatus>()
 
-    val warnOnInstall = appSettingsManager.providerSettings.data
+    val warnOnInstall = providerManager.providerPreferencesAsState
         .map { it.warnOnInstall }
         .stateIn(
             scope = viewModelScope,
@@ -187,7 +189,7 @@ internal class RepositoryScreenViewModel @Inject constructor(
 
     fun disableWarnOnInstall(state: Boolean) {
         viewModelScope.launch {
-            appSettingsManager.updateProviderSettings {
+            dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
                 it.copy(
                     warnOnInstall = state
                 )

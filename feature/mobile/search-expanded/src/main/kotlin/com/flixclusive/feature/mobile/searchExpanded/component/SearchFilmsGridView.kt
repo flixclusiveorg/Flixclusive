@@ -21,7 +21,7 @@ import com.flixclusive.core.ui.mobile.component.SMALL_ERROR
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
 import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenViewModel
-import com.flixclusive.model.datastore.AppSettings
+import com.flixclusive.model.datastore.user.UiPreferences
 import com.flixclusive.model.film.Film
 import com.flixclusive.core.locale.R as LocaleR
 
@@ -30,7 +30,7 @@ internal fun SearchFilmsGridView(
     modifier: Modifier = Modifier,
     viewModel: SearchExpandedScreenViewModel,
     listState: LazyGridState,
-    appSettings: AppSettings,
+    uiPreferences: UiPreferences,
     openFilmScreen: (Film) -> Unit,
     previewFilm: (Film) -> Unit,
 ) {
@@ -52,7 +52,7 @@ internal fun SearchFilmsGridView(
             FilmCard(
                 modifier = Modifier.fillMaxSize(),
                 film = film,
-                isShowingTitle = appSettings.isShowingFilmCardTitle,
+                isShowingTitle = uiPreferences.showTitleOnCards,
                 onClick = openFilmScreen,
                 onLongClick = previewFilm
             )
@@ -64,7 +64,7 @@ internal fun SearchFilmsGridView(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(3.dp),
-                    isShowingTitle = appSettings.isShowingFilmCardTitle
+                    isShowingTitle = uiPreferences.showTitleOnCards
                 )
             }
         }

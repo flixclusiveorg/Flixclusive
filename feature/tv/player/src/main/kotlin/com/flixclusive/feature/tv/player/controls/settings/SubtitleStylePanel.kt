@@ -52,11 +52,11 @@ import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.feature.tv.player.R
 import com.flixclusive.feature.tv.player.controls.settings.common.BorderedText
 import com.flixclusive.feature.tv.player.controls.settings.common.ConfirmButton
-import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.model.datastore.player.CaptionEdgeTypePreference
-import com.flixclusive.model.datastore.player.CaptionSizePreference
-import com.flixclusive.model.datastore.player.CaptionSizePreference.Companion.getDp
-import com.flixclusive.model.datastore.player.CaptionStylePreference
+import com.flixclusive.model.datastore.user.SubtitlesPreferences
+import com.flixclusive.model.datastore.user.player.CaptionEdgeTypePreference
+import com.flixclusive.model.datastore.user.player.CaptionSizePreference
+import com.flixclusive.model.datastore.user.player.CaptionSizePreference.Companion.getDp
+import com.flixclusive.model.datastore.user.player.CaptionStylePreference
 import com.flixclusive.core.locale.R as LocaleR
 
 
@@ -66,14 +66,14 @@ private val styleItemSize = 20.dp
 @Composable
 internal fun SubtitleStylePanel(
     modifier: Modifier = Modifier,
-    appSettings: AppSettings,
-    updateAppSettings: (AppSettings) -> Unit,
+    subtitlesPreferences: SubtitlesPreferences,
+    updatePreferences: (SubtitlesPreferences) -> Unit,
     hidePanel: () -> Unit,
 ) {
-    var currentAppSettings by remember { mutableStateOf(appSettings) }
+    var currentPreferences by remember { mutableStateOf(subtitlesPreferences) }
 
-    fun updateToSaveAppSettings(appSettings: AppSettings) {
-        currentAppSettings = appSettings
+    val updateToSavePreferences = fun (newPreferences: SubtitlesPreferences) {
+        currentPreferences = newPreferences
     }
 
     BackHandler {
@@ -89,14 +89,14 @@ internal fun SubtitleStylePanel(
     ) {
         Text(
             text = stringResource(id = LocaleR.string.sample_subtitle_text),
-            style = currentAppSettings.subtitleFontStyle.getTextStyle().copy(
-                color = Color(currentAppSettings.subtitleColor),
-                fontSize = currentAppSettings.subtitleSize.sp,
-                background = Color(currentAppSettings.subtitleBackgroundColor),
+            style = currentPreferences.subtitleFontStyle.getTextStyle().copy(
+                color = Color(currentPreferences.subtitleColor),
+                fontSize = currentPreferences.subtitleSize.sp,
+                background = Color(currentPreferences.subtitleBackgroundColor),
                 shadow = Shadow(
                     offset = Offset(6F, 6F),
                     blurRadius = 3f,
-                    color = Color(currentAppSettings.subtitleEdgeType.color),
+                    color = Color(currentPreferences.subtitleEdgeType.color),
                 )
             )
         )
@@ -113,8 +113,8 @@ internal fun SubtitleStylePanel(
                 CaptionSizePreference.entries.forEach {
                     StyleItem(
                         onClick = {
-                            updateToSaveAppSettings(
-                                currentAppSettings.copy(subtitleSize = it.getDp(true))
+                            updateToSavePreferences(
+                                currentPreferences.copy(subtitleSize = it.getDp(true))
                             )
                         }
                     ) {
@@ -136,8 +136,8 @@ internal fun SubtitleStylePanel(
                 CaptionEdgeTypePreference.entries.forEach {
                     StyleItem(
                         onClick = {
-                            updateToSaveAppSettings(
-                                currentAppSettings.copy(subtitleEdgeType = it)
+                            updateToSavePreferences(
+                                currentPreferences.copy(subtitleEdgeType = it)
                             )
                         }
                     ) {
@@ -150,7 +150,7 @@ internal fun SubtitleStylePanel(
                                         shadow = Shadow(
                                             offset = Offset(4F, 4F),
                                             blurRadius = 2f,
-                                            color = Color(currentAppSettings.subtitleEdgeType.color),
+                                            color = Color(currentPreferences.subtitleEdgeType.color),
                                         )
                                     ),
                                     modifier = Modifier
@@ -160,7 +160,7 @@ internal fun SubtitleStylePanel(
                             CaptionEdgeTypePreference.Outline -> {
                                 BorderedText(
                                     text = stringResource(R.string.abc),
-                                    borderColor = Color(currentAppSettings.subtitleEdgeType.color),
+                                    borderColor = Color(currentPreferences.subtitleEdgeType.color),
                                     style = MaterialTheme.typography.labelLarge.copy(
                                         fontSize = 15.sp,
                                         textAlign = TextAlign.Center
@@ -180,8 +180,8 @@ internal fun SubtitleStylePanel(
                 CaptionStylePreference.entries.forEach {
                     StyleItem(
                         onClick = {
-                            updateToSaveAppSettings(
-                                currentAppSettings.copy(subtitleFontStyle = it)
+                            updateToSavePreferences(
+                                currentPreferences.copy(subtitleFontStyle = it)
                             )
                         }
                     ) {
@@ -210,8 +210,8 @@ internal fun SubtitleStylePanel(
                 getAvailableSubtitleColors(context = LocalContext.current).forEach { (color, _) ->
                     StyleItem(
                         onClick = {
-                            updateToSaveAppSettings(
-                                currentAppSettings.copy(subtitleColor = color.toArgb())
+                            updateToSavePreferences(
+                                currentPreferences.copy(subtitleColor = color.toArgb())
                             )
                         }
                     ) {
@@ -231,8 +231,8 @@ internal fun SubtitleStylePanel(
                 subtitleBackgroundColors.forEach { (_, color) ->
                     StyleItem(
                         onClick = {
-                            updateToSaveAppSettings(
-                                currentAppSettings.copy(subtitleBackgroundColor = color.toArgb())
+                            updateToSavePreferences(
+                                currentPreferences.copy(subtitleBackgroundColor = color.toArgb())
                             )
                         }
                     ) {
@@ -263,7 +263,7 @@ internal fun SubtitleStylePanel(
         ) {
             ConfirmButton(
                 onClick = {
-                    updateAppSettings(currentAppSettings)
+                    updatePreferences(currentPreferences)
                     hidePanel()
                 },
                 isEmphasis = true,

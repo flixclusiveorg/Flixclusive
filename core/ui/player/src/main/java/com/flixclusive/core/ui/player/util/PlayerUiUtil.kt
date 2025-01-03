@@ -44,7 +44,7 @@ import com.flixclusive.core.ui.player.databinding.CustomPlayerBinding
 import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.model.database.util.calculateRemainingTime
 import com.flixclusive.model.database.util.isTimeInRangeOfThreshold
-import com.flixclusive.model.datastore.player.ResizeMode
+import com.flixclusive.model.datastore.user.player.ResizeMode
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.util.FilmType

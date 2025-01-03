@@ -88,7 +88,8 @@ fun PlayerScreen(
     var hasLaunchedFromIdle by remember { mutableStateOf(false) }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val playerPreferences by viewModel.playerPreferences.collectAsStateWithLifecycle()
+    val subtitlesPreferences by viewModel.subtitlesPreferences.collectAsStateWithLifecycle()
     val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
     val currentEpisodeSelected by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
@@ -297,7 +298,7 @@ fun PlayerScreen(
                 ) {
                     AudioFocusManager(
                         activity = context,
-                        preferredSeekAmount = appSettings.preferredSeekAmount,
+                        preferredSeekAmount = playerPreferences.seekAmount,
                         isTv = true
                     )
 
@@ -361,7 +362,8 @@ fun PlayerScreen(
 
                     PlaybackControls(
                         modifier = Modifier.fillMaxSize(),
-                        appSettings = appSettings,
+                        playerPreferences = playerPreferences,
+                        subtitlesPreferences = subtitlesPreferences,
                         isSubtitleStylePanelOpened = isSubtitleStylePanelOpened,
                         isSyncSubtitlesPanelOpened = isSyncSubtitlesPanelOpened,
                         isAudioAndSubtitlesPanelOpened = isAudioAndSubtitlesPanelOpened,
@@ -378,7 +380,7 @@ fun PlayerScreen(
                         isLastEpisode = isLastEpisode,
                         seekMultiplier = seekMultiplier,
                         showControls = { showControls(it) },
-                        updateAppSettings = viewModel::updateAppSettings,
+                        updatePreferences = viewModel::updatePreferences,
                         onServerChange = viewModel::onServerChange,
                         onProviderChange = { newProvider ->
                             viewModel.onProviderChange(

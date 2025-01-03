@@ -8,18 +8,19 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.navigation.navargs.GenreScreenNavArgs
 import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.data.tmdb.SortOptions
 import com.flixclusive.data.tmdb.TMDBRepository
+import com.flixclusive.model.datastore.user.UiPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.film.util.FilmType.Companion.toFilmType
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,15 +28,11 @@ import javax.inject.Inject
 internal class GenreViewModel @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     savedStateHandle: SavedStateHandle,
-    appSettingsManager: AppSettingsManager,
+    dataStoreManager: DataStoreManager,
 ) : ViewModel() {
-    val appSettings = appSettingsManager.appSettings
-        .data
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.cachedAppSettings
-        )
+    val uiPreferences = dataStoreManager
+        .getUserPrefs<UiPreferences>(UserPreferences.UI_PREFS_KEY)
+        .asStateFlow(viewModelScope)
 
     private val genreArgs = savedStateHandle.navArgs<GenreScreenNavArgs>()
     val filmTypeCouldBeBoth = genreArgs.genre.mediaType == "all"

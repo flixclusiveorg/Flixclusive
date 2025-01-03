@@ -10,9 +10,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.navigation.navargs.GenreScreenNavArgs
 import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
+import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.ui.mobile.component.film.FilmsGridScreen
 import com.flixclusive.core.ui.mobile.util.shouldPaginate
-import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
 
@@ -27,7 +27,7 @@ internal fun GenreScreen(
     previewFilm: (Film) -> Unit,
 ) {
     val viewModel: GenreViewModel = hiltViewModel()
-    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val uiPreferences by viewModel.uiPreferences.collectAsStateWithLifecycle()
     val listState = rememberLazyGridState()
 
     val shouldStartPaginate by remember {
@@ -44,7 +44,7 @@ internal fun GenreScreen(
     FilmsGridScreen(
         listState =  listState,
         pagingState = viewModel.pagingState,
-        isShowingFilmCardTitle = appSettings.isShowingFilmCardTitle,
+        isShowingFilmCardTitle = uiPreferences.showTitleOnCards,
         currentFilter = if(viewModel.filmTypeCouldBeBoth) viewModel.currentFilterSelected else null,
         screenTitle = args.genre.name,
         films = viewModel.films,

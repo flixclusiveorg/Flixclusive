@@ -5,7 +5,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.watch_history.WatchHistoryRepository
@@ -14,6 +15,8 @@ import com.flixclusive.domain.tmdb.FilmProviderUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.toWatchlistItem
+import com.flixclusive.model.datastore.user.UiPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmDetails
 import com.flixclusive.model.film.TvShow
@@ -45,7 +48,7 @@ abstract class BaseFilmScreenViewModel(
     private val filmProvider: FilmProviderUseCase,
     private val toggleWatchlistStatusUseCase: ToggleWatchlistStatusUseCase,
     private val userSessionManager: UserSessionManager,
-    appSettingsManager: AppSettingsManager
+    dataStoreManager: DataStoreManager
 ) : ViewModel() {
     private val filmId: String = partiallyDetailedFilm.identifier
 
@@ -65,13 +68,9 @@ abstract class BaseFilmScreenViewModel(
 
     var selectedSeasonNumber by mutableIntStateOf(value = 1)
 
-    val appSettings = appSettingsManager.appSettings
-        .data
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.cachedAppSettings
-        )
+    val uiPreferences = dataStoreManager
+        .getUserPrefs<UiPreferences>(UserPreferences.UI_PREFS_KEY)
+        .asStateFlow(viewModelScope)
 
     val watchHistoryItem = userSessionManager.currentUser
         .filterNotNull()

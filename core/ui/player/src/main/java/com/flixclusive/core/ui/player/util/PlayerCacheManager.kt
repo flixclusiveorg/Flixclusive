@@ -8,7 +8,7 @@ import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.NoOpCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.datastore.NO_LIMIT_PLAYER_CACHE_SIZE
+import com.flixclusive.model.datastore.user.NO_LIMIT_PLAYER_CACHE_SIZE
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject

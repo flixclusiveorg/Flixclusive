@@ -123,7 +123,7 @@
     <string name="check_for_updates">Check for updates</string>
     <string name="choose_an_avatar">Choose an avatar</string>
     <string name="clear_app_cache">Clear app cache</string>
-    <string name="clear_cache_links">Clear cached links</string>
+    <string name="clear_cached_links">Clear cached links</string>
     <string name="clear_library">Clear library</string>
     <string name="clear_search_history">Clear search history</string>
     <string name="clear_tests">Clear tests</string>
@@ -146,12 +146,13 @@
     <string name="default_label">(default)</string>
     <string name="default_user_agent">Default user agent</string>
     <string name="delete_profile">Delete profile</string>
+    <string name="delete_providers">Delete all providers</string>
+    <string name="delete_repositories">Delete all repositories</string>
     <string name="delete_search_history_item">Delete search history item</string>
     <string name="description">Description</string>
     <string name="disable_warning">Disable warning</string>
     <string name="doh">DNS over HTTPS</string>
     <string name="drop_shadow">Drop shadow</string>
-    <string name="outline">Outline</string>
     <string name="edit">Edit</string>
     <string name="edit_profile">Edit profile</string>
     <string name="episodes">Episodes</string>
@@ -160,6 +161,7 @@
     <string name="feature_request">Feature request</string>
     <string name="film_card_titles">Detailed film cards</string>
     <string name="film_filter">Film Type</string>
+    <string name="finish">Finish</string>
     <string name="first_time_providers_screen_title">Welcome to the Providers Screen!</string>
     <string name="flixclusive_providers">Flixclusive Providers</string>
     <string name="gender_female">Female</string>
@@ -177,6 +179,7 @@
     <string name="identity">Identity</string>
     <string name="ignore_warning_message">Don\'t warn me anymore.</string>
     <string name="import_label">Import</string>
+    <string name="incognito">Incognito</string>
     <string name="install">Install</string>
     <string name="install_all">Install all</string>
     <string name="issue_a_bug">Issue a bug</string>
@@ -184,11 +187,11 @@
     <string name="load_url">Load URL</string>
     <string name="lock">Lock</string>
     <string name="maintenance_all_caps">MAINTENANCE</string>
+    <string name="manage_providers">Manage providers</string>
     <string name="more_details">More details</string>
     <string name="more_like_this">More like this</string>
     <string name="name">Name</string>
     <string name="network">Network</string>
-    <string name="finish">Finish</string>
     <string name="next">Next</string>
     <string name="next_episode">Next episode</string>
     <string name="no_cache_limit_label">No cache limit (plz dont)</string>
@@ -206,11 +209,11 @@
     <string name="opt_in_prerelease">Ok 🗿</string>
     <string name="opt_out_prerelease">Hell nah 😭</string>
     <string name="other_films_message">Other films you might like!</string>
+    <string name="outline">Outline</string>
     <string name="pause">Pause</string>
-    <string name="pause_search_history">Pause search history</string>
     <string name="pin">PIN</string>
-    <string name="pin_hint">PIN hint</string>
     <string name="pin_confirm">Confirm PIN</string>
+    <string name="pin_hint">PIN hint</string>
     <string name="pin_setup">Setup PIN</string>
     <string name="pin_verify">Enter your current PIN</string>
     <string name="pip_mode">PiP mode</string>
@@ -252,6 +255,7 @@
     <string name="search_suggestion">Try searching \"Iron Man\"…</string>
     <string name="see_all">See all</string>
     <string name="seek_length_label">Player seek length</string>
+    <string name="selected_label">Selected</string>
     <string name="servers">Servers</string>
     <string name="share_button">Share button</string>
     <string name="share_the_app">Share the App!</string>
@@ -280,6 +284,7 @@
     <string name="subtitles_window_color">Window color</string>
     <string name="sync">Sync</string>
     <string name="sync_subtitles">Sync Subtitles</string>
+    <string name="system">System</string>
     <string name="test_provider">Test provider</string>
     <string name="test_providers">Test providers</string>
     <string name="understanding_providers">Understanding Providers</string>
@@ -293,7 +298,6 @@
     <string name="user">User</string>
     <string name="user_avatar">User avatar</string>
     <string name="user_interface">User interface</string>
-    <string name="selected">Selected</string>
     <string name="version">Version</string>
     <string name="video">Video</string>
     <string name="video_buffer_max_length">Maximum time to buffer</string>
@@ -309,12 +313,12 @@
     <string name="whos_watching">Who\'s watching?</string>
 
     <!--  On-boarding messages  -->
-    <string name="onboarding_profile_name_title">Who will be watching?</string>
-    <string name="onboarding_profile_avatar_title">Choosing an avatar</string>
-    <string name="onboarding_profile_pin_title">Need some privacy?</string>
-    <string name="onboarding_profile_name_description">The first thing for a delightful enjoyment is to set up a name!</string>
     <string name="onboarding_profile_avatar_description">The next step to personalize your journey is to pick an avatar that feels just right!</string>
+    <string name="onboarding_profile_avatar_title">Choosing an avatar</string>
+    <string name="onboarding_profile_name_description">The first thing for a delightful enjoyment is to set up a name!</string>
+    <string name="onboarding_profile_name_title">Who will be watching?</string>
     <string name="onboarding_profile_pin_description">To wrap things up, you can set a secure PIN lock to keep your profile safe and sound!</string>
+    <string name="onboarding_profile_pin_title">Need some privacy?</string>
 
     <!--  Color  -->
     <string name="cyan">Cyan</string>
@@ -399,23 +403,22 @@
     <string name="updates_out_now_provider_format">Updates for plugins are available: %1$s</string>
 
     <!--  Content descriptions  -->
-    <string name="avatar_chosen_content_desc">Avatar chosen</string>
     <string name="action_warning_format_message">Are you sure you want to do the following action: %1$s?</string>
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>
     <string name="add_500ms_content_description">Add 500ms on subtitle delay</string>
     <string name="add_to_watchlist_button">Add to watchlist button</string>
     <string name="add_user_button_content_desc">Add a new user profile</string>
     <string name="added_to_watchlist_button">Added to watchlist button</string>
-    <string name="advanced_settings_content_desc">This contains all the settings that are for <i>techy</i> users to configure.</string>
     <string name="animated_tag_content_desc">Animated Flixclusive tag</string>
-    <string name="appearance_settings_content_desc">This contains all the settings to customize how the general appearance of the app look and feel.</string>
     <string name="audio_and_subtitle_button_desc">An icon for available audio and subtitle for the player</string>
     <string name="audio_icon_content_desc">Audio icon</string>
     <string name="audio_snackbar_message">Audio set to %1$s</string>
     <string name="author_icon_content_desc">Author icon</string>
     <string name="automatic_crash_report">Automatic crash report</string>
+    <string name="avatar_chosen_content_desc">Avatar chosen</string>
+    <string name="backspace_content_desc">Backspace button to delete text</string>
     <string name="backward_button_content_description">Backward button for the player</string>
-    <string name="cache_links_item_count">You have %1$d cached links</string>
+    <string name="cached_links_description_format">Links are cached to avoid reloading them from their source provider, reducing unnecessary network calls. Currently, you have %1$d links in the cache.</string>
     <string name="change_avatar_content_desc">Change user\'s avatar</string>
     <string name="change_logs_image_content_desc">Change logs image logo</string>
     <string name="clear_cache_content_desc">Clear cache</string>
@@ -424,10 +427,8 @@
     <string name="copy_button">Copy to clipboard button</string>
     <string name="copy_full_logs_button">Copy full logs to clipboard</string>
     <string name="copy_stack_trace_content_desc">Copy button for error stack trace</string>
-    <string name="data_and_backup_settings_content_desc">This contains all the settings to customize how your data is handled.</string>
     <string name="decoder_priority_description">Preferred decoder for improved playback compatibility. May fix issues with high-quality streams and no-audio streams on devices with limited hardware support.</string>
     <string name="default_user_agent_description">Your user agent is like a digital ID for your browser or app, telling websites and servers who\'s asking for information.</string>
-    <string name="backspace_content_desc">Backspace button to delete text</string>
     <string name="delete_profile_content_desc">Deletes profile entirely from app</string>
     <string name="delete_search_history_item_message">Are you sure you want to delete this search history item?</string>
     <string name="doh_content_desc">DNS over HTTPS (DoH) can help bypass some ISP blocks by encrypting your DNS queries. However, it\'s important to note that this method is not foolproof and may not work in all cases</string>
@@ -439,14 +440,13 @@
     <string name="episodes_button_desc">An icon for episodes button</string>
     <string name="error_icon_content_desc">Error icon</string>
     <string name="expand_card_icon_content_desc">Expand test result card icon</string>
-    <string name="film_card_titles_settings_content_desc">Display the titles on under the media cards.</string>
+    <string name="film_card_titles_settings_desc">Display the titles on under the media cards.</string>
     <string name="film_item_content_description">A film\'s backdrop, picture or poster.</string>
     <string name="filter_button">Filter button</string>
     <string name="flixclusive_icon_content_desc">Flixclusive icon</string>
     <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>
     <string name="forward_button_content_description">Forward button for the player</string>
-    <string name="general_settings_content_desc">This contains all the general settings that are not related any of the specified groups on the settings navigation.</string>
-    <string name="on_boarding_background_content_desc">A background image for this on-boarding screen</string>
+    <string name="incognito_content_desc">Pauses watch history, search history, and any data that can be logged by the app.</string>
     <string name="lock_button_desc">An icon for locking the player</string>
     <string name="locked_profile_button_desc">Profile has a pin lock</string>
     <string name="missing_providers_logo_content_description">Missing providers logo</string>
@@ -454,25 +454,24 @@
     <string name="navigate_to_repository_content_desc">Open repository screen</string>
     <string name="navigate_up">Go back</string>
     <string name="next_episode_button_desc">An icon for next episode</string>
+    <string name="on_boarding_background_content_desc">A background image for this on-boarding screen</string>
     <string name="overview_collapse">Show less of the film\'s description</string>
     <string name="overview_expand">Expand all of the film\'s description</string>
     <string name="owner_avatar_content_desc">Avatar or picture of repository\'s owner</string>
+    <string name="pause_button">Pause button</string>
+    <string name="pin_content_desc">Setup a pin lock for this profile</string>
     <string name="pin_hint_description">Create a hint for your PIN</string>
     <string name="pin_hint_sub_description">This will help you remember what your PIN is if you somehow forget it</string>
-    <string name="pause_button">Pause button</string>
-    <string name="paused_search_history_content_desc">Pauses search history for incognito purposes.</string>
-    <string name="pin_content_desc">Setup a pin lock for this profile</string>
     <string name="pin_remove_content_desc">Remove the pin lock for this profile</string>
-    <string name="selected_avatar_content_desc">Selected avatar</string>
     <string name="pip_mode_desc">Picture-in-picture (PiP) lets you watch videos while using other apps.</string>
     <string name="play_button">Play button</string>
     <string name="play_pause_button_content_description">Play or pause button</string>
     <string name="playback_speed_snackbar_message">Playback speed set to %1$s</string>
-    <string name="player_settings_content_desc">This contains all the settings that are related to the player including subtitles, audio and UI.</string>
     <string name="poster_content_description">A poster of %1$s</string>
     <string name="provider_icon_content_desc">Default icon of a provider</string>
     <string name="provider_snackbar_message">Provider set to %1$s</string>
     <string name="provider_updates_log">Provider\'s update logs</string>
+    <string name="providers_button_settings_description">Add, remove, or modify providers to suit your preferences.</string>
     <string name="quality_snackbar_message">Quality set to %1$s</string>
     <string name="rating_icon">Rating Icon</string>
     <string name="release_player_desc">Releases player when minimizing the app. For seamless playback, turn this off. Though, this is required to free device memory.</string>
@@ -486,6 +485,7 @@
     <string name="search_history_icon">An icon for search history</string>
     <string name="search_history_item_count_format">You have %1$d search history items</string>
     <string name="see_more_btn_content_desc">A vertical see more button icon</string>
+    <string name="selected_avatar_content_desc">Selected avatar</string>
     <string name="server_snackbar_message">Server set to %1$s</string>
     <string name="signup_prerelease_updates_desc">Opt-in on using pre-release updates instead of official ones.</string>
     <string name="sort_icon_content_desc">Sort icon</string>
@@ -493,7 +493,6 @@
     <string name="subtitle_snackbar_message">Subtitle set to %1$s</string>
     <string name="subtitles_background_color_desc">Choose a background color behind the subtitle</string>
     <string name="subtitles_color_desc">Choose a readable and preferred color</string>
-    <string name="subtitles_settings_content_desc">This contains all the settings to customize how subtitles are displayed.</string>
     <string name="subtitles_toggle_desc">Toggle to turn subtitles on/off</string>
     <string name="subtract_1000ms_content_description">Subtract 1000ms on subtitle delay</string>
     <string name="subtract_500ms_content_description">Subtract 500ms on subtitle delay</string>
@@ -506,8 +505,17 @@
     <string name="video_cache_size_label">The dedicated video cache for the player. Always limit the cache if you have limited storage space.</string>
     <string name="view_type_button_content_desc">Change view type of list</string>
     <string name="volume_booster_desc">Adds an additional volume (dB) to the player. However, it might cause device to not play the audio properly.</string>
+    <string name="warn_delete_items_format">You have %1$d item to delete.</string>
     <string name="warn_on_unsafe_install_description">Triggers an alert dialog when an unsafe Provider installation is detected. This is a recommended option, as Providers operate independently and are not monitored by the app.</string>
     <string name="warning_content_description">Warning icon</string>
+
+    <!--  Tweak/settings screens descriptions  -->
+    <string name="appearance_settings_content_desc">This contains all the settings to customize how the general appearance of the app look and feel.</string>
+    <string name="data_and_backup_settings_content_desc">This contains all the settings to customize how your data is handled.</string>
+    <string name="player_settings_content_desc">This contains all the settings that are related to the player including subtitles, audio and UI.</string>
+    <string name="providers_settings_content_desc">This contains all the settings to manage how providers are managed.</string>
+    <string name="subtitles_settings_content_desc">This contains all the settings to customize how subtitles are displayed.</string>
+    <string name="system_settings_content_desc">This contains all system-level settings that are not tied to individual users or profiles. Changes made here will affect all users and profiles utilizing the app.</string>
 
     <!--  Share app message  -->
     <string name="share_message">Watch all latest and exclusive films at:\n\n%1$s</string>

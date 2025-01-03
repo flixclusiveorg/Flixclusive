@@ -32,7 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
@@ -55,7 +54,6 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.ObservePlayerTime
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatPlayerTitle
 import com.flixclusive.core.ui.player.util.updatePiPParams
 import com.flixclusive.core.util.android.getActivity
-import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.feature.mobile.player.controls.PlayerControls
 import com.flixclusive.feature.mobile.player.controls.dialogs.provider.ProviderResourceStateScreen
 import com.flixclusive.feature.mobile.player.util.BrightnessManager
@@ -87,7 +85,7 @@ internal fun PlayerScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val providerState by viewModel.dialogState.collectAsStateWithLifecycle()
 
-    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val playerPreferences by viewModel.playerPreferences.collectAsStateWithLifecycle()
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
 
     val mediaData = viewModel.cachedLinks
@@ -152,7 +150,7 @@ internal fun PlayerScreen(
         }
     }
 
-    /**
+    /*
      *
      * If a user comes back from an [Lifecycle.Event.ON_DESTROY] state for a long time,
      * the system will decide to kill the app. This side effect will
@@ -205,7 +203,7 @@ internal fun PlayerScreen(
                 context.updatePiPParams(
                     isPlaying = viewModel.player.isPlaying,
                     hasEnded = viewModel.player.playbackState == Player.STATE_ENDED,
-                    preferredSeekIncrement = appSettings.preferredSeekAmount
+                    preferredSeekIncrement = playerPreferences.seekAmount
                 )
             }
         }
@@ -330,8 +328,8 @@ internal fun PlayerScreen(
 
         AudioFocusManager(
             activity = context,
-            preferredSeekAmount = appSettings.preferredSeekAmount,
-            isPiPModeEnabled = appSettings.isPiPModeEnabled
+            preferredSeekAmount = playerPreferences.seekAmount,
+            isPiPModeEnabled = playerPreferences.isPiPModeEnabled
         )
 
         Box(
@@ -387,7 +385,7 @@ internal fun PlayerScreen(
 
             PlayerControls(
                 isVisible = viewModel.areControlsVisible && !isInPipMode,
-                appSettings = appSettings,
+                playerPreferences = playerPreferences,
                 areControlsLocked = viewModel.areControlsLocked,
                 isDoubleTapping = isDoubleTapping,
                 isEpisodesSheetOpened = isEpisodesSheetOpened,

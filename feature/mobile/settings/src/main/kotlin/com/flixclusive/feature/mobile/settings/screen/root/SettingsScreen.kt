@@ -10,6 +10,7 @@ import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
+import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -27,14 +28,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
+import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.user.getAvatarResource
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettingsProvider
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalScaffoldNavigator
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalSettingsViewModel
+import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
+import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
 import com.flixclusive.model.database.User
+import com.flixclusive.model.datastore.FlixclusivePrefs
 import com.ramcosta.composedestinations.annotation.Destination
 
 @SuppressLint("UnusedContentLambdaTargetStateParameter")
@@ -45,12 +45,9 @@ internal fun SettingsScreen(
     navigator: SettingsScreenNavigator
 ) {
     val viewModel = hiltViewModel<SettingsViewModel>()
-    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
-    val appSettingsProvider by viewModel.appSettingsProvider.collectAsStateWithLifecycle()
     val currentUser by viewModel.userSessionManager.currentUser.collectAsStateWithLifecycle()
-    val searchHistoryCount by viewModel.searchHistoryCount.collectAsStateWithLifecycle()
 
-    val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<BaseTweakScreen>()
+    val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<BaseTweakScreen<FlixclusivePrefs>>()
     val isListAndDetailVisible =
         scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
         && scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
@@ -63,10 +60,8 @@ internal fun SettingsScreen(
 
     if (currentUser != null) {
         CompositionLocalProvider(
-            LocalAppSettings provides appSettings,
-            LocalAppSettingsProvider provides appSettingsProvider,
             LocalScaffoldNavigator provides scaffoldNavigator,
-            LocalSettingsViewModel provides viewModel,
+            LocalSettingsNavigator provides navigator,
         ) {
             AnimatedContent(targetState = isListAndDetailVisible, label = "settings screen") {
                 ListDetailPaneScaffold(
@@ -83,9 +78,8 @@ internal fun SettingsScreen(
 
                         AnimatedPane {
                             ListContent(
+                                viewModel = viewModel,
                                 currentUser = { currentUser!! },
-                                searchHistoryCount = searchHistoryCount,
-                                onClearSearchHistory = viewModel::clearSearchHistory,
                                 navigator = navigator,
                                 onItemClick = { item ->
                                     scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
@@ -108,7 +102,9 @@ internal fun SettingsScreen(
                                 isDetailsVisible = !isListVisible,
                                 navigateBack = {
                                     if (scaffoldNavigator.canNavigateBack()) {
-                                        scaffoldNavigator.navigateBack()
+                                        scaffoldNavigator.navigateBack(
+                                            backNavigationBehavior = BackNavigationBehavior.PopLatest
+                                        )
                                     }
                                 },
                                 content = {
@@ -156,6 +152,11 @@ private fun getAdaptiveBackground(
             0.4F to surfaceColor
         )
     }
+}
+
+interface SettingsScreenNavigator : GoBackAction {
+    fun openProvidersScreen()
+    fun openLink(url: String)
 }
 
 internal fun getNavigatorPreview() = object : SettingsScreenNavigator {

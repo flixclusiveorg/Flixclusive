@@ -14,11 +14,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenViewModel
@@ -32,6 +34,7 @@ internal fun SearchProvidersView(
     viewModel: SearchExpandedScreenViewModel,
 ) {
     val listState = rememberLazyListState()
+    val providerDataList by viewModel.providerDataList.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         safeCall {
@@ -73,7 +76,7 @@ internal fun SearchProvidersView(
             )
         }
 
-        itemsIndexed(viewModel.providerDataList) { i, item ->
+        itemsIndexed(providerDataList) { i, item ->
             SearchProviderBlock(
                 providerData = item,
                 isSelected = viewModel.selectedProviderIndex == i + 1,

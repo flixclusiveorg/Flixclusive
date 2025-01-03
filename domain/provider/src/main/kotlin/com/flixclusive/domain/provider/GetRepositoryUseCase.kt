@@ -1,15 +1,16 @@
 package com.flixclusive.domain.provider
 
-import com.flixclusive.core.datastore.AppSettingsManager
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
+import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
 import com.flixclusive.domain.provider.util.isProviderBranchValid
+import com.flixclusive.model.datastore.user.ProviderPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 import com.flixclusive.core.locale.R as LocaleR
@@ -27,16 +28,22 @@ import com.flixclusive.core.locale.R as LocaleR
  */
 class GetRepositoryUseCase @Inject constructor(
     private val client: OkHttpClient,
-    private val appSettingsManager: AppSettingsManager
+    private val dataStoreManager: DataStoreManager
 ) {
     suspend operator fun invoke(url: String): Resource<Repository> {
         return withIOContext {
             safeCall {
-                val repositories = appSettingsManager.providerSettings.data
-                    .map { it.repositories }.first()
+                val repositories = dataStoreManager
+                    .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
+                    .first()
+                    .repositories
+
                 val (username, repositoryName) = extractGithubInfoFromLink(url) ?: (null to null)
 
-                val isAlreadyAdded = repositories.any { it.owner.equals(username, true) && it.name == repositoryName }
+                val isAlreadyAdded = repositories.any {
+                    it.owner.equals(username, true)
+                        && it.name == repositoryName
+                }
                 if (isAlreadyAdded) {
                     return@withIOContext Resource.Failure(LocaleR.string.already_added_repo_error)
                 }

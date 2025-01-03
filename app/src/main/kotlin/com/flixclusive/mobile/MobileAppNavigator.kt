@@ -15,7 +15,6 @@ import com.flixclusive.core.ui.common.navigation.navigator.ProviderTestNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.ProvidersScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.RepositorySearchScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.SearchScreenNavigator
-import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.UpdateDialogNavigator
 import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
@@ -34,6 +33,7 @@ import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDe
 import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
+import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
 import com.flixclusive.feature.mobile.settings.screen.root.destinations.SettingsScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateDialogDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination

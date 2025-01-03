@@ -30,7 +30,7 @@ internal fun RecentlyWatchedScreen(
     previewFilm: (Film) -> Unit,
 ) {
     val viewModel = hiltViewModel<RecentlyWatchedScreenViewModel>()
-    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val uiPreferences by viewModel.uiPreferences.collectAsStateWithLifecycle()
     val watchHistoryItems by viewModel.items.collectAsStateWithLifecycle()
 
     Box {
@@ -73,7 +73,7 @@ internal fun RecentlyWatchedScreen(
                 modifier = Modifier.fillMaxSize(),
                 screenTitle = stringResource(LocaleR.string.recently_watched),
                 films = watchHistoryItems,
-                isShowingFilmCardTitle = appSettings.isShowingFilmCardTitle,
+                isShowingFilmCardTitle = uiPreferences.showTitleOnCards,
                 onFilmClick = navigator::openFilmScreen,
                 onNavigationIconClick = navigator::goBack,
                 onFilmLongClick = previewFilm,

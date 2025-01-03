@@ -3,7 +3,6 @@ package com.flixclusive.feature.mobile.player.controls
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -18,11 +17,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.feature.mobile.player.R
 import com.flixclusive.feature.mobile.player.controls.dialogs.audio_and_subtitle.PlayerAudioAndSubtitleDialog
 import com.flixclusive.feature.mobile.player.controls.dialogs.servers.PlayerServersDialog
@@ -32,20 +31,19 @@ import com.flixclusive.feature.mobile.player.controls.gestures.GestureDirection
 import com.flixclusive.feature.mobile.player.controls.gestures.SeekerAndSliderGestures
 import com.flixclusive.feature.mobile.player.util.rememberBrightnessManager
 import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.datastore.AppSettings
-import com.flixclusive.model.provider.link.Stream
-import com.flixclusive.model.provider.link.Subtitle
+import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.player.R as PlayerR
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 internal fun PlayerControls(
     isVisible: Boolean,
-    appSettings: AppSettings,
+    playerPreferences: PlayerPreferences,
     areControlsLocked: Boolean,
     isDoubleTapping: MutableState<Boolean>,
     isEpisodesSheetOpened: MutableState<Boolean>,
@@ -203,7 +201,7 @@ internal fun PlayerControls(
 
                         CenterControls(
                             modifier = Modifier.align(Alignment.Center),
-                            seekIncrementMs = appSettings.preferredSeekAmount,
+                            seekIncrementMs = playerPreferences.seekAmount,
                             showControls = showControls
                         )
                     }
@@ -220,7 +218,7 @@ internal fun PlayerControls(
                                 )
                             ),
                         isSeeking = isSeeking,
-                        isPlayerTimeReversed = appSettings.isPlayerTimeReversed,
+                        isPlayerTimeReversed = playerPreferences.isDurationReversed,
                         isTvShow = currentEpisodeSelected != null,
                         isLastEpisode = isLastEpisode,
                         showControls = showControls,

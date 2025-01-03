@@ -58,8 +58,7 @@ internal fun SplashScreen(
     val context = LocalContext.current
     val viewModel: SplashScreenViewModel = hiltViewModel()
 
-    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
-    val onBoardingPreferences by viewModel.onBoardingPreferences.collectAsStateWithLifecycle()
+    val systemPreferences by viewModel.systemPreferences.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle()
     val configurationStatus by viewModel.configurationStatus.collectAsStateWithLifecycle()
@@ -75,7 +74,7 @@ internal fun SplashScreen(
     ) {
         SharedTransitionLayout {
             AnimatedContent(
-                targetState = onBoardingPreferences.isFirstTimeUserLaunch_,
+                targetState = systemPreferences.isFirstTimeUserLaunch,
                 transitionSpec = {
                     EnterTransition.None togetherWith ExitTransition.None
                 },
@@ -86,15 +85,10 @@ internal fun SplashScreen(
                         animatedScope = this@AnimatedContent,
                         sharedTransitionScope = this@SharedTransitionLayout,
                         onAgree = { isOptingIn ->
-                            with(viewModel) {
-                                updateOnBoardingPreferences {
-                                    it.copy(isFirstTimeUserLaunch_ = false)
-                                }
-
-                                updateSettings(
-                                    appSettings.copy(
-                                        isSendingCrashLogsAutomatically = isOptingIn
-                                    )
+                            viewModel.updateSettings {
+                                it.copy(
+                                    isFirstTimeUserLaunch = false,
+                                    isSendingCrashLogsAutomatically = isOptingIn
                                 )
                             }
                         }
@@ -124,7 +118,7 @@ internal fun SplashScreen(
 
                     LaunchedEffect(updateStatus, configurationStatus, areAllPermissionsGranted, isDoneLoading, userLoggedIn) {
                         if (areAllPermissionsGranted && isDoneLoading) {
-                            val hasAutoUpdate = appSettings.isUsingAutoUpdateAppFeature
+                            val hasAutoUpdate = systemPreferences.isUsingAutoUpdateAppFeature
                             val isAppOutdated = updateStatus is UpdateStatus.Outdated
                             val isAppUpdated = updateStatus is UpdateStatus.UpToDate
                             val updateHasErrors = updateStatus is UpdateStatus.Error
@@ -134,8 +128,8 @@ internal fun SplashScreen(
                             val hasOldUserSession = userLoggedIn != null
 
                             val isNavigatingToHome = ((isAppUpdated && hasAutoUpdate) || isConfigFetched)
-                                    && isHomeScreenReady
-                                    && hasOldUserSession
+                                && isHomeScreenReady
+                                && hasOldUserSession
                             hasErrors = (updateHasErrors && hasAutoUpdate) || configHasErrors
 
                             if (isAppOutdated && hasAutoUpdate) {

@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.settings.screen.root
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -36,13 +35,11 @@ internal fun DetailsScaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.Transparent,
         topBar = {
-            AnimatedContent(isDetailsVisible, label = "DetailsScaffold top bar") { state ->
-                if (state) {
-                    CommonTopBar(
-                        title = "",
-                        onNavigate = navigateBack
-                    )
-                }
+            if (isDetailsVisible) {
+                CommonTopBar(
+                    title = "",
+                    onNavigate = navigateBack
+                )
             }
         }
     ) { padding ->

@@ -83,7 +83,7 @@ internal fun MobileActivity.MobileApp(
     val context = LocalContext.current
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val hasSeenChangelogsForCurrentBuild by viewModel.hasSeenChangelogsForCurrentBuild.collectAsStateWithLifecycle()
+    val hasSeenNewChangelogs by viewModel.hasSeenNewChangelogs.collectAsStateWithLifecycle()
     val isConnectedAtNetwork by viewModel.isConnectedAtNetwork.collectAsStateWithLifecycle()
 
     val filmToPreview by viewModel.filmToPreview.collectAsStateWithLifecycle()
@@ -122,8 +122,8 @@ internal fun MobileActivity.MobileApp(
         )
     }
 
-    LaunchedEffect(hasSeenChangelogsForCurrentBuild, currentSelectedScreen) {
-        if (hasSeenChangelogsForCurrentBuild && currentSelectedScreen != SplashScreenDestination) {
+    LaunchedEffect(hasSeenNewChangelogs, currentSelectedScreen) {
+        if (hasSeenNewChangelogs && currentSelectedScreen != SplashScreenDestination) {
             delay(1000L) // Add delay for smooth transition
             val changelogsId = context.resources
                 .getIdentifier(
@@ -147,7 +147,7 @@ internal fun MobileActivity.MobileApp(
                 restoreState = true
             }
 
-            viewModel.onSaveLastSeenChangelogsVersion(
+            viewModel.onSaveLastSeenChangelogs(
                 version = viewModel.currentVersionCode
             )
         }

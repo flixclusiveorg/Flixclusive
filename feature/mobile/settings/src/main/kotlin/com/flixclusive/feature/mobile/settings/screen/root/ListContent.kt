@@ -19,10 +19,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,29 +33,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.navigation.navigator.SettingsScreenNavigator
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.advanced.AdvancedTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.appearance.AppearanceTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.data.DataTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.general.GeneralTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.github.FeatureRequestTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.github.IssueBugTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.github.RepositoryTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerTweakScreen
-import com.flixclusive.feature.mobile.settings.screen.providers.ProvidersTweakNavigation
+import com.flixclusive.feature.mobile.settings.screen.providers.ProvidersTweakScreen
+import com.flixclusive.feature.mobile.settings.screen.system.SystemTweakScreen
 import com.flixclusive.feature.mobile.settings.util.UiUtil.getEmphasizedLabel
 import com.flixclusive.feature.mobile.settings.util.UiUtil.getMediumEmphasizedLabel
 import com.flixclusive.model.database.User
+import com.flixclusive.model.datastore.FlixclusivePrefs
 import com.flixclusive.core.locale.R as LocaleR
 
 internal val UserScreenHorizontalPadding = 16.dp
@@ -66,24 +60,19 @@ private val NavigationButtonHeight = 50.dp
 @Composable
 internal fun ListContent(
     modifier: Modifier = Modifier,
+    viewModel: SettingsViewModel,
     currentUser: () -> User,
-    searchHistoryCount: Int = 0,
-    onClearSearchHistory: () -> Unit,
     navigator: SettingsScreenNavigator,
-    onItemClick: (BaseTweakScreen) -> Unit,
+    onItemClick: (BaseTweakScreen<FlixclusivePrefs>) -> Unit,
 ) {
     val items = remember {
         mapOf(
             LocaleR.string.application to listOf(
-                GeneralTweakScreen(mutableStateOf(false)),
-                ProvidersTweakNavigation,
-                AppearanceTweakScreen,
-                PlayerTweakScreen,
-                DataTweakScreen(
-                    searchHistoryCount = searchHistoryCount,
-                    onClearSearchHistory = onClearSearchHistory
-                ),
-                AdvancedTweakScreen
+                AppearanceTweakScreen(viewModel),
+                PlayerTweakScreen(viewModel),
+                DataTweakScreen(viewModel),
+                ProvidersTweakScreen(viewModel),
+                SystemTweakScreen(viewModel),
             ),
             LocaleR.string.github to listOf(
                 IssueBugTweakNavigation,
@@ -161,7 +150,8 @@ internal fun ListContent(
                             return@MenuItem
                         }
 
-                        onItemClick(navigation)
+                        @Suppress("UNCHECKED_CAST")
+                        onItemClick(navigation as BaseTweakScreen<FlixclusivePrefs>)
                     }
                 )
             }
@@ -296,24 +286,5 @@ private fun MenuItem(
             modifier = Modifier
                 .padding(start = 13.dp)
         )
-    }
-}
-
-@Preview
-@Composable
-private fun PreferencesScreenPreview() {
-    FlixclusiveTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            ListContent(
-                currentUser = { getDummyUser() },
-                searchHistoryCount = 1,
-                onClearSearchHistory = {},
-                navigator = getNavigatorPreview(),
-                onItemClick = {}
-            )
-        }
     }
 }

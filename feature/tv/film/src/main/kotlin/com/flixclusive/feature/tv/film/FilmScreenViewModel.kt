@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.film.BaseFilmScreenViewModel
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
@@ -28,7 +28,7 @@ internal class FilmScreenViewModel @Inject constructor(
     seasonProvider: SeasonProviderUseCase,
     toggleWatchlistStatusUseCase: ToggleWatchlistStatusUseCase,
     savedStateHandle: SavedStateHandle,
-    appSettingsManager: AppSettingsManager,
+    dataStoreManager: DataStoreManager,
     userSessionManager: UserSessionManager,
 ) : BaseFilmScreenViewModel(
     partiallyDetailedFilm = savedStateHandle.navArgs<FilmScreenNavArgs>().film,
@@ -36,7 +36,7 @@ internal class FilmScreenViewModel @Inject constructor(
     seasonProvider = seasonProvider,
     filmProvider = filmProvider,
     toggleWatchlistStatusUseCase = toggleWatchlistStatusUseCase,
-    appSettingsManager = appSettingsManager,
+    dataStoreManager = dataStoreManager,
     userSessionManager = userSessionManager
 ) {
     var errorSnackBarMessage by mutableStateOf<UiText?>(UiText.StringValue("ERR:: 404 ASDkasdmlaskdmasl"))

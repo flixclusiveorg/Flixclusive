@@ -1,6 +1,7 @@
 package com.flixclusive.data.configuration
 
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.awaitFirst
 import com.flixclusive.core.network.retrofit.GithubRawApiService
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
@@ -13,7 +14,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -40,7 +40,7 @@ private const val MAX_RETRIES = 5
 class AppConfigurationManager @Inject constructor(
     private val githubRawApiService: GithubRawApiService,
     private val appUpdateChecker: AppUpdateChecker,
-    private val appSettingsManager: AppSettingsManager,
+    private val dataStoreManager: DataStoreManager,
     client: OkHttpClient,
 ) {
     private val userAgentManager = UserAgentManager(client)
@@ -111,8 +111,8 @@ class AppConfigurationManager @Inject constructor(
         _updateStatus.update { UpdateStatus.Fetching }
 
         try {
-            val appSettings = appSettingsManager.appSettings.data.first()
-            val isUsingPrereleaseUpdates = appSettings.isUsingPrereleaseUpdates
+            val systemPreferences = dataStoreManager.systemPreferences.awaitFirst()
+            val isUsingPrereleaseUpdates = systemPreferences.isUsingPrereleaseUpdates
 
             val status = if (isUsingPrereleaseUpdates && currentAppBuild?.debug == false) {
                 appUpdateChecker.checkForPrereleaseUpdates(

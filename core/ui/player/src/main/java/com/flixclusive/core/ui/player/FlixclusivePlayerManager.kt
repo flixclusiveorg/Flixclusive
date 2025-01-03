@@ -36,6 +36,8 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.awaitFirst
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
 import com.flixclusive.core.ui.player.util.MimeTypeParser
@@ -54,7 +56,9 @@ import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.okhttp.USER_AGENT
-import com.flixclusive.model.datastore.AppSettings
+import com.flixclusive.model.datastore.user.PlayerPreferences
+import com.flixclusive.model.datastore.user.SubtitlesPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.model.provider.link.SubtitleSource
@@ -95,11 +99,19 @@ enum class PlayerEvents {
 @OptIn(UnstableApi::class)
 class FlixclusivePlayerManager(
     client: OkHttpClient,
-    private var appSettings: AppSettings,
+    private val dataStoreManager: DataStoreManager,
     private val context: Context,
     private val playerCacheManager: PlayerCacheManager,
     private val showErrorCallback: (message: UiText) -> Unit
 ) : Player.Listener {
+    private val playerPreferences get() = dataStoreManager
+        .getUserPrefs<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY)
+        .awaitFirst()
+
+    private val subtitlesPreferences get() = dataStoreManager
+        .getUserPrefs<SubtitlesPreferences>(UserPreferences.SUBTITLES_PREFS_KEY)
+        .awaitFirst()
+
     private var mediaSession: MediaSession? = null
     private var currentStreamPlaying: Stream? = null
     private var areTracksInitialized: Boolean = false
@@ -130,8 +142,8 @@ class FlixclusivePlayerManager(
         private set
     var playWhenReady by mutableStateOf(true)
 
-    private var preferredAudioLanguage = appSettings.preferredAudioLanguage
-    var preferredSubtitleLanguage = appSettings.subtitleLanguage
+    private var preferredAudioLanguage = playerPreferences.audioLanguage
+    var preferredSubtitleLanguage = subtitlesPreferences.subtitleLanguage
 
     val displayTitle: String
         get() = (player?.mediaMetadata?.displayTitle ?: "").toString()
@@ -204,13 +216,13 @@ class FlixclusivePlayerManager(
             val trackSelector = DefaultTrackSelector(context)
             val loadControl =
                 getLoadControl(
-                    bufferCacheSize = appSettings.preferredBufferCacheSize,
-                    videoBufferMs = appSettings.preferredVideoBufferMs
+                    bufferCacheSize = playerPreferences.bufferCacheSize,
+                    videoBufferMs = playerPreferences.videoBufferMs
                 )
 
             cacheFactory = context.getCacheFactory(
                 cache = playerCacheManager.getCache(
-                    preferredDiskCacheSize = appSettings.preferredDiskCacheSize
+                    preferredDiskCacheSize = playerPreferences.diskCacheSize
                 ),
                 onlineDataSource = okHttpDataSource
             )
@@ -230,13 +242,13 @@ class FlixclusivePlayerManager(
                             textRendererOutput = textRendererOutput,
                             metadataRendererOutput = metadataRendererOutput,
                             subtitleOffset = subtitleOffset,
-                            decoderPriority = appSettings.decoderPriority,
+                            decoderPriority = playerPreferences.decoderPriority,
                             onTextRendererChange = {
                                 currentTextRenderer = it
                             }
                         )
                     }
-                    appSettings.preferredSeekAmount.let {
+                    playerPreferences.seekAmount.let {
                         setSeekBackIncrementMs(it)
                         setSeekForwardIncrementMs(it)
                     }
@@ -256,7 +268,7 @@ class FlixclusivePlayerManager(
             .Builder(context, player!!)
             .build()
 
-        if (appSettings.isUsingVolumeBoost) {
+        if (playerPreferences.isUsingVolumeBoost) {
             infoLog("Initializing the volume booster...")
             safeCall {
                 volumeManager.loudnessEnhancer = LoudnessEnhancer(player!!.audioSessionId)
@@ -301,7 +313,7 @@ class FlixclusivePlayerManager(
     }
 
     fun release(isForceReleasing: Boolean = false) {
-        val isFullyReleasingThePlayer = appSettings.shouldReleasePlayer
+        val isFullyReleasingThePlayer = playerPreferences.isForcingPlayerRelease
 
         if (isFullyReleasingThePlayer || isForceReleasing) {
             infoLog("Releasing the player...")
@@ -326,7 +338,7 @@ class FlixclusivePlayerManager(
                 extractEmbeddedSubtitles()
 
                 val subtitleIndex = when {
-                    !appSettings.isSubtitleEnabled -> 0 // == Off subtitles
+                    !subtitlesPreferences.isSubtitleEnabled -> 0 // == Off subtitles
                     else -> availableSubtitles.getIndexOfPreferredLanguage(
                         preferredLanguage = preferredSubtitleLanguage,
                         languageExtractor = { it.language }
@@ -649,17 +661,17 @@ class FlixclusivePlayerManager(
 
             // Modify subtitle style
             val style = CaptionStyleCompat(
-                appSettings.subtitleColor,
-                appSettings.subtitleBackgroundColor,
+                subtitlesPreferences.subtitleColor,
+                subtitlesPreferences.subtitleBackgroundColor,
                 Color.TRANSPARENT,
-                appSettings.subtitleEdgeType.type,
+                subtitlesPreferences.subtitleEdgeType.type,
                 Color.BLACK,
-                appSettings.subtitleFontStyle.typeface
+                subtitlesPreferences.subtitleFontStyle.typeface
             )
 
-            val fontSize = if (isInPictureInPictureMode)
-                FONT_SIZE_PIP_MODE
-            else appSettings.subtitleSize
+            val fontSize =
+                if (isInPictureInPictureMode) FONT_SIZE_PIP_MODE
+                else subtitlesPreferences.subtitleSize
 
             setApplyEmbeddedFontSizes(false)
             setApplyEmbeddedStyles(false)
@@ -669,10 +681,6 @@ class FlixclusivePlayerManager(
                 /* size = */ fontSize
             )
         }
-    }
-
-    fun updateAppSettings(newAppSettings: AppSettings) {
-        appSettings = newAppSettings
     }
 
     /**

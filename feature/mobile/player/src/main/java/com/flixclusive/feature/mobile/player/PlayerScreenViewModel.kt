@@ -5,7 +5,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.player.BasePlayerViewModel
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
@@ -29,7 +29,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class PlayerScreenViewModel @Inject constructor(
-    appSettingsManager: AppSettingsManager,
+    dataStoreManager: DataStoreManager,
     client: OkHttpClient,
     context: Context,
     playerCacheManager: PlayerCacheManager,
@@ -45,7 +45,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     context = context,
     playerCacheManager = playerCacheManager,
     watchHistoryRepository = watchHistoryRepository,
-    appSettingsManager = appSettingsManager,
+    dataStoreManager = dataStoreManager,
     seasonProviderUseCase = seasonProvider,
     getMediaLinksUseCase = getMediaLinksUseCase,
     watchTimeUpdaterUseCase = watchTimeUpdaterUseCase,

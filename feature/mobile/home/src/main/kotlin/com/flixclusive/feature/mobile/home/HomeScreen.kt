@@ -51,7 +51,7 @@ internal fun HomeScreen(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val uiPreferences by viewModel.uiPreferences.collectAsStateWithLifecycle()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
 
     val headerItem = uiState.headerItem
@@ -110,7 +110,7 @@ internal fun HomeScreen(
                     HomeContinueWatchingRow(
                         dataListProvider = { watchHistoryItems },
                         onFilmClick = { play(it, null) },
-                        showCardTitle = appSettings.isShowingFilmCardTitle,
+                        showCardTitle = uiPreferences.showTitleOnCards,
                         onSeeMoreClick = previewFilm,
                     )
                 }
@@ -124,7 +124,7 @@ internal fun HomeScreen(
                         paginationState = homeRowItemsPagingState[i],
                         films = homeRowItems[i],
                         onFilmClick = navigator::openFilmScreen,
-                        showCardTitle = appSettings.isShowingFilmCardTitle,
+                        showCardTitle = uiPreferences.showTitleOnCards,
                         onFilmLongClick = previewFilm,
                         paginate = {
                             viewModel.onPaginateFilms(

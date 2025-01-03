@@ -1,6 +1,7 @@
 package com.flixclusive.core.network.di
 
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.awaitFirst
 import com.flixclusive.core.network.util.okhttp.UserAgentInterceptor
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.DoHProvider.doh360
@@ -16,13 +17,11 @@ import com.flixclusive.core.util.network.DoHProvider.dohQuad101
 import com.flixclusive.core.util.network.DoHProvider.dohQuad9
 import com.flixclusive.core.util.network.DoHProvider.dohSheCan
 import com.flixclusive.core.util.network.okhttp.ignoreAllSSLErrors
-import com.flixclusive.model.datastore.network.DoHPreference
+import com.flixclusive.model.datastore.user.network.DoHPreference
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import org.conscrypt.Conscrypt
 import java.security.Security
@@ -34,7 +33,7 @@ internal object OkHttpModule {
     @Provides
     @Singleton
     internal fun provideClient(
-        appSettingsManager: AppSettingsManager,
+        dataStoreManager: DataStoreManager,
     ): OkHttpClient {
         try {
             Security.insertProviderAt(Conscrypt.newProvider(), 1)
@@ -42,9 +41,7 @@ internal object OkHttpModule {
             errorLog(throwable.localizedMessage ?: "Unknown error trying to support TLS 1.3")
         }
 
-        val preferences = runBlocking {
-            appSettingsManager.appSettings.data.first()
-        }
+        val preferences = dataStoreManager.systemPreferences.awaitFirst()
 
         return OkHttpClient.Builder()
             .followRedirects(true)

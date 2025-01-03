@@ -6,7 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
@@ -20,7 +21,10 @@ import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.toWatchHistoryItem
 import com.flixclusive.model.database.util.getSavedTimeForFilm
-import com.flixclusive.model.datastore.player.PlayerQuality.Companion.getIndexOfPreferredQuality
+import com.flixclusive.model.datastore.user.PlayerPreferences
+import com.flixclusive.model.datastore.user.SubtitlesPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
+import com.flixclusive.model.datastore.user.player.PlayerQuality.Companion.getIndexOfPreferredQuality
 import com.flixclusive.model.film.FilmDetails
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
@@ -43,13 +47,16 @@ import okhttp3.OkHttpClient
 import kotlin.math.max
 import com.flixclusive.core.locale.R as LocaleR
 
+/**
+ * TODO: Remove this bitch ass ugly ass code
+ * */
 abstract class BasePlayerViewModel(
     args: PlayerScreenNavArgs,
     client: OkHttpClient,
     context: Context,
     playerCacheManager: PlayerCacheManager,
     private val watchHistoryRepository: WatchHistoryRepository,
-    private val appSettingsManager: AppSettingsManager,
+    private val dataStoreManager: DataStoreManager,
     private val seasonProviderUseCase: SeasonProviderUseCase,
     private val getMediaLinksUseCase: GetMediaLinksUseCase,
     private val watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
@@ -61,7 +68,7 @@ abstract class BasePlayerViewModel(
         client = client,
         context = context,
         playerCacheManager = playerCacheManager,
-        appSettings = appSettingsManager.cachedAppSettings,
+        dataStoreManager = dataStoreManager,
         showErrorCallback = {
             showErrorSnackbar(
                 message = it,
@@ -124,13 +131,13 @@ abstract class BasePlayerViewModel(
             }
         )
 
-    val appSettings = appSettingsManager.appSettings
-        .data
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.cachedAppSettings
-        )
+    val playerPreferences = dataStoreManager
+        .getUserPrefs<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY)
+        .asStateFlow(viewModelScope)
+
+    val subtitlesPreferences = dataStoreManager
+        .getUserPrefs<SubtitlesPreferences>(UserPreferences.SUBTITLES_PREFS_KEY)
+        .asStateFlow(viewModelScope)
 
     private var loadLinksFromNewProviderJob: Job? = null
     private var loadLinksJob: Job? = null
@@ -139,8 +146,8 @@ abstract class BasePlayerViewModel(
 
     open fun resetUiState() {
         _uiState.update {
-            val preferredQuality = appSettings.value.preferredQuality
-            val preferredResizeMode = appSettings.value.preferredResizeMode
+            val preferredQuality = playerPreferences.value.quality
+            val preferredResizeMode = playerPreferences.value.resizeMode
             val indexOfPreferredServer = cachedLinks.streams
                 .getIndexOfPreferredQuality(preferredQuality = preferredQuality)
 
@@ -302,8 +309,10 @@ abstract class BasePlayerViewModel(
     }
 
     fun onServerChange(index: Int? = null) {
-        val preferredQuality = appSettings.value.preferredQuality
-        val indexToUse = index ?: cachedLinks.streams.getIndexOfPreferredQuality(preferredQuality = preferredQuality)
+        val preferredQuality = playerPreferences.value.quality
+        val indexToUse = index ?: cachedLinks.streams.getIndexOfPreferredQuality(
+            preferredQuality = preferredQuality
+        )
 
         updateWatchHistory(
             currentTime = player.currentPosition,
@@ -317,11 +326,9 @@ abstract class BasePlayerViewModel(
 
     fun toggleVideoTimeReverse() {
         viewModelScope.launch {
-            appSettingsManager.updateSettings(
-                appSettings.value.run {
-                    copy(isPlayerTimeReversed = !isPlayerTimeReversed)
-                }
-            )
+            dataStoreManager.updateUserPrefs<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY) {
+                it.copy(isDurationReversed = !it.isDurationReversed)
+            }
         }
     }
 

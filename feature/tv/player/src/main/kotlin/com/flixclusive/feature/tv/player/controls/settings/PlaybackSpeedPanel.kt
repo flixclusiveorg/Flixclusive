@@ -1,28 +1,22 @@
 package com.flixclusive.feature.tv.player.controls.settings
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.foundation.PivotOffsets
@@ -33,24 +27,16 @@ import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
-import androidx.tv.material3.NonInteractiveSurfaceDefaults
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
-import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.player.FlixclusivePlayerManager
-import com.flixclusive.core.ui.player.util.PlayerCacheManager
-import com.flixclusive.core.ui.player.util.PlayerUiUtil
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.availablePlaybackSpeeds
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.tv.player.controls.settings.common.ConfirmButton
-import com.flixclusive.model.datastore.AppSettings
-import okhttp3.OkHttpClient
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -149,43 +135,5 @@ internal fun PlaybackSpeedPanel(
             modifier = Modifier.focusOnInitialVisibility()
         )
 
-    }
-}
-
-@OptIn(ExperimentalTvMaterial3Api::class)
-@Preview(device = "id:tv_1080p")
-@Composable
-private fun PlaybackSpeedPanelPreview() {
-    FlixclusiveTheme(isTv = true) {
-        Surface(
-            colors = NonInteractiveSurfaceDefaults.colors(Color.Black),
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            CompositionLocalProvider(
-                PlayerUiUtil.LocalPlayerManager provides
-                        FlixclusivePlayerManager(
-                            client = OkHttpClient(),
-                            appSettings = AppSettings(),
-                            context = LocalContext.current,
-                            playerCacheManager = PlayerCacheManager(LocalContext.current),
-                            showErrorCallback = {}
-                        )
-            ) {
-                Box {
-                    Image(
-                        painter = painterResource(id = UiCommonR.drawable.sample_movie_subtitle_preview),
-                        contentDescription = stringResource(LocaleR.string.sample_movie_content_desc),
-                        modifier = Modifier
-                            .fillMaxSize()
-                    )
-
-                    PlaybackSpeedPanel {
-
-                    }
-                }
-            }
-
-        }
     }
 }

@@ -21,7 +21,7 @@ import androidx.media3.exoplayer.text.TextRenderer
 import androidx.media3.exoplayer.video.VideoRendererEventListener
 import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
 import com.flixclusive.core.util.network.okhttp.SSLTrustManager
-import com.flixclusive.model.datastore.player.DecoderPriority
+import com.flixclusive.model.datastore.user.player.DecoderPriority
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
 import java.security.SecureRandom
 import javax.net.ssl.HttpsURLConnection

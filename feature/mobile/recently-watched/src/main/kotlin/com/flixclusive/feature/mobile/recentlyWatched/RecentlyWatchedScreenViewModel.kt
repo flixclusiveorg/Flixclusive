@@ -2,9 +2,12 @@ package com.flixclusive.feature.mobile.recentlyWatched
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.model.datastore.user.UiPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filterNotNull
@@ -16,16 +19,12 @@ import javax.inject.Inject
 @HiltViewModel
 internal class RecentlyWatchedScreenViewModel @Inject constructor(
     watchHistoryRepository: WatchHistoryRepository,
-    appSettingsManager: AppSettingsManager,
+    dataStoreManager: DataStoreManager,
     userSessionManager: UserSessionManager
 ) : ViewModel() {
-    val appSettings = appSettingsManager.appSettings
-        .data
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.cachedAppSettings
-        )
+    val uiPreferences = dataStoreManager
+        .getUserPrefs<UiPreferences>(UserPreferences.UI_PREFS_KEY)
+        .asStateFlow(viewModelScope)
 
     val items = userSessionManager.currentUser
         .filterNotNull()

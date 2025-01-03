@@ -5,7 +5,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.util.InternetMonitor
 import com.flixclusive.data.watch_history.WatchHistoryRepository
@@ -13,6 +14,8 @@ import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
+import com.flixclusive.model.datastore.user.UiPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.provider.Catalog
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,7 +53,7 @@ private fun filterWatchedFilms(watchHistoryItem: WatchHistoryItem): Boolean {
 class HomeScreenViewModel @Inject constructor(
     private val homeItemsProviderUseCase: HomeItemsProviderUseCase,
     private val userSessionManager: UserSessionManager,
-    appSettingsManager: AppSettingsManager,
+    dataStoreManager: DataStoreManager,
     internetMonitor: InternetMonitor,
     watchHistoryRepository: WatchHistoryRepository,
 ) : ViewModel() {
@@ -66,13 +69,9 @@ class HomeScreenViewModel @Inject constructor(
             initialValue = homeItemsProviderUseCase.state.value
         )
 
-    val appSettings = appSettingsManager.appSettings
-        .data
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.cachedAppSettings
-        )
+    val uiPreferences = dataStoreManager
+        .getUserPrefs<UiPreferences>(UserPreferences.UI_PREFS_KEY)
+        .asStateFlow(viewModelScope)
 
     private val connectionObserver = internetMonitor
         .isOnline

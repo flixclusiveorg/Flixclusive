@@ -3,9 +3,12 @@ package com.flixclusive.feature.mobile.watchlist
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.data.watchlist.WatchlistRepository
 import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.model.datastore.user.UiPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filterNotNull
@@ -16,17 +19,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class WatchlistScreenViewModel @Inject constructor(
-    appSettingsManager: AppSettingsManager,
+    dataStoreManager: DataStoreManager,
     private val watchlistRepository: WatchlistRepository,
-    val userSessionManager: UserSessionManager
+    userSessionManager: UserSessionManager
 ) : ViewModel() {
-    val appSettings = appSettingsManager.appSettings
-        .data
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = appSettingsManager.cachedAppSettings
-        )
+    val uiPreferences = dataStoreManager
+        .getUserPrefs<UiPreferences>(UserPreferences.UI_PREFS_KEY)
+        .asStateFlow(viewModelScope)
 
     val items = userSessionManager.currentUser
         .filterNotNull()

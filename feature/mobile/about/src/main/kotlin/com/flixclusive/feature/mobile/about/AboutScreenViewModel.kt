@@ -2,7 +2,8 @@ package com.flixclusive.feature.mobile.about
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.datastore.AppSettingsManager
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.awaitFirst
 import com.flixclusive.data.configuration.AppConfigurationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,14 +14,14 @@ import javax.inject.Inject
 @HiltViewModel
 internal class AboutScreenViewModel @Inject constructor(
     appConfigurationManager: AppConfigurationManager,
-    appSettingsManager: AppSettingsManager
+    dataStoreManager: DataStoreManager
 ) : ViewModel() {
     val currentAppBuild = appConfigurationManager.currentAppBuild
-    val isOnPreRelease = appSettingsManager.appSettings
+    val isOnPreRelease = dataStoreManager.systemPreferences
         .data.map { it.isUsingPrereleaseUpdates }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = false
+            initialValue = dataStoreManager.systemPreferences.awaitFirst().isUsingPrereleaseUpdates
         )
 }

@@ -63,7 +63,7 @@ internal fun <T> ListRadioComponent(
     )
 
     if (isDialogShown) {
-        var selected by rememberSaveable { mutableStateOf(selectedValue) }
+        var selected by remember { mutableStateOf(selectedValue) }
         val indexOfSelected = remember {
             options.keys
                 .indexOfFirst { it == selected }

@@ -9,5 +9,6 @@ android {
 dependencies {
     api(libs.gson)
     api(libs.stubs.provider)
+    api(libs.dataStore.preferences)
     implementation(projects.core.locale)
 }

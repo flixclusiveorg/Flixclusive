@@ -4,14 +4,15 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
@@ -19,22 +20,33 @@ import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.getAvailableBufferSizes
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.getAvailableCacheSizes
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerAdvancedValues.playerBufferLengths
+import com.flixclusive.feature.mobile.settings.screen.root.SettingsViewModel
 import com.flixclusive.feature.mobile.settings.screen.subtitles.SubtitlesTweakScreen
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalAppSettings
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.LocalScaffoldNavigator
-import com.flixclusive.feature.mobile.settings.util.LocalProviderHelper.getCurrentSettingsViewModel
-import com.flixclusive.model.datastore.player.DecoderPriority
-import com.flixclusive.model.datastore.player.PlayerQuality
-import com.flixclusive.model.datastore.player.ResizeMode
+import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
+import com.flixclusive.model.datastore.FlixclusivePrefs
+import com.flixclusive.model.datastore.user.PlayerPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
+import com.flixclusive.model.datastore.user.player.DecoderPriority
+import com.flixclusive.model.datastore.user.player.PlayerQuality
+import com.flixclusive.model.datastore.user.player.ResizeMode
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.collections.immutable.toPersistentMap
+import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-internal object PlayerTweakScreen : BaseTweakScreen {
+internal class PlayerTweakScreen(
+    private val viewModel: SettingsViewModel
+) : BaseTweakScreen<PlayerPreferences> {
+    override val preferencesKey = UserPreferences.PLAYER_PREFS_KEY
+    override val preferencesAsState: StateFlow<PlayerPreferences>
+        = viewModel.getUserPrefsAsState<PlayerPreferences>(preferencesKey)
+    override val onUpdatePreferences: suspend (suspend (PlayerPreferences) -> PlayerPreferences) -> Boolean
+        = { viewModel.updateUserPrefs(preferencesKey, it) }
+
     @Composable
     @ReadOnlyComposable
     override fun getTitle()
@@ -51,35 +63,35 @@ internal object PlayerTweakScreen : BaseTweakScreen {
 
     @Composable
     override fun getTweaks(): List<Tweak> {
+        val playerPreferences by preferencesAsState.collectAsStateWithLifecycle()
+        
         return listOf(
-            getGeneralTweaks(),
-            getAudioTweaks(),
-            getAdvancedTweaks()
+            getGeneralTweaks(playerPreferences),
+            getAudioTweaks(playerPreferences),
+            getAdvancedTweaks(playerPreferences)
         )
     }
 
     @OptIn(ExperimentalMaterial3AdaptiveApi::class)
     @Composable
-    private fun getGeneralTweaks(): TweakGroup {
+    private fun getGeneralTweaks(
+        playerPreferences: PlayerPreferences
+    ): TweakGroup {
         val context = LocalContext.current
         val navigator = LocalScaffoldNavigator.current!!
-
-        val appSettings = LocalAppSettings.current
-        val viewModel = getCurrentSettingsViewModel()
-        val onTweaked = viewModel::onChangeAppSettings
 
         val formatInSeconds = fun (amount: Long): String {
             return context.getString(LocaleR.string.n_seconds_format, amount)
         }
 
-        val selectedSeekAmount = remember(appSettings.preferredSeekAmount) {
-            val amountInSeconds = appSettings.preferredSeekAmount / 1000
+        val selectedSeekAmount = remember(playerPreferences.seekAmount) {
+            val amountInSeconds = playerPreferences.seekAmount / 1000
             formatInSeconds(amountInSeconds)
         }
 
-        val selectedResizeMode = remember(appSettings.preferredResizeMode) {
+        val selectedResizeMode = remember(playerPreferences.resizeMode) {
             val mode = ResizeMode.entries
-                .find { it.ordinal == appSettings.preferredResizeMode }
+                .find { it.ordinal == playerPreferences.resizeMode }
                 ?: ResizeMode.Fit
 
             mode.toUiText().asString(context)
@@ -97,10 +109,11 @@ internal object PlayerTweakScreen : BaseTweakScreen {
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.resize_mode),
                     description = selectedResizeMode,
-                    value = rememberSaveable { mutableIntStateOf(appSettings.preferredResizeMode) },
+                    value = remember { mutableIntStateOf(playerPreferences.resizeMode) },
                     onTweaked = {
-                        onTweaked(appSettings.copy(preferredResizeMode = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(resizeMode = it)
+                        }
                     },
                     options = persistentMapOf(
                         ResizeMode.Fit.mode to ResizeMode.Fit.toUiText().asString(context),
@@ -110,35 +123,38 @@ internal object PlayerTweakScreen : BaseTweakScreen {
                 ),
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.preferred_quality),
-                    description = appSettings.preferredQuality.qualityName.asString(),
-                    value = remember { mutableStateOf(appSettings.preferredQuality) },
+                    description = playerPreferences.quality.qualityName.asString(),
+                    value = remember { mutableStateOf(playerPreferences.quality) },
                     options = availableQualities,
                     onTweaked = {
-                        onTweaked(appSettings.copy(preferredQuality = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(quality = it)
+                        }
                     }
                 ),
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.seek_length_label),
                     description = selectedSeekAmount,
-                    value = remember { mutableLongStateOf(appSettings.preferredSeekAmount) },
+                    value = remember { mutableLongStateOf(playerPreferences.seekAmount) },
                     options = persistentMapOf(
                         5000L to formatInSeconds(5),
                         10000L to formatInSeconds(10),
                         30000L to formatInSeconds(30)
                     ),
                     onTweaked = {
-                        onTweaked(appSettings.copy(preferredSeekAmount = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(seekAmount = it)
+                        }
                     }
                 ),
                 TweakUI.ClickableTweak(
                     title = stringResource(LocaleR.string.subtitle),
                     description = stringResource(LocaleR.string.subtitles_settings_content_desc),
                     onClick = {
+                        @Suppress("UNCHECKED_CAST")
                         navigator.navigateTo(
                             pane = ListDetailPaneScaffoldRole.Detail,
-                            content = SubtitlesTweakScreen
+                            content = SubtitlesTweakScreen(viewModel) as BaseTweakScreen<FlixclusivePrefs>
                         )
                     }
                 )
@@ -147,30 +163,30 @@ internal object PlayerTweakScreen : BaseTweakScreen {
     }
 
     @Composable
-    private fun getUiTweaks(): TweakGroup {
-        val appSettings = LocalAppSettings.current
-        val viewModel = getCurrentSettingsViewModel()
-        val onTweaked = viewModel::onChangeAppSettings
-
+    private fun getUiTweaks(
+        playerPreferences: PlayerPreferences
+    ): TweakGroup {
         return TweakGroup(
             title = stringResource(LocaleR.string.user_interface),
             tweaks = persistentListOf(
                 TweakUI.SwitchTweak(
                     title = stringResource(LocaleR.string.reverse_player_time),
                     description = stringResource(LocaleR.string.reverse_player_time_desc),
-                    value = remember { mutableStateOf(appSettings.isPlayerTimeReversed) },
+                    value = remember { mutableStateOf(playerPreferences.isDurationReversed) },
                     onTweaked = {
-                        onTweaked(appSettings.copy(isPlayerTimeReversed = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(isDurationReversed = it)
+                        }
                     }
                 ),
                 TweakUI.SwitchTweak(
                     title = stringResource(LocaleR.string.pip_mode),
                     description = stringResource(LocaleR.string.pip_mode_desc),
-                    value = remember { mutableStateOf(appSettings.isPiPModeEnabled) },
+                    value = remember { mutableStateOf(playerPreferences.isPiPModeEnabled) },
                     onTweaked = {
-                        onTweaked(appSettings.copy(isPiPModeEnabled = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(isPiPModeEnabled = it)
+                        }
                     }
                 ),
 
@@ -179,11 +195,9 @@ internal object PlayerTweakScreen : BaseTweakScreen {
     }
 
     @Composable
-    private fun getAudioTweaks(): TweakGroup {
-        val appSettings = LocalAppSettings.current
-        val viewModel = getCurrentSettingsViewModel()
-        val onTweaked = viewModel::onChangeAppSettings
-
+    private fun getAudioTweaks(
+        playerPreferences: PlayerPreferences
+    ): TweakGroup {
         val languages = remember {
             Locale.getAvailableLocales()
                 .distinctBy { it.language }
@@ -193,7 +207,7 @@ internal object PlayerTweakScreen : BaseTweakScreen {
                 .toImmutableMap()
         }
 
-        val useVolumeBooster = remember { mutableStateOf(appSettings.isUsingVolumeBoost) }
+        val useVolumeBooster = remember { mutableStateOf(playerPreferences.isUsingVolumeBoost) }
 
         return TweakGroup(
             title = stringResource(LocaleR.string.audio),
@@ -203,18 +217,20 @@ internal object PlayerTweakScreen : BaseTweakScreen {
                     description = stringResource(LocaleR.string.volume_booster_desc),
                     value = useVolumeBooster,
                     onTweaked = {
-                        onTweaked(appSettings.copy(isUsingVolumeBoost = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(isPiPModeEnabled = it)
+                        }
                     },
                 ),
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.preferred_audio_language),
-                    description = Locale(appSettings.preferredAudioLanguage).displayLanguage,
-                    value = remember { mutableStateOf(appSettings.preferredAudioLanguage) },
+                    description = Locale(playerPreferences.audioLanguage).displayLanguage,
+                    value = remember { mutableStateOf(playerPreferences.audioLanguage) },
                     options = languages,
                     onTweaked = {
-                        onTweaked(appSettings.copy(preferredAudioLanguage = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(audioLanguage = it)
+                        }
                     }
                 )
             )
@@ -222,12 +238,10 @@ internal object PlayerTweakScreen : BaseTweakScreen {
     }
 
     @Composable
-    private fun getAdvancedTweaks(): TweakGroup {
+    private fun getAdvancedTweaks(
+        playerPreferences: PlayerPreferences
+    ): TweakGroup {
         val context = LocalContext.current
-
-        val appSettings = LocalAppSettings.current
-        val viewModel = getCurrentSettingsViewModel()
-        val onTweaked = viewModel::onChangeAppSettings
 
         val availableDecoders = remember {
             DecoderPriority.entries
@@ -241,50 +255,55 @@ internal object PlayerTweakScreen : BaseTweakScreen {
                 TweakUI.SwitchTweak(
                     title = stringResource(LocaleR.string.release_player),
                     description = stringResource(LocaleR.string.release_player_desc),
-                    value = remember { mutableStateOf(appSettings.shouldReleasePlayer) },
+                    value = remember { mutableStateOf(playerPreferences.isForcingPlayerRelease) },
                     onTweaked = {
-                        onTweaked(appSettings.copy(shouldReleasePlayer = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(isForcingPlayerRelease = it)
+                        }
                     }
                 ),
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.decoder_priority),
                     description = stringResource(LocaleR.string.decoder_priority_description),
-                    value = remember { mutableStateOf(appSettings.decoderPriority) },
+                    value = remember { mutableStateOf(playerPreferences.decoderPriority) },
                     options = availableDecoders,
                     onTweaked = {
-                        onTweaked(appSettings.copy(decoderPriority = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(decoderPriority = it)
+                        }
                     }
                 ),
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.video_cache_size),
                     description = stringResource(LocaleR.string.video_cache_size_label),
-                    value = remember { mutableLongStateOf(appSettings.preferredDiskCacheSize) },
+                    value = remember { mutableLongStateOf(playerPreferences.diskCacheSize) },
                     options = getAvailableCacheSizes(context),
                     onTweaked = {
-                        onTweaked(appSettings.copy(preferredDiskCacheSize = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(diskCacheSize = it)
+                        }
                     }
                 ),
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.video_buffer_size),
                     description = stringResource(LocaleR.string.video_buffer_size_label),
-                    value = remember { mutableLongStateOf(appSettings.preferredBufferCacheSize) },
+                    value = remember { mutableLongStateOf(playerPreferences.bufferCacheSize) },
                     options = getAvailableBufferSizes(context),
                     onTweaked = {
-                        onTweaked(appSettings.copy(preferredBufferCacheSize = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(bufferCacheSize = it)
+                        }
                     }
                 ),
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.video_buffer_max_length),
                     description = stringResource(LocaleR.string.video_buffer_max_length_desc),
-                    value = remember { mutableLongStateOf(appSettings.preferredVideoBufferMs) },
+                    value = remember { mutableLongStateOf(playerPreferences.videoBufferMs) },
                     options = playerBufferLengths,
                     onTweaked = {
-                        onTweaked(appSettings.copy(preferredVideoBufferMs = it))
-                        true
+                        onUpdatePreferences { oldValue ->
+                            oldValue.copy(videoBufferMs = it)
+                        }
                     }
                 )
             )

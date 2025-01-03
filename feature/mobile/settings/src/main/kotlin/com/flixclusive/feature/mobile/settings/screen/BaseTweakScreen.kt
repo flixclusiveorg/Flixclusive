@@ -3,10 +3,17 @@ package com.flixclusive.feature.mobile.settings.screen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakScaffold
+import com.flixclusive.model.datastore.FlixclusivePrefs
+import kotlinx.coroutines.flow.StateFlow
 
-internal interface BaseTweakScreen {
+internal interface BaseTweakScreen<T : FlixclusivePrefs> {
+    val preferencesKey: Preferences.Key<String>
+    val preferencesAsState: StateFlow<T>
+    val onUpdatePreferences: suspend (suspend (T) -> T) -> Boolean
+
     @Composable
     @ReadOnlyComposable
     fun getTitle(): String
