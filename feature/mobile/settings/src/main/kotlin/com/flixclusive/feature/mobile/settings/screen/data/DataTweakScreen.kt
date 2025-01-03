@@ -71,6 +71,7 @@ internal class DataTweakScreen(
             tweaks = persistentListOf(
                 TweakUI.ClickableTweak(
                     title = stringResource(LocaleR.string.clear_search_history),
+                    enabled = searchHistoryCount > 0,
                     description = stringResource(LocaleR.string.search_history_item_count_format, searchHistoryCount),
                     onClick = viewModel::clearSearchHistory,
                 ),
