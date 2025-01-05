@@ -10,7 +10,7 @@ import com.flixclusive.domain.provider.test.ProviderTestCases.methodTestCases
 import com.flixclusive.domain.provider.test.ProviderTestCases.propertyTestCases
 import com.flixclusive.domain.provider.util.StringHelper.createString
 import com.flixclusive.domain.provider.util.StringHelper.getString
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.ProviderApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
@@ -52,7 +52,7 @@ class TestProviderUseCase @Inject constructor(
     val filmOnTest = _filmOnTest.asStateFlow()
 
     operator fun invoke(
-        providers: ArrayList<ProviderData>
+        providers: ArrayList<ProviderMetadata>
     ) {
         testJob = AppDispatchers.IO.scope.launchPausing {
             _testJobState.value = TestJobState.RUNNING
@@ -73,7 +73,7 @@ class TestProviderUseCase @Inject constructor(
                 )
 
                 val api = loadProviderApi(
-                    providerData = provider,
+                    providerMetadata = provider,
                     updateOutput = {
                         testOutputs.update(
                             index = apiTestCaseIndex,
@@ -133,7 +133,7 @@ class TestProviderUseCase @Inject constructor(
     }
 
     private fun loadProviderApi(
-        providerData: ProviderData,
+        providerMetadata: ProviderMetadata,
         updateOutput: (ProviderTestCaseOutput) -> Unit,
     ): ProviderApi? {
         try {
@@ -144,8 +144,8 @@ class TestProviderUseCase @Inject constructor(
                 )
             )
 
-            val provider = providerManager.providers[providerData.name]
-            val api = providerApiRepository.apiMap[providerData.name]
+            val provider = providerManager.providers[providerMetadata.name]
+            val api = providerApiRepository.apiMap[providerMetadata.name]
                 ?: provider!!.getApi(
                     context = context,
                     client = client
@@ -218,9 +218,9 @@ class TestProviderUseCase @Inject constructor(
         }
     }
 
-    private fun ProviderData.addTestCountSuffix(): ProviderData {
+    private fun ProviderMetadata.addTestCountSuffix(): ProviderMetadata {
         val testCount = results.count {
-            it.provider.id.removeCountSuffix() == id
+            it.provider.id!!!!.removeCountSuffix() == id
         }
 
         if (testCount == 0)

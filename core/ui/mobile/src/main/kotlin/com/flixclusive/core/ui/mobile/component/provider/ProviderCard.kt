@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.locale.R as LocaleR
 
 enum class ProviderInstallationStatus {
@@ -50,7 +50,7 @@ enum class ProviderInstallationStatus {
 @Composable
 fun ProviderCard(
     modifier: Modifier = Modifier,
-    providerData: ProviderData,
+    providerMetadata: ProviderMetadata,
     status: ProviderInstallationStatus,
     onClick: () -> Unit,
 ) {
@@ -73,7 +73,7 @@ fun ProviderCard(
         ) {
             TopCardContent(
                 isDraggable = false,
-                providerData = providerData
+                providerMetadata = providerMetadata
             )
 
             HorizontalDivider(
@@ -82,7 +82,7 @@ fun ProviderCard(
                 thickness = 0.5.dp
             )
 
-            providerData.description?.let {
+            providerMetadata.description?.let {
                 Text(
                     text = it,
                     overflow = TextOverflow.Ellipsis,
@@ -140,12 +140,12 @@ fun ProviderCard(
 @Preview
 @Composable
 private fun ProviderCardPreview() {
-    val providerData = DummyDataForPreview.getDummyProviderData()
+    val providerMetadata = DummyDataForPreview.getDummyProviderMetadata()
 
     FlixclusiveTheme {
         Surface {
             ProviderCard(
-                providerData = providerData,
+                providerMetadata = providerMetadata,
                 status = ProviderInstallationStatus.Installed
             ) {
 

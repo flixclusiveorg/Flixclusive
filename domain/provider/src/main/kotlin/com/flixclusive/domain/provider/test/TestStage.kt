@@ -1,7 +1,7 @@
 package com.flixclusive.domain.provider.test
 
 import android.content.Context
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.locale.R as LocaleR
 
 
@@ -10,10 +10,10 @@ import com.flixclusive.core.locale.R as LocaleR
  * The test stages of a provider.
  *
  * */
-sealed class TestStage(val providerOnTest: ProviderData? = null) {
+sealed class TestStage(val providerOnTest: ProviderMetadata? = null) {
     protected abstract val index: Int
 
-    class Idle(providerOnTest: ProviderData?) : TestStage(providerOnTest) {
+    class Idle(providerOnTest: ProviderMetadata?) : TestStage(providerOnTest) {
         override val index: Int get() = 0
 
         companion object {
@@ -21,13 +21,13 @@ sealed class TestStage(val providerOnTest: ProviderData? = null) {
                 get() = this is Idle
         }
     }
-    class Stage1(providerOnTest: ProviderData?) : TestStage(providerOnTest) {
+    class Stage1(providerOnTest: ProviderMetadata?) : TestStage(providerOnTest) {
         override val index: Int get() = 1
     }
-    class Stage2(providerOnTest: ProviderData?) : TestStage(providerOnTest) {
+    class Stage2(providerOnTest: ProviderMetadata?) : TestStage(providerOnTest) {
         override val index: Int get() = 2
     }
-    class Done(providerOnTest: ProviderData?) : TestStage(providerOnTest) {
+    class Done(providerOnTest: ProviderMetadata?) : TestStage(providerOnTest) {
         override val index: Int get() = 3
     }
 
@@ -51,14 +51,14 @@ sealed class TestStage(val providerOnTest: ProviderData? = null) {
     }
 
     private fun compareProviders(
-        oldProvider: ProviderData?,
-        newProvider: ProviderData?
+        oldProvider: ProviderMetadata?,
+        newProvider: ProviderMetadata?
     ): Int {
         return when {
             oldProvider == null && newProvider == null -> 0
             oldProvider == null -> -1
             newProvider == null -> 1
-            else -> oldProvider.id.compareTo(newProvider.id)
+            else -> oldProvider.id!!.compareTo(newProvider.id!!)
         }
     }
 }

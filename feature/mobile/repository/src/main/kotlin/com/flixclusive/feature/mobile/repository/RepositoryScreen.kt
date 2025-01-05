@@ -55,7 +55,7 @@ import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.repository.component.RepositoryHeader
 import com.flixclusive.feature.mobile.repository.component.RepositoryTopBar
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
@@ -76,7 +76,7 @@ internal fun RepositoryScreen(
     val viewModel = hiltViewModel<RepositoryScreenViewModel>()
 
     val warnOnInstall by viewModel.warnOnInstall.collectAsStateWithLifecycle()
-    val providerDataList by remember {
+    val providerMetadataList by remember {
         derivedStateOf {
             when (viewModel.searchQuery.isNotEmpty()) {
                 true -> {
@@ -104,9 +104,9 @@ internal fun RepositoryScreen(
 
     val searchExpanded = rememberSaveable { mutableStateOf(false) }
 
-    var providerToInstall by remember { mutableStateOf<ProviderData?>(null) }
+    var providerToInstall by remember { mutableStateOf<ProviderMetadata?>(null) }
     var providersToInstall by rememberSaveable { mutableIntStateOf(0) }
-    var providerToUninstall by remember { mutableStateOf<ProviderData?>(null) }
+    var providerToUninstall by remember { mutableStateOf<ProviderMetadata?>(null) }
 
     LaunchedEffect(viewModel.snackbar) {
         if (viewModel.snackbar?.error != null) {
@@ -210,23 +210,23 @@ internal fun RepositoryScreen(
                     }
 
                     items(
-                        providerDataList,
+                        providerMetadataList,
                         key = { item -> "${item.name}-${item.buildUrl}" }
-                    ) { providerData ->
+                    ) { providerMetadata ->
                         ProviderCard(
-                            providerData = providerData,
-                            status = viewModel.onlineProviderMap[providerData]
+                            providerMetadata = providerMetadata,
+                            status = viewModel.onlineProviderMap[providerMetadata]
                                 ?: ProviderInstallationStatus.NotInstalled,
                             onClick = {
-                                val isNotInstalled = viewModel.onlineProviderMap[providerData] !=
+                                val isNotInstalled = viewModel.onlineProviderMap[providerMetadata] !=
                                         ProviderInstallationStatus.Installed
 
                                 if (isNotInstalled && warnOnInstall) {
-                                    providerToInstall = providerData
+                                    providerToInstall = providerMetadata
                                 } else if (isNotInstalled) {
-                                    viewModel.toggleInstallationStatus(providerData)
+                                    viewModel.toggleInstallationStatus(providerMetadata)
                                 } else {
-                                    providerToUninstall = providerData
+                                    providerToUninstall = providerMetadata
                                 }
                             },
                             modifier = Modifier

@@ -50,6 +50,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.R
+import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop.Companion.toGenreWithBackdrop
 import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenNavigator
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
@@ -165,7 +166,7 @@ internal fun FilmScreen(
                                     if (it.id == -1)
                                         return@FilmScreenHeader
 
-                                    navigator.openGenreScreen(it)
+                                    navigator.openGenreScreen(it.toGenreWithBackdrop())
                                 },
                                 onNavigateClick = navigator::goBack
                             )

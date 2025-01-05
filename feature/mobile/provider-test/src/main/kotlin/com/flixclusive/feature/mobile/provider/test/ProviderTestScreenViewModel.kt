@@ -8,7 +8,7 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.ViewModel
 import com.flixclusive.domain.provider.test.TestProviderUseCase
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -52,7 +52,7 @@ internal class ProviderTestScreenViewModel @Inject constructor(
     }
 
     fun startTests(
-        providers: ArrayList<ProviderData>,
+        providers: ArrayList<ProviderMetadata>,
         skipTestedProviders: Boolean = false
     ) {
         if (
@@ -79,9 +79,9 @@ internal class ProviderTestScreenViewModel @Inject constructor(
         testProviderUseCase.results.clear()
     }
 
-    private fun ProviderData.hasAlreadyBeenTested(): Boolean {
+    private fun ProviderMetadata.hasAlreadyBeenTested(): Boolean {
         return testProviderUseCase.results.fastAny {
-            it.provider.id == id
+            it.provider.id!! == id
         }
     }
 }

@@ -6,7 +6,7 @@ import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.data.provider.PROVIDERS_FOLDER
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import okhttp3.OkHttpClient
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -24,9 +24,10 @@ internal fun rmrf(file: File) {
 }
 
 fun Context.provideValidProviderPath(
-    providerData: ProviderData,
+    providerMetadata: ProviderMetadata,
     localPrefix: String? = null
-) = File("${localPrefix ?: "${filesDir}/$PROVIDERS_FOLDER/"}${buildValidFilename(providerData.repositoryUrl!!)}/${buildValidFilename(providerData.name)}.flx")
+) = File("${localPrefix ?: "${filesDir}/$PROVIDERS_FOLDER/"}${buildValidFilename(providerMetadata.repositoryUrl!!)}/${buildValidFilename(providerMetadata.name)}.flx")
+// TODO: Don't use [ProviderMetadata.name] as filename.
 
 /**
  * Mutate the given filename to make it valid for a FAT filesystem,
@@ -102,7 +103,7 @@ fun OkHttpClient.downloadFile(
             return@safeCall false
         }
 
-        response.body!!.source().saveTo(file)
+        response.body.source().saveTo(file)
         response.close()
 
         true

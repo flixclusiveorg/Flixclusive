@@ -6,7 +6,7 @@ import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.configuration.di.test.TestAppConfigurationModule.getMockAppConfigurationManager
 import com.flixclusive.data.tmdb.di.TestTmdbDataModule.getMockTMDBRepository
-import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.FilmMetadata
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -68,7 +68,7 @@ class TMDBRepositoryTest {
         }
     }
 
-    private  fun Resource<FilmDetails>.verifyFilmDetails() {
+    private  fun Resource<FilmMetadata>.verifyFilmMetadata() {
         Assert.assertTrue(this is Resource.Success)
         Assert.assertNotNull(data)
 
@@ -96,14 +96,14 @@ class TMDBRepositoryTest {
     fun `Get Avengers Endgame Movie` () = testScope.runTest {
         val movieId = 299534 // Avengers: Endgame
         val response = tmdbRepository.getMovie(id = movieId)
-        response.verifyFilmDetails()
+        response.verifyFilmMetadata()
     }
 
     @Test
     fun `Get Arcane TV Show` () = testScope.runTest {
         val tvShowId = 94605 // Arcane
         val response = tmdbRepository.getTvShow(id = tvShowId)
-        response.verifyFilmDetails()
+        response.verifyFilmMetadata()
     }
 
     @Test

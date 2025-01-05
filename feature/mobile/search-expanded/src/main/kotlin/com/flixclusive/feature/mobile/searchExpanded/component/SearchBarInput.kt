@@ -51,24 +51,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.provider.filter.FilterList
 import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
 import com.flixclusive.feature.mobile.searchExpanded.SearchItemViewType
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.ProviderFilterButton
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.getFormattedName
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
-import com.flixclusive.model.provider.ProviderData
-import com.flixclusive.core.ui.common.R as UiCommonR
+import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.provider.filter.FilterList
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun SearchBarInput(
     currentViewType: MutableState<SearchItemViewType>,
-    providerData: ProviderData,
+    providerMetadata: ProviderMetadata,
     searchQuery: String,
     lastQuerySearched: String,
     filters: FilterList,
@@ -196,7 +196,7 @@ internal fun SearchBarInput(
             item {
                 ProviderFilterButton(
                     currentViewType = currentViewType,
-                    providerData = providerData
+                    providerMetadata = providerMetadata
                 )
             }
 
@@ -266,7 +266,7 @@ private fun SearchBarExpandedPreview() {
                 onQueryChange = {},
                 onToggleFilterSheet = {},
                 filters = getDefaultTmdbFilters(),
-                providerData = getDummyProviderData(),
+                providerMetadata = getDummyProviderMetadata(),
                 currentViewType = remember { mutableStateOf(SearchItemViewType.SearchHistory) }
             )
         }

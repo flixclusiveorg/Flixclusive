@@ -10,10 +10,10 @@ import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.data.provider.ProviderManager
-import com.flixclusive.domain.updater.util.findProviderData
+import com.flixclusive.domain.updater.util.findProviderMetadata
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.Provider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
@@ -101,8 +101,8 @@ class ProviderUpdaterUseCase @Inject constructor(
         notificationChannelHasBeenInitialized = true
     }
 
-    suspend fun isProviderOutdated(providerData: ProviderData): Boolean {
-        val provider = providerManager.providers[providerData.name]
+    suspend fun isProviderOutdated(providerMetadata: ProviderMetadata): Boolean {
+        val provider = providerManager.providers[providerMetadata.name]
             ?: return false
 
         return isProviderOutdated(provider)
@@ -115,7 +115,7 @@ class ProviderUpdaterUseCase @Inject constructor(
             return false
 
         try {
-            val updateInfo = getLatestProviderData(provider)
+            val updateInfo = getLatestProviderMetadata(provider)
                 ?: return false
 
             val updatedVersion = updatedProvidersMap[provider.javaClass.simpleName]
@@ -130,16 +130,16 @@ class ProviderUpdaterUseCase @Inject constructor(
         return false
     }
 
-    suspend fun getLatestProviderData(providerName: String): ProviderData? {
+    suspend fun getLatestProviderMetadata(providerName: String): ProviderMetadata? {
         val provider = providerManager.providers[providerName]
         requireNotNull(provider) {
             "No such provider: $providerName"
         }
 
-        return getLatestProviderData(provider)
+        return getLatestProviderMetadata(provider)
     }
 
-    private suspend fun getLatestProviderData(provider: Provider): ProviderData? {
+    private suspend fun getLatestProviderMetadata(provider: Provider): ProviderMetadata? {
         val manifest = provider.manifest
 
         if (manifest?.updateUrl == null
@@ -150,7 +150,7 @@ class ProviderUpdaterUseCase @Inject constructor(
         val cached = cachedProviders[manifest.updateUrl]
 
         if (cached != null && cached.time > System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(30)) {
-            return cached.data.findProviderData(name)
+            return cached.data.findProviderMetadata(name)
         }
 
         val updaterJsonRequest = withIOContext {
@@ -158,10 +158,10 @@ class ProviderUpdaterUseCase @Inject constructor(
                 .execute().body.string()
         }
 
-        val updaterJson = fromJson<List<ProviderData>>(updaterJsonRequest)
+        val updaterJson = fromJson<List<ProviderMetadata>>(updaterJsonRequest)
         cachedProviders[manifest.updateUrl!!] = CachedData(updaterJson)
 
-        return updaterJson.findProviderData(name)
+        return updaterJson.findProviderMetadata(name)
     }
 
     suspend fun updateAllProviders(): Int {
@@ -182,22 +182,22 @@ class ProviderUpdaterUseCase @Inject constructor(
     }
 
     suspend fun updateProvider(providerName: String): Boolean {
-        val oldProviderData = providerManager.providerDataList.find {
+        val oldProviderMetadata = providerManager.providerMetadataList.find {
             it.name.equals(providerName, true)
         } ?: throw NoSuchElementException("No such provider data: $providerName")
 
-        val newProviderData = getLatestProviderData(providerName)
+        val newProviderMetadata = getLatestProviderMetadata(providerName)
             ?: return false
 
         providerManager.reloadProvider(
-            oldProviderData,
-            newProviderData
+            oldProviderMetadata,
+            newProviderMetadata
         )
-        updatedProvidersMap[providerName] = newProviderData.versionCode
+        updatedProvidersMap[providerName] = newProviderMetadata.versionCode
         return true
     }
 
-    class CachedData(var data: List<ProviderData>) {
+    class CachedData(var data: List<ProviderMetadata>) {
         var time: Long = System.currentTimeMillis()
     }
 }

@@ -21,8 +21,9 @@
 # Local configuration file (sdk path, etc)
 /local.properties
 
-# I don't know what are these
+# I don't know what these are
 .DS_Store
 /captures
 .externalNativeBuild
 .cxx
+.kotlin

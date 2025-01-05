@@ -5,7 +5,7 @@ import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOConte
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import okhttp3.OkHttpClient
 import javax.inject.Inject
@@ -23,7 +23,7 @@ import com.flixclusive.core.locale.R as LocaleR
 class GetOnlineProvidersUseCase @Inject constructor(
     private val client: OkHttpClient
 ) {
-    suspend operator fun invoke(repository: Repository): Resource<List<ProviderData>> {
+    suspend operator fun invoke(repository: Repository): Resource<List<ProviderMetadata>> {
         return withIOContext {
             safeCall {
                 val updaterJsonUrl = repository.getRawLink(
@@ -45,7 +45,7 @@ class GetOnlineProvidersUseCase @Inject constructor(
 
     private fun parseOnlineProviders(
         updaterJsonUrl: String
-    ): List<ProviderData>? {
+    ): List<ProviderMetadata>? {
         val response = client.request(updaterJsonUrl).execute()
 
         return response.body?.string()?.let(::fromJson)

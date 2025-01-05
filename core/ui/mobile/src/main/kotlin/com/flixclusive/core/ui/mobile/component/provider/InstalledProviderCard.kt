@@ -24,13 +24,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Status
 
 @Composable
 fun InstalledProviderCard(
     modifier: Modifier = Modifier,
-    providerData: ProviderData,
+    providerMetadata: ProviderMetadata,
     enabled: Boolean,
     isDraggable: Boolean,
     displacementOffset: Float?,
@@ -88,7 +88,7 @@ fun InstalledProviderCard(
             ) {
                 TopCardContent(
                     isDraggable = isDraggable,
-                    providerData = providerData,
+                    providerMetadata = providerMetadata,
                 )
 
                 HorizontalDivider(
@@ -98,13 +98,13 @@ fun InstalledProviderCard(
                 )
 
                 BottomCardContent(
-                    providerData = providerData,
+                    providerMetadata = providerMetadata,
                     enabled = enabled,
                     openSettings = openSettings,
                     unloadProvider = uninstallProvider,
                     toggleUsage = {
-                        if (providerData.status != Status.Maintenance
-                            && providerData.status != Status.Down) {
+                        if (providerMetadata.status != Status.Maintenance
+                            && providerMetadata.status != Status.Down) {
                             onToggleProvider()
                         }
                     }
@@ -117,12 +117,12 @@ fun InstalledProviderCard(
 @Preview
 @Composable
 private fun ProviderCardPreview() {
-    val providerData = DummyDataForPreview.getDummyProviderData()
+    val providerMetadata = DummyDataForPreview.getDummyProviderMetadata()
 
     FlixclusiveTheme {
         Surface {
             InstalledProviderCard(
-                providerData = providerData,
+                providerMetadata = providerMetadata,
                 enabled = true,
                 isDraggable = true,
                 displacementOffset = null,

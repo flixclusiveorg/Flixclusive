@@ -25,7 +25,7 @@ import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.datastore.user.SubtitlesPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.datastore.user.player.PlayerQuality.Companion.getIndexOfPreferredQuality
-import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
@@ -268,7 +268,7 @@ abstract class BasePlayerViewModel(
             updateProviderSelected(newProvider)
 
             getMediaLinksUseCase(
-                film = film as FilmDetails,
+                film = film as FilmMetadata,
                 preferredProviderName = newProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = currentSelectedEpisode.value,
@@ -498,7 +498,7 @@ abstract class BasePlayerViewModel(
 
         loadLinksJob = viewModelScope.launch {
             getMediaLinksUseCase(
-                film = film as FilmDetails,
+                film = film as FilmMetadata,
                 watchId = cachedLinks.watchId,
                 preferredProviderName = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,
@@ -559,7 +559,7 @@ abstract class BasePlayerViewModel(
                 .getNextEpisode()
 
             getMediaLinksUseCase(
-                film = film as FilmDetails,
+                film = film as FilmMetadata,
                 watchId = cachedLinks.watchId,
                 preferredProviderName = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,

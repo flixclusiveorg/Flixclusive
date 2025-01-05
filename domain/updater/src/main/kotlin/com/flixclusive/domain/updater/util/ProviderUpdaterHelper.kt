@@ -1,10 +1,10 @@
 package com.flixclusive.domain.updater.util
 
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 
-internal fun List<ProviderData>.findProviderData(
+internal fun List<ProviderMetadata>.findProviderMetadata(
     providerName: String
-): ProviderData {
+): ProviderMetadata {
     return firstOrNull { it.name.equals(providerName, true) }
         ?: throw IllegalArgumentException("Provider not found: $providerName")
 }

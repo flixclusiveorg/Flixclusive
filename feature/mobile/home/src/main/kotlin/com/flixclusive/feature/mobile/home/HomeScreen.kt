@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop.Companion.toGenreWithBackdrop
 import com.flixclusive.core.ui.common.navigation.navigator.HomeNavigator
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.home.HomeScreenViewModel
@@ -98,7 +99,7 @@ internal fun HomeScreen(
                         film = headerItem!!,
                         onGenreClick = { genre ->
                             if(genre.id >= 0) {
-                                navigator.openGenreScreen(genre = genre)
+                                navigator.openGenreScreen(genre = genre.toGenreWithBackdrop())
                             }
                         },
                         onFilmClick = navigator::openFilmScreen,

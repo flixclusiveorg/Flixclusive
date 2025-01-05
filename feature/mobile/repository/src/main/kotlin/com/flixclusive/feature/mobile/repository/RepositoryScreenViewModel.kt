@@ -19,7 +19,7 @@ import com.flixclusive.domain.provider.GetOnlineProvidersUseCase
 import com.flixclusive.domain.updater.ProviderUpdaterUseCase
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
@@ -39,14 +39,14 @@ internal class RepositoryScreenViewModel @Inject constructor(
 ) : ViewModel() {
     val repository = savedStateHandle.navArgs<RepositoryScreenNavArgs>().repository
 
-    var uiState by mutableStateOf<Resource<List<ProviderData>>>(Resource.Loading)
+    var uiState by mutableStateOf<Resource<List<ProviderMetadata>>>(Resource.Loading)
         private set
     var snackbar by mutableStateOf<Resource.Failure?>(null)
         private set
 
     var searchQuery by mutableStateOf("")
         private set
-    val onlineProviderMap = mutableStateMapOf<ProviderData, ProviderInstallationStatus>()
+    val onlineProviderMap = mutableStateMapOf<ProviderMetadata, ProviderInstallationStatus>()
 
     val warnOnInstall = providerManager.providerPreferencesAsState
         .map { it.warnOnInstall }
@@ -83,7 +83,7 @@ internal class RepositoryScreenViewModel @Inject constructor(
                         var providerInstallationStatus = ProviderInstallationStatus.NotInstalled
 
                         val isInstalledAlready =
-                            providerManager.providerDataList.any { it.name.equals(provider.name, true) }
+                            providerManager.providerMetadataList.any { it.name.equals(provider.name, true) }
 
                         if (isInstalledAlready && providerUpdaterUseCase.isProviderOutdated(provider)) {
                             providerInstallationStatus = ProviderInstallationStatus.Outdated
@@ -130,53 +130,53 @@ internal class RepositoryScreenViewModel @Inject constructor(
         }
     }
 
-    fun toggleInstallationStatus(providerData: ProviderData) {
+    fun toggleInstallationStatus(providerMetadata: ProviderMetadata) {
         if (installJob?.isActive == true) {
             return
         }
 
         installJob = AppDispatchers.Default.scope.launch {
-            when (onlineProviderMap[providerData]) {
-                ProviderInstallationStatus.NotInstalled -> installProvider(providerData)
-                ProviderInstallationStatus.Installed -> uninstallProvider(providerData)
-                ProviderInstallationStatus.Outdated -> updateProvider(providerData)
+            when (onlineProviderMap[providerMetadata]) {
+                ProviderInstallationStatus.NotInstalled -> installProvider(providerMetadata)
+                ProviderInstallationStatus.Installed -> uninstallProvider(providerMetadata)
+                ProviderInstallationStatus.Outdated -> updateProvider(providerMetadata)
                 else -> Unit
             }
         }
     }
 
-    private suspend fun updateProvider(providerData: ProviderData) {
-        val isSuccess = providerUpdaterUseCase.updateProvider(providerData.name)
+    private suspend fun updateProvider(providerMetadata: ProviderMetadata) {
+        val isSuccess = providerUpdaterUseCase.updateProvider(providerMetadata.name)
 
         if (isSuccess) {
-            onlineProviderMap[providerData] = ProviderInstallationStatus.Installed
+            onlineProviderMap[providerMetadata] = ProviderInstallationStatus.Installed
         } else {
             snackbar =
                 Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_update_provider))
         }
     }
 
-    private suspend fun installProvider(providerData: ProviderData): Boolean {
-        onlineProviderMap[providerData] = ProviderInstallationStatus.Installing
+    private suspend fun installProvider(providerMetadata: ProviderMetadata): Boolean {
+        onlineProviderMap[providerMetadata] = ProviderInstallationStatus.Installing
 
         try {
             providerManager.loadProvider(
-                providerData = providerData,
+                providerMetadata = providerMetadata,
                 needsDownload = true
             )
         } catch (_: Exception) {
-            snackbar = Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_load_provider, providerData.name))
-            onlineProviderMap[providerData] = ProviderInstallationStatus.NotInstalled
+            snackbar = Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_load_provider, providerMetadata.name))
+            onlineProviderMap[providerMetadata] = ProviderInstallationStatus.NotInstalled
             return false
         }
 
-        onlineProviderMap[providerData] = ProviderInstallationStatus.Installed
+        onlineProviderMap[providerMetadata] = ProviderInstallationStatus.Installed
         return true
     }
 
-    private suspend fun uninstallProvider(providerData: ProviderData) {
-        providerManager.unloadProvider(providerData)
-        onlineProviderMap[providerData] = ProviderInstallationStatus.NotInstalled
+    private suspend fun uninstallProvider(providerMetadata: ProviderMetadata) {
+        providerManager.unloadProvider(providerMetadata)
+        onlineProviderMap[providerMetadata] = ProviderInstallationStatus.NotInstalled
     }
 
     fun onSearchQueryChange(newQuery: String) {

@@ -1,7 +1,7 @@
 package com.flixclusive.domain.provider.test
 
 import androidx.compose.runtime.mutableStateListOf
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import java.util.Date
 
 /**
@@ -15,7 +15,7 @@ import java.util.Date
  * @property score The total score of the test outputs.
  * */
 data class ProviderTestResult(
-    val provider: ProviderData,
+    val provider: ProviderMetadata,
     val date: Date = Date(),
 ) {
     val outputs = mutableStateListOf<ProviderTestCaseOutput>()

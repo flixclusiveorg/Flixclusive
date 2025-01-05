@@ -11,7 +11,6 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.ui.common.navigation.navargs.GenreScreenNavArgs
 import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.data.tmdb.SortOptions
 import com.flixclusive.data.tmdb.TMDBRepository
@@ -43,7 +42,7 @@ internal class GenreViewModel @Inject constructor(
     var currentFilterSelected by mutableStateOf(
         if (filmTypeCouldBeBoth)
             FilmType.MOVIE
-        else genreArgs.genre.mediaType!!.toFilmType()
+        else genreArgs.genre.mediaType.toFilmType()
     )
         private set
     var canPaginate by mutableStateOf(false)
@@ -69,7 +68,7 @@ internal class GenreViewModel @Inject constructor(
                 val result = tmdbRepository.discoverFilms(
                     mediaType = currentFilterSelected.type,
                     page = page,
-                    withGenres = listOf(genreArgs.genre),
+                    withGenres = listOf(genreArgs.genre.toGenre()),
                     sortBy = SortOptions.POPULARITY
                 )
             ) {

@@ -30,14 +30,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.getProviderStatusColor
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Status
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun BottomCardContent(
-    providerData: ProviderData,
+    providerMetadata: ProviderMetadata,
     enabled: Boolean,
     openSettings: () -> Unit,
     unloadProvider: () -> Unit,
@@ -46,10 +46,10 @@ internal fun BottomCardContent(
     Row(
         modifier = Modifier
             .fillMaxWidth(),
-        horizontalArrangement = if (providerData.changelog != null) Arrangement.SpaceBetween else Arrangement.End,
+        horizontalArrangement = if (providerMetadata.changelog != null) Arrangement.SpaceBetween else Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val color = getProviderStatusColor(providerData.status)
+        val color = getProviderStatusColor(providerMetadata.status)
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -64,7 +64,7 @@ internal fun BottomCardContent(
             )
 
             Text(
-                text = providerData.status.toString(),
+                text = providerMetadata.status.toString(),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -108,7 +108,7 @@ internal fun BottomCardContent(
 
             Switch(
                 checked = enabled,
-                enabled = providerData.status != Status.Maintenance && providerData.status != Status.Down,
+                enabled = providerMetadata.status != Status.Maintenance && providerMetadata.status != Status.Down,
                 colors = SwitchDefaults.colors(
                     disabledCheckedThumbColor = MaterialTheme.colorScheme.surface
                         .onMediumEmphasis(1F)

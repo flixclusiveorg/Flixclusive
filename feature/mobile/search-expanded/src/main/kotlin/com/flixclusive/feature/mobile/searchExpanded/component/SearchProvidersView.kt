@@ -34,7 +34,7 @@ internal fun SearchProvidersView(
     viewModel: SearchExpandedScreenViewModel,
 ) {
     val listState = rememberLazyListState()
-    val providerDataList by viewModel.providerDataList.collectAsStateWithLifecycle()
+    val providerMetadataList by viewModel.providerMetadataList.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         safeCall {
@@ -68,7 +68,7 @@ internal fun SearchProvidersView(
 
         item {
             SearchProviderBlock(
-                providerData = Constant.tmdbProviderData,
+                providerMetadata = Constant.tmdbProviderMetadata,
                 isSelected = viewModel.selectedProviderIndex == 0,
                 onClick = {
                     viewModel.onChangeProvider(0)
@@ -76,9 +76,9 @@ internal fun SearchProvidersView(
             )
         }
 
-        itemsIndexed(providerDataList) { i, item ->
+        itemsIndexed(providerMetadataList) { i, item ->
             SearchProviderBlock(
-                providerData = item,
+                providerMetadata = item,
                 isSelected = viewModel.selectedProviderIndex == i + 1,
                 onClick = {
                     viewModel.onChangeProvider(i + 1)

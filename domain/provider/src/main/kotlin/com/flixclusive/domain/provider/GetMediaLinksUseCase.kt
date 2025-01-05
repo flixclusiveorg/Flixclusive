@@ -23,7 +23,7 @@ import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.isCached
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
-import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.provider.link.Flag
@@ -90,7 +90,7 @@ class GetMediaLinksUseCase @Inject constructor(
      * @return A flow stream of [MediaLinkResourceState]
      * */
     operator fun invoke(
-        film: FilmDetails,
+        film: FilmMetadata,
         watchHistoryItem: WatchHistoryItem?,
         preferredProviderName: String? = null,
         watchId: String? = null,
@@ -372,7 +372,7 @@ class GetMediaLinksUseCase @Inject constructor(
             return providerApis.first().sortedByDescending { api ->
                 val name = api.provider.name
 
-                providerManager.providerDataList
+                providerManager.providerMetadataList
                     .find { it.name == name }!!
                     .language.languageCode.equals(filmLanguage, true)
             }
@@ -383,7 +383,7 @@ class GetMediaLinksUseCase @Inject constructor(
 
     private suspend fun getCorrectWatchId(
         watchId: String?,
-        film: FilmDetails,
+        film: FilmMetadata,
         api: ProviderApi
     ): Resource<String?> {
         val needsNewWatchId = watchId == null && film.isFromTmdb && api !is ProviderWebViewApi

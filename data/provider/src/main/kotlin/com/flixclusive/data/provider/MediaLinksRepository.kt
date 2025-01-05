@@ -8,7 +8,7 @@ import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainCon
 import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
@@ -27,7 +27,7 @@ class MediaLinksRepository @Inject constructor() {
 
     /**
      *
-     * Obtains the list of [MediaLink] of a given [FilmDetails] from the given [ProviderApi].
+     * Obtains the list of [MediaLink] of a given [FilmMetadata] from the given [ProviderApi].
      *
      * @param api The api to be used to obtain the links.
      * @param watchId The unique identifier to be used to obtain the links.
@@ -40,7 +40,7 @@ class MediaLinksRepository @Inject constructor() {
     suspend fun getLinks(
         api: ProviderApi,
         watchId: String,
-        film: FilmDetails,
+        film: FilmMetadata,
         episode: Episode?,
         onLinkFound: (MediaLink) -> Unit
     ): Resource<Unit> {
@@ -90,7 +90,7 @@ class MediaLinksRepository @Inject constructor() {
      * @param api The provider api to be used to obtain the watch id.
      * */
     suspend fun getWatchId(
-        film: FilmDetails?,
+        film: FilmMetadata?,
         api: ProviderApi,
     ): Resource<String?> {
         return withIOContext {
@@ -137,7 +137,7 @@ class MediaLinksRepository @Inject constructor() {
                                 break
                             }
 
-                            val tvShowInfo = api.getFilmDetails(film = item)
+                            val tvShowInfo = api.getMetadata(film = item)
 
                             if (
                                 tvShowInfo.yearMatches(film)
@@ -201,7 +201,7 @@ class MediaLinksRepository @Inject constructor() {
         else -> equals(other, true) || compareIgnoringSymbols(other)
     }
 
-    private fun TvShow.seasonCountMatches(other: FilmDetails)
+    private fun TvShow.seasonCountMatches(other: FilmMetadata)
             = this.seasons.size == (other as TvShow).totalSeasons
 
     private fun Film.getRespectiveId(other: Film): String? {

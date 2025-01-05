@@ -1,9 +1,7 @@
 package com.flixclusive.core.datastore.migration.model
 
-import com.flixclusive.core.util.common.GithubConstant.GITHUB_BUILT_IN_PROVIDERS_REPOSITORY
 import com.flixclusive.model.datastore.user.ProviderOrderEntity
 import com.flixclusive.model.provider.Repository
-import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import kotlinx.serialization.Serializable
 
 
@@ -16,6 +14,6 @@ import kotlinx.serialization.Serializable
 internal data class OldAppSettingsProvider(
     val warnOnInstall: Boolean = true,
     val isUsingAutoUpdateProviderFeature: Boolean = true,
-    val repositories: List<Repository> = listOf(GITHUB_BUILT_IN_PROVIDERS_REPOSITORY.toValidRepositoryLink()),
+    val repositories: List<Repository> = listOf(),
     val providers: List<ProviderOrderEntity> = emptyList(),
 )

@@ -28,17 +28,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
-import com.flixclusive.model.provider.ProviderData
-import com.flixclusive.core.ui.common.R as UiCommonR
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun SearchProviderBlock(
     modifier: Modifier = Modifier,
-    providerData: ProviderData,
+    providerMetadata: ProviderMetadata,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -58,7 +58,7 @@ internal fun SearchProviderBlock(
             ImageWithSmallPlaceholder(
                 modifier = Modifier.size(60.dp),
                 placeholderModifier = Modifier.size(30.dp),
-                urlImage = providerData.iconUrl,
+                urlImage = providerMetadata.iconUrl,
                 placeholderId = UiCommonR.drawable.provider_logo,
                 contentDescId = LocaleR.string.provider_icon_content_desc,
                 shape = MaterialTheme.shapes.small
@@ -68,7 +68,7 @@ internal fun SearchProviderBlock(
                 modifier = Modifier.weight(1f),
             ) {
                 Text(
-                    text = providerData.name,
+                    text = providerMetadata.name,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Black,
                         fontSize = 18.sp
@@ -80,7 +80,7 @@ internal fun SearchProviderBlock(
                 )
 
                 Text(
-                    text = providerData.providerType?.toString() ?: stringResource(LocaleR.string.unknown_provider_type),
+                    text = providerMetadata.providerType?.toString() ?: stringResource(LocaleR.string.unknown_provider_type),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -112,7 +112,7 @@ private fun ProviderCardPreview() {
     FlixclusiveTheme {
         Surface {
             SearchProviderBlock(
-                providerData = getDummyProviderData(),
+                providerMetadata = getDummyProviderMetadata(),
                 isSelected = true,
                 onClick = {}
             )

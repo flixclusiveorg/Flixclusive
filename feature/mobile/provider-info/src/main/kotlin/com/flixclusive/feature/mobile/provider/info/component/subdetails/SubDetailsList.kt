@@ -18,12 +18,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.feature.mobile.provider.info.HORIZONTAL_PADDING
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import java.util.Locale
 import com.flixclusive.core.locale.R as LocaleR
 
@@ -36,14 +36,14 @@ private fun String.capitalize(): String {
 
 @Composable
 internal fun SubDetailsList(
-    providerData: ProviderData
+    providerMetadata: ProviderMetadata
 ) {
-    val subDetails = remember(providerData) {
+    val subDetails = remember(providerMetadata) {
         listOf(
-            providerData.versionName to UiText.StringResource(LocaleR.string.version),
-            providerData.status.toString() to UiText.StringResource(LocaleR.string.status),
-            Locale(providerData.language.languageCode).displayLanguage.capitalize() to UiText.StringResource(LocaleR.string.language),
-            providerData.providerType.type to UiText.StringResource(LocaleR.string.content),
+            providerMetadata.versionName to UiText.StringResource(LocaleR.string.version),
+            providerMetadata.status.toString() to UiText.StringResource(LocaleR.string.status),
+            Locale(providerMetadata.language.languageCode).displayLanguage.capitalize() to UiText.StringResource(LocaleR.string.language),
+            providerMetadata.providerType.type to UiText.StringResource(LocaleR.string.content),
         )
     }
 
@@ -86,11 +86,11 @@ internal fun SubDetailsList(
 @Preview
 @Composable
 private fun SubDetailsListPreview() {
-    val providerData = DummyDataForPreview.getDummyProviderData()
+    val providerMetadata = DummyDataForPreview.getDummyProviderMetadata()
 
     FlixclusiveTheme {
         Surface {
-            SubDetailsList(providerData = providerData)
+            SubDetailsList(providerMetadata = providerMetadata)
         }
     }
 }

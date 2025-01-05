@@ -51,7 +51,7 @@ internal class SearchExpandedScreenViewModel @Inject constructor(
     dataStoreManager: DataStoreManager
 ) : ViewModel() {
     private val providers = providerManager.workingApis
-    val providerDataList = providerManager.workingProviders
+    val providerMetadataList = providerManager.workingProviders
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

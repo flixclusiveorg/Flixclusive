@@ -1,18 +1,18 @@
 package com.flixclusive.domain.provider.test
 
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.locale.UiText
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.domain.provider.util.StringHelper.createString
 import com.flixclusive.domain.provider.util.StringHelper.getString
-import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.ProviderWebViewApi
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -53,7 +53,7 @@ internal object ProviderTestCases {
         ),
         ProviderTestCase(
             name = getString(LocaleR.string.ptest_method_get_film_details),
-            test = ::methodGetFilmDetailsIsSafeToCall,
+            test = ::methodGetFilmMetadataIsSafeToCall,
         ),
         ProviderTestCase(
             name = getString(LocaleR.string.ptest_method_get_links),
@@ -66,7 +66,7 @@ internal object ProviderTestCases {
             subclass(FilmSearchItem::class, FilmSearchItem.serializer())
         }
 
-        polymorphic(FilmDetails::class) {
+        polymorphic(FilmMetadata::class) {
             subclass(Movie::class, Movie.serializer())
             subclass(TvShow::class, TvShow.serializer())
         }
@@ -285,7 +285,7 @@ internal object ProviderTestCases {
         )
     }
 
-    suspend fun methodGetFilmDetailsIsSafeToCall(
+    suspend fun methodGetFilmMetadataIsSafeToCall(
         testName: UiText,
         api: ProviderApi,
     ): ProviderTestCaseOutput {
@@ -299,7 +299,7 @@ internal object ProviderTestCases {
             },
             successShortLog = { createString(it?.title ?: api.testFilm.title) },
             successFullLog = { createString(json.encodeToString(it)) },
-            assert = { api.getFilmDetails(api.testFilm) }
+            assert = { api.getMetadata(api.testFilm) }
         )
     }
 

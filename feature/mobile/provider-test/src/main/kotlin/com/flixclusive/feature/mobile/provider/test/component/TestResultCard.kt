@@ -52,12 +52,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.domain.provider.test.ProviderTestCaseOutput
 import com.flixclusive.domain.provider.test.ProviderTestResult
 import com.flixclusive.domain.provider.test.TestStatus
@@ -335,7 +335,7 @@ private fun TestOutputLog(
 @Preview
 @Composable
 private fun TestResultCardPreview() {
-    val providers = List(5) { getDummyProviderData() }
+    val providers = List(5) { getDummyProviderMetadata() }
     val isExpandedMap = remember {
         List(providers.size) { index: Int -> index to Random.nextBoolean() }
             .toMutableStateMap()

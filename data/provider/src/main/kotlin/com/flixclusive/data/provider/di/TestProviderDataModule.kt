@@ -12,7 +12,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 
-object TestProviderDataModule {
+object TestProviderMetadataModule {
     private val tmdbApiService: TMDBApiService = getMockTMDBApiService()
 
     fun getMockProviderApiRepository(): ProviderApiRepository {

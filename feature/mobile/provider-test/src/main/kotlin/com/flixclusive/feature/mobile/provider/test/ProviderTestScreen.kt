@@ -54,7 +54,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navargs.ProviderTestScreenNavArgs
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.domain.provider.test.ProviderTestCaseOutput
 import com.flixclusive.domain.provider.test.ProviderTestResult
@@ -66,7 +66,7 @@ import com.flixclusive.feature.mobile.provider.test.component.RepetitiveTestNoti
 import com.flixclusive.feature.mobile.provider.test.component.SortBottomSheet
 import com.flixclusive.feature.mobile.provider.test.component.TestResultCard
 import com.flixclusive.feature.mobile.provider.test.component.TestScreenHeader
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
 
@@ -104,7 +104,7 @@ internal fun ProviderTestScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var isSortingBottomSheetOpen by rememberSaveable { mutableStateOf(false) }
-    var testCaseOutputToShow by remember { mutableStateOf<Pair<ProviderData, ProviderTestCaseOutput>?>(null) }
+    var testCaseOutputToShow by remember { mutableStateOf<Pair<ProviderMetadata, ProviderTestCaseOutput>?>(null) }
 
     val context = LocalContext.current
     val localDensity = LocalDensity.current
@@ -236,12 +236,12 @@ internal fun ProviderTestScreen(
 
             items(
                 items = testResults,
-                key = { it.provider.id }
+                key = { it.provider.id!! }
             ) { data ->
                 TestResultCard(
-                    isExpanded = viewModel.isExpanded(id = data.provider.id),
+                    isExpanded = viewModel.isExpanded(id = data.provider.id!!),
                     testResult = data,
-                    onToggle = { viewModel.toggleCard(id = data.provider.id) },
+                    onToggle = { viewModel.toggleCard(id = data.provider.id!!) },
                     showFullLog = { testCaseOutputToShow = data.provider to it },
                     modifier = Modifier.animateItem()
                 )
@@ -313,7 +313,7 @@ private fun ProviderTestScreenPreview() {
                     override fun goBack() {}
                 },
                 args = ProviderTestScreenNavArgs(
-                    arrayListOf(getDummyProviderData())
+                    arrayListOf(getDummyProviderMetadata())
                 )
             )
         }

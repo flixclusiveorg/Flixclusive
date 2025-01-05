@@ -113,7 +113,7 @@ internal fun ProvidersScreen(
     val filteredProviders by remember {
         derivedStateOf {
             when (viewModel.searchQuery.isNotEmpty() && searchExpanded.value) {
-                true -> viewModel.providerDataList.fastFilter {
+                true -> viewModel.providerMetadataList.fastFilter {
                     it.name.contains(viewModel.searchQuery, true)
                 }
                 false -> null
@@ -146,7 +146,7 @@ internal fun ProvidersScreen(
             )
         },
         floatingActionButton = {
-            if (viewModel.providerDataList.isNotEmpty()) {
+            if (viewModel.providerMetadataList.isNotEmpty()) {
                 ExtendedFloatingActionButton(
                     onClick = navigator::openAddRepositoryScreen,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -176,7 +176,7 @@ internal fun ProvidersScreen(
                 .padding(top = topPadding)
         ) {
             AnimatedContent(
-                targetState = viewModel.providerDataList.isEmpty(),
+                targetState = viewModel.providerMetadataList.isEmpty(),
                 label = "",
                 transitionSpec = {
                     ContentTransform(
@@ -239,7 +239,7 @@ internal fun ProvidersScreen(
                                     CustomButton(
                                         onClick = {
                                             navigator.testProviders(
-                                                providers = viewModel.providerDataList
+                                                providers = viewModel.providerMetadataList
                                                     .toCollection(ArrayList())
                                             )
                                         },
@@ -259,29 +259,31 @@ internal fun ProvidersScreen(
                         }
 
                         itemsIndexed(
-                            items = filteredProviders ?: viewModel.providerDataList,
-                            key = { _, item -> item.id }
-                        ) { index, providerData ->
+                            items = filteredProviders ?: viewModel.providerMetadataList,
+                            key = { _, item ->
+                                item.id ?: item.buildUrl!!
+                            }
+                        ) { index, providerMetadata ->
                             val displacementOffset =
                                 // +1 since there's a header
                                 if (index + 1 == dragDropListState.getCurrentIndexOfDraggedListItem()) {
                                     dragDropListState.elementDisplacement.takeIf { it != 0f }
                                 } else null
 
-                            val isEnabled = providerData.status != Status.Maintenance
-                                && providerData.status != Status.Down
+                            val isEnabled = providerMetadata.status != Status.Maintenance
+                                && providerMetadata.status != Status.Down
                                 && (providerPreferences.providers.getOrNull(index)?.isDisabled?.not() ?: true)
 
                             InstalledProviderCard(
                                 modifier = Modifier.animateItem(),
-                                providerData = providerData,
+                                providerMetadata = providerMetadata,
                                 enabled = isEnabled,
                                 isDraggable = !searchExpanded.value,
                                 displacementOffset = displacementOffset,
-                                openSettings = { navigator.openProviderSettings(providerData) },
-                                onClick = { navigator.openProviderInfo(providerData) },
+                                openSettings = { navigator.openProviderSettings(providerMetadata) },
+                                onClick = { navigator.openProviderInfo(providerMetadata) },
                                 uninstallProvider = { indexOfProviderToUninstall = index },
-                                onToggleProvider = { viewModel.toggleProvider(providerData) }
+                                onToggleProvider = { viewModel.toggleProvider(providerMetadata) }
                             )
                         }
                     }
@@ -291,7 +293,7 @@ internal fun ProvidersScreen(
     }
 
     if (indexOfProviderToUninstall != null) {
-        val providerData = remember { (filteredProviders ?: viewModel.providerDataList)[indexOfProviderToUninstall!!] }
+        val providerMetadata = remember { (filteredProviders ?: viewModel.providerMetadataList)[indexOfProviderToUninstall!!] }
 
         IconAlertDialog(
             painter = painterResource(id = R.drawable.warning),
@@ -300,7 +302,7 @@ internal fun ProvidersScreen(
                 append(context.getString(LocaleR.string.warning_uninstall_message_first_half))
                 append(" ")
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append(providerData.name)
+                    append(providerMetadata.name)
                 }
                 append("?")
             },

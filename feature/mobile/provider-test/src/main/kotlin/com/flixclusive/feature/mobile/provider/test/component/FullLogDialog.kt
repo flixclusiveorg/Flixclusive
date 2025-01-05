@@ -43,11 +43,11 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_CORNER_SIZE
 import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.domain.provider.test.ProviderTestCaseOutput
 import com.flixclusive.domain.provider.test.TestStatus
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import com.flixclusive.core.locale.R as LocaleR
@@ -56,7 +56,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 @Composable
 internal fun FullLogDialog(
     testCaseOutput: ProviderTestCaseOutput,
-    provider: ProviderData,
+    provider: ProviderMetadata,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -225,7 +225,7 @@ internal fun labelValueStringBuilder(
 
 @Composable
 internal fun getFullLogOtherLabels(
-    provider: ProviderData,
+    provider: ProviderMetadata,
     testCaseOutput: ProviderTestCaseOutput
 ): List<AnnotatedString> {
     val context = LocalContext.current
@@ -286,7 +286,7 @@ private fun FullLogDialogPreview() {
         shortLog = UiText.StringValue("Failed to fetch film details for The Godfather [tt0068646]")
     )
 
-    val provider = getDummyProviderData()
+    val provider = getDummyProviderMetadata()
 
     FlixclusiveTheme {
         Surface(

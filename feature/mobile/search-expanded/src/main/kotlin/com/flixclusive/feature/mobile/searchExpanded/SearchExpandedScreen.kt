@@ -52,7 +52,7 @@ internal fun SearchExpandedScreen(
     previewFilm: (Film) -> Unit,
 ) {
     val viewModel: SearchExpandedScreenViewModel = hiltViewModel()
-    val providerDataList by viewModel.providerDataList.collectAsStateWithLifecycle()
+    val providerMetadataList by viewModel.providerMetadataList.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyGridState()
@@ -71,15 +71,15 @@ internal fun SearchExpandedScreen(
             viewModel.paginateItems()
     }
 
-    val providerData = remember(viewModel.selectedProviderIndex) {
-        val providerData = providerDataList
+    val providerMetadata = remember(viewModel.selectedProviderIndex) {
+        val providerMetadata = providerMetadataList
             .getOrNull(viewModel.selectedProviderIndex - 1)
 
-        if (providerData == null) {
-            return@remember Constant.tmdbProviderData
+        if (providerMetadata == null) {
+            return@remember Constant.tmdbProviderMetadata
         }
 
-        providerData
+        providerMetadata
     }
 
 
@@ -96,7 +96,7 @@ internal fun SearchExpandedScreen(
                 searchQuery = viewModel.searchQuery,
                 lastQuerySearched = viewModel.lastQuerySearched,
                 currentViewType = viewModel.currentViewType,
-                providerData = providerData,
+                providerMetadata = providerMetadata,
                 filters = sortedFilters,
                 onNavigationIconClick = navigator::goBack,
                 onQueryChange = viewModel::onQueryChange,

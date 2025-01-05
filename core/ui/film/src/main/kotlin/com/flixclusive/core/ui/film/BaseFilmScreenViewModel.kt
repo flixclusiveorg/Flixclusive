@@ -18,7 +18,7 @@ import com.flixclusive.model.database.toWatchlistItem
 import com.flixclusive.model.datastore.user.UiPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.model.film.util.FilmType
@@ -113,7 +113,7 @@ abstract class BaseFilmScreenViewModel(
             return
 
         initializeJob = viewModelScope.launch {
-            if (film is FilmDetails) {
+            if (film is FilmMetadata) {
                 onSuccessResponse(film)
                 return@launch
             }
@@ -136,7 +136,7 @@ abstract class BaseFilmScreenViewModel(
         }
     }
 
-    private fun onSuccessResponse(response: FilmDetails) {
+    private fun onSuccessResponse(response: FilmMetadata) {
         _film.update { response }
         _uiState.update {
             it.copy(

@@ -31,19 +31,26 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.navigation.navigator.SearchScreenNavigator
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop
+import com.flixclusive.core.ui.common.navigation.navigator.GenreScreenNavigator
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
 import com.flixclusive.core.ui.mobile.component.RetryButton
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.feature.mobile.search.component.SearchItemCard
 import com.flixclusive.feature.mobile.search.component.SearchItemCardPlaceholderWithText
 import com.flixclusive.feature.mobile.search.component.SearchItemRow
-import com.flixclusive.model.film.Genre
+import com.flixclusive.model.provider.Catalog
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
+
+interface SearchScreenNavigator : GenreScreenNavigator {
+    fun openSearchExpandedScreen()
+
+    fun openSeeAllScreen(item: Catalog)
+}
 
 @Destination
 @Composable
@@ -133,10 +140,10 @@ internal fun SearchScreen(
                         }
 
                         navigator.openGenreScreen(
-                            genre = Genre(
+                            genre = GenreWithBackdrop(
                                 id = it.id,
                                 name = it.name,
-                                posterPath = it.image,
+                                posterPath = it.image.toString(),
                                 mediaType = it.mediaType
                             )
                         )

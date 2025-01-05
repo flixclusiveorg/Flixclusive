@@ -1,58 +1,52 @@
 [versions]
 # Configurations ==
-androidGradlePlugin = "8.2.0"
-androidxComposeCompiler = "1.5.3"
+androidGradlePlugin = "8.7.3"
 applicationId = "com.flixclusive"
 applicationName = "Flixclusive"
-compileSdk = "34"
+compileSdk = "35"
 minSdk = "21"
 # =================
 
 accompanist = "0.32.0"
-androidDesugarJdkLibs = "2.0.4"
-androidx-test-ext-junit = "1.1.5"
-androidxComposeBom = "2024.09.02"
-androidxCore = "1.13.1"
+androidDesugarJdkLibs = "2.1.4"
+androidx-test-ext-junit = "1.2.1"
+androidxComposeBom = "2024.12.01"
+androidxCore = "1.15.0"
 androidxCoreSplashscreen = "1.0.1"
 androidxDataStore = "1.1.1"
-androidxTestCore = "1.5.0"
-androidxTestExt = "1.1.5"
-androidxTestRules = "1.5.0"
-androidxTestRunner = "1.5.2"
-appcompat = "1.6.1"
+androidxTestCore = "1.6.1"
+androidxTestRules = "1.6.1"
+androidxTestRunner = "1.6.2"
 coil = "3.0.4"
-compose = "1.7.2"
+compose = "1.7.6"
 composeDestinations = "1.9.53"
 conscrypt = "2.5.2"
-constraintLayout = "1.0.1"
-coreKtx = "1.12.0"
-coreStubs = "1.2.1"
-coroutines = "1.7.3"
+constraintLayout = "1.1.0"
+coreStubs = "1.2.4"
+coroutines = "1.9.0"
 dokka = "1.9.20"
 espresso-core = "3.6.1"
-gson = "2.10.1"
-hilt = "2.48"
+gson = "2.11.0"
+hilt = "2.49"
 hiltNavigation = "1.2.0"
-jsoup = "1.16.1"
 junit = "4.13.2"
-kotlin = "1.9.10"
+kotlin = "2.0.21"
 kotlinxImmutables = "0.3.8"
-ksp = "1.9.10-1.0.13"
-lifecycleRuntime = "2.8.3"
+ksp = "2.0.21-1.0.28"
+lifecycleRuntime = "2.8.7"
 localbroadcastmanager = "1.1.0"
 markdown = "0.5.5"
 material = "1.12.0"
-material3 = "1.1.2"
-media3 = "1.4.1"
+media3 = "1.5.1"
 media-ffmpeg = "0.8.2"
 mockk = "1.13.8"
 okhttp = "5.0.0-alpha.14"
 palette = "1.0.0"
 pauseCoroutine = "3959287e12"
-retrofit = "2.9.0"
+retrofit = "2.11.0"
 room = "2.6.1"
-serialization = "1.6.0"
-tvCompose = "1.0.0-alpha10"
+serialization = "1.6.3"
+tvCompose = "1.0.0-alpha10" # TODO: Update TV Compose to stable
 unifile = "1.0.0"
 
 [libraries]
@@ -112,9 +106,6 @@ stubs-model-provider = { group = "com.github.flixclusiveorg.core-stubs", name = 
 stubs-provider = { group = "com.github.flixclusiveorg.core-stubs", name = "provider", version.ref = "coreStubs" }
 stubs-util = { group = "com.github.flixclusiveorg.core-stubs", name = "core-util", version.ref = "coreStubs" }
 
-# Jsoup
-jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
-
 # Gson
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
@@ -163,7 +154,6 @@ okhttp-dnsoverhttps = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", ver
 # Retrofit
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
-retrofit-scalars = { group = "com.squareup.retrofit2", name = "converter-scalars", version.ref = "retrofit" }
 
 # Room
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
@@ -201,6 +191,7 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 
 
 

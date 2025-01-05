@@ -27,8 +27,8 @@ import com.flixclusive.data.provider.util.rmrf
 import com.flixclusive.model.datastore.user.ProviderOrderEntity
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
-import com.flixclusive.model.provider.ProviderData
 import com.flixclusive.model.provider.ProviderManifest
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import com.flixclusive.model.provider.Status
 import com.flixclusive.provider.Provider
@@ -64,16 +64,16 @@ class ProviderManager @Inject constructor(
     /**
      * An observable map of provider data
      */
-    val providerDataList = mutableStateListOf<ProviderData>()
+    val providerMetadataList = mutableStateListOf<ProviderMetadata>()
 
     /** Providers that failed to load for various reasons. Map of provider data to String or Exception  */
-    private val failedToLoad: MutableMap<ProviderData, Any> = LinkedHashMap()
+    private val failedToLoad: MutableMap<ProviderMetadata, Any> = LinkedHashMap()
 
     /**
      *
      * Map of all repository's updater.json files and their contents
      * */
-    private val updaterJsonMap = HashMap<String, List<ProviderData>>()
+    private val updaterJsonMap = HashMap<String, List<ProviderMetadata>>()
 
     private val dynamicResourceLoader = DynamicResourceLoader(context = context)
     private val LOCAL_PATH_PREFIX = context.getExternalFilesDir(null)?.absolutePath + "/providers/"
@@ -85,7 +85,7 @@ class ProviderManager @Inject constructor(
     val providerPreferences get() = providerPreferencesAsState.awaitFirst()
     
     val workingApis = snapshotFlow {
-        providerDataList
+        providerMetadataList
             .mapNotNull { data ->
                 val api = providerApiRepository.apiMap[data.name]
 
@@ -101,7 +101,7 @@ class ProviderManager @Inject constructor(
     }
     
     val workingProviders = snapshotFlow {
-        providerDataList
+        providerMetadataList
             .mapNotNull { data ->
                 if (
                     data.status != Status.Maintenance
@@ -161,7 +161,7 @@ class ProviderManager @Inject constructor(
                 return@folderForEach
             }
 
-            val randomProviderFile = fromJson<List<ProviderData>>(updaterJsonFile.reader())
+            val randomProviderFile = fromJson<List<ProviderMetadata>>(updaterJsonFile.reader())
                 .firstOrNull()
                 ?: return@folderForEach
 
@@ -216,13 +216,13 @@ class ProviderManager @Inject constructor(
         }
 
         val updaterJsonList = updaterJsonMap.getOrPut(updaterJsonFile.absolutePath) {
-            fromJson<List<ProviderData>>(updaterJsonFile.reader())
+            fromJson<List<ProviderMetadata>>(updaterJsonFile.reader())
         }
 
         val providerName = providerFile.name
-        val providerData = updaterJsonList.find { it.name.plus(".flx").equals(providerName, true) }
+        val providerMetadata = updaterJsonList.find { it.name.plus(".flx").equals(providerName, true) }
 
-        if (providerData == null) {
+        if (providerMetadata == null) {
             errorLog("Provider [$providerName] cannot be found on the updater.json file!")
             return
         }
@@ -230,7 +230,7 @@ class ProviderManager @Inject constructor(
         if (providerName.endsWith(".flx")) {
             loadProvider(
                 file = providerFile,
-                providerData = providerData
+                providerMetadata = providerMetadata
             )
         } else if (providerName != "oat") { // Some roms create this
             if (providerFile.isDirectory) {
@@ -271,25 +271,25 @@ class ProviderManager @Inject constructor(
     }
 
     suspend fun loadProvider(
-        providerData: ProviderData,
+        providerMetadata: ProviderMetadata,
         needsDownload: Boolean = false,
         filePath: String? = null
     ) {
-        check(providerData.repositoryUrl != null) {
+        check(providerMetadata.repositoryUrl != null) {
             "Repository URL must not be null if using this overloaded method."
         }
 
         val file = filePath?.let { File(it) } 
-            ?: context.provideValidProviderPath(providerData)
+            ?: context.provideValidProviderPath(providerMetadata)
 
-        if (needsDownload && !downloadProvider(file, providerData.buildUrl!!)) {
+        if (needsDownload && !downloadProvider(file, providerMetadata.buildUrl!!)) {
             throw IOException("Something went wrong trying to download the provider.")
         }
 
         val initialFailedToLoadProviders = failedToLoad.size
         loadProvider(
             file = file,
-            providerData = providerData
+            providerMetadata = providerMetadata
         )
 
         val hasNewErrors = needsDownload && failedToLoad.size - initialFailedToLoadProviders > 0
@@ -307,12 +307,12 @@ class ProviderManager @Inject constructor(
      * Loads a provider
      *
      * @param file              Provider file
-     * @param providerData      The provider information
+     * @param providerMetadata      The provider information
      */
     @Suppress("UNCHECKED_CAST")
     private suspend fun loadProvider(
         file: File,
-        providerData: ProviderData
+        providerMetadata: ProviderMetadata
     ) {
         val name = file.nameWithoutExtension
         val filePath = file.absolutePath
@@ -351,13 +351,13 @@ class ProviderManager @Inject constructor(
             }
 
             val settingsPath = context.getExternalFilesDir(null)
-                ?.absolutePath + "/settings/${buildValidFilename(providerData.repositoryUrl!!)}"
+                ?.absolutePath + "/settings/${buildValidFilename(providerMetadata.repositoryUrl!!)}"
 
             providerInstance.__filename = name
             providerInstance.manifest = manifest
             providerInstance.settings = ProviderSettings(
                 fileDirectory = settingsPath,
-                providerName = providerData.name
+                providerName = providerMetadata.name
             )
             if (manifest.requiresResources) {
                 withIOContext {
@@ -384,7 +384,7 @@ class ProviderManager @Inject constructor(
                 val api = providerInstance.getApi(context, client)
 
                 providerApiRepository.add(
-                    providerName = providerData.name,
+                    providerName = providerMetadata.name,
                     providerApi = api
                 )
             }
@@ -393,11 +393,11 @@ class ProviderManager @Inject constructor(
             classLoaders[loader] = providerInstance
 
             if (providerPosition > -1) {
-                providerDataList.add(
-                    index = providerPosition, element = providerData
+                providerMetadataList.add(
+                    index = providerPosition, element = providerMetadata
                 )
             } else {
-                providerDataList.add(element = providerData)
+                providerMetadataList.add(element = providerMetadata)
             }
         } catch (e: Throwable) {
             if (isCrashingOnGetApiMethod(e)) {
@@ -409,12 +409,12 @@ class ProviderManager @Inject constructor(
                     isDisabled = true
                 )
 
-                return loadProvider(file, providerData)
+                return loadProvider(file, providerMetadata)
             }
 
             errorLog("$name crashed with error: ${e.localizedMessage}")
             errorLog(e)
-            failedToLoad[providerData] = e
+            failedToLoad[providerMetadata] = e
         }
     }
 
@@ -440,14 +440,14 @@ class ProviderManager @Inject constructor(
     /**
      * Unloads a provider
      *
-     * @param providerData the [ProviderData] to uninstall/unload
+     * @param providerMetadata the [ProviderMetadata] to uninstall/unload
      * @param unloadOnSettings an optional toggle to also unload the provider from the settings. Default value is *true*
      */
     suspend fun unloadProvider(
-        providerData: ProviderData,
+        providerMetadata: ProviderMetadata,
         unloadOnSettings: Boolean = true
     ) {
-        val index = getPositionIndexFromSettings(providerData.name)
+        val index = getPositionIndexFromSettings(providerMetadata.name)
         val providerPreference = providerPreferences.providers[index]
 
         unloadProvider(
@@ -487,7 +487,7 @@ class ProviderManager @Inject constructor(
         safeCall("Exception while unloading provider: ${provider.name}") {
             provider.onUnload(context.applicationContext)
 
-            providerDataList.removeIf {
+            providerMetadataList.removeIf {
                 it.name.equals(provider.name, true)
             }
             classLoaders.values.removeIf { 
@@ -528,19 +528,19 @@ class ProviderManager @Inject constructor(
     }
 
     private suspend fun reloadProviderOnSettings(
-        oldProviderData: ProviderData,
-        newProviderData: ProviderData
+        oldProviderMetadata: ProviderMetadata,
+        newProviderMetadata: ProviderMetadata
     ): ProviderOrderEntity {
-        val oldOrderPosition = getPositionIndexFromSettings(oldProviderData.name)
+        val oldOrderPosition = getPositionIndexFromSettings(oldProviderMetadata.name)
         val oldPreference = providerPreferences.providers[oldOrderPosition]
 
         val localPrefix = if (oldPreference.filePath.contains(LOCAL_PATH_PREFIX)) LOCAL_PATH_PREFIX else null
         val newPath = context.provideValidProviderPath(
-            newProviderData,
+            newProviderMetadata,
             localPrefix = localPrefix
         )
         val newPreference = oldPreference.copy(
-            name = newProviderData.name,
+            name = newProviderMetadata.name,
             filePath = newPath.absolutePath
         )
 
@@ -553,24 +553,24 @@ class ProviderManager @Inject constructor(
     }
 
     suspend fun reloadProvider(
-        oldProviderData: ProviderData,
-        newProviderData: ProviderData
+        oldProviderMetadata: ProviderMetadata,
+        newProviderMetadata: ProviderMetadata
     ) {
-        if (!providers.containsKey(oldProviderData.name))
-            throw IllegalArgumentException("No such provider: ${oldProviderData.name}")
+        if (!providers.containsKey(oldProviderMetadata.name))
+            throw IllegalArgumentException("No such provider: ${oldProviderMetadata.name}")
 
         unloadProvider(
-            providerData = oldProviderData,
+            providerMetadata = oldProviderMetadata,
             unloadOnSettings = false
         )
 
         val newProviderPreference = reloadProviderOnSettings(
-            oldProviderData = oldProviderData,
-            newProviderData = newProviderData
+            oldProviderMetadata = oldProviderMetadata,
+            newProviderMetadata = newProviderMetadata
         )
 
         loadProvider(
-            providerData = newProviderData,
+            providerMetadata = newProviderMetadata,
             filePath = newProviderPreference.filePath,
             needsDownload = true
         )
@@ -592,9 +592,9 @@ class ProviderManager @Inject constructor(
             newProvidersOrder[fromIndex] = newProvidersOrder[toIndex]
             newProvidersOrder[toIndex] = tempProviderPreference
 
-            val tempProviderData = providerDataList[fromIndex]
-            providerDataList[fromIndex] = providerDataList[toIndex]
-            providerDataList[toIndex] = tempProviderData
+            val tempProviderMetadata = providerMetadataList[fromIndex]
+            providerMetadataList[fromIndex] = providerMetadataList[toIndex]
+            providerMetadataList[toIndex] = tempProviderMetadata
 
             it.copy(providers = newProvidersOrder)
         }
@@ -603,34 +603,34 @@ class ProviderManager @Inject constructor(
     /**
      * Toggles a provider. If it is enabled, it will be disabled and vice versa.
      *
-     * @param providerData The data of the provider to toggle
+     * @param providerMetadata The data of the provider to toggle
      */
-    suspend fun toggleUsage(providerData: ProviderData) {
-        val isProviderEnabled = isProviderEnabled(providerData.name)
+    suspend fun toggleUsage(providerMetadata: ProviderMetadata) {
+        val isProviderEnabled = isProviderEnabled(providerMetadata.name)
         toggleUsageOnSettings(
-            name = providerData.name,
+            name = providerMetadata.name,
             isDisabled = isProviderEnabled
         )
 
         if (isProviderEnabled) {
-            providerApiRepository.remove(providerData.name)
+            providerApiRepository.remove(providerMetadata.name)
         } else {
             try {
-                val api = providers[providerData.name]
+                val api = providers[providerMetadata.name]
                     ?.getApi(context, client)
 
                 if (api != null) {
                     providerApiRepository.add(
-                        providerName = providerData.name,
+                        providerName = providerMetadata.name,
                         providerApi = api
                     )
                 }
             } catch (e: Throwable) {
-                val message = context.getApiCrashMessage(provider = providerData.name)
+                val message = context.getApiCrashMessage(provider = providerMetadata.name)
                 errorLog(message)
                 context.showToast(message)
 
-                toggleUsage(providerData)
+                toggleUsage(providerMetadata)
             }
         }
     }

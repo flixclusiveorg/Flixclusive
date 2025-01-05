@@ -19,13 +19,13 @@ import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.FilmProviderUseCase
 import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.model.database.toFilmInstance
 import com.flixclusive.model.database.toWatchlistItem
 import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.datastore.user.UserPreferences.Companion.PLAYER_PREFS_KEY
 import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.toFilmInstance
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -210,7 +210,7 @@ internal class MobileAppViewModel @Inject constructor(
             val userId = getCurrentSignedInUserId() ?: return@launch
 
             val response = when {
-                filmToShow !is FilmDetails -> {
+                filmToShow !is FilmMetadata -> {
                     filmProviderUseCase(partiallyDetailedFilm = filmToShow)
                 }
                 else -> Resource.Success(filmToShow)

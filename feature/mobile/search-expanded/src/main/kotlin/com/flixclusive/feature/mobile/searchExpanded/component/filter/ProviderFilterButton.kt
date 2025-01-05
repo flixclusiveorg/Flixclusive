@@ -34,7 +34,7 @@ import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.feature.mobile.searchExpanded.SearchItemViewType
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.getButtonColors
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -42,12 +42,12 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 internal fun ProviderFilterButton(
     modifier: Modifier = Modifier,
     currentViewType: MutableState<SearchItemViewType>,
-    providerData: ProviderData
+    providerMetadata: ProviderMetadata
 ) {
     val context = LocalContext.current
 
     var lastViewTypeSelected by rememberSaveable { mutableStateOf(currentViewType.value.ordinal) }
-    var isIconLoadingError by remember(providerData.iconUrl) { mutableStateOf(false) }
+    var isIconLoadingError by remember(providerMetadata.iconUrl) { mutableStateOf(false) }
 
     OutlinedButton(
         onClick = {
@@ -68,7 +68,7 @@ internal fun ProviderFilterButton(
             .widthIn(min = 150.dp)
     ) {
         AnimatedContent(
-            targetState = providerData.name,
+            targetState = providerMetadata.name,
             label = "",
         ) {
             Row(
@@ -84,7 +84,7 @@ internal fun ProviderFilterButton(
                             .size(16.dp)
                     )
                 } else {
-                    val imageModel = remember { context.buildImageUrl(providerData.iconUrl) }
+                    val imageModel = remember { context.buildImageUrl(providerMetadata.iconUrl) }
 
                     AsyncImage(
                         model = imageModel,

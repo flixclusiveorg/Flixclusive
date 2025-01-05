@@ -49,7 +49,7 @@ import com.flixclusive.feature.mobile.provider.info.component.ProviderInfoHeader
 import com.flixclusive.feature.mobile.provider.info.component.ProviderInfoTopBar
 import com.flixclusive.feature.mobile.provider.info.component.author.AuthorsList
 import com.flixclusive.feature.mobile.provider.info.component.subdetails.SubDetailsList
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
@@ -84,8 +84,8 @@ internal fun ProviderInfoScreen(
 
     val webNavigationItems = remember {
         listOf(
-            LocaleR.string.issue_a_bug to viewModel.providerData.repositoryUrl?.getNewIssueUrl(),
-            LocaleR.string.browse_repository to viewModel.providerData.repositoryUrl,
+            LocaleR.string.issue_a_bug to viewModel.providerMetadata.repositoryUrl?.getNewIssueUrl(),
+            LocaleR.string.browse_repository to viewModel.providerMetadata.repositoryUrl,
         )
     }
 
@@ -102,10 +102,10 @@ internal fun ProviderInfoScreen(
         topBar = {
             ProviderInfoTopBar(
                 isVisible = shouldShowTopBar,
-                providerName = viewModel.providerData.name,
+                providerName = viewModel.providerMetadata.name,
                 onNavigationIconClick = navigator::goBack,
                 onSettingsClick = {
-                    navigator.openProviderSettings(viewModel.providerData)
+                    navigator.openProviderSettings(viewModel.providerMetadata)
                 }
             )
         }
@@ -143,7 +143,7 @@ internal fun ProviderInfoScreen(
                 item {
                     ProviderInfoHeader(
                         modifier = Modifier.padding(horizontal = HORIZONTAL_PADDING),
-                        providerData = viewModel.providerData,
+                        providerMetadata = viewModel.providerMetadata,
                         openRepositoryScreen = {
                             viewModel.repository?.let(navigator::openRepositoryScreen)
                         }
@@ -151,7 +151,7 @@ internal fun ProviderInfoScreen(
                 }
 
                 item {
-                    SubDetailsList(providerData = viewModel.providerData)
+                    SubDetailsList(providerMetadata = viewModel.providerMetadata)
                 }
 
                 item {
@@ -163,9 +163,9 @@ internal fun ProviderInfoScreen(
                         onTestProvider = {
                             val status = viewModel.providerInstallationStatus
                             if (status.isOutdated) {
-                                navigator.testProviders(arrayListOf(args.providerData))
+                                navigator.testProviders(arrayListOf(args.providerMetadata))
                             } else if (status.isInstalled) {
-                                navigator.testProviders(arrayListOf(viewModel.providerData))
+                                navigator.testProviders(arrayListOf(viewModel.providerMetadata))
                             }
                         },
                         onToggleInstallationState = {
@@ -179,12 +179,12 @@ internal fun ProviderInfoScreen(
                     )
                 }
 
-                if (viewModel.providerData.changelog != null) {
+                if (viewModel.providerMetadata.changelog != null) {
                     item {
                         NavigationItem(
                             label = stringResource(id = LocaleR.string.whats_new),
                             onClick = {
-                                navigator.seeWhatsNew(providerData = viewModel.providerData)
+                                navigator.seeWhatsNew(providerMetadata = viewModel.providerMetadata)
                             }
                         )
                     }
@@ -192,7 +192,7 @@ internal fun ProviderInfoScreen(
 
                 item {
                     DescriptionBlock(
-                        description = viewModel.providerData.description,
+                        description = viewModel.providerMetadata.description,
                         modifier = Modifier
                             .padding(horizontal = HORIZONTAL_PADDING)
                     )
@@ -200,7 +200,7 @@ internal fun ProviderInfoScreen(
 
                 item {
                     AuthorsList(
-                        authors = viewModel.providerData.authors,
+                        authors = viewModel.providerMetadata.authors,
                     )
                 }
 
@@ -222,7 +222,7 @@ internal fun ProviderInfoScreen(
     if (openWarnOnInstallDialog) {
         UnsafeInstallAlertDialog(
             quantity = 1,
-            formattedName = viewModel.providerData.name,
+            formattedName = viewModel.providerMetadata.name,
             warnOnInstall = warnOnInstall,
             onConfirm = { disableWarning ->
                 viewModel.disableWarnOnInstall(disableWarning)
@@ -242,20 +242,20 @@ private fun String.getNewIssueUrl(): String {
 @Preview
 @Composable
 private fun ProviderInfoScreenPreview() {
-    val providerData = DummyDataForPreview.getDummyProviderData()
+    val providerMetadata = DummyDataForPreview.getDummyProviderMetadata()
 
     FlixclusiveTheme {
         Surface {
             ProviderInfoScreen(
                 navigator = object : ProviderInfoNavigator {
                     override fun goBack() {}
-                    override fun testProviders(providers: ArrayList<ProviderData>) {}
-                    override fun seeWhatsNew(providerData: ProviderData) {}
-                    override fun openProviderSettings(providerData: ProviderData) {}
+                    override fun testProviders(providers: ArrayList<ProviderMetadata>) {}
+                    override fun seeWhatsNew(providerMetadata: ProviderMetadata) {}
+                    override fun openProviderSettings(providerMetadata: ProviderMetadata) {}
                     override fun openRepositoryScreen(repository: Repository) {}
                 },
                 args = ProviderInfoScreenNavArgs(
-                    providerData = providerData
+                    providerMetadata = providerMetadata
                 )
             )
         }

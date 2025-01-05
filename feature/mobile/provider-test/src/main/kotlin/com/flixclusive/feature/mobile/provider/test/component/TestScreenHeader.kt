@@ -32,7 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderData
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.domain.provider.test.TestStage
 import com.flixclusive.domain.provider.test.TestStage.Idle.Companion.isIdle
@@ -202,7 +202,7 @@ private fun ScreenHeaderPreview() {
     FlixclusiveTheme {
         Surface {
             TestScreenHeader(
-                stage = TestStage.Stage1(getDummyProviderData())
+                stage = TestStage.Stage1(getDummyProviderMetadata())
             )
         }
     }

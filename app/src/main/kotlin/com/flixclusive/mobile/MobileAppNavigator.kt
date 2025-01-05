@@ -3,10 +3,12 @@ package com.flixclusive.mobile
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
+import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop
 import com.flixclusive.core.ui.common.navigation.navargs.MarkdownNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.AddProfileNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.CommonUserEditNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GenreScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.HomeNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.PlayerScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.PreferencesScreenNavigator
@@ -14,7 +16,6 @@ import com.flixclusive.core.ui.common.navigation.navigator.ProviderInfoNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.ProviderTestNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.ProvidersScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.RepositorySearchScreenNavigator
-import com.flixclusive.core.ui.common.navigation.navigator.SearchScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.UpdateDialogNavigator
 import com.flixclusive.feature.mobile.about.destinations.AboutScreenDestination
@@ -31,6 +32,7 @@ import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScr
 import com.flixclusive.feature.mobile.recentlyWatched.destinations.RecentlyWatchedScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
 import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
+import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
@@ -44,10 +46,9 @@ import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestinatio
 import com.flixclusive.feature.mobile.watchlist.destinations.WatchlistScreenDestination
 import com.flixclusive.model.database.User
 import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.Genre
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.provider.Catalog
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.util.navGraph
 import com.flixclusive.util.navigateIfResumed
@@ -60,7 +61,7 @@ internal class MobileAppNavigator(
     private val navController: NavController,
     private val uriHandler: UriHandler,
     private val closeApp: () -> Unit,
-) : HomeNavigator, SearchScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator,
+) : HomeNavigator, SearchScreenNavigator, GenreScreenNavigator, PreferencesScreenNavigator, UpdateDialogNavigator,
     FilmScreenNavigator, SplashScreenNavigator, PlayerScreenNavigator, ProvidersScreenNavigator,
     RepositorySearchScreenNavigator, ProviderInfoNavigator, ProviderTestNavigator,
     MarkdownNavigator, SettingsScreenNavigator, CommonUserEditNavigator, UserProfilesNavigator,
@@ -87,7 +88,7 @@ internal class MobileAppNavigator(
         )
     }
 
-    override fun openGenreScreen(genre: Genre) {
+    override fun openGenreScreen(genre: GenreWithBackdrop) {
         navController.navigateIfResumed(GenreScreenDestination(genre = genre) within destination.navGraph())
     }
 
@@ -203,9 +204,9 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openProviderSettings(providerData: ProviderData) {
+    override fun openProviderSettings(providerMetadata: ProviderMetadata) {
         navController.navigateIfResumed(
-            ProviderSettingsScreenDestination(providerData = providerData) within destination.navGraph()
+            ProviderSettingsScreenDestination(providerMetadata = providerMetadata) within destination.navGraph()
         )
     }
 
@@ -221,22 +222,22 @@ internal class MobileAppNavigator(
         )
     }
 
-    override fun testProviders(providers: ArrayList<ProviderData>) {
+    override fun testProviders(providers: ArrayList<ProviderMetadata>) {
         navController.navigateIfResumed(
             ProviderTestScreenDestination(providers = providers) within destination.navGraph()
         )
     }
 
-    override fun seeWhatsNew(providerData: ProviderData) {
+    override fun seeWhatsNew(providerMetadata: ProviderMetadata) {
         openMarkdownScreen(
-            title = providerData.name,
-            description = providerData.changelog ?: ""
+            title = providerMetadata.name,
+            description = providerMetadata.changelog ?: ""
         )
     }
 
-    override fun openProviderInfo(providerData: ProviderData) {
+    override fun openProviderInfo(providerMetadata: ProviderMetadata) {
         navController.navigateIfResumed(
-            ProviderInfoScreenDestination(providerData = providerData) within destination.navGraph()
+            ProviderInfoScreenDestination(providerMetadata = providerMetadata) within destination.navGraph()
         )
     }
 

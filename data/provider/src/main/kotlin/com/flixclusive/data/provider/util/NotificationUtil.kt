@@ -3,7 +3,7 @@ package com.flixclusive.data.provider.util
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.flixclusive.core.util.android.notify
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.locale.R as LocaleR
 
 object NotificationUtil {
@@ -14,7 +14,7 @@ object NotificationUtil {
 
     fun Context.notifyOnError(
         shouldInitializeChannel: Boolean,
-        providers: Collection<ProviderData>
+        providers: Collection<ProviderMetadata>
     ) {
         val failedToLoadProviders = providers.joinToString(", ") { it.name }
         val notificationBody = getString(LocaleR.string.failed_to_load_providers_msg_format, failedToLoadProviders)

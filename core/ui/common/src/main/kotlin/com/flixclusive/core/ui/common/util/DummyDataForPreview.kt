@@ -9,7 +9,7 @@ import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.provider.Author
 import com.flixclusive.model.provider.Language
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.ProviderType
 import com.flixclusive.model.provider.Status
 import com.flixclusive.provider.Provider
@@ -18,8 +18,8 @@ import okhttp3.OkHttpClient
 
 object DummyDataForPreview {
     @Composable
-    fun getDummyProviderData() = remember {
-        ProviderData(
+    fun getDummyProviderMetadata() = remember {
+        ProviderMetadata(
             authors = List(5) { Author("FLX $it") },
             repositoryUrl = "https://github.com/flixclusiveorg/123Movies",
             buildUrl = "https://raw.githubusercontent.com/flixclusiveorg/plugins-template/builds/updater.json",
@@ -36,7 +36,8 @@ object DummyDataForPreview {
             language = Language.Multiple,
             name = "CineFlix",
             providerType = ProviderType.All,
-            status = Status.Working
+            status = Status.Working,
+            id = "TEST-FLX-PROVIDER"
         )
     }
 

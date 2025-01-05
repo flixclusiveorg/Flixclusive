@@ -60,7 +60,7 @@ internal fun ProviderSettingsScreen(
         }
 
         CommonTopBar(
-            title = args.providerData.name,
+            title = args.providerMetadata.name,
             onNavigate = navigator::goBack
         )
     }

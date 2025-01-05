@@ -36,8 +36,8 @@ internal class ProviderInfoScreenViewModel @Inject constructor(
     private val providerUpdaterUseCase: ProviderUpdaterUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    private val oldProviderData = savedStateHandle.navArgs<ProviderInfoScreenNavArgs>().providerData
-    var providerData by mutableStateOf(oldProviderData)
+    private val oldProviderMetadata = savedStateHandle.navArgs<ProviderInfoScreenNavArgs>().providerMetadata
+    var providerMetadata by mutableStateOf(oldProviderMetadata)
         private set
 
     var providerInstallationStatus by mutableStateOf(ProviderInstallationStatus.NotInstalled)
@@ -68,19 +68,19 @@ internal class ProviderInfoScreenViewModel @Inject constructor(
         providerInstallationStatus = ProviderInstallationStatus.NotInstalled
 
         val isInstalledAlready =
-            providerManager.providerDataList.any { it.name.equals(oldProviderData.name, true) }
+            providerManager.providerMetadataList.any { it.name.equals(oldProviderMetadata.name, true) }
 
-        if (isInstalledAlready && providerUpdaterUseCase.isProviderOutdated(oldProviderData)) {
+        if (isInstalledAlready && providerUpdaterUseCase.isProviderOutdated(oldProviderMetadata)) {
             providerInstallationStatus = ProviderInstallationStatus.Outdated
             viewModelScope.launch {
                 // Run this asynchronously
-                providerData = providerUpdaterUseCase.getLatestProviderData(oldProviderData.name) ?: oldProviderData
+                providerMetadata = providerUpdaterUseCase.getLatestProviderMetadata(oldProviderMetadata.name) ?: oldProviderMetadata
             }
         } else if (isInstalledAlready) {
             providerInstallationStatus = ProviderInstallationStatus.Installed
         }
 
-        getRepository(providerData.repositoryUrl ?: return)
+        getRepository(providerMetadata.repositoryUrl ?: return)
     }
 
     fun toggleInstallation() {
@@ -102,14 +102,14 @@ internal class ProviderInfoScreenViewModel @Inject constructor(
 
         try {
             providerManager.loadProvider(
-                providerData = oldProviderData,
+                providerMetadata = oldProviderMetadata,
                 needsDownload = true
             )
         } catch (_: Exception) {
             snackbar = Resource.Failure(
                 UiText.StringResource(
                     LocaleR.string.failed_to_load_provider,
-                    oldProviderData.name
+                    oldProviderMetadata.name
                 )
             )
             providerInstallationStatus = ProviderInstallationStatus.NotInstalled
@@ -120,12 +120,12 @@ internal class ProviderInfoScreenViewModel @Inject constructor(
     }
 
     private suspend fun uninstallProvider() {
-        providerManager.unloadProvider(oldProviderData)
+        providerManager.unloadProvider(oldProviderMetadata)
         providerInstallationStatus = ProviderInstallationStatus.NotInstalled
     }
 
     private suspend fun updateProvider() {
-        val isSuccess = providerUpdaterUseCase.updateProvider(oldProviderData.name)
+        val isSuccess = providerUpdaterUseCase.updateProvider(oldProviderMetadata.name)
 
         if (isSuccess) {
             providerInstallationStatus = ProviderInstallationStatus.Installed

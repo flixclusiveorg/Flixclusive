@@ -2,7 +2,7 @@ package com.flixclusive.core.database.util
 
 import androidx.room.TypeConverter
 import com.flixclusive.core.util.network.json.fromJson
-import com.flixclusive.model.film.DBFilm
+import com.flixclusive.model.database.DBFilm
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement

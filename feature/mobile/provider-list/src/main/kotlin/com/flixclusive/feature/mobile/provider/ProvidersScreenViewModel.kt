@@ -10,7 +10,7 @@ import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.model.datastore.user.UserOnBoarding
 import com.flixclusive.model.datastore.user.UserPreferences
-import com.flixclusive.model.provider.ProviderData
+import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
@@ -22,7 +22,7 @@ internal class ProvidersScreenViewModel @Inject constructor(
     private val providerManager: ProviderManager,
     private val dataStoreManager: DataStoreManager,
 ) : ViewModel() {
-    val providerDataList = providerManager.providerDataList
+    val providerMetadataList = providerManager.providerMetadataList
     val providerPreferencesAsState = providerManager.providerPreferencesAsState
 
     private var uninstallJob: Job? = null
@@ -50,13 +50,13 @@ internal class ProvidersScreenViewModel @Inject constructor(
         }
     }
 
-    fun toggleProvider(providerData: ProviderData) {
+    fun toggleProvider(providerMetadata: ProviderMetadata) {
         if (toggleJob?.isActive == true) {
             return
         }
 
         toggleJob = viewModelScope.launch {
-            providerManager.toggleUsage(providerData)
+            providerManager.toggleUsage(providerMetadata)
         }
     }
 
