@@ -96,7 +96,7 @@ internal class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             with (providerManager) {
                 workingProviders.first().forEach {
-                    unloadProvider(it)
+                    unload(it)
                 }
             }
         }

@@ -13,6 +13,7 @@ import com.flixclusive.core.ui.player.PlayerSnackbarMessage
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil
+import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
@@ -38,6 +39,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     getMediaLinksUseCase: GetMediaLinksUseCase,
     watchHistoryRepository: WatchHistoryRepository,
     watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
+    providerManager: ProviderManager,
     userSessionManager: UserSessionManager,
 ) : BasePlayerViewModel(
     args = savedStateHandle.navArgs<PlayerScreenNavArgs>(),
@@ -50,6 +52,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     getMediaLinksUseCase = getMediaLinksUseCase,
     watchTimeUpdaterUseCase = watchTimeUpdaterUseCase,
     userSessionManager = userSessionManager,
+    providerManager = providerManager,
 ) {
     val snackbarQueue = mutableStateListOf<PlayerSnackbarMessage>()
 

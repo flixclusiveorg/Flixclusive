@@ -58,7 +58,7 @@ internal fun TMDBTvShow.toTvShowDetails(): TvShow {
         producers = producers,
         recommendations = recommendations.results.filterOutUnreleasedFilms(),
         id = null,
-        providerName = DEFAULT_FILM_SOURCE_NAME,
+        providerId = DEFAULT_FILM_SOURCE_NAME,
         imdbId = imdbId ?: externalIds["imdb_id"],
         adult = adult,
         runtime = episodeRuntime.average().toInt(),

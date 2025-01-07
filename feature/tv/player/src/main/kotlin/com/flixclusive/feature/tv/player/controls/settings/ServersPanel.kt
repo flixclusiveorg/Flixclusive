@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,8 +24,8 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.core.ui.tv.util.hasPressedRight
 import com.flixclusive.feature.tv.player.controls.settings.common.ListContentHolder
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.link.Stream
-import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
@@ -32,14 +33,16 @@ internal fun ServersPanel(
     modifier: Modifier = Modifier,
     state: PlayerUiState,
     servers: List<Stream>,
-    apis: List<ProviderApi>,
+    providers: List<ProviderMetadata>,
     onProviderChange: (String) -> Unit,
     onServerChange: (Int) -> Unit,
     hidePanel: () -> Unit,
 ) {
-    val selectedProviderIndex = remember(state.selectedProvider) {
-        apis.indexOfFirst {
-            it.provider.name.equals(state.selectedProvider, true)
+    val selectedProviderIndex by remember {
+        derivedStateOf {
+            providers.indexOfFirst {
+                it.id == state.selectedProvider
+            }
         }
     }
 
@@ -75,11 +78,11 @@ internal fun ServersPanel(
                     },
                 contentDescription = stringResource(id = LocaleR.string.providers),
                 label = stringResource(id = LocaleR.string.providers),
-                items = apis,
+                items = providers,
                 selectedIndex = selectedProviderIndex,
                 itemState = state.selectedProviderState,
                 onItemClick = {
-                    onProviderChange(apis[it].provider.name!!)
+                    onProviderChange(providers[it].id)
                 }
             )
 

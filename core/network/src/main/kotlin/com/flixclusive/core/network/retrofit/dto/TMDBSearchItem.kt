@@ -1,10 +1,10 @@
 package com.flixclusive.core.network.retrofit.dto
 
-import com.flixclusive.model.film.util.FilmType
-import com.flixclusive.model.film.util.extractYear
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Genre
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.film.util.extractYear
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
@@ -26,15 +26,16 @@ internal data class TMDBSearchItem(
 )
 
 internal fun TMDBSearchItem.toFilmSearchItem(filmType: FilmType): FilmSearchItem {
-    val genreName = when (filmType) {
-        FilmType.MOVIE -> "Movie"
-        FilmType.TV_SHOW -> "TV Show"
-    }
+    val genreName =
+        when (filmType) {
+            FilmType.MOVIE -> "Movie"
+            FilmType.TV_SHOW -> "TV Show"
+        }
 
     return FilmSearchItem(
         id = null,
         backdropImage = backdropImage,
-        providerName = DEFAULT_FILM_SOURCE_NAME,
+        providerId = DEFAULT_FILM_SOURCE_NAME,
         genreIds = genreIds,
         language = language,
         posterImage = posterImage,
@@ -48,11 +49,12 @@ internal fun TMDBSearchItem.toFilmSearchItem(filmType: FilmType): FilmSearchItem
         filmType = filmType,
         voteCount = voteCount,
         year = releaseDate?.extractYear(),
-        genres = listOf(
-            Genre(
-                id = -1,
-                name = genreName
-            )
-        ),
+        genres =
+            listOf(
+                Genre(
+                    id = -1,
+                    name = genreName,
+                ),
+            ),
     )
 }

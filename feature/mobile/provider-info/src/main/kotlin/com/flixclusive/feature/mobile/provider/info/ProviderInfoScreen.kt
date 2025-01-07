@@ -102,7 +102,6 @@ internal fun ProviderInfoScreen(
         topBar = {
             ProviderInfoTopBar(
                 isVisible = shouldShowTopBar,
-                providerName = viewModel.providerMetadata.name,
                 onNavigationIconClick = navigator::goBack,
                 onSettingsClick = {
                     navigator.openProviderSettings(viewModel.providerMetadata)

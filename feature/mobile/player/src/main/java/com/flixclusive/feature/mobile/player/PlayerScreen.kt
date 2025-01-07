@@ -37,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.ui.common.navigation.navigator.PlayerScreenNavigator
+import com.flixclusive.core.ui.common.util.getActivity
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.mobile.ListenKeyEvents
 import com.flixclusive.core.ui.mobile.rememberPipMode
@@ -53,7 +54,6 @@ import com.flixclusive.core.ui.player.util.PlayerUiUtil.ObserveNewLinksAndSubtit
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.ObservePlayerTime
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatPlayerTitle
 import com.flixclusive.core.ui.player.util.updatePiPParams
-import com.flixclusive.core.util.android.getActivity
 import com.flixclusive.feature.mobile.player.controls.PlayerControls
 import com.flixclusive.feature.mobile.player.controls.dialogs.provider.ProviderResourceStateScreen
 import com.flixclusive.feature.mobile.player.util.BrightnessManager
@@ -88,16 +88,17 @@ internal fun PlayerScreen(
     val playerPreferences by viewModel.playerPreferences.collectAsStateWithLifecycle()
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
 
-    val mediaData = viewModel.cachedLinks
-    val providers by viewModel.providers.collectAsStateWithLifecycle(initialValue = emptyList())
+    val cachedLinks = viewModel.cachedLinks
+    val providers by viewModel.providersAsState.collectAsStateWithLifecycle()
     val seasonData by viewModel.season.collectAsStateWithLifecycle()
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 
     var scrapingJob by remember { mutableStateOf<Job?>(null) }
 
-    val currentPlayerTitle = remember(currentSelectedEpisode) {
-        formatPlayerTitle(args.film, currentSelectedEpisode)
-    }
+    val currentPlayerTitle =
+        remember(currentSelectedEpisode) {
+            formatPlayerTitle(args.film, currentSelectedEpisode)
+        }
     var controlTimeoutVisibility by remember {
         mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
     }
@@ -111,41 +112,46 @@ internal fun PlayerScreen(
 
     val snackbarBottomPadding by animateDpAsState(
         targetValue = if (viewModel.areControlsVisible && !viewModel.areControlsLocked) 100.dp else 0.dp,
-        label = ""
+        label = "",
     )
 
     fun showControls(isShowing: Boolean) {
-        val areSomeSheetsOpened = isEpisodesSheetOpened.value
-                || isPlayerSettingsDialogOpened.value
-                || isAudiosAndSubtitlesDialogOpened.value
-                || isServersDialogOpened.value
-                || isDoubleTapping.value
+        val areSomeSheetsOpened =
+            isEpisodesSheetOpened.value ||
+                isPlayerSettingsDialogOpened.value ||
+                isAudiosAndSubtitlesDialogOpened.value ||
+                isServersDialogOpened.value ||
+                isDoubleTapping.value
 
-        val isLoading = (!viewModel.player.hasBeenInitialized
-                || !viewModel.player.isPlaying
-                || viewModel.player.playbackState == Player.STATE_BUFFERING
-                || viewModel.player.playbackState == Player.STATE_ENDED)
-                && !viewModel.areControlsLocked
+        val isLoading =
+            (
+                !viewModel.player.hasBeenInitialized ||
+                    !viewModel.player.isPlaying ||
+                    viewModel.player.playbackState == Player.STATE_BUFFERING ||
+                    viewModel.player.playbackState == Player.STATE_ENDED
+            ) &&
+                !viewModel.areControlsLocked
 
-        controlTimeoutVisibility = when {
-            !isShowing || areSomeSheetsOpened -> 0
-            isLoading -> Int.MAX_VALUE
-            else -> PLAYER_CONTROL_VISIBILITY_TIMEOUT
-        }
+        controlTimeoutVisibility =
+            when {
+                !isShowing || areSomeSheetsOpened -> 0
+                isLoading -> Int.MAX_VALUE
+                else -> PLAYER_CONTROL_VISIBILITY_TIMEOUT
+            }
     }
 
     fun onEpisodeClick(episode: Episode? = null) {
         viewModel.onEpisodeClick(
-            episodeToWatch = episode
+            episodeToWatch = episode,
         )
     }
 
     LaunchedEffect(currentSelectedEpisode) {
-        if(currentSelectedEpisode != null && currentSelectedEpisode != args.episodeToPlay) {
+        if (currentSelectedEpisode != null && currentSelectedEpisode != args.episodeToPlay) {
             isChangingEpisode = true
             navigator.onEpisodeChange(
                 film = args.film,
-                episodeToPlay = currentSelectedEpisode!!
+                episodeToPlay = currentSelectedEpisode!!,
             )
         }
     }
@@ -159,8 +165,8 @@ internal fun PlayerScreen(
      *
      * */
     LaunchedEffect(Unit) {
-        if (mediaData.watchId.isEmpty() || mediaData.providerName.isEmpty()) {
-            when(args.film) {
+        if (cachedLinks.watchId.isEmpty() || cachedLinks.providerId.isEmpty()) {
+            when (args.film) {
                 is TvShow -> onEpisodeClick(args.episodeToPlay)
                 is Movie -> viewModel.loadMediaLinks()
                 else -> throw IllegalStateException("Invalid film instance [${args.film.filmType}]: ${args.film}")
@@ -170,23 +176,24 @@ internal fun PlayerScreen(
 
     CompositionLocalProvider(
         LocalPlayerManager provides viewModel.player,
-        LocalBrightnessManager provides brightnessManager
+        LocalBrightnessManager provides brightnessManager,
     ) {
         PlayerPipReceiver(
             action = ACTION_PIP_CONTROL,
             onReceive = { broadcastIntent ->
                 if (
-                    SDK_INT >= Build.VERSION_CODES.O
-                    && broadcastIntent?.action == ACTION_PIP_CONTROL
+                    SDK_INT >= Build.VERSION_CODES.O &&
+                    broadcastIntent?.action == ACTION_PIP_CONTROL
                 ) {
                     val event = broadcastIntent.getIntExtra(PLAYER_PIP_EVENT, -1)
 
-                    if (event == -1)
+                    if (event == -1) {
                         return@PlayerPipReceiver
+                    }
 
                     viewModel.player.handleBroadcastEvents(event)
                 }
-            }
+            },
         )
 
         /**
@@ -197,13 +204,13 @@ internal fun PlayerScreen(
         LaunchedEffect(
             isInPipMode,
             viewModel.player.isPlaying,
-            viewModel.player.playbackState
+            viewModel.player.playbackState,
         ) {
             if (SDK_INT >= Build.VERSION_CODES.O && isInPipMode) {
                 context.updatePiPParams(
                     isPlaying = viewModel.player.isPlaying,
                     hasEnded = viewModel.player.playbackState == Player.STATE_ENDED,
-                    preferredSeekIncrement = playerPreferences.seekAmount
+                    preferredSeekIncrement = playerPreferences.seekAmount,
                 )
             }
         }
@@ -223,7 +230,7 @@ internal fun PlayerScreen(
                         viewModel.player.run {
                             viewModel.updateWatchHistory(
                                 currentTime = currentPosition,
-                                duration = duration
+                                duration = duration,
                             )
                         }
                         onEpisodeClick()
@@ -277,18 +284,20 @@ internal fun PlayerScreen(
                 viewModel.areControlsVisible = true
                 delay(1000)
                 controlTimeoutVisibility -= 1
-            } else viewModel.areControlsVisible = false
+            } else {
+                viewModel.areControlsVisible = false
+            }
         }
 
         // Re-prepare the player if provider data has changed
         ObserveNewLinksAndSubtitles(
             selectedSourceLink = uiState.selectedSourceLink,
             currentPlayerTitle = currentPlayerTitle,
-            newLinks = mediaData.streams,
-            newSubtitles = mediaData.subtitles,
+            newLinks = cachedLinks.streams,
+            newSubtitles = cachedLinks.subtitles,
             getSavedTimeForCurrentSourceData = {
                 viewModel.getSavedTimeForSourceData(currentSelectedEpisode).first
-            }
+            },
         )
 
         /**
@@ -311,7 +320,7 @@ internal fun PlayerScreen(
             isPlayerSettingsDialogOpened.value,
             isAudiosAndSubtitlesDialogOpened.value,
             isServersDialogOpened.value,
-            isDoubleTapping.value
+            isDoubleTapping.value,
         ) {
             showControls(true)
         }
@@ -323,19 +332,20 @@ internal fun PlayerScreen(
             showSnackbar = viewModel::showSnackbar,
             onQueueNextEpisode = {
                 viewModel.onQueueNextEpisode()
-            }
+            },
         )
 
         AudioFocusManager(
             activity = context,
             preferredSeekAmount = playerPreferences.seekAmount,
-            isPiPModeEnabled = playerPreferences.isPiPModeEnabled
+            isPiPModeEnabled = playerPreferences.isPiPModeEnabled,
         )
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black),
         ) {
             LifecycleAwarePlayer(
                 areControlsVisible = viewModel.areControlsVisible && !viewModel.areControlsLocked,
@@ -343,21 +353,22 @@ internal fun PlayerScreen(
                 resizeMode = uiState.selectedResizeMode,
                 onInitialize = {
                     viewModel.run {
-                        val (currentPosition, _)
-                            = getSavedTimeForSourceData(currentSelectedEpisode)
+                        val (currentPosition, _) =
+                            getSavedTimeForSourceData(currentSelectedEpisode)
 
                         player.initialize()
-                        mediaData.run {
-                            val getPossibleSourceLink = streams
-                                .getOrNull(uiState.selectedSourceLink)
-                                ?: streams.getOrNull(0)
+                        cachedLinks.run {
+                            val getPossibleSourceLink =
+                                streams
+                                    .getOrNull(uiState.selectedSourceLink)
+                                    ?: streams.getOrNull(0)
 
                             getPossibleSourceLink?.let {
                                 player.prepare(
                                     link = it,
                                     title = currentPlayerTitle,
                                     subtitles = subtitles,
-                                    initialPlaybackPosition = currentPosition
+                                    initialPlaybackPosition = currentPosition,
                                 )
                             }
                         }
@@ -367,20 +378,21 @@ internal fun PlayerScreen(
                     viewModel.player.run {
                         viewModel.updateWatchHistory(
                             currentTime = currentPosition,
-                            duration = duration
+                            duration = duration,
                         )
 
                         release(isForceReleasing = isForceReleasing)
                     }
-                }
+                },
             )
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .noIndicationClickable {
-                        showControls(!viewModel.areControlsVisible)
-                    }
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .noIndicationClickable {
+                            showControls(!viewModel.areControlsVisible)
+                        },
             )
 
             PlayerControls(
@@ -390,11 +402,11 @@ internal fun PlayerScreen(
                 isDoubleTapping = isDoubleTapping,
                 isEpisodesSheetOpened = isEpisodesSheetOpened,
                 isAudiosAndSubtitlesDialogOpened = isAudiosAndSubtitlesDialogOpened,
-                servers = mediaData.streams,
+                servers = cachedLinks.streams,
                 isPlayerSettingsDialogOpened = isPlayerSettingsDialogOpened,
                 isServersDialogOpened = isServersDialogOpened,
                 watchHistoryItem = watchHistoryItem,
-                providerApis = providers,
+                providers = providers,
                 availableSeasons = (args.film as? TvShow)?.totalSeasons,
                 currentEpisodeSelected = currentSelectedEpisode,
                 isLastEpisode = viewModel.isLastEpisode,
@@ -406,7 +418,7 @@ internal fun PlayerScreen(
                 onVideoServerChange = viewModel::onServerChange,
                 onProviderChange = { newProvider ->
                     viewModel.onProviderChange(
-                        newProvider =  newProvider
+                        newProvider = newProvider,
                     )
                 },
                 onResizeModeChange = viewModel::onResizeModeChange,
@@ -414,12 +426,12 @@ internal fun PlayerScreen(
                 toggleVideoTimeReverse = viewModel::toggleVideoTimeReverse,
                 showControls = { showControls(it) },
                 lockControls = { viewModel.areControlsLocked = it },
-                addSubtitle = { mediaData.subtitles.add(index = 0, element = it) },
+                addSubtitle = { cachedLinks.subtitles.add(index = 0, element = it) },
                 onEpisodeClick = {
                     viewModel.run {
                         updateWatchHistory(
                             currentTime = player.currentPosition,
-                            duration = player.duration
+                            duration = player.duration,
                         )
 
                         onEpisodeClick(it)
@@ -429,27 +441,31 @@ internal fun PlayerScreen(
 
             if (!isInPipMode) {
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(bottom = snackbarBottomPadding)
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(bottom = snackbarBottomPadding),
                 ) {
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth(0.55F),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(0.55F),
                     ) {
                         items(
                             items = viewModel.snackbarQueue,
                             key = { data ->
                                 if (data.type == PlayerSnackbarMessageType.Error) {
                                     data.type.ordinal + Random.nextInt()
-                                } else data.type.ordinal
-                            }
+                                } else {
+                                    data.type.ordinal
+                                }
+                            },
                         ) { data ->
                             PlayerSnackbar(
                                 messageData = data,
                                 onDismissMessage = {
                                     viewModel.removeSnackbar(data)
-                                }
+                                },
                             )
                         }
                     }
@@ -457,7 +473,6 @@ internal fun PlayerScreen(
             }
         }
     }
-
 
     AnimatedVisibility(
         visible = !providerState.isIdle,
@@ -479,11 +494,11 @@ internal fun PlayerScreen(
 
             ProviderResourceStateScreen(
                 state = providerState,
-                servers = mediaData.streams,
+                servers = cachedLinks.streams,
                 onSkipLoading = {
                     updateWatchHistory(
                         currentTime = player.currentPosition,
-                        duration = player.duration
+                        duration = player.duration,
                     )
 
                     onEpisodeClick()
@@ -496,7 +511,7 @@ internal fun PlayerScreen(
                     if (player.playWhenReady) {
                         player.play()
                     }
-                }
+                },
             )
         }
     }

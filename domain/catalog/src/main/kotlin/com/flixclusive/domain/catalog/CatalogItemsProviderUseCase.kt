@@ -50,5 +50,5 @@ class CatalogItemsProviderUseCase @Inject constructor(
     }
 
     private val ProviderCatalog.providerApi: ProviderApi?
-        get() = providerApiRepository.apiMap[providerName]
+        get() = providerApiRepository.get(providerId)
 }

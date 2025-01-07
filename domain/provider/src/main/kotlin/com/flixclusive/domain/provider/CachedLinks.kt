@@ -13,7 +13,7 @@ import java.io.Serializable
  * A data model to hold all cached [MediaLink]s that was extracted from a provider.
  *
  * @param watchId the watch id of the film from the used provider
- * @param providerName the name of the provider used
+ * @param providerId the id of the provider used
  * @param streams watchable links obtained from the provider
  * @param subtitles subtitle links obtained from the provider
  *
@@ -23,7 +23,7 @@ import java.io.Serializable
  * */
 data class CachedLinks(
     val watchId: String = "",
-    val providerName: String = "",
+    val providerId: String = "",
     val streams: SnapshotStateList<Stream> = mutableStateListOf(),
     val subtitles: SnapshotStateList<Subtitle> = mutableStateListOf()
 ) : Serializable {

@@ -16,13 +16,19 @@ private suspend fun Call.await(callStack: Array<StackTraceElement>): Response {
     return suspendCancellableCoroutine { continuation ->
         val callback =
             object : Callback {
-                override fun onResponse(call: Call, response: Response) {
-                    continuation.resume(response) {
-                        response.body?.close()
+                override fun onResponse(
+                    call: Call,
+                    response: Response,
+                ) {
+                    continuation.resume(response) { _, responseToClose, _ ->
+                        responseToClose.close()
                     }
                 }
 
-                override fun onFailure(call: Call, e: IOException) {
+                override fun onFailure(
+                    call: Call,
+                    e: IOException,
+                ) {
                     // Don't bother with resuming the continuation if it is already cancelled.
                     if (continuation.isCancelled) return
                     val exception = IOException(e.message, e).apply { stackTrace = callStack }
@@ -47,22 +53,24 @@ suspend fun Call.await(): Response {
     return await(callStack)
 }
 
-
-fun OkHttpClient.newCachelessCallWithProgress(request: Request, listener: ProgressListener): Call {
-    val progressClient = newBuilder()
-        .cache(null)
-        .followRedirects(true)
-        .followSslRedirects(true)
-        .addNetworkInterceptor { chain ->
-            val originalResponse = chain.proceed(chain.request())
-            originalResponse.body?.let {
-                originalResponse.newBuilder()
-                    .body(ProgressResponseBody(it, listener))
-                    .build()
-            } ?: originalResponse
-        }
-        .build()
+fun OkHttpClient.newCachelessCallWithProgress(
+    request: Request,
+    listener: ProgressListener,
+): Call {
+    val progressClient =
+        newBuilder()
+            .cache(null)
+            .followRedirects(true)
+            .followSslRedirects(true)
+            .addNetworkInterceptor { chain ->
+                val originalResponse = chain.proceed(chain.request())
+                originalResponse.body.let {
+                    originalResponse
+                        .newBuilder()
+                        .body(ProgressResponseBody(it, listener))
+                        .build()
+                }
+            }.build()
 
     return progressClient.newCall(request)
 }
-

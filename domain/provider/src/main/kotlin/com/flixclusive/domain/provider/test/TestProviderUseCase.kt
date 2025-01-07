@@ -73,7 +73,7 @@ class TestProviderUseCase @Inject constructor(
                 )
 
                 val api = loadProviderApi(
-                    providerMetadata = provider,
+                    metadata = provider,
                     updateOutput = {
                         testOutputs.update(
                             index = apiTestCaseIndex,
@@ -133,7 +133,7 @@ class TestProviderUseCase @Inject constructor(
     }
 
     private fun loadProviderApi(
-        providerMetadata: ProviderMetadata,
+        metadata: ProviderMetadata,
         updateOutput: (ProviderTestCaseOutput) -> Unit,
     ): ProviderApi? {
         try {
@@ -144,8 +144,8 @@ class TestProviderUseCase @Inject constructor(
                 )
             )
 
-            val provider = providerManager.providers[providerMetadata.name]
-            val api = providerApiRepository.apiMap[providerMetadata.name]
+            val provider = providerManager.providers[metadata.id]
+            val api = providerApiRepository.get(metadata.id)
                 ?: provider!!.getApi(
                     context = context,
                     client = client
@@ -220,17 +220,12 @@ class TestProviderUseCase @Inject constructor(
 
     private fun ProviderMetadata.addTestCountSuffix(): ProviderMetadata {
         val testCount = results.count {
-            it.provider.id!!!!.removeCountSuffix() == id
+            it.provider.id == id
         }
 
         if (testCount == 0)
             return this
 
         return copy(name = "$name ($testCount)")
-    }
-
-    private fun String.removeCountSuffix(): String {
-        val regex = """\s*\(\d+\)""".toRegex() // Matches " (number)" at the end of the string
-        return replace(regex, "")
     }
 }

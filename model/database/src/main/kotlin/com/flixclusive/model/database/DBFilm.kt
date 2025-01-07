@@ -11,7 +11,7 @@ import java.io.Serializable
  * */
 data class DBFilm(
     override val id: String? = null,
-    override val providerName: String? = null,
+    override val providerId: String = "",
     override val imdbId: String? = null,
     override val tmdbId: Int? = null,
     override val language: String? = null,
@@ -54,7 +54,7 @@ fun Film.toFilmInstance(): DBFilm {
         year = year,
         runtime = runtime,
         homePage = homePage,
-        providerName = providerName,
+        providerId = providerId,
         customProperties = customProperties
     )
 }

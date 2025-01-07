@@ -36,7 +36,9 @@ class GetSearchCardsUseCase @Inject constructor(
 
     val providersCatalogsCards: Flow<List<ProviderCatalog>>
         = providerManager.workingApis.map { list ->
-            list.flatMap { it.catalogs }
+            list.flatMap { (_, api) ->
+                api.catalogs
+            }
         }
     
     private val _movieCompanyCards = MutableStateFlow<List<SearchCatalog>>(emptyList())
@@ -55,7 +57,7 @@ class GetSearchCardsUseCase @Inject constructor(
     operator fun invoke() {
         val isAlreadyInitialized = configurationManager.searchCatalogsData?.run {
             (type.size + genres.size) == _cards.value.data?.size
-        } ?: false
+        } == true
 
         if(initializationJob?.isActive == true || isAlreadyInitialized)
             return

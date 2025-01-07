@@ -34,9 +34,9 @@ import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
-import com.flixclusive.provider.ProviderApi
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.player.R as PlayerR
 
@@ -53,7 +53,7 @@ internal fun PlayerControls(
     watchHistoryItem: WatchHistoryItem?,
     servers: List<Stream>,
     isLastEpisode: Boolean,
-    providerApis: List<ProviderApi>,
+    providers: List<ProviderMetadata>,
     availableSeasons: Int?,
     state: PlayerUiState,
     seasonData: Resource<Season?>,
@@ -321,7 +321,7 @@ internal fun PlayerControls(
         PlayerServersDialog(
             state = state,
             servers = servers,
-            providers = providerApis,
+            providers = providers,
             onProviderChange = { provider ->
                 onProviderChange(provider)
                 triggerSnackbar(

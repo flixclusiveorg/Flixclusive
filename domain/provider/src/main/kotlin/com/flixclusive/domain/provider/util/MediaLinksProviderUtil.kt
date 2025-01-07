@@ -14,10 +14,10 @@ internal object MediaLinksProviderUtil {
     fun getNoLinksLoadedMessage(provider: String)
         = UiText.StringResource(LocaleR.string.no_links_loaded_format_message, provider)
 
-    fun CachedLinks.isCached(providerName: String?): Boolean
+    fun CachedLinks.isCached(providerId: String?): Boolean
          = streams.isNotEmpty()
-            && (providerName.equals(providerName, true)
-            || providerName == null)
+            && (this@isCached.providerId.equals(providerId, true)
+            || providerId == null)
 
     fun MediaLink.isValidLink(): Boolean {
         return url.toHttpUrlOrNull() != null

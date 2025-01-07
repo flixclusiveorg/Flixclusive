@@ -65,8 +65,6 @@ class GetMediaLinksUseCase @Inject constructor(
     private val tmdbRepository: TMDBRepository,
     private val providerManager: ProviderManager,
 ) {
-    val providerApis: Flow<List<ProviderApi>> = providerManager.workingApis
-
     /**
      *
      * For caching provider links for each films ONLY
@@ -81,7 +79,7 @@ class GetMediaLinksUseCase @Inject constructor(
      * 
      * @param film The film to get the links
      * @param watchHistoryItem The watch history item of the film
-     * @param preferredProviderName The name of the preferred provider
+     * @param preferredProvider The ID of the preferred provider
      * @param watchId The watch id of the film
      * @param episode The episode of the film if it is a tv show
      * @param onSuccess A callback to run when the links are obtained successfully
@@ -92,14 +90,14 @@ class GetMediaLinksUseCase @Inject constructor(
     operator fun invoke(
         film: FilmMetadata,
         watchHistoryItem: WatchHistoryItem?,
-        preferredProviderName: String? = null,
+        preferredProvider: String? = null,
         watchId: String? = null,
         episode: Episode? = null,
         onSuccess: (Episode?) -> Unit,
         onError: ((UiText) -> Unit)? = null,
     ): Flow<MediaLinkResourceState> = channelFlow {
         val apis = getPrioritizedProvidersList(
-            preferredProviderName = preferredProviderName,
+            preferredProvider = preferredProvider,
             filmLanguage = film.language
         )
 
@@ -141,7 +139,7 @@ class GetMediaLinksUseCase @Inject constructor(
                     episode = episode,
                     cachedLinks = cachedLinks.copy(
                         watchId = film.identifier,
-                        providerName = DEFAULT_FILM_SOURCE_NAME
+                        providerId = DEFAULT_FILM_SOURCE_NAME
                     )
                 )
 
@@ -162,24 +160,25 @@ class GetMediaLinksUseCase @Inject constructor(
 
         clearTrustedCache(cachedLinks)
 
-        if (cachedLinks.isCached(preferredProviderName)) {
+        if (cachedLinks.isCached(preferredProvider)) {
             onSuccess(episodeToUse)
             finish()
             return@channelFlow
         }
 
         for (i in apis.indices) {
-            val api = apis[i]
+            val (apiId, api) = apis[i]
+            val metadata = providerManager.metadataList[apiId]!!
 
-            val isNotTheSameFilmProvider = !film.providerName.equals(api.provider.name, true) && !film.isFromTmdb
-            val isChangingProvider = preferredProviderName != null
+            val isNotTheSameFilmProvider = !film.providerId.equals(apiId, true) && !film.isFromTmdb
+            val isChangingProvider = preferredProvider != null
 
-            if ((isChangingProvider && api.provider.name != preferredProviderName) || isNotTheSameFilmProvider)
+            if ((isChangingProvider && apiId != preferredProvider) || isNotTheSameFilmProvider)
                 continue
 
             val canStopLooping = i == apis.lastIndex || isChangingProvider || !film.isFromTmdb
 
-            sendFetchingFilmMessage(provider = api.provider.name)
+            sendFetchingFilmMessage(provider = metadata.name)
 
             val watchIdResource = getCorrectWatchId(
                 watchId = watchId,
@@ -202,7 +201,7 @@ class GetMediaLinksUseCase @Inject constructor(
 
             val watchIdToUse = watchIdResource.data!!
             sendExtractingLinksMessage(
-                provider = api.provider.name,
+                provider = metadata.name,
                 isOnWebView = api is ProviderWebViewApi
             )
 
@@ -212,7 +211,7 @@ class GetMediaLinksUseCase @Inject constructor(
                 episode = episodeToUse,
                 cachedLinks = cachedLinks.copy(
                     watchId = watchIdToUse,
-                    providerName = api.provider.name
+                    providerId = apiId
                 )
             )
 
@@ -230,7 +229,7 @@ class GetMediaLinksUseCase @Inject constructor(
                 isNotSuccessful && canStopLooping -> {
                     val error = when {
                         result.error != null -> result.error!!
-                        noLinksLoaded -> getNoLinksLoadedMessage(api.provider.name)
+                        noLinksLoaded -> getNoLinksLoadedMessage(metadata.name)
                         else -> DEFAULT_ERROR_MESSAGE
                     }
 
@@ -308,7 +307,7 @@ class GetMediaLinksUseCase @Inject constructor(
             seasonNumber = 1
             episodeNumber = 1
         } else {
-            val (nextSeason, nextEpisode) = getNextEpisodeToWatch(watchHistoryItem!!)
+            val (nextSeason, nextEpisode) = getNextEpisodeToWatch(watchHistoryItem)
             seasonNumber = nextSeason ?: 1
             episodeNumber = nextEpisode ?: 1
         }
@@ -359,26 +358,27 @@ class GetMediaLinksUseCase @Inject constructor(
      * given provider and puts it on top of the list
      * */
     private suspend fun getPrioritizedProvidersList(
-        preferredProviderName: String?,
+        preferredProvider: String?,
         filmLanguage: String?,
-    ): List<ProviderApi> {
-        if(preferredProviderName != null) {
-            return providerApis.first().sortedByDescending {
-                it.provider.name.equals(preferredProviderName, true)
+    ): List<Pair<String, ProviderApi>> {
+        val apis = providerManager.workingApis.first()
+
+        if(preferredProvider != null) {
+            return apis.sortedByDescending { (id, _) ->
+                id.equals(preferredProvider, true)
             }
         }
 
         if (filmLanguage != null) {
-            return providerApis.first().sortedByDescending { api ->
-                val name = api.provider.name
-
-                providerManager.providerMetadataList
-                    .find { it.name == name }!!
-                    .language.languageCode.equals(filmLanguage, true)
+            return apis.sortedByDescending { (id, _) ->
+                providerManager.metadataList[id]
+                    ?.language
+                    ?.languageCode
+                    ?.equals(filmLanguage, ignoreCase = true) == true
             }
         }
 
-        return providerApis.first()
+        return apis
     }
 
     private suspend fun getCorrectWatchId(

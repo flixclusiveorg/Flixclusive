@@ -48,7 +48,6 @@
     <string name="error_search_history_is_already_cleared">Search history is already cleared!</string>
     <string name="fail_sending_error_log">Couldn\'t send error logs to server</string>
     <string name="failed_checking_for_updates">Failed to check for updates</string>
-    <string name="failed_to_auto_update_providers_error_message">Something went wrong while auto updating providers.</string>
     <string name="failed_to_extract">Failed to extract, try again later</string>
     <string name="failed_to_get_app_updates">Failed to get app updates</string>
     <string name="failed_to_init_app">Couldn\'t initialize the app.</string>
@@ -398,6 +397,7 @@
     <string name="invalid_provider_file_directory_msg_format">Found directory %s in your providers folder. DO NOT EXTRACT PROVIDER ZIPS!</string>
     <string name="next_episode_on_format">Next episode on %1$d…</string>
     <string name="providers_updated_format">The following provider(s) have been updated: %1$s</string>
+    <string name="failed_to_update_providers_format">Failed to update these provider(s): %1$s</string>
     <string name="test_providers_completed">Test results summary: %1$s</string>
     <string name="update_out_now_format">%1$s is out now</string>
     <string name="updates_out_now_provider_format">Updates for plugins are available: %1$s</string>

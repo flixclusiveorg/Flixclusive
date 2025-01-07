@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,30 +19,32 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderApi
+import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.feature.mobile.player.controls.common.BasePlayerDialog
 import com.flixclusive.feature.mobile.player.controls.common.ListContentHolder
 import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.link.Stream
-import com.flixclusive.provider.ProviderApi
+import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun PlayerServersDialog(
     state: PlayerUiState,
     servers: List<Stream>,
-    providers: List<ProviderApi>,
+    providers: List<ProviderMetadata>,
     onProviderChange: (String) -> Unit,
     onVideoServerChange: (Int, String) -> Unit,
     onDismissSheet: () -> Unit,
 ) {
-    val selectedProviderIndex = remember(state.selectedProvider) {
-        providers.indexOfFirst {
-            it.provider.name.equals(state.selectedProvider, true)
+    val selectedProviderIndex by remember {
+        derivedStateOf {
+            providers.indexOfFirst {
+                it.id == state.selectedProvider
+            }
         }
     }
 
@@ -59,7 +63,7 @@ internal fun PlayerServersDialog(
                 selectedIndex = selectedProviderIndex,
                 itemState = state.selectedProviderState,
                 onItemClick = {
-                    onProviderChange(providers[it].provider.name!!)
+                    onProviderChange(providers[it].id)
                 }
             )
 
@@ -101,7 +105,7 @@ internal fun PlayerServersDialog(
 )
 @Composable
 private fun PlayerServersDialogPreview() {
-    val sources = getDummyProviderApi()
+    val providers = List<ProviderMetadata>(5) { getDummyProviderMetadata() }
 
     val serverNames = listOf("ServerA", "ServerB", "ServerC", "ServerD", "ServerE")
     val serverUrls = listOf("http://serverA.com", "http://serverB.com", "http://serverC.com", "http://serverD.com", "http://serverE.com")
@@ -115,9 +119,9 @@ private fun PlayerServersDialogPreview() {
     FlixclusiveTheme {
         Surface {
             PlayerServersDialog(
-                state = PlayerUiState(selectedProvider = sources[0].provider.name),
+                state = PlayerUiState(selectedProvider = providers[0].name),
                 servers = servers,
-                providers = sources,
+                providers = providers,
                 onProviderChange = {},
                 onVideoServerChange = { _, _ ->}
             ) {}

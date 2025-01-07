@@ -7,17 +7,23 @@ import javax.inject.Singleton
 
 @Singleton
 class ProviderApiRepository @Inject constructor() {
-    val apiMap = mutableStateMapOf<String, ProviderApi>()
+    private val apiMap = mutableStateMapOf<String, ProviderApi>()
 
-    fun add(providerName: String, providerApi: ProviderApi) {
-        apiMap[providerName] = providerApi
+    fun get(id: String) = apiMap[id]
+
+    fun add(id: String, api: ProviderApi) {
+        apiMap[id] = api
     }
 
     /**
      *
      * Removes all providers registered to the given provider name.
      * */
-    fun remove(providerName: String) {
-        apiMap.remove(providerName)
+    fun remove(id: String) {
+        apiMap.remove(id)
+    }
+
+    fun clear() {
+        apiMap.clear()
     }
 }

@@ -11,7 +11,7 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.ToggleWatchlistStatusUseCase
-import com.flixclusive.domain.tmdb.FilmProviderUseCase
+import com.flixclusive.domain.tmdb.GetFilmMetadataUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.toWatchlistItem
@@ -45,7 +45,7 @@ abstract class BaseFilmScreenViewModel(
     private val partiallyDetailedFilm: Film,
     private val watchHistoryRepository: WatchHistoryRepository,
     private val seasonProvider: SeasonProviderUseCase,
-    private val filmProvider: FilmProviderUseCase,
+    private val filmProvider: GetFilmMetadataUseCase,
     private val toggleWatchlistStatusUseCase: ToggleWatchlistStatusUseCase,
     private val userSessionManager: UserSessionManager,
     dataStoreManager: DataStoreManager

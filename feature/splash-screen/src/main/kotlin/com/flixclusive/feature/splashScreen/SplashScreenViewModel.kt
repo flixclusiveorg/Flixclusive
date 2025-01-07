@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.util.coroutines.AppDispatchers
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.user.UserRepository
@@ -26,97 +26,107 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 internal sealed class SplashScreenUiState {
-    data object Loading: SplashScreenUiState()
-    data object Okay: SplashScreenUiState()
-    data object Failure: SplashScreenUiState()
+    data object Loading : SplashScreenUiState()
+
+    data object Okay : SplashScreenUiState()
+
+    data object Failure : SplashScreenUiState()
 }
 
 @HiltViewModel
-internal class SplashScreenViewModel @Inject constructor(
-    homeItemsProviderUseCase: HomeItemsProviderUseCase,
-    appConfigurationManager: AppConfigurationManager,
-    val appUpdateCheckerUseCase: AppUpdateCheckerUseCase,
-    private val userSessionManager: UserSessionManager,
-    private val userRepository: UserRepository,
-    private val dataStoreManager: DataStoreManager,
-    private val providerManager: ProviderManager,
-    private val providerUpdaterUseCase: ProviderUpdaterUseCase,
-) : ViewModel() {
-    private val _uiState = MutableStateFlow<SplashScreenUiState>(SplashScreenUiState.Loading)
-    val uiState = _uiState.asStateFlow()
+internal class SplashScreenViewModel
+    @Inject
+    constructor(
+        homeItemsProviderUseCase: HomeItemsProviderUseCase,
+        appConfigurationManager: AppConfigurationManager,
+        val appUpdateCheckerUseCase: AppUpdateCheckerUseCase,
+        private val userSessionManager: UserSessionManager,
+        private val userRepository: UserRepository,
+        private val dataStoreManager: DataStoreManager,
+        private val providerManager: ProviderManager,
+        private val providerUpdaterUseCase: ProviderUpdaterUseCase,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow<SplashScreenUiState>(SplashScreenUiState.Loading)
+        val uiState = _uiState.asStateFlow()
 
-    val configurationStatus = appConfigurationManager.configurationStatus
+        val configurationStatus = appConfigurationManager.configurationStatus
 
-    val systemPreferences = dataStoreManager.systemPreferences
-        .asStateFlow(viewModelScope)
+        val systemPreferences =
+            dataStoreManager.systemPreferences
+                .asStateFlow(viewModelScope)
 
-    val noUsersFound = userRepository
-        .observeUsers()
-        .map { it.isEmpty() }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking { userRepository.observeUsers().first().isEmpty() }
-        )
+        val noUsersFound =
+            userRepository
+                .observeUsers()
+                .map { it.isEmpty() }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = runBlocking { userRepository.observeUsers().first().isEmpty() },
+                )
 
-    val userLoggedIn = userSessionManager
-        .currentUser
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
+        val userLoggedIn =
+            userSessionManager
+                .currentUser
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = null,
+                )
 
-    init {
-        viewModelScope.launch {
-            launch {
-                combine(
-                    appConfigurationManager.configurationStatus,
-                    userLoggedIn
-                ) { status, user ->
-                    if (status is Resource.Success && user != null) {
-                        homeItemsProviderUseCase(user.id)
-                    }
-                }.collect()
-            }
+        init {
+            viewModelScope.launch {
+                launch initHomeScreen@{
+                    combine(
+                        appConfigurationManager.configurationStatus,
+                        userLoggedIn,
+                    ) { status, user ->
+                        if (status is Resource.Success && user != null) {
+                            homeItemsProviderUseCase(user.id)
+                            this@initHomeScreen.cancel()
+                        }
+                    }.collect()
+                }
 
-            launch {
-                homeItemsProviderUseCase.state.collectLatest { state ->
-                    _uiState.update {
-                        when {
-                            state.rowItems.size >= PREFERRED_MINIMUM_HOME_ITEMS -> SplashScreenUiState.Okay
-                            state.status is Resource.Failure -> SplashScreenUiState.Failure
-                            else -> it
+                launch waitForHomeScreenItems@{
+                    homeItemsProviderUseCase.state.collectLatest { state ->
+                        val newState =
+                            when {
+                                state.rowItems.size >= PREFERRED_MINIMUM_HOME_ITEMS -> SplashScreenUiState.Okay
+                                state.status is Resource.Failure -> SplashScreenUiState.Failure
+                                else -> _uiState.value
+                            }
+
+                        _uiState.value = newState
+
+                        if (newState == SplashScreenUiState.Okay) {
+                            this@waitForHomeScreenItems.cancel()
                         }
                     }
                 }
             }
 
-            launch(AppDispatchers.IO.dispatcher) io@ {
+            launchOnIO {
                 userLoggedIn.collectLatest {
                     if (it != null) {
                         providerManager.initialize()
-                        providerUpdaterUseCase.checkForUpdates(notify = true)
-                        this@io.cancel()
+                        providerUpdaterUseCase(notify = true)
+                        cancel()
                     } else {
                         userSessionManager.restoreSession()
                     }
                 }
             }
         }
-    }
 
-    fun updateSettings(
-        transform: suspend (t: SystemPreferences) -> SystemPreferences
-    ) {
-        viewModelScope.launch {
-            dataStoreManager.updateSystemPrefs(transform)
+        fun updateSettings(transform: suspend (t: SystemPreferences) -> SystemPreferences) {
+            launchOnIO {
+                dataStoreManager.updateSystemPrefs(transform)
+            }
         }
     }
-}

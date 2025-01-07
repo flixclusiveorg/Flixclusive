@@ -70,6 +70,7 @@ import com.flixclusive.feature.mobile.provider.component.ProfileHandlerButtons
 import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
 import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
 import com.flixclusive.feature.mobile.provider.util.rememberDragDropListState
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Status
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
@@ -93,7 +94,7 @@ internal fun ProvidersScreen(
     val providerPreferences by viewModel.providerPreferencesAsState.collectAsStateWithLifecycle()
     val userOnBoardingPrefs by viewModel.userOnBoardingPrefs.collectAsStateWithLifecycle()
     val searchExpanded = rememberSaveable { mutableStateOf(false) }
-    var indexOfProviderToUninstall by rememberSaveable { mutableStateOf<Int?>(null) }
+    var providerToUninstall by rememberSaveable { mutableStateOf<ProviderMetadata?>(null) }
 
     val helpTooltipState = rememberTooltipState(isPersistent = true)
     val scope = rememberCoroutineScope()
@@ -113,9 +114,7 @@ internal fun ProvidersScreen(
     val filteredProviders by remember {
         derivedStateOf {
             when (viewModel.searchQuery.isNotEmpty() && searchExpanded.value) {
-                true -> viewModel.providerMetadataList.fastFilter {
-                    it.name.contains(viewModel.searchQuery, true)
-                }
+                true -> viewModel.providers.fastFilter { it.name.contains(viewModel.searchQuery, true) }
                 false -> null
             }
         }
@@ -146,7 +145,7 @@ internal fun ProvidersScreen(
             )
         },
         floatingActionButton = {
-            if (viewModel.providerMetadataList.isNotEmpty()) {
+            if (viewModel.providers.isNotEmpty()) {
                 ExtendedFloatingActionButton(
                     onClick = navigator::openAddRepositoryScreen,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -176,7 +175,7 @@ internal fun ProvidersScreen(
                 .padding(top = topPadding)
         ) {
             AnimatedContent(
-                targetState = viewModel.providerMetadataList.isEmpty(),
+                targetState = viewModel.providers.isEmpty(),
                 label = "",
                 transitionSpec = {
                     ContentTransform(
@@ -239,7 +238,7 @@ internal fun ProvidersScreen(
                                     CustomButton(
                                         onClick = {
                                             navigator.testProviders(
-                                                providers = viewModel.providerMetadataList
+                                                providers = viewModel.providers
                                                     .toCollection(ArrayList())
                                             )
                                         },
@@ -259,31 +258,29 @@ internal fun ProvidersScreen(
                         }
 
                         itemsIndexed(
-                            items = filteredProviders ?: viewModel.providerMetadataList,
-                            key = { _, item ->
-                                item.id ?: item.buildUrl!!
-                            }
-                        ) { index, providerMetadata ->
+                            items = filteredProviders ?: viewModel.providers,
+                            key = { _, item -> item.id }
+                        ) { index, metadata ->
                             val displacementOffset =
                                 // +1 since there's a header
                                 if (index + 1 == dragDropListState.getCurrentIndexOfDraggedListItem()) {
                                     dragDropListState.elementDisplacement.takeIf { it != 0f }
                                 } else null
 
-                            val isEnabled = providerMetadata.status != Status.Maintenance
-                                && providerMetadata.status != Status.Down
-                                && (providerPreferences.providers.getOrNull(index)?.isDisabled?.not() ?: true)
+                            val isEnabled = metadata.status != Status.Maintenance
+                                && metadata.status != Status.Down
+                                && (providerPreferences.providers.getOrNull(index)?.isDisabled?.not() != false)
 
                             InstalledProviderCard(
                                 modifier = Modifier.animateItem(),
-                                providerMetadata = providerMetadata,
+                                providerMetadata = metadata,
                                 enabled = isEnabled,
                                 isDraggable = !searchExpanded.value,
                                 displacementOffset = displacementOffset,
-                                openSettings = { navigator.openProviderSettings(providerMetadata) },
-                                onClick = { navigator.openProviderInfo(providerMetadata) },
-                                uninstallProvider = { indexOfProviderToUninstall = index },
-                                onToggleProvider = { viewModel.toggleProvider(providerMetadata) }
+                                openSettings = { navigator.openProviderSettings(metadata) },
+                                onClick = { navigator.openProviderInfo(metadata) },
+                                uninstallProvider = { providerToUninstall = metadata },
+                                onToggleProvider = { viewModel.toggleProvider(metadata) }
                             )
                         }
                     }
@@ -292,8 +289,8 @@ internal fun ProvidersScreen(
         }
     }
 
-    if (indexOfProviderToUninstall != null) {
-        val providerMetadata = remember { (filteredProviders ?: viewModel.providerMetadataList)[indexOfProviderToUninstall!!] }
+    if (providerToUninstall != null) {
+        val metadata = remember { providerToUninstall!! }
 
         IconAlertDialog(
             painter = painterResource(id = R.drawable.warning),
@@ -302,15 +299,15 @@ internal fun ProvidersScreen(
                 append(context.getString(LocaleR.string.warning_uninstall_message_first_half))
                 append(" ")
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append(providerMetadata.name)
+                    append(metadata.name)
                 }
                 append("?")
             },
             onConfirm = {
-                viewModel.uninstallProvider(indexOfProviderToUninstall!!)
-                indexOfProviderToUninstall = null
+                viewModel.uninstallProvider(metadata)
+                providerToUninstall = null
             },
-            onDismiss = { indexOfProviderToUninstall = null }
+            onDismiss = { providerToUninstall = null }
         )
     }
 

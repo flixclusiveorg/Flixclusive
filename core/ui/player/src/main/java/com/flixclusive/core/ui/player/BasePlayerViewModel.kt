@@ -12,6 +12,8 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
+import com.flixclusive.core.util.coroutines.asStateFlow
+import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.CachedLinks
@@ -56,6 +58,7 @@ abstract class BasePlayerViewModel(
     context: Context,
     playerCacheManager: PlayerCacheManager,
     private val watchHistoryRepository: WatchHistoryRepository,
+    private val providerManager: ProviderManager,
     private val dataStoreManager: DataStoreManager,
     private val seasonProviderUseCase: SeasonProviderUseCase,
     private val getMediaLinksUseCase: GetMediaLinksUseCase,
@@ -83,7 +86,12 @@ abstract class BasePlayerViewModel(
             episode = _currentSelectedEpisode.value
         )
 
-    val providers = getMediaLinksUseCase.providerApis
+    val providersAsState = providerManager
+        .workingProviders
+        .asStateFlow(
+            scope = viewModelScope,
+            initialValue = emptyList()
+        )
 
     private val _dialogState = MutableStateFlow<MediaLinkResourceState>(MediaLinkResourceState.Idle)
     val dialogState: StateFlow<MediaLinkResourceState> = _dialogState.asStateFlow()
@@ -154,7 +162,7 @@ abstract class BasePlayerViewModel(
             it.copy(
                 selectedSourceLink = indexOfPreferredServer,
                 selectedResizeMode = preferredResizeMode,
-                selectedProvider = cachedLinks.providerName
+                selectedProvider = cachedLinks.providerId
             )
         }
     }
@@ -269,7 +277,7 @@ abstract class BasePlayerViewModel(
 
             getMediaLinksUseCase(
                 film = film as FilmMetadata,
-                preferredProviderName = newProvider,
+                preferredProvider = newProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = currentSelectedEpisode.value,
                 onSuccess = { _ ->
@@ -500,7 +508,7 @@ abstract class BasePlayerViewModel(
             getMediaLinksUseCase(
                 film = film as FilmMetadata,
                 watchId = cachedLinks.watchId,
-                preferredProviderName = _uiState.value.selectedProvider,
+                preferredProvider = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = episodeToWatch,
                 onSuccess = { newEpisode ->
@@ -561,7 +569,7 @@ abstract class BasePlayerViewModel(
             getMediaLinksUseCase(
                 film = film as FilmMetadata,
                 watchId = cachedLinks.watchId,
-                preferredProviderName = _uiState.value.selectedProvider,
+                preferredProvider = _uiState.value.selectedProvider,
                 watchHistoryItem = watchHistoryItem.value,
                 episode = episode,
                 onSuccess = { newEpisode ->

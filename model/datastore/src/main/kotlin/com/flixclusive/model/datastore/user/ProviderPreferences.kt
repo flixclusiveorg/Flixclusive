@@ -3,7 +3,6 @@ package com.flixclusive.model.datastore.user
 import com.flixclusive.model.provider.Repository
 import kotlinx.serialization.Serializable
 
-
 /**
  *
  * A sub data class for provider settings of
@@ -14,9 +13,8 @@ data class ProviderPreferences(
     val warnOnInstall: Boolean = true,
     val autoUpdate: Boolean = true,
     val repositories: List<Repository> = listOf(),
-    val providers: List<ProviderOrderEntity> = emptyList(),
+    val providers: List<ProviderFromPreferences> = emptyList(),
 ) : UserPreferences
-
 
 /**
  *
@@ -25,23 +23,27 @@ data class ProviderPreferences(
  *
  * */
 @Serializable
-data class ProviderOrderEntity(
+data class ProviderFromPreferences(
+    val id: String = "",
     val name: String,
     val filePath: String,
     val isDisabled: Boolean,
+    val isDebug: Boolean = false,
 ) {
-    override fun equals(other: Any?): Boolean {
-        return when(other) {
-            is ProviderOrderEntity -> name == other.name && filePath == other.filePath && isDisabled == other.isDisabled
-            is String -> filePath == other
+    override fun equals(other: Any?): Boolean =
+        when (other) {
+            is ProviderFromPreferences -> id == other.id
+            is String -> id == other
             else -> super.equals(other)
         }
-    }
 
     override fun hashCode(): Int {
-        var result = name.hashCode()
+        var result = super.hashCode()
+        result = 31 * result + id.hashCode()
+        result = 31 * result + name.hashCode()
         result = 31 * result + filePath.hashCode()
         result = 31 * result + isDisabled.hashCode()
+        result = 31 * result + isDebug.hashCode()
         return result
     }
 }

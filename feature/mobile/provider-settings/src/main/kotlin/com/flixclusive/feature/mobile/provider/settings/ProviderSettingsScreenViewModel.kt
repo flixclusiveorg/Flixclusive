@@ -12,6 +12,6 @@ internal class ProviderSettingsScreenViewModel @Inject constructor(
     providerManager: ProviderManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    private val providerMetadata = savedStateHandle.navArgs<ProviderInfoScreenNavArgs>().providerMetadata
-    val providerInstance = providerManager.providers[providerMetadata.name]
+    private val metadata = savedStateHandle.navArgs<ProviderInfoScreenNavArgs>().providerMetadata
+    val providerInstance = providerManager.providers[metadata.id]
 }

@@ -74,7 +74,7 @@ class TMDBRepositoryTest {
 
         data?.run {
             Assert.assertNotNull(title)
-            debugLog("☑\uFE0F $title [$providerName]")
+            debugLog("☑\uFE0F $title [$providerId]")
             Assert.assertNotNull(tmdbId)
             debugLog("\t > $tmdbId")
             Assert.assertNotNull(year)

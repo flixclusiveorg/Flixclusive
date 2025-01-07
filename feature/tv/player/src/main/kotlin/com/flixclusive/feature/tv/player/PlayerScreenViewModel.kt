@@ -14,6 +14,7 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.player.BasePlayerViewModel
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
+import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
@@ -30,71 +31,74 @@ import okhttp3.OkHttpClient
 
 @Composable
 internal fun playerScreenViewModel(args: PlayerScreenNavArgs): PlayerScreenViewModel {
-    val factory = EntryPointAccessors.fromActivity(
-        LocalContext.current as Activity,
-        ViewModelFactoryProvider::class.java
-    ).playerScreenViewModelFactory()
+    val factory =
+        EntryPointAccessors
+            .fromActivity(
+                LocalContext.current as Activity,
+                ViewModelFactoryProvider::class.java,
+            ).playerScreenViewModelFactory()
 
     return viewModel(factory = PlayerScreenViewModel.provideFactory(factory, args))
 }
 
+internal class PlayerScreenViewModel
+    @AssistedInject
+    constructor(
+        @Assisted args: PlayerScreenNavArgs,
+        private val dataStoreManager: DataStoreManager,
+        client: OkHttpClient,
+        context: Context,
+        playerCacheManager: PlayerCacheManager,
+        seasonProvider: SeasonProviderUseCase,
+        getMediaLinksUseCase: GetMediaLinksUseCase,
+        watchHistoryRepository: WatchHistoryRepository,
+        watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
+        providerManager: ProviderManager,
+        userSessionManager: UserSessionManager,
+    ) : BasePlayerViewModel(
+            dataStoreManager = dataStoreManager,
+            args = args,
+            client = client,
+            context = context,
+            playerCacheManager = playerCacheManager,
+            seasonProviderUseCase = seasonProvider,
+            getMediaLinksUseCase = getMediaLinksUseCase,
+            watchHistoryRepository = watchHistoryRepository,
+            watchTimeUpdaterUseCase = watchTimeUpdaterUseCase,
+            userSessionManager = userSessionManager,
+            providerManager = providerManager,
+        ) {
+        @AssistedFactory
+        interface Factory {
+            fun create(args: PlayerScreenNavArgs): PlayerScreenViewModel
+        }
 
-internal class PlayerScreenViewModel @AssistedInject constructor(
-    @Assisted args: PlayerScreenNavArgs,
-    private val dataStoreManager: DataStoreManager,
-    client: OkHttpClient,
-    context: Context,
-    playerCacheManager: PlayerCacheManager,
-    seasonProvider: SeasonProviderUseCase,
-    getMediaLinksUseCase: GetMediaLinksUseCase,
-    watchHistoryRepository: WatchHistoryRepository,
-    watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
-    userSessionManager: UserSessionManager
-) : BasePlayerViewModel(
-    dataStoreManager = dataStoreManager,
-    args = args,
-    client = client,
-    context = context,
-    playerCacheManager = playerCacheManager,
-    seasonProviderUseCase = seasonProvider,
-    getMediaLinksUseCase = getMediaLinksUseCase,
-    watchHistoryRepository = watchHistoryRepository,
-    watchTimeUpdaterUseCase = watchTimeUpdaterUseCase,
-    userSessionManager = userSessionManager,
-) {
+        @Suppress("UNCHECKED_CAST")
+        companion object {
+            fun provideFactory(
+                assistedFactory: Factory,
+                args: PlayerScreenNavArgs,
+            ): ViewModelProvider.Factory =
+                object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T = assistedFactory.create(args) as T
+                }
+        }
 
-    @AssistedFactory
-    interface Factory {
-        fun create(args: PlayerScreenNavArgs): PlayerScreenViewModel
-    }
+        override fun showErrorSnackbar(
+            message: UiText,
+            isInternalPlayerError: Boolean,
+        ) {}
 
-    @Suppress("UNCHECKED_CAST")
-    companion object {
-        fun provideFactory(
-            assistedFactory: Factory,
-            args: PlayerScreenNavArgs
-        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return assistedFactory.create(args) as T
+        /**
+         *
+         * Used for subtitle style updates.
+         * */
+        inline fun <reified T : UserPreferences> updatePreferences(
+            key: Preferences.Key<String>,
+            newPreferences: T,
+        ) {
+            viewModelScope.launch {
+                dataStoreManager.updateUserPrefs<T>(key) { newPreferences }
             }
         }
     }
-
-    override fun showErrorSnackbar(
-        message: UiText,
-        isInternalPlayerError: Boolean
-    ) {}
-
-    /**
-     *
-     * Used for subtitle style updates.
-     * */
-    inline fun <reified T : UserPreferences> updatePreferences(
-        key: Preferences.Key<String>,
-        newPreferences: T,
-    ) {
-        viewModelScope.launch {
-            dataStoreManager.updateUserPrefs<T>(key) { newPreferences }
-        }
-    }
-}

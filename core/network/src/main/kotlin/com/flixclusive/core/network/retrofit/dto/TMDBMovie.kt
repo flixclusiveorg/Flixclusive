@@ -1,6 +1,5 @@
 package com.flixclusive.core.network.retrofit.dto
 
-import com.flixclusive.model.film.util.extractYear
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Genre
@@ -9,6 +8,7 @@ import com.flixclusive.model.film.Person
 import com.flixclusive.model.film.SearchResponseData
 import com.flixclusive.model.film.TMDBCollection
 import com.flixclusive.model.film.common.details.Company
+import com.flixclusive.model.film.util.extractYear
 import com.flixclusive.model.film.util.filterOutUnreleasedFilms
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
@@ -42,16 +42,20 @@ internal data class BelongsToCollection(
     val id: Int,
     val name: String,
     @SerializedName("poster_path") val posterPath: String?,
-    @SerializedName("backdrop_path") val backdropPath: String?
+    @SerializedName("backdrop_path") val backdropPath: String?,
 )
 
-internal fun TMDBMovie.toMovieDetails(): Movie {
-    return Movie(
+internal fun TMDBMovie.toMovieDetails(): Movie =
+    Movie(
         tmdbId = tmdbId,
         title = title,
         posterImage = posterImage,
         backdropImage = backdropImage,
-        logoImage = images.logos?.firstOrNull()?.filePath?.replace("svg", "png"),
+        logoImage =
+            images.logos
+                ?.firstOrNull()
+                ?.filePath
+                ?.replace("svg", "png"),
         homePage = homePage,
         language = language,
         releaseDate = releaseDate,
@@ -59,7 +63,7 @@ internal fun TMDBMovie.toMovieDetails(): Movie {
         producers = producers,
         recommendations = recommendations.results.filterOutUnreleasedFilms(),
         id = null,
-        providerName = DEFAULT_FILM_SOURCE_NAME,
+        providerId = DEFAULT_FILM_SOURCE_NAME,
         imdbId = imdbId ?: externalIds["imdb_id"],
         adult = adult,
         runtime = runtime,
@@ -68,14 +72,14 @@ internal fun TMDBMovie.toMovieDetails(): Movie {
         year = releaseDate?.extractYear(),
         genres = genres,
         cast = credits["cast"] ?: emptyList(),
-        collection = belongsToCollection?.run {
-            TMDBCollection(
-                id = id,
-                collectionName = name,
-                posterPath = posterPath,
-                backdropPath = backdropPath,
-                films = emptyList(),
-            )
-        },
+        collection =
+            belongsToCollection?.run {
+                TMDBCollection(
+                    id = id,
+                    collectionName = name,
+                    posterPath = posterPath,
+                    backdropPath = backdropPath,
+                    films = emptyList(),
+                )
+            },
     )
-}

@@ -46,8 +46,8 @@ import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.datastore.user.SubtitlesPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.link.Stream
-import com.flixclusive.provider.ProviderApi
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
@@ -65,7 +65,7 @@ internal fun PlaybackControls(
     isServerPanelOpened: MutableState<Boolean>,
     isVisible: Boolean,
     isTvShow: Boolean,
-    providerApis: List<ProviderApi>,
+    providers: List<ProviderMetadata>,
     servers: List<Stream>,
     stateProvider: () -> PlayerUiState,
     dialogStateProvider: () -> MediaLinkResourceState,
@@ -299,7 +299,7 @@ internal fun PlaybackControls(
             ServersPanel(
                 state = state,
                 servers = servers,
-                apis = providerApis,
+                providers = providers,
                 onProviderChange = onProviderChange,
                 onServerChange = onServerChange,
                 hidePanel = { isServerPanelOpened.value = false },

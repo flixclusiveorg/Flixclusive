@@ -13,6 +13,7 @@ import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavAr
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.data.provider.util.DownloadFailed
 import com.flixclusive.domain.provider.GetRepositoryUseCase
 import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
 import com.flixclusive.domain.updater.ProviderUpdaterUseCase
@@ -29,143 +30,151 @@ import javax.inject.Inject
 import com.flixclusive.core.locale.R as LocaleR
 
 @HiltViewModel
-internal class ProviderInfoScreenViewModel @Inject constructor(
-    private val dataStoreManager: DataStoreManager,
-    private val getRepositoryUseCase: GetRepositoryUseCase,
-    private val providerManager: ProviderManager,
-    private val providerUpdaterUseCase: ProviderUpdaterUseCase,
-    savedStateHandle: SavedStateHandle
-) : ViewModel() {
-    private val oldProviderMetadata = savedStateHandle.navArgs<ProviderInfoScreenNavArgs>().providerMetadata
-    var providerMetadata by mutableStateOf(oldProviderMetadata)
-        private set
+internal class ProviderInfoScreenViewModel
+    @Inject
+    constructor(
+        private val dataStoreManager: DataStoreManager,
+        private val getRepositoryUseCase: GetRepositoryUseCase,
+        private val providerManager: ProviderManager,
+        private val providerUpdaterUseCase: ProviderUpdaterUseCase,
+        savedStateHandle: SavedStateHandle,
+    ) : ViewModel() {
+        private val argsMetadata = savedStateHandle.navArgs<ProviderInfoScreenNavArgs>().providerMetadata
+        var providerMetadata by mutableStateOf(argsMetadata)
+            private set
 
-    var providerInstallationStatus by mutableStateOf(ProviderInstallationStatus.NotInstalled)
-        private set
-    var snackbar by mutableStateOf<Resource.Failure?>(null)
-        private set
+        var providerInstallationStatus by mutableStateOf(ProviderInstallationStatus.NotInstalled)
+            private set
+        var snackbar by mutableStateOf<Resource.Failure?>(null)
+            private set
 
-    private var providerJob: Job? = null
+        private var providerJob: Job? = null
 
-    var repository: Repository? by mutableStateOf(null)
-        private set
+        var repository: Repository? by mutableStateOf(null)
+            private set
 
-    val warnOnInstall = providerManager.providerPreferencesAsState
-        .map { it.warnOnInstall }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
-            initialValue = false
-        )
-
-    init {
-        viewModelScope.launch {
-            initialize()
-        }
-    }
-
-    private suspend fun initialize() {
-        providerInstallationStatus = ProviderInstallationStatus.NotInstalled
-
-        val isInstalledAlready =
-            providerManager.providerMetadataList.any { it.name.equals(oldProviderMetadata.name, true) }
-
-        if (isInstalledAlready && providerUpdaterUseCase.isProviderOutdated(oldProviderMetadata)) {
-            providerInstallationStatus = ProviderInstallationStatus.Outdated
-            viewModelScope.launch {
-                // Run this asynchronously
-                providerMetadata = providerUpdaterUseCase.getLatestProviderMetadata(oldProviderMetadata.name) ?: oldProviderMetadata
-            }
-        } else if (isInstalledAlready) {
-            providerInstallationStatus = ProviderInstallationStatus.Installed
-        }
-
-        getRepository(providerMetadata.repositoryUrl ?: return)
-    }
-
-    fun toggleInstallation() {
-        if (providerJob?.isActive == true)
-            return
-
-        providerJob = AppDispatchers.Default.scope.launch {
-            when (providerInstallationStatus) {
-                ProviderInstallationStatus.NotInstalled -> installProvider()
-                ProviderInstallationStatus.Outdated -> updateProvider()
-                ProviderInstallationStatus.Installed -> uninstallProvider()
-                else -> Unit
-            }
-        }
-    }
-
-    private suspend fun installProvider() {
-        providerInstallationStatus = ProviderInstallationStatus.Installing
-
-        try {
-            providerManager.loadProvider(
-                providerMetadata = oldProviderMetadata,
-                needsDownload = true
-            )
-        } catch (_: Exception) {
-            snackbar = Resource.Failure(
-                UiText.StringResource(
-                    LocaleR.string.failed_to_load_provider,
-                    oldProviderMetadata.name
+        val warnOnInstall =
+            providerManager.providerPreferencesAsState
+                .map { it.warnOnInstall }
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000L),
+                    initialValue = false,
                 )
-            )
+
+        init {
+            viewModelScope.launch {
+                initialize()
+            }
+        }
+
+        private suspend fun initialize() {
             providerInstallationStatus = ProviderInstallationStatus.NotInstalled
-            return
+
+            val isInstalledAlready =
+                providerManager.metadataList[argsMetadata.id] != null
+
+            if (isInstalledAlready && providerUpdaterUseCase.isOutdated(argsMetadata.id)) {
+                providerInstallationStatus = ProviderInstallationStatus.Outdated
+                viewModelScope.launch {
+                    // Run this asynchronously
+                    providerMetadata = providerUpdaterUseCase
+                        .getLatestMetadata(argsMetadata.id) ?: argsMetadata
+                }
+            } else if (isInstalledAlready) {
+                providerInstallationStatus = ProviderInstallationStatus.Installed
+            }
+
+            getRepository(providerMetadata.repositoryUrl)
         }
 
-        providerInstallationStatus = ProviderInstallationStatus.Installed
-    }
+        fun toggleInstallation() {
+            if (providerJob?.isActive == true) {
+                return
+            }
 
-    private suspend fun uninstallProvider() {
-        providerManager.unloadProvider(oldProviderMetadata)
-        providerInstallationStatus = ProviderInstallationStatus.NotInstalled
-    }
+            providerJob =
+                AppDispatchers.Default.scope.launch {
+                    when (providerInstallationStatus) {
+                        ProviderInstallationStatus.NotInstalled -> installProvider()
+                        ProviderInstallationStatus.Outdated -> updateProvider()
+                        ProviderInstallationStatus.Installed -> uninstallProvider()
+                        else -> Unit
+                    }
+                }
+        }
 
-    private suspend fun updateProvider() {
-        val isSuccess = providerUpdaterUseCase.updateProvider(oldProviderMetadata.name)
+        private suspend fun installProvider() {
+            providerInstallationStatus = ProviderInstallationStatus.Installing
 
-        if (isSuccess) {
+            try {
+                providerManager.loadProvider(
+                    provider = argsMetadata,
+                    needsDownload = true,
+                )
+            } catch (_: Exception) {
+                snackbar =
+                    Resource.Failure(
+                        UiText.StringResource(
+                            LocaleR.string.failed_to_load_provider,
+                            argsMetadata.name,
+                        ),
+                    )
+                providerInstallationStatus = ProviderInstallationStatus.NotInstalled
+                return
+            }
+
             providerInstallationStatus = ProviderInstallationStatus.Installed
-        } else {
-            snackbar =
-                Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_update_provider))
-        }
-    }
-
-    private suspend fun getRepository(url: String) {
-        val (username, repositoryName) = extractGithubInfoFromLink(url) ?: return
-
-        repository = providerManager.providerPreferences.repositories.find {
-            it.owner.equals(username, true) && it.name == repositoryName
         }
 
-        if (repository != null)
-            return
+        private suspend fun uninstallProvider() {
+            providerManager.unload(argsMetadata)
+            providerInstallationStatus = ProviderInstallationStatus.NotInstalled
+        }
 
-        when (val onlineRepository = getRepositoryUseCase(url)) {
-            is Resource.Failure -> snackbar = onlineRepository
-            Resource.Loading -> Unit
-            is Resource.Success -> {
-                repository = onlineRepository.data
+        private suspend fun updateProvider() {
+            try {
+                providerUpdaterUseCase.update(argsMetadata.name)
+                providerInstallationStatus = ProviderInstallationStatus.Installed
+            } catch (_: DownloadFailed) {
+                snackbar =
+                    Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_update_provider))
+            }
+        }
+
+        private suspend fun getRepository(url: String) {
+            val (username, repositoryName) = extractGithubInfoFromLink(url) ?: return
+
+            repository =
+                providerManager.providerPreferences.repositories.find {
+                    it.owner.equals(username, true) && it.name == repositoryName
+                }
+
+            if (repository != null) {
+                return
+            }
+
+            when (val onlineRepository = getRepositoryUseCase(url)) {
+                is Resource.Failure -> snackbar = onlineRepository
+                Resource.Loading -> Unit
+                is Resource.Success -> {
+                    repository = onlineRepository.data
+                    dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
+                        it.copy(repositories = it.repositories + repository!!)
+                    }
+                }
+            }
+        }
+
+        fun onConsumeSnackbar() {
+            snackbar = null
+        }
+
+        fun disableWarnOnInstall(state: Boolean) {
+            viewModelScope.launch {
                 dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
-                    it.copy(repositories = it.repositories + repository!!)
+                    it.copy(warnOnInstall = state)
                 }
             }
         }
     }
-
-    fun onConsumeSnackbar() {
-        snackbar = null
-    }
-
-    fun disableWarnOnInstall(state: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
-                it.copy(warnOnInstall = state)
-            }
-        }
-    }
-}

@@ -17,7 +17,7 @@ import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.data.watchlist.WatchlistRepository
 import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
-import com.flixclusive.domain.tmdb.FilmProviderUseCase
+import com.flixclusive.domain.tmdb.GetFilmMetadataUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.toFilmInstance
 import com.flixclusive.model.database.toWatchlistItem
@@ -45,7 +45,7 @@ import com.flixclusive.core.locale.R as LocaleR
 
 @HiltViewModel
 internal class MobileAppViewModel @Inject constructor(
-    private val filmProviderUseCase: FilmProviderUseCase,
+    private val getFilmMetadataUseCase: GetFilmMetadataUseCase,
     private val getMediaLinksUseCase: GetMediaLinksUseCase,
     private val watchHistoryRepository: WatchHistoryRepository,
     private val watchlistRepository: WatchlistRepository,
@@ -211,7 +211,7 @@ internal class MobileAppViewModel @Inject constructor(
 
             val response = when {
                 filmToShow !is FilmMetadata -> {
-                    filmProviderUseCase(partiallyDetailedFilm = filmToShow)
+                    getFilmMetadataUseCase(partiallyDetailedFilm = filmToShow)
                 }
                 else -> Resource.Success(filmToShow)
             }

@@ -28,9 +28,9 @@ import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.player.PlayerProviderState
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
-import com.flixclusive.provider.ProviderApi
 
 @Composable
 internal fun <Type> ListContentHolder(
@@ -47,35 +47,39 @@ internal fun <Type> ListContentHolder(
     val hapticFeedback = getFeedbackOnLongPress()
 
     val listState = rememberLazyListState()
-    val listBottomFade = Brush.verticalGradient(
-        0.15F to Color.Transparent,
-        0.2F to Color.Red,
-        0.9F to Color.Red,
-        1F to Color.Transparent
-    )
+    val listBottomFade =
+        Brush.verticalGradient(
+            0.15F to Color.Transparent,
+            0.2F to Color.Red,
+            0.9F to Color.Red,
+            1F to Color.Transparent,
+        )
 
     LaunchedEffect(selectedIndex) {
         safeCall { listState.animateScrollToItem(selectedIndex) }
     }
 
     Box(
-        modifier = modifier
-            .padding(15.dp)
+        modifier =
+            modifier
+                .padding(15.dp),
     ) {
         LazyColumn(
-            modifier = Modifier
-                .fadingEdge(listBottomFade),
+            modifier =
+                Modifier
+                    .fadingEdge(listBottomFade),
             state = listState,
-            contentPadding = PaddingValues(top = 50.dp, bottom = 15.dp)
+            contentPadding = PaddingValues(top = 50.dp, bottom = 15.dp),
         ) {
             itemsIndexed(items) { i, item ->
-                val name = when (item) {
-                    is String -> item
-                    is Stream -> item.name
-                    is ProviderApi -> item.provider.name!!
-                    is Subtitle -> item.language
-                    else -> throw ClassFormatError("Invalid content type provided.")
-                }
+                val name =
+                    when (item) {
+                        is String -> item
+                        is Stream -> item.name
+                        is ProviderMetadata -> item.name
+                        is Subtitle -> item.language
+                        else -> throw ClassFormatError("Invalid content type provided.")
+                    }
 
                 ListItem(
                     name = name,
@@ -93,40 +97,43 @@ internal fun <Type> ListContentHolder(
                             clipboardManager.setText(
                                 AnnotatedString(
                                     """
-                                        Stream name: ${item.name}
-                                        Stream link: ${item.url}
-                                        Stream headers: ${item.customHeaders}
-                                    """.trimIndent()
-                                )
+                                    Stream name: ${item.name}
+                                    Stream link: ${item.url}
+                                    Stream headers: ${item.customHeaders}
+                                    """.trimIndent(),
+                                ),
                             )
                         }
-                    }
+                    },
                 )
             }
         }
 
         Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
+            modifier =
+                Modifier
+                    .align(Alignment.TopCenter),
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     painter = icon,
-                    contentDescription = contentDescription
+                    contentDescription = contentDescription,
                 )
 
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Black
-                    ),
+                    style =
+                        MaterialTheme.typography.headlineSmall.copy(
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Black,
+                        ),
                 )
             }
         }

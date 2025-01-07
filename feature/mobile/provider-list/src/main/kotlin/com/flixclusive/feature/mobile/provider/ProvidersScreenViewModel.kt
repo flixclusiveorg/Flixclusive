@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.provider
 
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,7 +14,6 @@ import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,8 +22,12 @@ internal class ProvidersScreenViewModel @Inject constructor(
     private val providerManager: ProviderManager,
     private val dataStoreManager: DataStoreManager,
 ) : ViewModel() {
-    val providerMetadataList = providerManager.providerMetadataList
     val providerPreferencesAsState = providerManager.providerPreferencesAsState
+    val providers by derivedStateOf {
+        providerPreferencesAsState.value.providers.mapNotNull {
+            providerManager.metadataList[it.id]
+        }
+    }
 
     private var uninstallJob: Job? = null
     private var toggleJob: Job? = null
@@ -46,7 +50,7 @@ internal class ProvidersScreenViewModel @Inject constructor(
         }
 
         swapJob = viewModelScope.launch {
-            providerManager.swapProvidersOrder(fromIndex, toIndex)
+            providerManager.swapOrder(fromIndex, toIndex)
         }
     }
 
@@ -60,14 +64,14 @@ internal class ProvidersScreenViewModel @Inject constructor(
         }
     }
 
-    fun uninstallProvider(index: Int) {
+    fun uninstallProvider(metadata: ProviderMetadata) {
         if (uninstallJob?.isActive == true) {
             return
         }
 
         uninstallJob = viewModelScope.launch {
             with (providerManager) {
-                unloadProvider(providerPreferencesAsState.first().providers[index])
+                unload(metadata)
             }
         }
     }

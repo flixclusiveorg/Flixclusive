@@ -10,8 +10,8 @@ internal object Constant {
     val tmdbProviderMetadata by lazy {
         ProviderMetadata(
             authors = emptyList(),
-            repositoryUrl = null,
-            buildUrl = null,
+            repositoryUrl = "",
+            buildUrl = "",
             description = null,
             versionName = "1.0.0",
             versionCode = 10000,
@@ -20,7 +20,7 @@ internal object Constant {
             name = "$DEFAULT_FILM_SOURCE_NAME - Default",
             providerType = ProviderType.All,
             status = Status.Working,
-            id = "tmdb-default"
+            id = "tmdb-default",
         )
     }
 }

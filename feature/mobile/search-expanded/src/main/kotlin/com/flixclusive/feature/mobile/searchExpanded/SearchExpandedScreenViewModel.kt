@@ -43,208 +43,220 @@ import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
-internal class SearchExpandedScreenViewModel @Inject constructor(
-    private val tmdbRepository: TMDBRepository,
-    private val searchHistoryRepository: SearchHistoryRepository,
-    private val userSessionManager: UserSessionManager,
-    val providerManager: ProviderManager,
-    dataStoreManager: DataStoreManager
-) : ViewModel() {
-    private val providers = providerManager.workingApis
-    val providerMetadataList = providerManager.workingProviders
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking { providerManager.workingProviders.first() }
-        )
+internal class SearchExpandedScreenViewModel
+    @Inject
+    constructor(
+        private val tmdbRepository: TMDBRepository,
+        private val searchHistoryRepository: SearchHistoryRepository,
+        private val userSessionManager: UserSessionManager,
+        val providerManager: ProviderManager,
+        dataStoreManager: DataStoreManager,
+    ) : ViewModel() {
+        private val providers = providerManager.workingApis
+        val providerMetadataList =
+            providerManager.workingProviders
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = runBlocking { providerManager.workingProviders.first() },
+                )
 
-    private val userId: Int? get() = userSessionManager.currentUser.value?.id
-    val searchHistory = userSessionManager.currentUser
-        .filterNotNull()
-        .flatMapLatest { user ->
-            searchHistoryRepository.getAllItemsInFlow(ownerId = user.id)
+        private val userId: Int? get() = userSessionManager.currentUser.value?.id
+        val searchHistory =
+            userSessionManager.currentUser
+                .filterNotNull()
+                .flatMapLatest { user ->
+                    searchHistoryRepository.getAllItemsInFlow(ownerId = user.id)
+                }.stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = emptyList(),
+                )
+
+        val uiPreferences =
+            dataStoreManager
+                .getUserPrefs<UiPreferences>(UserPreferences.UI_PREFS_KEY)
+                .asStateFlow(viewModelScope)
+
+        val searchResults = mutableStateListOf<FilmSearchItem>()
+        var filters by mutableStateOf(getDefaultTmdbFilters())
+            private set
+
+        private var searchingJob: Job? = null
+
+        var selectedProviderIndex by mutableIntStateOf(0)
+            private set
+
+        private var page by mutableIntStateOf(1)
+        private var maxPage by mutableIntStateOf(1)
+        var canPaginate by mutableStateOf(false)
+            private set
+        var pagingState by mutableStateOf(PagingState.IDLE)
+            private set
+        var error by mutableStateOf<UiText?>(null)
+            private set
+
+        var lastQuerySearched by mutableStateOf("")
+            private set
+        var searchQuery by mutableStateOf("")
+            private set
+
+        internal val currentViewType = mutableStateOf(SearchItemViewType.SearchHistory)
+
+        fun onSearch() {
+            if (searchingJob?.isActive == true) {
+                return
+            }
+
+            searchingJob =
+                viewModelScope.launch {
+                    // Reset pagination
+                    page = 1
+                    maxPage = 1
+                    canPaginate = false
+                    pagingState = PagingState.IDLE
+                    searchResults.clear()
+
+                    lastQuerySearched = searchQuery
+                    currentViewType.value = SearchItemViewType.Films
+
+                    if (searchQuery.isNotEmpty()) {
+                        searchHistoryRepository.insert(
+                            SearchHistory(
+                                query = searchQuery,
+                                ownerId = userId ?: return@launch,
+                            ),
+                        )
+                    }
+
+                    paginateItems()
+                }
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
 
-    val uiPreferences = dataStoreManager
-        .getUserPrefs<UiPreferences>(UserPreferences.UI_PREFS_KEY)
-        .asStateFlow(viewModelScope)
+        fun onChangeProvider(index: Int) {
+            selectedProviderIndex = index
+            onSearch()
+        }
 
-    val searchResults = mutableStateListOf<FilmSearchItem>()
-    var filters by mutableStateOf(getDefaultTmdbFilters())
-        private set
+        fun onQueryChange(query: String) {
+            searchQuery = query
+        }
 
-    private var searchingJob: Job? = null
+        fun onUpdateFilters(newFilters: FilterList) {
+            filters = newFilters
+        }
 
-    var selectedProviderIndex by mutableIntStateOf(0)
-        private set
+        fun paginateItems() {
+            viewModelScope.launch {
+                if (isDonePaginating()) {
+                    return@launch
+                }
 
-    private var page by mutableIntStateOf(1)
-    private var maxPage by mutableIntStateOf(1)
-    var canPaginate by mutableStateOf(false)
-        private set
-    var pagingState by mutableStateOf(PagingState.IDLE)
-        private set
-    var error by mutableStateOf<UiText?>(null)
-        private set
+                pagingState =
+                    when (page) {
+                        1 -> PagingState.LOADING
+                        else -> PagingState.PAGINATING
+                    }
 
-    var lastQuerySearched by mutableStateOf("")
-        private set
-    var searchQuery by mutableStateOf("")
-        private set
+                when (
+                    val result = getResponseFromProviderEndpoint()
+                ) {
+                    is Resource.Success -> result.data?.parseResults()
+                    is Resource.Failure -> {
+                        error = result.error
+                        pagingState =
+                            when (page) {
+                                1 -> PagingState.ERROR
+                                else -> PagingState.PAGINATING_EXHAUST
+                            }
+                    }
+                    Resource.Loading -> Unit
+                }
+            }
+        }
 
-    internal val currentViewType = mutableStateOf(SearchItemViewType.SearchHistory)
+        fun deleteSearchHistoryItem(item: SearchHistory) {
+            viewModelScope.launch {
+                searchHistoryRepository.remove(
+                    id = item.id,
+                    ownerId = userId ?: return@launch,
+                )
+            }
+        }
 
-    fun onSearch() {
-        if (searchingJob?.isActive == true)
-            return
+        private suspend fun getSelectedProvider(): ProviderApi? = providers.first().getOrNull(selectedProviderIndex - 1)?.second
 
-        searchingJob = viewModelScope.launch {
-            // Reset pagination
-            page = 1
-            maxPage = 1
-            canPaginate = false
+        private fun SearchResponseData<FilmSearchItem>.parseResults() {
+            val results =
+                results
+                    .filterNot { it.posterImage == null }
+
+            maxPage = totalPages
+            canPaginate = results.size == 20 || page < maxPage
+
+            if (page == 1) {
+                searchResults.clear()
+            }
+
+            searchResults.addAll(results)
+
             pagingState = PagingState.IDLE
-            searchResults.clear()
 
-            lastQuerySearched = searchQuery
-            currentViewType.value = SearchItemViewType.Films
-
-            if (searchQuery.isNotEmpty()) {
-                searchHistoryRepository.insert(
-                    SearchHistory(
-                        query = searchQuery,
-                        ownerId = userId ?: return@launch
-                    )
-                )
-            }
-
-            paginateItems()
-        }
-    }
-
-    fun onChangeProvider(index: Int) {
-        selectedProviderIndex = index
-        onSearch()
-    }
-
-    fun onQueryChange(query: String) {
-        searchQuery = query
-    }
-
-    fun onUpdateFilters(newFilters: FilterList) {
-        filters = newFilters
-    }
-
-    fun paginateItems() {
-        viewModelScope.launch {
-            if (isDonePaginating())
-                return@launch
-
-            pagingState = when (page) {
-                1 -> PagingState.LOADING
-                else -> PagingState.PAGINATING
-            }
-
-            when (
-                val result = getResponseFromProviderEndpoint()
-            ) {
-                is Resource.Success -> result.data?.parseResults()
-                is Resource.Failure -> {
-                    error = result.error
-                    pagingState = when (page) {
-                        1 -> PagingState.ERROR
-                        else -> PagingState.PAGINATING_EXHAUST
-                    }
-                }
-                Resource.Loading -> Unit
+            if (canPaginate) {
+                this@SearchExpandedScreenViewModel.page++
             }
         }
-    }
 
-    fun deleteSearchHistoryItem(item: SearchHistory) {
-        viewModelScope.launch {
-            searchHistoryRepository.remove(
-                id = item.id,
-                ownerId = userId ?: return@launch
+        private fun isDonePaginating(): Boolean =
+            page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE) || searchQuery.isEmpty()
+
+        private fun filterOutUiComponentsFromFilterList(): FilterList =
+            FilterList(
+                filters
+                    .fastMap { group ->
+                        FilterGroup(
+                            name = group.name,
+                            list =
+                                group.list.fastFilter { filter ->
+                                    filter !is BottomSheetComponent<*>
+                                },
+                        )
+                    }.sortedByDescending {
+                        it.isBeingUsed()
+                    },
             )
-        }
-    }
 
-    private suspend fun getSelectedProvider(): ProviderApi?
-        = providers.first().getOrNull(selectedProviderIndex - 1)
+        private suspend fun getResponseFromProviderEndpoint(): Resource<SearchResponseData<FilmSearchItem>> {
+            val filteredFilters = filterOutUiComponentsFromFilterList()
 
-    private fun SearchResponseData<FilmSearchItem>.parseResults() {
-        val results = results
-            .filterNot { it.posterImage == null }
+            return if (selectedProviderIndex == 0) {
+                val mediaTypeFilter = filteredFilters.first().first()
+                val mediaType = mediaTypeFilter.state as Int
 
-        maxPage = totalPages
-        canPaginate = results.size == 20 || page < maxPage
-
-        if (page == 1) {
-            searchResults.clear()
-        }
-
-        searchResults.addAll(results)
-
-        pagingState = PagingState.IDLE
-
-        if (canPaginate)
-            this@SearchExpandedScreenViewModel.page++
-    }
-
-    private fun isDonePaginating(): Boolean {
-        return page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE) || searchQuery.isEmpty()
-    }
-
-    private fun filterOutUiComponentsFromFilterList(): FilterList
-        = FilterList(
-            filters.fastMap { group ->
-                FilterGroup(
-                    name = group.name,
-                    list = group.list.fastFilter { filter ->
-                        filter !is BottomSheetComponent<*>
-                    }
+                tmdbRepository.search(
+                    page = page,
+                    query = searchQuery,
+                    filter = mediaType,
                 )
-            }.sortedByDescending {
-                it.isBeingUsed()
-            }
-        )
+            } else {
+                try {
+                    val result =
+                        withIOContext {
+                            getSelectedProvider()!!.search(
+                                page = page,
+                                title = searchQuery,
+                            )
+                        }
 
-    private suspend fun getResponseFromProviderEndpoint(): Resource<SearchResponseData<FilmSearchItem>> {
-        val filteredFilters = filterOutUiComponentsFromFilterList()
-
-        return if (selectedProviderIndex == 0) {
-            val mediaTypeFilter = filteredFilters.first().first()
-            val mediaType = mediaTypeFilter.state as Int
-
-            tmdbRepository.search(
-                page = page,
-                query = searchQuery,
-                filter = mediaType
-            )
-        } else {
-            try {
-                val result = withIOContext {
-                    getSelectedProvider()!!.search(
-                        page = page,
-                        title = searchQuery,
-                    )
+                    Resource.Success(result)
+                } catch (e: Exception) {
+                    errorLog(e)
+                    Resource
+                        .Failure(e)
+                        .also {
+                            error = it.error
+                        }
                 }
-
-                Resource.Success(result)
-            } catch (e: Exception) {
-                errorLog(e)
-                Resource.Failure(e)
-                    .also {
-                        error = it.error
-                    }
             }
         }
     }
-}
-

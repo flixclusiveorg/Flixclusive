@@ -37,7 +37,7 @@ import java.util.zip.ZipOutputStream
  */
 @Suppress("DEPRECATION")
 internal class DynamicResourceLoader(
-    private val context: Context
+    private val context: Context,
 ) {
     /**
      * Loads the resources from the input file and sets them to the provided [Provider].
@@ -46,7 +46,7 @@ internal class DynamicResourceLoader(
      * @param inputFile The input file containing the resources to be loaded.
      * @param provider The Provider instance to set the loaded resources.
      */
-    fun load(inputFile: File, provider: Provider) {
+    fun load(inputFile: File): Resources {
         var filePath = inputFile.absolutePath
         if (isAndroidMarshmallowOrBelow()) {
             val tempFile = createTempFile(inputFile)
@@ -54,16 +54,12 @@ internal class DynamicResourceLoader(
             manipulateZipFile(
                 inputFile = inputFile,
                 tempFile = tempFile,
-                manifestFile = manifestFile
+                manifestFile = manifestFile,
             )
             filePath = tempFile.absolutePath
         }
 
-        provider.resources = getDynamicResources(filePath = filePath)
-
-        if (isAndroidMarshmallowOrBelow()) {
-            cleanupArtifacts(inputFile)
-        }
+        return getDynamicResources(filePath = filePath)
     }
 
     /**
@@ -71,9 +67,7 @@ internal class DynamicResourceLoader(
      *
      * @return True if the device is running Android Marshmallow or below, false otherwise.
      */
-    private fun isAndroidMarshmallowOrBelow(): Boolean {
-        return Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
-    }
+    internal fun isAndroidMarshmallowOrBelow(): Boolean = Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
 
     /**
      * Creates a new Resources instance using the provided file path.
@@ -89,7 +83,7 @@ internal class DynamicResourceLoader(
         return Resources(
             assets,
             context.resources.displayMetrics,
-            context.resources.configuration
+            context.resources.configuration,
         )
     }
 
@@ -104,15 +98,15 @@ internal class DynamicResourceLoader(
     private fun manipulateZipFile(
         inputFile: File,
         tempFile: File,
-        manifestFile: File
+        manifestFile: File,
     ) {
         copyInputToTemp(
             inputFile = inputFile,
-            tempFile = tempFile
+            tempFile = tempFile,
         )
         appendManifestToZip(
             tempFile = tempFile,
-            manifestFile = manifestFile
+            manifestFile = manifestFile,
         )
         infoLog("ZIP file manipulation completed for legacy Android version.")
     }
@@ -122,7 +116,7 @@ internal class DynamicResourceLoader(
      *
      * @param inputFile The original input file.
      */
-    private fun cleanupArtifacts(inputFile: File) {
+    internal fun cleanupArtifacts(inputFile: File) {
         val tempFile = createTempFile(inputFile)
         val manifestFile = createManifestFile(tempFile)
         tempFile.delete()
@@ -136,9 +130,7 @@ internal class DynamicResourceLoader(
      * @param inputFile The original input file.
      * @return A File object representing the temporary ZIP file.
      */
-    private fun createTempFile(inputFile: File): File {
-        return File(inputFile.parent, "${inputFile.nameWithoutExtension}_temp.flx")
-    }
+    private fun createTempFile(inputFile: File): File = File(inputFile.parent, "${inputFile.nameWithoutExtension}_temp.flx")
 
     /**
      * Creates a basic AndroidManifest.xml file.
@@ -147,11 +139,12 @@ internal class DynamicResourceLoader(
      * @return A File object representing the created AndroidManifest.xml.
      */
     private fun createManifestFile(tempFile: File): File {
-        val manifestContent = """
+        val manifestContent =
+            """
             <?xml version="1.0" encoding="utf-8"?>
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
             </manifest>
-        """.trimIndent()
+            """.trimIndent()
         val file = File(tempFile.parent, "AndroidManifest.xml")
         file.writeText(manifestContent)
         return file
@@ -163,7 +156,10 @@ internal class DynamicResourceLoader(
      * @param inputFile The original input file.
      * @param tempFile The temporary file to copy to.
      */
-    private fun copyInputToTemp(inputFile: File, tempFile: File) {
+    private fun copyInputToTemp(
+        inputFile: File,
+        tempFile: File,
+    ) {
         inputFile.copyTo(tempFile, overwrite = true)
     }
 
@@ -173,7 +169,10 @@ internal class DynamicResourceLoader(
      * @param tempFile The temporary ZIP file.
      * @param manifestFile The manifest file to be added.
      */
-    private fun appendManifestToZip(tempFile: File, manifestFile: File) {
+    private fun appendManifestToZip(
+        tempFile: File,
+        manifestFile: File,
+    ) {
         ZipFile(tempFile).use { zipFile ->
             val tempOutputFile = File(tempFile.parent, "${tempFile.nameWithoutExtension}_new.flx")
             ZipOutputStream(tempOutputFile.outputStream()).use { zipOutputStream ->
@@ -190,7 +189,10 @@ internal class DynamicResourceLoader(
      * @param zipFile The original ZIP file.
      * @param zipOutputStream The output stream of the new ZIP file.
      */
-    private fun copyExistingEntries(zipFile: ZipFile, zipOutputStream: ZipOutputStream) {
+    private fun copyExistingEntries(
+        zipFile: ZipFile,
+        zipOutputStream: ZipOutputStream,
+    ) {
         for (entry in zipFile.entries()) {
             zipOutputStream.putNextEntry(ZipEntry(entry.name))
             zipFile.getInputStream(entry).use { input ->
@@ -206,7 +208,10 @@ internal class DynamicResourceLoader(
      * @param zipOutputStream The output stream of the ZIP file.
      * @param manifestFile The manifest file to be added.
      */
-    private fun addManifestToZip(zipOutputStream: ZipOutputStream, manifestFile: File) {
+    private fun addManifestToZip(
+        zipOutputStream: ZipOutputStream,
+        manifestFile: File,
+    ) {
         zipOutputStream.putNextEntry(ZipEntry("AndroidManifest.xml"))
         manifestFile.inputStream().use { input ->
             input.copyTo(zipOutputStream)
@@ -220,7 +225,10 @@ internal class DynamicResourceLoader(
      * @param tempOutputFile The new temporary file to replace the original.
      * @param tempFile The original temporary file to be replaced.
      */
-    private fun replaceOriginalTempFile(tempOutputFile: File, tempFile: File) {
+    private fun replaceOriginalTempFile(
+        tempOutputFile: File,
+        tempFile: File,
+    ) {
         tempOutputFile.renameTo(tempFile)
     }
 }
