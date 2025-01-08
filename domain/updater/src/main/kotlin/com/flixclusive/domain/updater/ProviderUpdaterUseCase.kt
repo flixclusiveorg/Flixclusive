@@ -46,22 +46,12 @@ class ProviderUpdaterUseCase
         private var notificationChannelHasBeenInitialized = false
 
         suspend operator fun invoke(notify: Boolean) {
-            val outdatedProviders =
-                providerManager.metadataList.mapNotNull { (id, metadata) ->
-                    if (isOutdated(id)) {
-                        metadata
-                    } else {
-                        null
-                    }
-                }
-
+            val outdatedProviders = getOutdatedProviders()
             outdated.clear()
             outdated.addAll(outdatedProviders.map { it.id })
 
             infoLog("Available updates [${outdated.size}] ${outdated.joinToString(", ")}")
-            if (!notify) {
-                return
-            }
+            if (!notify) return
 
             val preferences =
                 dataStoreManager
@@ -77,6 +67,11 @@ class ProviderUpdaterUseCase
 
             notify(updateResults)
         }
+
+        private suspend fun getOutdatedProviders(): List<ProviderMetadata> =
+            providerManager.metadataList.mapNotNull { (id, metadata) ->
+                if (isOutdated(id)) metadata else null
+            }
 
         private fun notify(result: ProviderUpdateResult) {
             val notificationBody =
@@ -147,7 +142,7 @@ class ProviderUpdaterUseCase
                     getLatestMetadata(manifest.id)
                         ?: return false
 
-                val updatedVersion = updatedProvidersMap[provider.javaClass.simpleName]
+                val updatedVersion = updatedProvidersMap[manifest.id]
                 val isOutdated =
                     (updatedVersion != null && updatedVersion < updateInfo.versionCode) || manifest.versionCode < updateInfo.versionCode
 
@@ -197,6 +192,8 @@ class ProviderUpdaterUseCase
         }
 
         suspend fun updateAll(): ProviderUpdateResult {
+            if (outdated.isEmpty()) return ProviderUpdateResult.None
+
             val failed = ArrayList<ProviderMetadata>()
             val updated = ArrayList<ProviderMetadata>()
 

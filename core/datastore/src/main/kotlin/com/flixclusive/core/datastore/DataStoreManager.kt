@@ -31,65 +31,70 @@ private val Context.systemPreferences: DataStore<SystemPreferences> by dataStore
     serializer = SystemPreferencesSerializer,
     produceMigrations = { context ->
         listOf(
-            SystemPreferencesMigration(context)
+            SystemPreferencesMigration(context),
         )
-    }
+    },
 )
 
-class DataStoreManager @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val userSessionDataStore: UserSessionDataStore
-) {
-    val systemPreferences = context.systemPreferences
-    lateinit var userPreferences: DataStore<Preferences>
+class DataStoreManager
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+        private val userSessionDataStore: UserSessionDataStore,
+    ) {
+        val systemPreferences = context.systemPreferences
+        lateinit var userPreferences: DataStore<Preferences>
 
-    init {
-        launchOnIO {
-            userSessionDataStore.currentUserId.collectLatest {
-                if (it != null) {
-                    initUserPrefs(userId = it)
+        init {
+            launchOnIO {
+                userSessionDataStore.currentUserId.collectLatest {
+                    if (it != null) {
+                        initUserPrefs(userId = it)
+                    }
                 }
             }
         }
-    }
 
-    private fun initUserPrefs(userId: Int) {
-        userPreferences = context.createUserPreferences(
-            userId = userId,
-            produceMigrations = { _ ->
-                listOf(
-                    UserPreferencesMigration(context = context)
+        private fun initUserPrefs(userId: Int) {
+            userPreferences =
+                context.createUserPreferences(
+                    userId = userId,
+                    produceMigrations = { _ ->
+                        listOf(
+                            UserPreferencesMigration(context = context),
+                        )
+                    },
                 )
-            }
-        )
-    }
-
-    inline fun <reified T : UserPreferences> getUserPrefs(key: Preferences.Key<String>): Flow<T> =
-        userPreferences.data.map { preferences ->
-            val data = preferences[key]
-                ?: return@map T::class.java.getDeclaredConstructor().newInstance()
-
-            Json.decodeFromString(data)
         }
 
-    suspend inline fun <reified T : UserPreferences> updateUserPrefs(
-        key: Preferences.Key<String>,
-        crossinline transform: suspend (t: T) -> T
-    ) {
-        userPreferences.edit { preferences ->
-            val oldValue = preferences[key] ?: throw NullUserPreferences
-            val newValue = withIOContext {
-                transform(Json.decodeFromString(oldValue))
+        inline fun <reified T : UserPreferences> getUserPrefs(key: Preferences.Key<String>): Flow<T> =
+            userPreferences.data.map { preferences ->
+                val data =
+                    preferences[key]
+                        ?: return@map T::class.java.getDeclaredConstructor().newInstance()
+
+                Json.decodeFromString(data)
             }
 
-            preferences[key] = Json.encodeToString(newValue)
-        }
-    }
+        suspend inline fun <reified T : UserPreferences> updateUserPrefs(
+            key: Preferences.Key<String>,
+            crossinline transform: suspend (t: T) -> T,
+        ) {
+            userPreferences.edit { preferences ->
+                val oldValue = preferences[key] ?: throw NullUserPreferences
+                val newValue =
+                    withIOContext {
+                        transform(Json.decodeFromString(oldValue))
+                    }
 
-    suspend fun updateSystemPrefs(transform: suspend (t: SystemPreferences) -> SystemPreferences) {
-        systemPreferences.updateData {
-            val newSettings = transform(it)
-            newSettings
+                preferences[key] = Json.encodeToString(newValue)
+            }
+        }
+
+        suspend fun updateSystemPrefs(transform: suspend (t: SystemPreferences) -> SystemPreferences) {
+            systemPreferences.updateData {
+                val newSettings = transform(it)
+                newSettings
+            }
         }
     }
-}

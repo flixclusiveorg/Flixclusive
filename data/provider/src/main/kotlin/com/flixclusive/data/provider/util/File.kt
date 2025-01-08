@@ -4,8 +4,9 @@ import android.content.Context
 import com.flixclusive.core.util.android.saveTo
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.okhttp.request
-import com.flixclusive.data.provider.PROVIDERS_FOLDER
+import com.flixclusive.data.provider.PROVIDERS_FOLDER_NAME
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import okhttp3.OkHttpClient
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -24,17 +25,27 @@ internal fun rmrf(file: File) {
     file.delete()
 }
 
+internal fun Context.getExternalDirPath(): String? {
+    val externalDir = getExternalFilesDir(null)
+    val externalDirPath = externalDir?.absolutePath
+
+    return externalDirPath
+}
+
+private fun Context.getProvidersPathPrefix(userId: Int): String = getExternalDirPath() + "/$PROVIDERS_FOLDER_NAME/user-$userId"
+
 internal fun ProviderMetadata.toFile(
     context: Context,
+    userId: Int,
     localPrefix: String? = null,
 ): File {
-    val prefix = localPrefix ?: "${context.filesDir}/$PROVIDERS_FOLDER/"
-    val folderName = repositoryUrl.toValidFilename()
+    val prefix = localPrefix ?: context.getProvidersPathPrefix(userId)
+    val repository = repositoryUrl.toValidRepositoryLink()
+    val folderName = "${repository.owner}-${repository.name}".toValidFilename()
     val fileName = id.toValidFilename()
 
-    return File("$prefix$folderName/$fileName.flx")
+    return File("$prefix/$folderName/$fileName.flx")
 }
-// TODO: Add datastore migration for this file path change
 
 /**
  * Mutate the given filename to make it valid for a FAT filesystem,
@@ -140,14 +151,14 @@ private const val CLASSES_DEX_FILENAME = "classes.dex"
 private const val JSON_SUFFIX = ".json"
 private const val PROVIDER_FILE_SUFFIX = ".flx"
 
-val File.isNotOat: Boolean
+internal val File.isNotOat: Boolean
     get() = name.equals(OAT_FILENAME, true)
 
-val File.isClassesDex: Boolean
+internal val File.isClassesDex: Boolean
     get() = name.equals(CLASSES_DEX_FILENAME, true)
 
-val File.isJson: Boolean
+internal val File.isJson: Boolean
     get() = name.endsWith(JSON_SUFFIX, true)
 
-val File.isProviderFile: Boolean
+internal val File.isProviderFile: Boolean
     get() = name.endsWith(PROVIDER_FILE_SUFFIX, true)

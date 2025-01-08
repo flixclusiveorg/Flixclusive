@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataMigration
 import androidx.datastore.dataStoreFile
 import androidx.datastore.preferences.core.Preferences
+import com.flixclusive.core.datastore.ProviderFromPreferencesMigration.migrateToNewPaths
 import com.flixclusive.core.datastore.migration.model.OldAppSettings
 import com.flixclusive.core.datastore.migration.model.OldAppSettingsProvider
 import com.flixclusive.core.datastore.migration.model.OldOnBoardingPreferences
@@ -20,14 +21,14 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 internal class UserPreferencesMigration(
-    private val context: Context
+    private val context: Context,
 ) : DataMigration<Preferences> {
-    private val oldDataStoreFile
-        = context.dataStoreFile(OLD_APP_SETTINGS_FILENAME)
-    private val oldOnBoardingPreferencesFile
-        = context.dataStoreFile(OLD_ON_BOARDING_PREFS_FILENAME)
-    private val oldAppSettingsProviderFile
-        = context.dataStoreFile(OLD_APP_PROVIDER_SETTINGS_FILENAME)
+    private val oldDataStoreFile =
+        context.dataStoreFile(OLD_APP_SETTINGS_FILENAME)
+    private val oldOnBoardingPreferencesFile =
+        context.dataStoreFile(OLD_ON_BOARDING_PREFS_FILENAME)
+    private val oldAppSettingsProviderFile =
+        context.dataStoreFile(OLD_APP_PROVIDER_SETTINGS_FILENAME)
 
     override suspend fun cleanUp() {
         oldDataStoreFile.delete()
@@ -41,32 +42,37 @@ internal class UserPreferencesMigration(
         val oldOnBoardingPreferences = context.oldOnBoardingPreferences.data.first()
 
         val uiPreferences = oldAppSettings.toUiPreferences()
-        val providerPreferences = oldAppProviderSettings.toProviderPreferences()
+        val providerPreferences = oldAppProviderSettings.toProviderPreferences(context)
         val userOnBoarding = oldOnBoardingPreferences.toUserOnBoarding()
         val dataPreferences = oldAppSettings.toDataPreferences()
         val subtitlesPreferences = oldAppSettings.toSubtitlesPreferences()
         val playerPreferences = oldAppSettings.toPlayerPreferences()
-        
+
         val currentMutablePrefs = currentData.toMutablePreferences()
 
-        currentMutablePrefs[UserPreferences.UI_PREFS_KEY] = Json.encodeToString(uiPreferences)
-        currentMutablePrefs[UserPreferences.PROVIDER_PREFS_KEY] = Json.encodeToString(providerPreferences)
-        currentMutablePrefs[UserPreferences.USER_ON_BOARDING_PREFS_KEY] = Json.encodeToString(userOnBoarding)
-        currentMutablePrefs[UserPreferences.DATA_PREFS_KEY] = Json.encodeToString(dataPreferences)
-        currentMutablePrefs[UserPreferences.SUBTITLES_PREFS_KEY] = Json.encodeToString(subtitlesPreferences)
-        currentMutablePrefs[UserPreferences.PLAYER_PREFS_KEY] = Json.encodeToString(playerPreferences)
+        currentMutablePrefs[UserPreferences.UI_PREFS_KEY] =
+            Json.encodeToString(uiPreferences)
+        currentMutablePrefs[UserPreferences.PROVIDER_PREFS_KEY] =
+            Json.encodeToString(providerPreferences)
+        currentMutablePrefs[UserPreferences.USER_ON_BOARDING_PREFS_KEY] =
+            Json.encodeToString(userOnBoarding)
+        currentMutablePrefs[UserPreferences.DATA_PREFS_KEY] =
+            Json.encodeToString(dataPreferences)
+        currentMutablePrefs[UserPreferences.SUBTITLES_PREFS_KEY] =
+            Json.encodeToString(subtitlesPreferences)
+        currentMutablePrefs[UserPreferences.PLAYER_PREFS_KEY] =
+            Json.encodeToString(playerPreferences)
 
         return currentMutablePrefs.toPreferences()
     }
 
-    override suspend fun shouldMigrate(currentData: Preferences): Boolean {
-        return oldDataStoreFile.exists()
-            && oldAppSettingsProviderFile.exists()
-            && oldOnBoardingPreferencesFile.exists()
-    }
-    
-    private fun OldAppSettings.toPlayerPreferences(): PlayerPreferences {
-        return PlayerPreferences(
+    override suspend fun shouldMigrate(currentData: Preferences): Boolean =
+        oldDataStoreFile.exists() ||
+            oldAppSettingsProviderFile.exists() ||
+            oldOnBoardingPreferencesFile.exists()
+
+    private fun OldAppSettings.toPlayerPreferences(): PlayerPreferences =
+        PlayerPreferences(
             isForcingPlayerRelease = shouldReleasePlayer,
             isDurationReversed = isPlayerTimeReversed,
             isPiPModeEnabled = isPiPModeEnabled,
@@ -80,10 +86,9 @@ internal class UserPreferencesMigration(
             quality = preferredQuality,
             decoderPriority = decoderPriority,
         )
-    }
-    
-    private fun OldAppSettings.toSubtitlesPreferences(): SubtitlesPreferences {
-        return SubtitlesPreferences(
+
+    private fun OldAppSettings.toSubtitlesPreferences(): SubtitlesPreferences =
+        SubtitlesPreferences(
             isSubtitleEnabled = isSubtitleEnabled,
             subtitleLanguage = subtitleLanguage,
             subtitleColor = subtitleColor,
@@ -92,30 +97,28 @@ internal class UserPreferencesMigration(
             subtitleBackgroundColor = subtitleBackgroundColor,
             subtitleEdgeType = subtitleEdgeType,
         )
-    }
-    
-    private fun OldAppSettings.toDataPreferences(): DataPreferences {
-        return DataPreferences(isIncognito = isIncognito)
-    }
-    
-    private fun OldAppSettings.toUiPreferences(): UiPreferences {
-        return UiPreferences(
-            showTitleOnCards = isShowingFilmCardTitle
-        )
-    }
 
-    private fun OldAppSettingsProvider.toProviderPreferences(): ProviderPreferences {
+    private fun OldAppSettings.toDataPreferences(): DataPreferences = DataPreferences(isIncognito = isIncognito)
+
+    private fun OldAppSettings.toUiPreferences(): UiPreferences = UiPreferences(showTitleOnCards = isShowingFilmCardTitle)
+
+    private fun OldAppSettingsProvider.toProviderPreferences(context: Context): ProviderPreferences {
+        val providersWithNewFilePaths =
+            migrateToNewPaths(
+                oldProviders = providers,
+                context = context,
+            )
+
         return ProviderPreferences(
             warnOnInstall = warnOnInstall,
             autoUpdate = isUsingAutoUpdateProviderFeature,
             repositories = repositories,
-            providers = providers,
+            providers = providersWithNewFilePaths,
         )
     }
 
-    private fun OldOnBoardingPreferences.toUserOnBoarding(): UserOnBoarding {
-        return UserOnBoarding(
+    private fun OldOnBoardingPreferences.toUserOnBoarding(): UserOnBoarding =
+        UserOnBoarding(
             isFirstTimeOnProvidersScreen = isFirstTimeOnProvidersScreen,
         )
-    }
 }
