@@ -12,7 +12,8 @@ import kotlinx.serialization.Serializable
 data class ProviderPreferences(
     val shouldWarnBeforeInstall: Boolean = true,
     val isAutoUpdateEnabled: Boolean = true,
-    val repositories: List<Repository> = listOf(),
+    val shouldAddDebugPrefix: Boolean = true,
+    val repositories: List<Repository> = emptyList(),
     val providers: List<ProviderFromPreferences> = emptyList(),
 ) : UserPreferences
 

@@ -69,6 +69,7 @@ internal class ProvidersScreenViewModel @Inject constructor(
             return
         }
 
+        // TODO: Move out of viewModelScope
         uninstallJob = viewModelScope.launch {
             with (providerManager) {
                 unload(metadata)

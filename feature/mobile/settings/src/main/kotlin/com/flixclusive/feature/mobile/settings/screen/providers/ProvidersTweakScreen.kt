@@ -87,6 +87,25 @@ internal class ProvidersTweakScreen(
         )
 
     @Composable
+    private fun getTestingTweaks(providerPreferences: ProviderPreferences): TweakGroup =
+        TweakGroup(
+            title = stringResource(LocaleR.string.test),
+            tweaks =
+                persistentListOf(
+                    TweakUI.SwitchTweak(
+                        value = remember { mutableStateOf(providerPreferences.shouldAddDebugPrefix) },
+                        title = stringResource(LocaleR.string.add_debug_prefix),
+                        description = stringResource(LocaleR.string.add_debug_prefix_settings_description),
+                        onTweaked = {
+                            onUpdatePreferences { oldValue ->
+                                oldValue.copy(shouldAddDebugPrefix = it)
+                            }
+                        },
+                    ),
+                ),
+        )
+
+    @Composable
     private fun getDataTweaks(providerPreferences: ProviderPreferences): TweakGroup {
         val context = LocalContext.current
         val clearCachedLinksLabel = stringResource(LocaleR.string.clear_cached_links)

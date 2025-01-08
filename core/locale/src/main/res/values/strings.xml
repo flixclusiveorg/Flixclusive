@@ -110,6 +110,7 @@
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
     <string name="authors">Authors</string>
     <string name="auto_option">Auto</string>
+    <string name="add_debug_prefix">Add debug prefix</string>
     <string name="auto_update_providers">Auto-update providers</string>
     <string name="automatic_crash_report_label">Automatically send the crash data to Flixclusive\'s server.</string>
     <string name="browse_categories">Browse categories</string>
@@ -134,6 +135,7 @@
     <string name="continue_label">Continue</string>
     <string name="continue_watching">Continue Watching</string>
     <string name="copy_link">Copy link</string>
+    <string name="test">Test</string>
     <string name="currently_testing">Currently Testing</string>
     <string name="data">Data</string>
     <string name="data_and_backup">Data and backup</string>
@@ -440,11 +442,12 @@
     <string name="episodes_button_desc">An icon for episodes button</string>
     <string name="error_icon_content_desc">Error icon</string>
     <string name="expand_card_icon_content_desc">Expand test result card icon</string>
-    <string name="film_card_titles_settings_desc">Display the titles on under the media cards.</string>
     <string name="film_item_content_description">A film\'s backdrop, picture or poster.</string>
     <string name="filter_button">Filter button</string>
     <string name="flixclusive_icon_content_desc">Flixclusive icon</string>
     <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>
+    <string name="add_debug_prefix_settings_description">Automatically adds a \'-debug\' prefix to providers you\'re currently debugging or developing.</string>
+    <string name="film_card_titles_settings_description">Display the titles on under the media cards.</string>
     <string name="forward_button_content_description">Forward button for the player</string>
     <string name="incognito_content_desc">Pauses watch history, search history, and any data that can be logged by the app.</string>
     <string name="lock_button_desc">An icon for locking the player</string>

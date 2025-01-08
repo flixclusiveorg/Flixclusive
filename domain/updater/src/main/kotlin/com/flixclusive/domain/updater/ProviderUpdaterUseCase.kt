@@ -8,6 +8,7 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.data.provider.PROVIDER_DEBUG
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.provider.util.DownloadFailed
 import com.flixclusive.model.provider.ProviderMetadata
@@ -34,8 +35,10 @@ class ProviderUpdaterUseCase
         private val client: OkHttpClient,
     ) {
         // Synchronized to avoid ConcurrentModificationException
-        private val cachedProviders: MutableMap<String, CachedData> = Collections.synchronizedMap(HashMap())
-        private val updatedProvidersMap: MutableMap<String, VersionCode> = Collections.synchronizedMap(HashMap())
+        private val cachedProviders: MutableMap<String, CachedData> =
+            Collections.synchronizedMap(HashMap())
+        private val updatedProvidersMap: MutableMap<String, VersionCode> =
+            Collections.synchronizedMap(HashMap())
         private val outdated = ArrayDeque<String>()
 
         private var notificationChannelHasBeenInitialized = false
@@ -59,12 +62,10 @@ class ProviderUpdaterUseCase
             notify(updateResults)
         }
 
-        private suspend fun getOutdatedProviders(): List<ProviderMetadata> {
-            val preferences = providerManager.providerPreferences
+        private suspend fun getOutdatedProviders(): List<ProviderMetadata> =
             providerManager.metadataList.mapNotNull { (id, metadata) ->
                 if (isOutdated(id)) metadata else null
             }
-        }
 
         private fun notify(result: ProviderUpdateResult) {
             val notificationBody =
@@ -75,6 +76,7 @@ class ProviderUpdaterUseCase
                             result.providers.joinToString(", "),
                         )
                     }
+
                     is ProviderUpdateResult.Error -> {
                         if (result.success.isNotEmpty()) {
                             context.getString(
@@ -88,12 +90,14 @@ class ProviderUpdaterUseCase
                             result.failed.joinToString(", "),
                         )
                     }
+
                     is ProviderUpdateResult.Outdated -> {
                         context.getString(
                             LocaleR.string.updates_out_now_provider_format,
                             result.providers.joinToString(", "),
                         )
                     }
+
                     ProviderUpdateResult.None -> context.getString(LocaleR.string.all_providers_updated)
                 }
 
@@ -121,6 +125,8 @@ class ProviderUpdaterUseCase
         }
 
         suspend fun isOutdated(id: String): Boolean {
+            if (id.endsWith(PROVIDER_DEBUG)) return false
+
             val provider =
                 providerManager.providers[id]
                     ?: return false
@@ -161,7 +167,12 @@ class ProviderUpdaterUseCase
 
             val cached = cachedProviders[manifest.updateUrl]
 
-            if (cached != null && cached.time > System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(30)) {
+            if (cached != null &&
+                cached.time > System.currentTimeMillis() -
+                TimeUnit.MINUTES.toMillis(
+                    30,
+                )
+            ) {
                 return findMetadata(
                     id = id,
                     updaterJson = cached.data,

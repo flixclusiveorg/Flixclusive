@@ -21,51 +21,48 @@ import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal class AppearanceTweakScreen(
-    viewModel: SettingsViewModel
+    viewModel: SettingsViewModel,
 ) : BaseTweakScreen<UiPreferences> {
     override val key = UserPreferences.UI_PREFS_KEY
-    override val preferencesAsState: StateFlow<UiPreferences>
-        = viewModel.getUserPrefsAsState<UiPreferences>(key)
-    override val onUpdatePreferences: suspend (suspend (UiPreferences) -> UiPreferences) -> Boolean
-        = { viewModel.updateUserPrefs(key, it) }
+    override val preferencesAsState: StateFlow<UiPreferences> =
+        viewModel.getUserPrefsAsState<UiPreferences>(key)
+    override val onUpdatePreferences: suspend (suspend (UiPreferences) -> UiPreferences) -> Boolean =
+        { viewModel.updateUserPrefs(key, it) }
 
     @Composable
-    override fun getTitle(): String
-        = stringResource(LocaleR.string.appearance)
+    override fun getTitle(): String = stringResource(LocaleR.string.appearance)
 
     @Composable
-    override fun getIconPainter(): Painter
-        = painterResource(UiCommonR.drawable.appearance_settings)
+    override fun getIconPainter(): Painter = painterResource(UiCommonR.drawable.appearance_settings)
 
     @Composable
-    override fun getDescription(): String
-        = stringResource(LocaleR.string.appearance_settings_content_desc)
+    override fun getDescription(): String = stringResource(LocaleR.string.appearance_settings_content_desc)
 
     @Composable
     override fun getTweaks(): List<Tweak> {
         val uiPreferences by preferencesAsState.collectAsStateWithLifecycle()
 
         return listOf(
-            getGeneralTweaks(uiPreferences = uiPreferences)
+            getGeneralTweaks(uiPreferences = uiPreferences),
         )
     }
 
     @Composable
-    private fun getGeneralTweaks(uiPreferences: UiPreferences): TweakGroup {
-        return TweakGroup(
+    private fun getGeneralTweaks(uiPreferences: UiPreferences): TweakGroup =
+        TweakGroup(
             title = stringResource(LocaleR.string.general),
-            tweaks = persistentListOf(
-                TweakUI.SwitchTweak(
-                    title = stringResource(LocaleR.string.film_card_titles),
-                    description = stringResource(LocaleR.string.film_card_titles_settings_desc),
-                    value = remember { mutableStateOf(uiPreferences.shouldShowTitleOnCards) },
-                    onTweaked = {
-                        onUpdatePreferences { oldValue ->
-                            oldValue.copy(shouldShowTitleOnCards = it)
-                        }
-                    }
-                )
-            )
+            tweaks =
+                persistentListOf(
+                    TweakUI.SwitchTweak(
+                        title = stringResource(LocaleR.string.film_card_titles),
+                        description = stringResource(LocaleR.string.film_card_titles_settings_description),
+                        value = remember { mutableStateOf(uiPreferences.shouldShowTitleOnCards) },
+                        onTweaked = {
+                            onUpdatePreferences { oldValue ->
+                                oldValue.copy(shouldShowTitleOnCards = it)
+                            }
+                        },
+                    ),
+                ),
         )
-    }
 }

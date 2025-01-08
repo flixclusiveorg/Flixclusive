@@ -26,79 +26,87 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class SettingsViewModel @Inject constructor(
-    val userSessionManager: UserSessionManager,
-    private val userRepository: UserRepository,
-    private val dataStoreManager: DataStoreManager,
-    private val searchHistoryRepository: SearchHistoryRepository,
-    private val getMediaLinksUseCase: GetMediaLinksUseCase,
-    private val providerManager: ProviderManager
-) : ViewModel() {
-    val searchHistoryCount = userSessionManager.currentUser
-        .filterNotNull()
-        .flatMapLatest { user ->
-            searchHistoryRepository.getAllItemsInFlow(ownerId = user.id)
-                .map { it.size }
+internal class SettingsViewModel
+    @Inject
+    constructor(
+        val userSessionManager: UserSessionManager,
+        private val userRepository: UserRepository,
+        private val dataStoreManager: DataStoreManager,
+        private val searchHistoryRepository: SearchHistoryRepository,
+        private val getMediaLinksUseCase: GetMediaLinksUseCase,
+        private val providerManager: ProviderManager,
+    ) : ViewModel() {
+        val searchHistoryCount =
+            userSessionManager.currentUser
+                .filterNotNull()
+                .flatMapLatest { user ->
+                    searchHistoryRepository
+                        .getAllItemsInFlow(ownerId = user.id)
+                        .map { it.size }
+                }.stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = 0,
+                )
+
+        val cachedLinksSize by derivedStateOf {
+            getMediaLinksUseCase.cache.size
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = 0
-        )
 
-    val cachedLinksSize by derivedStateOf {
-        getMediaLinksUseCase.cache.size
-    }
+        val systemPreferences =
+            dataStoreManager.systemPreferences
+                .asStateFlow(viewModelScope)
 
-    val systemPreferences = dataStoreManager.systemPreferences
-        .asStateFlow(viewModelScope)
+        inline fun <reified T : UserPreferences> getUserPrefsAsState(key: Preferences.Key<String>) =
+            dataStoreManager
+                .getUserPrefs<T>(key)
+                .asStateFlow(viewModelScope)
 
-    inline fun <reified T : UserPreferences> getUserPrefsAsState(
-        key: Preferences.Key<String>
-    ) = dataStoreManager.getUserPrefs<T>(key)
-        .asStateFlow(viewModelScope)
-
-    suspend fun updateSystemPrefs(transform: suspend (t: SystemPreferences) -> SystemPreferences): Boolean {
-        dataStoreManager.updateSystemPrefs(transform)
-        return true
-    }
-
-    suspend inline fun <reified T : UserPreferences> updateUserPrefs(
-        key: Preferences.Key<String>,
-        crossinline transform: suspend (t: T) -> T
-    ): Boolean {
-        dataStoreManager.updateUserPrefs<T>(key, transform)
-        return true
-    }
-
-    fun clearSearchHistory() {
-        viewModelScope.launch {
-            val userId = userSessionManager.currentUser.value?.id
-                ?: return@launch
-
-            searchHistoryRepository.clearAll(userId)
+        suspend fun updateSystemPrefs(transform: suspend (t: SystemPreferences) -> SystemPreferences): Boolean {
+            dataStoreManager.updateSystemPrefs(transform)
+            return true
         }
-    }
 
-    fun clearCacheLinks() {
-        getMediaLinksUseCase.cache.clear()
-    }
+        suspend inline fun <reified T : UserPreferences> updateUserPrefs(
+            key: Preferences.Key<String>,
+            crossinline transform: suspend (t: T) -> T,
+        ): Boolean {
+            dataStoreManager.updateUserPrefs<T>(key, transform)
+            return true
+        }
 
-    fun deleteRepositories() {
-        viewModelScope.launch {
-            updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
-                it.copy(repositories = emptyList())
+        fun clearSearchHistory() {
+            // TODO: Move out of viewModelScope
+            viewModelScope.launch {
+                val userId =
+                    userSessionManager.currentUser.value?.id
+                        ?: return@launch
+
+                searchHistoryRepository.clearAll(userId)
             }
         }
-    }
 
-    fun deleteProviders() {
-        viewModelScope.launch {
-            with (providerManager) {
-                workingProviders.first().forEach {
-                    unload(it)
+        fun clearCacheLinks() {
+            getMediaLinksUseCase.cache.clear()
+        }
+
+        fun deleteRepositories() {
+            // TODO: Move out of viewModelScope
+            viewModelScope.launch {
+                updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
+                    it.copy(repositories = emptyList())
+                }
+            }
+        }
+
+        fun deleteProviders() {
+            // TODO: Move out of viewModelScope
+            viewModelScope.launch {
+                with(providerManager) {
+                    workingProviders.first().forEach {
+                        unload(it)
+                    }
                 }
             }
         }
     }
-}
