@@ -1,0 +1,29 @@
+root = true
+
+[*]
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 120
+tab_width = 8
+ij_continuation_indent_size = 8
+
+[*.{kt,kts}]
+ij_continuation_indent_size = 4
+ij_kotlin_name_count_to_use_star_import = 2147483647
+ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
+ij_kotlin_packages_to_use_import_on_demand = unset
+ktlint_code_style = kotlin_official
+ktlint_standard = enabled
+ktlint_experimental = enabled
+ktlint_function_naming_ignore_when_annotated_with = Composable
+ktlint_standard_discouraged-comment-location = disabled
+ktlint_standard_function-expression-body = disabled
+ktlint_compose_lambda-param-event-trailing = disabled
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2

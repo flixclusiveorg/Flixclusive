@@ -155,8 +155,12 @@ internal class ProviderInfoScreenViewModel
             }
 
             when (val onlineRepository = getRepositoryUseCase(url)) {
-                is Resource.Failure -> snackbar = onlineRepository
-                Resource.Loading -> Unit
+                is Resource.Failure -> {
+                    snackbar = onlineRepository
+                }
+
+                Resource.Loading -> {}
+
                 is Resource.Success -> {
                     repository = onlineRepository.data
                     dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {

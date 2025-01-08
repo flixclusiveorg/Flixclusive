@@ -487,8 +487,9 @@ class ProviderManager
 
             val repository = repositoryUrl.toValidRepositoryLink()
             val childDirectoryName = "${repository.owner}-${repository.name}"
+            val finalPathPrefix = "$PROVIDERS_SETTINGS_FOLDER_NAME/$parentDirectoryName/$childDirectoryName"
 
-            return "${context.getExternalDirPath()}/$PROVIDERS_SETTINGS_FOLDER_NAME/$parentDirectoryName/$childDirectoryName"
+            return "${context.getExternalDirPath()}/$finalPathPrefix"
         }
 
         private fun getProviderFromPreferencesOrCreate(
