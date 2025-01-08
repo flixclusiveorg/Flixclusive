@@ -18,7 +18,7 @@ fun Context.createUserPreferences(
     userId: Int,
     corruptionHandler: ReplaceFileCorruptionHandler<Preferences>? = null,
     produceMigrations: (Context) -> List<DataMigration<Preferences>> = { listOf() },
-    scope: CoroutineScope = AppDispatchers.IO.scope
+    scope: CoroutineScope = AppDispatchers.IO.scope,
 ): DataStore<Preferences> {
     synchronized(DataStoreLock.lock) {
         if (DataStoreLock.CURRENT_USER_ID != userId) {
@@ -29,19 +29,20 @@ fun Context.createUserPreferences(
 
     return USER_PREFS_INSTANCE ?: synchronized(DataStoreLock.lock) {
         if (USER_PREFS_INSTANCE == null) {
-            USER_PREFS_INSTANCE = PreferenceDataStoreFactory.create(
-                corruptionHandler = corruptionHandler,
-                migrations = produceMigrations(applicationContext),
-                scope = scope
-            ) {
-                applicationContext.preferencesDataStoreFile("$USER_PREFERENCE_FILENAME-$userId")
-            }
+            USER_PREFS_INSTANCE =
+                PreferenceDataStoreFactory.create(
+                    corruptionHandler = corruptionHandler,
+                    migrations = produceMigrations(applicationContext),
+                    scope = scope,
+                ) {
+                    applicationContext.preferencesDataStoreFile("$USER_PREFERENCE_FILENAME-$userId")
+                }
         }
         USER_PREFS_INSTANCE!!
     }
 }
 
-@Suppress("unused")
+@Suppress("unused", "ktlint:standard:property-naming")
 internal object DataStoreLock {
     val lock = Any()
 

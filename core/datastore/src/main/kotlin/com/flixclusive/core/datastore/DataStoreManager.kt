@@ -1,6 +1,7 @@
 package com.flixclusive.core.datastore
 
 import android.content.Context
+import androidx.annotation.GuardedBy
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import androidx.datastore.preferences.core.Preferences
@@ -42,8 +43,13 @@ class DataStoreManager
         @ApplicationContext private val context: Context,
         private val userSessionDataStore: UserSessionDataStore,
     ) {
+        val lock = Any()
         val systemPreferences = context.systemPreferences
+
+        @GuardedBy("lock")
+        @Volatile
         lateinit var userPreferences: DataStore<Preferences>
+            private set
 
         init {
             launchOnIO {
@@ -56,25 +62,30 @@ class DataStoreManager
         }
 
         private fun initUserPrefs(userId: Int) {
-            userPreferences =
-                context.createUserPreferences(
-                    userId = userId,
-                    produceMigrations = { _ ->
-                        listOf(
-                            UserPreferencesMigration(context = context),
-                        )
-                    },
-                )
+            synchronized(lock) {
+                userPreferences =
+                    context.createUserPreferences(
+                        userId = userId,
+                        produceMigrations = { _ ->
+                            listOf(
+                                UserPreferencesMigration(context = context),
+                            )
+                        },
+                    )
+            }
         }
 
-        inline fun <reified T : UserPreferences> getUserPrefs(key: Preferences.Key<String>): Flow<T> =
-            userPreferences.data.map { preferences ->
-                val data =
-                    preferences[key]
-                        ?: return@map T::class.java.getDeclaredConstructor().newInstance()
+        inline fun <reified T : UserPreferences> getUserPrefs(key: Preferences.Key<String>): Flow<T> {
+            return synchronized(lock) {
+                userPreferences.data.map { preferences ->
+                    val data =
+                        preferences[key]
+                            ?: return@map T::class.java.getDeclaredConstructor().newInstance()
 
-                Json.decodeFromString(data)
+                    Json.decodeFromString(data)
+                }
             }
+        }
 
         suspend inline fun <reified T : UserPreferences> updateUserPrefs(
             key: Preferences.Key<String>,
