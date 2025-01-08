@@ -26,6 +26,7 @@ internal inline fun <reified T> PathClassLoader.getFileFromPath(file: String): T
 
 @Suppress("UNCHECKED_CAST")
 internal fun PathClassLoader.getProviderInstance(
+    id: String, // TODO: Remove this in the future
     file: File,
     settingsDirPath: String,
     manifest: ProviderManifest,
@@ -40,7 +41,7 @@ internal fun PathClassLoader.getProviderInstance(
     provider.settings =
         ProviderSettings(
             fileDirectory = settingsDirPath,
-            providerId = manifest.id,
+            providerId = id,
         )
 
     return provider

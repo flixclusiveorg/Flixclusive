@@ -5,7 +5,8 @@ import com.flixclusive.core.util.android.saveTo
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.data.provider.PROVIDERS_FOLDER_NAME
-import com.flixclusive.model.provider.Repository
+import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import okhttp3.OkHttpClient
 import java.io.File
 import kotlin.jvm.Throws
@@ -30,19 +31,20 @@ internal fun Context.getExternalDirPath(): String? {
     return externalDirPath
 }
 
-private fun Context.getProvidersPathPrefix(userId: Int): String = getExternalDirPath() + "/$PROVIDERS_FOLDER_NAME/user-$userId"
+private fun Context.getProvidersPathPrefix(userId: Int): String =
+    getExternalDirPath() + "/$PROVIDERS_FOLDER_NAME/user-$userId"
 
 internal fun Context.createFileForProvider(
-    providerId: String,
-    providerRepository: Repository,
+    provider: ProviderMetadata,
     userId: Int,
     localPrefix: String? = null,
 ): File {
     val prefix = localPrefix ?: getProvidersPathPrefix(userId)
-    val repository = providerRepository
+    val repository = provider.repositoryUrl.toValidRepositoryLink()
+    val filename = provider.buildUrl.substringAfterLast("/")
     val folderName = "${repository.owner}-${repository.name}"
 
-    return File("$prefix/$folderName/$providerId.flx")
+    return File("$prefix/$folderName/$filename")
 }
 
 @Throws(DownloadFailed::class)
@@ -60,12 +62,12 @@ internal fun OkHttpClient.download(
         var backupFile: File? = null
         file.mkdirs()
         if (file.exists()) {
-            backupFile = File(file.parent!!.plus("${file.name}.old"))
+            backupFile = File(file.parent!!.plus("/${file.name}.old"))
             file.renameTo(backupFile)
             file.delete()
         }
 
-        if (file.createNewFile()) {
+        if (!file.createNewFile()) {
             backupFile?.renameTo(file)
             errorLog("Error creating file: $file")
             throw Exception("Error creating file: $file")

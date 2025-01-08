@@ -12,6 +12,7 @@ import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withDefaultContext
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.util.coroutines.blockFirstNotNull
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
@@ -88,8 +89,6 @@ class ProviderManager
          * Map of all repository's updater.json files and their contents
          * */
         private val updaterJsonMap = HashMap<String, List<ProviderMetadata>>()
-
-        private val lock = Any()
 
         private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
 
@@ -307,20 +306,18 @@ class ProviderManager
             buildUrl: String,
         ) {
             val updaterJsonUrl = replaceLastAfterSlash(buildUrl, UPDATER_FILE)
-            val updaterFile = File(saveTo.parent!!.plus(UPDATER_FILE))
+            val updaterFile = File(saveTo.parent!!.plus("/$UPDATER_FILE"))
 
             withIOContext {
-                synchronized(lock) {
-                    client.download(
-                        file = saveTo,
-                        downloadUrl = buildUrl,
-                    )
+                client.download(
+                    file = saveTo,
+                    downloadUrl = buildUrl,
+                )
 
-                    client.download(
-                        file = updaterFile,
-                        downloadUrl = updaterJsonUrl,
-                    )
-                }
+                client.download(
+                    file = updaterFile,
+                    downloadUrl = updaterJsonUrl,
+                )
             }
         }
 
@@ -333,9 +330,8 @@ class ProviderManager
             val file =
                 filePath?.let { File(it) }
                     ?: context.createFileForProvider(
+                        provider = provider,
                         userId = userId,
-                        providerId = provider.id,
-                        providerRepository = provider.repositoryUrl.toValidRepositoryLink(),
                     )
 
             if (needsDownload) {
@@ -369,62 +365,61 @@ class ProviderManager
             val filePath = file.absolutePath
 
             try {
-                synchronized(lock) {
-                    safeCall {
-                        File(filePath).setReadOnly()
-                    }
-
-                    val loader = PathClassLoader(filePath, context.classLoader)
-                    val manifest: ProviderManifest = loader.getFileFromPath(MANIFEST_FILE)
-                    val settingsDirPath =
-                        createSettingsDirPath(
-                            repositoryUrl = metadata.repositoryUrl,
-                            isDebugProvider = metadata.id.endsWith(PROVIDER_DEBUG),
-                        )
-
-                    val providerFromPreferences =
-                        getProviderFromPreferencesOrCreate(
-                            id = metadata.id,
-                            fileName = file.nameWithoutExtension,
-                            filePath = filePath,
-                        )
-
-                    val needsMigration = providerFromPreferences.id.isEmpty()
-                    if (needsMigration) {
-                        migrateForOldSettingsFile(
-                            directory = settingsDirPath,
-                            metadata = metadata,
-                        )
-                    }
-
-                    val provider =
-                        loader.getProviderInstance(
-                            file = file,
-                            manifest = manifest,
-                            settingsDirPath = settingsDirPath,
-                        )
-
-                    if (manifest.requiresResources) {
-                        provider.resources = dynamicResourceLoader.load(inputFile = file)
-                    }
-
-                    if (manifest.requiresResources && dynamicResourceLoader.isAPI23OrBelow()) {
-                        dynamicResourceLoader.cleanupArtifacts(file)
-                    }
-
-                    if (!providerFromPreferences.isDisabled) {
-                        val api = provider.getApi(context, client)
-
-                        providerApiRepository.add(
-                            id = metadata.id,
-                            api = api,
-                        )
-                    }
-
-                    providers[metadata.id] = provider
-                    classLoaders[metadata.id] = loader
-                    metadataList[metadata.id] = metadata
+                safeCall {
+                    File(filePath).setReadOnly()
                 }
+
+                val loader = PathClassLoader(filePath, context.classLoader)
+                val manifest: ProviderManifest = loader.getFileFromPath(MANIFEST_FILE)
+                val settingsDirPath =
+                    createSettingsDirPath(
+                        repositoryUrl = metadata.repositoryUrl,
+                        isDebugProvider = metadata.id.endsWith(PROVIDER_DEBUG),
+                    )
+
+                val providerFromPreferences =
+                    getProviderFromPreferencesOrCreate(
+                        id = metadata.id,
+                        fileName = file.nameWithoutExtension,
+                        filePath = filePath,
+                    )
+
+                if (canMigrateSettingsFile(metadata)) {
+                    migrateForOldSettingsFile(
+                        directory = settingsDirPath,
+                        metadata = metadata,
+                    )
+                }
+
+                val provider =
+                    loader.getProviderInstance(
+                        id = metadata.id,
+                        file = file,
+                        manifest = manifest,
+                        settingsDirPath = settingsDirPath,
+                    )
+
+                if (manifest.requiresResources) {
+                    provider.resources = dynamicResourceLoader.load(inputFile = file)
+                }
+
+                if (manifest.requiresResources && dynamicResourceLoader.isAPI23OrBelow()) {
+                    dynamicResourceLoader.cleanupArtifacts(file)
+                }
+
+                if (!providerFromPreferences.isDisabled) {
+                    val api = provider.getApi(context, client)
+
+                    providerApiRepository.add(
+                        id = metadata.id,
+                        api = api,
+                    )
+                }
+
+                providers[metadata.id] = provider
+                classLoaders[metadata.id] = loader
+                metadataList[metadata.id] = metadata
+                loadOnPreferences(providerFromPreferences)
             } catch (e: Throwable) {
                 if (isCrashingOnGetApiMethod(e)) {
                     val message = context.getApiCrashMessage(provider = metadata.name)
@@ -461,6 +456,15 @@ class ProviderManager
             )
         }
 
+        private fun canMigrateSettingsFile(metadata: ProviderMetadata): Boolean {
+            val providerFromPreference =
+                providerPreferencesAsState.value.providers
+                    .find { it.name.equals(metadata.name, true) }
+                    ?: return false
+
+            return providerFromPreference.id.isEmpty()
+        }
+
         private fun migrateForOldSettingsFile(
             directory: String,
             metadata: ProviderMetadata,
@@ -474,7 +478,7 @@ class ProviderManager
             val oldSettingsFile = File(directory, "${metadata.name}.json")
             if (!files.contains(oldSettingsFile)) return
 
-            val newSettingsFile = File(oldSettingsFile, metadata.id)
+            val newSettingsFile = File(oldSettingsFile.parentFile, "${metadata.id}.json")
             oldSettingsFile.renameTo(newSettingsFile)
         }
 
@@ -514,20 +518,29 @@ class ProviderManager
             return providerFromPreferences
         }
 
-        private fun showToastOnProviderCrash(message: String) {
-            if (toast != null) {
-                toast!!.cancel()
-            }
+        private suspend fun showToastOnProviderCrash(message: String) {
+            withMainContext {
+                if (toast != null) {
+                    toast!!.cancel()
+                }
 
-            toast = Toast.makeText(context, message, Toast.LENGTH_SHORT)
-            toast!!.show()
+                toast = Toast.makeText(context, message, Toast.LENGTH_SHORT)
+                toast!!.show()
+            }
         }
 
         private suspend fun loadOnPreferences(provider: ProviderFromPreferences) {
             val index =
                 providerPreferencesAsState.value
                     .providers
-                    .indexOfFirst { it.id == provider.id }
+                    .indexOfFirst {
+                        // TODO: Remove this in the future and just do `it.id == provider.id`
+                        if (it.id.isEmpty()) {
+                            it.name == provider.name
+                        } else {
+                            it.id == provider.id
+                        }
+                    }
 
             updateProviderPrefs {
                 val providersList = it.providers.toMutableList()
@@ -587,12 +600,10 @@ class ProviderManager
         }
 
         private fun removeProviderFromListsAndMaps(id: String) {
-            synchronized(lock) {
-                metadataList.remove(id)
-                classLoaders.remove(id)
-                providerApiRepository.remove(id)
-                providers.remove(id)
-            }
+            metadataList.remove(id)
+            classLoaders.remove(id)
+            providerApiRepository.remove(id)
+            providers.remove(id)
         }
 
         private fun deleteProviderRelatedFiles(file: File) {
@@ -632,15 +643,17 @@ class ProviderManager
             val oldPreference = providerPreferences.providers[oldOrderPosition]
 
             val userId = userSessionDataStore.currentUserId.blockFirstNotNull()!!
+            val file =
+                context
+                    .createFileForProvider(
+                        userId = userId,
+                        provider = newMetadata,
+                    )
+            val filePath = file.absolutePath
+
             return oldPreference.copy(
                 name = newMetadata.name,
-                filePath =
-                    context
-                        .createFileForProvider(
-                            userId = userId,
-                            providerId = newMetadata.id,
-                            providerRepository = newMetadata.repositoryUrl.toValidRepositoryLink(),
-                        ).absolutePath,
+                filePath = filePath,
             )
         }
 

@@ -129,7 +129,10 @@ internal class RepositoryScreenViewModel
                     if (failedToInstallProviders.isNotEmpty()) {
                         val failedProviders = failedToInstallProviders.joinToString(", ")
 
-                        snackbar = Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_load_provider, failedProviders))
+                        snackbar =
+                            Resource.Failure(
+                                UiText.StringResource(LocaleR.string.failed_to_load_provider, failedProviders),
+                            )
                         return@launch
                     }
 
@@ -172,13 +175,21 @@ internal class RepositoryScreenViewModel
                     needsDownload = true,
                 )
             } catch (_: Exception) {
-                snackbar = Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_load_provider, providerMetadata.name))
+                snackbar =
+                    Resource.Failure(
+                        UiText.StringResource(LocaleR.string.failed_to_load_provider, providerMetadata.name),
+                    )
                 onlineProviderMap[providerMetadata] = ProviderInstallationStatus.NotInstalled
                 return false
             }
 
-            onlineProviderMap[providerMetadata] = ProviderInstallationStatus.Installed
-            return true
+            val isInstalled = providerManager.providers[providerMetadata.id] != null
+            if (isInstalled) {
+                onlineProviderMap[providerMetadata] = ProviderInstallationStatus.Installed
+                return true
+            }
+
+            return false
         }
 
         private suspend fun uninstallProvider(providerMetadata: ProviderMetadata) {
