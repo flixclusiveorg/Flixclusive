@@ -6,6 +6,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+
 class AndroidApplicationConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
@@ -13,11 +14,17 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 apply("com.android.application")
                 apply("org.jetbrains.kotlin.android")
                 apply("org.jetbrains.kotlin.plugin.serialization")
+                apply("org.jlleitschuh.gradle.ktlint")
             }
 
             extensions.configure<ApplicationExtension> {
                 configureKotlinAndroid(commonExtension = this)
-                defaultConfig.targetSdk = libs.findVersion("compileSdk").get().toString().toInt()
+                defaultConfig.targetSdk =
+                    libs
+                        .findVersion("compileSdk")
+                        .get()
+                        .toString()
+                        .toInt()
             }
 
             dependencies {

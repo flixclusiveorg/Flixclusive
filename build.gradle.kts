@@ -1,3 +1,5 @@
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
@@ -11,15 +13,27 @@ buildscript {
 
 plugins {
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.dokka) apply false
+    alias(libs.plugins.hilt) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
-    alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.room) apply false
-    alias(libs.plugins.dokka) apply false
-    id("com.osacky.doctor") version "0.9.1"
+    id("com.osacky.doctor") version "0.9.1" // TODO: Remove this
+}
+
+subprojects {
+    if (this@subprojects.subprojects.isNotEmpty()) return@subprojects
+
+    afterEvaluate {
+        configure<KtlintExtension> {
+            android.set(true)
+            outputColorName.set("RED")
+        }
+    }
 }
 
 // Generate a mf FAT AHH JAR!
@@ -29,14 +43,14 @@ tasks.register<Jar>("fatJar") {
     destinationDirectory.set(File("build/stubs"))
 
     subprojects.forEach { project ->
-        if (project.subprojects.size == 0) {
+        if (project.subprojects.isEmpty()) {
             val projectPath = "." + project.path.replace(":", "/")
             from("$projectPath/src/main/kotlin", "$projectPath/src/main/java")
         }
     }
 }
 
-/**
+/*
  *
  * Generate the stubs jar for the providers-system.
  *
@@ -51,10 +65,10 @@ tasks.register<Jar>("generateStubsJar") {
     dependsOn("fatJar")
 
     subprojects.forEach { project ->
-        if (project.subprojects.size == 0) {
+        if (project.subprojects.isEmpty()) {
             val projectPath = "." + project.path.replace(":", "/")
             val classesJar =
-                File("${projectPath}/build/intermediates/compile_app_classes_jar/release/classes.jar")
+                File("$projectPath/build/intermediates/compile_app_classes_jar/release/classes.jar")
 
             if (classesJar.exists()) {
                 from(zipTree(classesJar)) {
@@ -62,7 +76,8 @@ tasks.register<Jar>("generateStubsJar") {
                 }
             } else {
                 from({
-                    project.configurations.getByName("archives")
+                    project.configurations
+                        .getByName("archives")
                         .allArtifacts.files
                         .filter { it.name.contains("release") }
                         .map(::zipTree)

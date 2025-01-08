@@ -32,6 +32,8 @@ hiltNavigation = "1.2.0"
 junit = "4.13.2"
 kotlin = "2.0.21"
 kotlinxImmutables = "0.3.8"
+ktlint = "12.1.2"
+ktlintCompose = "0.4.22"
 ksp = "2.0.21-1.0.28"
 lifecycleRuntime = "2.8.7"
 localbroadcastmanager = "1.1.0"
@@ -91,6 +93,9 @@ constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayou
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
 core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "androidxCoreSplashscreen" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+
+# KtLint Compose
+compose-rules = { group = "io.nlopez.compose.rules", name = "ktlin", version.ref = "ktlintCompose" }
 
 # Compose Destinations by raamcosta
 destinations-animations = { module = "io.github.raamcosta.compose-destinations:animations-core", version.ref = "composeDestinations" }
@@ -189,6 +194,7 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 room = { id = "androidx.room", version.ref = "room" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
