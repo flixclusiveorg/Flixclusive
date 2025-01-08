@@ -98,7 +98,9 @@ class ProviderUpdaterUseCase
                         )
                     }
 
-                    ProviderUpdateResult.None -> context.getString(LocaleR.string.all_providers_updated)
+                    ProviderUpdateResult.None -> {
+                        return
+                    }
                 }
 
             context.notify(
@@ -143,7 +145,8 @@ class ProviderUpdaterUseCase
 
                 val updatedVersion = updatedProvidersMap[manifest.id]
                 val isOutdated =
-                    (updatedVersion != null && updatedVersion < updateInfo.versionCode) || manifest.versionCode < updateInfo.versionCode
+                    (updatedVersion != null && updatedVersion < updateInfo.versionCode) ||
+                        manifest.versionCode < updateInfo.versionCode
 
                 return isOutdated
             } catch (e: Throwable) {
