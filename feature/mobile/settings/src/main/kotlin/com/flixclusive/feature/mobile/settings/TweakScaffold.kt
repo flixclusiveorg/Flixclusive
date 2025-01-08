@@ -18,7 +18,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
@@ -31,6 +30,7 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.feature.mobile.settings.component.BaseTweakComponent
 import com.flixclusive.feature.mobile.settings.component.ClickableComponent
 import com.flixclusive.feature.mobile.settings.component.DialogComponent
@@ -50,19 +50,20 @@ private val TweakGroupSpacing = 25.dp
 internal fun TweakScaffold(
     title: String,
     description: String,
-    tweaksProvider: @Composable () -> List<Tweak>
+    tweaksProvider: @Composable () -> List<Tweak>,
 ) {
     val tweaks = tweaksProvider()
     val screenPadding = getAdaptiveDp(TweakPaddingHorizontal)
     LazyColumn(
-        contentPadding = PaddingValues(vertical = screenPadding)
+        contentPadding = PaddingValues(vertical = screenPadding),
     ) {
         item {
             SubScreenHeader(
                 title = title,
                 description = description,
-                modifier = Modifier
-                    .padding(horizontal = screenPadding)
+                modifier =
+                    Modifier
+                        .padding(horizontal = screenPadding),
             )
         }
 
@@ -82,23 +83,25 @@ private fun SubScreenHeader(
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(15.dp),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
     ) {
         Text(
             text = title,
-            style = getAdaptiveTextStyle(
-                style = TypographyStyle.Headline,
-                mode = TextStyleMode.Emphasized,
-                size = 35.sp
-            )
+            style =
+                getAdaptiveTextStyle(
+                    style = TypographyStyle.Headline,
+                    mode = TextStyleMode.Emphasized,
+                    size = 35.sp,
+                ),
         )
 
         Text(
             text = description,
-            style = getAdaptiveTextStyle(
-                style = TypographyStyle.Label,
-                mode = TextStyleMode.SemiEmphasized,
-            )
+            style =
+                getAdaptiveTextStyle(
+                    style = TypographyStyle.Label,
+                    mode = TextStyleMode.SemiEmphasized,
+                ),
         )
     }
 }
@@ -111,6 +114,7 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                     RenderTweakUi(tweak)
                 }
             }
+
             is TweakGroup -> {
                 item {
                     val alpha by animateFloatAsState(
@@ -121,16 +125,18 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                     GroupLabel(
                         title = tweak.title,
                         description = tweak.description,
-                        titleStyle = getEmphasizedLabel(
-                            size = 20.sp, letterSpacing = 0.1.sp,
-                        ).copy(color = LocalContentColor.current.onMediumEmphasis(0.8F)),
-                        modifier = Modifier
-                            .alpha(alpha)
-                            .padding(
-                                bottom = getAdaptiveDp(10.dp),
-                                top = TweakGroupSpacing
-                            )
-                            .padding(horizontal = TweakPaddingHorizontal)
+                        titleStyle =
+                            getEmphasizedLabel(
+                                size = 20.sp,
+                                letterSpacing = 0.1.sp,
+                            ).copy(color = LocalContentColor.current.onMediumEmphasis(0.8F)),
+                        modifier =
+                            Modifier
+                                .alpha(alpha)
+                                .padding(
+                                    bottom = getAdaptiveDp(10.dp),
+                                    top = TweakGroupSpacing,
+                                ).padding(horizontal = TweakPaddingHorizontal),
                     )
                 }
 
@@ -150,7 +156,7 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
 
 @Composable
 private fun RenderTweakUi(tweak: TweakUI<*>) {
-    val scope = rememberCoroutineScope()
+    val scope = AppDispatchers.IO.scope
     val icon = tweak.iconId?.let { painterResource(it) }
 
     when (tweak) {
@@ -158,12 +164,14 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
             HorizontalDivider(
                 thickness = 1.dp,
                 color = LocalContentColor.current.onMediumEmphasis(0.3F),
-                modifier = Modifier.padding(
-                    horizontal = getAdaptiveDp(TweakPaddingHorizontal),
-                    vertical = getAdaptiveDp(TweakGroupSpacing / 2)
-                )
+                modifier =
+                    Modifier.padding(
+                        horizontal = getAdaptiveDp(TweakPaddingHorizontal),
+                        vertical = getAdaptiveDp(TweakGroupSpacing / 2),
+                    ),
             )
         }
+
         is TweakUI.InformationTweak -> {
             BaseTweakComponent(
                 title = tweak.title,
@@ -173,11 +181,12 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                     AdaptiveIcon(
                         imageVector = Icons.Outlined.Info,
                         contentDescription = null,
-                        tint = LocalContentColor.current.onMediumEmphasis()
+                        tint = LocalContentColor.current.onMediumEmphasis(),
                     )
-                }
+                },
             )
         }
+
         is TweakUI.SliderTweak -> {
             SliderComponent(
                 title = tweak.title,
@@ -193,9 +202,10 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                             tweak.value.value = it
                         }
                     }
-                }
+                },
             )
         }
+
         is TweakUI.SwitchTweak -> {
             SwitchComponent(
                 title = tweak.title,
@@ -209,9 +219,10 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                             tweak.value.value = it
                         }
                     }
-                }
+                },
             )
         }
+
         is TweakUI.TextFieldTweak -> {
             TextFieldComponent(
                 title = tweak.title,
@@ -225,9 +236,10 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                             tweak.value.value = it
                         }
                     }
-                }
+                },
             )
         }
+
         is TweakUI.ListTweak<*> -> {
             ListRadioComponent(
                 title = tweak.title,
@@ -243,9 +255,10 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                             tweak.internalSet(it)
                         }
                     }
-                }
+                },
             )
         }
+
         is TweakUI.MultiSelectListTweak<*> -> {
             ListSelectComponent(
                 title = tweak.title,
@@ -261,9 +274,10 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                             tweak.internalSet(it)
                         }
                     }
-                }
+                },
             )
         }
+
         is TweakUI.ClickableTweak -> {
             ClickableComponent(
                 title = tweak.title,
@@ -273,6 +287,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                 enabled = tweak.enabled,
             )
         }
+
         is TweakUI.DialogTweak -> {
             DialogComponent(
                 title = tweak.title,
@@ -281,9 +296,10 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                 dialogMessage = tweak.dialogMessage,
                 icon = icon,
                 enabled = tweak.enabled,
-                onConfirm = tweak.onConfirm
+                onConfirm = tweak.onConfirm,
             )
         }
+
         is TweakUI.CustomContentTweak<*> -> {
             tweak.content()
         }

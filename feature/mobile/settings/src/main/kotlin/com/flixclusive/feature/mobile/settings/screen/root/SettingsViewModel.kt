@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
+import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.user.UserRepository
@@ -76,8 +77,7 @@ internal class SettingsViewModel
         }
 
         fun clearSearchHistory() {
-            // TODO: Move out of viewModelScope
-            viewModelScope.launch {
+            AppDispatchers.IO.scope.launch {
                 val userId =
                     userSessionManager.currentUser.value?.id
                         ?: return@launch
@@ -91,8 +91,7 @@ internal class SettingsViewModel
         }
 
         fun deleteRepositories() {
-            // TODO: Move out of viewModelScope
-            viewModelScope.launch {
+            AppDispatchers.IO.scope.launch {
                 updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
                     it.copy(repositories = emptyList())
                 }
@@ -100,8 +99,7 @@ internal class SettingsViewModel
         }
 
         fun deleteProviders() {
-            // TODO: Move out of viewModelScope
-            viewModelScope.launch {
+            AppDispatchers.IO.scope.launch {
                 with(providerManager) {
                     workingProviders.first().forEach {
                         unload(it)
