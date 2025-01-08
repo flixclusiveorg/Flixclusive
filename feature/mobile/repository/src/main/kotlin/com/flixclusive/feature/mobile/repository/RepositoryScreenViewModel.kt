@@ -15,6 +15,7 @@ import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationSta
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.util.DownloadFailed
 import com.flixclusive.domain.provider.GetOnlineProvidersUseCase
 import com.flixclusive.domain.updater.ProviderUpdaterUseCase
@@ -35,6 +36,7 @@ internal class RepositoryScreenViewModel
     @Inject
     constructor(
         private val providerManager: ProviderManager,
+        private val providerRepository: ProviderRepository,
         private val providerUpdaterUseCase: ProviderUpdaterUseCase,
         private val getOnlineProvidersUseCase: GetOnlineProvidersUseCase,
         private val dataStoreManager: DataStoreManager,
@@ -52,7 +54,8 @@ internal class RepositoryScreenViewModel
         val onlineProviderMap = mutableStateMapOf<ProviderMetadata, ProviderInstallationStatus>()
 
         val warnOnInstall =
-            providerManager.providerPreferencesAsState
+            dataStoreManager
+                .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
                 .map { it.shouldWarnBeforeInstall }
                 .stateIn(
                     scope = viewModelScope,
@@ -88,7 +91,7 @@ internal class RepositoryScreenViewModel
                                 var providerInstallationStatus = ProviderInstallationStatus.NotInstalled
 
                                 val isInstalledAlready =
-                                    providerManager.metadataList[provider.id] != null
+                                    providerRepository.getProviderMetadata(provider.id) != null
 
                                 if (isInstalledAlready && providerUpdaterUseCase.isOutdated(provider.id)) {
                                     providerInstallationStatus = ProviderInstallationStatus.Outdated
@@ -183,7 +186,7 @@ internal class RepositoryScreenViewModel
                 return false
             }
 
-            val isInstalled = providerManager.providers[providerMetadata.id] != null
+            val isInstalled = providerRepository.getProvider(providerMetadata.id) != null
             if (isInstalled) {
                 onlineProviderMap[providerMetadata] = ProviderInstallationStatus.Installed
                 return true

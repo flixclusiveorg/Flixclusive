@@ -37,9 +37,8 @@ private fun Context.getProvidersPathPrefix(userId: Int): String =
 internal fun Context.createFileForProvider(
     provider: ProviderMetadata,
     userId: Int,
-    localPrefix: String? = null,
 ): File {
-    val prefix = localPrefix ?: getProvidersPathPrefix(userId)
+    val prefix = getProvidersPathPrefix(userId)
     val repository = provider.repositoryUrl.toValidRepositoryLink()
     val filename = provider.buildUrl.substringAfterLast("/")
     val folderName = "${repository.owner}-${repository.name}"

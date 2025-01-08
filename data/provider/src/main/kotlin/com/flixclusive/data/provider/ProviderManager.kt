@@ -2,8 +2,6 @@ package com.flixclusive.data.provider
 
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.snapshotFlow
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.util.asStateFlow
@@ -29,7 +27,6 @@ import com.flixclusive.data.provider.util.getExternalDirPath
 import com.flixclusive.data.provider.util.getFileFromPath
 import com.flixclusive.data.provider.util.getProviderInstance
 import com.flixclusive.data.provider.util.isClassesDex
-import com.flixclusive.data.provider.util.isCrashingOnGetApiMethod
 import com.flixclusive.data.provider.util.isJson
 import com.flixclusive.data.provider.util.isNotOat
 import com.flixclusive.data.provider.util.isProviderFile
@@ -41,14 +38,11 @@ import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderManifest
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
-import com.flixclusive.model.provider.Status
-import com.flixclusive.provider.Provider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import java.io.File
-import java.util.Collections
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.flixclusive.core.locale.R as LocaleR
@@ -68,27 +62,10 @@ class ProviderManager
         private val client: OkHttpClient,
         private val userSessionDataStore: UserSessionDataStore,
         private val dataStoreManager: DataStoreManager,
+        private val providerRepository: ProviderRepository,
         private val providerApiRepository: ProviderApiRepository,
     ) {
-        /** Map containing all loaded providers  */
-        val providers: MutableMap<String, Provider> = Collections.synchronizedMap(LinkedHashMap())
-
-        // TODO: Make this public for crash log purposes
-        private val classLoaders: MutableMap<String, PathClassLoader> =
-            Collections.synchronizedMap(HashMap())
-
         private var toast: Toast? = null
-
-        /**
-         * An observable map of provider data
-         */
-        val metadataList = mutableStateMapOf<String, ProviderMetadata>()
-
-        /**
-         *
-         * Map of all repository's updater.json files and their contents
-         * */
-        private val updaterJsonMap = HashMap<String, List<ProviderMetadata>>()
 
         private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
 
@@ -102,47 +79,13 @@ class ProviderManager
                     .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
                     .asStateFlow(AppDispatchers.IO.scope)
 
-        val providerPreferences: ProviderPreferences
-            get() = providerPreferencesAsState.awaitFirst()
-
-        val workingApis =
-            snapshotFlow {
-                metadataList
-                    .mapNotNull { (id, data) ->
-                        val api = providerApiRepository.get(id)
-
-                        if (
-                            data.status != Status.Maintenance &&
-                            data.status != Status.Down &&
-                            isProviderEnabled(id) &&
-                            api != null
-                        ) {
-                            return@mapNotNull id to api
-                        }
-
-                        null
-                    }
-            }
-
-        val workingProviders =
-            snapshotFlow {
-                metadataList
-                    .mapNotNull { (id, data) ->
-                        if (
-                            data.status != Status.Maintenance &&
-                            data.status != Status.Down &&
-                            isProviderEnabled(id)
-                        ) {
-                            return@mapNotNull data
-                        }
-
-                        null
-                    }
-            }
+        val providerPreferences: ProviderPreferences get() = providerPreferencesAsState.awaitFirst()
 
         suspend fun initialize() {
+            providerRepository.initializeOrder()
             initializeDebugProviderFromPreferences()
 
+            val updaterJsonMap = HashMap<String, List<ProviderMetadata>>()
             providerPreferencesAsState.value.providers.forEach { providerPreference ->
                 val file = File(providerPreference.filePath)
 
@@ -152,7 +95,7 @@ class ProviderManager
                 }
 
                 val metadata =
-                    getProviderMetadataFromUpdater(
+                    updaterJsonMap.getProviderMetadataFromUpdater(
                         id = providerPreference.id,
                         file = file,
                     ) ?: return@forEach
@@ -228,7 +171,7 @@ class ProviderManager
             }
         }
 
-        private fun getProviderMetadataFromUpdater(
+        private fun HashMap<String, List<ProviderMetadata>>.getProviderMetadataFromUpdater(
             id: String,
             file: File,
         ): ProviderMetadata? {
@@ -247,7 +190,7 @@ class ProviderManager
             }
 
             val updaterJsonList =
-                updaterJsonMap.getOrPut(updaterFile.absolutePath) {
+                getOrPut(updaterFile.absolutePath) {
                     fromJson<List<ProviderMetadata>>(updaterFile.reader())
                 }
 
@@ -355,7 +298,7 @@ class ProviderManager
             file: File,
             metadata: ProviderMetadata,
         ) {
-            if (providers.contains(metadata.id)) {
+            if (providerRepository.getProvider(metadata.id) != null) {
                 warnLog("Provider with name ${metadata.name} [${file.name}] already exists")
                 return
             }
@@ -377,7 +320,7 @@ class ProviderManager
                         isDebugProvider = metadata.id.endsWith(PROVIDER_DEBUG),
                     )
 
-                val providerFromPreferences =
+                val preferenceItem =
                     getProviderFromPreferencesOrCreate(
                         id = metadata.id,
                         fileName = file.nameWithoutExtension,
@@ -407,35 +350,30 @@ class ProviderManager
                     dynamicResourceLoader.cleanupArtifacts(file)
                 }
 
-                if (!providerFromPreferences.isDisabled) {
-                    val api = provider.getApi(context, client)
+                try {
+                    if (!preferenceItem.isDisabled) {
+                        val api = provider.getApi(context, client)
 
-                    providerApiRepository.add(
-                        id = metadata.id,
-                        api = api,
-                    )
-                }
-
-                providers[metadata.id] = provider
-                classLoaders[metadata.id] = loader
-                metadataList[metadata.id] = metadata
-                loadOnPreferences(providerFromPreferences)
-            } catch (e: Throwable) {
-                if (isCrashingOnGetApiMethod(e)) {
+                        providerApiRepository.addApi(
+                            id = metadata.id,
+                            api = api,
+                        )
+                    }
+                } finally {
                     val message = context.getApiCrashMessage(provider = metadata.name)
-                    showToastOnProviderCrash(message)
+                    context.showToastOnProviderCrash(message)
                     errorLog(message)
 
-                    toggleUsageOnSettings(
-                        id = metadata.id,
-                        isDisabled = true,
+                    providerRepository.add(
+                        classLoader = loader,
+                        provider = provider,
+                        metadata = metadata,
+                        preferenceItem = preferenceItem.copy(isDisabled = true),
                     )
-
-                    return loadProvider(file, metadata)
                 }
-
+            } catch (e: Throwable) {
                 val message = context.getCommonCrashMessage(provider = metadata.name)
-                showToastOnProviderCrash(message)
+                context.showToastOnProviderCrash(message)
                 errorLog("${metadata.name} crashed with error!")
                 errorLog(e)
             }
@@ -518,42 +456,14 @@ class ProviderManager
             return providerFromPreferences
         }
 
-        private suspend fun showToastOnProviderCrash(message: String) {
+        private suspend fun Context.showToastOnProviderCrash(message: String) {
             withMainContext {
                 if (toast != null) {
                     toast!!.cancel()
                 }
 
-                toast = Toast.makeText(context, message, Toast.LENGTH_SHORT)
+                toast = Toast.makeText(this@showToastOnProviderCrash, message, Toast.LENGTH_SHORT)
                 toast!!.show()
-            }
-        }
-
-        private suspend fun loadOnPreferences(provider: ProviderFromPreferences) {
-            val index =
-                providerPreferencesAsState.value
-                    .providers
-                    .indexOfFirst {
-                        // TODO: Remove this in the future and just do `it.id == provider.id`
-                        if (it.id.isEmpty()) {
-                            it.name == provider.name
-                        } else {
-                            it.id == provider.id
-                        }
-                    }
-
-            updateProviderPrefs {
-                val providersList = it.providers.toMutableList()
-
-                if (index > -1) {
-                    providersList[index] = provider
-                } else {
-                    providersList.add(provider)
-                }
-
-                it.copy(
-                    providers = providersList.toList(),
-                )
             }
         }
 
@@ -578,7 +488,7 @@ class ProviderManager
                 "No such provider on your preferences: ${metadata.name}"
             }
 
-            val provider = providers[metadata.id]
+            val provider = providerRepository.getProvider(metadata.id)
             val file = File(providerFromPreferences.filePath)
 
             if (provider == null || !file.exists()) {
@@ -591,19 +501,13 @@ class ProviderManager
                 provider.onUnload(context)
             }
 
-            removeProviderFromListsAndMaps(id = metadata.id)
+            providerRepository.remove(id = metadata.id)
+            providerApiRepository.removeApi(id = metadata.id)
             deleteProviderRelatedFiles(file = file)
 
             if (unloadOnPreferences) {
-                unloadOnPreferences(id = metadata.id)
+                providerRepository.removeFromPreferences(id = metadata.id)
             }
-        }
-
-        private fun removeProviderFromListsAndMaps(id: String) {
-            metadataList.remove(id)
-            classLoaders.remove(id)
-            providerApiRepository.remove(id)
-            providers.remove(id)
         }
 
         private fun deleteProviderRelatedFiles(file: File) {
@@ -617,17 +521,6 @@ class ProviderManager
                 if (lastRemainingFile.name.equals(UPDATER_FILE, true)) {
                     rmrf(parentDirectory)
                 }
-            }
-        }
-
-        private suspend fun unloadOnPreferences(id: String) {
-            updateProviderPrefs {
-                val newList = it.providers.toMutableList()
-                newList.removeIf { providerPref ->
-                    providerPref.id == id
-                }
-
-                it.copy(providers = newList)
             }
         }
 
@@ -662,7 +555,7 @@ class ProviderManager
             oldMetadata: ProviderMetadata,
             newMetadata: ProviderMetadata,
         ) {
-            require(providers.contains(oldMetadata.id)) {
+            requireNotNull(providerRepository.getProvider(oldMetadata.id)) {
                 "No such provider: ${oldMetadata.name}"
             }
 
@@ -672,7 +565,7 @@ class ProviderManager
                     newMetadata = newMetadata,
                 )
 
-            loadOnPreferences(provider = newPreference)
+            providerRepository.addToPreferences(preferenceItem = newPreference)
 
             downloadProvider(
                 saveTo = File(newPreference.filePath),
@@ -689,100 +582,6 @@ class ProviderManager
                 filePath = newPreference.filePath,
             )
         }
-
-        suspend fun swapOrder(
-            from: Int,
-            to: Int,
-        ) {
-            updateProviderPrefs {
-                val newProvidersOrder = it.providers.toMutableList()
-                val size = newProvidersOrder.size
-
-                if (from == to || from < 0 || to < 0 || from >= size || to >= size) {
-                    return@updateProviderPrefs it
-                }
-
-                val tempProviderPreference = newProvidersOrder[from]
-                newProvidersOrder[from] = newProvidersOrder[to]
-                newProvidersOrder[to] = tempProviderPreference
-
-                it.copy(providers = newProvidersOrder)
-            }
-        }
-
-        /**
-         * Toggles a provider. If it is enabled, it will be disabled and vice versa.
-         *
-         * @param metadata The data of the provider to toggle
-         */
-        suspend fun toggleUsage(metadata: ProviderMetadata) {
-            val isProviderEnabled = isProviderEnabled(metadata.id)
-            toggleUsageOnSettings(
-                id = metadata.id,
-                isDisabled = isProviderEnabled,
-            )
-
-            if (isProviderEnabled) {
-                providerApiRepository.remove(metadata.id)
-            } else {
-                try {
-                    val api =
-                        providers[metadata.id]
-                            ?.getApi(
-                                context = context,
-                                client = client,
-                            )
-
-                    if (api != null) {
-                        providerApiRepository.add(
-                            id = metadata.id,
-                            api = api,
-                        )
-                    }
-                } catch (e: Throwable) {
-                    val message = context.getApiCrashMessage(provider = metadata.name)
-                    errorLog(e)
-                    errorLog(message)
-                    context.showToast(message)
-
-                    toggleUsage(metadata)
-                }
-            }
-        }
-
-        private suspend fun toggleUsageOnSettings(
-            id: String,
-            isDisabled: Boolean,
-        ) {
-            updateProviderPrefs {
-                withDefaultContext {
-                    val listOfSavedProviders = it.providers.toMutableList()
-
-                    val indexOfProvider =
-                        listOfSavedProviders.indexOfFirst { provider ->
-                            provider.id == id
-                        }
-                    val provider = listOfSavedProviders[indexOfProvider]
-
-                    listOfSavedProviders[indexOfProvider] = provider.copy(isDisabled = isDisabled)
-
-                    it.copy(providers = listOfSavedProviders.toList())
-                }
-            }
-        }
-
-        /**
-         * Checks whether a provider is enabled
-         *
-         * @param id Name of the provider
-         * @return Whether the provider is enabled
-         */
-        fun isProviderEnabled(id: String): Boolean =
-            // TODO: REMOVE `isProviderEnabled` HERE. IT'S NOT RELATED TO THE OTHER FUNCTIONS
-            providerPreferences.providers
-                .find { it.id == id }
-                ?.isDisabled
-                ?.not() != false
 
         private suspend fun updateProviderPrefs(transform: suspend (t: ProviderPreferences) -> ProviderPreferences) {
             dataStoreManager.updateUserPrefs<ProviderPreferences>(

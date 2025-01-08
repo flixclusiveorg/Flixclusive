@@ -37,7 +37,6 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavArgs
 import com.flixclusive.core.ui.common.navigation.navigator.ProviderInfoNavigator
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
-import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.mobile.component.dialog.UnsafeInstallAlertDialog
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
@@ -70,7 +69,7 @@ internal fun ProviderInfoScreen(
 ) {
     val viewModel = hiltViewModel<ProviderInfoScreenViewModel>()
 
-    val warnOnInstall by viewModel.warnOnInstall.collectAsStateWithLifecycle()
+    val providerPreferences by viewModel.providerPreferences.collectAsStateWithLifecycle()
     var openWarnOnInstallDialog by rememberSaveable { mutableStateOf(false) }
 
     val uriHandler = LocalUriHandler.current
@@ -84,7 +83,7 @@ internal fun ProviderInfoScreen(
 
     val webNavigationItems = remember {
         listOf(
-            LocaleR.string.issue_a_bug to viewModel.providerMetadata.repositoryUrl?.getNewIssueUrl(),
+            LocaleR.string.issue_a_bug to viewModel.providerMetadata.repositoryUrl.getNewIssueUrl(),
             LocaleR.string.browse_repository to viewModel.providerMetadata.repositoryUrl,
         )
     }
@@ -168,7 +167,7 @@ internal fun ProviderInfoScreen(
                             }
                         },
                         onToggleInstallationState = {
-                            if (viewModel.providerInstallationStatus.isNotInstalled && warnOnInstall) {
+                            if (viewModel.providerInstallationStatus.isNotInstalled && providerPreferences.shouldWarnBeforeInstall) {
                                 openWarnOnInstallDialog = true
                                 return@MainButtons
                             }
@@ -206,12 +205,7 @@ internal fun ProviderInfoScreen(
                 items(webNavigationItems) { (label, url) ->
                     NavigationItem(
                         label = stringResource(id = label),
-                        onClick = {
-                            if (url != null) uriHandler.openUri(url)
-                            else {
-                                context.showToast(context.getString(LocaleR.string.null_repository_url_error))
-                            }
-                        }
+                        onClick = { uriHandler.openUri(url) }
                     )
                 }
             }
@@ -222,7 +216,7 @@ internal fun ProviderInfoScreen(
         UnsafeInstallAlertDialog(
             quantity = 1,
             formattedName = viewModel.providerMetadata.name,
-            warnOnInstall = warnOnInstall,
+            warnOnInstall = providerPreferences.shouldWarnBeforeInstall,
             onConfirm = { disableWarning ->
                 viewModel.disableWarnOnInstall(disableWarning)
                 viewModel.toggleInstallation()

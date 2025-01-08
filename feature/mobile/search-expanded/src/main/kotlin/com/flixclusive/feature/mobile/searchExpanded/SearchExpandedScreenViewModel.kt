@@ -15,8 +15,10 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
+import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.data.provider.ProviderApiRepository
+import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
@@ -39,7 +41,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
@@ -49,16 +50,23 @@ internal class SearchExpandedScreenViewModel
         private val tmdbRepository: TMDBRepository,
         private val searchHistoryRepository: SearchHistoryRepository,
         private val userSessionManager: UserSessionManager,
-        val providerManager: ProviderManager,
+        providerRepository: ProviderRepository,
+        providerApiRepository: ProviderApiRepository,
         dataStoreManager: DataStoreManager,
     ) : ViewModel() {
-        private val providers = providerManager.workingApis
-        val providerMetadataList =
-            providerManager.workingProviders
-                .stateIn(
+        private val providers =
+            providerApiRepository
+                .getEnabledApisAsFlow()
+                .asStateFlow(
                     scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = runBlocking { providerManager.workingProviders.first() },
+                    initialValue = emptyList(),
+                )
+        val providerMetadataList =
+            providerRepository
+                .getEnabledProvidersAsFlow()
+                .asStateFlow(
+                    scope = viewModelScope,
+                    initialValue = emptyList(),
                 )
 
         private val userId: Int? get() = userSessionManager.currentUser.value?.id
@@ -161,7 +169,10 @@ internal class SearchExpandedScreenViewModel
                 when (
                     val result = getResponseFromProviderEndpoint()
                 ) {
-                    is Resource.Success -> result.data?.parseResults()
+                    is Resource.Success -> {
+                        result.data?.parseResults()
+                    }
+
                     is Resource.Failure -> {
                         error = result.error
                         pagingState =
@@ -170,7 +181,10 @@ internal class SearchExpandedScreenViewModel
                                 else -> PagingState.PAGINATING_EXHAUST
                             }
                     }
-                    Resource.Loading -> Unit
+
+                    Resource.Loading -> {
+                        Unit
+                    }
                 }
             }
         }
@@ -184,7 +198,7 @@ internal class SearchExpandedScreenViewModel
             }
         }
 
-        private suspend fun getSelectedProvider(): ProviderApi? = providers.first().getOrNull(selectedProviderIndex - 1)?.second
+        private suspend fun getSelectedProvider(): ProviderApi? = providers.first().getOrNull(selectedProviderIndex - 1)
 
         private fun SearchResponseData<FilmSearchItem>.parseResults() {
             val results =

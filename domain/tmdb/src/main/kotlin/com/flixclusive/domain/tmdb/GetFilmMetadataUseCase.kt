@@ -14,37 +14,41 @@ import com.flixclusive.model.film.util.FilmType
 import javax.inject.Inject
 import com.flixclusive.core.locale.R as LocaleR
 
-class GetFilmMetadataUseCase @Inject constructor(
-    private val tmdbRepository: TMDBRepository,
-    private val providerApiRepository: ProviderApiRepository
-) {
-    suspend operator fun invoke(partiallyDetailedFilm: Film): Resource<FilmMetadata> {
-        return partiallyDetailedFilm.run {
-            if (!providerId.equals(DEFAULT_FILM_SOURCE_NAME, true)) {
-                withIOContext {
-                    try {
-                        val api = providerApiRepository.get(providerId)!!
-                        val filmMetadata = api.getMetadata(film = this@run)
+class GetFilmMetadataUseCase
+    @Inject
+    constructor(
+        private val tmdbRepository: TMDBRepository,
+        private val providerApiRepository: ProviderApiRepository,
+    ) {
+        suspend operator fun invoke(partiallyDetailedFilm: Film): Resource<FilmMetadata> {
+            return partiallyDetailedFilm.run {
+                if (!providerId.equals(DEFAULT_FILM_SOURCE_NAME, true)) {
+                    withIOContext {
+                        try {
+                            val api = providerApiRepository.getApi(providerId)!!
+                            val filmMetadata = api.getMetadata(film = this@run)
 
-                        Resource.Success(filmMetadata)
-                    } catch (e: Exception) {
-                        errorLog(e)
-                        Resource.Failure(UiText.StringResource(LocaleR.string.failed_to_fetch_data_message, e.actualMessage))
+                            Resource.Success(filmMetadata)
+                        } catch (e: Exception) {
+                            errorLog(e)
+                            Resource.Failure(
+                                UiText.StringResource(LocaleR.string.failed_to_fetch_data_message, e.actualMessage),
+                            )
+                        }
                     }
                 }
-            }
 
-            when {
-                isMovie && isFromTmdb -> tmdbRepository.getMovie(id = tmdbId!!)
-                isTvShow && isFromTmdb -> tmdbRepository.getTvShow(id = tmdbId!!)
-                else -> Resource.Failure(UiText.StringResource(LocaleR.string.film_not_found))
+                when {
+                    isMovie && isFromTmdb -> tmdbRepository.getMovie(id = tmdbId!!)
+                    isTvShow && isFromTmdb -> tmdbRepository.getTvShow(id = tmdbId!!)
+                    else -> Resource.Failure(UiText.StringResource(LocaleR.string.film_not_found))
+                }
             }
         }
-    }
 
-    private val Film.isTvShow: Boolean
-        get() = filmType == FilmType.TV_SHOW
-    
-    private val Film.isMovie: Boolean
-        get() = filmType == FilmType.MOVIE
-}
+        private val Film.isTvShow: Boolean
+            get() = filmType == FilmType.TV_SHOW
+
+        private val Film.isMovie: Boolean
+            get() = filmType == FilmType.MOVIE
+    }

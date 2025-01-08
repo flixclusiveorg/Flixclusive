@@ -14,7 +14,7 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.player.BasePlayerViewModel
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
-import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
@@ -53,7 +53,7 @@ internal class PlayerScreenViewModel
         getMediaLinksUseCase: GetMediaLinksUseCase,
         watchHistoryRepository: WatchHistoryRepository,
         watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
-        providerManager: ProviderManager,
+        providerRepository: ProviderRepository,
         userSessionManager: UserSessionManager,
     ) : BasePlayerViewModel(
             dataStoreManager = dataStoreManager,
@@ -66,7 +66,7 @@ internal class PlayerScreenViewModel
             watchHistoryRepository = watchHistoryRepository,
             watchTimeUpdaterUseCase = watchTimeUpdaterUseCase,
             userSessionManager = userSessionManager,
-            providerManager = providerManager,
+            providerRepository = providerRepository,
         ) {
         @AssistedFactory
         interface Factory {

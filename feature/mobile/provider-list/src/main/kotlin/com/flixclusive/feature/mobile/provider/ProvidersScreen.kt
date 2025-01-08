@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,13 +66,14 @@ import com.flixclusive.core.ui.mobile.component.provider.InstalledProviderCard
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
+import com.flixclusive.data.provider.util.getApiCrashMessage
+import com.flixclusive.data.provider.util.isNotUsable
 import com.flixclusive.feature.mobile.provider.component.CustomButton
 import com.flixclusive.feature.mobile.provider.component.ProfileHandlerButtons
 import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
 import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
 import com.flixclusive.feature.mobile.provider.util.rememberDragDropListState
 import com.flixclusive.model.provider.ProviderMetadata
-import com.flixclusive.model.provider.Status
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -91,8 +93,10 @@ internal fun ProvidersScreen(
     val context = LocalContext.current
 
     val viewModel = hiltViewModel<ProvidersScreenViewModel>()
-    val providerPreferences by viewModel.providerPreferencesAsState.collectAsStateWithLifecycle()
+    val providers by viewModel.providers.collectAsStateWithLifecycle()
+    val providerToggles by viewModel.providerPrefs.collectAsStateWithLifecycle()
     val userOnBoardingPrefs by viewModel.userOnBoardingPrefs.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle(null)
     val searchExpanded = rememberSaveable { mutableStateOf(false) }
     var providerToUninstall by rememberSaveable { mutableStateOf<ProviderMetadata?>(null) }
 
@@ -111,10 +115,19 @@ internal fun ProvidersScreen(
     val shouldShowTopBar by listState.isScrollingUp()
     val listIsAtTop by listState.isAtTop()
 
+    LaunchedEffect(error) {
+        if (error == null) return@LaunchedEffect
+
+        val faultyProvider = providers.find { it.id == error!!.providerId } ?: return@LaunchedEffect
+        val message = context.getApiCrashMessage(faultyProvider.name)
+
+        context.showToast(message)
+    }
+
     val filteredProviders by remember {
         derivedStateOf {
             when (viewModel.searchQuery.isNotEmpty() && searchExpanded.value) {
-                true -> viewModel.providers.fastFilter { it.name.contains(viewModel.searchQuery, true) }
+                true -> providers.fastFilter { it.name.contains(viewModel.searchQuery, true) }
                 false -> null
             }
         }
@@ -145,7 +158,7 @@ internal fun ProvidersScreen(
             )
         },
         floatingActionButton = {
-            if (viewModel.providers.isNotEmpty()) {
+            if (providers.isNotEmpty()) {
                 ExtendedFloatingActionButton(
                     onClick = navigator::openAddRepositoryScreen,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -175,7 +188,7 @@ internal fun ProvidersScreen(
                 .padding(top = topPadding)
         ) {
             AnimatedContent(
-                targetState = viewModel.providers.isEmpty(),
+                targetState = providers.isEmpty(),
                 label = "",
                 transitionSpec = {
                     ContentTransform(
@@ -238,8 +251,7 @@ internal fun ProvidersScreen(
                                     CustomButton(
                                         onClick = {
                                             navigator.testProviders(
-                                                providers = viewModel.providers
-                                                    .toCollection(ArrayList())
+                                                providers = providers.toCollection(ArrayList())
                                             )
                                         },
                                         iconId = UiCommonR.drawable.test,
@@ -258,7 +270,7 @@ internal fun ProvidersScreen(
                         }
 
                         itemsIndexed(
-                            items = filteredProviders ?: viewModel.providers,
+                            items = filteredProviders ?: providers,
                             key = { _, item -> item.id }
                         ) { index, metadata ->
                             val displacementOffset =
@@ -267,12 +279,10 @@ internal fun ProvidersScreen(
                                     dragDropListState.elementDisplacement.takeIf { it != 0f }
                                 } else null
 
-                            val isEnabled = metadata.status != Status.Maintenance
-                                && metadata.status != Status.Down
-                                && (providerPreferences.providers.getOrNull(index)?.isDisabled?.not() != false)
+                            val isDisabled = providerToggles.getOrNull(index)
+                            val isEnabled = !metadata.isNotUsable && isDisabled == false
 
                             InstalledProviderCard(
-                                modifier = Modifier.animateItem(),
                                 providerMetadata = metadata,
                                 enabled = isEnabled,
                                 isDraggable = !searchExpanded.value,
@@ -280,7 +290,12 @@ internal fun ProvidersScreen(
                                 openSettings = { navigator.openProviderSettings(metadata) },
                                 onClick = { navigator.openProviderInfo(metadata) },
                                 uninstallProvider = { providerToUninstall = metadata },
-                                onToggleProvider = { viewModel.toggleProvider(metadata) }
+                                onToggleProvider = {
+                                    viewModel.toggleProvider(
+                                        id = metadata.id,
+                                        isEnabled = isEnabled
+                                    )
+                                }
                             )
                         }
                     }

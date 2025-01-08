@@ -13,7 +13,7 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.util.coroutines.asStateFlow
-import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.CachedLinks
@@ -58,7 +58,7 @@ abstract class BasePlayerViewModel(
     context: Context,
     playerCacheManager: PlayerCacheManager,
     private val watchHistoryRepository: WatchHistoryRepository,
-    private val providerManager: ProviderManager,
+    private val providerRepository: ProviderRepository,
     private val dataStoreManager: DataStoreManager,
     private val seasonProviderUseCase: SeasonProviderUseCase,
     private val getMediaLinksUseCase: GetMediaLinksUseCase,
@@ -67,31 +67,34 @@ abstract class BasePlayerViewModel(
 ) : ViewModel() {
     val film = args.film
 
-    val player = FlixclusivePlayerManager(
-        client = client,
-        context = context,
-        playerCacheManager = playerCacheManager,
-        dataStoreManager = dataStoreManager,
-        showErrorCallback = {
-            showErrorSnackbar(
-                message = it,
-                isInternalPlayerError = true
-            )
-        }
-    )
+    val player =
+        FlixclusivePlayerManager(
+            client = client,
+            context = context,
+            playerCacheManager = playerCacheManager,
+            dataStoreManager = dataStoreManager,
+            showErrorCallback = {
+                showErrorSnackbar(
+                    message = it,
+                    isInternalPlayerError = true,
+                )
+            },
+        )
 
     val cachedLinks: CachedLinks
-        get() = getMediaLinksUseCase.getCache(
-            filmId = film.identifier,
-            episode = _currentSelectedEpisode.value
-        )
+        get() =
+            getMediaLinksUseCase.getCache(
+                filmId = film.identifier,
+                episode = _currentSelectedEpisode.value,
+            )
 
-    val providersAsState = providerManager
-        .workingProviders
-        .asStateFlow(
-            scope = viewModelScope,
-            initialValue = emptyList()
-        )
+    val providersAsState =
+        providerRepository
+            .getEnabledProvidersAsFlow()
+            .asStateFlow(
+                scope = viewModelScope,
+                initialValue = emptyList(),
+            )
 
     private val _dialogState = MutableStateFlow<MediaLinkResourceState>(MediaLinkResourceState.Idle)
     val dialogState: StateFlow<MediaLinkResourceState> = _dialogState.asStateFlow()
@@ -120,32 +123,36 @@ abstract class BasePlayerViewModel(
     private val userId: Int?
         get() = userSessionManager.currentUser.value?.id
 
-    val watchHistoryItem = userSessionManager.currentUser
-        .filterNotNull()
-        .flatMapLatest { user ->
-            watchHistoryRepository
-                .getWatchHistoryItemByIdInFlow(
-                    itemId = film.identifier, ownerId = user.id
-                )
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = runBlocking {
-                userId?.let {
-                    watchHistoryRepository.getWatchHistoryItemById(film.identifier, it)
-                        ?: film.toWatchHistoryItem(ownerId = it)
-                }
-            }
-        )
+    val watchHistoryItem =
+        userSessionManager.currentUser
+            .filterNotNull()
+            .flatMapLatest { user ->
+                watchHistoryRepository
+                    .getWatchHistoryItemByIdInFlow(
+                        itemId = film.identifier,
+                        ownerId = user.id,
+                    )
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue =
+                    runBlocking {
+                        userId?.let {
+                            watchHistoryRepository.getWatchHistoryItemById(film.identifier, it)
+                                ?: film.toWatchHistoryItem(ownerId = it)
+                        }
+                    },
+            )
 
-    val playerPreferences = dataStoreManager
-        .getUserPrefs<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY)
-        .asStateFlow(viewModelScope)
+    val playerPreferences =
+        dataStoreManager
+            .getUserPrefs<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY)
+            .asStateFlow(viewModelScope)
 
-    val subtitlesPreferences = dataStoreManager
-        .getUserPrefs<SubtitlesPreferences>(UserPreferences.SUBTITLES_PREFS_KEY)
-        .asStateFlow(viewModelScope)
+    val subtitlesPreferences =
+        dataStoreManager
+            .getUserPrefs<SubtitlesPreferences>(UserPreferences.SUBTITLES_PREFS_KEY)
+            .asStateFlow(viewModelScope)
 
     private var loadLinksFromNewProviderJob: Job? = null
     private var loadLinksJob: Job? = null
@@ -156,13 +163,14 @@ abstract class BasePlayerViewModel(
         _uiState.update {
             val preferredQuality = playerPreferences.value.quality
             val preferredResizeMode = playerPreferences.value.resizeMode
-            val indexOfPreferredServer = cachedLinks.streams
-                .getIndexOfPreferredQuality(preferredQuality = preferredQuality)
+            val indexOfPreferredServer =
+                cachedLinks.streams
+                    .getIndexOfPreferredQuality(preferredQuality = preferredQuality)
 
             it.copy(
                 selectedSourceLink = indexOfPreferredServer,
                 selectedResizeMode = preferredResizeMode,
-                selectedProvider = cachedLinks.providerId
+                selectedProvider = cachedLinks.providerId,
             )
         }
     }
@@ -180,14 +188,15 @@ abstract class BasePlayerViewModel(
 
         val watchHistoryItemToUse = watchHistoryItem.value ?: return 0L to 0L
 
-        isLastEpisode = checkIfLastEpisode(
-            episodeToCheck = episodeToUse,
-            watchHistoryItem = watchHistoryItemToUse
-        )
+        isLastEpisode =
+            checkIfLastEpisode(
+                episodeToCheck = episodeToUse,
+                watchHistoryItem = watchHistoryItemToUse,
+            )
 
         return getSavedTimeForFilm(
             watchHistoryItemToUse,
-            episodeToUse
+            episodeToUse,
         )
     }
 
@@ -210,55 +219,60 @@ abstract class BasePlayerViewModel(
      * */
     protected abstract fun showErrorSnackbar(
         message: UiText,
-        isInternalPlayerError: Boolean = false
+        isInternalPlayerError: Boolean = false,
     )
 
     fun onSeasonChange(seasonNumber: Int) {
-        if (onSeasonChangeJob?.isActive == true)
+        if (onSeasonChangeJob?.isActive == true) {
             return
+        }
 
-        onSeasonChangeJob = viewModelScope.launch {
-            if (!film.isFromTmdb) {
-                val tvShow = film as TvShow
-                val season = tvShow.seasons
-                    .find { it.number == seasonNumber }
+        onSeasonChangeJob =
+            viewModelScope.launch {
+                if (!film.isFromTmdb) {
+                    val tvShow = film as TvShow
+                    val season =
+                        tvShow.seasons
+                            .find { it.number == seasonNumber }
 
-                if (season != null)
-                    _season.value = Resource.Success(season)
-
-                return@launch
-            }
-
-            seasonProviderUseCase.asFlow(
-                tvShow = film as TvShow,
-                seasonNumber = seasonNumber
-            ).collectLatest { result ->
-                if (result is Resource.Success) {
-                    val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(
-                        itemId = film.identifier,
-                        ownerId = userId ?: return@collectLatest
-                    )
-
-                    watchHistoryItem?.let { item ->
-                        result.data?.episodes?.size?.let {
-                            val newEpisodesMap = item.episodes.toMutableMap()
-                            newEpisodesMap[seasonNumber] = it
-
-                            watchHistoryRepository.insert(item.copy(episodes = newEpisodesMap))
-                        }
+                    if (season != null) {
+                        _season.value = Resource.Success(season)
                     }
+
+                    return@launch
                 }
 
-                _season.value = result
+                seasonProviderUseCase
+                    .asFlow(
+                        tvShow = film as TvShow,
+                        seasonNumber = seasonNumber,
+                    ).collectLatest { result ->
+                        if (result is Resource.Success) {
+                            val watchHistoryItem =
+                                watchHistoryRepository.getWatchHistoryItemById(
+                                    itemId = film.identifier,
+                                    ownerId = userId ?: return@collectLatest,
+                                )
+
+                            watchHistoryItem?.let { item ->
+                                result.data?.episodes?.size?.let {
+                                    val newEpisodesMap = item.episodes.toMutableMap()
+                                    newEpisodesMap[seasonNumber] = it
+
+                                    watchHistoryRepository.insert(item.copy(episodes = newEpisodesMap))
+                                }
+                            }
+                        }
+
+                        _season.value = result
+                    }
             }
-        }
     }
 
-    fun onProviderChange(
-        newProvider: String
-    ) {
-        if (loadLinksFromNewProviderJob?.isActive == true)
+    fun onProviderChange(newProvider: String) {
+        if (loadLinksFromNewProviderJob?.isActive == true) {
             return
+        }
 
         // Cancel episode queueing job
         if (loadNextLinksJob?.isActive == true) {
@@ -268,40 +282,46 @@ abstract class BasePlayerViewModel(
 
         updateWatchHistory(
             currentTime = player.currentPosition,
-            duration = player.duration
+            duration = player.duration,
         )
 
-        loadLinksFromNewProviderJob = viewModelScope.launch {
-            val oldSelectedSource = _uiState.value.selectedProvider
-            updateProviderSelected(newProvider)
+        loadLinksFromNewProviderJob =
+            viewModelScope.launch {
+                val oldSelectedSource = _uiState.value.selectedProvider
+                updateProviderSelected(newProvider)
 
-            getMediaLinksUseCase(
-                film = film as FilmMetadata,
-                preferredProvider = newProvider,
-                watchHistoryItem = watchHistoryItem.value,
-                episode = currentSelectedEpisode.value,
-                onSuccess = { _ ->
-                    resetUiState()
-                    resetNextEpisodeQueue()
-                },
-                onError = {
-                    updateProviderSelected(oldSelectedSource)
-                    showErrorSnackbar(it)
-                }
-            ).collect { state ->
-                when {
-                    state.isIdle ||
-                    state.isError ||
-                    state.isSuccess ||
-                    state.isSuccessWithTrustedProviders -> _uiState.update {
-                        it.copy(selectedProviderState = PlayerProviderState.SELECTED)
-                    }
-                    state.isLoading -> _uiState.update {
-                        it.copy(selectedProviderState = PlayerProviderState.LOADING)
+                getMediaLinksUseCase(
+                    film = film as FilmMetadata,
+                    preferredProvider = newProvider,
+                    watchHistoryItem = watchHistoryItem.value,
+                    episode = currentSelectedEpisode.value,
+                    onSuccess = { _ ->
+                        resetUiState()
+                        resetNextEpisodeQueue()
+                    },
+                    onError = {
+                        updateProviderSelected(oldSelectedSource)
+                        showErrorSnackbar(it)
+                    },
+                ).collect { state ->
+                    when {
+                        state.isIdle ||
+                            state.isError ||
+                            state.isSuccess ||
+                            state.isSuccessWithTrustedProviders -> {
+                            _uiState.update {
+                                it.copy(selectedProviderState = PlayerProviderState.SELECTED)
+                            }
+                        }
+
+                        state.isLoading -> {
+                            _uiState.update {
+                                it.copy(selectedProviderState = PlayerProviderState.LOADING)
+                            }
+                        }
                     }
                 }
             }
-        }
     }
 
     fun onResizeModeChange(resizeMode: Int) {
@@ -318,13 +338,14 @@ abstract class BasePlayerViewModel(
 
     fun onServerChange(index: Int? = null) {
         val preferredQuality = playerPreferences.value.quality
-        val indexToUse = index ?: cachedLinks.streams.getIndexOfPreferredQuality(
-            preferredQuality = preferredQuality
-        )
+        val indexToUse =
+            index ?: cachedLinks.streams.getIndexOfPreferredQuality(
+                preferredQuality = preferredQuality,
+            )
 
         updateWatchHistory(
             currentTime = player.currentPosition,
-            duration = player.duration
+            duration = player.duration,
         )
 
         _uiState.update {
@@ -352,13 +373,14 @@ abstract class BasePlayerViewModel(
     ) {
         viewModelScope.launch {
             watchTimeUpdaterUseCase(
-                watchHistoryItem = watchHistoryItem.value
-                    ?: film.toWatchHistoryItem(
-                        ownerId = userId ?: return@launch
-                    ),
+                watchHistoryItem =
+                    watchHistoryItem.value
+                        ?: film.toWatchHistoryItem(
+                            ownerId = userId ?: return@launch,
+                        ),
                 currentTime = currentTime,
                 totalDuration = duration,
-                currentSelectedEpisode = currentSelectedEpisode.value
+                currentSelectedEpisode = currentSelectedEpisode.value,
             )
         }
     }
@@ -393,9 +415,7 @@ abstract class BasePlayerViewModel(
      * @param onError an optional callback if caller wants to call [showErrorSnackbar]
      *
      * */
-    private suspend fun Episode.getNextEpisode(
-        onError: ((UiText) -> Unit)? = null,
-    ): Episode? {
+    private suspend fun Episode.getNextEpisode(onError: ((UiText) -> Unit)? = null): Episode? {
         val nextEpisode: Episode?
 
         val episodeSeasonNumber = this.season
@@ -403,7 +423,7 @@ abstract class BasePlayerViewModel(
 
         val seasonToUse = fetchSeasonIfNeeded(episodeSeasonNumber)
 
-        if(seasonToUse is Resource.Failure) {
+        if (seasonToUse is Resource.Failure) {
             onError?.invoke(seasonToUse.error!!)
             return null
         }
@@ -411,33 +431,37 @@ abstract class BasePlayerViewModel(
         val episodesList = seasonToUse.data!!.episodes
         val nextEpisodeNumberToWatch = episodeNumber + 1
 
-        if (episodesList.last().number == nextEpisodeNumberToWatch)
+        if (episodesList.last().number == nextEpisodeNumberToWatch) {
             return episodesList.last()
+        }
 
         val isThereANextEpisode = episodesList.last().number > nextEpisodeNumberToWatch
         val isThereANextSeason = seasonToUse.data!!.number + 1 <= (film as TvShow).totalSeasons
 
-        nextEpisode = if (isThereANextEpisode) {
-            episodesList.firstOrNull {
-                it.number == nextEpisodeNumberToWatch
-            }
-        } else if (isThereANextSeason) {
-            fetchSeasonIfNeeded(seasonNumber = episodeSeasonNumber + 1).run {
-                if(this is Resource.Failure) {
-                    onError?.invoke(error!!)
+        nextEpisode =
+            if (isThereANextEpisode) {
+                episodesList.firstOrNull {
+                    it.number == nextEpisodeNumberToWatch
                 }
+            } else if (isThereANextSeason) {
+                fetchSeasonIfNeeded(seasonNumber = episodeSeasonNumber + 1).run {
+                    if (this is Resource.Failure) {
+                        onError?.invoke(error!!)
+                    }
 
-                data?.episodes?.firstOrNull()
+                    data?.episodes?.firstOrNull()
+                }
+            } else {
+                null
             }
-        } else null
 
-        if(nextEpisode == null && !isThereANextSeason) {
+        if (nextEpisode == null && !isThereANextSeason) {
             onError?.invoke(
                 UiText.StringResource(
                     LocaleR.string.episode_non_existent_error_message_format,
                     nextEpisodeNumberToWatch,
-                    seasonToUse.data!!.number
-                )
+                    seasonToUse.data!!.number,
+                ),
             )
         }
 
@@ -472,13 +496,15 @@ abstract class BasePlayerViewModel(
 
             var episode = episodeToWatch
             if (isLoadingNextEpisode) {
-                episode = currentSelectedEpisode.value!!.getNextEpisode(
-                    onError = { showErrorSnackbar(it) }
-                ).also {
-                    if (it == null) {
-                        return@launch
-                    }
-                }
+                episode =
+                    currentSelectedEpisode.value!!
+                        .getNextEpisode(
+                            onError = { showErrorSnackbar(it) },
+                        ).also {
+                            if (it == null) {
+                                return@launch
+                            }
+                        }
             }
 
             loadMediaLinks(episode)
@@ -490,9 +516,7 @@ abstract class BasePlayerViewModel(
      *
      * @param episodeToWatch an optional parameter for the episode to watch if film to be watched is a [TvShow]
      */
-    fun loadMediaLinks(
-        episodeToWatch: Episode? = null
-    ) {
+    fun loadMediaLinks(episodeToWatch: Episode? = null) {
         if (loadLinksFromNewProviderJob?.isActive == true || loadLinksJob?.isActive == true) {
             showErrorSnackbar(UiText.StringResource(LocaleR.string.load_link_job_active_error_message))
             return
@@ -504,23 +528,24 @@ abstract class BasePlayerViewModel(
             loadNextLinksJob = null
         }
 
-        loadLinksJob = viewModelScope.launch {
-            getMediaLinksUseCase(
-                film = film as FilmMetadata,
-                watchId = cachedLinks.watchId,
-                preferredProvider = _uiState.value.selectedProvider,
-                watchHistoryItem = watchHistoryItem.value,
-                episode = episodeToWatch,
-                onSuccess = { newEpisode ->
-                    _currentSelectedEpisode.value = newEpisode
+        loadLinksJob =
+            viewModelScope.launch {
+                getMediaLinksUseCase(
+                    film = film as FilmMetadata,
+                    watchId = cachedLinks.watchId,
+                    preferredProvider = _uiState.value.selectedProvider,
+                    watchHistoryItem = watchHistoryItem.value,
+                    episode = episodeToWatch,
+                    onSuccess = { newEpisode ->
+                        _currentSelectedEpisode.value = newEpisode
 
-                    resetUiState()
-                    resetNextEpisodeQueue()
+                        resetUiState()
+                        resetNextEpisodeQueue()
+                    },
+                ).collect {
+                    _dialogState.value = it
                 }
-            ).collect {
-                _dialogState.value = it
             }
-        }
     }
 
     /**
@@ -531,8 +556,8 @@ abstract class BasePlayerViewModel(
      * */
     private suspend fun getQueuedEpisode(): Boolean {
         if (
-            isNextEpisodeLoaded
-            && nextEpisodeToUse != null
+            isNextEpisodeLoaded &&
+            nextEpisodeToUse != null
         ) {
             _season.value = fetchSeasonFromMetaProvider(nextEpisodeToUse!!.season)
             _currentSelectedEpisode.value = nextEpisodeToUse
@@ -559,25 +584,32 @@ abstract class BasePlayerViewModel(
      * Callback function to silently queue up the next episode
      */
     fun onQueueNextEpisode() {
-        if (loadNextLinksJob?.isActive == true || isNextEpisodeLoaded || loadLinksJob?.isActive == true || loadLinksFromNewProviderJob?.isActive == true)
+        if (loadNextLinksJob?.isActive == true ||
+            isNextEpisodeLoaded ||
+            loadLinksJob?.isActive == true ||
+            loadLinksFromNewProviderJob?.isActive == true
+        ) {
             return
-
-        loadNextLinksJob = viewModelScope.launch {
-            val episode = currentSelectedEpisode.value!!
-                .getNextEpisode()
-
-            getMediaLinksUseCase(
-                film = film as FilmMetadata,
-                watchId = cachedLinks.watchId,
-                preferredProvider = _uiState.value.selectedProvider,
-                watchHistoryItem = watchHistoryItem.value,
-                episode = episode,
-                onSuccess = { newEpisode ->
-                    nextEpisodeToUse = newEpisode
-                    isNextEpisodeLoaded = true
-                }
-            ).collect()
         }
+
+        loadNextLinksJob =
+            viewModelScope.launch {
+                val episode =
+                    currentSelectedEpisode.value!!
+                        .getNextEpisode()
+
+                getMediaLinksUseCase(
+                    film = film as FilmMetadata,
+                    watchId = cachedLinks.watchId,
+                    preferredProvider = _uiState.value.selectedProvider,
+                    watchHistoryItem = watchHistoryItem.value,
+                    episode = episode,
+                    onSuccess = { newEpisode ->
+                        nextEpisodeToUse = newEpisode
+                        isNextEpisodeLoaded = true
+                    },
+                ).collect()
+            }
     }
 
     /**
@@ -590,10 +622,11 @@ abstract class BasePlayerViewModel(
      *
      * */
     protected suspend fun fetchSeasonFromMetaProvider(seasonNumber: Int): Resource<Season> {
-        val result = seasonProviderUseCase(
-            tvShow = film as TvShow,
-            seasonNumber = seasonNumber
-        )
+        val result =
+            seasonProviderUseCase(
+                tvShow = film as TvShow,
+                seasonNumber = seasonNumber,
+            )
 
         watchHistoryItem.value?.let { item ->
             result.data?.episodes?.size?.let {

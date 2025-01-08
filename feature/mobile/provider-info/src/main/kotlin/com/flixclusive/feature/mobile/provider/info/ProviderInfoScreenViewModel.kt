@@ -7,12 +7,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.util.DownloadFailed
 import com.flixclusive.domain.provider.GetRepositoryUseCase
 import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
@@ -22,9 +24,6 @@ import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.flixclusive.core.locale.R as LocaleR
@@ -37,6 +36,7 @@ internal class ProviderInfoScreenViewModel
         private val getRepositoryUseCase: GetRepositoryUseCase,
         private val providerManager: ProviderManager,
         private val providerUpdaterUseCase: ProviderUpdaterUseCase,
+        private val providerRepository: ProviderRepository,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         private val argsMetadata = savedStateHandle.navArgs<ProviderInfoScreenNavArgs>().providerMetadata
@@ -53,14 +53,10 @@ internal class ProviderInfoScreenViewModel
         var repository: Repository? by mutableStateOf(null)
             private set
 
-        val warnOnInstall =
-            providerManager.providerPreferencesAsState
-                .map { it.shouldWarnBeforeInstall }
-                .stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000L),
-                    initialValue = false,
-                )
+        val providerPreferences =
+            dataStoreManager
+                .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
+                .asStateFlow(viewModelScope)
 
         init {
             viewModelScope.launch {
@@ -72,7 +68,7 @@ internal class ProviderInfoScreenViewModel
             providerInstallationStatus = ProviderInstallationStatus.NotInstalled
 
             val isInstalledAlready =
-                providerManager.metadataList[argsMetadata.id] != null
+                providerRepository.getProviderMetadata(argsMetadata.id) != null
 
             if (isInstalledAlready && providerUpdaterUseCase.isOutdated(argsMetadata.id)) {
                 providerInstallationStatus = ProviderInstallationStatus.Outdated
@@ -146,7 +142,7 @@ internal class ProviderInfoScreenViewModel
             val (username, repositoryName) = extractGithubInfoFromLink(url) ?: return
 
             repository =
-                providerManager.providerPreferences.repositories.find {
+                providerPreferences.value.repositories.find {
                     it.owner.equals(username, true) && it.name == repositoryName
                 }
 

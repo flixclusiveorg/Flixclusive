@@ -2,6 +2,7 @@ package com.flixclusive.domain.updater
 
 import android.content.Context
 import androidx.core.app.NotificationCompat
+import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.util.android.notify
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.log.errorLog
@@ -10,9 +11,13 @@ import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.data.provider.PROVIDER_DEBUG
 import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.util.DownloadFailed
+import com.flixclusive.model.datastore.user.ProviderPreferences
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
 import java.util.Collections
 import java.util.concurrent.TimeUnit
@@ -31,6 +36,8 @@ class ProviderUpdaterUseCase
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
+        private val dataStoreManager: DataStoreManager,
+        private val providerRepository: ProviderRepository,
         private val providerManager: ProviderManager,
         private val client: OkHttpClient,
     ) {
@@ -51,7 +58,11 @@ class ProviderUpdaterUseCase
             infoLog("Available updates [${outdated.size}] ${outdated.joinToString(", ")}")
             if (!notify) return
 
-            val preferences = providerManager.providerPreferences
+            val preferences =
+                dataStoreManager
+                    .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
+                    .first()
+
             val updateResults =
                 when {
                     preferences.isAutoUpdateEnabled -> updateAll()
@@ -63,8 +74,8 @@ class ProviderUpdaterUseCase
         }
 
         private suspend fun getOutdatedProviders(): List<ProviderMetadata> =
-            providerManager.metadataList.mapNotNull { (id, metadata) ->
-                if (isOutdated(id)) metadata else null
+            providerRepository.getOrderedProviders().mapNotNull { metadata ->
+                if (isOutdated(metadata.id)) metadata else null
             }
 
         private fun notify(result: ProviderUpdateResult) {
@@ -130,7 +141,7 @@ class ProviderUpdaterUseCase
             if (id.endsWith(PROVIDER_DEBUG)) return false
 
             val provider =
-                providerManager.providers[id]
+                providerRepository.getProvider(id)
                     ?: return false
 
             val manifest = provider.manifest
@@ -158,7 +169,7 @@ class ProviderUpdaterUseCase
         }
 
         suspend fun getLatestMetadata(id: String): ProviderMetadata? {
-            val provider = providerManager.providers[id]
+            val provider = providerRepository.getProvider(id)
             requireNotNull(provider) {
                 "No such provider with ID: $id"
             }
@@ -206,7 +217,7 @@ class ProviderUpdaterUseCase
 
             while (outdated.isNotEmpty()) {
                 val providerId = outdated.removeFirst()
-                val metadata = providerManager.metadataList[providerId] ?: continue
+                val metadata = providerRepository.getProviderMetadata(providerId) ?: continue
 
                 try {
                     update(providerId)
@@ -230,7 +241,7 @@ class ProviderUpdaterUseCase
         @Throws(DownloadFailed::class)
         suspend fun update(id: String) {
             val oldMetadata =
-                providerManager.metadataList[id]
+                providerRepository.getProviderMetadata(id)
                     ?: throw NoSuchElementException("No such provider ID: $id")
 
             val newMetadata =

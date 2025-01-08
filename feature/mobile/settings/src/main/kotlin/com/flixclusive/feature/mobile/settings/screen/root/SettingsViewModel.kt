@@ -9,6 +9,7 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
@@ -19,7 +20,6 @@ import com.flixclusive.model.datastore.user.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -35,6 +35,7 @@ internal class SettingsViewModel
         private val dataStoreManager: DataStoreManager,
         private val searchHistoryRepository: SearchHistoryRepository,
         private val getMediaLinksUseCase: GetMediaLinksUseCase,
+        private val providerRepository: ProviderRepository,
         private val providerManager: ProviderManager,
     ) : ViewModel() {
         val searchHistoryCount =
@@ -100,10 +101,8 @@ internal class SettingsViewModel
 
         fun deleteProviders() {
             AppDispatchers.IO.scope.launch {
-                with(providerManager) {
-                    workingProviders.first().forEach {
-                        unload(it)
-                    }
+                providerRepository.getProviders().forEach {
+                    providerManager.unload(it)
                 }
             }
         }
