@@ -95,7 +95,7 @@ core-splashscreen = { group = "androidx.core", name = "core-splashscreen", versi
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 # KtLint Compose
-compose-rules = { group = "io.nlopez.compose.rules", name = "ktlin", version.ref = "ktlintCompose" }
+compose-rules = { group = "io.nlopez.compose.rules", name = "ktlint", version.ref = "ktlintCompose" }
 
 # Compose Destinations by raamcosta
 destinations-animations = { module = "io.github.raamcosta.compose-destinations:animations-core", version.ref = "composeDestinations" }
