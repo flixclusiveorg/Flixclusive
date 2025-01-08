@@ -58,10 +58,10 @@ internal class AppearanceTweakScreen(
                 TweakUI.SwitchTweak(
                     title = stringResource(LocaleR.string.film_card_titles),
                     description = stringResource(LocaleR.string.film_card_titles_settings_desc),
-                    value = remember { mutableStateOf(uiPreferences.showTitleOnCards) },
+                    value = remember { mutableStateOf(uiPreferences.shouldShowTitleOnCards) },
                     onTweaked = {
                         onUpdatePreferences { oldValue ->
-                            oldValue.copy(showTitleOnCards = it)
+                            oldValue.copy(shouldShowTitleOnCards = it)
                         }
                     }
                 )

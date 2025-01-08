@@ -20,10 +20,13 @@ import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.data.provider.util.DownloadFailed
 import com.flixclusive.data.provider.util.DynamicResourceLoader
+import com.flixclusive.data.provider.util.createFileForProvider
 import com.flixclusive.data.provider.util.download
 import com.flixclusive.data.provider.util.getApiCrashMessage
 import com.flixclusive.data.provider.util.getCommonCrashMessage
 import com.flixclusive.data.provider.util.getExternalDirPath
+import com.flixclusive.data.provider.util.getFileFromPath
+import com.flixclusive.data.provider.util.getProviderInstance
 import com.flixclusive.data.provider.util.isClassesDex
 import com.flixclusive.data.provider.util.isCrashingOnGetApiMethod
 import com.flixclusive.data.provider.util.isJson
@@ -31,8 +34,6 @@ import com.flixclusive.data.provider.util.isNotOat
 import com.flixclusive.data.provider.util.isProviderFile
 import com.flixclusive.data.provider.util.replaceLastAfterSlash
 import com.flixclusive.data.provider.util.rmrf
-import com.flixclusive.data.provider.util.toFile
-import com.flixclusive.data.provider.util.toValidFilename
 import com.flixclusive.model.datastore.user.ProviderFromPreferences
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
@@ -41,13 +42,11 @@ import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import com.flixclusive.model.provider.Status
 import com.flixclusive.provider.Provider
-import com.flixclusive.provider.settings.ProviderSettings
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import java.io.File
-import java.io.InputStreamReader
 import java.util.Collections
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -326,9 +325,10 @@ class ProviderManager
             val userId = userSessionDataStore.currentUserId.blockFirstNotNull()!!
             val file =
                 filePath?.let { File(it) }
-                    ?: provider.toFile(
-                        context = context,
+                    ?: context.createFileForProvider(
                         userId = userId,
+                        providerId = provider.id,
+                        providerRepository = provider.repositoryUrl.toValidRepositoryLink()
                     )
 
             if (needsDownload) {
@@ -368,9 +368,10 @@ class ProviderManager
                     }
 
                     val loader = PathClassLoader(filePath, context.classLoader)
-                    val manifest = loader.getManifestFromFile()
+                    val manifest: ProviderManifest = loader.getFileFromPath(MANIFEST_FILE)
                     val settingsDirPath =
-                        metadata.toSettingsDirPath(
+                        createSettingsDirPath(
+                            repositoryUrl = metadata.repositoryUrl,
                             isDebugDirectory = file.absolutePath.contains("/$DEBUG_FOLDER_NAME/"),
                         )
 
@@ -392,10 +393,17 @@ class ProviderManager
                     val provider =
                         loader.getProviderInstance(
                             file = file,
-                            metadata = metadata,
                             manifest = manifest,
                             settingsDirPath = settingsDirPath,
                         )
+
+                    if (manifest.requiresResources) {
+                        provider.resources = dynamicResourceLoader.load(inputFile = file)
+                    }
+
+                    if (manifest.requiresResources && dynamicResourceLoader.isAPI23OrBelow()) {
+                        dynamicResourceLoader.cleanupArtifacts(file)
+                    }
 
                     if (!providerFromPreferences.isDisabled) {
                         val api = provider.getApi(context, client)
@@ -431,54 +439,6 @@ class ProviderManager
             }
         }
 
-        private fun PathClassLoader.getManifestFromFile(): ProviderManifest {
-            val manifest: ProviderManifest
-
-            getResourceAsStream(MANIFEST_FILE).use { stream ->
-                if (stream == null) {
-                    throw NullPointerException("No manifest found")
-                }
-
-                InputStreamReader(stream).use { reader ->
-                    manifest = fromJson(reader)
-                }
-            }
-
-            return manifest
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        private fun PathClassLoader.getProviderInstance(
-            file: File,
-            settingsDirPath: String,
-            metadata: ProviderMetadata,
-            manifest: ProviderManifest,
-        ): Provider {
-            val providerClass: Class<out Provider?> =
-                loadClass(manifest.providerClassName) as Class<out Provider>
-
-            val provider = providerClass.getDeclaredConstructor().newInstance() as Provider
-
-            provider.__filename = file.name
-            provider.manifest = manifest
-            provider.settings =
-                ProviderSettings(
-                    fileDirectory = settingsDirPath,
-                    providerId = metadata.id,
-                )
-
-            if (manifest.requiresResources) {
-                with(dynamicResourceLoader) {
-                    provider.resources = load(inputFile = file)
-                    if (dynamicResourceLoader.isAndroidMarshmallowOrBelow()) {
-                        cleanupArtifacts(file)
-                    }
-                }
-            }
-
-            return provider
-        }
-
         private fun migrateForOldSettingsFile(
             directory: String,
             metadata: ProviderMetadata,
@@ -496,16 +456,15 @@ class ProviderManager
             oldSettingsFile.renameTo(newSettingsFile)
         }
 
-        private fun ProviderMetadata.toSettingsDirPath(isDebugDirectory: Boolean): String {
-            val userId = userSessionDataStore.currentUserId.blockFirstNotNull()
+        private fun createSettingsDirPath(
+            repositoryUrl: String,
+            isDebugDirectory: Boolean,
+        ): String {
+            val userId = userSessionDataStore.currentUserId.blockFirstNotNull()!!
             val parentDirectoryName = if (isDebugDirectory) DEBUG_FOLDER_NAME else "user-$userId"
 
-            require(userId != null && !isDebugDirectory) {
-                "User ID cannot be null when loading providers!"
-            }
-
             val repository = repositoryUrl.toValidRepositoryLink()
-            val childDirectoryName = "${repository.owner}-${repository.name}".toValidFilename()
+            val childDirectoryName = "${repository.owner}-${repository.name}"
 
             return "${context.getExternalDirPath()}/$PROVIDERS_SETTINGS_FOLDER_NAME/$parentDirectoryName/$childDirectoryName"
         }
@@ -640,29 +599,28 @@ class ProviderManager
             }
         }
 
-        private fun ProviderMetadata.toNewProviderFromPreferences(new: ProviderMetadata): ProviderFromPreferences {
+        private fun createNewProviderFromPreferences(
+            id: String,
+            newMetadata: ProviderMetadata,
+        ): ProviderFromPreferences {
             val oldOrderPosition =
                 providerPreferencesAsState.value
                     .providers
                     .indexOfFirst { it.id == id }
 
             val oldPreference = providerPreferences.providers[oldOrderPosition]
-            val localPrefix =
-                when {
-                    oldPreference.filePath.contains(localPathPrefixForDebug) -> localPathPrefixForDebug
-                    else -> null
-                }
 
             val userId = userSessionDataStore.currentUserId.blockFirstNotNull()!!
             return oldPreference.copy(
-                name = new.name,
+                name = newMetadata.name,
                 filePath =
-                    new
-                        .toFile(
-                            context = context,
+                    context
+                        .createFileForProvider(
                             userId = userId,
-                            localPrefix = localPrefix,
-                        ).absolutePath,
+                            providerId = newMetadata.id,
+                            providerRepository = newMetadata.repositoryUrl.toValidRepositoryLink()
+                        )
+                        .absolutePath,
             )
         }
 
@@ -676,7 +634,10 @@ class ProviderManager
             }
 
             val newPreference =
-                oldMetadata.toNewProviderFromPreferences(new = newMetadata)
+                createNewProviderFromPreferences(
+                    id = oldMetadata.id,
+                    newMetadata = newMetadata
+                )
 
             loadOnPreferences(provider = newPreference)
 

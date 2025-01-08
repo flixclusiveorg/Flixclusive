@@ -282,7 +282,7 @@ internal fun FilmScreen(
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .animateItem(),
-                                    isShowingTitle = uiPreferences.showTitleOnCards,
+                                    isShowingTitle = uiPreferences.shouldShowTitleOnCards,
                                     film = film,
                                     onClick = navigator::openFilmScreen,
                                     onLongClick = previewFilm

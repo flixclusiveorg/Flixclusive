@@ -111,7 +111,7 @@ internal fun HomeScreen(
                     HomeContinueWatchingRow(
                         dataListProvider = { watchHistoryItems },
                         onFilmClick = { play(it, null) },
-                        showCardTitle = uiPreferences.showTitleOnCards,
+                        showCardTitle = uiPreferences.shouldShowTitleOnCards,
                         onSeeMoreClick = previewFilm,
                     )
                 }
@@ -125,7 +125,7 @@ internal fun HomeScreen(
                         paginationState = homeRowItemsPagingState[i],
                         films = homeRowItems[i],
                         onFilmClick = navigator::openFilmScreen,
-                        showCardTitle = uiPreferences.showTitleOnCards,
+                        showCardTitle = uiPreferences.shouldShowTitleOnCards,
                         onFilmLongClick = previewFilm,
                         paginate = {
                             viewModel.onPaginateFilms(

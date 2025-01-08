@@ -53,7 +53,7 @@ internal class RepositoryScreenViewModel
 
         val warnOnInstall =
             providerManager.providerPreferencesAsState
-                .map { it.warnOnInstall }
+                .map { it.shouldWarnBeforeInstall }
                 .stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5000L),
@@ -198,7 +198,7 @@ internal class RepositoryScreenViewModel
             viewModelScope.launch {
                 dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
                     it.copy(
-                        warnOnInstall = state,
+                        shouldWarnBeforeInstall = state,
                     )
                 }
             }

@@ -100,7 +100,7 @@ internal class UserPreferencesMigration(
 
     private fun OldAppSettings.toDataPreferences(): DataPreferences = DataPreferences(isIncognito = isIncognito)
 
-    private fun OldAppSettings.toUiPreferences(): UiPreferences = UiPreferences(showTitleOnCards = isShowingFilmCardTitle)
+    private fun OldAppSettings.toUiPreferences(): UiPreferences = UiPreferences(shouldShowTitleOnCards = isShowingFilmCardTitle)
 
     private fun OldAppSettingsProvider.toProviderPreferences(context: Context): ProviderPreferences {
         val providersWithNewFilePaths =
@@ -110,8 +110,8 @@ internal class UserPreferencesMigration(
             )
 
         return ProviderPreferences(
-            warnOnInstall = warnOnInstall,
-            autoUpdate = isUsingAutoUpdateProviderFeature,
+            shouldWarnBeforeInstall = warnOnInstall,
+            isAutoUpdateEnabled = isUsingAutoUpdateProviderFeature,
             repositories = repositories,
             providers = providersWithNewFilePaths,
         )

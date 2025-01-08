@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UiPreferences(
-    val showTitleOnCards: Boolean = false,
+    val shouldShowTitleOnCards: Boolean = false,
 ) : UserPreferences

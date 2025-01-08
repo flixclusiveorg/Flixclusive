@@ -73,7 +73,7 @@ internal fun RecentlyWatchedScreen(
                 modifier = Modifier.fillMaxSize(),
                 screenTitle = stringResource(LocaleR.string.recently_watched),
                 films = watchHistoryItems,
-                isShowingFilmCardTitle = uiPreferences.showTitleOnCards,
+                isShowingFilmCardTitle = uiPreferences.shouldShowTitleOnCards,
                 onFilmClick = navigator::openFilmScreen,
                 onNavigationIconClick = navigator::goBack,
                 onFilmLongClick = previewFilm,

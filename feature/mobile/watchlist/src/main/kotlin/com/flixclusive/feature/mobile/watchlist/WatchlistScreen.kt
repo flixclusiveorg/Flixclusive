@@ -71,7 +71,7 @@ internal fun WatchlistScreen(
                 modifier = Modifier.fillMaxSize(),
                 screenTitle = stringResource(LocaleR.string.watchlist),
                 films = watchlist,
-                isShowingFilmCardTitle = uiPreferences.showTitleOnCards,
+                isShowingFilmCardTitle = uiPreferences.shouldShowTitleOnCards,
                 onFilmClick = navigator::openFilmScreen,
                 onNavigationIconClick = navigator::goBack,
                 onFilmLongClick = previewFilm,

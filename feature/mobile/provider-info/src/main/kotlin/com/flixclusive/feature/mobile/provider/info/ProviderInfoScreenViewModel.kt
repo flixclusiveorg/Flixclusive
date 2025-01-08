@@ -55,7 +55,7 @@ internal class ProviderInfoScreenViewModel
 
         val warnOnInstall =
             providerManager.providerPreferencesAsState
-                .map { it.warnOnInstall }
+                .map { it.shouldWarnBeforeInstall }
                 .stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5000L),
@@ -173,7 +173,7 @@ internal class ProviderInfoScreenViewModel
         fun disableWarnOnInstall(state: Boolean) {
             viewModelScope.launch {
                 dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
-                    it.copy(warnOnInstall = state)
+                    it.copy(shouldWarnBeforeInstall = state)
                 }
             }
         }

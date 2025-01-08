@@ -48,7 +48,7 @@ internal class DynamicResourceLoader(
      */
     fun load(inputFile: File): Resources {
         var filePath = inputFile.absolutePath
-        if (isAndroidMarshmallowOrBelow()) {
+        if (isAPI23OrBelow()) {
             val tempFile = createTempFile(inputFile)
             val manifestFile = createManifestFile(tempFile)
             manipulateZipFile(
@@ -67,7 +67,7 @@ internal class DynamicResourceLoader(
      *
      * @return True if the device is running Android Marshmallow or below, false otherwise.
      */
-    internal fun isAndroidMarshmallowOrBelow(): Boolean = Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
+    internal fun isAPI23OrBelow(): Boolean = Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
 
     /**
      * Creates a new Resources instance using the provided file path.

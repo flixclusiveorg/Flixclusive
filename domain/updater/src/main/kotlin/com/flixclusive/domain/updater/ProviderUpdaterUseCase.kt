@@ -2,7 +2,6 @@ package com.flixclusive.domain.updater
 
 import android.content.Context
 import androidx.core.app.NotificationCompat
-import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.util.android.notify
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.log.errorLog
@@ -11,11 +10,8 @@ import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.provider.util.DownloadFailed
-import com.flixclusive.model.datastore.user.ProviderPreferences
-import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
 import java.util.Collections
 import java.util.concurrent.TimeUnit
@@ -35,7 +31,6 @@ class ProviderUpdaterUseCase
     constructor(
         @ApplicationContext private val context: Context,
         private val providerManager: ProviderManager,
-        private val dataStoreManager: DataStoreManager,
         private val client: OkHttpClient,
     ) {
         // Synchronized to avoid ConcurrentModificationException
@@ -53,14 +48,10 @@ class ProviderUpdaterUseCase
             infoLog("Available updates [${outdated.size}] ${outdated.joinToString(", ")}")
             if (!notify) return
 
-            val preferences =
-                dataStoreManager
-                    .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
-                    .first()
-
+            val preferences = providerManager.providerPreferences
             val updateResults =
                 when {
-                    preferences.autoUpdate -> updateAll()
+                    preferences.isAutoUpdateEnabled -> updateAll()
                     outdatedProviders.isEmpty() -> ProviderUpdateResult.None
                     else -> ProviderUpdateResult.Outdated(outdatedProviders)
                 }
@@ -68,10 +59,12 @@ class ProviderUpdaterUseCase
             notify(updateResults)
         }
 
-        private suspend fun getOutdatedProviders(): List<ProviderMetadata> =
+        private suspend fun getOutdatedProviders(): List<ProviderMetadata> {
+            val preferences = providerManager.providerPreferences
             providerManager.metadataList.mapNotNull { (id, metadata) ->
                 if (isOutdated(id)) metadata else null
             }
+        }
 
         private fun notify(result: ProviderUpdateResult) {
             val notificationBody =

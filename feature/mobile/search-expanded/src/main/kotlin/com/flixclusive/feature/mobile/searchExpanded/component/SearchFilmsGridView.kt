@@ -52,7 +52,7 @@ internal fun SearchFilmsGridView(
             FilmCard(
                 modifier = Modifier.fillMaxSize(),
                 film = film,
-                isShowingTitle = uiPreferences.showTitleOnCards,
+                isShowingTitle = uiPreferences.shouldShowTitleOnCards,
                 onClick = openFilmScreen,
                 onLongClick = previewFilm
             )
@@ -64,7 +64,7 @@ internal fun SearchFilmsGridView(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(3.dp),
-                    isShowingTitle = uiPreferences.showTitleOnCards
+                    isShowingTitle = uiPreferences.shouldShowTitleOnCards
                 )
             }
         }

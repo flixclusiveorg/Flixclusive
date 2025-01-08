@@ -5,11 +5,9 @@ import com.flixclusive.core.util.android.saveTo
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.data.provider.PROVIDERS_FOLDER_NAME
-import com.flixclusive.model.provider.ProviderMetadata
-import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
+import com.flixclusive.model.provider.Repository
 import okhttp3.OkHttpClient
 import java.io.File
-import java.nio.charset.StandardCharsets
 import kotlin.jvm.Throws
 
 /**
@@ -34,75 +32,17 @@ internal fun Context.getExternalDirPath(): String? {
 
 private fun Context.getProvidersPathPrefix(userId: Int): String = getExternalDirPath() + "/$PROVIDERS_FOLDER_NAME/user-$userId"
 
-internal fun ProviderMetadata.toFile(
-    context: Context,
+internal fun Context.createFileForProvider(
+    providerId: String,
+    providerRepository: Repository,
     userId: Int,
     localPrefix: String? = null,
 ): File {
-    val prefix = localPrefix ?: context.getProvidersPathPrefix(userId)
-    val repository = repositoryUrl.toValidRepositoryLink()
-    val folderName = "${repository.owner}-${repository.name}".toValidFilename()
-    val fileName = id.toValidFilename()
+    val prefix = localPrefix ?: getProvidersPathPrefix(userId)
+    val repository = providerRepository
+    val folderName = "${repository.owner}-${repository.name}"
 
-    return File("$prefix/$folderName/$fileName.flx")
-}
-
-/**
- * Mutate the given filename to make it valid for a FAT filesystem,
- * replacing any invalid characters with "_".
- *
- */
-internal fun String.toValidFilename(): String {
-    if (isEmpty() || this == "." || this == "..") {
-        return "(invalid)"
-    }
-
-    val res = StringBuilder(length)
-    for (c in this) {
-        if (isValidFilenameChar(c)) {
-            res.append(c)
-        } else {
-            res.append('_')
-        }
-    }
-
-    trimFilename(res)
-    return res.toString()
-}
-
-private fun isValidFilenameChar(c: Char): Boolean {
-    val charByte = c.code.toByte()
-    // Control characters (0x00 to 0x1F) are not allowed
-    if (charByte in 0x00..0x1F) {
-        return false
-    }
-    // Specific characters are also not allowed
-    if (c.code == 0x7F) {
-        return false
-    }
-
-    return when (c) {
-        '"', '*', '/', ':', '<', '>', '?', '\\', '|' -> false
-        else -> true
-    }
-}
-
-private fun trimFilename(
-    res: StringBuilder,
-    maxBytes: Int = 254,
-) {
-    var rawBytes = res.toString().toByteArray(StandardCharsets.UTF_8)
-    if (rawBytes.size > maxBytes) {
-        // Reduce max bytes to account for "..."
-        val adjustedMaxBytes = maxBytes - 3
-        while (rawBytes.size > adjustedMaxBytes) {
-            // Remove character from the middle
-            res.deleteCharAt(res.length / 2)
-            rawBytes = res.toString().toByteArray(StandardCharsets.UTF_8)
-        }
-        // Insert "..." in the middle
-        res.insert(res.length / 2, "...")
-    }
+    return File("$prefix/$folderName/$providerId.flx")
 }
 
 @Throws(DownloadFailed::class)

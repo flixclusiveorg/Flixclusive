@@ -48,7 +48,7 @@ internal fun SeeAllScreen(
             viewModel.isMediaTypeDefault -> viewModel.currentFilterSelected
             else -> null
         },
-        isShowingFilmCardTitle = uiPreferences.showTitleOnCards,
+        isShowingFilmCardTitle = uiPreferences.shouldShowTitleOnCards,
         screenTitle = viewModel.catalog.name,
         films = viewModel.films,
         onRetry = {
