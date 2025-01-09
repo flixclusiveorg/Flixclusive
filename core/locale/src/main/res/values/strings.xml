@@ -96,6 +96,7 @@
     <string name="tv_show">TV Show</string>
 
     <!--  Extra labels  -->
+    <string name="add_debug_prefix">Add debug prefix</string>
     <string name="add_own_subtitle">Add subs</string>
     <string name="add_profile">Add profile</string>
     <string name="add_provider">Add provider</string>
@@ -110,7 +111,6 @@
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
     <string name="authors">Authors</string>
     <string name="auto_option">Auto</string>
-    <string name="add_debug_prefix">Add debug prefix</string>
     <string name="auto_update_providers">Auto-update providers</string>
     <string name="automatic_crash_report_label">Automatically send the crash data to Flixclusive\'s server.</string>
     <string name="browse_categories">Browse categories</string>
@@ -135,7 +135,6 @@
     <string name="continue_label">Continue</string>
     <string name="continue_watching">Continue Watching</string>
     <string name="copy_link">Copy link</string>
-    <string name="test">Test</string>
     <string name="currently_testing">Currently Testing</string>
     <string name="data">Data</string>
     <string name="data_and_backup">Data and backup</string>
@@ -165,6 +164,7 @@
     <string name="finish">Finish</string>
     <string name="first_time_providers_screen_title">Welcome to the Providers Screen!</string>
     <string name="flixclusive_providers">Flixclusive Providers</string>
+    <string name="gen_ai_notice">AI-generated content notice</string>
     <string name="gender_female">Female</string>
     <string name="gender_male">Male</string>
     <string name="gender_non_binary">Non-binary</string>
@@ -286,6 +286,7 @@
     <string name="sync">Sync</string>
     <string name="sync_subtitles">Sync Subtitles</string>
     <string name="system">System</string>
+    <string name="test">Test</string>
     <string name="test_provider">Test provider</string>
     <string name="test_providers">Test providers</string>
     <string name="understanding_providers">Understanding Providers</string>
@@ -394,12 +395,12 @@
     <string name="episode_non_existent_error_message_format">Episode %1$s doesn\'t exist on Season %2$s</string>
     <string name="extracting_from_provider_format">Extracting from %1$s…</string>
     <string name="extracting_from_web_view_provider_format">Running WebView for %1$s…</string>
+    <string name="failed_to_update_providers_format">Failed to update these provider(s): %1$s</string>
     <string name="fetching_from_provider_format">Fetching from %1$s…</string>
     <string name="invalid_provider_file_dex_json_msg_format">Found extracted provider file %s in your providers folder. DO NOT EXTRACT PROVIDER ZIPS!</string>
     <string name="invalid_provider_file_directory_msg_format">Found directory %s in your providers folder. DO NOT EXTRACT PROVIDER ZIPS!</string>
     <string name="next_episode_on_format">Next episode on %1$d…</string>
     <string name="providers_updated_format">The following provider(s) have been updated: %1$s</string>
-    <string name="failed_to_update_providers_format">Failed to update these provider(s): %1$s</string>
     <string name="test_providers_completed">Test results summary: %1$s</string>
     <string name="update_out_now_format">%1$s is out now</string>
     <string name="updates_out_now_provider_format">Updates for plugins are available: %1$s</string>
@@ -408,6 +409,7 @@
     <string name="action_warning_format_message">Are you sure you want to do the following action: %1$s?</string>
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>
     <string name="add_500ms_content_description">Add 500ms on subtitle delay</string>
+    <string name="add_debug_prefix_settings_description">Automatically adds a \'-debug\' prefix to providers you\'re currently debugging or developing.</string>
     <string name="add_to_watchlist_button">Add to watchlist button</string>
     <string name="add_user_button_content_desc">Add a new user profile</string>
     <string name="added_to_watchlist_button">Added to watchlist button</string>
@@ -442,12 +444,11 @@
     <string name="episodes_button_desc">An icon for episodes button</string>
     <string name="error_icon_content_desc">Error icon</string>
     <string name="expand_card_icon_content_desc">Expand test result card icon</string>
+    <string name="film_card_titles_settings_description">Display the titles on under the media cards.</string>
     <string name="film_item_content_description">A film\'s backdrop, picture or poster.</string>
     <string name="filter_button">Filter button</string>
     <string name="flixclusive_icon_content_desc">Flixclusive icon</string>
     <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>
-    <string name="add_debug_prefix_settings_description">Automatically adds a \'-debug\' prefix to providers you\'re currently debugging or developing.</string>
-    <string name="film_card_titles_settings_description">Display the titles on under the media cards.</string>
     <string name="forward_button_content_description">Forward button for the player</string>
     <string name="incognito_content_desc">Pauses watch history, search history, and any data that can be logged by the app.</string>
     <string name="lock_button_desc">An icon for locking the player</string>
@@ -531,6 +532,9 @@
     <string name="splash_notice_permissions_header">Allow Permissions</string>
 
     <!--  Disclaimer/Privacy Notice messages  -->
+    <string name="gen_ai_disclaimer_message">
+        The app uses Generative AI (GenAI) to provide content such as avatars, descriptions, labels, and other resources. The author understands the concerns associated with AI-generated content and acknowledges that some users may feel uneasy about its use. However, maintaining the app as a whole is a demanding task, and AI significantly simplifies the process of generating the mentioned content. I hope you still find the app useful!
+    </string>
     <string name="privacy_notice_crash_log_sender">
         <![CDATA[
         The app collects crash data automatically to help improve your experience. You can opt out of crash data collection in the settings. Please note, the app uses an unsafe network client (e.g., ignoring SSL verification and other security mechanisms) to fully integrate with third-party providers. Use at your own risk.

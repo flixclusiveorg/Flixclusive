@@ -61,26 +61,31 @@ import com.flixclusive.core.locale.R as LocaleR
 
 private fun getEnterAnimation(delay: Int): EnterTransition {
     return fadeIn(
-        animationSpec = tween(
-            durationMillis = ENTER_DELAY,
-            delayMillis = delay
+        animationSpec =
+            tween(
+                durationMillis = ENTER_DELAY,
+                delayMillis = delay,
+            ),
+    ) +
+        slideInHorizontally(
+            tween(delayMillis = delay),
         )
-    ) + slideInHorizontally(
-        tween(delayMillis = delay)
-    )
 }
 
 private fun getExitAnimation(delay: Int): ExitTransition {
     return fadeOut(
-        animationSpec = tween(
-            delayMillis = delay,
+        animationSpec =
+            tween(
+                delayMillis = delay,
+            ),
+    ) +
+        slideOutHorizontally(
+            animationSpec =
+                tween(
+                    durationMillis = EXIT_DELAY,
+                    delayMillis = delay,
+                ),
         )
-    ) + slideOutHorizontally(
-        animationSpec = tween(
-            durationMillis = EXIT_DELAY,
-            delayMillis = delay
-        )
-    )
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -89,7 +94,7 @@ internal fun ConsentScreen(
     modifier: Modifier = Modifier,
     animatedScope: AnimatedVisibilityScope,
     sharedTransitionScope: SharedTransitionScope,
-    onAgree: (isOptingIn: Boolean) -> Unit
+    onAgree: (isOptingIn: Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     val consents = remember { context.getConsents() }
@@ -98,15 +103,16 @@ internal fun ConsentScreen(
     val isOptingIn = remember { mutableStateOf(true) }
 
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize(),
+        modifier =
+            modifier
+                .fillMaxSize(),
         contentPadding = PaddingValues(vertical = PaddingHorizontal),
-        verticalArrangement = Arrangement.spacedBy(15.dp)
+        verticalArrangement = Arrangement.spacedBy(15.dp),
     ) {
         item {
             Tag(
                 animatedScope = animatedScope,
-                sharedTransitionScope = sharedTransitionScope
+                sharedTransitionScope = sharedTransitionScope,
             )
         }
 
@@ -117,20 +123,22 @@ internal fun ConsentScreen(
             with(animatedScope) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(15.dp, Alignment.CenterVertically),
-                    modifier = Modifier.animateEnterExit(
-                        enter = getEnterAnimation(enterDelay),
-                        exit = getExitAnimation(exitDelay)
-                    )
+                    modifier =
+                        Modifier.animateEnterExit(
+                            enter = getEnterAnimation(enterDelay),
+                            exit = getExitAnimation(exitDelay),
+                        ),
                 ) {
                     HorizontalDivider(
-                        modifier = Modifier
-                            .padding(vertical = 8.dp),
-                        thickness = 0.5.dp
+                        modifier =
+                            Modifier
+                                .padding(vertical = 8.dp),
+                        thickness = 0.5.dp,
                     )
 
                     HeaderBodyComponent(
                         consent = it,
-                        isOptingIn = isOptingIn
+                        isOptingIn = isOptingIn,
                     )
                 }
             }
@@ -140,18 +148,20 @@ internal fun ConsentScreen(
             with(animatedScope) {
                 Button(
                     onClick = { onAgree(isOptingIn.value) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
-                    ),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(),
+                        ),
                     shape = MaterialTheme.shapes.extraSmall,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 60.dp)
-                        .animateEnterExit(
-                            enter = getEnterAnimation(1100),
-                            exit = getExitAnimation(0)
-                        )
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 60.dp)
+                            .animateEnterExit(
+                                enter = getEnterAnimation(1100),
+                                exit = getExitAnimation(0),
+                            ),
                 ) {
                     Text(
                         text = stringResource(id = LocaleR.string.understood),
@@ -174,62 +184,72 @@ internal fun Context.getConsents(): List<Consent> {
         Consent(
             title = getString(LocaleR.string.providers_disclaimer),
             description = getString(LocaleR.string.provider_disclaimer_message),
-        )
+        ),
+        Consent(
+            title = getString(LocaleR.string.gen_ai_notice),
+            description = getString(LocaleR.string.gen_ai_disclaimer_message),
+        ),
     )
 }
 
 @Composable
 private fun HeaderBodyComponent(
-    modifier: Modifier = Modifier,
     consent: Consent,
     isOptingIn: MutableState<Boolean>,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .padding(vertical = 8.dp),
-        verticalArrangement = Arrangement.SpaceBetween
+        modifier =
+            modifier
+                .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Box(
-            modifier = Modifier
-                .padding(bottom = 10.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-                    shape = MaterialTheme.shapes.extraSmall
-                )
+            modifier =
+                Modifier
+                    .padding(bottom = 10.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+                        shape = MaterialTheme.shapes.extraSmall,
+                    ),
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier
-                    .padding(8.dp)
+                modifier =
+                    Modifier
+                        .padding(8.dp),
             ) {
                 Text(
                     text = consent.title,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Black
-                    )
+                    style =
+                        MaterialTheme.typography.headlineMedium.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Black,
+                        ),
                 )
 
                 Text(
                     text = consent.description,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Normal
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Normal,
+                        ),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(),
                 )
             }
         }
-
 
         consent.optInMessage?.let {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier
-                    .padding(top = 5.dp)
-                    .align(Alignment.CenterHorizontally)
+                modifier =
+                    Modifier
+                        .padding(top = 5.dp)
+                        .align(Alignment.CenterHorizontally),
             ) {
                 CustomCheckbox(
                     checked = isOptingIn.value,
@@ -240,10 +260,11 @@ private fun HeaderBodyComponent(
 
                 Text(
                     text = it,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
                 )
             }
         }
@@ -268,8 +289,9 @@ private fun ConsentPreview() {
 
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier =
+                Modifier
+                    .fillMaxSize(),
         ) {
             SharedTransitionLayout {
                 AnimatedContent(
@@ -278,19 +300,19 @@ private fun ConsentPreview() {
                         EnterTransition.None
                             .togetherWith(ExitTransition.None)
                     },
-                    label = "test_transition"
+                    label = "test_transition",
                 ) {
                     if (it == true || it == null) {
                         LoadingTag(
                             isLoading = it ?: false,
                             animatedScope = this@AnimatedContent,
-                            sharedTransitionScope = this@SharedTransitionLayout
+                            sharedTransitionScope = this@SharedTransitionLayout,
                         )
                     } else if (it == false) {
                         ConsentScreen(
                             animatedScope = this@AnimatedContent,
                             sharedTransitionScope = this@SharedTransitionLayout,
-                            onAgree = { isLoading = null }
+                            onAgree = { isLoading = null },
                         )
                     }
                 }
