@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.provider.component
 
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -33,29 +32,17 @@ internal fun InstalledProviderCard(
     modifier: Modifier = Modifier,
     dragModifier: Modifier = Modifier,
 ) {
-    val cardScale =
-        animateFloatAsState(
-            targetValue = if (isDraggingProvider() && isDraggableProvider()) 1.1F else 1F,
-            label = "CardScale",
-        )
-
     val cardAlpha =
         animateFloatAsState(
             targetValue = if ((isDraggingProvider() && isDraggableProvider()) || enabledProvider()) 1F else 0.6F,
             label = "CardAlpha",
         )
 
-    val elevation =
-        animateDpAsState(
-            targetValue = if (isDraggingProvider() && isDraggableProvider()) 10.dp else 3.dp,
-            label = "CardElevation",
-        )
-
     Card(
         onClick = onClick,
         shape = MaterialTheme.shapes.medium,
         interactionSource = interactionSource,
-        elevation = CardDefaults.cardElevation(defaultElevation = elevation.value),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         colors =
             CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
@@ -66,8 +53,6 @@ internal fun InstalledProviderCard(
                 .padding(vertical = 3.dp)
                 .graphicsLayer {
                     alpha = cardAlpha.value
-                    scaleX = cardScale.value
-                    scaleY = cardScale.value
                 },
     ) {
         Column(
