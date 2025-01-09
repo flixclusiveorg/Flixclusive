@@ -30,4 +30,21 @@ data class ProviderFromPreferences(
     val filePath: String,
     val isDisabled: Boolean,
     val isDebug: Boolean = false,
-)
+) {
+    override fun equals(other: Any?): Boolean =
+        when (other) {
+            is ProviderFromPreferences -> id == other.id
+            is String -> id == other
+            else -> super.equals(other)
+        }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + id.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + filePath.hashCode()
+        result = 31 * result + isDisabled.hashCode()
+        result = 31 * result + isDebug.hashCode()
+        return result
+    }
+}
