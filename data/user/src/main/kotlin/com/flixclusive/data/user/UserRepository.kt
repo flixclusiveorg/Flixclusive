@@ -8,7 +8,7 @@ interface UserRepository {
 
     fun observeUser(id: Int): Flow<User?>
 
-    suspend fun addUser(user: User)
+    suspend fun addUser(user: User): Long
 
     suspend fun updateUser(user: User)
 

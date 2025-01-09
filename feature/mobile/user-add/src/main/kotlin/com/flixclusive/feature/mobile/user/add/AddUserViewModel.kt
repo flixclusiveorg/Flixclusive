@@ -26,89 +26,105 @@ import kotlin.random.Random
 
 internal sealed class AddUserState {
     data object Added : AddUserState()
+
     data object NotAdded : AddUserState()
 }
 
 @HiltViewModel
-internal class AddUserViewModel @Inject constructor(
-    homeItemsProviderUseCase: HomeItemsProviderUseCase,
-    private val userRepository: UserRepository,
-    private val tmdbRepository: TMDBRepository,
-    private val userSessionManager: UserSessionManager
-) : ViewModel() {
-    private val defaultBackgrounds = listOf(
-        "/13bHg4hwhPqauZhxgMzCLSIAM89.jpg",
-        "/JfEDrH4QObfVvFtnqzZfkUp9x4.jpg",
-        "/6WmpbBcZeo6Vr9f7dMqpBobCSjR.jpg",
-        "/cjrSkULmG2btwLOEvWZCeO5KRY2.jpg",
-        "/bMSbEx9vXCSGN4NEktjVIEuibn2.jpg",
-        "/5UhrZoYLLlbigxS578hyQn2qf9W.jpg",
-    ).shuffled()
+internal class AddUserViewModel
+    @Inject
+    constructor(
+        homeItemsProviderUseCase: HomeItemsProviderUseCase,
+        private val userRepository: UserRepository,
+        private val tmdbRepository: TMDBRepository,
+        private val userSessionManager: UserSessionManager,
+    ) : ViewModel() {
+        private val defaultBackgrounds =
+            listOf(
+                "/13bHg4hwhPqauZhxgMzCLSIAM89.jpg",
+                "/JfEDrH4QObfVvFtnqzZfkUp9x4.jpg",
+                "/6WmpbBcZeo6Vr9f7dMqpBobCSjR.jpg",
+                "/cjrSkULmG2btwLOEvWZCeO5KRY2.jpg",
+                "/bMSbEx9vXCSGN4NEktjVIEuibn2.jpg",
+                "/5UhrZoYLLlbigxS578hyQn2qf9W.jpg",
+            ).shuffled()
 
-    private val _state = MutableStateFlow<AddUserState>(AddUserState.NotAdded)
-    val state = _state.asStateFlow()
+        private val _state = MutableStateFlow<AddUserState>(AddUserState.NotAdded)
+        val state = _state.asStateFlow()
 
-    private val _images = MutableStateFlow(emptyList<String>())
-    val images = _images.asStateFlow()
+        private val _images = MutableStateFlow(emptyList<String>())
+        val images = _images.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            with(homeItemsProviderUseCase) {
-                this@with.state
-                    .takeWhile { it.rowItems[1].isEmpty() }
-                    .onEach {
-                        val firstCatalog = it.catalogs.first()
-                        val firstRowOfFilms = it.rowItems.first()
+        init {
+            viewModelScope.launch {
+                with(homeItemsProviderUseCase) {
+                    this@with
+                        .state
+                        .takeWhile { it.rowItems[1].isEmpty() }
+                        .onEach {
+                            val firstCatalog = it.catalogs.first()
+                            val firstRowOfFilms = it.rowItems.first()
 
-                        var backgrounds: List<String>? = null
-                        if (firstRowOfFilms.isEmpty()) {
-                            getCatalogItems(
-                                catalog = firstCatalog, index = 0, page = 1
-                            )
-                        } else {
-                            backgrounds = firstRowOfFilms.mapNotNull { media ->
-                                media.getBestImage()
-                            }.take(3)
-                        }
+                            var backgrounds: List<String>? = null
+                            if (firstRowOfFilms.isEmpty()) {
+                                getCatalogItems(
+                                    catalog = firstCatalog,
+                                    index = 0,
+                                    page = 1,
+                                )
+                            } else {
+                                backgrounds =
+                                    firstRowOfFilms
+                                        .mapNotNull { media ->
+                                            media.getBestImage()
+                                        }.take(3)
+                            }
 
-                        if (backgrounds?.size == 3) {
-                            _images.update { backgrounds }
-                            cancel()
-                        }
+                            if (backgrounds?.size == 3) {
+                                _images.update { backgrounds }
+                                cancel()
+                            }
+                        }.catch { _images.value = defaultBackgrounds }
+                        .collect()
+                }
+            }
+        }
+
+        val user =
+            mutableStateOf(
+                User(
+                    id = 0,
+                    name = "",
+                    image = Random.nextInt(AVATARS_IMAGE_COUNT),
+                ),
+            )
+
+        private var addJob: Job? = null
+
+        fun addUser(
+            user: User,
+            isSigningIn: Boolean,
+        ) {
+            if (addJob?.isActive == true) {
+                return
+            }
+
+            addJob =
+                viewModelScope.launch {
+                    val userId = userRepository.addUser(user).toInt()
+                    if (isSigningIn) {
+                        val validatedUser = user.copy(id = userId)
+                        userSessionManager.signIn(validatedUser)
                     }
-                    .catch { _images.value = defaultBackgrounds }
-                    .collect()
-            }
+                    _state.value = AddUserState.Added
+                }
+        }
+
+        private suspend fun Film.getBestImage(): String? {
+            return tmdbRepository
+                .getPosterWithoutLogo(
+                    id = tmdbId!!,
+                    mediaType = filmType.type,
+                ).data ?: backdropImage
         }
     }
-
-    val user = mutableStateOf(
-        User(
-            id = 0,
-            name = "",
-            image = Random.nextInt(AVATARS_IMAGE_COUNT)
-        )
-    )
-
-    private var addJob: Job? = null
-
-    fun addUser(user: User, isSigningIn: Boolean) {
-        if (addJob?.isActive == true)
-            return
-
-        addJob = viewModelScope.launch {
-            userRepository.addUser(user)
-            if (isSigningIn) {
-                userSessionManager.signIn(user)
-            }
-            _state.value = AddUserState.Added
-        }
-    }
-
-    private suspend fun Film.getBestImage(): String? {
-        return tmdbRepository.getPosterWithoutLogo(
-            id = tmdbId!!,
-            mediaType = filmType.type
-        ).data ?: backdropImage
-    }
-}
