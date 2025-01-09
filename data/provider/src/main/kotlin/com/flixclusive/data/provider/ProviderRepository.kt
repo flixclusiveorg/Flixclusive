@@ -49,6 +49,8 @@ class ProviderRepository
         }
 
         suspend fun addToPreferences(preferenceItem: ProviderFromPreferences) {
+            if (providerPositions.contains(preferenceItem)) return
+
             providerPositions.add(preferenceItem)
             saveToPreferences()
         }
@@ -102,8 +104,9 @@ class ProviderRepository
         }
 
         internal suspend fun removeFromPreferences(id: String) {
-            providerPositions.removeIf { it.id == id }
-            saveToPreferences()
+            if (providerPositions.removeIf { it.id == id }) {
+                saveToPreferences()
+            }
         }
 
         suspend fun toggleProvider(id: String) {
@@ -133,6 +136,8 @@ class ProviderRepository
                     .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
                     .first()
 
-            preferences.providers.forEach(providerPositions::add)
+            preferences.providers.forEach {
+                providerPositions.add(it)
+            }
         }
     }

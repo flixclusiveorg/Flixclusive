@@ -5,6 +5,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -15,39 +17,37 @@ internal class ReactiveList<T>(
     private val _operations = MutableSharedFlow<ListOperation<T>>()
     val operations get() = _operations.asSharedFlow()
 
-    fun add(item: T) {
-        scope.launch {
-            _operations.emit(ListOperation.Add(item))
-            list.add(item)
-        }
-    }
+    private val mutex = Mutex()
 
-    fun replaceAt(
+    suspend fun add(item: T) =
+        mutex.withLock {
+            list.add(item)
+            _operations.emit(ListOperation.Add(item))
+        }
+
+    suspend fun replaceAt(
         index: Int,
         item: T,
-    ) {
-        scope.launch {
-            list[index] = item
-            _operations.emit(ListOperation.Replace(index, item))
-        }
+    ) = mutex.withLock {
+        list[index] = item
+        _operations.emit(ListOperation.Replace(index, item))
     }
 
-    fun removeIf(filter: (T) -> Boolean): Boolean {
-        val item = list.find(filter)
+    suspend fun removeIf(filter: (T) -> Boolean): Boolean =
+        mutex.withLock {
+            val item = list.find(filter)
 
-        if (item != null) {
-            scope.launch {
+            if (item != null) {
                 _operations.emit(ListOperation.Remove(item))
             }
+
+            return list.remove(item)
         }
 
-        return list.remove(item)
-    }
-
-    fun move(
+    suspend fun move(
         from: Int,
         to: Int,
-    ) {
+    ) = mutex.withLock {
         scope.launch {
             if (from !in indices && to !in indices) return@launch
 
@@ -58,12 +58,11 @@ internal class ReactiveList<T>(
         }
     }
 
-    fun clear() {
-        scope.launch {
-            _operations.emit(ListOperation.Clear())
+    suspend fun clear() =
+        mutex.withLock {
             list.clear()
+            _operations.emit(ListOperation.Clear())
         }
-    }
 }
 
 sealed class ListOperation<T> {
