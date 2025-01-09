@@ -15,11 +15,13 @@ import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastFirstOrNull
@@ -54,35 +56,39 @@ import com.flixclusive.core.locale.R as LocaleR
 @Destination
 @Composable
 internal fun SettingsScreen(
-    navigator: SettingsScreenNavigator
+    navigator: SettingsScreenNavigator,
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
-    val viewModel = hiltViewModel<SettingsViewModel>()
     val currentUser by viewModel.userSessionManager.currentUser.collectAsStateWithLifecycle()
 
     val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<String>()
     val isListAndDetailVisible =
-        scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
-        && scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
+        scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded &&
+            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
 
+    val backgroundAlpha = remember { mutableFloatStateOf(1F) }
     val backgroundBrush = getAdaptiveBackground(currentUser)
 
-    val items = remember {
-        mapOf(
-            LocaleR.string.application to listOf(
-                AppearanceTweakScreen(viewModel),
-                PlayerTweakScreen(viewModel),
-                DataTweakScreen(viewModel),
-                ProvidersTweakScreen(viewModel),
-                SubtitlesTweakScreen(viewModel),
-                SystemTweakScreen(viewModel),
-            ),
-            LocaleR.string.github to listOf(
-                IssueBugTweakNavigation,
-                FeatureRequestTweakNavigation,
-                RepositoryTweakNavigation
+    val items =
+        remember {
+            mapOf(
+                LocaleR.string.application to
+                    listOf(
+                        AppearanceTweakScreen(viewModel),
+                        PlayerTweakScreen(viewModel),
+                        DataTweakScreen(viewModel),
+                        ProvidersTweakScreen(viewModel),
+                        SubtitlesTweakScreen(viewModel),
+                        SystemTweakScreen(viewModel),
+                    ),
+                LocaleR.string.github to
+                    listOf(
+                        IssueBugTweakNavigation,
+                        FeatureRequestTweakNavigation,
+                        RepositoryTweakNavigation,
+                    ),
             )
-        )
-    }
+        }
     val navigationItems = remember { items.values.flatten() }
 
     BackHandler(scaffoldNavigator.canNavigateBack()) {
@@ -96,34 +102,39 @@ internal fun SettingsScreen(
         ) {
             AnimatedContent(targetState = isListAndDetailVisible, label = "settings screen") {
                 ListDetailPaneScaffold(
-                    modifier = Modifier.drawBehind {
-                        if (isListAndDetailVisible) {
-                            drawRect(backgroundBrush)
-                        }
-                    },
+                    modifier =
+                        Modifier.drawBehind {
+                            if (isListAndDetailVisible) {
+                                drawRect(backgroundBrush, alpha = backgroundAlpha.floatValue)
+                            }
+                        },
                     directive = scaffoldNavigator.scaffoldDirective,
                     value = scaffoldNavigator.scaffoldValue,
                     listPane = {
                         AnimatedPane {
                             ListContent(
-                                viewModel = viewModel,
                                 items = items,
                                 currentUser = { currentUser!! },
                                 navigator = navigator,
+                                onScroll = {
+                                    backgroundAlpha.floatValue = it
+                                },
                                 onItemClick = { item ->
                                     scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
                                 },
-                                modifier = Modifier.drawBehind {
-                                    if (!isListAndDetailVisible) {
-                                        drawRect(backgroundBrush)
-                                    }
-                                },
+                                modifier =
+                                    Modifier.drawBehind {
+                                        if (!isListAndDetailVisible) {
+                                            drawRect(backgroundBrush)
+                                        }
+                                    },
                             )
                         }
                     },
                     detailPane = {
                         val isListVisible =
-                            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
+                            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] ==
+                                PaneAdaptedValue.Expanded
 
                         AnimatedPane {
                             DetailsScaffold(
@@ -132,19 +143,19 @@ internal fun SettingsScreen(
                                 navigateBack = {
                                     if (scaffoldNavigator.canNavigateBack()) {
                                         scaffoldNavigator.navigateBack(
-                                            backNavigationBehavior = BackNavigationBehavior.PopLatest
+                                            backNavigationBehavior = BackNavigationBehavior.PopLatest,
                                         )
                                     }
                                 },
                                 content = {
                                     RenderTweakScreen(
                                         key = scaffoldNavigator.currentDestination?.content,
-                                        items = navigationItems
+                                        items = navigationItems,
                                     )
-                                }
+                                },
                             )
                         }
-                    }
+                    },
                 )
             }
         }
@@ -153,61 +164,67 @@ internal fun SettingsScreen(
 
 @Composable
 private fun RenderTweakScreen(
-    key: String?, items: List<BaseTweakScreen<out FlixclusivePrefs>>
+    key: String?,
+    items: List<BaseTweakScreen<out FlixclusivePrefs>>,
 ) {
-    items.fastFirstOrNull {
-        if (it is BaseTweakNavigation)
-            return@fastFirstOrNull false
+    items
+        .fastFirstOrNull {
+            if (it is BaseTweakNavigation) {
+                return@fastFirstOrNull false
+            }
 
-        it.key.name == key
-    }?.Content()
+            it.key.name == key
+        }?.Content()
 }
 
 @Composable
-private fun getAdaptiveBackground(
-    currentUser: User?,
-): Brush {
+private fun getAdaptiveBackground(currentUser: User?): Brush {
     val context = LocalContext.current
 
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryColor = MaterialTheme.colorScheme.primary.copy(0.3F)
 
     return remember(currentUser?.image) {
-        val color = if (currentUser != null) {
-            val avatarId = context.getAvatarResource(currentUser.image)
-            val drawable = ContextCompat.getDrawable(context, avatarId)!!
+        val colors =
+            if (currentUser != null) {
+                val avatarId = context.getAvatarResource(currentUser.image)
+                val drawable = ContextCompat.getDrawable(context, avatarId)!!
 
-            val palette = Palette
-                .from(drawable.toBitmap())
-                .generate()
+                val palette =
+                    Palette
+                        .from(drawable.toBitmap())
+                        .generate()
 
-            val swatch = palette.let {
-                it.vibrantSwatch
-                    ?: it.lightVibrantSwatch
-                    ?: it.lightMutedSwatch
+                val backgroundColor = Color(palette.dominantSwatch?.rgb ?: surfaceColor.toArgb())
+                val tubeLightColor = Color(palette.lightVibrantSwatch?.rgb ?: surfaceColor.toArgb())
+
+                listOf(
+                    tubeLightColor.copy(0.5F),
+                    backgroundColor.copy(0.2F),
+                    surfaceColor,
+                )
+            } else {
+                listOf(primaryColor, surfaceColor)
             }
 
-            swatch?.rgb?.let { Color(it) }
-                ?: primaryColor
-        } else surfaceColor
-
-        Brush.verticalGradient(
-            0F to color.copy(0.3F),
-            0.4F to surfaceColor
-        )
+        Brush.verticalGradient(colors)
     }
 }
 
 interface SettingsScreenNavigator : GoBackAction {
     fun openProvidersScreen()
+
     fun openLink(url: String)
 }
 
-internal fun getNavigatorPreview() = object : SettingsScreenNavigator {
-    override fun openProvidersScreen() = Unit
-    override fun openLink(url: String) = Unit
-    override fun goBack() = Unit
-}
+internal fun getNavigatorPreview() =
+    object : SettingsScreenNavigator {
+        override fun openProvidersScreen() = Unit
+
+        override fun openLink(url: String) = Unit
+
+        override fun goBack() = Unit
+    }
 
 @Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
 @Composable
@@ -215,7 +232,7 @@ private fun TabletPreview() {
     FlixclusiveTheme {
         Surface {
             SettingsScreen(
-                navigator = getNavigatorPreview()
+                navigator = getNavigatorPreview(),
             )
         }
     }
@@ -227,7 +244,7 @@ private fun PhonePreview() {
     FlixclusiveTheme {
         Surface {
             SettingsScreen(
-                navigator = getNavigatorPreview()
+                navigator = getNavigatorPreview(),
             )
         }
     }
