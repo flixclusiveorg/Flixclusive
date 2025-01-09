@@ -110,11 +110,7 @@ internal class ProvidersScreenViewModel
                         providerApiRepository.removeApi(id)
                     } else {
                         try {
-                            val api = providerApiRepository.getApi(id) ?: return@launch
-                            providerApiRepository.addApi(
-                                id = id,
-                                api = api,
-                            )
+                            providerManager.loadApiFromProvider(id = id)
                         } catch (e: Throwable) {
                             providerRepository.toggleProvider(id = id)
                             errorLog(e)

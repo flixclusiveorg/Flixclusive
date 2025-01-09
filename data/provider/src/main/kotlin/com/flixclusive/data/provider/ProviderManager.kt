@@ -38,6 +38,7 @@ import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderManifest
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
+import com.flixclusive.provider.Provider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.StateFlow
@@ -346,26 +347,22 @@ class ProviderManager
                     dynamicResourceLoader.cleanupArtifacts(file)
                 }
 
+                var forceDisable = false
                 try {
                     if (!preferenceItem.isDisabled) {
-                        val api = provider.getApi(context, client)
-
-                        providerApiRepository.addApi(
-                            id = metadata.id,
-                            api = api,
-                        )
                     }
-                } finally {
-                    // TODO: Fix isDisabled property here
+                } catch (_: Exception) {
+                    forceDisable = true
+
                     val message = context.getApiCrashMessage(provider = metadata.name)
                     context.showToastOnProviderCrash(message)
                     errorLog(message)
-
+                } finally {
                     providerRepository.add(
                         classLoader = loader,
                         provider = provider,
                         metadata = metadata,
-                        preferenceItem = preferenceItem.copy(isDisabled = true),
+                        preferenceItem = preferenceItem.copy(isDisabled = forceDisable),
                     )
                 }
             } catch (e: Throwable) {
@@ -374,6 +371,26 @@ class ProviderManager
                 errorLog("${metadata.name} crashed with error!")
                 errorLog(e)
             }
+        }
+
+        fun loadApiFromProvider(id: String) {
+            val provider =
+                providerRepository.getProvider(id)
+                    ?: throw NullPointerException("Provider [$id] is not yet loaded!")
+
+            loadApiFromProvider(id, provider)
+        }
+
+        private fun loadApiFromProvider(
+            id: String,
+            provider: Provider,
+        ) {
+            val api = provider.getApi(context, client)
+
+            providerApiRepository.addApi(
+                id = id,
+                api = api,
+            )
         }
 
         @Suppress("UNCHECKED_CAST")
