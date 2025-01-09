@@ -22,10 +22,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
-object NullUserPreferences : NullPointerException("User preferences cannot be null") {
-    private fun readResolve(): Any = NullUserPreferences
-}
-
 internal const val SYSTEM_PREFS_FILENAME = "system-preferences.json"
 private val Context.systemPreferences: DataStore<SystemPreferences> by dataStore(
     fileName = SYSTEM_PREFS_FILENAME,
@@ -78,11 +74,15 @@ class DataStoreManager
         inline fun <reified T : UserPreferences> getUserPrefs(key: Preferences.Key<String>): Flow<T> {
             return synchronized(lock) {
                 userPreferences.data.map { preferences ->
-                    val data =
-                        preferences[key]
-                            ?: return@map T::class.java.getDeclaredConstructor().newInstance()
+                    val data = preferences[key]
+                    val instance =
+                        if (data != null) {
+                            Json.decodeFromString(data)
+                        } else {
+                            T::class.java.getDeclaredConstructor().newInstance()
+                        }
 
-                    Json.decodeFromString(data)
+                    instance
                 }
             }
         }
@@ -92,10 +92,17 @@ class DataStoreManager
             crossinline transform: suspend (t: T) -> T,
         ) {
             userPreferences.edit { preferences ->
-                val oldValue = preferences[key] ?: throw NullUserPreferences
+                val oldValue = preferences[key]
                 val newValue =
                     withIOContext {
-                        transform(Json.decodeFromString(oldValue))
+                        val instance =
+                            if (oldValue != null) {
+                                Json.decodeFromString(oldValue)
+                            } else {
+                                T::class.java.getDeclaredConstructor().newInstance()
+                            }
+
+                        transform(instance)
                     }
 
                 preferences[key] = Json.encodeToString(newValue)
