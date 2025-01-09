@@ -7,6 +7,7 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -42,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -52,6 +55,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFilter
+import androidx.core.view.HapticFeedbackConstantsCompat
+import androidx.core.view.ViewCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
@@ -62,7 +67,6 @@ import com.flixclusive.core.ui.common.navigation.navigator.ProvidersScreenNaviga
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
-import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.data.provider.util.getApiCrashMessage
@@ -71,11 +75,10 @@ import com.flixclusive.feature.mobile.provider.component.CustomButton
 import com.flixclusive.feature.mobile.provider.component.InstalledProviderCard
 import com.flixclusive.feature.mobile.provider.component.ProfileHandlerButtons
 import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
-import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
-import com.flixclusive.feature.mobile.provider.util.rememberDragDropListState
+import com.flixclusive.feature.mobile.provider.reorderable.ReorderableItem
+import com.flixclusive.feature.mobile.provider.reorderable.rememberReorderableLazyListState
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -98,21 +101,29 @@ internal fun ProvidersScreen(
     val searchExpanded = rememberSaveable { mutableStateOf(false) }
     var providerToUninstall by rememberSaveable { mutableStateOf<ProviderMetadata?>(null) }
 
+    val view = LocalView.current
     val helpTooltipState = rememberTooltipState(isPersistent = true)
     val scope = rememberCoroutineScope()
-    val overscrollJob = remember { mutableStateOf<Job?>(null) }
-    val dragDropListState =
-        rememberDragDropListState(
-            onMove = { fromIndex, toIndex ->
+    val lazyListState = rememberLazyListState()
+    val reorderableLazyListState =
+        rememberReorderableLazyListState(
+            lazyListState = lazyListState,
+            onMove = { from, to ->
                 if (!searchExpanded.value) {
                     // -1 since there's a header
-                    viewModel.onMove(fromIndex - 1, toIndex - 1)
+                    with(viewModel.providers) {
+                        add(from.index - 1, removeAt(to.index - 1))
+                    }
+                    viewModel.onMove(from.index - 1, to.index - 1)
+                    ViewCompat.performHapticFeedback(
+                        view,
+                        HapticFeedbackConstantsCompat.SEGMENT_FREQUENT_TICK,
+                    )
                 }
             },
         )
-    val listState = dragDropListState.getLazyListState()
-    val shouldShowTopBar by listState.isScrollingUp()
-    val listIsAtTop by listState.isAtTop()
+    val shouldShowTopBar by lazyListState.isScrollingUp()
+    val listIsAtTop by lazyListState.isAtTop()
 
     LaunchedEffect(error) {
         if (error == null) return@LaunchedEffect
@@ -196,10 +207,10 @@ internal fun ProvidersScreen(
                         initialContentExit = fadeOut(),
                     )
                 },
+                modifier = Modifier.fillMaxSize(),
             ) { state ->
                 if (state) {
                     EmptyDataMessage(
-                        modifier = Modifier.fillMaxSize(),
                         description = stringResource(LocaleR.string.empty_providers_list_message),
                     ) {
                         Column(
@@ -220,20 +231,9 @@ internal fun ProvidersScreen(
                     }
                 } else {
                     LazyColumn(
-                        state = listState,
+                        state = lazyListState,
                         contentPadding =
-                            PaddingValues(
-                                bottom = FabButtonSize * 2,
-                            ),
-                        modifier =
-                            Modifier
-                                .padding(horizontal = 10.dp)
-                                .dragGestureHandler(
-                                    scope = scope,
-                                    itemListDragAndDropState = dragDropListState,
-                                    overscrollJob = overscrollJob,
-                                    feedbackLongPress = getFeedbackOnLongPress(),
-                                ),
+                            PaddingValues(bottom = FabButtonSize * 2, end = 10.dp, start = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         item {
@@ -277,27 +277,41 @@ internal fun ProvidersScreen(
                             items = filteredProviders ?: viewModel.providers,
                             key = { _, item -> item.id },
                         ) { index, metadata ->
-                            InstalledProviderCard(
-                                providerMetadata = metadata,
-                                isDraggableProvider = { !searchExpanded.value },
-                                openSettings = { navigator.openProviderSettings(metadata) },
-                                onClick = { navigator.openProviderInfo(metadata) },
-                                uninstallProvider = { providerToUninstall = metadata },
-                                onToggleProvider = { viewModel.toggleProvider(id = metadata.id) },
-                                enabledProvider = {
-                                    val isDisabled = providerToggles.getOrNull(index)
+                            ReorderableItem(reorderableLazyListState, metadata.id) { isDragging ->
+                                val interactionSource = remember { MutableInteractionSource() }
 
-                                    !metadata.isNotUsable && isDisabled == false
-                                },
-                                displacementOffsetProvider = {
-                                    if (index + 1 == dragDropListState.getCurrentIndexOfDraggedListItem()) {
-                                        dragDropListState.elementDisplacement.takeIf { it != 0f }
-                                    } else {
-                                        null
-                                    }
-                                },
-                                modifier = Modifier,
-                            )
+                                InstalledProviderCard(
+                                    providerMetadata = metadata,
+                                    interactionSource = interactionSource,
+                                    isDraggableProvider = { !searchExpanded.value },
+                                    openSettings = { navigator.openProviderSettings(metadata) },
+                                    onClick = { navigator.openProviderInfo(metadata) },
+                                    uninstallProvider = { providerToUninstall = metadata },
+                                    onToggleProvider = { viewModel.toggleProvider(id = metadata.id) },
+                                    enabledProvider = {
+                                        val isDisabled = providerToggles.getOrNull(index)
+
+                                        !metadata.isNotUsable && isDisabled == false
+                                    },
+                                    isDraggingProvider = { isDragging },
+                                    dragModifier =
+                                        Modifier.draggableHandle(
+                                            onDragStarted = {
+                                                ViewCompat.performHapticFeedback(
+                                                    view,
+                                                    HapticFeedbackConstantsCompat.GESTURE_START,
+                                                )
+                                            },
+                                            onDragStopped = {
+                                                ViewCompat.performHapticFeedback(
+                                                    view,
+                                                    HapticFeedbackConstantsCompat.GESTURE_END,
+                                                )
+                                            },
+                                            interactionSource = interactionSource,
+                                        ),
+                                )
+                            }
                         }
                     }
                 }

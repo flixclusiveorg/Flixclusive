@@ -26,7 +26,6 @@ internal class ReactiveList<T>(
         item: T,
     ) = mutex.withLock {
         list[index] = item
-        _operations.emit(ListOperation.Replace(index, item))
     }
 
     suspend fun removeIf(filter: (T) -> Boolean): Boolean =
@@ -48,14 +47,11 @@ internal class ReactiveList<T>(
 
         val item = list.removeAt(from)
         list.add(to, item)
-
-        _operations.emit(ListOperation.Move(from, to))
     }
 
     suspend fun clear() =
         mutex.withLock {
             list.clear()
-            _operations.emit(ListOperation.Clear())
         }
 }
 
@@ -64,19 +60,7 @@ sealed class ListOperation<T> {
         val item: T,
     ) : ListOperation<T>()
 
-    data class Replace<T>(
-        val index: Int,
-        val item: T,
-    ) : ListOperation<T>()
-
     data class Remove<T>(
         val item: T,
     ) : ListOperation<T>()
-
-    data class Move<T>(
-        val from: Int,
-        val to: Int,
-    ) : ListOperation<T>()
-
-    class Clear<T> : ListOperation<T>()
 }

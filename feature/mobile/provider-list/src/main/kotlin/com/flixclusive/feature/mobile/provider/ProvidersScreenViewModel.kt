@@ -53,7 +53,6 @@ internal class ProvidersScreenViewModel
 
         private var uninstallJob: Job? = null
         private var toggleJob: Job? = null
-        private var swapJob: Job? = null
 
         private val _error = MutableSharedFlow<ProviderError?>()
         val error: SharedFlow<ProviderError?> = _error.asSharedFlow()
@@ -91,12 +90,9 @@ internal class ProvidersScreenViewModel
             fromIndex: Int,
             toIndex: Int,
         ) {
-            if (swapJob?.isActive == true) return
-
-            swapJob =
-                ioScope.launch {
-                    providerRepository.moveProvider(fromIndex, toIndex)
-                }
+            ioScope.launch {
+                providerRepository.moveProvider(fromIndex, toIndex)
+            }
         }
 
         fun toggleProvider(id: String) {

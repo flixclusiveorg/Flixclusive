@@ -33,6 +33,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 fun ProviderTopCardContent(
     providerMetadata: ProviderMetadata,
     isDraggableProvider: () -> Boolean,
+    dragModifier: Modifier = Modifier,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -41,6 +42,7 @@ fun ProviderTopCardContent(
         AnimatedContent(
             targetState = isDraggableProvider(),
             label = "",
+            modifier = dragModifier,
         ) { state ->
             if (state) {
                 Icon(
