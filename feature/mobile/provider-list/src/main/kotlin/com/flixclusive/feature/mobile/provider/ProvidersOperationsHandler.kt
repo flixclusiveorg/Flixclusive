@@ -35,7 +35,7 @@ class ProvidersOperationsHandler(
         fromIndex: Int,
         toIndex: Int,
     ) {
-        if (fromIndex !in providers.indices && toIndex !in providers.indices) return
+        if (fromIndex !in providers.indices || toIndex !in providers.indices) return
 
         val provider = providers[fromIndex]
         providers.removeAt(fromIndex)

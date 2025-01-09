@@ -1,17 +1,13 @@
 package com.flixclusive.data.provider.util
 
-import com.flixclusive.core.util.coroutines.AppDispatchers
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 
 @Serializable
 internal class ReactiveList<T>(
-    private val scope: CoroutineScope = AppDispatchers.IO.scope,
     private val list: ArrayList<T> = ArrayList<T>(),
 ) : List<T> by list {
     private val _operations = MutableSharedFlow<ListOperation<T>>()
@@ -48,14 +44,12 @@ internal class ReactiveList<T>(
         from: Int,
         to: Int,
     ) = mutex.withLock {
-        scope.launch {
-            if (from !in indices && to !in indices) return@launch
+        if (from !in indices || to !in indices) return
 
-            val item = list.removeAt(from)
-            list.add(to, item)
+        val item = list.removeAt(from)
+        list.add(to, item)
 
-            _operations.emit(ListOperation.Move(from, to))
-        }
+        _operations.emit(ListOperation.Move(from, to))
     }
 
     suspend fun clear() =
