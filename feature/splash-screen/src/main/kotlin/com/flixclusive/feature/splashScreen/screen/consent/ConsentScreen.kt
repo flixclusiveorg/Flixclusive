@@ -20,14 +20,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,6 +43,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -49,7 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.mobile.component.CustomCheckbox
 import com.flixclusive.feature.splashScreen.ENTER_DELAY
 import com.flixclusive.feature.splashScreen.EXIT_DELAY
@@ -102,62 +105,75 @@ internal fun ConsentScreen(
     val delayMs = ENTER_DELAY
     val isOptingIn = remember { mutableStateOf(true) }
 
-    LazyColumn(
-        modifier =
-            modifier
-                .fillMaxSize(),
-        contentPadding = PaddingValues(vertical = PaddingHorizontal),
-        verticalArrangement = Arrangement.spacedBy(15.dp),
-    ) {
-        item {
-            Tag(
-                animatedScope = animatedScope,
-                sharedTransitionScope = sharedTransitionScope,
-            )
-        }
+    Box(modifier = modifier) {
+        LazyColumn(
+            modifier =
+                Modifier
+                    .fillMaxSize(),
+            contentPadding = PaddingValues(vertical = PaddingHorizontal),
+            verticalArrangement = Arrangement.spacedBy(15.dp),
+        ) {
+            item {
+                Tag(
+                    animatedScope = animatedScope,
+                    sharedTransitionScope = sharedTransitionScope,
+                )
+            }
 
-        itemsIndexed(consents) { i, it ->
-            val enterDelay = (i * delayMs) / 2
-            val exitDelay = ((consents.size - i) * delayMs) / 5
+            itemsIndexed(consents) { i, it ->
+                val enterDelay = (i * delayMs) / 2
+                val exitDelay = ((consents.size - i) * delayMs) / 5
 
-            with(animatedScope) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(15.dp, Alignment.CenterVertically),
-                    modifier =
-                        Modifier.animateEnterExit(
-                            enter = getEnterAnimation(enterDelay),
-                            exit = getExitAnimation(exitDelay),
-                        ),
-                ) {
-                    HorizontalDivider(
+                with(animatedScope) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(15.dp, Alignment.CenterVertically),
                         modifier =
-                            Modifier
-                                .padding(vertical = 8.dp),
-                        thickness = 0.5.dp,
-                    )
+                            Modifier.animateEnterExit(
+                                enter = getEnterAnimation(enterDelay),
+                                exit = getExitAnimation(exitDelay),
+                            ),
+                    ) {
+                        HorizontalDivider(
+                            modifier =
+                                Modifier
+                                    .padding(vertical = 8.dp),
+                            thickness = 0.5.dp,
+                        )
 
-                    HeaderBodyComponent(
-                        consent = it,
-                        isOptingIn = isOptingIn,
-                    )
+                        HeaderBodyComponent(
+                            consent = it,
+                            isOptingIn = isOptingIn,
+                        )
+                    }
                 }
+            }
+
+            item {
+                Spacer(Modifier.height(60.dp))
             }
         }
 
-        item {
-            with(animatedScope) {
-                Button(
-                    onClick = { onAgree(isOptingIn.value) },
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(),
+        with(animatedScope) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                0F to Color.Transparent,
+                                1F to MaterialTheme.colorScheme.surface,
+                            ),
                         ),
+            ) {
+                ElevatedButton(
+                    onClick = { onAgree(isOptingIn.value) },
                     shape = MaterialTheme.shapes.extraSmall,
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 60.dp)
+                            .heightIn(min = 65.dp)
+                            .padding(getAdaptiveDp(5.dp))
                             .animateEnterExit(
                                 enter = getEnterAnimation(1100),
                                 exit = getExitAnimation(0),
@@ -173,7 +189,6 @@ internal fun ConsentScreen(
     }
 }
 
-// TODO: Add Gen AI disclaimer
 internal fun Context.getConsents(): List<Consent> {
     return listOf(
         Consent(
