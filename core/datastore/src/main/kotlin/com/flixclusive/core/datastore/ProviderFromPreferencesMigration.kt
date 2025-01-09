@@ -122,7 +122,7 @@ internal object ProviderFromPreferencesMigration {
     private fun Context.getNewMigrationFolder(rootFolder: String): File =
         getExternalFilesDir(null)!!
             .resolve(rootFolder)
-            .resolve("user-0")
+            .resolve("user-1")
 
     private fun Context.getOldProvidersFolder(): File = filesDir.resolve(OLD_PROVIDERS_FOLDER_NAME)
 
