@@ -54,6 +54,7 @@ internal class ProvidersTweakScreen(
             ),
             TweakUI.Divider,
             getGeneralTweaks(providerPreferences),
+            getTestingTweaks(providerPreferences),
             getDataTweaks(providerPreferences),
         )
     }
@@ -113,9 +114,17 @@ internal class ProvidersTweakScreen(
         val deleteRepositoriesLabel = stringResource(LocaleR.string.delete_repositories)
         val warningLabel = stringResource(LocaleR.string.warning)
 
-        val formatWarningMessage = fun (action: String): String = context.getString(LocaleR.string.action_warning_format_message, action)
+        val formatWarningMessage = fun (action: String): String =
+            context.getString(
+                LocaleR.string.action_warning_format_message,
+                action,
+            )
 
-        val formatWarningCountDescription = fun (items: Int): String = context.getString(LocaleR.string.warn_delete_items_format, items)
+        val formatWarningCountDescription = fun (items: Int): String =
+            context.getString(
+                LocaleR.string.warn_delete_items_format,
+                items,
+            )
 
         return TweakGroup(
             title = stringResource(LocaleR.string.data),
@@ -124,7 +133,11 @@ internal class ProvidersTweakScreen(
                     TweakUI.DialogTweak(
                         title = clearCachedLinksLabel,
                         dialogTitle = warningLabel,
-                        description = stringResource(LocaleR.string.cached_links_description_format, viewModel.cachedLinksSize),
+                        description =
+                            stringResource(
+                                LocaleR.string.cached_links_description_format,
+                                viewModel.cachedLinksSize,
+                            ),
                         dialogMessage = formatWarningMessage(clearCachedLinksLabel),
                         onConfirm = viewModel::clearCacheLinks,
                     ),
