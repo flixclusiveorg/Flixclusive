@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
+import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
@@ -110,7 +111,7 @@ internal class AddUserViewModel
             }
 
             addJob =
-                viewModelScope.launch {
+                AppDispatchers.IO.scope.launch {
                     val userId = userRepository.addUser(user).toInt()
                     if (isSigningIn) {
                         val validatedUser = user.copy(id = userId)

@@ -12,7 +12,6 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
-import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
@@ -88,13 +87,7 @@ abstract class BasePlayerViewModel(
                 episode = _currentSelectedEpisode.value,
             )
 
-    val providersAsState =
-        providerRepository
-            .getEnabledProvidersAsFlow()
-            .asStateFlow(
-                scope = viewModelScope,
-                initialValue = emptyList(),
-            )
+    val providers by lazy { providerRepository.getEnabledProviders() }
 
     private val _dialogState = MutableStateFlow<MediaLinkResourceState>(MediaLinkResourceState.Idle)
     val dialogState: StateFlow<MediaLinkResourceState> = _dialogState.asStateFlow()

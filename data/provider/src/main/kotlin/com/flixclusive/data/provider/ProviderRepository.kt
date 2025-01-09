@@ -1,6 +1,8 @@
 package com.flixclusive.data.provider
 
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.data.provider.util.ListOperation
+import com.flixclusive.data.provider.util.ReactiveList
 import com.flixclusive.data.provider.util.isNotUsable
 import com.flixclusive.model.datastore.user.ProviderFromPreferences
 import com.flixclusive.model.datastore.user.ProviderPreferences
@@ -8,11 +10,8 @@ import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.Provider
 import dalvik.system.PathClassLoader
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 import java.util.Collections
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,8 +24,8 @@ class ProviderRepository
     constructor(
         private val dataStoreManager: DataStoreManager,
     ) {
-        private val providersAsStateFlow = MutableStateFlow(mapOf<String, ProviderMetadata>())
-        private val orderListAsStateFlow = MutableStateFlow(listOf<ProviderFromPreferences>())
+        private val providerMetadata = LinkedHashMap<String, ProviderMetadata>()
+        private val providerPositions = ReactiveList<ProviderFromPreferences>()
 
         /** Map containing all loaded provider classes  */
         private val providerInstances: MutableMap<String, Provider> =
@@ -44,135 +43,87 @@ class ProviderRepository
         ) {
             classLoaders[metadata.id] = classLoader
             providerInstances[metadata.id] = provider
-            providersAsStateFlow.update {
-                val newMap = it.toMutableMap()
-                newMap[metadata.id] = metadata
-                newMap.toMap()
-            }
+            providerMetadata[metadata.id] = metadata
 
             addToPreferences(preferenceItem = preferenceItem)
         }
 
         suspend fun addToPreferences(preferenceItem: ProviderFromPreferences) {
-            orderListAsStateFlow.update {
-                val newList = it.toMutableList()
-                if (!newList.contains(preferenceItem)) {
-                    newList.add(preferenceItem)
-                }
-                newList.toList()
-            }
-
+            providerPositions.add(preferenceItem)
             saveToPreferences()
         }
 
-        fun getProviderMetadata(id: String): ProviderMetadata? = providersAsStateFlow.value[id]
+        fun getProviderMetadata(id: String): ProviderMetadata? = providerMetadata[id]
 
         fun getProvider(id: String): Provider? = providerInstances[id]
 
-        fun getProviderFromPreferences(id: String): ProviderFromPreferences? =
-            orderListAsStateFlow.value.find { it.id == id }
+        fun getProviderFromPreferences(id: String): ProviderFromPreferences? = providerPositions.find { it.id == id }
 
-        fun getEnabledProvidersAsFlow(): Flow<List<ProviderMetadata>> {
-            return providersAsStateFlow.map {
-                it.mapNotNull { (id, api) ->
-                    val metadata = getProviderMetadata(id = id)
-                    val preferenceItem = getProviderFromPreferences(id = id)
-                    if (metadata == null) return@mapNotNull null
-                    if (preferenceItem == null) return@mapNotNull null
+        fun getEnabledProviders(): List<ProviderMetadata> {
+            return providerMetadata.mapNotNull { (id, api) ->
+                val metadata = getProviderMetadata(id = id)
+                val preferenceItem = getProviderFromPreferences(id = id)
+                if (metadata == null) return@mapNotNull null
+                if (preferenceItem == null) return@mapNotNull null
 
-                    if (!metadata.isNotUsable && !preferenceItem.isDisabled) {
-                        return@mapNotNull api
-                    }
-
-                    null
+                if (!metadata.isNotUsable && !preferenceItem.isDisabled) {
+                    return@mapNotNull api
                 }
+
+                null
             }
         }
 
-        suspend fun getProviders(): List<ProviderMetadata> {
-            return providersAsStateFlow.first().values.toList()
+        fun getProviders(): List<ProviderMetadata> {
+            return providerMetadata.values.toList()
         }
 
-        suspend fun getOrderedProviders(): List<ProviderMetadata> {
-            return orderListAsStateFlow
-                .map { list ->
-                    list.mapNotNull { item ->
-                        providersAsStateFlow.value[item.id]
-                    }
-                }.first()
-        }
-
-        fun getOrderedProvidersAsFlow(): Flow<List<ProviderMetadata>> {
-            return orderListAsStateFlow.map { list ->
-                list.mapNotNull { item ->
-                    providersAsStateFlow.value[item.id]
-                }
+        fun getOrderedProviders(): List<ProviderMetadata> {
+            return providerPositions.mapNotNull { item ->
+                providerMetadata[item.id]
             }
         }
+
+        fun observePositions(): SharedFlow<ListOperation<ProviderFromPreferences>> = providerPositions.operations
 
         suspend fun moveProvider(
             fromIndex: Int,
             toIndex: Int,
         ) {
-            orderListAsStateFlow.update {
-                val newList = it.toMutableList()
-                if (fromIndex !in newList.indices && toIndex !in newList.indices) {
-                    return@update it
-                }
-
-                val id = newList.removeAt(fromIndex)
-                newList.add(toIndex, id)
-                newList.toList()
-            }
-
+            providerPositions.move(fromIndex, toIndex)
             saveToPreferences()
         }
 
         internal suspend fun remove(id: String) {
             providerInstances.remove(id)
             classLoaders.remove(id)
-            providersAsStateFlow.update {
-                if (it.size == 1) return@update mapOf()
-
-                val newMap = it.toMutableMap()
-                newMap.remove(id)
-                newMap.toMap()
-            }
+            providerMetadata.remove(id)
             removeFromPreferences(id)
         }
 
         internal suspend fun removeFromPreferences(id: String) {
-            orderListAsStateFlow.update {
-                val newList = it.toMutableList()
-                newList.removeIf { it.id == id }
-                newList.toList()
-            }
-
+            providerPositions.removeIf { it.id == id }
             saveToPreferences()
         }
 
-        suspend fun setEnabled(
-            id: String,
-            isDisabled: Boolean,
-        ) {
-            orderListAsStateFlow.update {
-                val newList = it.toMutableList()
+        suspend fun toggleProvider(id: String) {
+            val indexOfProvider =
+                providerPositions.indexOfFirst { provider ->
+                    provider.id == id
+                }
 
-                val indexOfProvider =
-                    newList.indexOfFirst { provider -> provider.id == id }
-
-                val provider = newList[indexOfProvider]
-                newList[indexOfProvider] = provider.copy(isDisabled = isDisabled == true)
-
-                newList.toList()
-            }
+            val provider = providerPositions[indexOfProvider]
+            providerPositions.replaceAt(
+                index = indexOfProvider,
+                item = provider.copy(isDisabled = !provider.isDisabled),
+            )
 
             saveToPreferences()
         }
 
         private suspend fun saveToPreferences() {
             dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
-                it.copy(providers = orderListAsStateFlow.value)
+                it.copy(providers = providerPositions)
             }
         }
 
@@ -182,10 +133,6 @@ class ProviderRepository
                     .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
                     .first()
 
-            orderListAsStateFlow.update {
-                val newList = it.toMutableList()
-                preferences.providers.forEach(newList::add)
-                newList.toList()
-            }
+            preferences.providers.forEach(providerPositions::add)
         }
     }

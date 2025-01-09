@@ -74,9 +74,8 @@ import kotlin.random.Random
 internal fun PlayerScreen(
     navigator: PlayerScreenNavigator,
     args: PlayerScreenNavArgs,
+    viewModel: PlayerScreenViewModel = hiltViewModel(),
 ) {
-    val viewModel: PlayerScreenViewModel = hiltViewModel()
-
     val isInPipMode by rememberPipMode()
 
     val context = LocalContext.current.getActivity<ComponentActivity>()
@@ -89,7 +88,7 @@ internal fun PlayerScreen(
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
 
     val cachedLinks = viewModel.cachedLinks
-    val providers by viewModel.providersAsState.collectAsStateWithLifecycle()
+    val providers = viewModel.providers
     val seasonData by viewModel.season.collectAsStateWithLifecycle()
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
 

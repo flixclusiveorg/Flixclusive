@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.mobile.component.provider
+package com.flixclusive.feature.mobile.provider.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,93 +36,103 @@ import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
-internal fun BottomCardContent(
+internal fun ProviderBottomCardContent(
     providerMetadata: ProviderMetadata,
-    enabled: Boolean,
+    enabledProvider: () -> Boolean,
     openSettings: () -> Unit,
     unloadProvider: () -> Unit,
     toggleUsage: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier =
+            Modifier
+                .fillMaxWidth(),
         horizontalArrangement = if (providerMetadata.changelog != null) Arrangement.SpaceBetween else Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         val color = getProviderStatusColor(providerMetadata.status)
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .weight(1F)
+            modifier =
+                Modifier
+                    .weight(1F),
         ) {
             Box(
-                modifier = Modifier
-                    .background(color, CircleShape)
-                    .size(7.dp)
+                modifier =
+                    Modifier
+                        .background(color, CircleShape)
+                        .size(7.dp),
             )
 
             Text(
                 text = providerMetadata.status.toString(),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Black,
-                    color = color.onMediumEmphasis(0.4F),
-                    fontSize = 11.sp
-                )
+                style =
+                    MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Black,
+                        color = color.onMediumEmphasis(0.4F),
+                        fontSize = 11.sp,
+                    ),
             )
         }
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(5.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             OutlinedButton(
                 onClick = unloadProvider,
                 modifier = Modifier.size(width = 80.dp, height = 25.dp),
                 contentPadding = PaddingValues(0.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = LocalContentColor.current.onMediumEmphasis(0.4F),
-                )
+                colors =
+                    ButtonDefaults.outlinedButtonColors(
+                        contentColor = LocalContentColor.current.onMediumEmphasis(0.4F),
+                    ),
             ) {
                 Text(
                     text = stringResource(LocaleR.string.uninstall),
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
                 )
             }
 
             OutlinedButton(
                 onClick = openSettings,
                 modifier = Modifier.size(width = 50.dp, height = 25.dp),
-                contentPadding = PaddingValues(0.dp)
+                contentPadding = PaddingValues(0.dp),
             ) {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.provider_settings),
                     contentDescription = stringResource(id = LocaleR.string.provider_settings),
-                    modifier = Modifier
-                        .scale(0.8F)
+                    modifier =
+                        Modifier
+                            .scale(0.8F),
                 )
             }
 
             Switch(
-                checked = enabled,
+                checked = enabledProvider(),
                 enabled = providerMetadata.status != Status.Maintenance && providerMetadata.status != Status.Down,
-                colors = SwitchDefaults.colors(
-                    disabledCheckedThumbColor = MaterialTheme.colorScheme.surface
-                        .onMediumEmphasis(1F)
-                        .compositeOver(MaterialTheme.colorScheme.surface),
-                    disabledCheckedTrackColor = MaterialTheme.colorScheme.onSurface
-                        .onMediumEmphasis(0.12F)
-                        .compositeOver(MaterialTheme.colorScheme.surface),
-                ),
+                colors =
+                    SwitchDefaults.colors(
+                        disabledCheckedThumbColor =
+                            MaterialTheme.colorScheme.surface
+                                .onMediumEmphasis(1F)
+                                .compositeOver(MaterialTheme.colorScheme.surface),
+                        disabledCheckedTrackColor =
+                            MaterialTheme.colorScheme.onSurface
+                                .onMediumEmphasis(0.12F)
+                                .compositeOver(MaterialTheme.colorScheme.surface),
+                    ),
                 onCheckedChange = {
                     toggleUsage()
                 },
-                modifier = Modifier
-                    .scale(0.7F)
-                    .width(40.dp)
+                modifier =
+                    Modifier
+                        .scale(0.7F)
+                        .width(40.dp),
             )
         }
     }

@@ -35,7 +35,8 @@ enum class ProviderInstallationStatus {
     NotInstalled,
     Installing,
     Installed,
-    Outdated;
+    Outdated,
+    ;
 
     val isNotInstalled: Boolean
         get() = this == NotInstalled
@@ -49,86 +50,96 @@ enum class ProviderInstallationStatus {
 
 @Composable
 fun ProviderCard(
-    modifier: Modifier = Modifier,
     providerMetadata: ProviderMetadata,
     status: ProviderInstallationStatus,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
 
     Card(
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
-        ),
-        modifier = modifier
-            .fillMaxWidth()
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+            ),
+        modifier =
+            modifier
+                .fillMaxWidth(),
     ) {
         Column(
-            modifier = Modifier
-                .padding(
-                    horizontal = 15.dp,
-                    vertical = 10.dp
-                )
+            modifier =
+                Modifier
+                    .padding(
+                        horizontal = 15.dp,
+                        vertical = 10.dp,
+                    ),
         ) {
-            TopCardContent(
-                isDraggable = false,
-                providerMetadata = providerMetadata
+            ProviderTopCardContent(
+                isDraggableProvider = { false },
+                providerMetadata = providerMetadata,
             )
 
             HorizontalDivider(
-                modifier = Modifier
-                    .padding(vertical = 15.dp),
-                thickness = 0.5.dp
+                modifier =
+                    Modifier
+                        .padding(vertical = 15.dp),
+                thickness = 0.5.dp,
             )
 
             providerMetadata.description?.let {
                 Text(
                     text = it,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Normal,
-                        color = LocalContentColor.current.onMediumEmphasis(),
-                        fontSize = 13.sp
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 10.dp)
+                    style =
+                        MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Normal,
+                            color = LocalContentColor.current.onMediumEmphasis(),
+                            fontSize = 13.sp,
+                        ),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp),
                 )
             }
 
             ElevatedButton(
                 onClick = onClick,
                 shape = MaterialTheme.shapes.medium,
-                modifier = Modifier
-                    .height(50.dp)
-                    .fillMaxWidth()
+                modifier =
+                    Modifier
+                        .height(50.dp)
+                        .fillMaxWidth(),
             ) {
                 AnimatedContent(
                     targetState = status,
-                    label = ""
+                    label = "",
                 ) {
-                    val textLabel = remember(it) {
-                        when (it) {
-                            ProviderInstallationStatus.Installed -> context.getString(LocaleR.string.uninstall)
-                            ProviderInstallationStatus.Outdated -> context.getString(LocaleR.string.update_label)
-                            else -> context.getString(LocaleR.string.install)
+                    val textLabel =
+                        remember(it) {
+                            when (it) {
+                                ProviderInstallationStatus.Installed -> context.getString(LocaleR.string.uninstall)
+                                ProviderInstallationStatus.Outdated -> context.getString(LocaleR.string.update_label)
+                                else -> context.getString(LocaleR.string.install)
+                            }
                         }
-                    }
 
                     if (it == ProviderInstallationStatus.Installing) {
                         CircularProgressIndicator(
                             strokeWidth = 2.dp,
-                            modifier = Modifier
-                                .size(20.dp)
+                            modifier =
+                                Modifier
+                                    .size(20.dp),
                         )
                     } else {
                         Text(
                             text = textLabel,
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.Black,
-                                fontSize = 14.sp
-                            )
+                            style =
+                                MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 14.sp,
+                                ),
                         )
                     }
                 }
@@ -146,10 +157,9 @@ private fun ProviderCardPreview() {
         Surface {
             ProviderCard(
                 providerMetadata = providerMetadata,
-                status = ProviderInstallationStatus.Installed
-            ) {
-
-            }
+                status = ProviderInstallationStatus.Installed,
+                onClick = {},
+            )
         }
     }
 }

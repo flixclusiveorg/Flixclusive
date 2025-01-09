@@ -15,7 +15,6 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
-import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderRepository
@@ -54,20 +53,8 @@ internal class SearchExpandedScreenViewModel
         providerApiRepository: ProviderApiRepository,
         dataStoreManager: DataStoreManager,
     ) : ViewModel() {
-        private val providers =
-            providerApiRepository
-                .getEnabledApisAsFlow()
-                .asStateFlow(
-                    scope = viewModelScope,
-                    initialValue = emptyList(),
-                )
-        val providerMetadataList =
-            providerRepository
-                .getEnabledProvidersAsFlow()
-                .asStateFlow(
-                    scope = viewModelScope,
-                    initialValue = emptyList(),
-                )
+        private val providerApis by lazy { providerApiRepository.getEnabledApisAsFlow() }
+        val providerMetadataList by lazy { providerRepository.getEnabledProviders() }
 
         private val userId: Int? get() = userSessionManager.currentUser.value?.id
         val searchHistory =
@@ -198,7 +185,10 @@ internal class SearchExpandedScreenViewModel
             }
         }
 
-        private suspend fun getSelectedProvider(): ProviderApi? = providers.first().getOrNull(selectedProviderIndex - 1)
+        private suspend fun getSelectedProvider(): ProviderApi? =
+            providerApis.first().getOrNull(
+                selectedProviderIndex - 1,
+            )
 
         private fun SearchResponseData<FilmSearchItem>.parseResults() {
             val results =

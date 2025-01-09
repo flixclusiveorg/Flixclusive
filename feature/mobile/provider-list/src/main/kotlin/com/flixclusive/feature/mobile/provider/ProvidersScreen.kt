@@ -62,13 +62,13 @@ import com.flixclusive.core.ui.common.navigation.navigator.ProvidersScreenNaviga
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
-import com.flixclusive.core.ui.mobile.component.provider.InstalledProviderCard
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.data.provider.util.getApiCrashMessage
 import com.flixclusive.data.provider.util.isNotUsable
 import com.flixclusive.feature.mobile.provider.component.CustomButton
+import com.flixclusive.feature.mobile.provider.component.InstalledProviderCard
 import com.flixclusive.feature.mobile.provider.component.ProfileHandlerButtons
 import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
 import com.flixclusive.feature.mobile.provider.util.DragAndDropUtils.dragGestureHandler
@@ -81,19 +81,17 @@ import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 private val FabButtonSize = 56.dp
-private fun Context.getHelpGuideTexts()
-    = resources.getStringArray(LocaleR.array.providers_screen_help)
+
+private fun Context.getHelpGuideTexts() = resources.getStringArray(LocaleR.array.providers_screen_help)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination
 @Composable
 internal fun ProvidersScreen(
-    navigator: ProvidersScreenNavigator
+    navigator: ProvidersScreenNavigator,
+    viewModel: ProvidersScreenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-
-    val viewModel = hiltViewModel<ProvidersScreenViewModel>()
-    val providers by viewModel.providers.collectAsStateWithLifecycle()
     val providerToggles by viewModel.providerPrefs.collectAsStateWithLifecycle()
     val userOnBoardingPrefs by viewModel.userOnBoardingPrefs.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle(null)
@@ -103,14 +101,15 @@ internal fun ProvidersScreen(
     val helpTooltipState = rememberTooltipState(isPersistent = true)
     val scope = rememberCoroutineScope()
     val overscrollJob = remember { mutableStateOf<Job?>(null) }
-    val dragDropListState = rememberDragDropListState(
-        onMove = { fromIndex, toIndex ->
-            if (!searchExpanded.value) {
-                // -1 since there's a header
-                viewModel.onMove(fromIndex - 1, toIndex - 1)
-            }
-        }
-    )
+    val dragDropListState =
+        rememberDragDropListState(
+            onMove = { fromIndex, toIndex ->
+                if (!searchExpanded.value) {
+                    // -1 since there's a header
+                    viewModel.onMove(fromIndex - 1, toIndex - 1)
+                }
+            },
+        )
     val listState = dragDropListState.getLazyListState()
     val shouldShowTopBar by listState.isScrollingUp()
     val listIsAtTop by listState.isAtTop()
@@ -118,7 +117,7 @@ internal fun ProvidersScreen(
     LaunchedEffect(error) {
         if (error == null) return@LaunchedEffect
 
-        val faultyProvider = providers.find { it.id == error!!.providerId } ?: return@LaunchedEffect
+        val faultyProvider = viewModel.providers.find { it.id == error!!.providerId } ?: return@LaunchedEffect
         val message = context.getApiCrashMessage(faultyProvider.name)
 
         context.showToast(message)
@@ -127,7 +126,7 @@ internal fun ProvidersScreen(
     val filteredProviders by remember {
         derivedStateOf {
             when (viewModel.searchQuery.isNotEmpty() && searchExpanded.value) {
-                true -> providers.fastFilter { it.name.contains(viewModel.searchQuery, true) }
+                true -> viewModel.providers.fastFilter { it.name.contains(viewModel.searchQuery, true) }
                 false -> null
             }
         }
@@ -141,7 +140,7 @@ internal fun ProvidersScreen(
         val (title, description) = context.getHelpGuideTexts()
         navigator.openMarkdownScreen(
             title = title,
-            description = description
+            description = description,
         )
     }
 
@@ -154,11 +153,11 @@ internal fun ProvidersScreen(
                 onQueryChange = viewModel::onSearchQueryChange,
                 tooltipState = helpTooltipState,
                 searchExpanded = searchExpanded,
-                onNeedHelp = onNeedHelp
+                onNeedHelp = onNeedHelp,
             )
         },
         floatingActionButton = {
-            if (providers.isNotEmpty()) {
+            if (viewModel.providers.isNotEmpty()) {
                 ExtendedFloatingActionButton(
                     onClick = navigator::openAddRepositoryScreen,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -170,32 +169,33 @@ internal fun ProvidersScreen(
                     icon = {
                         Icon(
                             painter = painterResource(id = UiCommonR.drawable.round_add_24),
-                            contentDescription = stringResource(LocaleR.string.add_provider)
+                            contentDescription = stringResource(LocaleR.string.add_provider),
                         )
-                    }
+                    },
                 )
             }
-        }
+        },
     ) { innerPadding ->
         val topPadding by animateDpAsState(
             targetValue = if (listIsAtTop) innerPadding.calculateTopPadding() else 0.dp,
-            label = ""
+            label = "",
         )
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = topPadding)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(top = topPadding),
         ) {
             AnimatedContent(
-                targetState = providers.isEmpty(),
+                targetState = viewModel.providers.isEmpty(),
                 label = "",
                 transitionSpec = {
                     ContentTransform(
                         targetContentEnter = fadeIn(),
-                        initialContentExit = fadeOut()
+                        initialContentExit = fadeOut(),
                     )
-                }
+                },
             ) { state ->
                 if (state) {
                     EmptyDataMessage(
@@ -205,13 +205,14 @@ internal fun ProvidersScreen(
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(5.dp),
-                            modifier = Modifier
-                                .padding(bottom = 12.dp)
+                            modifier =
+                                Modifier
+                                    .padding(bottom = 12.dp),
                         ) {
                             MissingProvidersLogo()
                             OutlinedButton(
                                 onClick = navigator::openAddRepositoryScreen,
-                                modifier = Modifier
+                                modifier = Modifier,
                             ) {
                                 Text(text = stringResource(LocaleR.string.add_provider))
                             }
@@ -220,24 +221,26 @@ internal fun ProvidersScreen(
                 } else {
                     LazyColumn(
                         state = listState,
-                        contentPadding = PaddingValues(
-                            bottom = FabButtonSize * 2,
-                        ),
-                        modifier = Modifier
-                            .padding(horizontal = 10.dp)
-                            .dragGestureHandler(
-                                scope = scope,
-                                itemListDragAndDropState = dragDropListState,
-                                overscrollJob = overscrollJob,
-                                feedbackLongPress = getFeedbackOnLongPress()
+                        contentPadding =
+                            PaddingValues(
+                                bottom = FabButtonSize * 2,
                             ),
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 10.dp)
+                                .dragGestureHandler(
+                                    scope = scope,
+                                    itemListDragAndDropState = dragDropListState,
+                                    overscrollJob = overscrollJob,
+                                    feedbackLongPress = getFeedbackOnLongPress(),
+                                ),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         item {
                             AnimatedVisibility(
                                 visible = !searchExpanded.value,
                                 enter = fadeIn(),
-                                exit = fadeOut()
+                                exit = fadeOut(),
                             ) {
                                 Column(
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -245,57 +248,55 @@ internal fun ProvidersScreen(
                                     ProfileHandlerButtons(
                                         modifier = Modifier.padding(top = 15.dp),
                                         onImport = featureComingSoonCallback,
-                                        onExport = featureComingSoonCallback
+                                        onExport = featureComingSoonCallback,
                                     )
 
                                     CustomButton(
                                         onClick = {
                                             navigator.testProviders(
-                                                providers = providers.toCollection(ArrayList())
+                                                providers = viewModel.providers.toCollection(ArrayList()),
                                             )
                                         },
                                         iconId = UiCommonR.drawable.test,
                                         label = stringResource(id = LocaleR.string.test_providers),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 3.dp)
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 3.dp),
                                     )
 
                                     HorizontalDivider(
                                         thickness = 1.dp,
-                                        color = LocalContentColor.current.onMediumEmphasis(0.4F)
+                                        color = LocalContentColor.current.onMediumEmphasis(0.4F),
                                     )
                                 }
                             }
                         }
 
                         itemsIndexed(
-                            items = filteredProviders ?: providers,
-                            key = { _, item -> item.id }
+                            items = filteredProviders ?: viewModel.providers,
+                            key = { _, item -> item.id },
                         ) { index, metadata ->
-                            val displacementOffset =
-                                // +1 since there's a header
-                                if (index + 1 == dragDropListState.getCurrentIndexOfDraggedListItem()) {
-                                    dragDropListState.elementDisplacement.takeIf { it != 0f }
-                                } else null
-
-                            val isDisabled = providerToggles.getOrNull(index)
-                            val isEnabled = !metadata.isNotUsable && isDisabled == false
-
                             InstalledProviderCard(
                                 providerMetadata = metadata,
-                                enabled = isEnabled,
-                                isDraggable = !searchExpanded.value,
-                                displacementOffset = displacementOffset,
+                                isDraggableProvider = { !searchExpanded.value },
                                 openSettings = { navigator.openProviderSettings(metadata) },
                                 onClick = { navigator.openProviderInfo(metadata) },
                                 uninstallProvider = { providerToUninstall = metadata },
-                                onToggleProvider = {
-                                    viewModel.toggleProvider(
-                                        id = metadata.id,
-                                        isEnabled = isEnabled
-                                    )
-                                }
+                                onToggleProvider = { viewModel.toggleProvider(id = metadata.id) },
+                                enabledProvider = {
+                                    val isDisabled = providerToggles.getOrNull(index)
+
+                                    !metadata.isNotUsable && isDisabled == false
+                                },
+                                displacementOffsetProvider = {
+                                    if (index + 1 == dragDropListState.getCurrentIndexOfDraggedListItem()) {
+                                        dragDropListState.elementDisplacement.takeIf { it != 0f }
+                                    } else {
+                                        null
+                                    }
+                                },
+                                modifier = Modifier,
                             )
                         }
                     }
@@ -310,19 +311,20 @@ internal fun ProvidersScreen(
         IconAlertDialog(
             painter = painterResource(id = R.drawable.warning),
             contentDescription = stringResource(id = LocaleR.string.warning_content_description),
-            description = buildAnnotatedString {
-                append(context.getString(LocaleR.string.warning_uninstall_message_first_half))
-                append(" ")
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append(metadata.name)
-                }
-                append("?")
-            },
+            description =
+                buildAnnotatedString {
+                    append(context.getString(LocaleR.string.warning_uninstall_message_first_half))
+                    append(" ")
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(metadata.name)
+                    }
+                    append("?")
+                },
             onConfirm = {
                 viewModel.uninstallProvider(metadata)
                 providerToUninstall = null
             },
-            onDismiss = { providerToUninstall = null }
+            onDismiss = { providerToUninstall = null },
         )
     }
 
@@ -333,11 +335,12 @@ internal fun ProvidersScreen(
             dismissButtonLabel = stringResource(id = LocaleR.string.skip),
             dismissOnConfirm = false,
             onConfirm = {
-                scope.launch {
-                    viewModel.setFirstTimeOnProvidersScreen(false)
-                }.invokeOnCompletion {
-                    onNeedHelp()
-                }
+                scope
+                    .launch {
+                        viewModel.setFirstTimeOnProvidersScreen(false)
+                    }.invokeOnCompletion {
+                        onNeedHelp()
+                    }
             },
             onDismiss = {
                 scope.run {
@@ -349,7 +352,7 @@ internal fun ProvidersScreen(
                         }
                     }
                 }
-            }
+            },
         )
     }
 }
@@ -360,21 +363,23 @@ private fun MissingProvidersLogo() {
         contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(
-            LocalContentColor provides MaterialTheme.colorScheme.primary.onMediumEmphasis()
+            LocalContentColor provides MaterialTheme.colorScheme.primary.onMediumEmphasis(),
         ) {
             Icon(
                 painter = painterResource(id = UiCommonR.drawable.provider_logo),
                 contentDescription = stringResource(id = LocaleR.string.missing_providers_logo_content_description),
-                modifier = Modifier.size(70.dp)
+                modifier = Modifier.size(70.dp),
             )
 
             Text(
                 text = "?",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = 25.sp
-                ),
-                modifier = Modifier
-                    .padding(bottom = 2.dp)
+                style =
+                    MaterialTheme.typography.headlineLarge.copy(
+                        fontSize = 25.sp,
+                    ),
+                modifier =
+                    Modifier
+                        .padding(bottom = 2.dp),
             )
         }
     }
@@ -387,7 +392,7 @@ private fun MissingProvidersLogoPreview() {
         Surface {
             EmptyDataMessage(
                 modifier = Modifier.fillMaxSize(),
-                alignment = Alignment.Center
+                alignment = Alignment.Center,
             ) {
                 MissingProvidersLogo()
             }

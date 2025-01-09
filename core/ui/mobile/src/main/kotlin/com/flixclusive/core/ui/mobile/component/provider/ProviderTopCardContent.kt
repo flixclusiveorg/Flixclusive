@@ -1,6 +1,5 @@
 package com.flixclusive.core.ui.mobile.component.provider
 
-
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,28 +29,29 @@ import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-
 @Composable
-internal fun TopCardContent(
+fun ProviderTopCardContent(
     providerMetadata: ProviderMetadata,
-    isDraggable: Boolean
+    isDraggableProvider: () -> Boolean,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         AnimatedContent(
-            targetState = isDraggable,
-            label = ""
+            targetState = isDraggableProvider(),
+            label = "",
         ) { state ->
             if (state) {
                 Icon(
                     painter = painterResource(id = R.drawable.round_drag_indicator_24),
-                    contentDescription = stringResource(
-                        id = LocaleR.string.drag_icon_content_desc
-                    ),
-                    modifier = Modifier
-                        .size(30.dp)
+                    contentDescription =
+                        stringResource(
+                            id = LocaleR.string.drag_icon_content_desc,
+                        ),
+                    modifier =
+                        Modifier
+                            .size(30.dp),
                 )
             }
         }
@@ -62,14 +62,15 @@ internal fun TopCardContent(
             urlImage = providerMetadata.iconUrl,
             placeholderId = UiCommonR.drawable.provider_logo,
             contentDescId = LocaleR.string.provider_icon_content_desc,
-            shape = MaterialTheme.shapes.small
+            shape = MaterialTheme.shapes.small,
         )
 
         ProviderDetails(
             providerMetadata = providerMetadata,
-            modifier = Modifier
-                .weight(1F)
-                .padding(start = 5.dp)
+            modifier =
+                Modifier
+                    .weight(1F)
+                    .padding(start = 5.dp),
         )
     }
 }
@@ -82,72 +83,79 @@ private fun ProviderDetails(
     val context = LocalContext.current
 
     Column(
-        modifier = modifier
+        modifier = modifier,
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier =
+                Modifier
+                    .fillMaxWidth(),
         ) {
             Text(
                 text = providerMetadata.name,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Black,
-                    fontSize = 18.sp
-                ),
+                style =
+                    MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Black,
+                        fontSize = 18.sp,
+                    ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .padding(bottom = 2.dp)
+                modifier =
+                    Modifier
+                        .padding(bottom = 2.dp),
             )
-
 
             Text(
                 text = "v${providerMetadata.versionName}",
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Normal,
-                    color = LocalContentColor.current.onMediumEmphasis(0.4F),
-                    fontSize = 13.sp
-                )
+                style =
+                    MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Normal,
+                        color = LocalContentColor.current.onMediumEmphasis(0.4F),
+                        fontSize = 13.sp,
+                    ),
             )
         }
 
-        val authors = remember {
-            if (providerMetadata.authors.size == 1) {
-                context.getString(
-                    LocaleR.string.made_by_author_label_format,
-                    providerMetadata.authors.firstOrNull()?.name ?: "anon"
-                )
-            } else {
-                providerMetadata.authors
-                    .map { it.name }
-                    .take(3).joinToString(", ")
+        val authors =
+            remember {
+                if (providerMetadata.authors.size == 1) {
+                    context.getString(
+                        LocaleR.string.made_by_author_label_format,
+                        providerMetadata.authors.firstOrNull()?.name ?: "anon",
+                    )
+                } else {
+                    providerMetadata.authors
+                        .map { it.name }
+                        .take(3)
+                        .joinToString(", ")
+                }
             }
-        }
 
         Text(
             text = authors,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Light,
-                color = LocalContentColor.current.onMediumEmphasis(),
-                fontSize = 13.sp
-            )
+            style =
+                MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Light,
+                    color = LocalContentColor.current.onMediumEmphasis(),
+                    fontSize = 13.sp,
+                ),
         )
 
         Text(
             text = providerMetadata.providerType.toString(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Black,
-                color = LocalContentColor.current.onMediumEmphasis(),
-                fontSize = 13.sp
-            )
+            style =
+                MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    color = LocalContentColor.current.onMediumEmphasis(),
+                    fontSize = 13.sp,
+                ),
         )
     }
 }

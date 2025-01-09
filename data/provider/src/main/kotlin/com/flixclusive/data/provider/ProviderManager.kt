@@ -69,10 +69,6 @@ class ProviderManager
 
         private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
 
-        private val localPathPrefixForDebug by lazy {
-            "${context.getExternalDirPath()}/$PROVIDERS_FOLDER_NAME/debug"
-        }
-
         val providerPreferencesAsState: StateFlow<ProviderPreferences>
             get() =
                 dataStoreManager
@@ -108,7 +104,7 @@ class ProviderManager
         }
 
         private suspend fun initializeDebugProviderFromPreferences() {
-            val path = localPathPrefixForDebug
+            val path = "${context.getExternalDirPath()}/$PROVIDERS_FOLDER_NAME/debug"
             val localDir = File(path)
 
             if (!localDir.exists()) {
@@ -360,6 +356,7 @@ class ProviderManager
                         )
                     }
                 } finally {
+                    // TODO: Fix isDisabled property here
                     val message = context.getApiCrashMessage(provider = metadata.name)
                     context.showToastOnProviderCrash(message)
                     errorLog(message)

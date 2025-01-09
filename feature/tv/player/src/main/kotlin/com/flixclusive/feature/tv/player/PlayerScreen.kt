@@ -174,7 +174,7 @@ fun PlayerScreen(
         exit = fadeOut(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY)),
     ) {
         val sourceData = viewModel.cachedLinks
-        val providers by viewModel.providersAsState.collectAsStateWithLifecycle()
+        val providers = viewModel.providers
 
         val currentPlayerTitle =
             remember(currentEpisodeSelected) {

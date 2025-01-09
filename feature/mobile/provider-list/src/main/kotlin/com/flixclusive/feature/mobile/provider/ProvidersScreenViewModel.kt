@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.provider
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -42,13 +43,13 @@ internal class ProvidersScreenViewModel
         private val providerApiRepository: ProviderApiRepository,
     ) : ViewModel() {
         private val ioScope = AppDispatchers.IO.scope
-        val providers =
-            providerRepository
-                .getOrderedProvidersAsFlow()
-                .asStateFlow(
-                    scope = viewModelScope,
-                    initialValue = emptyList(),
-                )
+        val providers = mutableStateListOf<ProviderMetadata>()
+
+        val providersChangesHandler =
+            ProvidersOperationsHandler(
+                repository = providerRepository,
+                providers = providers,
+            )
 
         private var uninstallJob: Job? = null
         private var toggleJob: Job? = null
@@ -72,6 +73,16 @@ internal class ProvidersScreenViewModel
                 .distinctUntilChanged()
                 .asStateFlow(viewModelScope, initialValue = emptyList())
 
+        init {
+            viewModelScope.launch {
+                providers.addAll(providerRepository.getOrderedProviders())
+
+                providerRepository.observePositions().collect { operation ->
+                    providersChangesHandler.handleOperations(operation)
+                }
+            }
+        }
+
         fun onSearchQueryChange(newQuery: String) {
             searchQuery = newQuery
         }
@@ -88,17 +99,18 @@ internal class ProvidersScreenViewModel
                 }
         }
 
-        fun toggleProvider(
-            id: String,
-            isEnabled: Boolean,
-        ) {
+        fun toggleProvider(id: String) {
             if (toggleJob?.isActive == true) return
 
             toggleJob =
                 ioScope.launch {
-                    providerRepository.setEnabled(id = id, isDisabled = isEnabled)
+                    providerRepository.toggleProvider(id = id)
+                    val isDisabled =
+                        providerRepository
+                            .getProviderFromPreferences(id = id)
+                            ?.isDisabled == true
 
-                    if (!isEnabled) {
+                    if (isDisabled) {
                         providerApiRepository.removeApi(id)
                     } else {
                         try {
@@ -108,7 +120,7 @@ internal class ProvidersScreenViewModel
                                 api = api,
                             )
                         } catch (e: Throwable) {
-                            providerRepository.setEnabled(id = id, isDisabled = true)
+                            providerRepository.toggleProvider(id = id)
                             errorLog(e)
                             _error.emit(
                                 ProviderError(

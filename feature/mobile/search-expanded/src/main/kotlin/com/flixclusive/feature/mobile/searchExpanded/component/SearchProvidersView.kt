@@ -14,13 +14,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenViewModel
@@ -30,11 +28,11 @@ import com.flixclusive.core.locale.R as LocaleR
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SearchProvidersView(
-    modifier: Modifier = Modifier,
     viewModel: SearchExpandedScreenViewModel,
+    modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
-    val providerMetadataList by viewModel.providerMetadataList.collectAsStateWithLifecycle()
+    val providerMetadataList = viewModel.providerMetadataList
 
     LaunchedEffect(Unit) {
         safeCall {
@@ -45,23 +43,25 @@ internal fun SearchProvidersView(
     LazyColumn(
         modifier = modifier,
         state = listState,
-        contentPadding = PaddingValues(bottom = 10.dp)
+        contentPadding = PaddingValues(bottom = 10.dp),
     ) {
         stickyHeader {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(bottom = 5.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(bottom = 5.dp),
             ) {
                 Text(
                     text = stringResource(id = LocaleR.string.get_search_results_from),
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Black,
-                        color = LocalContentColor.current.onMediumEmphasis(0.8F)
-                    ),
-                    modifier = Modifier.padding(horizontal = 10.dp)
+                    style =
+                        MaterialTheme.typography.labelMedium.copy(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Black,
+                            color = LocalContentColor.current.onMediumEmphasis(0.8F),
+                        ),
+                    modifier = Modifier.padding(horizontal = 10.dp),
                 )
             }
         }
@@ -72,7 +72,7 @@ internal fun SearchProvidersView(
                 isSelected = viewModel.selectedProviderIndex == 0,
                 onClick = {
                     viewModel.onChangeProvider(0)
-                }
+                },
             )
         }
 
@@ -82,7 +82,7 @@ internal fun SearchProvidersView(
                 isSelected = viewModel.selectedProviderIndex == i + 1,
                 onClick = {
                     viewModel.onChangeProvider(i + 1)
-                }
+                },
             )
         }
     }

@@ -42,17 +42,17 @@ import kotlinx.coroutines.launch
 internal enum class SearchItemViewType {
     SearchHistory,
     Providers,
-    Films;
+    Films,
 }
 
 @Destination
 @Composable
 internal fun SearchExpandedScreen(
     navigator: CommonScreenNavigator,
+    viewModel: SearchExpandedScreenViewModel = hiltViewModel(),
     previewFilm: (Film) -> Unit,
 ) {
-    val viewModel: SearchExpandedScreenViewModel = hiltViewModel()
-    val providerMetadataList by viewModel.providerMetadataList.collectAsStateWithLifecycle()
+    val providerMetadataList = viewModel.providerMetadataList
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyGridState()
@@ -67,21 +67,23 @@ internal fun SearchExpandedScreen(
     var filterGroupIndexToShow by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(key1 = shouldStartPaginate) {
-        if(shouldStartPaginate && viewModel.pagingState == PagingState.IDLE)
+        if (shouldStartPaginate && viewModel.pagingState == PagingState.IDLE) {
             viewModel.paginateItems()
-    }
-
-    val providerMetadata = remember(viewModel.selectedProviderIndex) {
-        val providerMetadata = providerMetadataList
-            .getOrNull(viewModel.selectedProviderIndex - 1)
-
-        if (providerMetadata == null) {
-            return@remember Constant.tmdbProviderMetadata
         }
-
-        providerMetadata
     }
 
+    val providerMetadata =
+        remember(viewModel.selectedProviderIndex) {
+            val providerMetadata =
+                providerMetadataList
+                    .getOrNull(viewModel.selectedProviderIndex - 1)
+
+            if (providerMetadata == null) {
+                return@remember Constant.tmdbProviderMetadata
+            }
+
+            providerMetadata
+        }
 
     val sortedFilters by remember {
         derivedStateOf {
@@ -107,35 +109,38 @@ internal fun SearchExpandedScreen(
                         listState.scrollToItem(0)
                     }
                     viewModel.onSearch()
-                }
+                },
             )
-        }
+        },
     ) { innerPadding ->
         AnimatedContent(
             targetState = viewModel.currentViewType.value,
             transitionSpec = {
-                val enter = when (targetState) {
-                    SearchItemViewType.Films -> slideInHorizontally { it } + fadeIn()
-                    SearchItemViewType.Providers -> slideInHorizontally { -it } + fadeIn()
-                    else -> fadeIn()
-                }
+                val enter =
+                    when (targetState) {
+                        SearchItemViewType.Films -> slideInHorizontally { it } + fadeIn()
+                        SearchItemViewType.Providers -> slideInHorizontally { -it } + fadeIn()
+                        else -> fadeIn()
+                    }
 
-                val exit = when (initialState) {
-                    SearchItemViewType.Films -> slideOutHorizontally { it } + fadeOut()
-                    SearchItemViewType.Providers -> slideOutHorizontally { -it } + fadeOut()
-                    else -> fadeOut()
-                }
+                val exit =
+                    when (initialState) {
+                        SearchItemViewType.Films -> slideOutHorizontally { it } + fadeOut()
+                        SearchItemViewType.Providers -> slideOutHorizontally { -it } + fadeOut()
+                        else -> fadeOut()
+                    }
 
                 ContentTransform(
                     targetContentEnter = enter,
-                    initialContentExit = exit
+                    initialContentExit = exit,
                 )
             },
-            label = ""
+            label = "",
         ) { viewType ->
-            val modifier = Modifier
-                .padding(innerPadding)
-                .clip(RoundedCornerShape(topEnd = 4.dp, topStart = 4.dp))
+            val modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .clip(RoundedCornerShape(topEnd = 4.dp, topStart = 4.dp))
 
             when (viewType) {
                 SearchItemViewType.SearchHistory -> {
