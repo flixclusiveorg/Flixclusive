@@ -8,10 +8,12 @@
     </style>
 
     <style name="Theme.Flixclusive.Starting" parent="Theme.SplashScreen">
-        <item name="postSplashScreenTheme">@style/Theme.FlixclusiveTV</item>
+        <item name="postSplashScreenTheme">@style/Theme.Flixclusive</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/transparent_image</item>
         <item name="windowSplashScreenAnimationDuration">0</item>
         <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
 
     <style name="Theme.FlixclusiveTV" parent="Theme.Material3.Dark.NoActionBar" />
@@ -21,5 +23,7 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/transparent_image</item>
         <item name="windowSplashScreenAnimationDuration">0</item>
         <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
 </resources>
