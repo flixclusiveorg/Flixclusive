@@ -3,6 +3,11 @@ package com.flixclusive.feature.mobile.settings.screen.root
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -14,6 +19,7 @@ import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -34,7 +40,6 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.user.getAvatarResource
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
-import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.appearance.AppearanceTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.data.DataTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.github.FeatureRequestTweakNavigation
@@ -47,10 +52,10 @@ import com.flixclusive.feature.mobile.settings.screen.system.SystemTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
 import com.flixclusive.model.database.User
-import com.flixclusive.model.datastore.FlixclusivePrefs
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
 
+@Suppress("ktlint:compose:vm-forwarding-check")
 @SuppressLint("UnusedContentLambdaTargetStateParameter")
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Destination
@@ -116,9 +121,7 @@ internal fun SettingsScreen(
                                 items = items,
                                 currentUser = { currentUser!! },
                                 navigator = navigator,
-                                onScroll = {
-                                    backgroundAlpha.floatValue = it
-                                },
+                                onScroll = { backgroundAlpha.floatValue = it },
                                 onItemClick = { item ->
                                     scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
                                 },
@@ -136,45 +139,53 @@ internal fun SettingsScreen(
                             scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] ==
                                 PaneAdaptedValue.Expanded
 
-                        AnimatedPane {
-                            DetailsScaffold(
-                                isListAndDetailVisible = isListAndDetailVisible,
-                                isDetailsVisible = !isListVisible,
-                                navigateBack = {
-                                    if (scaffoldNavigator.canNavigateBack()) {
-                                        scaffoldNavigator.navigateBack(
-                                            backNavigationBehavior = BackNavigationBehavior.PopLatest,
-                                        )
+                        val screen by remember {
+                            derivedStateOf {
+                                navigationItems.fastFirstOrNull {
+                                    if (it is BaseTweakNavigation) {
+                                        return@fastFirstOrNull false
                                     }
-                                },
-                                content = {
-                                    RenderTweakScreen(
-                                        key = scaffoldNavigator.currentDestination?.content,
-                                        items = navigationItems,
+
+                                    it.key.name == scaffoldNavigator.currentDestination?.content
+                                }
+                            }
+                        }
+
+                        if (screen != null) {
+                            AnimatedPane {
+                                AnimatedContent(
+                                    targetState = screen!!,
+                                    label = "DetailsContent",
+                                    transitionSpec = {
+                                        if (initialState.isSubNavigation == true) {
+                                            fadeIn() + slideInHorizontally { -it / 4 } togetherWith
+                                                slideOutHorizontally { it / 4 } + fadeOut()
+                                        } else {
+                                            fadeIn() + slideInHorizontally { it / 4 } togetherWith
+                                                slideOutHorizontally { -it / 4 } + fadeOut()
+                                        }
+                                    },
+                                ) {
+                                    DetailsScaffold(
+                                        isListAndDetailVisible = isListAndDetailVisible,
+                                        isDetailsVisible = !isListVisible,
+                                        content = { it.Content() },
+                                        navigateBack = {
+                                            if (scaffoldNavigator.canNavigateBack()) {
+                                                scaffoldNavigator.navigateBack(
+                                                    backNavigationBehavior = BackNavigationBehavior.PopLatest,
+                                                )
+                                            }
+                                        },
                                     )
-                                },
-                            )
+                                }
+                            }
                         }
                     },
                 )
             }
         }
     }
-}
-
-@Composable
-private fun RenderTweakScreen(
-    key: String?,
-    items: List<BaseTweakScreen<out FlixclusivePrefs>>,
-) {
-    items
-        .fastFirstOrNull {
-            if (it is BaseTweakNavigation) {
-                return@fastFirstOrNull false
-            }
-
-            it.key.name == key
-        }?.Content()
 }
 
 @Composable
