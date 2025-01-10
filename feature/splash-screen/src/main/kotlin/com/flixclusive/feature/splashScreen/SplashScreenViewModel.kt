@@ -7,12 +7,12 @@ import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.data.configuration.AppConfigurationManager
-import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.home.PREFERRED_MINIMUM_HOME_ITEMS
+import com.flixclusive.domain.provider.ProviderLoaderUseCase
+import com.flixclusive.domain.provider.ProviderUpdaterUseCase
 import com.flixclusive.domain.updater.AppUpdateCheckerUseCase
-import com.flixclusive.domain.updater.ProviderUpdaterUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.datastore.system.SystemPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,7 +48,7 @@ internal class SplashScreenViewModel
         private val userSessionManager: UserSessionManager,
         private val userRepository: UserRepository,
         private val dataStoreManager: DataStoreManager,
-        private val providerManager: ProviderManager,
+        private val providerLoaderUseCase: ProviderLoaderUseCase,
         private val providerUpdaterUseCase: ProviderUpdaterUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow<SplashScreenUiState>(SplashScreenUiState.Loading)
@@ -114,7 +114,8 @@ internal class SplashScreenViewModel
             launchOnIO {
                 userLoggedIn.collectLatest {
                     if (it != null) {
-                        providerManager.initialize()
+                        providerLoaderUseCase.initDebugFolderToPreferences()
+                        providerLoaderUseCase.initFromLocal()
                         providerUpdaterUseCase(notify = true)
                         cancel()
                     } else {

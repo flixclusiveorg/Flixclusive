@@ -1,4 +1,4 @@
-package com.flixclusive.data.provider.util
+package com.flixclusive.domain.provider.util
 
 internal fun replaceLastAfterSlash(
     url: String,

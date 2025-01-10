@@ -1,15 +1,10 @@
-package com.flixclusive.data.provider.util
+package com.flixclusive.domain.provider.util
 
 import android.content.Context
-import com.flixclusive.core.util.android.saveTo
-import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.core.util.network.okhttp.request
-import com.flixclusive.data.provider.PROVIDERS_FOLDER_NAME
+import com.flixclusive.domain.provider.PROVIDERS_FOLDER_NAME
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
-import okhttp3.OkHttpClient
 import java.io.File
-import kotlin.jvm.Throws
 
 /**
  *
@@ -32,7 +27,7 @@ internal fun Context.getExternalDirPath(): String? {
 }
 
 private fun Context.getProvidersPathPrefix(userId: Int): String =
-    getExternalDirPath() + "/$PROVIDERS_FOLDER_NAME/user-$userId"
+    getExternalDirPath() + "/${PROVIDERS_FOLDER_NAME}/user-$userId"
 
 internal fun Context.createFileForProvider(
     provider: ProviderMetadata,
@@ -45,47 +40,6 @@ internal fun Context.createFileForProvider(
 
     return File("$prefix/$folderName/$filename")
 }
-
-@Throws(DownloadFailed::class)
-internal fun OkHttpClient.download(
-    file: File,
-    downloadUrl: String,
-) {
-    try {
-        val response = request(downloadUrl).execute()
-        if (!response.isSuccessful) {
-            errorLog("Error on download: [${response.code}] ${response.message}")
-            return
-        }
-
-        var backupFile: File? = null
-        file.mkdirs()
-        if (file.exists()) {
-            backupFile = File(file.parent!!.plus("/${file.name}.old"))
-            file.renameTo(backupFile)
-            file.delete()
-        }
-
-        if (!file.createNewFile()) {
-            backupFile?.renameTo(file)
-            errorLog("Error creating file: $file")
-            throw Exception("Error creating file: $file")
-        }
-
-        response.body.source().saveTo(file)
-        response.close()
-        backupFile?.delete()
-    } catch (e: Throwable) {
-        errorLog("Error on downloading URL: $downloadUrl")
-        errorLog(e)
-
-        throw DownloadFailed(downloadUrl)
-    }
-}
-
-class DownloadFailed(
-    downloadUrl: String,
-) : Exception("Failed to download the following URL: $downloadUrl")
 
 private const val OAT_FILENAME = "oat"
 private const val CLASSES_DEX_FILENAME = "classes.dex"

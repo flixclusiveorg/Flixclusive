@@ -9,18 +9,19 @@ import com.flixclusive.data.provider.MediaLinksRepository
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.finish
-import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.finishWithTrustedProviders
-import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.sendExtractingLinksMessage
-import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.sendFetchingEpisodeMessage
-import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.sendFetchingFilmMessage
-import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.throwError
-import com.flixclusive.domain.provider.util.GetMediaLinksStateMessageHelper.throwUnavailableError
-import com.flixclusive.domain.provider.util.MediaLinksProviderUtil
-import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.DEFAULT_ERROR_MESSAGE
-import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.EMPTY_PROVIDER_MESSAGE
-import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.getNoLinksLoadedMessage
-import com.flixclusive.domain.provider.util.MediaLinksProviderUtil.isCached
+import com.flixclusive.domain.provider.util.DEFAULT_ERROR_MESSAGE
+import com.flixclusive.domain.provider.util.EMPTY_PROVIDER_MESSAGE
+import com.flixclusive.domain.provider.util.UNAVAILABLE_EPISODE_MESSAGE
+import com.flixclusive.domain.provider.util.finish
+import com.flixclusive.domain.provider.util.finishWithTrustedProviders
+import com.flixclusive.domain.provider.util.getNoLinksLoadedMessage
+import com.flixclusive.domain.provider.util.getWatchId
+import com.flixclusive.domain.provider.util.isCached
+import com.flixclusive.domain.provider.util.sendExtractingLinksMessage
+import com.flixclusive.domain.provider.util.sendFetchingEpisodeMessage
+import com.flixclusive.domain.provider.util.sendFetchingFilmMessage
+import com.flixclusive.domain.provider.util.throwError
+import com.flixclusive.domain.provider.util.throwUnavailableError
 import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.database.util.getNextEpisodeToWatch
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
@@ -106,30 +107,24 @@ class GetMediaLinksUseCase
                         filmLanguage = film.language,
                     )
 
-                val episodeToUse =
-                    when {
-                        film.isTvShow && episode == null -> {
-                            sendFetchingEpisodeMessage()
+                var episodeToUse: Episode? = episode
+                if (film.isTvShow && episode == null) {
+                    sendFetchingEpisodeMessage()
 
-                            val nextEpisode =
-                                getNearestEpisodeToWatch(
-                                    film = film as TvShow,
-                                    watchHistoryItem = watchHistoryItem,
-                                )
+                    val nextEpisode =
+                        getNearestEpisodeToWatch(
+                            film = film as TvShow,
+                            watchHistoryItem = watchHistoryItem,
+                        )
 
-                            if (nextEpisode is Resource.Failure) {
-                                onError?.invoke(nextEpisode.error ?: MediaLinksProviderUtil.UNAVAILABLE_EPISODE_MESSAGE)
-                                throwError(nextEpisode.error)
-                                return@channelFlow
-                            }
-
-                            nextEpisode.data
-                        }
-
-                        else -> {
-                            episode
-                        }
+                    if (nextEpisode is Resource.Failure) {
+                        onError?.invoke(nextEpisode.error ?: UNAVAILABLE_EPISODE_MESSAGE)
+                        throwError(nextEpisode.error)
+                        return@channelFlow
                     }
+
+                    episodeToUse = nextEpisode.data
+                }
 
                 val cachedLinks =
                     getCache(
@@ -140,26 +135,16 @@ class GetMediaLinksUseCase
                 if (apis.isEmpty()) {
                     if (film.tmdbId != null) {
                         val response =
-                            tmdbRepository.getWatchProviders(
-                                mediaType = film.filmType.type,
-                                id = film.tmdbId!!,
+                            loadOfficialWatchProvidersFromTmdb(
+                                cachedLinks = cachedLinks,
+                                film = film,
+                                episode = episode,
                             )
 
-                        response.data?.fastForEach(cachedLinks::add)
-                        storeCache(
-                            filmId = film.identifier,
-                            episode = episode,
-                            cachedLinks =
-                                cachedLinks.copy(
-                                    watchId = film.identifier,
-                                    providerId = DEFAULT_FILM_SOURCE_NAME,
-                                ),
-                        )
-
-                        if (response.data?.isNotEmpty() == true) {
+                        if (response is Resource.Success) {
                             finishWithTrustedProviders()
                             return@channelFlow
-                        } else if (response.error != null) {
+                        } else {
                             onError?.invoke(response.error!!)
                             throwError(response.error)
                             return@channelFlow
@@ -417,18 +402,39 @@ class GetMediaLinksUseCase
             val needsNewWatchId = watchId == null && film.isFromTmdb && api !is ProviderWebViewApi
             val watchIdResource =
                 when {
-                    needsNewWatchId -> {
-                        mediaLinksRepository.getWatchId(
-                            film = film,
-                            api = api,
-                        )
-                    }
-
-                    else -> {
-                        Resource.Success(watchId ?: film.identifier)
-                    }
+                    needsNewWatchId -> api.getWatchId(film = film)
+                    else -> Resource.Success(watchId ?: film.identifier)
                 }
 
             return watchIdResource
+        }
+
+        private suspend fun loadOfficialWatchProvidersFromTmdb(
+            cachedLinks: CachedLinks,
+            film: FilmMetadata,
+            episode: Episode?,
+        ): Resource<Unit> {
+            val response =
+                tmdbRepository.getWatchProviders(
+                    mediaType = film.filmType.type,
+                    id = film.tmdbId!!,
+                )
+
+            response.data?.fastForEach(cachedLinks::add)
+            storeCache(
+                filmId = film.identifier,
+                episode = episode,
+                cachedLinks =
+                    cachedLinks.copy(
+                        watchId = film.identifier,
+                        providerId = DEFAULT_FILM_SOURCE_NAME,
+                    ),
+            )
+
+            return if (response is Resource.Failure) {
+                Resource.Failure(response.error)
+            } else {
+                Resource.Success(Unit)
+            }
         }
     }

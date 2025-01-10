@@ -7,12 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
-import com.flixclusive.core.util.coroutines.AppDispatchers
-import com.flixclusive.data.provider.ProviderManager
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
+import com.flixclusive.domain.provider.ProviderUnloaderUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.datastore.system.SystemPreferences
 import com.flixclusive.model.datastore.user.ProviderPreferences
@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -36,7 +35,7 @@ internal class SettingsViewModel
         private val searchHistoryRepository: SearchHistoryRepository,
         private val getMediaLinksUseCase: GetMediaLinksUseCase,
         private val providerRepository: ProviderRepository,
-        private val providerManager: ProviderManager,
+        private val providerUnloaderUseCase: ProviderUnloaderUseCase,
     ) : ViewModel() {
         val searchHistoryCount =
             userSessionManager.currentUser
@@ -78,10 +77,10 @@ internal class SettingsViewModel
         }
 
         fun clearSearchHistory() {
-            AppDispatchers.IO.scope.launch {
+            launchOnIO {
                 val userId =
                     userSessionManager.currentUser.value?.id
-                        ?: return@launch
+                        ?: return@launchOnIO
 
                 searchHistoryRepository.clearAll(userId)
             }
@@ -92,7 +91,7 @@ internal class SettingsViewModel
         }
 
         fun deleteRepositories() {
-            AppDispatchers.IO.scope.launch {
+            launchOnIO {
                 updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
                     it.copy(repositories = emptyList())
                 }
@@ -100,9 +99,9 @@ internal class SettingsViewModel
         }
 
         fun deleteProviders() {
-            AppDispatchers.IO.scope.launch {
+            launchOnIO {
                 providerRepository.getProviders().forEach {
-                    providerManager.unload(it)
+                    providerUnloaderUseCase.unload(it)
                 }
             }
         }

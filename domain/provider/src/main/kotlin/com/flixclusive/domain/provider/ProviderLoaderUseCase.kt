@@ -1,15 +1,11 @@
-package com.flixclusive.data.provider
+package com.flixclusive.domain.provider
 
 import android.content.Context
 import android.widget.Toast
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
-import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.datastore.util.awaitFirst
 import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.core.util.coroutines.AppDispatchers
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withDefaultContext
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.util.coroutines.blockFirstNotNull
 import com.flixclusive.core.util.exception.safeCall
@@ -17,21 +13,21 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.core.util.network.json.fromJson
-import com.flixclusive.data.provider.util.DownloadFailed
-import com.flixclusive.data.provider.util.DynamicResourceLoader
-import com.flixclusive.data.provider.util.createFileForProvider
-import com.flixclusive.data.provider.util.download
-import com.flixclusive.data.provider.util.getApiCrashMessage
-import com.flixclusive.data.provider.util.getCommonCrashMessage
-import com.flixclusive.data.provider.util.getExternalDirPath
-import com.flixclusive.data.provider.util.getFileFromPath
-import com.flixclusive.data.provider.util.getProviderInstance
-import com.flixclusive.data.provider.util.isClassesDex
-import com.flixclusive.data.provider.util.isJson
-import com.flixclusive.data.provider.util.isNotOat
-import com.flixclusive.data.provider.util.isProviderFile
-import com.flixclusive.data.provider.util.replaceLastAfterSlash
-import com.flixclusive.data.provider.util.rmrf
+import com.flixclusive.data.provider.ProviderApiRepository
+import com.flixclusive.data.provider.ProviderRepository
+import com.flixclusive.domain.provider.util.DynamicResourceLoader
+import com.flixclusive.domain.provider.util.createFileForProvider
+import com.flixclusive.domain.provider.util.downloadProvider
+import com.flixclusive.domain.provider.util.getApiCrashMessage
+import com.flixclusive.domain.provider.util.getCommonCrashMessage
+import com.flixclusive.domain.provider.util.getExternalDirPath
+import com.flixclusive.domain.provider.util.getFileFromPath
+import com.flixclusive.domain.provider.util.getProviderInstance
+import com.flixclusive.domain.provider.util.isClassesDex
+import com.flixclusive.domain.provider.util.isJson
+import com.flixclusive.domain.provider.util.isNotOat
+import com.flixclusive.domain.provider.util.isProviderFile
+import com.flixclusive.domain.provider.util.rmrf
 import com.flixclusive.model.datastore.user.ProviderFromPreferences
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
@@ -41,7 +37,6 @@ import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import com.flixclusive.provider.Provider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
-import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 import java.io.File
 import javax.inject.Inject
@@ -50,13 +45,13 @@ import com.flixclusive.core.locale.R as LocaleR
 
 internal const val PROVIDERS_FOLDER_NAME = "providers"
 internal const val PROVIDERS_SETTINGS_FOLDER_NAME = "settings"
-const val PROVIDER_DEBUG = "debug"
+internal const val UPDATER_FILE = "updater.json"
+internal const val PROVIDER_DEBUG = "debug"
 
 private const val MANIFEST_FILE = "manifest.json"
-private const val UPDATER_FILE = "updater.json"
 
 @Singleton
-class ProviderManager
+class ProviderLoaderUseCase
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
@@ -70,41 +65,36 @@ class ProviderManager
 
         private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
 
-        val providerPreferencesAsState: StateFlow<ProviderPreferences>
-            get() =
-                dataStoreManager
-                    .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
-                    .asStateFlow(AppDispatchers.IO.scope)
+        private val updaterJsonMap = HashMap<String, List<ProviderMetadata>>()
+        private val providerPreferences: ProviderPreferences get() =
+            dataStoreManager
+                .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
+                .awaitFirst()
 
-        val providerPreferences: ProviderPreferences get() = providerPreferencesAsState.awaitFirst()
+        suspend fun load(
+            provider: ProviderMetadata,
+            needsDownload: Boolean = false,
+            filePath: String? = null,
+        ) {
+            val userId = userSessionDataStore.currentUserId.blockFirstNotNull()!!
+            val file =
+                filePath?.let { File(it) }
+                    ?: context.createFileForProvider(
+                        provider = provider,
+                        userId = userId,
+                    )
 
-        suspend fun initialize() {
-            providerRepository.initializeOrder()
-            initializeDebugProviderFromPreferences()
-
-            val updaterJsonMap = HashMap<String, List<ProviderMetadata>>()
-            providerPreferencesAsState.value.providers.forEach { providerPreference ->
-                val file = File(providerPreference.filePath)
-
-                if (!file.exists()) {
-                    warnLog("Provider file doesn't exist for: ${providerPreference.name}")
-                    return@forEach
-                }
-
-                val metadata =
-                    updaterJsonMap.getProviderMetadataFromUpdater(
-                        id = providerPreference.id,
-                        file = file,
-                    ) ?: return@forEach
-
-                initializeFromFile(
-                    file = file,
-                    metadata = metadata,
-                )
+            if (needsDownload) {
+                client.downloadProvider(file, provider.buildUrl)
             }
+
+            load(
+                file = file,
+                metadata = provider,
+            )
         }
 
-        private suspend fun initializeDebugProviderFromPreferences() {
+        suspend fun initDebugFolderToPreferences() {
             val path = "${context.getExternalDirPath()}/$PROVIDERS_FOLDER_NAME/debug"
             val localDir = File(path)
 
@@ -147,9 +137,68 @@ class ProviderManager
             }
         }
 
+        suspend fun initFromLocal() {
+            providerPreferences.providers.forEach { itemPreference ->
+                val file = File(itemPreference.filePath)
+
+                if (!file.exists()) {
+                    warnLog("Provider file doesn't exist for: ${itemPreference.name}")
+                    return
+                }
+
+                val metadata =
+                    updaterJsonMap.getProviderMetadataFromUpdater(
+                        id = itemPreference.id,
+                        file = file,
+                    ) ?: return
+
+                val isDebugProvider = file.parent?.equals(PROVIDER_DEBUG, true) == true
+
+                when {
+                    file.isProviderFile && isDebugProvider -> {
+                        loadDebugProvider(
+                            file = file,
+                            metadata = metadata,
+                        )
+                    }
+
+                    file.isProviderFile -> {
+                        load(
+                            file = file,
+                            metadata = metadata,
+                        )
+                    }
+
+                    file.isNotOat && file.isDirectory -> {
+                        // Some roms create this
+                        context.showToast(
+                            String.format(
+                                context.getString(LocaleR.string.invalid_provider_file_directory_msg_format),
+                                file.name,
+                            ),
+                        )
+
+                        rmrf(file)
+                    }
+
+                    file.isNotOat || file.isClassesDex || file.isJson -> {
+                        // Some roms create this
+                        context.showToast(
+                            String.format(
+                                context.getString(LocaleR.string.invalid_provider_file_dex_json_msg_format),
+                                file.name,
+                            ),
+                        )
+
+                        rmrf(file)
+                    }
+                }
+            }
+        }
+
         private suspend fun addProviderToPreferences(file: File) {
             val isProviderNotYetLoaded =
-                providerPreferencesAsState.value.providers
+                providerPreferences.providers
                     .any { it.filePath == file.absolutePath }
                     .not()
 
@@ -194,96 +243,6 @@ class ProviderManager
             return updaterJsonList.find { it.id == id }
         }
 
-        private suspend fun initializeFromFile(
-            file: File,
-            metadata: ProviderMetadata,
-        ) {
-            val isDebugProvider = file.parent?.equals(PROVIDER_DEBUG, true) == true
-            when {
-                file.isProviderFile && isDebugProvider -> {
-                    loadDebugProvider(
-                        file = file,
-                        metadata = metadata,
-                    )
-                }
-
-                file.isProviderFile -> {
-                    loadProvider(
-                        file = file,
-                        metadata = metadata,
-                    )
-                }
-
-                file.isNotOat && file.isDirectory -> {
-                    // Some roms create this
-                    context.showToast(
-                        String.format(
-                            context.getString(LocaleR.string.invalid_provider_file_directory_msg_format),
-                            file.name,
-                        ),
-                    )
-
-                    rmrf(file)
-                }
-
-                file.isNotOat || file.isClassesDex || file.isJson -> {
-                    // Some roms create this
-                    context.showToast(
-                        String.format(
-                            context.getString(LocaleR.string.invalid_provider_file_dex_json_msg_format),
-                            file.name,
-                        ),
-                    )
-
-                    rmrf(file)
-                }
-            }
-        }
-
-        @Throws(DownloadFailed::class)
-        private suspend fun downloadProvider(
-            saveTo: File,
-            buildUrl: String,
-        ) {
-            val updaterJsonUrl = replaceLastAfterSlash(buildUrl, UPDATER_FILE)
-            val updaterFile = File(saveTo.parent!!.plus("/$UPDATER_FILE"))
-
-            withIOContext {
-                client.download(
-                    file = saveTo,
-                    downloadUrl = buildUrl,
-                )
-
-                client.download(
-                    file = updaterFile,
-                    downloadUrl = updaterJsonUrl,
-                )
-            }
-        }
-
-        suspend fun loadProvider(
-            provider: ProviderMetadata,
-            needsDownload: Boolean = false,
-            filePath: String? = null,
-        ) {
-            val userId = userSessionDataStore.currentUserId.blockFirstNotNull()!!
-            val file =
-                filePath?.let { File(it) }
-                    ?: context.createFileForProvider(
-                        provider = provider,
-                        userId = userId,
-                    )
-
-            if (needsDownload) {
-                downloadProvider(file, provider.buildUrl)
-            }
-
-            loadProvider(
-                file = file,
-                metadata = provider,
-            )
-        }
-
         /**
          * Loads a provider
          *
@@ -291,7 +250,7 @@ class ProviderManager
          * @param metadata      The provider information
          */
         @Suppress("UNCHECKED_CAST")
-        private suspend fun loadProvider(
+        private suspend fun load(
             file: File,
             metadata: ProviderMetadata,
         ) {
@@ -318,7 +277,7 @@ class ProviderManager
                     )
 
                 val preferenceItem =
-                    getProviderFromPreferencesOrCreate(
+                    getPreferenceItemOrCreate(
                         id = metadata.id,
                         fileName = file.nameWithoutExtension,
                         filePath = filePath,
@@ -347,12 +306,13 @@ class ProviderManager
                     dynamicResourceLoader.cleanupArtifacts(file)
                 }
 
-                var forceDisable = false
+                var isApiDisabled = preferenceItem.isDisabled
                 try {
-                    if (!preferenceItem.isDisabled) {
+                    if (!isApiDisabled) {
+                        loadApiFromProvider(metadata.id, provider)
                     }
                 } catch (_: Exception) {
-                    forceDisable = true
+                    isApiDisabled = true
 
                     val message = context.getApiCrashMessage(provider = metadata.name)
                     context.showToastOnProviderCrash(message)
@@ -362,7 +322,7 @@ class ProviderManager
                         classLoader = loader,
                         provider = provider,
                         metadata = metadata,
-                        preferenceItem = preferenceItem.copy(isDisabled = forceDisable),
+                        preferenceItem = preferenceItem.copy(isDisabled = isApiDisabled),
                     )
                 }
             } catch (e: Throwable) {
@@ -398,7 +358,7 @@ class ProviderManager
             file: File,
             metadata: ProviderMetadata,
         ) {
-            loadProvider(
+            load(
                 file = file,
                 metadata =
                     metadata.copy(
@@ -410,7 +370,7 @@ class ProviderManager
 
         private fun canMigrateSettingsFile(metadata: ProviderMetadata): Boolean {
             val providerFromPreference =
-                providerPreferencesAsState.value.providers
+                providerPreferences.providers
                     .find { it.name.equals(metadata.name, true) }
                     ?: return false
 
@@ -448,13 +408,13 @@ class ProviderManager
             return "${context.getExternalDirPath()}/$finalPathPrefix"
         }
 
-        private fun getProviderFromPreferencesOrCreate(
+        private fun getPreferenceItemOrCreate(
             id: String,
             fileName: String,
             filePath: String,
         ): ProviderFromPreferences {
             var providerFromPreferences =
-                providerPreferencesAsState.value.providers
+                providerPreferences.providers
                     .find { it.id == id }
 
             if (providerFromPreferences == null) {
@@ -479,122 +439,6 @@ class ProviderManager
                 toast = Toast.makeText(this@showToastOnProviderCrash, message, Toast.LENGTH_SHORT)
                 toast!!.show()
             }
-        }
-
-        /**
-         * Unloads a provider
-         *
-         * @param metadata the [ProviderMetadata] to uninstall/unload
-         * @param unloadOnPreferences an optional toggle to also unload the provider from the settings. Default value is *true*
-         */
-        suspend fun unload(
-            metadata: ProviderMetadata,
-            unloadOnPreferences: Boolean = true,
-        ) {
-            val providerFromPreferences =
-                withDefaultContext {
-                    providerPreferencesAsState.value
-                        .providers
-                        .find { it.id == metadata.id }
-                }
-
-            requireNotNull(providerFromPreferences) {
-                "No such provider on your preferences: ${metadata.name}"
-            }
-
-            val provider = providerRepository.getProvider(metadata.id)
-            val file = File(providerFromPreferences.filePath)
-
-            if (provider == null || !file.exists()) {
-                errorLog("Provider [${metadata.name}] not found. Cannot be unloaded")
-                return
-            }
-
-            infoLog("Unloading provider: ${provider.name}")
-            safeCall("Exception while unloading provider with ID: ${provider.name}") {
-                provider.onUnload(context)
-            }
-
-            providerRepository.remove(id = metadata.id)
-            providerApiRepository.removeApi(id = metadata.id)
-            deleteProviderRelatedFiles(file = file)
-
-            if (unloadOnPreferences) {
-                providerRepository.removeFromPreferences(id = metadata.id)
-            }
-        }
-
-        private fun deleteProviderRelatedFiles(file: File) {
-            file.delete()
-
-            // Delete updater.json file if its the only thing remaining on that directory
-            val parentDirectory = file.parentFile!!
-            if (parentDirectory.isDirectory && parentDirectory.listFiles()?.size == 1) {
-                val lastRemainingFile = parentDirectory.listFiles()!![0]
-
-                if (lastRemainingFile.name.equals(UPDATER_FILE, true)) {
-                    rmrf(parentDirectory)
-                }
-            }
-        }
-
-        private fun createNewProviderFromPreferences(
-            id: String,
-            newMetadata: ProviderMetadata,
-        ): ProviderFromPreferences {
-            val oldOrderPosition =
-                providerPreferencesAsState.value
-                    .providers
-                    .indexOfFirst { it.id == id }
-
-            val oldPreference = providerPreferences.providers[oldOrderPosition]
-
-            val userId = userSessionDataStore.currentUserId.blockFirstNotNull()!!
-            val file =
-                context
-                    .createFileForProvider(
-                        userId = userId,
-                        provider = newMetadata,
-                    )
-            val filePath = file.absolutePath
-
-            return oldPreference.copy(
-                name = newMetadata.name,
-                filePath = filePath,
-            )
-        }
-
-        @Throws(DownloadFailed::class)
-        suspend fun update(
-            oldMetadata: ProviderMetadata,
-            newMetadata: ProviderMetadata,
-        ) {
-            requireNotNull(providerRepository.getProvider(oldMetadata.id)) {
-                "No such provider: ${oldMetadata.name}"
-            }
-
-            val newPreference =
-                createNewProviderFromPreferences(
-                    id = oldMetadata.id,
-                    newMetadata = newMetadata,
-                )
-
-            providerRepository.addToPreferences(preferenceItem = newPreference)
-
-            downloadProvider(
-                saveTo = File(newPreference.filePath),
-                buildUrl = newMetadata.buildUrl,
-            )
-
-            unload(
-                metadata = oldMetadata,
-                unloadOnPreferences = false,
-            )
-
-            loadProvider(
-                provider = newMetadata,
-                filePath = newPreference.filePath,
-            )
         }
 
         private suspend fun updateProviderPrefs(transform: suspend (t: ProviderPreferences) -> ProviderPreferences) {

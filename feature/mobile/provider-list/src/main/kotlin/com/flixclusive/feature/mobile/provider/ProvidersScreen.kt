@@ -69,8 +69,8 @@ import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
-import com.flixclusive.data.provider.util.getApiCrashMessage
 import com.flixclusive.data.provider.util.isNotUsable
+import com.flixclusive.domain.provider.util.getApiCrashMessage
 import com.flixclusive.feature.mobile.provider.component.CustomButton
 import com.flixclusive.feature.mobile.provider.component.InstalledProviderCard
 import com.flixclusive.feature.mobile.provider.component.ProfileHandlerButtons

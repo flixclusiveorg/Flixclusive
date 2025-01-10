@@ -1,10 +1,9 @@
 package com.flixclusive.domain.provider.test
 
 import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.locale.util.toUiText
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.util.log.infoLog
-import com.flixclusive.domain.provider.util.StringHelper.createString
-import com.flixclusive.domain.provider.util.StringHelper.getString
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.FilmSearchItem
@@ -26,59 +25,63 @@ import com.flixclusive.core.locale.R as LocaleR
 
 @Suppress("MemberVisibilityCanBePrivate")
 internal object ProviderTestCases {
-    val propertyTestCases = listOf(
-        ProviderTestCase(
-            name = getString(LocaleR.string.ptest_get_testable_film),
-            stopTestOnFailure = true,
-            test = ::testFilmIsSafeToGet,
-        ),
-        ProviderTestCase(
-            name = getString(LocaleR.string.ptest_get_catalog_list),
-            test = ::catalogListIsSafeToGet,
-        ),
-        ProviderTestCase(
-            name = getString(LocaleR.string.ptest_get_search_filters),
-            test = ::filtersAreSafeToGet,
-        ),
-    )
+    val propertyTestCases =
+        listOf(
+            ProviderTestCase(
+                name = LocaleR.string.ptest_get_testable_film.toUiText(),
+                stopTestOnFailure = true,
+                test = ::testFilmIsSafeToGet,
+            ),
+            ProviderTestCase(
+                name = LocaleR.string.ptest_get_catalog_list.toUiText(),
+                test = ::catalogListIsSafeToGet,
+            ),
+            ProviderTestCase(
+                name = LocaleR.string.ptest_get_search_filters.toUiText(),
+                test = ::filtersAreSafeToGet,
+            ),
+        )
 
-    val methodTestCases = listOf(
-        ProviderTestCase(
-            name = getString(LocaleR.string.ptest_method_get_catalog_items),
-            test = ::methodGetCatalogItemsIsSafeToCall,
-        ),
-        ProviderTestCase(
-            name = getString(LocaleR.string.ptest_method_get_search_items),
-            test = ::methodSearchIsSafeToCall,
-        ),
-        ProviderTestCase(
-            name = getString(LocaleR.string.ptest_method_get_film_details),
-            test = ::methodGetFilmMetadataIsSafeToCall,
-        ),
-        ProviderTestCase(
-            name = getString(LocaleR.string.ptest_method_get_links),
-            test = ::methodGetLinksIsSafeToCall,
-        ),
-    )
+    val methodTestCases =
+        listOf(
+            ProviderTestCase(
+                name = LocaleR.string.ptest_method_get_catalog_items.toUiText(),
+                test = ::methodGetCatalogItemsIsSafeToCall,
+            ),
+            ProviderTestCase(
+                name = LocaleR.string.ptest_method_get_search_items.toUiText(),
+                test = ::methodSearchIsSafeToCall,
+            ),
+            ProviderTestCase(
+                name = LocaleR.string.ptest_method_get_film_details.toUiText(),
+                test = ::methodGetFilmMetadataIsSafeToCall,
+            ),
+            ProviderTestCase(
+                name = LocaleR.string.ptest_method_get_links.toUiText(),
+                test = ::methodGetLinksIsSafeToCall,
+            ),
+        )
 
-    private val module = SerializersModule {
-        polymorphic(Film::class) {
-            subclass(FilmSearchItem::class, FilmSearchItem.serializer())
+    private val module =
+        SerializersModule {
+            polymorphic(Film::class) {
+                subclass(FilmSearchItem::class, FilmSearchItem.serializer())
+            }
+
+            polymorphic(FilmMetadata::class) {
+                subclass(Movie::class, Movie.serializer())
+                subclass(TvShow::class, TvShow.serializer())
+            }
         }
-
-        polymorphic(FilmMetadata::class) {
-            subclass(Movie::class, Movie.serializer())
-            subclass(TvShow::class, TvShow.serializer())
-        }
-    }
 
     /** For pretty printing */
     @OptIn(ExperimentalSerializationApi::class)
-    private val json = Json {
-        prettyPrint = true
-        prettyPrintIndent = "  "
-        serializersModule = module
-    }
+    private val json =
+        Json {
+            prettyPrint = true
+            prettyPrintIndent = "  "
+            serializersModule = module
+        }
 
     data class ProviderTestCase(
         val name: UiText,
@@ -101,65 +104,74 @@ internal object ProviderTestCases {
         failedFullLog: ((Throwable?) -> UiText)? = null,
         assert: suspend () -> T?,
     ): ProviderTestCaseOutput {
-        val (value, timeTaken) = measureTimedValue {
-            try {
-                val data = assert()
-                AssertionResult(
-                    status = TestStatus.SUCCESS,
-                    data = data,
-                )
-            } catch (e: Throwable) {
-                val status = when (e) {
-                    is NotImplementedError -> TestStatus.NOT_IMPLEMENTED
-                    else -> TestStatus.FAILURE
+        val (value, timeTaken) =
+            measureTimedValue {
+                try {
+                    val data = assert()
+                    AssertionResult(
+                        status = TestStatus.SUCCESS,
+                        data = data,
+                    )
+                } catch (e: Throwable) {
+                    val status =
+                        when (e) {
+                            is NotImplementedError -> TestStatus.NOT_IMPLEMENTED
+                            else -> TestStatus.FAILURE
+                        }
+
+                    AssertionResult(
+                        status = status,
+                        error = e,
+                    )
                 }
-
-                AssertionResult(
-                    status = status,
-                    error = e,
-                )
             }
-        }
 
-        val (shortLog, fullLog) = when (value.status) {
-            TestStatus.SUCCESS -> successShortLog(value.data) to successFullLog(value.data)
-            TestStatus.RUNNING -> UiText.StringValue("") to UiText.StringValue("")
-            TestStatus.NOT_IMPLEMENTED, TestStatus.FAILURE -> {
-                val actualNotImplementedShortLog = notImplementedShortLog?.invoke(value.error)
-                    ?: value.error?.localizedMessage?.let(::createString)
-                    ?: getString(LocaleR.string.ptest_error_not_implemented)
+        val (shortLog, fullLog) =
+            when (value.status) {
+                TestStatus.SUCCESS -> successShortLog(value.data) to successFullLog(value.data)
+                TestStatus.RUNNING -> UiText.StringValue("") to UiText.StringValue("")
+                TestStatus.NOT_IMPLEMENTED, TestStatus.FAILURE -> {
+                    val actualNotImplementedShortLog =
+                        notImplementedShortLog?.invoke(value.error)
+                            ?: value.error?.localizedMessage?.toUiText()
+                            ?: LocaleR.string.ptest_error_not_implemented.toUiText()
 
-                val actualFailedFullLog = failedFullLog?.invoke(value.error)
-                    ?: createString(value.error!!.stackTraceToString())
+                    val actualFailedFullLog =
+                        failedFullLog?.invoke(value.error)
+                            ?: value.error!!.stackTraceToString().toUiText()
 
-                if (value.status == TestStatus.NOT_IMPLEMENTED)
-                    actualNotImplementedShortLog to actualFailedFullLog
-                else failedShortLog(value.error) to actualFailedFullLog
+                    if (value.status == TestStatus.NOT_IMPLEMENTED) {
+                        actualNotImplementedShortLog to actualFailedFullLog
+                    } else {
+                        failedShortLog(value.error) to actualFailedFullLog
+                    }
+                }
             }
-        }
 
         return ProviderTestCaseOutput(
             status = value.status,
             name = testName,
             timeTaken = timeTaken,
             shortLog = shortLog,
-            fullLog = fullLog
+            fullLog = fullLog,
         )
     }
 
     private fun List<Film>?.filmsResponseToFullLog(): UiText {
-        val films = this?.map {
-            "${it.title} [${it.identifier}]"
-        }
+        val films =
+            this?.map {
+                "${it.title} [${it.identifier}]"
+            }
 
-        return createString(json.encodeToString(films ?: emptyList()))
+        return json.encodeToString(films ?: emptyList()).toUiText()
     }
 
     private fun getShortLogForItemsFound(size: Int?): UiText {
-        if (size == null || size == 0)
-            return getString(LocaleR.string.ptest_success_items_count_found_empty)
+        if (size == null || size == 0) {
+            return LocaleR.string.ptest_success_items_count_found_empty.toUiText()
+        }
 
-        return getString(LocaleR.string.ptest_success_items_count_found, size)
+        return LocaleR.string.ptest_success_items_count_found.toUiText(size)
     }
 
     suspend fun testFilmIsSafeToGet(
@@ -168,10 +180,10 @@ internal object ProviderTestCases {
     ): ProviderTestCaseOutput {
         return assertWithMeasuredTime(
             testName = testName,
-            failedShortLog = { getString(LocaleR.string.ptest_error_get_testable_film) },
-            successShortLog = { createString(api.testFilm.title) },
-            successFullLog = { createString(json.encodeToString(api.testFilm)) },
-            assert = { assertProperty(api.testFilm) }
+            failedShortLog = { LocaleR.string.ptest_error_get_testable_film.toUiText() },
+            successShortLog = { api.testFilm.title.toUiText() },
+            successFullLog = { json.encodeToString(api.testFilm).toUiText() },
+            assert = { assertProperty(api.testFilm) },
         )
     }
 
@@ -181,10 +193,10 @@ internal object ProviderTestCases {
     ): ProviderTestCaseOutput {
         return assertWithMeasuredTime(
             testName = testName,
-            failedShortLog = { getString(LocaleR.string.ptest_error_get_catalog_list) },
+            failedShortLog = { LocaleR.string.ptest_error_get_catalog_list.toUiText() },
             successShortLog = { getShortLogForItemsFound(api.catalogs.size) },
-            successFullLog = { createString(json.encodeToString(api.catalogs)) },
-            assert = { assertProperty(api.catalogs) }
+            successFullLog = { json.encodeToString(api.catalogs).toUiText() },
+            assert = { assertProperty(api.catalogs) },
         )
     }
 
@@ -194,22 +206,24 @@ internal object ProviderTestCases {
     ): ProviderTestCaseOutput {
         return assertWithMeasuredTime(
             testName = testName,
-            failedShortLog = { getString(LocaleR.string.ptest_error_get_search_filters) },
+            failedShortLog = { LocaleR.string.ptest_error_get_search_filters.toUiText() },
             successShortLog = { getShortLogForItemsFound(api.filters.size) },
             successFullLog = {
-                val mapOfFilters = api.filters.withIndex().associate { (index, list) ->
-                    val key = list.firstOrNull()?.name ?: "Filter #${index + 1}"
-                    val value = list.map {
-                        mapOf(
-                            "Name" to it.name,
-                            "Default value" to it.state.toString()
-                        )
+                val mapOfFilters =
+                    api.filters.withIndex().associate { (index, list) ->
+                        val key = list.firstOrNull()?.name ?: "Filter #${index + 1}"
+                        val value =
+                            list.map {
+                                mapOf(
+                                    "Name" to it.name,
+                                    "Default value" to it.state.toString(),
+                                )
+                            }
+
+                        key to value
                     }
 
-                    key to value
-                }
-
-                createString(json.encodeToString(mapOfFilters))
+                json.encodeToString(mapOfFilters).toUiText()
             },
             assert = {
                 api.filters.forEach { filterGroup ->
@@ -217,7 +231,7 @@ internal object ProviderTestCases {
                         assertProperty(filter)
                     }
                 }
-            }
+            },
         )
     }
 
@@ -228,27 +242,29 @@ internal object ProviderTestCases {
         return assertWithMeasuredTime(
             testName = testName,
             failedShortLog = {
-                val catalogTested = if (api.catalogs.isEmpty()) {
-                    ""
-                } else "- ${api.catalogs.first().name}"
+                val catalogTested =
+                    if (api.catalogs.isEmpty()) {
+                        ""
+                    } else {
+                        "- ${api.catalogs.first().name}"
+                    }
 
-                getString(
-                    LocaleR.string.ptest_error_method_get_catalog_items,
-                    catalogTested
-                )
+                LocaleR.string.ptest_error_method_get_catalog_items.toUiText(catalogTested)
             },
             successShortLog = { getShortLogForItemsFound(it?.size) },
             successFullLog = { it.filmsResponseToFullLog() },
             assert = {
-                if (api.catalogs.isEmpty())
+                if (api.catalogs.isEmpty()) {
                     throw NotImplementedError("Provider catalogs are empty")
+                }
 
-                val response = api.getCatalogItems(
-                    catalog = api.catalogs.first(),
-                )
+                val response =
+                    api.getCatalogItems(
+                        catalog = api.catalogs.first(),
+                    )
 
                 response.results
-            }
+            },
         )
     }
 
@@ -259,29 +275,30 @@ internal object ProviderTestCases {
         return assertWithMeasuredTime(
             testName = testName,
             failedShortLog = {
-                val catalogTested = if (api.catalogs.isEmpty()) {
-                    ""
-                } else "- ${api.catalogs.first().name}"
+                val catalogTested =
+                    if (api.catalogs.isEmpty()) {
+                        ""
+                    } else {
+                        "- ${api.catalogs.first().name}"
+                    }
 
-                getString(
-                    LocaleR.string.ptest_error_method_get_catalog_items,
-                    catalogTested
-                )
+                LocaleR.string.ptest_error_method_get_catalog_items.toUiText(catalogTested)
             },
             successShortLog = { getShortLogForItemsFound(it?.size) },
             successFullLog = { it.filmsResponseToFullLog() },
             assert = {
-                val response = with(api.testFilm) {
-                    api.search(
-                        title = title,
-                        id = id,
-                        imdbId = imdbId,
-                        tmdbId = tmdbId,
-                    )
-                }
+                val response =
+                    with(api.testFilm) {
+                        api.search(
+                            title = title,
+                            id = id,
+                            imdbId = imdbId,
+                            tmdbId = tmdbId,
+                        )
+                    }
 
                 response.results
-            }
+            },
         )
     }
 
@@ -292,14 +309,13 @@ internal object ProviderTestCases {
         return assertWithMeasuredTime(
             testName = testName,
             failedShortLog = {
-                getString(
-                    LocaleR.string.ptest_error_method_get_film_details,
-                    "${api.testFilm.title} [${api.testFilm.identifier}]"
+                LocaleR.string.ptest_error_method_get_film_details.toUiText(
+                    "${api.testFilm.title} [${api.testFilm.identifier}]",
                 )
             },
-            successShortLog = { createString(it?.title ?: api.testFilm.title) },
-            successFullLog = { createString(json.encodeToString(it)) },
-            assert = { api.getMetadata(api.testFilm) }
+            successShortLog = { (it?.title ?: api.testFilm.title).toUiText() },
+            successFullLog = { json.encodeToString(it).toUiText() },
+            assert = { api.getMetadata(api.testFilm) },
         )
     }
 
@@ -310,46 +326,47 @@ internal object ProviderTestCases {
         return assertWithMeasuredTime(
             testName = testName,
             failedShortLog = {
-                getString(
-                    LocaleR.string.ptest_error_method_get_links,
-                    "${api.testFilm.title} [${api.testFilm.identifier}]"
+                LocaleR.string.ptest_error_method_get_links.toUiText(
+                    "${api.testFilm.title} [${api.testFilm.identifier}]",
                 )
             },
             successShortLog = { getShortLogForItemsFound(it?.size) },
             successFullLog = { links ->
                 val linksOnly = links?.map { it.url }
 
-                createString(json.encodeToString(linksOnly))
+                json.encodeToString(linksOnly).toUiText()
             },
             assert = {
-                val episodeData = when (api.testFilm.filmType) {
-                    FilmType.TV_SHOW -> Episode(number = 1, season = 1)
-                    else -> null
-                }
+                val episodeData =
+                    when (api.testFilm.filmType) {
+                        FilmType.TV_SHOW -> Episode(number = 1, season = 1)
+                        else -> null
+                    }
 
                 val links = mutableSetOf<MediaLink>()
                 if (api is ProviderWebViewApi) {
-                    val webView = withMainContext {
-                        api.getWebView()
-                    }
+                    val webView =
+                        withMainContext {
+                            api.getWebView()
+                        }
 
                     webView.getLinks(
                         watchId = api.testFilm.id ?: api.testFilm.identifier,
                         film = api.testFilm,
                         episode = episodeData,
-                        onLinkFound = links::add
+                        onLinkFound = links::add,
                     )
                 } else {
                     api.getLinks(
                         watchId = api.testFilm.id ?: api.testFilm.identifier,
                         film = api.testFilm,
                         episode = episodeData,
-                        onLinkFound = links::add
+                        onLinkFound = links::add,
                     )
                 }
 
                 return@assertWithMeasuredTime links
-            }
+            },
         )
     }
 }

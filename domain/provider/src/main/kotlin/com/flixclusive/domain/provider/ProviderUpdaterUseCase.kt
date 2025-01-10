@@ -1,28 +1,34 @@
-package com.flixclusive.domain.updater
+package com.flixclusive.domain.provider
 
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.UserSessionDataStore
+import com.flixclusive.core.datastore.util.awaitFirst
 import com.flixclusive.core.util.android.notify
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
+import com.flixclusive.core.util.coroutines.blockFirstNotNull
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
-import com.flixclusive.data.provider.PROVIDER_DEBUG
-import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.data.provider.util.DownloadFailed
+import com.flixclusive.domain.provider.util.DownloadFailed
+import com.flixclusive.domain.provider.util.createFileForProvider
+import com.flixclusive.domain.provider.util.downloadProvider
+import com.flixclusive.model.datastore.user.ProviderFromPreferences
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
+import java.io.File
 import java.util.Collections
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.collections.get
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -37,8 +43,10 @@ class ProviderUpdaterUseCase
     constructor(
         @ApplicationContext private val context: Context,
         private val dataStoreManager: DataStoreManager,
+        private val userSessionDataStore: UserSessionDataStore,
         private val providerRepository: ProviderRepository,
-        private val providerManager: ProviderManager,
+        private val providerLoaderUseCase: ProviderLoaderUseCase,
+        private val providerUnloaderUseCase: ProviderUnloaderUseCase,
         private val client: OkHttpClient,
     ) {
         // Synchronized to avoid ConcurrentModificationException
@@ -49,6 +57,11 @@ class ProviderUpdaterUseCase
         private val outdated = ArrayDeque<String>()
 
         private var notificationChannelHasBeenInitialized = false
+
+        private val providerPreferences: ProviderPreferences get() =
+            dataStoreManager
+                .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
+                .awaitFirst()
 
         suspend operator fun invoke(notify: Boolean) {
             val outdatedProviders = getOutdatedProviders()
@@ -248,12 +261,71 @@ class ProviderUpdaterUseCase
                 getLatestMetadata(id)
                     ?: throw NoSuchElementException("Can't find latest metadata for provider with ID: $id")
 
-            providerManager.update(
+            update(
                 oldMetadata = oldMetadata,
                 newMetadata = newMetadata,
             )
 
             updatedProvidersMap[id] = newMetadata.versionCode
+        }
+
+        @Throws(DownloadFailed::class)
+        suspend fun update(
+            oldMetadata: ProviderMetadata,
+            newMetadata: ProviderMetadata,
+        ) {
+            requireNotNull(providerRepository.getProvider(oldMetadata.id)) {
+                "No such provider: ${oldMetadata.name}"
+            }
+
+            val newPreference =
+                getUpdatedPreferenceItem(
+                    id = oldMetadata.id,
+                    newMetadata = newMetadata,
+                )
+
+            providerRepository.addToPreferences(preferenceItem = newPreference)
+
+            client.downloadProvider(
+                saveTo = File(newPreference.filePath),
+                buildUrl = newMetadata.buildUrl,
+            )
+
+            providerUnloaderUseCase.unload(
+                metadata = oldMetadata,
+                unloadOnPreferences = false,
+            )
+
+            providerLoaderUseCase.load(
+                provider = newMetadata,
+                filePath = newPreference.filePath,
+            )
+        }
+
+        private fun getUpdatedPreferenceItem(
+            id: String,
+            newMetadata: ProviderMetadata,
+        ): ProviderFromPreferences {
+            val oldOrderPosition =
+                providerPreferences
+                    .providers
+                    .indexOfFirst { it.id == id }
+
+            val oldPreference = providerPreferences.providers[oldOrderPosition]
+
+            val userId = userSessionDataStore.currentUserId.blockFirstNotNull()!!
+            val file =
+                context
+                    .createFileForProvider(
+                        userId = userId,
+                        provider = newMetadata,
+                    )
+            val filePath = file.absolutePath
+
+            return oldPreference.copy(
+                name = newMetadata.name,
+                filePath = filePath,
+            )
         }
 
         private class CachedData(

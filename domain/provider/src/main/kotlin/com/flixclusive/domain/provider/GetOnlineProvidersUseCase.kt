@@ -11,7 +11,6 @@ import okhttp3.OkHttpClient
 import javax.inject.Inject
 import com.flixclusive.core.locale.R as LocaleR
 
-
 /**
  * Use case to retrieve a list of online providers from 'updater.json' of 'builds' branch
  *
@@ -20,34 +19,42 @@ import com.flixclusive.core.locale.R as LocaleR
  *
  * @param client The OkHttpClient instance used to make network requests.
  */
-class GetOnlineProvidersUseCase @Inject constructor(
-    private val client: OkHttpClient
-) {
-    suspend operator fun invoke(repository: Repository): Resource<List<ProviderMetadata>> {
-        return withIOContext {
-            safeCall {
-                val updaterJsonUrl = repository.getRawLink(
-                    filename = "updater.json",
-                    branch = "builds"
-                )
+class GetOnlineProvidersUseCase
+    @Inject
+    constructor(
+        private val client: OkHttpClient,
+    ) {
+    /*
+     * TODO: Improve this. It can literally
+     *  just use String.format(ProviderMetadata.buildUrl, UPDATER_FILE)
+     * */
+        suspend operator fun invoke(repository: Repository): Resource<List<ProviderMetadata>> {
+            return withIOContext {
+                safeCall {
+                    val updaterJsonUrl =
+                        repository.getRawLink(
+                            filename = UPDATER_FILE,
+                            branch = "builds",
+                        )
 
-                val onlineProviders = parseOnlineProviders(updaterJsonUrl)
+                    val onlineProviders = parseOnlineProviders(updaterJsonUrl)
 
-                if (onlineProviders.isNullOrEmpty()) {
-                    throw NullPointerException("This repository does not seem to have providers listed on its 'updater.json'. Make sure this repository follows the proper provider file structure.")
-                }
+                    if (onlineProviders.isNullOrEmpty()) {
+                        throw NullPointerException(
+                            "This repository does not seem to have providers listed on its 'updater.json'. Make sure this repository follows the proper provider file structure.",
+                        )
+                    }
 
+                    return@withIOContext Resource.Success(onlineProviders)
+                } ?: Resource.Failure(LocaleR.string.failed_to_load_online_providers)
+            }
+        }
 
-                return@withIOContext Resource.Success(onlineProviders)
-            } ?: Resource.Failure(LocaleR.string.failed_to_load_online_providers)
+        private fun parseOnlineProviders(updaterJsonUrl: String): List<ProviderMetadata>? {
+            val response = client.request(updaterJsonUrl).execute()
+
+            return response.fromJson(
+                "Couldn't parse providers from remote source!",
+            )
         }
     }
-
-    private fun parseOnlineProviders(
-        updaterJsonUrl: String
-    ): List<ProviderMetadata>? {
-        val response = client.request(updaterJsonUrl).execute()
-
-        return response.body?.string()?.let(::fromJson)
-    }
-}

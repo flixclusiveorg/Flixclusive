@@ -1,4 +1,4 @@
-package com.flixclusive.data.provider.util
+package com.flixclusive.domain.provider.util
 
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.model.provider.ProviderManifest

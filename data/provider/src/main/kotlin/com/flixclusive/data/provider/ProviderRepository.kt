@@ -96,14 +96,14 @@ class ProviderRepository
             saveToPreferences()
         }
 
-        internal suspend fun remove(id: String) {
+        suspend fun remove(id: String) {
             providerInstances.remove(id)
             classLoaders.remove(id)
             providerMetadata.remove(id)
             removeFromPreferences(id)
         }
 
-        internal suspend fun removeFromPreferences(id: String) {
+        suspend fun removeFromPreferences(id: String) {
             if (providerPositions.removeIf { it.id == id }) {
                 saveToPreferences()
             }
@@ -130,7 +130,7 @@ class ProviderRepository
             }
         }
 
-        internal suspend fun initializeOrder() {
+        internal suspend fun initializeProviderPositions() {
             val preferences =
                 dataStoreManager
                     .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)

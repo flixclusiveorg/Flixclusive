@@ -1,4 +1,4 @@
-package com.flixclusive.data.provider.util
+package com.flixclusive.domain.provider.util
 
 import android.content.Context
 import com.flixclusive.core.locale.R as LocaleR

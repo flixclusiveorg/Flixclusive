@@ -2,14 +2,13 @@ package com.flixclusive.domain.provider.test
 
 import android.content.Context
 import androidx.compose.runtime.mutableStateListOf
+import com.flixclusive.core.locale.util.toUiText
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.domain.provider.test.ProviderTestCases.ProviderTestCase
 import com.flixclusive.domain.provider.test.ProviderTestCases.methodTestCases
 import com.flixclusive.domain.provider.test.ProviderTestCases.propertyTestCases
-import com.flixclusive.domain.provider.util.StringHelper.createString
-import com.flixclusive.domain.provider.util.StringHelper.getString
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.ProviderApi
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -71,7 +70,7 @@ class TestProviderUseCase
                             testOutputs.add(
                                 ProviderTestCaseOutput(
                                     status = TestStatus.RUNNING,
-                                    name = getString(LocaleR.string.ptest_get_api),
+                                    name = LocaleR.string.ptest_get_api.toUiText(),
                                 ),
                             )
 
@@ -145,7 +144,7 @@ class TestProviderUseCase
                 updateOutput(
                     ProviderTestCaseOutput(
                         status = TestStatus.RUNNING,
-                        name = getString(LocaleR.string.ptest_get_api),
+                        name = LocaleR.string.ptest_get_api.toUiText(),
                     ),
                 )
 
@@ -160,10 +159,10 @@ class TestProviderUseCase
                 updateOutput(
                     ProviderTestCaseOutput(
                         status = TestStatus.SUCCESS,
-                        name = getString(LocaleR.string.ptest_get_api),
+                        name = LocaleR.string.ptest_get_api.toUiText(),
                         timeTaken = 0.milliseconds,
-                        shortLog = getString(LocaleR.string.ptest_success_get_api),
-                        fullLog = createString("${api.javaClass.simpleName} [HASHCODE:${api.hashCode()}]"),
+                        shortLog = LocaleR.string.ptest_success_get_api.toUiText(),
+                        fullLog = "${api.javaClass.simpleName} [HASHCODE:${api.hashCode()}]".toUiText(),
                     ),
                 )
 
@@ -172,10 +171,10 @@ class TestProviderUseCase
                 updateOutput(
                     ProviderTestCaseOutput(
                         status = TestStatus.FAILURE,
-                        name = getString(LocaleR.string.ptest_get_api),
+                        name = LocaleR.string.ptest_get_api.toUiText(),
                         timeTaken = 0.milliseconds,
-                        shortLog = getString(LocaleR.string.ptest_error_get_api),
-                        fullLog = createString(e.stackTraceToString()),
+                        shortLog = LocaleR.string.ptest_error_get_api.toUiText(),
+                        fullLog = e.stackTraceToString().toUiText(),
                     ),
                 )
                 return null

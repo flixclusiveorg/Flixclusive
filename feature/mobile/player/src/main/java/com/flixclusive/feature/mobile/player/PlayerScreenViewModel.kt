@@ -13,11 +13,11 @@ import com.flixclusive.core.ui.player.PlayerSnackbarMessage
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.ui.player.util.PlayerUiUtil
-import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
+import com.flixclusive.domain.provider.ProviderLoaderUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.film.TvShow
@@ -43,7 +43,7 @@ internal class PlayerScreenViewModel
         watchHistoryRepository: WatchHistoryRepository,
         watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
         providerRepository: ProviderRepository,
-        providerManager: ProviderManager,
+        providerLoaderUseCase: ProviderLoaderUseCase,
         userSessionManager: UserSessionManager,
     ) : BasePlayerViewModel(
             args = savedStateHandle.navArgs<PlayerScreenNavArgs>(),

@@ -1,4 +1,4 @@
-package com.flixclusive.data.provider.util
+package com.flixclusive.domain.provider.util
 
 import android.content.Context
 import android.content.res.AssetManager
@@ -44,7 +44,6 @@ internal class DynamicResourceLoader(
      * For Android Marshmallow and below, it manipulates the ZIP file before loading.
      *
      * @param inputFile The input file containing the resources to be loaded.
-     * @param provider The Provider instance to set the loaded resources.
      */
     fun load(inputFile: File): Resources {
         var filePath = inputFile.absolutePath
@@ -130,7 +129,11 @@ internal class DynamicResourceLoader(
      * @param inputFile The original input file.
      * @return A File object representing the temporary ZIP file.
      */
-    private fun createTempFile(inputFile: File): File = File(inputFile.parent, "${inputFile.nameWithoutExtension}_temp.flx")
+    private fun createTempFile(inputFile: File): File =
+        File(
+            inputFile.parent,
+            "${inputFile.nameWithoutExtension}_temp.flx",
+        )
 
     /**
      * Creates a basic AndroidManifest.xml file.

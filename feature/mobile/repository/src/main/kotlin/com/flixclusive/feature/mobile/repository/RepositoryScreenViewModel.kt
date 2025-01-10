@@ -14,11 +14,12 @@ import com.flixclusive.core.ui.common.navigation.navargs.RepositoryScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.data.provider.util.DownloadFailed
 import com.flixclusive.domain.provider.GetOnlineProvidersUseCase
-import com.flixclusive.domain.updater.ProviderUpdaterUseCase
+import com.flixclusive.domain.provider.ProviderLoaderUseCase
+import com.flixclusive.domain.provider.ProviderUnloaderUseCase
+import com.flixclusive.domain.provider.ProviderUpdaterUseCase
+import com.flixclusive.domain.provider.util.DownloadFailed
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderMetadata
@@ -35,7 +36,8 @@ import com.flixclusive.core.locale.R as LocaleR
 internal class RepositoryScreenViewModel
     @Inject
     constructor(
-        private val providerManager: ProviderManager,
+        private val providerLoaderUseCase: ProviderLoaderUseCase,
+        private val providerUnloaderUseCase: ProviderUnloaderUseCase,
         private val providerRepository: ProviderRepository,
         private val providerUpdaterUseCase: ProviderUpdaterUseCase,
         private val getOnlineProvidersUseCase: GetOnlineProvidersUseCase,
@@ -173,7 +175,7 @@ internal class RepositoryScreenViewModel
             onlineProviderMap[providerMetadata] = ProviderInstallationStatus.Installing
 
             try {
-                providerManager.loadProvider(
+                providerLoaderUseCase.load(
                     provider = providerMetadata,
                     needsDownload = true,
                 )
@@ -196,7 +198,7 @@ internal class RepositoryScreenViewModel
         }
 
         private suspend fun uninstallProvider(providerMetadata: ProviderMetadata) {
-            providerManager.unload(providerMetadata)
+            providerUnloaderUseCase.unload(providerMetadata)
             onlineProviderMap[providerMetadata] = ProviderInstallationStatus.NotInstalled
         }
 

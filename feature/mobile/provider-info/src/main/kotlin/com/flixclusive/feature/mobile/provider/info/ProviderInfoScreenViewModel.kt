@@ -13,12 +13,13 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.util.coroutines.AppDispatchers
-import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.data.provider.util.DownloadFailed
 import com.flixclusive.domain.provider.GetRepositoryUseCase
+import com.flixclusive.domain.provider.ProviderLoaderUseCase
+import com.flixclusive.domain.provider.ProviderUnloaderUseCase
+import com.flixclusive.domain.provider.ProviderUpdaterUseCase
+import com.flixclusive.domain.provider.util.DownloadFailed
 import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
-import com.flixclusive.domain.updater.ProviderUpdaterUseCase
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.Repository
@@ -34,7 +35,8 @@ internal class ProviderInfoScreenViewModel
     constructor(
         private val dataStoreManager: DataStoreManager,
         private val getRepositoryUseCase: GetRepositoryUseCase,
-        private val providerManager: ProviderManager,
+        private val providerLoaderUseCase: ProviderLoaderUseCase,
+        private val providerUnloaderUseCase: ProviderUnloaderUseCase,
         private val providerUpdaterUseCase: ProviderUpdaterUseCase,
         private val providerRepository: ProviderRepository,
         savedStateHandle: SavedStateHandle,
@@ -104,7 +106,7 @@ internal class ProviderInfoScreenViewModel
             providerInstallationStatus = ProviderInstallationStatus.Installing
 
             try {
-                providerManager.loadProvider(
+                providerLoaderUseCase.load(
                     provider = argsMetadata,
                     needsDownload = true,
                 )
@@ -124,7 +126,7 @@ internal class ProviderInfoScreenViewModel
         }
 
         private suspend fun uninstallProvider() {
-            providerManager.unload(argsMetadata)
+            providerUnloaderUseCase.unload(argsMetadata)
             providerInstallationStatus = ProviderInstallationStatus.NotInstalled
         }
 

@@ -12,8 +12,9 @@ import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderApiRepository
-import com.flixclusive.data.provider.ProviderManager
 import com.flixclusive.data.provider.ProviderRepository
+import com.flixclusive.domain.provider.ProviderLoaderUseCase
+import com.flixclusive.domain.provider.ProviderUnloaderUseCase
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserOnBoarding
 import com.flixclusive.model.datastore.user.UserPreferences
@@ -37,7 +38,8 @@ internal data class ProviderError(
 internal class ProvidersScreenViewModel
     @Inject
     constructor(
-        private val providerManager: ProviderManager,
+        private val providerLoaderUseCase: ProviderLoaderUseCase,
+        private val providerUnloaderUseCase: ProviderUnloaderUseCase,
         private val dataStoreManager: DataStoreManager,
         private val providerRepository: ProviderRepository,
         private val providerApiRepository: ProviderApiRepository,
@@ -110,7 +112,9 @@ internal class ProvidersScreenViewModel
                         providerApiRepository.removeApi(id)
                     } else {
                         try {
-                            providerManager.loadApiFromProvider(id = id)
+                            // TODO: Move `loadFromApiFromProvider` to ProviderApiRepository
+                            providerLoaderUseCase
+                                .loadApiFromProvider(id = id)
                         } catch (e: Throwable) {
                             providerRepository.toggleProvider(id = id)
                             errorLog(e)
@@ -130,7 +134,7 @@ internal class ProvidersScreenViewModel
 
             uninstallJob =
                 ioScope.launch {
-                    providerManager.unload(metadata)
+                    providerUnloaderUseCase.unload(metadata)
                 }
         }
 
