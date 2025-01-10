@@ -2,18 +2,21 @@ package com.flixclusive.feature.mobile.provider
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.data.provider.util.ListOperation
+import com.flixclusive.data.provider.util.CollectionsOperation
+import com.flixclusive.data.provider.util.CollectionsOperationHandler
 import com.flixclusive.model.datastore.user.ProviderFromPreferences
 import com.flixclusive.model.provider.ProviderMetadata
 
-class ProvidersOperationsHandler(
+internal class ProvidersOperationsHandler(
     private val repository: ProviderRepository,
     private val providers: SnapshotStateList<ProviderMetadata>,
-) {
-    fun handleOperations(operation: ListOperation<ProviderFromPreferences>) {
+) : CollectionsOperationHandler<ProviderFromPreferences> {
+    override fun handleOperations(operation: CollectionsOperation<ProviderFromPreferences>) {
+        if (operation !is CollectionsOperation.List) return
+
         when (operation) {
-            is ListOperation.Add -> handleAdd(operation.item.id)
-            is ListOperation.Remove -> handleRemove(operation.item.id)
+            is CollectionsOperation.List.Add -> handleAdd(operation.item.id)
+            is CollectionsOperation.List.Remove -> handleRemove(operation.item.id)
         }
     }
 

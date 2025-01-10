@@ -21,62 +21,64 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.dialog.TextAlertDialog
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenViewModel
 import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SearchSearchHistoryView(
+    searchHistory: List<SearchHistory>,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    deleteSearchHistoryItem: (SearchHistory) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SearchExpandedScreenViewModel,
 ) {
-    val searchHistory by viewModel.searchHistory.collectAsStateWithLifecycle()
     var searchHistoryToDelete by rememberSaveable { mutableStateOf<SearchHistory?>(null) }
 
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(bottom = 10.dp)
+        contentPadding = PaddingValues(bottom = 10.dp),
     ) {
         stickyHeader {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(bottom = 5.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(bottom = 5.dp),
             ) {
                 Text(
                     text = stringResource(id = LocaleR.string.search_history),
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Black,
-                        color = LocalContentColor.current.onMediumEmphasis(0.8F)
-                    ),
-                    modifier = Modifier.padding(horizontal = 10.dp)
+                    style =
+                        MaterialTheme.typography.labelMedium.copy(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Black,
+                            color = LocalContentColor.current.onMediumEmphasis(0.8F),
+                        ),
+                    modifier = Modifier.padding(horizontal = 10.dp),
                 )
             }
         }
 
         items(
             items = searchHistory,
-            key = { it.id }
+            key = { it.id },
         ) { item ->
             SearchHistoryBlock(
                 modifier = Modifier.animateItem(),
                 item = item,
                 onClick = {
-                    viewModel.onQueryChange(item.query)
-                    viewModel.onSearch()
+                    onQueryChange(item.query)
+                    onSearch()
                 },
                 onLongClick = {
                     searchHistoryToDelete = item
                 },
                 onArrowClick = {
-                    viewModel.onQueryChange(item.query)
-                }
+                    onQueryChange(item.query)
+                },
             )
         }
     }
@@ -85,8 +87,8 @@ internal fun SearchSearchHistoryView(
         TextAlertDialog(
             label = stringResource(id = LocaleR.string.delete_search_history_item),
             description = stringResource(id = LocaleR.string.delete_search_history_item_message),
-            onConfirm = { viewModel.deleteSearchHistoryItem(searchHistoryToDelete!!) },
-            onDismiss = { searchHistoryToDelete = null }
+            onConfirm = { deleteSearchHistoryItem(searchHistoryToDelete!!) },
+            onDismiss = { searchHistoryToDelete = null },
         )
     }
 }

@@ -78,7 +78,7 @@ internal class ProvidersScreenViewModel
             viewModelScope.launch {
                 providers.addAll(providerRepository.getOrderedProviders())
 
-                providerRepository.observePositions().collect { operation ->
+                providerRepository.observe().collect { operation ->
                     providersChangesHandler.handleOperations(operation)
                 }
             }

@@ -15,69 +15,77 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.SMALL_ERROR
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
 import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
-import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenViewModel
 import com.flixclusive.model.datastore.user.UiPreferences
 import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun SearchFilmsGridView(
-    modifier: Modifier = Modifier,
-    viewModel: SearchExpandedScreenViewModel,
+    searchResults: List<FilmSearchItem>,
+    pagingState: PagingState,
+    error: UiText?,
     listState: LazyGridState,
     uiPreferences: UiPreferences,
+    paginateItems: () -> Unit,
     openFilmScreen: (Film) -> Unit,
     previewFilm: (Film) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-
-    val errorHeight = remember(viewModel.searchResults) {
-        when {
-            viewModel.searchResults.isEmpty() -> LARGE_ERROR
-            else -> SMALL_ERROR
+    val errorHeight =
+        remember(searchResults) {
+            when {
+                searchResults.isEmpty() -> LARGE_ERROR
+                else -> SMALL_ERROR
+            }
         }
-    }
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(110.dp),
         state = listState,
         contentPadding = PaddingValues(),
-        modifier = modifier
+        modifier = modifier,
     ) {
-        items(viewModel.searchResults) { film ->
+        items(searchResults) { film ->
             FilmCard(
                 modifier = Modifier.fillMaxSize(),
                 film = film,
                 isShowingTitle = uiPreferences.shouldShowTitleOnCards,
                 onClick = openFilmScreen,
-                onLongClick = previewFilm
+                onLongClick = previewFilm,
             )
         }
 
-        if(viewModel.pagingState.isLoading) {
+        if (pagingState.isLoading) {
             items(20) {
                 FilmCardPlaceholder(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(3.dp),
-                    isShowingTitle = uiPreferences.shouldShowTitleOnCards
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(3.dp),
+                    isShowingTitle = uiPreferences.shouldShowTitleOnCards,
                 )
             }
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             RetryButton(
-                modifier = Modifier
-                    .height(errorHeight)
-                    .fillMaxWidth(),
-                shouldShowError = viewModel.pagingState.isError,
-                error = viewModel.error?.asString()
-                    ?: stringResource(LocaleR.string.error_on_search),
-                onRetry = viewModel::paginateItems
+                modifier =
+                    Modifier
+                        .height(errorHeight)
+                        .fillMaxWidth(),
+                shouldShowError = pagingState.isError,
+                error =
+                    error?.asString()
+                        ?: stringResource(LocaleR.string.error_on_search),
+                onRetry = paginateItems,
             )
         }
     }

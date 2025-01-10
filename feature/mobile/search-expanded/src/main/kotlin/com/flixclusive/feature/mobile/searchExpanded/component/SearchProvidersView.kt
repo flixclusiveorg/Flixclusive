@@ -13,32 +13,35 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenViewModel
 import com.flixclusive.feature.mobile.searchExpanded.util.Constant
+import com.flixclusive.model.provider.ProviderMetadata
+import kotlin.math.max
 import com.flixclusive.core.locale.R as LocaleR
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SearchProvidersView(
-    viewModel: SearchExpandedScreenViewModel,
+    providerMetadataList: List<ProviderMetadata>,
+    selectedProviderId: String,
+    onChangeProvider: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val listState = rememberLazyListState()
-    val providerMetadataList = viewModel.providerMetadataList
-
-    LaunchedEffect(Unit) {
-        safeCall {
-            listState.animateScrollToItem(viewModel.selectedProviderIndex)
+    val selectedIndex =
+        remember {
+            providerMetadataList.indexOfFirst { it.id == selectedProviderId }
         }
-    }
+
+    val listState =
+        rememberLazyListState(
+            initialFirstVisibleItemIndex = max(selectedIndex, 0),
+        )
 
     LazyColumn(
         modifier = modifier,
@@ -67,21 +70,25 @@ internal fun SearchProvidersView(
         }
 
         item {
+            val tmdbMetadata = Constant.tmdbProviderMetadata
             SearchProviderBlock(
-                providerMetadata = Constant.tmdbProviderMetadata,
-                isSelected = viewModel.selectedProviderIndex == 0,
+                providerMetadata = tmdbMetadata,
+                isSelected = selectedProviderId == tmdbMetadata.id,
                 onClick = {
-                    viewModel.onChangeProvider(0)
+                    onChangeProvider(tmdbMetadata.id)
                 },
             )
         }
 
-        itemsIndexed(providerMetadataList) { i, item ->
+        itemsIndexed(
+            providerMetadataList,
+            key = { _, item -> item.id },
+        ) { i, item ->
             SearchProviderBlock(
                 providerMetadata = item,
-                isSelected = viewModel.selectedProviderIndex == i + 1,
+                isSelected = item.id == selectedProviderId,
                 onClick = {
-                    viewModel.onChangeProvider(i + 1)
+                    onChangeProvider(item.id)
                 },
             )
         }

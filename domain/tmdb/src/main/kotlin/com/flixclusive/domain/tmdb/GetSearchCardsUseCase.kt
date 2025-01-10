@@ -3,19 +3,14 @@ package com.flixclusive.domain.tmdb
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.coroutines.AppDispatchers
-import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.data.configuration.AppConfigurationManager
-import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.model.configuration.catalog.SearchCatalog
-import com.flixclusive.model.provider.ProviderCatalog
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.concurrent.CancellationException
 import javax.inject.Inject
@@ -30,22 +25,11 @@ class GetSearchCardsUseCase
     constructor(
         private val tmdbRepository: TMDBRepository,
         private val configurationManager: AppConfigurationManager,
-        providerApiRepository: ProviderApiRepository,
     ) {
         private val usedPosterPaths = mutableSetOf<String>()
 
         private val _tvShowNetworkCards = MutableStateFlow<List<SearchCatalog>>(emptyList())
         val tvShowNetworkCards = _tvShowNetworkCards.asStateFlow()
-
-        val providersCatalogsCards: Flow<List<ProviderCatalog>> =
-            providerApiRepository
-                .getEnabledApisAsFlow()
-                .map { list ->
-                    list.flatMap { api -> api.catalogs }
-                }.asStateFlow(
-                    scope = AppDispatchers.Default.scope,
-                    initialValue = emptyList(),
-                )
 
         private val _movieCompanyCards = MutableStateFlow<List<SearchCatalog>>(emptyList())
         val movieCompanyCards = _movieCompanyCards.asStateFlow()

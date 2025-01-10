@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 internal class ReactiveList<T>(
     private val list: ArrayList<T> = ArrayList<T>(),
 ) : List<T> by list {
-    private val _operations = MutableSharedFlow<ListOperation<T>>()
+    private val _operations = MutableSharedFlow<CollectionsOperation.List<T>>()
     val operations get() = _operations.asSharedFlow()
 
     private val mutex = Mutex()
@@ -18,7 +18,7 @@ internal class ReactiveList<T>(
     suspend fun add(item: T) =
         mutex.withLock {
             list.add(item)
-            _operations.emit(ListOperation.Add(item))
+            _operations.emit(CollectionsOperation.List.Add(item))
         }
 
     suspend fun replaceAt(
@@ -33,7 +33,7 @@ internal class ReactiveList<T>(
             val item = list.find(filter)
 
             if (item != null) {
-                _operations.emit(ListOperation.Remove(item))
+                _operations.emit(CollectionsOperation.List.Remove(item))
             }
 
             return list.remove(item)
@@ -53,14 +53,4 @@ internal class ReactiveList<T>(
         mutex.withLock {
             list.clear()
         }
-}
-
-sealed class ListOperation<T> {
-    data class Add<T>(
-        val item: T,
-    ) : ListOperation<T>()
-
-    data class Remove<T>(
-        val item: T,
-    ) : ListOperation<T>()
 }

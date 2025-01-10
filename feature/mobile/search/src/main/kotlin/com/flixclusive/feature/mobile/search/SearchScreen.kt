@@ -56,30 +56,28 @@ interface SearchScreenNavigator : GenreScreenNavigator {
 @Composable
 internal fun SearchScreen(
     navigator: SearchScreenNavigator,
+    viewModel: SearchScreenViewModel = hiltViewModel(),
 ) {
-    val viewModel: SearchScreenViewModel = hiltViewModel()
-
     val tvShowNetworkCards by viewModel.tvShowNetworkCards.collectAsStateWithLifecycle()
     val movieCompanyCards by viewModel.movieCompanyCards.collectAsStateWithLifecycle()
     val genreCards by viewModel.genreCards.collectAsStateWithLifecycle()
-    val providersCatalogsCards by viewModel.providersCatalogsCards.collectAsStateWithLifecycle(initialValue = emptyList())
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 180.dp),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             SearchBarHeader(
-                onSearchBarClick = navigator::openSearchExpandedScreen
+                onSearchBarClick = navigator::openSearchExpandedScreen,
             )
         }
 
-        if (providersCatalogsCards.isNotEmpty()) {
+        if (viewModel.providersCatalogsCards.isNotEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 SearchItemRow(
-                    list = providersCatalogsCards,
+                    list = viewModel.providersCatalogsCards,
                     showItemNames = false,
                     rowTitle = UiText.StringResource(LocaleR.string.browse_providers_catalogs),
-                    onClick = navigator::openSeeAllScreen
+                    onClick = navigator::openSeeAllScreen,
                 )
             }
         }
@@ -89,7 +87,7 @@ internal fun SearchScreen(
                 list = tvShowNetworkCards,
                 showItemNames = false,
                 rowTitle = UiText.StringResource(LocaleR.string.browse_tv_networks),
-                onClick = navigator::openSeeAllScreen
+                onClick = navigator::openSeeAllScreen,
             )
         }
 
@@ -98,7 +96,7 @@ internal fun SearchScreen(
                 list = movieCompanyCards,
                 showItemNames = false,
                 rowTitle = UiText.StringResource(LocaleR.string.browse_movie_companies),
-                onClick = navigator::openSeeAllScreen
+                onClick = navigator::openSeeAllScreen,
             )
         }
 
@@ -106,25 +104,29 @@ internal fun SearchScreen(
             Text(
                 text = stringResource(LocaleR.string.browse_categories),
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 15.dp)
-                    .padding(top = 15.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 15.dp)
+                        .padding(top = 15.dp),
             )
         }
 
-        if(genreCards.isLoading) {
+        if (genreCards.isLoading) {
             items(20) {
                 SearchItemCardPlaceholderWithText()
             }
-        } else if(genreCards is Resource.Failure) {
+        } else if (genreCards is Resource.Failure) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 RetryButton(
-                    modifier = Modifier
-                        .height(LARGE_ERROR),
+                    modifier =
+                        Modifier
+                            .height(LARGE_ERROR),
                     shouldShowError = true,
-                    error = genreCards.error?.asString() ?: stringResource(id = LocaleR.string.failed_to_initialize_search_items),
-                    onRetry = viewModel::retryLoadingCards
+                    error =
+                        genreCards.error?.asString()
+                            ?: stringResource(id = LocaleR.string.failed_to_initialize_search_items),
+                    onRetry = viewModel::retryLoadingCards,
                 )
             }
         } else {
@@ -134,20 +136,21 @@ internal fun SearchScreen(
                     label = it.name,
                     onClick = {
                         // If item is not a genre but a film type instead
-                        if(it.id < 0) {
+                        if (it.id < 0) {
                             navigator.openSeeAllScreen(it)
                             return@SearchItemCard
                         }
 
                         navigator.openGenreScreen(
-                            genre = GenreWithBackdrop(
-                                id = it.id,
-                                name = it.name,
-                                posterPath = it.image.toString(),
-                                mediaType = it.mediaType
-                            )
+                            genre =
+                                GenreWithBackdrop(
+                                    id = it.id,
+                                    name = it.name,
+                                    posterPath = it.image.toString(),
+                                    mediaType = it.mediaType,
+                                ),
                         )
-                    }
+                    },
                 )
             }
         }
@@ -155,42 +158,43 @@ internal fun SearchScreen(
 }
 
 @Composable
-private fun SearchBarHeader(
-    onSearchBarClick: () -> Unit
-) {
+private fun SearchBarHeader(onSearchBarClick: () -> Unit) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Text(
             text = stringResource(id = LocaleR.string.search),
             style = MaterialTheme.typography.headlineMedium,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 15.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 15.dp),
         )
 
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = TextFieldDefaults.MinHeight)
-                .padding(horizontal = 15.dp)
-                .clip(MaterialTheme.shapes.small)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { onSearchBarClick() }
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = TextFieldDefaults.MinHeight)
+                    .padding(horizontal = 15.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { onSearchBarClick() },
         ) {
             Row(
-                modifier = Modifier
-                    .padding(horizontal = 15.dp),
+                modifier =
+                    Modifier
+                        .padding(horizontal = 15.dp),
                 horizontalArrangement = Arrangement.spacedBy(15.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.search_outlined),
-                    contentDescription = stringResource(id = LocaleR.string.search)
+                    contentDescription = stringResource(id = LocaleR.string.search),
                 )
 
                 Text(
@@ -198,7 +202,7 @@ private fun SearchBarHeader(
                     style = MaterialTheme.typography.bodyMedium,
                     color = LocalContentColor.current.onMediumEmphasis(),
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }

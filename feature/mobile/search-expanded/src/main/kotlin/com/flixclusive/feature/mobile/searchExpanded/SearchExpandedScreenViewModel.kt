@@ -22,6 +22,7 @@ import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
 import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.feature.mobile.searchExpanded.util.Constant.TMDB_PROVIDER_ID
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
 import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.model.datastore.user.UiPreferences
@@ -36,7 +37,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -49,12 +49,13 @@ internal class SearchExpandedScreenViewModel
         private val tmdbRepository: TMDBRepository,
         private val searchHistoryRepository: SearchHistoryRepository,
         private val userSessionManager: UserSessionManager,
+        private val providerApiRepository: ProviderApiRepository,
         providerRepository: ProviderRepository,
-        providerApiRepository: ProviderApiRepository,
         dataStoreManager: DataStoreManager,
     ) : ViewModel() {
-        private val providerApis by lazy { providerApiRepository.getEnabledApisAsFlow() }
         val providerMetadataList by lazy { providerRepository.getEnabledProviders() }
+        private val providerApis = mutableStateListOf<ProviderApi>()
+        private val apisChangesHandler = ApiListChangesHandler(providerApis)
 
         private val userId: Int? get() = userSessionManager.currentUser.value?.id
         val searchHistory =
@@ -79,7 +80,7 @@ internal class SearchExpandedScreenViewModel
 
         private var searchingJob: Job? = null
 
-        var selectedProviderIndex by mutableIntStateOf(0)
+        var selectedProviderId by mutableStateOf<String>(TMDB_PROVIDER_ID)
             private set
 
         private var page by mutableIntStateOf(1)
@@ -96,7 +97,17 @@ internal class SearchExpandedScreenViewModel
         var searchQuery by mutableStateOf("")
             private set
 
-        internal val currentViewType = mutableStateOf(SearchItemViewType.SearchHistory)
+        val currentViewType = mutableStateOf(SearchItemViewType.SearchHistory)
+
+        init {
+            viewModelScope.launch {
+                providerApis.addAll(providerApiRepository.getApis())
+
+                providerApiRepository.observe().collect {
+                    apisChangesHandler.handleOperations(it)
+                }
+            }
+        }
 
         fun onSearch() {
             if (searchingJob?.isActive == true) {
@@ -128,8 +139,8 @@ internal class SearchExpandedScreenViewModel
                 }
         }
 
-        fun onChangeProvider(index: Int) {
-            selectedProviderIndex = index
+        fun onChangeProvider(id: String) {
+            selectedProviderId = id
             onSearch()
         }
 
@@ -185,11 +196,6 @@ internal class SearchExpandedScreenViewModel
             }
         }
 
-        private suspend fun getSelectedProvider(): ProviderApi? =
-            providerApis.first().getOrNull(
-                selectedProviderIndex - 1,
-            )
-
         private fun SearchResponseData<FilmSearchItem>.parseResults() {
             val results =
                 results
@@ -233,7 +239,7 @@ internal class SearchExpandedScreenViewModel
         private suspend fun getResponseFromProviderEndpoint(): Resource<SearchResponseData<FilmSearchItem>> {
             val filteredFilters = filterOutUiComponentsFromFilterList()
 
-            return if (selectedProviderIndex == 0) {
+            return if (selectedProviderId == TMDB_PROVIDER_ID) {
                 val mediaTypeFilter = filteredFilters.first().first()
                 val mediaType = mediaTypeFilter.state as Int
 
@@ -244,9 +250,10 @@ internal class SearchExpandedScreenViewModel
                 )
             } else {
                 try {
+                    val api = providerApiRepository.getApi(selectedProviderId)!!
                     val result =
                         withIOContext {
-                            getSelectedProvider()!!.search(
+                            api.search(
                                 page = page,
                                 title = searchQuery,
                             )

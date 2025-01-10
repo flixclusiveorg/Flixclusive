@@ -1,7 +1,7 @@
 package com.flixclusive.data.provider
 
 import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.data.provider.util.ListOperation
+import com.flixclusive.data.provider.util.CollectionsOperation
 import com.flixclusive.data.provider.util.ReactiveList
 import com.flixclusive.data.provider.util.isNotUsable
 import com.flixclusive.model.datastore.user.ProviderFromPreferences
@@ -86,7 +86,7 @@ class ProviderRepository
             }
         }
 
-        fun observePositions(): SharedFlow<ListOperation<ProviderFromPreferences>> = providerPositions.operations
+        fun observe(): SharedFlow<CollectionsOperation.List<ProviderFromPreferences>> = providerPositions.operations
 
         suspend fun moveProvider(
             fromIndex: Int,
@@ -101,6 +101,14 @@ class ProviderRepository
             classLoaders.remove(id)
             providerMetadata.remove(id)
             removeFromPreferences(id)
+        }
+
+        suspend fun clearAll() {
+            providerInstances.clear()
+            classLoaders.clear()
+            providerMetadata.clear()
+            providerPositions.clear()
+            saveToPreferences()
         }
 
         suspend fun removeFromPreferences(id: String) {

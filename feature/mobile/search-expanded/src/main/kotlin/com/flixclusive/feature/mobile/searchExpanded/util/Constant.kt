@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.searchExpanded.util
 
+import androidx.compose.runtime.Stable
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderMetadata
@@ -7,6 +8,9 @@ import com.flixclusive.model.provider.ProviderType
 import com.flixclusive.model.provider.Status
 
 internal object Constant {
+    const val TMDB_PROVIDER_ID = "tmdb-default-wtf"
+
+    @Stable
     val tmdbProviderMetadata by lazy {
         ProviderMetadata(
             authors = emptyList(),
@@ -20,7 +24,7 @@ internal object Constant {
             name = "$DEFAULT_FILM_SOURCE_NAME - Default",
             providerType = ProviderType.All,
             status = Status.Working,
-            id = "tmdb-default",
+            id = TMDB_PROVIDER_ID,
         )
     }
 }

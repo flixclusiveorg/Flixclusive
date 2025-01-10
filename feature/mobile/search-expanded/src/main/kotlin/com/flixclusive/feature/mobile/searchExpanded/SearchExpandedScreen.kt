@@ -1,11 +1,11 @@
 package com.flixclusive.feature.mobile.searchExpanded
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -73,10 +73,9 @@ internal fun SearchExpandedScreen(
     }
 
     val providerMetadata =
-        remember(viewModel.selectedProviderIndex) {
+        remember(viewModel.selectedProviderId) {
             val providerMetadata =
-                providerMetadataList
-                    .getOrNull(viewModel.selectedProviderIndex - 1)
+                providerMetadataList.find { viewModel.selectedProviderId == it.id }
 
             if (providerMetadata == null) {
                 return@remember Constant.tmdbProviderMetadata
@@ -130,10 +129,7 @@ internal fun SearchExpandedScreen(
                         else -> fadeOut()
                     }
 
-                ContentTransform(
-                    targetContentEnter = enter,
-                    initialContentExit = exit,
-                )
+                enter togetherWith exit
             },
             label = "",
         ) { viewType ->
@@ -146,13 +142,18 @@ internal fun SearchExpandedScreen(
                 SearchItemViewType.SearchHistory -> {
                     SearchSearchHistoryView(
                         modifier = modifier,
-                        viewModel = viewModel,
+                        searchHistory = viewModel.searchHistory.collectAsStateWithLifecycle().value,
+                        onSearch = viewModel::onSearch,
+                        onQueryChange = viewModel::onQueryChange,
+                        deleteSearchHistoryItem = viewModel::deleteSearchHistoryItem,
                     )
                 }
                 SearchItemViewType.Providers -> {
                     SearchProvidersView(
                         modifier = modifier,
-                        viewModel = viewModel,
+                        providerMetadataList = viewModel.providerMetadataList,
+                        selectedProviderId = viewModel.selectedProviderId,
+                        onChangeProvider = viewModel::onChangeProvider,
                     )
                 }
                 SearchItemViewType.Films -> {
@@ -161,8 +162,11 @@ internal fun SearchExpandedScreen(
                         uiPreferences = uiPreferences,
                         listState = listState,
                         previewFilm = previewFilm,
-                        viewModel = viewModel,
                         openFilmScreen = navigator::openFilmScreen,
+                        searchResults = viewModel.searchResults,
+                        pagingState = viewModel.pagingState,
+                        error = viewModel.error,
+                        paginateItems = viewModel::paginateItems,
                     )
                 }
             }
