@@ -1,11 +1,15 @@
 package com.flixclusive.data.provider
 
+import android.content.Context
 import com.flixclusive.data.provider.util.isNotUsable
+import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import okhttp3.OkHttpClient
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -13,6 +17,8 @@ import javax.inject.Singleton
 class ProviderApiRepository
     @Inject
     constructor(
+        @ApplicationContext private val context: Context,
+        private val client: OkHttpClient,
         private val providerRepository: ProviderRepository,
     ) {
         private val apisAsStateFlow = MutableStateFlow<Map<String, ProviderApi>>(mapOf())
@@ -38,7 +44,7 @@ class ProviderApiRepository
 
         fun getApi(id: String) = apisAsStateFlow.value[id]
 
-        fun addApi(
+        private fun addApi(
             id: String,
             api: ProviderApi,
         ) {
@@ -47,6 +53,22 @@ class ProviderApiRepository
                 newMap[id] = api
                 newMap.toMap()
             }
+        }
+
+        fun addApiFromProvider(
+            id: String,
+            provider: Provider,
+        ) {
+            val api = provider.getApi(context, client)
+            addApi(id, api)
+        }
+
+        fun addApiFromId(id: String) {
+            val provider =
+                providerRepository.getProvider(id)
+                    ?: throw NullPointerException("Provider [$id] is not yet loaded!")
+
+            addApiFromProvider(id, provider)
         }
 
         /**

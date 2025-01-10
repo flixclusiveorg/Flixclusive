@@ -112,9 +112,7 @@ internal class ProvidersScreenViewModel
                         providerApiRepository.removeApi(id)
                     } else {
                         try {
-                            // TODO: Move `loadFromApiFromProvider` to ProviderApiRepository
-                            providerLoaderUseCase
-                                .loadApiFromProvider(id = id)
+                            providerApiRepository.addApiFromId(id = id)
                         } catch (e: Throwable) {
                             providerRepository.toggleProvider(id = id)
                             errorLog(e)

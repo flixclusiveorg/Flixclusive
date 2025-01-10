@@ -34,7 +34,6 @@ import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderManifest
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
-import com.flixclusive.provider.Provider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import okhttp3.OkHttpClient
@@ -309,7 +308,10 @@ class ProviderLoaderUseCase
                 var isApiDisabled = preferenceItem.isDisabled
                 try {
                     if (!isApiDisabled) {
-                        loadApiFromProvider(metadata.id, provider)
+                        providerApiRepository.addApiFromProvider(
+                            id = metadata.id,
+                            provider = provider,
+                        )
                     }
                 } catch (_: Exception) {
                     isApiDisabled = true
@@ -331,26 +333,6 @@ class ProviderLoaderUseCase
                 errorLog("${metadata.name} crashed with error!")
                 errorLog(e)
             }
-        }
-
-        fun loadApiFromProvider(id: String) {
-            val provider =
-                providerRepository.getProvider(id)
-                    ?: throw NullPointerException("Provider [$id] is not yet loaded!")
-
-            loadApiFromProvider(id, provider)
-        }
-
-        private fun loadApiFromProvider(
-            id: String,
-            provider: Provider,
-        ) {
-            val api = provider.getApi(context, client)
-
-            providerApiRepository.addApi(
-                id = id,
-                api = api,
-            )
         }
 
         @Suppress("UNCHECKED_CAST")
