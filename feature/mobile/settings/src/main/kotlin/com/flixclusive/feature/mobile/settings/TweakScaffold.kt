@@ -17,12 +17,18 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.util.fastFlatMap
 import androidx.compose.ui.util.fastForEachIndexed
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
@@ -40,7 +46,9 @@ import com.flixclusive.feature.mobile.settings.component.ListSelectComponent
 import com.flixclusive.feature.mobile.settings.component.SliderComponent
 import com.flixclusive.feature.mobile.settings.component.SwitchComponent
 import com.flixclusive.feature.mobile.settings.component.TextFieldComponent
-import com.flixclusive.feature.mobile.settings.util.UiUtil.getEmphasizedLabel
+import com.flixclusive.feature.mobile.settings.util.LocalSettingsSearchQuery
+import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 internal val TweakPaddingHorizontal = 10.dp
@@ -52,26 +60,52 @@ internal fun TweakScaffold(
     description: String,
     tweaksProvider: @Composable () -> List<Tweak>,
 ) {
-    val tweaks = tweaksProvider()
     val screenPadding = getAdaptiveDp(TweakPaddingHorizontal)
+
+    val tweaks = tweaksProvider()
+    val settingsSearchQuery = LocalSettingsSearchQuery.current
+    var tweaksFiltered by remember { mutableStateOf<List<Tweak>?>(null) }
+
+    LaunchedEffect(tweaks, settingsSearchQuery.value) {
+        if (settingsSearchQuery.value.isEmpty()) {
+            tweaksFiltered = null
+            return@LaunchedEffect
+        }
+
+        delay(800)
+        tweaksFiltered = tweaks.fastFlatMap {
+            when (it) {
+                is TweakGroup -> it.tweaks
+                is TweakUI<*> -> listOf(it)
+                else -> emptyList()
+            }
+        }.fastFilter {
+            it.description?.contains(settingsSearchQuery.value, true) == true ||
+                it.title.contains(settingsSearchQuery.value, true)
+        }
+    }
+
     LazyColumn(
         contentPadding = PaddingValues(vertical = screenPadding),
     ) {
-        item {
-            SubScreenHeader(
-                title = title,
-                description = description,
-                modifier =
+        if (tweaksFiltered == null) {
+            item(key = "Header") {
+                SubScreenHeader(
+                    title = title,
+                    description = description,
+                    modifier =
                     Modifier
-                        .padding(horizontal = screenPadding),
-            )
+                        .padding(horizontal = screenPadding)
+                        .animateItem(),
+                )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(TweakGroupSpacing))
+            }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(TweakGroupSpacing))
-        }
-
-        renderTweak(tweaks)
+        renderTweak(tweaksFiltered ?: tweaks)
     }
 }
 
@@ -110,13 +144,16 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
     tweaks.fastForEachIndexed { i, tweak ->
         when (tweak) {
             is TweakUI<*> -> {
-                item {
-                    RenderTweakUi(tweak)
+                item(key = tweak.title) {
+                    RenderTweakUi(
+                        tweak = tweak,
+                        modifier = Modifier.animateItem(),
+                    )
                 }
             }
 
             is TweakGroup -> {
-                item {
+                item(key = tweak.title) {
                     val alpha by animateFloatAsState(
                         label = "alpha",
                         targetValue = if (tweak.enabled) 1F else 0.6F,
@@ -132,6 +169,7 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                             ).copy(color = LocalContentColor.current.onMediumEmphasis(0.8F)),
                         modifier =
                             Modifier
+                                .animateItem()
                                 .alpha(alpha)
                                 .padding(
                                     bottom = getAdaptiveDp(10.dp),
@@ -140,8 +178,11 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                     )
                 }
 
-                items(tweak.tweaks) { item ->
-                    RenderTweakUi(tweak = item)
+                items(tweak.tweaks, key = { it.title }) { item ->
+                    RenderTweakUi(
+                        tweak = item,
+                        modifier = Modifier.animateItem(),
+                    )
                 }
 
                 item {
@@ -155,7 +196,10 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
 }
 
 @Composable
-private fun RenderTweakUi(tweak: TweakUI<*>) {
+private fun RenderTweakUi(
+    tweak: TweakUI<*>,
+    modifier: Modifier = Modifier,
+) {
     val scope = AppDispatchers.IO.scope
     val icon = tweak.iconId?.let { painterResource(it) }
 
@@ -165,15 +209,17 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
                 thickness = 1.dp,
                 color = LocalContentColor.current.onMediumEmphasis(0.3F),
                 modifier =
-                    Modifier.padding(
-                        horizontal = getAdaptiveDp(TweakPaddingHorizontal),
-                        vertical = getAdaptiveDp(TweakGroupSpacing / 2),
-                    ),
+                    modifier
+                        .padding(
+                            horizontal = getAdaptiveDp(TweakPaddingHorizontal),
+                            vertical = getAdaptiveDp(TweakGroupSpacing / 2),
+                        ),
             )
         }
 
         is TweakUI.InformationTweak -> {
             BaseTweakComponent(
+                modifier = modifier,
                 title = tweak.title,
                 description = tweak.description,
                 enabled = tweak.enabled,
@@ -189,6 +235,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
 
         is TweakUI.SliderTweak -> {
             SliderComponent(
+                modifier = modifier,
                 title = tweak.title,
                 description = tweak.description,
                 icon = icon,
@@ -208,6 +255,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
 
         is TweakUI.SwitchTweak -> {
             SwitchComponent(
+                modifier = modifier,
                 title = tweak.title,
                 description = tweak.description,
                 icon = icon,
@@ -225,6 +273,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
 
         is TweakUI.TextFieldTweak -> {
             TextFieldComponent(
+                modifier = modifier,
                 title = tweak.title,
                 description = tweak.description,
                 icon = icon,
@@ -242,6 +291,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
 
         is TweakUI.ListTweak<*> -> {
             ListRadioComponent(
+                modifier = modifier,
                 title = tweak.title,
                 description = tweak.description,
                 icon = icon,
@@ -261,6 +311,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
 
         is TweakUI.MultiSelectListTweak<*> -> {
             ListSelectComponent(
+                modifier = modifier,
                 title = tweak.title,
                 description = tweak.description,
                 icon = icon,
@@ -280,6 +331,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
 
         is TweakUI.ClickableTweak -> {
             ClickableComponent(
+                modifier = modifier,
                 title = tweak.title,
                 description = tweak.description,
                 icon = icon,
@@ -290,6 +342,7 @@ private fun RenderTweakUi(tweak: TweakUI<*>) {
 
         is TweakUI.DialogTweak -> {
             DialogComponent(
+                modifier = modifier,
                 title = tweak.title,
                 description = tweak.description,
                 dialogTitle = tweak.dialogTitle,

@@ -91,7 +91,7 @@ private enum class PinSetupStep {
     Verify,
     Setup,
     Confirm,
-    Hint
+    Hint,
 }
 
 @Destination
@@ -99,7 +99,7 @@ private enum class PinSetupStep {
 internal fun PinSetupScreen(
     currentPin: String? = null,
     isRemovingPin: Boolean = false,
-    resultNavigator: ResultBackNavigator<PinWithHintResult>
+    resultNavigator: ResultBackNavigator<PinWithHintResult>,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowHeightSizeClass
 
@@ -132,10 +132,11 @@ internal fun PinSetupScreen(
         if (isCurrentPinVerificationCorrect && isRemovingPin) {
             resultNavigator.navigateBack(
                 onlyIfResumed = true,
-                result = PinWithHintResult(
-                    pin = null,
-                    pinHint = null
-                )
+                result =
+                    PinWithHintResult(
+                        pin = null,
+                        pinHint = null,
+                    ),
             )
         } else if (isCurrentPinVerificationCorrect) {
             newPin.value = ""
@@ -149,12 +150,16 @@ internal fun PinSetupScreen(
         } else if (stepState == PinSetupStep.Hint && pinHint.value.isNotEmpty()) {
             resultNavigator.navigateBack(
                 onlyIfResumed = true,
-                result = PinWithHintResult(
-                    pin = newPin.value,
-                    pinHint = pinHint.value
-                )
+                result =
+                    PinWithHintResult(
+                        pin = newPin.value,
+                        pinHint = pinHint.value,
+                    ),
             )
-        } else if (stepState == PinSetupStep.Confirm || stepState == PinSetupStep.Verify || stepState == PinSetupStep.Hint) {
+        } else if (stepState == PinSetupStep.Confirm ||
+            stepState == PinSetupStep.Verify ||
+            stepState == PinSetupStep.Hint
+        ) {
             hasErrors.value = true
         }
     }
@@ -169,13 +174,15 @@ internal fun PinSetupScreen(
     }
 
     AnimatedContent(
-        modifier = Modifier.fillMaxSize()
-            .padding(horizontal = getAdaptiveDp(DefaultScreenPaddingHorizontal, 2.dp)),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = getAdaptiveDp(DefaultScreenPaddingHorizontal, 2.dp)),
         targetState = stepState == PinSetupStep.Hint,
         label = "PinSetupStep",
         transitionSpec = {
             fadeIn(tween(durationMillis = 500)) togetherWith fadeOut()
-        }
+        },
     ) { isOnHintStep ->
         if (isOnHintStep) {
             PinSetupHintScreen(
@@ -184,15 +191,15 @@ internal fun PinSetupScreen(
                 onSkip = {
                     resultNavigator.navigateBack(
                         onlyIfResumed = true,
-                        result = PinWithHintResult(
-                            pin = newPin.value,
-                            pinHint = null
-                        )
+                        result =
+                            PinWithHintResult(
+                                pin = newPin.value,
+                                pinHint = null,
+                            ),
                     )
-                }
+                },
             )
-        }
-        else if (windowSizeClass.isCompact) {
+        } else if (windowSizeClass.isCompact) {
             PinSetupScreenCompactLandscape(
                 currentPin = currentPin,
                 pin = newPin,
@@ -200,10 +207,9 @@ internal fun PinSetupScreen(
                 hasErrors = hasErrors,
                 stepState = stepState,
                 onBack = onBack,
-                onConfirm = onConfirm
+                onConfirm = onConfirm,
             )
-        }
-        else {
+        } else {
             PinSetupScreenDefault(
                 currentPin = currentPin,
                 pin = newPin,
@@ -211,7 +217,7 @@ internal fun PinSetupScreen(
                 hasErrors = hasErrors,
                 stepState = stepState,
                 onBack = onBack,
-                onConfirm = onConfirm
+                onConfirm = onConfirm,
             )
         }
     }
@@ -226,46 +232,50 @@ private fun PinSetupScreenCompactLandscape(
     hasErrors: MutableState<Boolean>,
     stepState: PinSetupStep,
     onBack: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
 ) {
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
     ) {
         CommonTopBar(
             title = "",
             onNavigate = onBack,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
+            rowModifier =
+                Modifier
+                    .align(Alignment.TopCenter),
         )
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth(0.8F)
-                .align(Alignment.Center)
-                .scale(0.85F)
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.8F)
+                    .align(Alignment.Center)
+                    .scale(0.85F),
         ) {
             Column(
                 modifier = Modifier.weight(0.5F),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(
-                    space = 25.dp,
-                    alignment = Alignment.CenterVertically
-                ),
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        space = 25.dp,
+                        alignment = Alignment.CenterVertically,
+                    ),
             ) {
                 AnimatedContent(
                     targetState = stepState,
                     label = "PinSetupStep",
                     transitionSpec = {
                         fadeIn(tween(durationMillis = 500)) togetherWith fadeOut()
-                    }
+                    },
                 ) {
-                    val title = when (it) {
-                        PinSetupStep.Verify -> stringResource(LocaleR.string.pin_verify)
-                        PinSetupStep.Setup -> stringResource(LocaleR.string.pin_setup)
-                        PinSetupStep.Confirm -> stringResource(LocaleR.string.pin_confirm)
-                        else -> null
-                    }
+                    val title =
+                        when (it) {
+                            PinSetupStep.Verify -> stringResource(LocaleR.string.pin_verify)
+                            PinSetupStep.Setup -> stringResource(LocaleR.string.pin_setup)
+                            PinSetupStep.Confirm -> stringResource(LocaleR.string.pin_confirm)
+                            else -> null
+                        }
 
                     if (title != null) {
                         HeaderLabel(title = title)
@@ -273,13 +283,13 @@ private fun PinSetupScreenCompactLandscape(
                 }
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     repeat(MAX_USER_PIN_LENGTH) {
                         PinPlaceholder(
                             showPin = it == pin.value.length - 1 && isTyping.value,
                             hasErrors = hasErrors.value,
-                            char = pin.value.getOrNull(it)
+                            char = pin.value.getOrNull(it),
                         )
                     }
                 }
@@ -289,12 +299,13 @@ private fun PinSetupScreenCompactLandscape(
 
             FlowRow(
                 modifier = Modifier.weight(0.5F),
-                horizontalArrangement = Arrangement.spacedBy(
-                    space = pinPadding,
-                    alignment = Alignment.CenterHorizontally
-                ),
+                horizontalArrangement =
+                    Arrangement.spacedBy(
+                        space = pinPadding,
+                        alignment = Alignment.CenterHorizontally,
+                    ),
                 verticalArrangement = Arrangement.spacedBy(pinPadding),
-                maxItemsInEachRow = 3
+                maxItemsInEachRow = 3,
             ) {
                 repeat(MAX_NUMBER_LENGTH + 2) {
                     when (val digit = it + 1) {
@@ -307,11 +318,11 @@ private fun PinSetupScreenCompactLandscape(
                                         isTyping.value = false
                                         pin.value = pin.value.dropLast(1)
                                     }
-                                }
+                                },
                             ) {
                                 AdaptiveIcon(
                                     painter = painterResource(UiCommonR.drawable.backspace_filled),
-                                    contentDescription = stringResource(LocaleR.string.backspace_content_desc)
+                                    contentDescription = stringResource(LocaleR.string.backspace_content_desc),
                                 )
                             }
                         }
@@ -323,14 +334,15 @@ private fun PinSetupScreenCompactLandscape(
                                     if (pin.value.length == MAX_USER_PIN_LENGTH) {
                                         onConfirm()
                                     }
-                                }
+                                },
                             ) {
                                 Text(
                                     text = stringResource(LocaleR.string.ok),
-                                    style = getAdaptiveTextStyle(
-                                        style = TypographyStyle.Title,
-                                        mode = TextStyleMode.Emphasized
-                                    )
+                                    style =
+                                        getAdaptiveTextStyle(
+                                            style = TypographyStyle.Title,
+                                            mode = TextStyleMode.Emphasized,
+                                        ),
                                 )
                             }
                         }
@@ -344,7 +356,7 @@ private fun PinSetupScreenCompactLandscape(
                                         hasErrors.value = false
                                         pin.value += "${coercedDigit % MAX_NUMBER_LENGTH}"
                                     }
-                                }
+                                },
                             )
                         }
                     }
@@ -363,25 +375,27 @@ private fun PinSetupScreenDefault(
     hasErrors: MutableState<Boolean>,
     stepState: PinSetupStep,
     onBack: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
 ) {
     Scaffold(
         topBar = {
             CommonTopBar(
                 title = "",
-                onNavigate = onBack
+                onNavigate = onBack,
             )
-        }
+        },
     ) { padding ->
         Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
+            modifier =
+                Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(
-                space = 25.dp,
-                alignment = Alignment.CenterVertically
-            ),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    space = 25.dp,
+                    alignment = Alignment.CenterVertically,
+                ),
         ) {
             AnimatedContent(
                 targetState = stepState,
@@ -389,15 +403,17 @@ private fun PinSetupScreenDefault(
                 transitionSpec = {
                     fadeIn(tween(durationMillis = 500)) togetherWith fadeOut()
                 },
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
+                modifier =
+                    Modifier
+                        .align(Alignment.CenterHorizontally),
             ) {
-                val title = when (it) {
-                    PinSetupStep.Verify -> stringResource(LocaleR.string.pin_verify)
-                    PinSetupStep.Setup -> stringResource(LocaleR.string.pin_setup)
-                    PinSetupStep.Confirm -> stringResource(LocaleR.string.pin_confirm)
-                    else -> null
-                }
+                val title =
+                    when (it) {
+                        PinSetupStep.Verify -> stringResource(LocaleR.string.pin_verify)
+                        PinSetupStep.Setup -> stringResource(LocaleR.string.pin_setup)
+                        PinSetupStep.Confirm -> stringResource(LocaleR.string.pin_confirm)
+                        else -> null
+                    }
 
                 if (title != null) {
                     HeaderLabel(title = title)
@@ -406,15 +422,16 @@ private fun PinSetupScreenDefault(
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(bottom = 25.dp)
+                modifier =
+                    Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 25.dp),
             ) {
                 repeat(MAX_USER_PIN_LENGTH) {
                     PinPlaceholder(
                         showPin = it == pin.value.length - 1 && isTyping.value,
                         hasErrors = hasErrors.value,
-                        char = pin.value.getOrNull(it)
+                        char = pin.value.getOrNull(it),
                     )
                 }
             }
@@ -422,14 +439,16 @@ private fun PinSetupScreenDefault(
             val pinPadding = getAdaptiveDp(20.dp)
 
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(
-                    space = pinPadding,
-                    alignment = Alignment.CenterHorizontally
-                ),
+                horizontalArrangement =
+                    Arrangement.spacedBy(
+                        space = pinPadding,
+                        alignment = Alignment.CenterHorizontally,
+                    ),
                 verticalArrangement = Arrangement.spacedBy(pinPadding),
                 maxItemsInEachRow = 3,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
+                modifier =
+                    Modifier
+                        .align(Alignment.CenterHorizontally),
             ) {
                 repeat(MAX_NUMBER_LENGTH + 2) {
                     when (val digit = it + 1) {
@@ -442,11 +461,11 @@ private fun PinSetupScreenDefault(
                                         isTyping.value = false
                                         pin.value = pin.value.dropLast(1)
                                     }
-                                }
+                                },
                             ) {
                                 AdaptiveIcon(
                                     painter = painterResource(UiCommonR.drawable.backspace_filled),
-                                    contentDescription = stringResource(LocaleR.string.backspace_content_desc)
+                                    contentDescription = stringResource(LocaleR.string.backspace_content_desc),
                                 )
                             }
                         }
@@ -458,14 +477,15 @@ private fun PinSetupScreenDefault(
                                     if (pin.value.length == MAX_USER_PIN_LENGTH) {
                                         onConfirm()
                                     }
-                                }
+                                },
                             ) {
                                 Text(
                                     text = stringResource(LocaleR.string.ok),
-                                    style = getAdaptiveTextStyle(
-                                        style = TypographyStyle.Title,
-                                        mode = TextStyleMode.Emphasized
-                                    )
+                                    style =
+                                        getAdaptiveTextStyle(
+                                            style = TypographyStyle.Title,
+                                            mode = TextStyleMode.Emphasized,
+                                        ),
                                 )
                             }
                         }
@@ -479,7 +499,7 @@ private fun PinSetupScreenDefault(
                                         hasErrors.value = false
                                         pin.value += "${coercedDigit % MAX_NUMBER_LENGTH}"
                                     }
-                                }
+                                },
                             )
                         }
                     }
@@ -495,44 +515,50 @@ private fun PinSetupHintScreen(
     onSkip: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    val defaultContainerColor = MaterialTheme.colorScheme
-        .surfaceColorAtElevation(1.dp)
+    val defaultContainerColor =
+        MaterialTheme.colorScheme
+            .surfaceColorAtElevation(1.dp)
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val adaptiveMaxWidth = Modifier
-        .fillMaxAdaptiveWidth(
-            compact = 1F,
-            medium = 0.8F,
-            expanded = 0.5F
-        )
+    val adaptiveMaxWidth =
+        Modifier
+            .fillMaxAdaptiveWidth(
+                compact = 1F,
+                medium = 0.8F,
+                expanded = 0.5F,
+            )
 
     Column(
-        modifier = Modifier.fillMaxSize()
-            .noIndicationClickable {
-                focusManager.clearFocus(true)
-                keyboardController?.hide()
-            },
-        verticalArrangement = Arrangement.spacedBy(
-            space = 8.dp,
-            alignment = Alignment.CenterVertically
-        ),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .noIndicationClickable {
+                    focusManager.clearFocus(true)
+                    keyboardController?.hide()
+                },
+        verticalArrangement =
+            Arrangement.spacedBy(
+                space = 8.dp,
+                alignment = Alignment.CenterVertically,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         HeaderLabel(
-            title = stringResource(LocaleR.string.pin_hint_description)
+            title = stringResource(LocaleR.string.pin_hint_description),
         )
 
         Text(
             text = stringResource(LocaleR.string.pin_hint_sub_description),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(0.8F),
-            style = getAdaptiveTextStyle(
-                style = TypographyStyle.Body,
-                mode = TextStyleMode.NonEmphasized,
-                size = 14.sp
-            )
+            style =
+                getAdaptiveTextStyle(
+                    style = TypographyStyle.Body,
+                    mode = TextStyleMode.NonEmphasized,
+                    size = 14.sp,
+                ),
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -541,21 +567,23 @@ private fun PinSetupHintScreen(
             value = pinHint.value,
             onValueChange = { pinHint.value = it },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    focusManager.clearFocus(true)
-                    keyboardController?.hide()
-                }
-            ),
+            keyboardActions =
+                KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus(true)
+                        keyboardController?.hide()
+                    },
+                ),
             placeholder = {
                 Text(
                     text = stringResource(LocaleR.string.pin_hint),
-                    style = getAdaptiveTextStyle(
-                        style = TypographyStyle.Label,
-                        mode = TextStyleMode.Emphasized,
-                    ).copy(
-                        color = LocalContentColor.current.onMediumEmphasis(),
-                    )
+                    style =
+                        getAdaptiveTextStyle(
+                            style = TypographyStyle.Label,
+                            mode = TextStyleMode.Emphasized,
+                        ).copy(
+                            color = LocalContentColor.current.onMediumEmphasis(),
+                        ),
                 )
             },
             trailingIcon = {
@@ -565,59 +593,64 @@ private fun PinSetupHintScreen(
                     exit = scaleOut(),
                 ) {
                     IconButton(
-                        onClick = { pinHint.value = "" }
+                        onClick = { pinHint.value = "" },
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.outline_close_square),
-                            contentDescription = stringResource(LocaleR.string.clear_text_button)
+                            contentDescription = stringResource(LocaleR.string.clear_text_button),
                         )
                     }
                 }
             },
-            textStyle = getAdaptiveTextStyle(
-                size = 16.sp,
-                style = TypographyStyle.Body,
-                mode = TextStyleMode.Normal
-            ).copy(
-                textAlign = TextAlign.Start
-            ),
+            textStyle =
+                getAdaptiveTextStyle(
+                    size = 16.sp,
+                    style = TypographyStyle.Body,
+                    mode = TextStyleMode.Normal,
+                ).copy(
+                    textAlign = TextAlign.Start,
+                ),
             singleLine = true,
             shape = DefaultShape,
-            colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = defaultContainerColor,
-                focusedContainerColor = defaultContainerColor,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-            ),
-            modifier = adaptiveMaxWidth
-                .height(
-                    getAdaptiveDp(
-                        dp = 65.dp,
-                        increaseBy = 15.dp
-                    )
-                )
+            colors =
+                TextFieldDefaults.colors(
+                    unfocusedContainerColor = defaultContainerColor,
+                    focusedContainerColor = defaultContainerColor,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                ),
+            modifier =
+                adaptiveMaxWidth
+                    .height(
+                        getAdaptiveDp(
+                            dp = 65.dp,
+                            increaseBy = 15.dp,
+                        ),
+                    ),
         )
 
         val adaptiveHeight = Modifier.height(getAdaptiveDp(45.dp, 10.dp))
 
         Row(
             modifier = adaptiveMaxWidth,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             TextButton(
                 onClick = onSkip,
                 shape = MaterialTheme.shapes.small,
-                modifier = adaptiveHeight
-                    .weight(0.5F)
+                modifier =
+                    adaptiveHeight
+                        .weight(0.5F),
             ) {
                 Text(
                     text = stringResource(LocaleR.string.skip),
-                    style = getAdaptiveTextStyle(
-                        style = TypographyStyle.Label,
-                        mode = TextStyleMode.NonEmphasized,
-                    ).copy(
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    style =
+                        getAdaptiveTextStyle(
+                            style = TypographyStyle.Label,
+                            mode = TextStyleMode.NonEmphasized,
+                        ).copy(
+                            color = MaterialTheme.colorScheme.primary,
+                        ),
                 )
             }
 
@@ -625,16 +658,18 @@ private fun PinSetupHintScreen(
                 onClick = onConfirm,
                 enabled = pinHint.value.isNotEmpty(),
                 shape = MaterialTheme.shapes.small,
-                modifier = adaptiveHeight
-                    .weight(0.5F)
+                modifier =
+                    adaptiveHeight
+                        .weight(0.5F),
             ) {
                 Text(
-                    text = stringResource(LocaleR.string.finish) ,
-                    style = getAdaptiveTextStyle(
-                        style = TypographyStyle.Label,
-                        mode = TextStyleMode.Emphasized,
-                        increaseBy = 6.sp
-                    )
+                    text = stringResource(LocaleR.string.finish),
+                    style =
+                        getAdaptiveTextStyle(
+                            style = TypographyStyle.Label,
+                            mode = TextStyleMode.Emphasized,
+                            increaseBy = 6.sp,
+                        ),
                 )
             }
         }
@@ -645,48 +680,57 @@ private fun PinSetupHintScreen(
 private fun PinPlaceholder(
     showPin: Boolean,
     hasErrors: Boolean,
-    char: Char?
+    char: Char?,
 ) {
     val size = getAdaptiveDp(16.dp)
 
     val inputColor by animateColorAsState(
         label = "PinPlaceholderInputColor",
-        targetValue = if (char != null && hasErrors) MaterialTheme.colorScheme.error
-        else if (char != null) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp)
+        targetValue =
+            if (char != null && hasErrors) {
+                MaterialTheme.colorScheme.error
+            } else if (char != null) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp)
+            },
     )
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(
-            space = 5.dp,
-            alignment = Alignment.Bottom
-        ),
-        modifier = Modifier
-            .heightIn(size * 4F)
+        verticalArrangement =
+            Arrangement.spacedBy(
+                space = 5.dp,
+                alignment = Alignment.Bottom,
+            ),
+        modifier =
+            Modifier
+                .heightIn(size * 4F),
     ) {
         AnimatedVisibility(
             visible = showPin,
             enter = fadeIn() + slideInVertically(tween(100)) { it / 4 },
-            exit = fadeOut()
+            exit = fadeOut(),
         ) {
             Text(
                 text = "${char ?: ""}",
-                style = getAdaptiveTextStyle(
-                    style = TypographyStyle.Title,
-                    mode = TextStyleMode.Emphasized,
-                    size = 25.sp,
-                )
+                style =
+                    getAdaptiveTextStyle(
+                        style = TypographyStyle.Title,
+                        mode = TextStyleMode.Emphasized,
+                        size = 25.sp,
+                    ),
             )
         }
 
         Spacer(
-            modifier = Modifier
-                .size(size)
-                .background(
-                    color = inputColor,
-                    shape = CircleShape
-                )
+            modifier =
+                Modifier
+                    .size(size)
+                    .background(
+                        color = inputColor,
+                        shape = CircleShape,
+                    ),
         )
     }
 }
@@ -694,17 +738,18 @@ private fun PinPlaceholder(
 @Composable
 private fun PinButton(
     digit: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     PinButton(
-        onClick = onClick
+        onClick = onClick,
     ) {
         Text(
             text = "$digit",
-            style = getAdaptiveTextStyle(
-                style = TypographyStyle.Title,
-                mode = TextStyleMode.Emphasized
-            )
+            style =
+                getAdaptiveTextStyle(
+                    style = TypographyStyle.Title,
+                    mode = TextStyleMode.Emphasized,
+                ),
         )
     }
 }
@@ -713,11 +758,12 @@ private fun PinButton(
 private fun HeaderLabel(title: String) {
     Text(
         text = title,
-        style = getAdaptiveTextStyle(
-            style = TypographyStyle.Title,
-            mode = TextStyleMode.Emphasized,
-            size = 25.sp
-        )
+        style =
+            getAdaptiveTextStyle(
+                style = TypographyStyle.Title,
+                mode = TextStyleMode.Emphasized,
+                size = 25.sp,
+            ),
     )
 }
 
@@ -726,7 +772,7 @@ private fun PinButton(
     onClick: () -> Unit,
     enabled: Boolean = true,
     noEmphasis: Boolean = false,
-    content: @Composable RowScope.() -> Unit
+    content: @Composable RowScope.() -> Unit,
 ) {
     if (noEmphasis) {
         TextButton(
@@ -735,8 +781,9 @@ private fun PinButton(
             onClick = onClick,
             shape = MaterialTheme.shapes.small,
             contentPadding = PaddingValues(0.dp),
-            modifier = Modifier
-                .size(getAdaptiveDp(65.dp))
+            modifier =
+                Modifier
+                    .size(getAdaptiveDp(65.dp)),
         )
     } else {
         OutlinedButton(
@@ -745,8 +792,9 @@ private fun PinButton(
             onClick = onClick,
             shape = MaterialTheme.shapes.small,
             contentPadding = PaddingValues(0.dp),
-            modifier = Modifier
-                .size(getAdaptiveDp(65.dp))
+            modifier =
+                Modifier
+                    .size(getAdaptiveDp(65.dp)),
         )
     }
 }
@@ -758,11 +806,17 @@ private fun PinSetupScreenBasePreview() {
         Surface {
             PinSetupScreen(
                 currentPin = "0000",
-                resultNavigator = object : ResultBackNavigator<PinWithHintResult> {
-                    override fun navigateBack(result: PinWithHintResult, onlyIfResumed: Boolean) = Unit
-                    override fun navigateBack(onlyIfResumed: Boolean) = Unit
-                    override fun setResult(result: PinWithHintResult) = Unit
-                }
+                resultNavigator =
+                    object : ResultBackNavigator<PinWithHintResult> {
+                        override fun navigateBack(
+                            result: PinWithHintResult,
+                            onlyIfResumed: Boolean,
+                        ) = Unit
+
+                        override fun navigateBack(onlyIfResumed: Boolean) = Unit
+
+                        override fun setResult(result: PinWithHintResult) = Unit
+                    },
             )
         }
     }

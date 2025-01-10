@@ -5,13 +5,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,73 +30,88 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBarDefaults.getAdaptiveTopBarHeight
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
+import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 fun CommonTopBar(
-    modifier: Modifier = Modifier,
     title: String,
     onNavigate: () -> Unit,
+    rowModifier: Modifier = Modifier,
+    boxModifier: Modifier = Modifier,
     endContent: (@Composable () -> Unit)? = null,
 ) {
     CommonTopBar(
-        modifier = modifier,
+        rowModifier = rowModifier,
+        boxModifier = boxModifier,
         navigationIcon = {
             val iconSize = getAdaptiveDp(16.dp, 3.dp)
             IconButton(onClick = onNavigate) {
                 Icon(
                     painter = painterResource(R.drawable.left_arrow),
                     contentDescription = stringResource(LocaleR.string.navigate_up),
-                    modifier = Modifier
-                        .size(iconSize)
+                    modifier =
+                        Modifier
+                            .size(iconSize),
                 )
             }
         },
         body = {
-            val fontSize = getAdaptiveTextUnit(20.sp, 5)
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = fontSize,
-                    fontWeight = FontWeight.SemiBold
-                ),
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                modifier = Modifier
-                    .padding(start = 15.dp)
-            )
+            Box(
+                modifier = Modifier.weight(1F),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Text(
+                    text = title,
+                    style =
+                        getAdaptiveTextStyle(
+                            style = TypographyStyle.Body,
+                            mode = TextStyleMode.Normal,
+                            size = 20.sp,
+                            increaseBy = 5.sp,
+                        ).copy(fontWeight = FontWeight.SemiBold),
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    modifier =
+                        Modifier
+                            .padding(start = 15.dp),
+                )
+            }
         },
         actions = {
             endContent?.invoke()
-        }
+        },
     )
 }
 
 @Composable
 fun CommonTopBar(
-    modifier: Modifier = Modifier,
     navigationIcon: @Composable RowScope.() -> Unit,
     body: @Composable RowScope.() -> Unit,
     actions: @Composable RowScope.() -> Unit,
+    boxModifier: Modifier = Modifier,
+    rowModifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.surface)
-            .statusBarsPadding(),
-        contentAlignment = Alignment.Center
+        modifier =
+            boxModifier
+                .background(MaterialTheme.colorScheme.surface)
+                .statusBarsPadding(),
+        contentAlignment = Alignment.Center,
     ) {
         Row(
-            modifier = modifier
-                .height(getAdaptiveTopBarHeight())
-                .fillMaxWidth(),
+            modifier =
+                rowModifier
+                    .height(getAdaptiveTopBarHeight())
+                    .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             navigationIcon()
             body()
-            Spacer(modifier = Modifier.weight(1F))
             actions()
         }
     }
@@ -106,10 +122,10 @@ object CommonTopBarDefaults {
     private val DefaultTopBarHeightIncrementValue = 15.dp
 
     @Composable
-    fun getAdaptiveTopBarHeight()
-        = getAdaptiveDp(
+    fun getAdaptiveTopBarHeight() =
+        getAdaptiveDp(
             dp = DefaultTopBarHeight,
-            increaseBy = DefaultTopBarHeightIncrementValue
+            increaseBy = DefaultTopBarHeightIncrementValue,
         )
 }
 
@@ -119,15 +135,19 @@ private fun CommonTopBarBasePreview() {
     FlixclusiveTheme {
         Surface {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        MaterialTheme.colorScheme.onSurface
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            MaterialTheme.colorScheme.onSurface,
+                        ),
             ) {
                 CommonTopBar(
                     title = "Title",
-                    onNavigate = {}
+                    onNavigate = {},
+                    endContent = {
+                        Icon(Icons.Default.AccountBox, contentDescription = null)
+                    },
                 )
             }
         }

@@ -47,8 +47,8 @@ import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
-import com.flixclusive.feature.mobile.settings.util.UiUtil.getEmphasizedLabel
-import com.flixclusive.feature.mobile.settings.util.UiUtil.getMediumEmphasizedLabel
+import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
+import com.flixclusive.feature.mobile.settings.util.getMediumEmphasizedLabel
 import com.flixclusive.model.database.User
 import com.flixclusive.model.datastore.FlixclusivePrefs
 import com.flixclusive.core.locale.R as LocaleR

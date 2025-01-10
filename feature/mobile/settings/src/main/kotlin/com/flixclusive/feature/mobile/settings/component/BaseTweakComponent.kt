@@ -42,14 +42,13 @@ internal fun BaseTweakComponent(
     )
 
     Column(
-        modifier = (if (extraContent != null) modifier else Modifier)
-            .alpha(alpha),
+        modifier = modifier.alpha(alpha),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(defaultHorizontalPadding),
-            modifier = (if (extraContent == null) modifier else Modifier)
+            modifier = Modifier
                 .clickable(
                     enabled = onClick != null && enabled,
                     onClick = { onClick?.invoke() }

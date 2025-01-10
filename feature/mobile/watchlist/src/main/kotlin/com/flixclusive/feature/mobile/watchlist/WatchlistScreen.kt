@@ -27,9 +27,9 @@ import com.flixclusive.core.locale.R as LocaleR
 @Composable
 internal fun WatchlistScreen(
     navigator: CommonScreenNavigator,
+    viewModel: WatchlistScreenViewModel = hiltViewModel(),
     previewFilm: (Film) -> Unit,
 ) {
-    val viewModel: WatchlistScreenViewModel = hiltViewModel()
     val uiPreferences by viewModel.uiPreferences.collectAsStateWithLifecycle()
     val watchlist by viewModel.items.collectAsStateWithLifecycle()
 
@@ -37,26 +37,27 @@ internal fun WatchlistScreen(
         AnimatedVisibility(
             visible = watchlist.isEmpty(),
             enter = fadeIn(),
-            exit = fadeOut()
+            exit = fadeOut(),
         ) {
             Scaffold(
                 topBar = {
                     CommonTopBar(
-                        modifier = Modifier.align(Alignment.TopStart),
+                        rowModifier = Modifier.align(Alignment.TopStart),
                         title = stringResource(id = LocaleR.string.watchlist),
-                        onNavigate = navigator::goBack
+                        onNavigate = navigator::goBack,
                     )
-                }
+                },
             ) {
                 Box(
-                    modifier = Modifier
-                        .padding(it)
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .padding(it)
+                            .fillMaxSize(),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = stringResource(LocaleR.string.watchlist_empty_message),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -65,7 +66,7 @@ internal fun WatchlistScreen(
         AnimatedVisibility(
             visible = watchlist.isNotEmpty(),
             enter = fadeIn(),
-            exit = fadeOut()
+            exit = fadeOut(),
         ) {
             FilmsGridScreen(
                 modifier = Modifier.fillMaxSize(),

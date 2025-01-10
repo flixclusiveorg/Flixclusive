@@ -27,9 +27,9 @@ import com.flixclusive.core.locale.R as LocaleR
 @Composable
 internal fun RecentlyWatchedScreen(
     navigator: CommonScreenNavigator,
+    viewModel: RecentlyWatchedScreenViewModel = hiltViewModel(),
     previewFilm: (Film) -> Unit,
 ) {
-    val viewModel = hiltViewModel<RecentlyWatchedScreenViewModel>()
     val uiPreferences by viewModel.uiPreferences.collectAsStateWithLifecycle()
     val watchHistoryItems by viewModel.items.collectAsStateWithLifecycle()
 
@@ -38,27 +38,29 @@ internal fun RecentlyWatchedScreen(
             visible = watchHistoryItems.isEmpty(),
             enter = fadeIn(),
             exit = fadeOut(),
-            modifier = Modifier
-                .fillMaxSize()
+            modifier =
+                Modifier
+                    .fillMaxSize(),
         ) {
             Scaffold(
                 topBar = {
                     CommonTopBar(
-                        modifier = Modifier.align(Alignment.TopStart),
+                        rowModifier = Modifier.align(Alignment.TopStart),
                         title = stringResource(id = LocaleR.string.recently_watched),
-                        onNavigate = navigator::goBack
+                        onNavigate = navigator::goBack,
                     )
-                }
+                },
             ) {
                 Box(
-                    modifier = Modifier
-                        .padding(it)
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        Modifier
+                            .padding(it)
+                            .fillMaxSize(),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = stringResource(id = LocaleR.string.empty_recently_watched_list_message),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -67,7 +69,7 @@ internal fun RecentlyWatchedScreen(
         AnimatedVisibility(
             visible = watchHistoryItems.isNotEmpty(),
             enter = fadeIn(),
-            exit = fadeOut()
+            exit = fadeOut(),
         ) {
             FilmsGridScreen(
                 modifier = Modifier.fillMaxSize(),
