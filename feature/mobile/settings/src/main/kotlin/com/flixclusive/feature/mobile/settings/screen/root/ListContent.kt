@@ -26,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -68,6 +69,8 @@ internal fun ListContent(
     val listState = rememberLazyListState()
     var headerHeightPx by remember { mutableIntStateOf(0) }
 
+    val onScrollCallback by rememberUpdatedState(onScroll)
+
     LaunchedEffect(listState, headerHeightPx) {
         snapshotFlow {
             Triple(listState.firstVisibleItemScrollOffset, listState.firstVisibleItemIndex, headerHeightPx)
@@ -82,7 +85,7 @@ internal fun ListContent(
                     else -> 0F
                 }
 
-            onScroll(scrollOffset)
+            onScrollCallback(scrollOffset)
         }
     }
 

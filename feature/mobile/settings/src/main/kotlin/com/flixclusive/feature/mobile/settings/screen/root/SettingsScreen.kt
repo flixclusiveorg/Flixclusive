@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.settings.screen.root
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -15,6 +16,7 @@ import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
+import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldDestinationItem
 import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
@@ -23,11 +25,13 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastFirstOrNull
@@ -52,6 +56,7 @@ import com.flixclusive.feature.mobile.settings.screen.system.SystemTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
 import com.flixclusive.model.database.User
+import com.flixclusive.model.datastore.user.UserPreferences
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
 
@@ -66,12 +71,27 @@ internal fun SettingsScreen(
 ) {
     val currentUser by viewModel.userSessionManager.currentUser.collectAsStateWithLifecycle()
 
-    val scaffoldNavigator = rememberListDetailPaneScaffoldNavigator<String>()
-    val isListAndDetailVisible =
-        scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded &&
-            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val initialNavigation =
+        if (isLandscape) {
+            listOf(
+                ThreePaneScaffoldDestinationItem(
+                    ListDetailPaneScaffoldRole.Detail,
+                    UserPreferences.UI_PREFS_KEY.name,
+                ),
+            )
+        } else {
+            listOf(ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.List))
+        }
 
-    val backgroundAlpha = remember { mutableFloatStateOf(1F) }
+    val scaffoldNavigator =
+        rememberListDetailPaneScaffoldNavigator<String>(initialDestinationHistory = initialNavigation)
+    val isListAndDetailVisible =
+        scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Expanded &&
+            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
+
+    val backgroundAlpha = rememberSaveable { mutableFloatStateOf(1F) }
     val backgroundBrush = getAdaptiveBackground(currentUser)
 
     val items =
@@ -105,85 +125,83 @@ internal fun SettingsScreen(
             LocalScaffoldNavigator provides scaffoldNavigator,
             LocalSettingsNavigator provides navigator,
         ) {
-            AnimatedContent(targetState = isListAndDetailVisible, label = "settings screen") {
-                ListDetailPaneScaffold(
-                    modifier =
-                        Modifier.drawBehind {
-                            if (isListAndDetailVisible) {
-                                drawRect(backgroundBrush, alpha = backgroundAlpha.floatValue)
-                            }
-                        },
-                    directive = scaffoldNavigator.scaffoldDirective,
-                    value = scaffoldNavigator.scaffoldValue,
-                    listPane = {
-                        AnimatedPane {
-                            ListContent(
-                                items = items,
-                                currentUser = { currentUser!! },
-                                navigator = navigator,
-                                onScroll = { backgroundAlpha.floatValue = it },
-                                onItemClick = { item ->
-                                    scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
-                                },
-                                modifier =
-                                    Modifier.drawBehind {
-                                        if (!isListAndDetailVisible) {
-                                            drawRect(backgroundBrush)
-                                        }
-                                    },
-                            )
+            ListDetailPaneScaffold(
+                modifier =
+                    Modifier.drawBehind {
+                        if (isListAndDetailVisible) {
+                            drawRect(backgroundBrush, alpha = backgroundAlpha.floatValue)
                         }
                     },
-                    detailPane = {
+                directive = scaffoldNavigator.scaffoldDirective,
+                value = scaffoldNavigator.scaffoldValue,
+                listPane = {
+                    AnimatedPane {
+                        ListContent(
+                            items = items,
+                            currentUser = { currentUser!! },
+                            navigator = navigator,
+                            onScroll = { backgroundAlpha.floatValue = it },
+                            onItemClick = { item ->
+                                scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
+                            },
+                            modifier =
+                                Modifier.drawBehind {
+                                    if (!isListAndDetailVisible) {
+                                        drawRect(backgroundBrush)
+                                    }
+                                },
+                        )
+                    }
+                },
+                detailPane = {
+                    val screen by remember {
+                        derivedStateOf {
+                            navigationItems.fastFirstOrNull {
+                                if (it is BaseTweakNavigation) {
+                                    return@fastFirstOrNull false
+                                }
+
+                                it.key.name == scaffoldNavigator.currentDestination?.content
+                            }
+                        }
+                    }
+
+                    if (screen != null) {
                         val isListVisible =
-                            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] ==
+                            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] ==
                                 PaneAdaptedValue.Expanded
 
-                        val screen by remember {
-                            derivedStateOf {
-                                navigationItems.fastFirstOrNull {
-                                    if (it is BaseTweakNavigation) {
-                                        return@fastFirstOrNull false
+                        AnimatedPane {
+                            AnimatedContent(
+                                targetState = screen!!,
+                                label = "DetailsContent",
+                                transitionSpec = {
+                                    if (initialState.isSubNavigation == true) {
+                                        fadeIn() + slideInHorizontally { -it / 4 } togetherWith
+                                            slideOutHorizontally { it / 4 } + fadeOut()
+                                    } else {
+                                        fadeIn() + slideInHorizontally { it / 4 } togetherWith
+                                            slideOutHorizontally { -it / 4 } + fadeOut()
                                     }
-
-                                    it.key.name == scaffoldNavigator.currentDestination?.content
-                                }
-                            }
-                        }
-
-                        if (screen != null) {
-                            AnimatedPane {
-                                AnimatedContent(
-                                    targetState = screen!!,
-                                    label = "DetailsContent",
-                                    transitionSpec = {
-                                        if (initialState.isSubNavigation == true) {
-                                            fadeIn() + slideInHorizontally { -it / 4 } togetherWith
-                                                slideOutHorizontally { it / 4 } + fadeOut()
-                                        } else {
-                                            fadeIn() + slideInHorizontally { it / 4 } togetherWith
-                                                slideOutHorizontally { -it / 4 } + fadeOut()
+                                },
+                            ) {
+                                DetailsScaffold(
+                                    isListAndDetailVisible = isListAndDetailVisible,
+                                    isDetailsVisible = !isListVisible,
+                                    content = { it.Content() },
+                                    navigateBack = {
+                                        if (scaffoldNavigator.canNavigateBack()) {
+                                            scaffoldNavigator.navigateBack(
+                                                backNavigationBehavior = BackNavigationBehavior.PopLatest,
+                                            )
                                         }
                                     },
-                                ) {
-                                    DetailsScaffold(
-                                        isListAndDetailVisible = isListAndDetailVisible,
-                                        isDetailsVisible = !isListVisible,
-                                        content = { it.Content() },
-                                        navigateBack = {
-                                            if (scaffoldNavigator.canNavigateBack()) {
-                                                scaffoldNavigator.navigateBack(
-                                                    backNavigationBehavior = BackNavigationBehavior.PopLatest,
-                                                )
-                                            }
-                                        },
-                                    )
-                                }
+                                )
                             }
                         }
-                    },
-                )
-            }
+                    }
+                },
+            )
         }
     }
 }

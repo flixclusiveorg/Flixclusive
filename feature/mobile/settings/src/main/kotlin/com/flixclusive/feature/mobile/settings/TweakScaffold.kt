@@ -66,8 +66,8 @@ internal fun TweakScaffold(
     val settingsSearchQuery = LocalSettingsSearchQuery.current
     var tweaksFiltered by remember { mutableStateOf<List<Tweak>?>(null) }
 
-    LaunchedEffect(tweaks, settingsSearchQuery.value) {
-        if (settingsSearchQuery.value.isEmpty()) {
+    LaunchedEffect(tweaks, settingsSearchQuery) {
+        if (settingsSearchQuery.isEmpty()) {
             tweaksFiltered = null
             return@LaunchedEffect
         }
@@ -80,8 +80,8 @@ internal fun TweakScaffold(
                 else -> emptyList()
             }
         }.fastFilter {
-            it.description?.contains(settingsSearchQuery.value, true) == true ||
-                it.title.contains(settingsSearchQuery.value, true)
+            it.description?.contains(settingsSearchQuery, true) == true ||
+                it.title.contains(settingsSearchQuery, true)
         }
     }
 

@@ -32,8 +32,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -77,71 +79,20 @@ internal fun DetailsScaffold(
             1F to MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
         )
 
-    val searchQuery = remember { mutableStateOf("") }
-    val isSearching = remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearching by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.Transparent,
         topBar = {
             if (isDetailsVisible) {
-                CommonTopBar(
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                if (isSearching.value) {
-                                    isSearching.value = false
-                                } else {
-                                    navigateBack()
-                                }
-                            },
-                        ) {
-                            AdaptiveIcon(
-                                painter = painterResource(UiCommonR.drawable.left_arrow),
-                                contentDescription = stringResource(LocaleR.string.navigate_up),
-                                dp = 16.dp,
-                                increaseBy = 3.dp,
-                            )
-                        }
-                    },
-                    body = {},
-                    actions = {
-                        Box(
-                            modifier = Modifier.weight(1F),
-                            contentAlignment = Alignment.CenterEnd,
-                        ) {
-                            AnimatedContent(
-                                targetState = isSearching.value,
-                                label = "TopBarAction",
-                                transitionSpec = { getSearchTransition() },
-                            ) { state ->
-                                val heightModifier =
-                                    Modifier
-                                        .height(getAdaptiveTopBarHeight())
-                                        .padding(getAdaptiveDp(8.dp))
-
-                                if (state) {
-                                    TopBarTextField(
-                                        searchQuery = searchQuery.value,
-                                        onQueryChange = { searchQuery.value = it },
-                                        modifier = heightModifier.fillMaxWidth(),
-                                    )
-                                } else {
-                                    IconButton(
-                                        onClick = { isSearching.value = true },
-                                        modifier = heightModifier,
-                                    ) {
-                                        AdaptiveIcon(
-                                            painter = painterResource(UiCommonR.drawable.search_outlined),
-                                            contentDescription = stringResource(LocaleR.string.search),
-                                            dp = 18.dp,
-                                            increaseBy = 3.dp,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    },
+                DetailsScaffoldTopBar(
+                    isSearching = isSearching,
+                    searchQuery = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onToggleSearchBar = { isSearching = it },
+                    onNavigateBack = navigateBack,
                 )
             }
         },
@@ -165,6 +116,74 @@ internal fun DetailsScaffold(
             )
         }
     }
+}
+
+@Composable
+private fun DetailsScaffoldTopBar(
+    isSearching: Boolean,
+    searchQuery: String,
+    onNavigateBack: () -> Unit,
+    onToggleSearchBar: (Boolean) -> Unit,
+    onQueryChange: (String) -> Unit,
+) {
+    CommonTopBar(
+        navigationIcon = {
+            IconButton(
+                onClick = {
+                    if (isSearching) {
+                        onToggleSearchBar(false)
+                    } else {
+                        onNavigateBack()
+                    }
+                },
+            ) {
+                AdaptiveIcon(
+                    painter = painterResource(UiCommonR.drawable.left_arrow),
+                    contentDescription = stringResource(LocaleR.string.navigate_up),
+                    dp = 16.dp,
+                    increaseBy = 3.dp,
+                )
+            }
+        },
+        body = {},
+        actions = {
+            Box(
+                modifier = Modifier.weight(1F),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                AnimatedContent(
+                    targetState = isSearching,
+                    label = "TopBarAction",
+                    transitionSpec = { getSearchTransition() },
+                ) { state ->
+                    val heightModifier =
+                        Modifier
+                            .height(getAdaptiveTopBarHeight())
+                            .padding(getAdaptiveDp(8.dp))
+
+                    if (state) {
+                        TopBarTextField(
+                            searchQuery = searchQuery,
+                            onQueryChange = onQueryChange,
+                            modifier = heightModifier.fillMaxWidth(),
+                        )
+                    } else {
+                        IconButton(
+                            onClick = { onToggleSearchBar(true) },
+                            modifier = heightModifier,
+                        ) {
+                            AdaptiveIcon(
+                                painter = painterResource(UiCommonR.drawable.search_outlined),
+                                contentDescription = stringResource(LocaleR.string.search),
+                                dp = 18.dp,
+                                increaseBy = 3.dp,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+    )
 }
 
 @Composable
