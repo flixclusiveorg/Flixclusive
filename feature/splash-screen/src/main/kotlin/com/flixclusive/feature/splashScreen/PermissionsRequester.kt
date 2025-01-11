@@ -55,13 +55,7 @@ internal fun Context.getAllRequiredPermissions(): List<String> {
         requiredPermissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 
-    for (permission in requiredPermissions) {
-        val status = checkCallingOrSelfPermission(permission)
-
-        if (status == PackageManager.PERMISSION_GRANTED) {
-            requiredPermissions.remove(permission)
-        }
+    return requiredPermissions.filterNot { permission ->
+        checkCallingOrSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
     }
-
-    return requiredPermissions.toList()
 }
