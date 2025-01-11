@@ -4,10 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
+import kotlin.random.Random
 
 /**
  *
  * A tweak represents a settings item in different modes such as groups or individual UIs.
+ *
+ * Necessary to use deferred on some variables here.
  * */
 sealed class Tweak {
     abstract val title: String
@@ -143,13 +146,13 @@ sealed class TweakUI<T> : Tweak() {
         override val onTweaked: suspend (newValue: String) -> Boolean = { true },
     ) : TweakUI<String>()
 
-    data class CustomContentTweak<T>(
-        val value: MutableState<T>,
-        override val title: String,
-        override val description: String? = null,
-        override val iconId: Int? = null,
-        override val enabled: Boolean = true,
-        override val onTweaked: suspend (newValue: T) -> Boolean = { true },
+    data class CustomContentTweak(
         val content: @Composable () -> Unit,
-    ) : TweakUI<T>()
+    ) : TweakUI<Nothing>() {
+        override val title: String by lazy { Random.nextDouble().toString() }
+        override val onTweaked: suspend (Nothing) -> Boolean get() = { true }
+        override val iconId: Int? get() = null
+        override val description: String? get() = null
+        override val enabled: Boolean get() = true
+    }
 }

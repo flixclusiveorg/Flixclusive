@@ -168,13 +168,14 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                                 letterSpacing = 0.1.sp,
                             ).copy(color = LocalContentColor.current.onMediumEmphasis(0.8F)),
                         modifier =
-                            Modifier
-                                .animateItem()
-                                .alpha(alpha)
-                                .padding(
-                                    bottom = getAdaptiveDp(10.dp),
-                                    top = TweakGroupSpacing,
-                                ).padding(horizontal = TweakPaddingHorizontal),
+                        Modifier
+                            .animateItem()
+                            .alpha(alpha)
+                            .padding(
+                                bottom = getAdaptiveDp(10.dp),
+                                top = TweakGroupSpacing,
+                            )
+                            .padding(horizontal = TweakPaddingHorizontal),
                     )
                 }
 
@@ -239,7 +240,7 @@ private fun RenderTweakUi(
                 title = tweak.title,
                 description = tweak.description,
                 icon = icon,
-                selectedValue = tweak.value.value,
+                selectedValueProvider = { tweak.value.value },
                 range = tweak.range,
                 steps = tweak.steps,
                 enabled = tweak.enabled,
@@ -353,7 +354,7 @@ private fun RenderTweakUi(
             )
         }
 
-        is TweakUI.CustomContentTweak<*> -> {
+        is TweakUI.CustomContentTweak -> {
             tweak.content()
         }
     }

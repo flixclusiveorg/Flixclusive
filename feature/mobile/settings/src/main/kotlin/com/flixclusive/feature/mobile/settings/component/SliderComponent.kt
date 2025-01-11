@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.settings.component
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Slider
@@ -19,15 +20,16 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun SliderComponent(
-    selectedValue: Float,
-    range: ClosedFloatingPointRange<Float>,
-    steps: Int,
+    selectedValueProvider: () -> Float,
     title: String,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    range: ClosedFloatingPointRange<Float> = 0F..1F,
+    steps: Int = 0,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     enabled: Boolean = true,
     description: String? = null,
     icon: Painter? = null,
-    modifier: Modifier = Modifier,
-    onValueChange: (Float) -> Unit
 ) {
     BaseTweakComponent(
         modifier = modifier,
@@ -37,10 +39,11 @@ internal fun SliderComponent(
         extraContent = {
             Slider(
                 enabled = enabled,
-                value = selectedValue,
+                value = selectedValueProvider(),
                 steps = steps,
                 valueRange = range,
-                onValueChange = onValueChange
+                onValueChange = onValueChange,
+                interactionSource = interactionSource,
             )
         },
         startContent =
@@ -51,7 +54,9 @@ internal fun SliderComponent(
                         contentDescription = null,
                     )
                 }
-            } else null,
+            } else {
+                null
+            },
     )
 }
 
@@ -63,26 +68,27 @@ private fun SliderComponentBasePreview() {
 
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier =
+                Modifier
+                    .fillMaxSize(),
         ) {
             Column {
                 SliderComponent(
                     title = "Slider tweak with icon",
                     description = "Slider tweak summary",
                     icon = painterResource(UiCommonR.drawable.happy_emphasized),
-                    selectedValue = value,
-                    onValueChange = { value = it},
+                    selectedValueProvider = { value },
+                    onValueChange = { value = it },
                     range = 0F..100F,
-                    steps = 10
+                    steps = 10,
                 )
                 SliderComponent(
                     title = "Slider tweak",
                     description = "Slider tweak summary",
-                    selectedValue = value2,
-                    onValueChange = { value2 = it},
+                    selectedValueProvider = { value2 },
+                    onValueChange = { value2 = it },
                     range = 0F..1F,
-                    steps = 100
+                    steps = 100,
                 )
             }
         }
