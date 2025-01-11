@@ -19,7 +19,7 @@ data class TweakGroup(
     override val title: String,
     override val description: String? = null,
     override val enabled: Boolean = true,
-    val tweaks: ImmutableList<TweakUI<out Any>>
+    val tweaks: ImmutableList<TweakUI<out Any>>,
 ) : Tweak()
 
 /**
@@ -34,7 +34,7 @@ sealed class TweakUI<T> : Tweak() {
      * */
     data class InformationTweak(
         override val title: String,
-        override val description: String? = null
+        override val description: String? = null,
     ) : TweakUI<Unit>() {
         override val enabled: Boolean = true
         override val onTweaked: suspend (newValue: Unit) -> Boolean = { true }
@@ -84,7 +84,7 @@ sealed class TweakUI<T> : Tweak() {
         override val description: String? = null,
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
-        override val onTweaked: suspend (newValue: Boolean) -> Boolean = { true }
+        override val onTweaked: suspend (newValue: Boolean) -> Boolean = { true },
     ) : TweakUI<Boolean>()
 
     data class SliderTweak(
@@ -95,9 +95,10 @@ sealed class TweakUI<T> : Tweak() {
         override val description: String? = null,
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
-        override val onTweaked: suspend (newValue: Float) -> Boolean = { true }
+        override val onTweaked: suspend (newValue: Float) -> Boolean = { true },
     ) : TweakUI<Float>()
 
+    @Suppress("UNCHECKED_CAST")
     data class ListTweak<S>(
         val value: MutableState<S>,
         val options: ImmutableMap<S, String>,
@@ -106,14 +107,16 @@ sealed class TweakUI<T> : Tweak() {
         override val description: String? = null,
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
-        override val onTweaked: suspend (newValue: S) -> Boolean = { true }
+        override val onTweaked: suspend (newValue: S) -> Boolean = { true },
     ) : TweakUI<S>() {
         internal fun internalSet(newValue: Any) {
             value.value = newValue as S
         }
+
         internal suspend fun internalOnValueChanged(newValue: Any) = onTweaked(newValue as S)
     }
 
+    @Suppress("UNCHECKED_CAST")
     data class MultiSelectListTweak<S>(
         val values: MutableState<Set<S>>,
         val options: ImmutableMap<S, String>,
@@ -122,11 +125,12 @@ sealed class TweakUI<T> : Tweak() {
         override val description: String? = null,
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
-        override val onTweaked: suspend (newValue: Set<S>) -> Boolean = { true }
+        override val onTweaked: suspend (newValue: Set<S>) -> Boolean = { true },
     ) : TweakUI<Set<S>>() {
         internal fun internalSet(newValue: Set<Any?>) {
             values.value = newValue as Set<S>
         }
+
         internal suspend fun internalOnValueChanged(newValue: Set<Any?>) = onTweaked(newValue as Set<S>)
     }
 
@@ -136,7 +140,7 @@ sealed class TweakUI<T> : Tweak() {
         override val description: String? = null,
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
-        override val onTweaked: suspend (newValue: String) -> Boolean = { true }
+        override val onTweaked: suspend (newValue: String) -> Boolean = { true },
     ) : TweakUI<String>()
 
     data class CustomContentTweak<T>(
@@ -146,6 +150,6 @@ sealed class TweakUI<T> : Tweak() {
         override val iconId: Int? = null,
         override val enabled: Boolean = true,
         override val onTweaked: suspend (newValue: T) -> Boolean = { true },
-        val content: @Composable () -> Unit
+        val content: @Composable () -> Unit,
     ) : TweakUI<T>()
 }

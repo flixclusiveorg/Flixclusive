@@ -62,7 +62,7 @@ internal class PlayerTweakScreen(
     @Composable
     override fun getTweaks(): List<Tweak> {
         val playerPreferences by preferencesAsState.collectAsStateWithLifecycle()
-        
+
         return listOf(
             getGeneralTweaks(playerPreferences),
             getAudioTweaks(playerPreferences),
@@ -87,14 +87,16 @@ internal class PlayerTweakScreen(
             formatInSeconds(amountInSeconds)
         }
 
-        val selectedResizeMode = remember(playerPreferences.resizeMode) {
+        val selectedResizeMode = remember { mutableIntStateOf(playerPreferences.resizeMode) }
+        val selectedResizeModeAsString = remember(selectedResizeMode.intValue) {
             val mode = ResizeMode.entries
-                .find { it.ordinal == playerPreferences.resizeMode }
+                .find { it.mode == playerPreferences.resizeMode }
                 ?: ResizeMode.Fit
 
             mode.toUiText().asString(context)
         }
 
+        val selectedQuality = remember { mutableStateOf(playerPreferences.quality) }
         val availableQualities = remember {
             PlayerQuality.entries
                 .associateWith { it.qualityName.asString(context) }
@@ -106,8 +108,8 @@ internal class PlayerTweakScreen(
             tweaks = persistentListOf(
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.resize_mode),
-                    description = selectedResizeMode,
-                    value = remember { mutableIntStateOf(playerPreferences.resizeMode) },
+                    description = selectedResizeModeAsString,
+                    value = selectedResizeMode,
                     onTweaked = {
                         onUpdatePreferences { oldValue ->
                             oldValue.copy(resizeMode = it)
@@ -121,8 +123,8 @@ internal class PlayerTweakScreen(
                 ),
                 TweakUI.ListTweak(
                     title = stringResource(LocaleR.string.preferred_quality),
-                    description = playerPreferences.quality.qualityName.asString(),
-                    value = remember { mutableStateOf(playerPreferences.quality) },
+                    description = selectedQuality.value.qualityName.asString(),
+                    value = selectedQuality,
                     options = availableQualities,
                     onTweaked = {
                         onUpdatePreferences { oldValue ->
