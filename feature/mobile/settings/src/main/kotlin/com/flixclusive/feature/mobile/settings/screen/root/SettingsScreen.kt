@@ -168,7 +168,7 @@ internal fun SettingsScreen(
 
                     if (screen != null) {
                         val isListVisible =
-                            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] ==
+                            scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] ==
                                 PaneAdaptedValue.Expanded
 
                         AnimatedPane {
