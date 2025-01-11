@@ -70,7 +70,7 @@ internal fun BaseTweakComponent(
                 }
             }
 
-            GroupLabel(
+            TitleDescriptionHeader(
                 title = title,
                 description = description,
                 modifier = Modifier.weight(1F)

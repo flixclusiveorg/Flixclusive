@@ -40,12 +40,12 @@ import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.feature.mobile.settings.component.BaseTweakComponent
 import com.flixclusive.feature.mobile.settings.component.ClickableComponent
 import com.flixclusive.feature.mobile.settings.component.DialogComponent
-import com.flixclusive.feature.mobile.settings.component.GroupLabel
 import com.flixclusive.feature.mobile.settings.component.ListRadioComponent
 import com.flixclusive.feature.mobile.settings.component.ListSelectComponent
 import com.flixclusive.feature.mobile.settings.component.SliderComponent
 import com.flixclusive.feature.mobile.settings.component.SwitchComponent
 import com.flixclusive.feature.mobile.settings.component.TextFieldComponent
+import com.flixclusive.feature.mobile.settings.component.TitleDescriptionHeader
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsSearchQuery
 import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
 import kotlinx.coroutines.delay
@@ -159,7 +159,7 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                         targetValue = if (tweak.enabled) 1F else 0.6F,
                     )
 
-                    GroupLabel(
+                    TitleDescriptionHeader(
                         title = tweak.title,
                         description = tweak.description,
                         titleStyle =

@@ -14,9 +14,10 @@ import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 
 @Composable
-internal fun GroupLabel(
+internal fun TitleDescriptionHeader(
     title: String,
     description: String?,
+    modifier: Modifier = Modifier,
     titleStyle: TextStyle = getAdaptiveTextStyle(
         style = TypographyStyle.Title,
         mode = TextStyleMode.SemiEmphasized,
@@ -25,7 +26,6 @@ internal fun GroupLabel(
         style = TypographyStyle.Body,
         mode = TextStyleMode.NonEmphasized,
     ),
-    modifier: Modifier = Modifier,
 ) {
     if (title.isNotBlank()) {
         Column(
