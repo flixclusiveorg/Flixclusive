@@ -48,15 +48,15 @@ internal val TagSize = 300.dp
 
 @OptIn(
     ExperimentalPermissionsApi::class,
-    ExperimentalSharedTransitionApi::class
+    ExperimentalSharedTransitionApi::class,
 )
 @Destination
 @Composable
 internal fun SplashScreen(
-    navigator: SplashScreenNavigator
+    navigator: SplashScreenNavigator,
+    viewModel: SplashScreenViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val viewModel: SplashScreenViewModel = hiltViewModel()
 
     val systemPreferences by viewModel.systemPreferences.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -66,11 +66,12 @@ internal fun SplashScreen(
     val noUsersFound by viewModel.noUsersFound.collectAsStateWithLifecycle()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = PaddingHorizontal),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = PaddingHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         SharedTransitionLayout {
             AnimatedContent(
@@ -78,7 +79,7 @@ internal fun SplashScreen(
                 transitionSpec = {
                     EnterTransition.None togetherWith ExitTransition.None
                 },
-                label = "splash_screen"
+                label = "splash_screen",
             ) { state ->
                 if (state) {
                     ConsentScreen(
@@ -88,10 +89,10 @@ internal fun SplashScreen(
                             viewModel.updateSettings {
                                 it.copy(
                                     isFirstTimeUserLaunch = false,
-                                    isSendingCrashLogsAutomatically = isOptingIn
+                                    isSendingCrashLogsAutomatically = isOptingIn,
                                 )
                             }
-                        }
+                        },
                     )
                 } else {
                     var hasErrors by rememberSaveable { mutableStateOf(false) }
@@ -104,7 +105,7 @@ internal fun SplashScreen(
                     LoadingTag(
                         isLoading = isLoading,
                         animatedScope = this@AnimatedContent,
-                        sharedTransitionScope = this@SharedTransitionLayout
+                        sharedTransitionScope = this@SharedTransitionLayout,
                     )
 
                     LaunchedEffect(true) {
@@ -116,7 +117,13 @@ internal fun SplashScreen(
                         }
                     }
 
-                    LaunchedEffect(updateStatus, configurationStatus, areAllPermissionsGranted, isDoneLoading, userLoggedIn) {
+                    LaunchedEffect(
+                        updateStatus,
+                        configurationStatus,
+                        areAllPermissionsGranted,
+                        isDoneLoading,
+                        userLoggedIn,
+                    ) {
                         if (areAllPermissionsGranted && isDoneLoading) {
                             val hasAutoUpdate = systemPreferences.isUsingAutoUpdateAppFeature
                             val isAppOutdated = updateStatus is UpdateStatus.Outdated
@@ -127,30 +134,34 @@ internal fun SplashScreen(
                             val isHomeScreenReady = uiState is SplashScreenUiState.Okay
                             val hasOldUserSession = userLoggedIn != null
 
-                            val isNavigatingToHome = ((isAppUpdated && hasAutoUpdate) || isConfigFetched)
-                                && isHomeScreenReady
-                                && hasOldUserSession
+                            val isNavigatingToHome =
+                                ((isAppUpdated && hasAutoUpdate) || isConfigFetched) &&
+                                    isHomeScreenReady &&
+                                    hasOldUserSession
                             hasErrors = (updateHasErrors && hasAutoUpdate) || configHasErrors
 
                             if (isAppOutdated && hasAutoUpdate) {
                                 with(viewModel.appUpdateCheckerUseCase) {
                                     navigator.openUpdateScreen(
-                                        newVersion = newVersion ?: throw NullPointerException("App's new version is null"),
+                                        newVersion =
+                                            newVersion
+                                                ?: throw NullPointerException("App's new version is null"),
                                         updateInfo = updateInfo,
-                                        updateUrl = updateUrl ?: throw NullPointerException("App's new update URL is null"),
+                                        updateUrl =
+                                            updateUrl
+                                                ?: throw NullPointerException("App's new update URL is null"),
                                         isComingFromSplashScreen = true,
                                     )
                                 }
-                            }
-                            else if (noUsersFound) {
+                            } else if (noUsersFound) {
                                 navigator.openAddProfileScreen(isInitializing = true)
-                            }
-                            else if (!hasOldUserSession) {
+                            } else if (!hasOldUserSession) {
                                 navigator.openProfilesScreenFromSplashScreen()
-                            }
-                            else if (isNavigatingToHome) {
+                            } else if (isNavigatingToHome) {
                                 if (updateHasErrors) {
-                                    val message = "${context.getString(LocaleR.string.failed_to_get_app_updates)}: ${updateStatus.errorMessage?.asString(context)}"
+                                    val message = "${context.getString(LocaleR.string.failed_to_get_app_updates)}: ${
+                                        updateStatus.errorMessage?.asString(context)
+                                    }"
                                     context.showToast(message = message)
                                 }
 
@@ -160,45 +171,50 @@ internal fun SplashScreen(
                     }
 
                     if (hasErrors) {
-                        val (title, errorMessage) = if (updateStatus is UpdateStatus.Error)
-                            stringResource(LocaleR.string.failed_to_get_app_updates) to updateStatus.errorMessage
-                        else stringResource(LocaleR.string.something_went_wrong) to (configurationStatus as Resource.Failure).error
+                        val (title, errorMessage) =
+                            if (updateStatus is UpdateStatus.Error) {
+                                stringResource(LocaleR.string.failed_to_get_app_updates) to updateStatus.errorMessage
+                            } else {
+                                stringResource(LocaleR.string.something_went_wrong) to
+                                    (configurationStatus as Resource.Failure).error
+                            }
 
                         ErrorDialog(
                             title = title,
                             description = errorMessage!!.asString(),
                             dismissButtonLabel = stringResource(LocaleR.string.close_label),
-                            onDismiss = navigator::openHomeScreen
+                            onDismiss = navigator::openHomeScreen,
                         )
                     }
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && isDoneLoading) {
-                        val notificationsPermissionState = rememberPermissionState(
-                            android.Manifest.permission.POST_NOTIFICATIONS
-                        )
+                        val notificationsPermissionState =
+                            rememberPermissionState(
+                                android.Manifest.permission.POST_NOTIFICATIONS,
+                            )
 
-                        val textToShow = if (notificationsPermissionState.status.shouldShowRationale) {
-                            stringResource(LocaleR.string.notification_persist_request_message)
-                        } else {
-                            stringResource(LocaleR.string.notification_request_message)
-                        }
+                        val textToShow =
+                            if (notificationsPermissionState.status.shouldShowRationale) {
+                                stringResource(LocaleR.string.notification_persist_request_message)
+                            } else {
+                                stringResource(LocaleR.string.notification_request_message)
+                            }
 
                         if (!notificationsPermissionState.status.isGranted) {
                             ErrorDialog(
                                 title = stringResource(LocaleR.string.splash_notice_permissions_header),
                                 description = textToShow,
                                 dismissButtonLabel = stringResource(LocaleR.string.allow),
-                                onDismiss = notificationsPermissionState::launchPermissionRequest
+                                onDismiss = notificationsPermissionState::launchPermissionRequest,
                             )
                         }
 
                         if (notificationsPermissionState.status.isGranted && !areAllPermissionsGranted) {
                             areAllPermissionsGranted = true
                         }
-                    } else areAllPermissionsGranted = true
+                    }
                 }
             }
         }
     }
-
 }
