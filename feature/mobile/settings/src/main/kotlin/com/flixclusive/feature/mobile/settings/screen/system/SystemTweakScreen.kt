@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.util.showToast
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakScaffold
@@ -63,7 +64,7 @@ internal class SystemTweakScreen(
     @Composable
     override fun Content() {
         val scope = rememberCoroutineScope()
-        
+
         if (showPrereleaseWarning.value) {
             PreReleaseWarningDialog(
                 onConfirm = {
@@ -158,14 +159,17 @@ internal class SystemTweakScreen(
                             }
                         } else false
 
-                        if (success) {
-                            val message = context.getString(LocaleR.string.restart_app_for_changes_message)
-                            context.showToast(message)
+                        withMainContext {
+                            if (success) {
+                                val message = context.getString(LocaleR.string.restart_app_for_changes_message)
+                                context.showToast(message)
+                            }
                         }
 
                         success
                     }
                 ),
+                // TODO: Make this a CustomContentTweak
                 TweakUI.TextFieldTweak(
                     value = userAgent,
                     title = stringResource(LocaleR.string.default_user_agent),
@@ -177,9 +181,12 @@ internal class SystemTweakScreen(
                             }
                         } else false
 
-                        if (success) {
-                            val message = context.getString(LocaleR.string.restart_app_for_changes_message)
-                            context.showToast(message)
+
+                        withMainContext {
+                            if (success) {
+                                val message = context.getString(LocaleR.string.restart_app_for_changes_message)
+                                context.showToast(message)
+                            }
                         }
 
                         success
