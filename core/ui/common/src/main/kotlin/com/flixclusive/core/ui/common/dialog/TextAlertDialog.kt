@@ -32,7 +32,7 @@ import com.flixclusive.core.locale.R as LocaleR
  * */
 @Composable
 fun TextAlertDialog(
-    label: CharSequence,
+    label: CharSequence, // TODO: Rename label to title
     description: CharSequence,
     dialogProperties: DialogProperties = DialogProperties(),
     confirmButtonLabel: String = stringResource(id = LocaleR.string.ok),

@@ -289,6 +289,7 @@
     <string name="test">Test</string>
     <string name="test_provider">Test provider</string>
     <string name="test_providers">Test providers</string>
+    <string name="bg_transparency">Background transparency</string>
     <string name="understanding_providers">Understanding Providers</string>
     <string name="understood">Understood</string>
     <string name="uninstall">Uninstall</string>
@@ -483,6 +484,7 @@
     <string name="repository_icon_content_desc">Repository icon</string>
     <string name="reset_settings_msg">This will reset all app settings.</string>
     <string name="reverse_player_time_desc">Convert the default negative playback duration into a positive value for better readability.</string>
+    <string name="subtitle_preview_content_desc">Sample preview of current subtitle configuration</string>
     <string name="sample_movie_content_desc">Sample Movie for Subtitle Preview</string>
     <string name="search_for_providers">Search for providers</string>
     <string name="search_history_content_desc">Clears all searches this user has made</string>
@@ -496,7 +498,7 @@
     <string name="subtitle_icon_content_desc">Subtitle icon</string>
     <string name="subtitle_snackbar_message">Subtitle set to %1$s</string>
     <string name="subtitles_background_color_desc">Choose a background color behind the subtitle</string>
-    <string name="subtitles_color_desc">Choose a readable and preferred color</string>
+    <string name="subtitles_color_desc">Choose a readable and preferred font color</string>
     <string name="subtitles_toggle_desc">Toggle to turn subtitles on/off</string>
     <string name="subtract_1000ms_content_description">Subtract 1000ms on subtitle delay</string>
     <string name="subtract_500ms_content_description">Subtract 500ms on subtitle delay</string>
@@ -512,6 +514,7 @@
     <string name="warn_delete_items_format">You have %1$d item to delete.</string>
     <string name="warn_on_unsafe_install_description">Triggers an alert dialog when an unsafe Provider installation is detected. This is a recommended option, as Providers operate independently and are not monitored by the app.</string>
     <string name="warning_content_description">Warning icon</string>
+    <string name="check_indicator_content_desc">Check indicator for selected sheet item</string>
 
     <!--  Tweak/settings screens descriptions  -->
     <string name="appearance_settings_content_desc">This contains all the settings to customize how the general appearance of the app look and feel.</string>
@@ -526,10 +529,9 @@
     <string name="share_message_subject">Flixclusive download link</string>
 
     <!-- Permission request messages -->
-    <string name="check_indicator_content_desc">Check indicator for selected sheet item</string>
-    <string name="notification_persist_request_message">It seems that you\'ve blocked notification permissions. Please grant this permission for the app update service.</string>
-    <string name="notification_request_message">Notification permission is required for the app updater feature to be available. Please grant this permission.</string>
-    <string name="splash_notice_permissions_header">Allow Permissions</string>
+    <string name="permissions_request_message">To provide you with the best experience, the app needs access on some specific features on your device. You can review and manage these permissions at any time in your device settings.</string>
+    <string name="permissions_persist_request_message">These permissions are needed for core features to work properly. If you have concerns, feel free to ask in our Discord community before proceeding.</string>
+    <string name="splash_notice_permissions_header">Grant permissions</string>
 
     <!--  Disclaimer/Privacy Notice messages  -->
     <string name="gen_ai_disclaimer_message">

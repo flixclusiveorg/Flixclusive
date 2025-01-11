@@ -48,8 +48,8 @@ import kotlinx.coroutines.delay
 
 @Stable
 @Composable
-internal fun getGradientColors()
-    = listOf(
+internal fun getGradientColors() =
+    listOf(
         MaterialTheme.colorScheme.primary,
         MaterialTheme.colorScheme.tertiary,
     )
@@ -59,31 +59,33 @@ internal fun getGradientColors()
 internal fun LoadingTag(
     isLoading: Boolean,
     animatedScope: AnimatedVisibilityScope,
-    sharedTransitionScope: SharedTransitionScope
+    sharedTransitionScope: SharedTransitionScope,
 ) {
     val gradientColors = getGradientColors()
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically)
+        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
     ) {
         Tag(
             animatedScope = animatedScope,
-            sharedTransitionScope = sharedTransitionScope
+            sharedTransitionScope = sharedTransitionScope,
         )
 
         AnimatedVisibility(
             visible = isLoading,
-            enter = fadeIn(
-                animationSpec = tween(durationMillis = EXIT_DELAY)
-            ) + scaleIn(),
-            exit = scaleOut(
-                animationSpec = tween(durationMillis = ENTER_DELAY)
-            ) + fadeOut(),
+            enter =
+                fadeIn(
+                    animationSpec = tween(durationMillis = EXIT_DELAY),
+                ) + scaleIn(),
+            exit =
+                scaleOut(
+                    animationSpec = tween(durationMillis = ENTER_DELAY),
+                ) + fadeOut(),
         ) {
             GradientCircularProgressIndicator(
-                colors = gradientColors
+                colors = gradientColors,
             )
         }
     }
@@ -93,34 +95,38 @@ internal fun LoadingTag(
 @Composable
 internal fun Tag(
     animatedScope: AnimatedVisibilityScope,
-    sharedTransitionScope: SharedTransitionScope
+    sharedTransitionScope: SharedTransitionScope,
 ) {
     val gradientColors = getGradientColors()
     with(sharedTransitionScope) {
         Box(
-            modifier = Modifier
-                .sharedElement(
-                    state = rememberSharedContentState(key = APP_TAG_KEY),
-                    animatedVisibilityScope = animatedScope
-                )
-                .background(MaterialTheme.colorScheme.surface)
+            modifier =
+                Modifier
+                    .sharedElement(
+                        state = rememberSharedContentState(key = APP_TAG_KEY),
+                        animatedVisibilityScope = animatedScope,
+                    ).background(MaterialTheme.colorScheme.surface), // TODO: Remove background on tag
         ) {
             Image(
                 painter = painterResource(com.flixclusive.core.ui.common.R.drawable.flixclusive_tag),
-                contentDescription = stringResource(id = com.flixclusive.core.locale.R.string.flixclusive_tag_content_desc),
+                contentDescription =
+                    stringResource(
+                        id = com.flixclusive.core.locale.R.string.flixclusive_tag_content_desc,
+                    ),
                 contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .width(TagSize)
-                    .graphicsLayer(alpha = 0.99F)
-                    .drawWithCache {
-                        onDrawWithContent {
-                            drawContent()
-                            drawRect(
-                                brush = Brush.linearGradient(colors = gradientColors),
-                                blendMode = BlendMode.SrcAtop
-                            )
-                        }
-                    }
+                modifier =
+                    Modifier
+                        .width(TagSize)
+                        .graphicsLayer(alpha = 0.99F)
+                        .drawWithCache {
+                            onDrawWithContent {
+                                drawContent()
+                                drawRect(
+                                    brush = Brush.linearGradient(colors = gradientColors),
+                                    blendMode = BlendMode.SrcAtop,
+                                )
+                            }
+                        },
             )
         }
     }
@@ -139,18 +145,19 @@ private fun LoadingTagPreview() {
 
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier =
+                Modifier
+                    .fillMaxSize(),
         ) {
             SharedTransitionLayout {
                 AnimatedContent(
                     isLoading,
-                    label = "test_transition"
+                    label = "test_transition",
                 ) {
                     LoadingTag(
                         isLoading = it,
                         animatedScope = this@AnimatedContent,
-                        sharedTransitionScope = this@SharedTransitionLayout
+                        sharedTransitionScope = this@SharedTransitionLayout,
                     )
                 }
             }

@@ -1,6 +1,5 @@
 package com.flixclusive.feature.splashScreen
 
-import android.os.Build
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -15,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -25,16 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.ui.common.dialog.TextAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.data.configuration.UpdateStatus
-import com.flixclusive.feature.splashScreen.component.ErrorDialog
 import com.flixclusive.feature.splashScreen.component.LoadingTag
 import com.flixclusive.feature.splashScreen.screen.consent.ConsentScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
 import com.flixclusive.core.locale.R as LocaleR
@@ -98,9 +95,8 @@ internal fun SplashScreen(
                     var hasErrors by rememberSaveable { mutableStateOf(false) }
                     var isLoading by rememberSaveable { mutableStateOf(false) }
                     var isDoneLoading by rememberSaveable { mutableStateOf(false) }
-                    var areAllPermissionsGranted by rememberSaveable {
-                        mutableStateOf(context.hasAllPermissionGranted())
-                    }
+                    val requiredPermissions = remember { context.getAllRequiredPermissions() }
+                    var areAllPermissionsGranted by rememberSaveable { mutableStateOf(requiredPermissions.isEmpty()) }
 
                     LoadingTag(
                         isLoading = isLoading,
@@ -179,39 +175,21 @@ internal fun SplashScreen(
                                     (configurationStatus as Resource.Failure).error
                             }
 
-                        ErrorDialog(
-                            title = title,
+                        TextAlertDialog(
+                            label = title,
                             description = errorMessage!!.asString(),
-                            dismissButtonLabel = stringResource(LocaleR.string.close_label),
+                            confirmButtonLabel = stringResource(LocaleR.string.close_label),
+                            dismissButtonLabel = null,
+                            onConfirm = navigator::openHomeScreen,
                             onDismiss = navigator::openHomeScreen,
                         )
                     }
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && isDoneLoading) {
-                        val notificationsPermissionState =
-                            rememberPermissionState(
-                                android.Manifest.permission.POST_NOTIFICATIONS,
-                            )
-
-                        val textToShow =
-                            if (notificationsPermissionState.status.shouldShowRationale) {
-                                stringResource(LocaleR.string.notification_persist_request_message)
-                            } else {
-                                stringResource(LocaleR.string.notification_request_message)
-                            }
-
-                        if (!notificationsPermissionState.status.isGranted) {
-                            ErrorDialog(
-                                title = stringResource(LocaleR.string.splash_notice_permissions_header),
-                                description = textToShow,
-                                dismissButtonLabel = stringResource(LocaleR.string.allow),
-                                onDismiss = notificationsPermissionState::launchPermissionRequest,
-                            )
-                        }
-
-                        if (notificationsPermissionState.status.isGranted && !areAllPermissionsGranted) {
-                            areAllPermissionsGranted = true
-                        }
+                    if (!areAllPermissionsGranted && isDoneLoading) {
+                        PermissionsRequester(
+                            permissions = requiredPermissions,
+                            onGrantPermissions = { areAllPermissionsGranted = true }
+                        )
                     }
                 }
             }
