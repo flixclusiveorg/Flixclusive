@@ -1,9 +1,7 @@
 package com.flixclusive.core.ui.common.navigation.navigator
 
-import com.flixclusive.core.ui.common.navigation.GoBackAction
 
-
-interface UpdateDialogNavigator : GoBackAction {
+interface ViewNewAppUpdatesAction {
     fun openUpdateScreen(
         newVersion: String,
         updateUrl: String,

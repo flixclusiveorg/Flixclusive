@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -34,8 +35,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavArgs
-import com.flixclusive.core.ui.common.navigation.navigator.ProviderInfoNavigator
+import com.flixclusive.core.ui.common.navigation.navargs.ProviderMetadataNavArgs
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.TestProvidersAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewMarkdownAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderSettingsAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewRepositoryAction
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.mobile.component.dialog.UnsafeInstallAlertDialog
 import com.flixclusive.core.ui.mobile.util.isAtTop
@@ -51,6 +56,7 @@ import com.flixclusive.feature.mobile.provider.info.component.subdetails.SubDeta
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 
 internal val HORIZONTAL_PADDING = 20.dp
@@ -59,16 +65,22 @@ internal val LABEL_SIZE_IN_SP = LABEL_SIZE.sp
 internal val LABEL_SIZE_IN_DP = LABEL_SIZE.dp
 internal val SUB_LABEL_SIZE = 13.sp
 
+interface ProviderInfoNavigator :
+    GoBackAction,
+    ViewProviderSettingsAction,
+    ViewRepositoryAction,
+    TestProvidersAction,
+    ViewMarkdownAction
+
 @Destination(
-    navArgsDelegate = ProviderInfoScreenNavArgs::class
+    navArgsDelegate = ProviderMetadataNavArgs::class,
 )
 @Composable
 internal fun ProviderInfoScreen(
     navigator: ProviderInfoNavigator,
-    args: ProviderInfoScreenNavArgs
+    args: ProviderMetadataNavArgs,
+    viewModel: ProviderInfoScreenViewModel = hiltViewModel(),
 ) {
-    val viewModel = hiltViewModel<ProviderInfoScreenViewModel>()
-
     val providerPreferences by viewModel.providerPreferences.collectAsStateWithLifecycle()
     var openWarnOnInstallDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -79,14 +91,16 @@ internal fun ProviderInfoScreen(
     val shouldShowTopBar by listState.isScrollingUp()
     val listIsAtTop by listState.isAtTop()
 
+    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val webNavigationItems = remember {
-        listOf(
-            LocaleR.string.issue_a_bug to viewModel.providerMetadata.repositoryUrl.getNewIssueUrl(),
-            LocaleR.string.browse_repository to viewModel.providerMetadata.repositoryUrl,
-        )
-    }
+    val webNavigationItems =
+        remember {
+            listOf(
+                LocaleR.string.issue_a_bug to viewModel.providerMetadata.repositoryUrl.getNewIssueUrl(),
+                LocaleR.string.browse_repository to viewModel.providerMetadata.repositoryUrl,
+            )
+        }
 
     LaunchedEffect(viewModel.snackbar) {
         if (viewModel.snackbar?.error != null) {
@@ -104,39 +118,42 @@ internal fun ProviderInfoScreen(
                 onNavigationIconClick = navigator::goBack,
                 onSettingsClick = {
                     navigator.openProviderSettings(viewModel.providerMetadata)
-                }
+                },
             )
-        }
+        },
     ) { innerPadding ->
         val surface = MaterialTheme.colorScheme.surface
         val emphasizedBackgroundColor = MaterialTheme.colorScheme.primary
         val topPadding by animateDpAsState(
             targetValue = if (listIsAtTop) innerPadding.calculateTopPadding() else 0.dp,
-            label = ""
+            label = "",
         )
 
         Box(
-            modifier = Modifier
-                .padding(top = topPadding)
-                .fillMaxSize()
-                .drawBehind {
-                    drawRect(
-                        brush = Brush.radialGradient(
-                            colors = listOf(emphasizedBackgroundColor, surface),
-                            center = Offset(
-                                x = size.width,
-                                y = size.height
-                            ),
-                            radius = size.width.times(0.85F)
+            modifier =
+                Modifier
+                    .padding(top = topPadding)
+                    .fillMaxSize()
+                    .drawBehind {
+                        drawRect(
+                            brush =
+                                Brush.radialGradient(
+                                    colors = listOf(emphasizedBackgroundColor, surface),
+                                    center =
+                                        Offset(
+                                            x = size.width,
+                                            y = size.height,
+                                        ),
+                                    radius = size.width.times(0.85F),
+                                ),
                         )
-                    )
 
-                    drawRect(surface.copy(alpha = 0.7F))
-                }
+                        drawRect(surface.copy(alpha = 0.7F))
+                    },
         ) {
             LazyColumn(
                 state = listState,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item {
                     ProviderInfoHeader(
@@ -144,7 +161,7 @@ internal fun ProviderInfoScreen(
                         providerMetadata = viewModel.providerMetadata,
                         openRepositoryScreen = {
                             viewModel.repository?.let(navigator::openRepositoryScreen)
-                        }
+                        },
                     )
                 }
 
@@ -154,9 +171,10 @@ internal fun ProviderInfoScreen(
 
                 item {
                     MainButtons(
-                        modifier = Modifier
-                            .padding(horizontal = HORIZONTAL_PADDING)
-                            .padding(bottom = 10.dp),
+                        modifier =
+                            Modifier
+                                .padding(horizontal = HORIZONTAL_PADDING)
+                                .padding(bottom = 10.dp),
                         providerInstallationStatus = viewModel.providerInstallationStatus,
                         onTestProvider = {
                             val status = viewModel.providerInstallationStatus
@@ -167,13 +185,15 @@ internal fun ProviderInfoScreen(
                             }
                         },
                         onToggleInstallationState = {
-                            if (viewModel.providerInstallationStatus.isNotInstalled && providerPreferences.shouldWarnBeforeInstall) {
+                            if (viewModel.providerInstallationStatus.isNotInstalled &&
+                                providerPreferences.shouldWarnBeforeInstall
+                            ) {
                                 openWarnOnInstallDialog = true
                                 return@MainButtons
                             }
 
                             viewModel.toggleInstallation()
-                        }
+                        },
                     )
                 }
 
@@ -182,8 +202,21 @@ internal fun ProviderInfoScreen(
                         NavigationItem(
                             label = stringResource(id = LocaleR.string.whats_new),
                             onClick = {
-                                navigator.seeWhatsNew(providerMetadata = viewModel.providerMetadata)
-                            }
+                                with(viewModel.providerMetadata) {
+                                    if (changelog != null) {
+                                        navigator.openMarkdownScreen(
+                                            title = name,
+                                            description = changelog!!,
+                                        )
+                                    } else {
+                                        scope.launch {
+                                            snackbarHostState.showMessage(
+                                                context.getString(LocaleR.string.no_changelogs),
+                                            )
+                                        }
+                                    }
+                                }
+                            },
                         )
                     }
                 }
@@ -191,8 +224,9 @@ internal fun ProviderInfoScreen(
                 item {
                     DescriptionBlock(
                         description = viewModel.providerMetadata.description,
-                        modifier = Modifier
-                            .padding(horizontal = HORIZONTAL_PADDING)
+                        modifier =
+                            Modifier
+                                .padding(horizontal = HORIZONTAL_PADDING),
                     )
                 }
 
@@ -205,7 +239,7 @@ internal fun ProviderInfoScreen(
                 items(webNavigationItems) { (label, url) ->
                     NavigationItem(
                         label = stringResource(id = label),
-                        onClick = { uriHandler.openUri(url) }
+                        onClick = { uriHandler.openUri(url) },
                     )
                 }
             }
@@ -221,15 +255,17 @@ internal fun ProviderInfoScreen(
                 viewModel.disableWarnOnInstall(disableWarning)
                 viewModel.toggleInstallation()
             },
-            onDismiss = { openWarnOnInstallDialog = false }
+            onDismiss = { openWarnOnInstallDialog = false },
         )
     }
 }
 
 private fun String.getNewIssueUrl(): String {
-    return if (contains("github.com"))
+    return if (contains("github.com")) {
         plus("/issues/new")
-    else this
+    } else {
+        this
+    }
 }
 
 @Preview
@@ -240,16 +276,25 @@ private fun ProviderInfoScreenPreview() {
     FlixclusiveTheme {
         Surface {
             ProviderInfoScreen(
-                navigator = object : ProviderInfoNavigator {
-                    override fun goBack() {}
-                    override fun testProviders(providers: ArrayList<ProviderMetadata>) {}
-                    override fun seeWhatsNew(providerMetadata: ProviderMetadata) {}
-                    override fun openProviderSettings(providerMetadata: ProviderMetadata) {}
-                    override fun openRepositoryScreen(repository: Repository) {}
-                },
-                args = ProviderInfoScreenNavArgs(
-                    providerMetadata = providerMetadata
-                )
+                navigator =
+                    object : ProviderInfoNavigator {
+                        override fun goBack() {}
+
+                        override fun testProviders(providers: ArrayList<ProviderMetadata>) {}
+
+                        override fun openMarkdownScreen(
+                            title: String,
+                            description: String,
+                        ) {}
+
+                        override fun openProviderSettings(providerMetadata: ProviderMetadata) {}
+
+                        override fun openRepositoryScreen(repository: Repository) {}
+                    },
+                args =
+                    ProviderMetadataNavArgs(
+                        providerMetadata = providerMetadata,
+                    ),
             )
         }
     }

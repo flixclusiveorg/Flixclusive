@@ -36,7 +36,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import com.flixclusive.core.ui.common.navigation.navigator.PlayerScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.getActivity
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.mobile.ListenKeyEvents
@@ -59,6 +59,7 @@ import com.flixclusive.feature.mobile.player.controls.dialogs.provider.ProviderR
 import com.flixclusive.feature.mobile.player.util.BrightnessManager
 import com.flixclusive.feature.mobile.player.util.LocalBrightnessManager
 import com.flixclusive.feature.mobile.player.util.PlayerPipReceiver
+import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
@@ -67,6 +68,29 @@ import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlin.random.Random
+
+interface PlayerScreenNavigator : GoBackAction {
+    /**
+     *
+     * There will be cases where the system will kill
+     * the app's process mercilessly if it's never put as an exclusion
+     * in the **ignore battery optimization list**.
+     *
+     * When the user comes back to the app after a long while,
+     * it will scrape back the old data that were saved from SavedStateHandle.
+     *
+     * This action should trigger the `savedStateHandle` to
+     * update its values based on PlayerScreenNavArgs - since that is where
+     * the args are saved on.
+     *
+     * So whenever the user comes back to the app, the last episode the user
+     * was on would be re-used.
+     * */
+    fun onEpisodeChange(
+        film: Film,
+        episodeToPlay: Episode
+    )
+}
 
 @OptIn(UnstableApi::class)
 @Destination(navArgsDelegate = PlayerScreenNavArgs::class)

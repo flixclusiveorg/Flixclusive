@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,6 +51,7 @@ import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
 import com.flixclusive.feature.mobile.settings.util.getMediumEmphasizedLabel
 import com.flixclusive.model.database.User
 import com.flixclusive.model.datastore.FlixclusivePrefs
+import kotlinx.collections.immutable.ImmutableMap
 import com.flixclusive.core.locale.R as LocaleR
 
 internal val UserScreenHorizontalPadding = 16.dp
@@ -59,12 +59,12 @@ private val NavigationButtonHeight = 50.dp
 
 @Composable
 internal fun ListContent(
-    modifier: Modifier = Modifier,
-    items: Map<Int, List<BaseTweakScreen<out FlixclusivePrefs>>>,
+    items: ImmutableMap<Int?, List<BaseTweakScreen<out FlixclusivePrefs>>>,
     onScroll: (Float) -> Unit,
     currentUser: () -> User,
     navigator: SettingsScreenNavigator,
     onItemClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
     var headerHeightPx by remember { mutableIntStateOf(0) }
@@ -82,6 +82,7 @@ internal fun ListContent(
                     index == 0 && headerHeight > coercedOffset -> {
                         1f - (coercedOffset / headerHeight)
                     }
+
                     else -> 0F
                 }
 
@@ -95,16 +96,16 @@ internal fun ListContent(
                 .fillMaxSize()
                 .then(modifier),
         state = listState,
-        contentPadding = PaddingValues(horizontal = UserScreenHorizontalPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         item {
             ListContentHeader(
                 currentUser = currentUser,
-                onChangeUser = { /*TODO: Implement change user event*/ },
+                onChangeUser = { navigator.openEditUserScreen(currentUser()) },
                 modifier =
                     Modifier
                         .padding(bottom = 20.dp)
+                        .padding(horizontal = UserScreenHorizontalPadding)
                         .onGloballyPositioned {
                             headerHeightPx = it.size.height
                         },
@@ -116,25 +117,31 @@ internal fun ListContent(
                 HorizontalDivider(
                     modifier =
                         Modifier
-                            .padding(vertical = 15.dp),
+                            .padding(
+                                vertical = 15.dp,
+                                horizontal = UserScreenHorizontalPadding,
+                            ),
                     thickness = 1.dp,
                     color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.2F),
                 )
             }
 
-            item {
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 10.dp, top = 5.dp),
-                ) {
-                    Text(
-                        text = stringResource(id = categoryLabel),
-                        style = getEmphasizedLabel(letterSpacing = 1.5.sp),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                    )
+            if (categoryLabel != null) {
+                item {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp, top = 5.dp)
+                                .padding(horizontal = UserScreenHorizontalPadding),
+                    ) {
+                        Text(
+                            text = stringResource(id = categoryLabel),
+                            style = getEmphasizedLabel(letterSpacing = 1.5.sp),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
 
@@ -258,6 +265,7 @@ private fun ListContentHeader(
             user = currentUser(),
             modifier =
                 Modifier
+                    .clickable { onChangeUser() }
                     .size(DefaultAvatarSize),
         )
 
@@ -290,6 +298,7 @@ private fun MenuItem(
                 .fillMaxWidth()
                 .height(NavigationButtonHeight)
                 .clip(MaterialTheme.shapes.extraSmall)
+                .padding(horizontal = UserScreenHorizontalPadding)
                 .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {

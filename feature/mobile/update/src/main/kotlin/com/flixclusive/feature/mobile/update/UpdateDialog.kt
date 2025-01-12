@@ -28,7 +28,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
-import com.flixclusive.core.ui.common.navigation.navigator.UpdateDialogNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewNewAppUpdatesAction
 import com.flixclusive.data.configuration.UpdateStatus
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.spec.DestinationStyle
@@ -36,18 +37,23 @@ import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal object DismissibleDialog : DestinationStyle.Dialog {
-    override val properties = DialogProperties(
-        dismissOnClickOutside = true,
-        dismissOnBackPress = true,
-    )
+    override val properties =
+        DialogProperties(
+            dismissOnClickOutside = true,
+            dismissOnBackPress = true,
+        )
 }
+
+interface UpdateDialogNavigator :
+    ViewNewAppUpdatesAction,
+    GoBackAction
 
 @Destination(style = DismissibleDialog::class)
 @Composable
 internal fun UpdateDialog(
     navigator: UpdateDialogNavigator,
+    viewModel: UpdateFeatureViewModel = hiltViewModel(),
 ) {
-    val viewModel = hiltViewModel<UpdateFeatureViewModel>()
     val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
@@ -56,57 +62,60 @@ internal fun UpdateDialog(
 
     LaunchedEffect(updateStatus) {
         if (
-            updateStatus is UpdateStatus.Outdated
-            && viewModel.appUpdateCheckerUseCase.updateUrl != null
-            && viewModel.appUpdateCheckerUseCase.newVersion != null
+            updateStatus is UpdateStatus.Outdated &&
+            viewModel.appUpdateCheckerUseCase.updateUrl != null &&
+            viewModel.appUpdateCheckerUseCase.newVersion != null
         ) {
             navigator.openUpdateScreen(
                 newVersion = viewModel.appUpdateCheckerUseCase.newVersion!!,
                 updateUrl = viewModel.appUpdateCheckerUseCase.updateUrl!!,
-                updateInfo = viewModel.appUpdateCheckerUseCase.updateInfo
+                updateInfo = viewModel.appUpdateCheckerUseCase.updateInfo,
             )
         }
     }
 
     Dialog(
-        onDismissRequest = navigator::goBack
+        onDismissRequest = navigator::goBack,
     ) {
         Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 300.dp),
-            shape = MaterialTheme.shapes.large
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 300.dp),
+            shape = MaterialTheme.shapes.large,
         ) {
             Box(
                 modifier = Modifier.padding(16.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 AnimatedVisibility(
                     visible = updateStatus == UpdateStatus.Fetching,
                     enter = fadeIn(),
-                    exit = fadeOut()
+                    exit = fadeOut(),
                 ) {
                     Column(
                         modifier = Modifier.matchParentSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(30.dp)
+                        verticalArrangement = Arrangement.spacedBy(30.dp),
                     ) {
                         Box(
-                            modifier = Modifier
-                                .size(80.dp),
-                            contentAlignment = Alignment.Center
+                            modifier =
+                                Modifier
+                                    .size(80.dp),
+                            contentAlignment = Alignment.Center,
                         ) {
                             GradientCircularProgressIndicator(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.tertiary,
-                                )
+                                colors =
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.tertiary,
+                                    ),
                             )
                         }
 
                         Text(
                             text = stringResource(id = LocaleR.string.checking_for_updates),
-                            style = MaterialTheme.typography.labelLarge
+                            style = MaterialTheme.typography.labelLarge,
                         )
                     }
                 }
@@ -114,27 +123,29 @@ internal fun UpdateDialog(
                 AnimatedVisibility(
                     visible = updateStatus is UpdateStatus.Error,
                     enter = fadeIn(),
-                    exit = fadeOut()
+                    exit = fadeOut(),
                 ) {
                     Column(
                         modifier = Modifier.matchParentSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(30.dp)
+                        verticalArrangement = Arrangement.spacedBy(30.dp),
                     ) {
                         Icon(
                             painter = painterResource(id = UiCommonR.drawable.round_error_outline_24),
                             contentDescription = stringResource(id = LocaleR.string.error_icon_content_desc),
                             tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier
-                                .size(80.dp)
-                                .padding(bottom = 15.dp)
+                            modifier =
+                                Modifier
+                                    .size(80.dp)
+                                    .padding(bottom = 15.dp),
                         )
 
                         Text(
-                            text = updateStatus.errorMessage?.asString()
-                                ?: stringResource(id = LocaleR.string.failed_checking_for_updates),
+                            text =
+                                updateStatus.errorMessage?.asString()
+                                    ?: stringResource(id = LocaleR.string.failed_checking_for_updates),
                             style = MaterialTheme.typography.labelLarge,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }
@@ -142,26 +153,27 @@ internal fun UpdateDialog(
                 AnimatedVisibility(
                     visible = updateStatus is UpdateStatus.UpToDate,
                     enter = fadeIn(),
-                    exit = fadeOut()
+                    exit = fadeOut(),
                 ) {
                     Column(
                         modifier = Modifier.matchParentSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(30.dp)
+                        verticalArrangement = Arrangement.spacedBy(30.dp),
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.round_check_circle_outline_24),
                             contentDescription = "Updated icon",
                             tint = MaterialTheme.colorScheme.tertiary,
-                            modifier = Modifier
-                                .size(80.dp)
-                                .padding(bottom = 15.dp)
+                            modifier =
+                                Modifier
+                                    .size(80.dp)
+                                    .padding(bottom = 15.dp),
                         )
 
                         Text(
                             text = stringResource(id = LocaleR.string.up_to_date),
                             style = MaterialTheme.typography.labelLarge,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }

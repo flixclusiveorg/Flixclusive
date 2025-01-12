@@ -27,7 +27,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.navigation.navigator.RepositorySearchScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewRepositoryAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
@@ -39,15 +40,18 @@ import com.flixclusive.feature.mobile.repository.search.component.RepositorySear
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
 
+interface RepositorySearchScreenNavigator :
+    ViewRepositoryAction,
+    GoBackAction
+
 @Destination
 @Composable
 internal fun RepositorySearchScreen(
-    navigator: RepositorySearchScreenNavigator
+    navigator: RepositorySearchScreenNavigator,
+    viewModel: RepositorySearchScreenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
-
-    val viewModel = hiltViewModel<RepositorySearchScreenViewModel>()
     val repositories by viewModel.repositories.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
@@ -56,26 +60,33 @@ internal fun RepositorySearchScreen(
     val isSelecting = rememberSaveable { mutableStateOf(false) }
     val isRemoving = rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(isSelecting.value) {
-        if (!isSelecting.value)
+        if (!isSelecting.value) {
             viewModel.clearSelection()
-        else focusManager.clearFocus()
+        } else {
+            focusManager.clearFocus()
+        }
     }
 
     LaunchedEffect(viewModel.selectedRepositories.size) {
-        if (viewModel.selectedRepositories.size == 0)
+        if (viewModel.selectedRepositories.size == 0) {
             isSelecting.value = false
+        }
     }
 
-    val hasQueryBoxError = remember(viewModel.errorMessage.value) {
-        mutableStateOf(viewModel.errorMessage.value != null)
-    }
+    val hasQueryBoxError =
+        remember(viewModel.errorMessage.value) {
+            mutableStateOf(viewModel.errorMessage.value != null)
+        }
 
     val hapticFeedBack = getFeedbackOnLongPress()
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(viewModel.errorMessage.value) {
         if (viewModel.errorMessage.value != null) {
-            val message = viewModel.errorMessage.value!!.error?.asString(context)
-                ?: context.getString(LocaleR.string.default_error)
+            val message =
+                viewModel.errorMessage.value!!
+                    .error
+                    ?.asString(context)
+                    ?: context.getString(LocaleR.string.default_error)
 
             snackbarHostState.showMessage(message)
         }
@@ -97,44 +108,48 @@ internal fun RepositorySearchScreen(
                 isSelecting = isSelecting,
                 selectCount = viewModel.selectedRepositories.size,
                 onRemoveRepositories = { isRemoving.value = true },
-                onNavigationIconClick = navigator::goBack
+                onNavigationIconClick = navigator::goBack,
             )
-        }
+        },
     ) {
         Box(
-            modifier = Modifier
-                .padding(it)
-                .fillMaxSize()
+            modifier =
+                Modifier
+                    .padding(it)
+                    .fillMaxSize(),
         ) {
             LazyColumn(
                 state = listState,
                 contentPadding = PaddingValues(horizontal = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .padding(horizontal = 10.dp)
+                modifier =
+                    Modifier
+                        .padding(horizontal = 10.dp),
             ) {
                 item {
                     AddRepositoryBar(
                         urlQuery = viewModel.urlQuery,
                         isError = hasQueryBoxError,
                         focusRequester = focusRequester,
-                        onAdd = viewModel::onAddLink
+                        onAdd = viewModel::onAddLink,
                     )
                 }
 
                 item {
                     HorizontalDivider(
-                        modifier = Modifier
-                            .padding(vertical = 10.dp),
+                        modifier =
+                            Modifier
+                                .padding(vertical = 10.dp),
                         thickness = 1.dp,
-                        color = LocalContentColor.current.onMediumEmphasis(0.4F)
+                        color = LocalContentColor.current.onMediumEmphasis(0.4F),
                     )
                 }
 
                 items(repositories) { repository ->
-                    val isSelected = remember(viewModel.selectedRepositories.size) {
-                        viewModel.selectedRepositories.contains(repository)
-                    }
+                    val isSelected =
+                        remember(viewModel.selectedRepositories.size) {
+                            viewModel.selectedRepositories.contains(repository)
+                        }
 
                     RepositoryCard(
                         repository = repository,
@@ -159,8 +174,9 @@ internal fun RepositorySearchScreen(
                             viewModel.selectRepository(repository)
                             isSelecting.value = true
                         },
-                        modifier = Modifier
-                            .padding(vertical = 5.dp)
+                        modifier =
+                            Modifier
+                                .padding(vertical = 5.dp),
                     )
                 }
             }
@@ -176,7 +192,7 @@ internal fun RepositorySearchScreen(
             cancel = {
                 isSelecting.value = false
                 isRemoving.value = false
-            }
+            },
         )
     }
 }

@@ -51,8 +51,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navargs.ProviderTestScreenNavArgs
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.ui.common.util.onMediumEmphasis

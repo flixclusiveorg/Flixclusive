@@ -9,19 +9,23 @@ import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.navigation.navargs.SeeAllScreenNavArgs
-import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
 import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.ui.mobile.component.film.FilmsGridScreen
 import com.flixclusive.core.ui.mobile.util.shouldPaginate
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
 
+
+interface SeeAllScreenNavigator : GoBackAction, ViewFilmAction
+
 @Destination(
     navArgsDelegate = SeeAllScreenNavArgs::class
 )
 @Composable
 internal fun SeeAllScreen(
-    navigator: CommonScreenNavigator,
+    navigator: SeeAllScreenNavigator,
     previewFilm: (Film) -> Unit,
 ) {
     val viewModel: SeeAllViewModel = hiltViewModel()

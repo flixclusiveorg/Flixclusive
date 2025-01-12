@@ -152,7 +152,7 @@ internal fun SplashScreen(
                             } else if (noUsersFound) {
                                 navigator.openAddProfileScreen(isInitializing = true)
                             } else if (!hasOldUserSession) {
-                                navigator.openProfilesScreenFromSplashScreen()
+                                navigator.openProfilesScreen(isComingFromSplashScreen = true)
                             } else if (isNavigatingToHome) {
                                 if (updateHasErrors) {
                                     val message = "${context.getString(LocaleR.string.failed_to_get_app_updates)}: ${

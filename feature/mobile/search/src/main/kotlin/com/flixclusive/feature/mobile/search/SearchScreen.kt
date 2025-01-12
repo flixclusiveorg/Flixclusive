@@ -34,22 +34,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop
-import com.flixclusive.core.ui.common.navigation.navigator.GenreScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewAllFilmsAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewGenreCatalogAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.feature.mobile.search.component.SearchItemCard
 import com.flixclusive.feature.mobile.search.component.SearchItemCardPlaceholderWithText
 import com.flixclusive.feature.mobile.search.component.SearchItemRow
-import com.flixclusive.model.provider.Catalog
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface SearchScreenNavigator : GenreScreenNavigator {
+interface SearchScreenNavigator : GoBackAction, ViewGenreCatalogAction, ViewAllFilmsAction {
     fun openSearchExpandedScreen()
-
-    fun openSeeAllScreen(item: Catalog)
 }
 
 @Destination

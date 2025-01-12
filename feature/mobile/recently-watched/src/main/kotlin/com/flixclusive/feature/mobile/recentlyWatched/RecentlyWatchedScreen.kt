@@ -17,16 +17,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.CommonTopBar
-import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
 import com.flixclusive.core.ui.mobile.component.film.FilmsGridScreen
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
 
+interface RecentlyWatchedScreenNavigator : GoBackAction, ViewFilmAction
+
 @Destination
 @Composable
 internal fun RecentlyWatchedScreen(
-    navigator: CommonScreenNavigator,
+    navigator: RecentlyWatchedScreenNavigator,
     viewModel: RecentlyWatchedScreenViewModel = hiltViewModel(),
     previewFilm: (Film) -> Unit,
 ) {

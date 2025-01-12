@@ -13,18 +13,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.CommonTopBarDefaults.DefaultTopBarHeight
-import com.flixclusive.core.ui.common.navigation.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavArgs
+import com.flixclusive.core.ui.common.navigation.navargs.ProviderMetadataNavArgs
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.provider.util.res.LocalResources
 import com.ramcosta.composedestinations.annotation.Destination
 
 @Destination(
-    navArgsDelegate = ProviderInfoScreenNavArgs::class
+    navArgsDelegate = ProviderMetadataNavArgs::class
 )
 @Composable
 internal fun ProviderSettingsScreen(
     navigator: GoBackAction,
-    args: ProviderInfoScreenNavArgs
+    args: ProviderMetadataNavArgs
 ) {
     val context = LocalContext.current
     val viewModel = hiltViewModel<ProviderSettingsScreenViewModel>()

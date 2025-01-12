@@ -27,6 +27,7 @@
     <string name="subtitle_selections">Subtitle Selections</string>
 
     <!--  Errors  -->
+    <string name="no_changelogs">No update changelogs found</string>
     <string name="already_added_repo_error">Repository has already been added!</string>
     <string name="an_error_occurred">An error occurred</string>
     <string name="blank_media_id_error_message">Could not find media id from the provider</string>
@@ -239,6 +240,7 @@
     <string name="remove_from_watchlist">Remove from Watchlist</string>
     <string name="remove_repositories">Remove repositories</string>
     <string name="repository">Repository</string>
+    <string name="switch_profile">Switch profile</string>
     <string name="reset">Reset</string>
     <string name="reset_settings">Reset settings</string>
     <string name="resize_mode">Resize mode</string>

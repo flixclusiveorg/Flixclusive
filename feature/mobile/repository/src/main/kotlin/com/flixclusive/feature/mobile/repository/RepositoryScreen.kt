@@ -41,8 +41,8 @@ import androidx.compose.ui.util.fastFilter
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
-import com.flixclusive.core.ui.common.navigation.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navargs.RepositoryScreenNavArgs
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.dialog.UnsafeInstallAlertDialog

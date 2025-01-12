@@ -33,8 +33,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.CommonTopBarDefaults.DefaultTopBarHeight
 import com.flixclusive.core.ui.common.dialog.TextAlertDialog
-import com.flixclusive.core.ui.common.navigation.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navargs.MarkdownNavArgs
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.ramcosta.composedestinations.annotation.Destination
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.locale.R as LocaleR
@@ -43,35 +42,36 @@ private fun isValidUrl(url: String): Boolean {
     return Patterns.WEB_URL.matcher(url).matches()
 }
 
-
-@Destination(
-    navArgsDelegate = MarkdownNavArgs::class
-)
+@Destination
 @Composable
 internal fun MarkdownScreen(
     navigator: GoBackAction,
-    args: MarkdownNavArgs
+    title: String,
+    description: String,
 ) {
     val uriHandler = LocalUriHandler.current
     var linkToOpen by rememberSaveable { mutableStateOf<String?>(null) }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier =
+            Modifier
+                .fillMaxSize(),
     ) {
         Column(
-            modifier = Modifier
-                .statusBarsPadding()
-                .padding(top = DefaultTopBarHeight)
-                .verticalScroll(rememberScrollState())
+            modifier =
+                Modifier
+                    .statusBarsPadding()
+                    .padding(top = DefaultTopBarHeight)
+                    .verticalScroll(rememberScrollState()),
         ) {
             MarkdownText(
-                markdown = args.description,
+                markdown = description,
                 isTextSelectable = true,
                 linkColor = Color(0xFF5890FF),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = LocalContentColor.current,
-                ),
+                style =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        color = LocalContentColor.current,
+                    ),
                 linkifyMask = Linkify.WEB_URLS or Linkify.EMAIL_ADDRESSES,
                 imageLoader = LocalContext.current.imageLoader,
                 onLinkClicked = {
@@ -79,21 +79,23 @@ internal fun MarkdownScreen(
                         linkToOpen = it
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
             )
-            
+
             Spacer(
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .height(10.dp)
+                modifier =
+                    Modifier
+                        .navigationBarsPadding()
+                        .height(10.dp),
             )
         }
 
         CommonTopBar(
-            title = args.title,
-            onNavigate = navigator::goBack
+            title = title,
+            onNavigate = navigator::goBack,
         )
     }
 
@@ -103,7 +105,7 @@ internal fun MarkdownScreen(
             description = stringResource(id = LocaleR.string.not_trusted_url),
             confirmButtonLabel = stringResource(id = LocaleR.string.proceed),
             onConfirm = { uriHandler.openUri(linkToOpen!!) },
-            onDismiss = { linkToOpen = null }
+            onDismiss = { linkToOpen = null },
         )
     }
 }
@@ -114,18 +116,18 @@ private fun ProviderWhatsNewScreenPreview() {
     FlixclusiveTheme {
         Surface {
             MarkdownScreen(
-                navigator = object : GoBackAction {
-                    override fun goBack() {}
-                },
-                args = MarkdownNavArgs(
-                    title = "2.0.0",
-                    description = """
-                        # Flixclusive
-                        
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                        Link: https://example.com
-                    """.trimIndent()
-                )
+                navigator =
+                    object : GoBackAction {
+                        override fun goBack() {}
+                    },
+                title = "2.0.0",
+                description =
+                    """
+                    # Flixclusive
+
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Link: https://example.com
+                    """.trimIndent(),
             )
         }
     }

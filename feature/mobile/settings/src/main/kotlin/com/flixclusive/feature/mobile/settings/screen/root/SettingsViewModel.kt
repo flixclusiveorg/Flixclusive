@@ -10,7 +10,6 @@ import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.search_history.SearchHistoryRepository
-import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.ProviderUnloaderUseCase
 import com.flixclusive.domain.user.UserSessionManager
@@ -30,7 +29,6 @@ internal class SettingsViewModel
     @Inject
     constructor(
         val userSessionManager: UserSessionManager,
-        private val userRepository: UserRepository,
         private val dataStoreManager: DataStoreManager,
         private val searchHistoryRepository: SearchHistoryRepository,
         private val getMediaLinksUseCase: GetMediaLinksUseCase,
@@ -44,7 +42,8 @@ internal class SettingsViewModel
                     searchHistoryRepository
                         .getAllItemsInFlow(ownerId = user.id)
                         .map { it.size }
-                }.stateIn(
+                }
+                .stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5000),
                     initialValue = 0,
@@ -106,3 +105,7 @@ internal class SettingsViewModel
             }
         }
     }
+
+data class SettingsUiState(
+    val isLoggingOut: Boolean = false
+)

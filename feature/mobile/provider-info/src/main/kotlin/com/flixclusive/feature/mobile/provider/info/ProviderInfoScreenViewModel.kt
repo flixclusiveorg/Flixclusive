@@ -10,7 +10,7 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.ui.common.navigation.navargs.ProviderInfoScreenNavArgs
+import com.flixclusive.core.ui.common.navigation.navargs.ProviderMetadataNavArgs
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.data.provider.ProviderRepository
@@ -41,7 +41,7 @@ internal class ProviderInfoScreenViewModel
         private val providerRepository: ProviderRepository,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
-        private val argsMetadata = savedStateHandle.navArgs<ProviderInfoScreenNavArgs>().providerMetadata
+        private val argsMetadata = savedStateHandle.navArgs<ProviderMetadataNavArgs>().providerMetadata
         var providerMetadata by mutableStateOf(argsMetadata)
             private set
 

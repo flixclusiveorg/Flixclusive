@@ -42,7 +42,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.navigation.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.ChooseProfileAction
+import com.flixclusive.core.ui.common.navigation.navigator.EditUserAction
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.user.getAvatarResource
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.appearance.AppearanceTweakScreen
@@ -59,6 +61,7 @@ import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
 import com.flixclusive.model.database.User
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.collections.immutable.persistentMapOf
 import com.flixclusive.core.locale.R as LocaleR
 
 @Suppress("ktlint:compose:vm-forwarding-check")
@@ -97,7 +100,8 @@ internal fun SettingsScreen(
 
     val items =
         remember {
-            mapOf(
+            persistentMapOf(
+                null to listOf(SwitchProfileNavigation),
                 LocaleR.string.application to
                     listOf(
                         AppearanceTweakScreen(viewModel),
@@ -241,19 +245,18 @@ private fun getAdaptiveBackground(currentUser: User?): Brush {
     }
 }
 
-interface SettingsScreenNavigator : GoBackAction {
+interface SettingsScreenNavigator : GoBackAction, ChooseProfileAction, EditUserAction {
     fun openProvidersScreen()
-
     fun openLink(url: String)
 }
 
 internal fun getNavigatorPreview() =
     object : SettingsScreenNavigator {
         override fun openProvidersScreen() = Unit
-
         override fun openLink(url: String) = Unit
-
         override fun goBack() = Unit
+        override fun openProfilesScreen(isComingFromSplashScreen: Boolean) = Unit
+        override fun openEditUserScreen(user: User) = Unit
     }
 
 @Preview(device = "spec:width=1280dp,height=800dp,dpi=240")

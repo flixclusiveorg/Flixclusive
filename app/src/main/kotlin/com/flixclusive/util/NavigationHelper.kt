@@ -22,7 +22,7 @@ import androidx.navigation.NavGraph
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
 import com.flixclusive.ROOT
-import com.flixclusive.core.ui.common.navigation.PinWithHintResult
+import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
 import com.flixclusive.feature.mobile.user.add.AddUserScreen
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
@@ -105,8 +105,8 @@ internal fun NavController.currentScreenAsState(
 @Composable
 internal fun AppNavHost(
     navController: NavHostController,
-    isTv: Boolean = false,
     closeApp: () -> Unit,
+    isTv: Boolean = false,
     previewFilm: (Film) -> Unit = {},
     play: (Film, Episode?) -> Unit = { _, _ -> },
 ) {

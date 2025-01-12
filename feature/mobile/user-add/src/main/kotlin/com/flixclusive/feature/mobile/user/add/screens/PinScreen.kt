@@ -22,17 +22,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.navigation.navigator.CommonUserEditNavigator
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.add.OnBoardingScreen
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal class PinScreen(
-    private val navigator: CommonUserEditNavigator
+    private val navigator: AddUserScreenNavigator
 ) : OnBoardingScreen {
     override val index: Int = 0
     override val title: UiText

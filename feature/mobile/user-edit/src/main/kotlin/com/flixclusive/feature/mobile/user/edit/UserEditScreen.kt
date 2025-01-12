@@ -34,8 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
-import com.flixclusive.core.ui.common.navigation.PinWithHintResult
-import com.flixclusive.core.ui.common.navigation.navigator.CommonUserEditNavigator
+import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.SelectAvatarAction
+import com.flixclusive.core.ui.common.navigation.navigator.SetupPinAction
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
@@ -52,45 +54,51 @@ import com.ramcosta.composedestinations.result.ResultRecipient
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
+interface UserEditScreenNavigator :
+    SetupPinAction,
+    SelectAvatarAction,
+    GoBackAction
+
 @Destination
 @Composable
 internal fun UserEditScreen(
-    navigator: CommonUserEditNavigator,
+    navigator: UserEditScreenNavigator,
     avatarResultRecipient: ResultRecipient<UserAvatarSelectScreenDestination, Int>,
     pinResultRecipient: ResultRecipient<PinSetupScreenDestination, PinWithHintResult>,
-    userArg: User
+    userArg: User,
+    viewModel: UserEditViewModel = hiltViewModel(),
 ) {
-    val viewModel = hiltViewModel<UserEditViewModel>()
     var user by remember { mutableStateOf(userArg) }
 
-    val tweaks = remember(user.pin) {
-        listOf(
-            IdentityTweak(
-                initialName = user.name,
-                userHasPin = user.pin != null,
-                onSetupPin = { isRemovingPin ->
-                    navigator.openUserPinSetupScreen(
-                        currentPin = user.pin,
-                        isRemovingPin = isRemovingPin
-                    )
-                },
-                onNameChange = {
-                    user = user.copy(name = it)
-                    viewModel.onEditUser(user = user)
-                }
-            ),
-            DataTweak(
-                onClearSearchHistory = { viewModel.onClearSearchHistory(user.id) },
-                onDeleteProfile = { viewModel.onRemoveUser(user.id) },
-                onClearLibraries = { selection ->
-                    viewModel.onClearLibraries(
-                        userId = user.id,
-                        libraries = selection
-                    )
-                },
+    val tweaks =
+        remember(user.pin) {
+            listOf(
+                IdentityTweak(
+                    initialName = user.name,
+                    userHasPin = user.pin != null,
+                    onSetupPin = { isRemovingPin ->
+                        navigator.openUserPinSetupScreen(
+                            currentPin = user.pin,
+                            isRemovingPin = isRemovingPin,
+                        )
+                    },
+                    onNameChange = {
+                        user = user.copy(name = it)
+                        viewModel.onEditUser(user = user)
+                    },
+                ),
+                DataTweak(
+                    onClearSearchHistory = { viewModel.onClearSearchHistory(user.id) },
+                    onDeleteProfile = { viewModel.onRemoveUser(user.id) },
+                    onClearLibraries = { selection ->
+                        viewModel.onClearLibraries(
+                            userId = user.id,
+                            libraries = selection,
+                        )
+                    },
+                ),
             )
-        )
-    }
+        }
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -105,10 +113,11 @@ internal fun UserEditScreen(
     pinResultRecipient.onNavResult { result ->
         if (result is NavResult.Value) {
             val (pin, hint) = result.value
-            user = user.copy(
-                pin = pin,
-                pinHint = hint
-            )
+            user =
+                user.copy(
+                    pin = pin,
+                    pinHint = hint,
+                )
             viewModel.onEditUser(user = user)
         }
     }
@@ -117,54 +126,59 @@ internal fun UserEditScreen(
         topBar = {
             CommonTopBar(
                 title = stringResource(LocaleR.string.edit_profile),
-                onNavigate = { navigator.goBack() }
+                onNavigate = { navigator.goBack() },
             )
-        }
+        },
     ) { padding ->
         Box(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
+            modifier =
+                Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
         ) {
             LazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(5.dp),
                 contentPadding = PaddingValues(getAdaptiveDp(10.dp)),
-                modifier = Modifier.fillMaxSize()
-                    .noIndicationClickable {
-                        keyboardController?.hide()
-                        focusManager.clearFocus(true)
-                    }
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .noIndicationClickable {
+                            keyboardController?.hide()
+                            focusManager.clearFocus(true)
+                        },
             ) {
                 item {
                     Box(
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .padding(getAdaptiveDp(5.dp))
+                            modifier =
+                                Modifier
+                                    .padding(getAdaptiveDp(5.dp)),
                         ) {
                             UserAvatar(
                                 user = user,
                                 borderWidth = 0.dp,
                                 shadowBlur = 0.dp,
                                 shadowSpread = 0.dp,
-                                modifier = Modifier
-                                    .height(
-                                        getAdaptiveDp(
-                                            dp = (DefaultAvatarSize.value * 1.2).dp,
-                                            increaseBy = 80.dp
-                                        )
-                                    )
-                                    .aspectRatio(1F)
+                                modifier =
+                                    Modifier
+                                        .height(
+                                            getAdaptiveDp(
+                                                dp = (DefaultAvatarSize.value * 1.2).dp,
+                                                increaseBy = 80.dp,
+                                            ),
+                                        ).aspectRatio(1F),
                             )
                         }
 
                         ChangeImageButton(
                             onClick = { navigator.openUserAvatarSelectScreen(selected = user.image) },
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
+                            modifier =
+                                Modifier
+                                    .align(Alignment.BottomEnd),
                         )
                     }
                 }
@@ -185,32 +199,34 @@ private fun ChangeImageButton(
     val buttonSize = getAdaptiveDp(30.dp, 10.dp)
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier
-            .size(buttonSize)
-            .background(
-                color = MaterialTheme.colorScheme.onSurface,
-                shape = CircleShape
-            )
-            .clickable(
-                indication = ripple(
-                    bounded = false,
-                    radius = buttonSize / 2
-                ),
-                interactionSource = null,
-            ) {
-                onClick()
-            }
+        modifier =
+            modifier
+                .size(buttonSize)
+                .background(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    shape = CircleShape,
+                ).clickable(
+                    indication =
+                        ripple(
+                            bounded = false,
+                            radius = buttonSize / 2,
+                        ),
+                    interactionSource = null,
+                ) {
+                    onClick()
+                },
     ) {
         Icon(
             painter = painterResource(UiCommonR.drawable.edit),
             contentDescription = stringResource(LocaleR.string.change_avatar_content_desc),
             tint = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.size(
-                getAdaptiveDp(
-                    dp = 18.dp,
-                    increaseBy = 10.dp
+            modifier =
+                Modifier.size(
+                    getAdaptiveDp(
+                        dp = 18.dp,
+                        increaseBy = 10.dp,
+                    ),
                 ),
-            )
         )
     }
 }
@@ -222,33 +238,44 @@ private fun ChangeImageButton(
 private fun UserEditScreenBasePreview() {
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier =
+                Modifier
+                    .fillMaxSize(),
         ) {
             UserEditScreen(
-                navigator = object: CommonUserEditNavigator {
-                    override fun openUserAvatarSelectScreen(selected: Int) = Unit
-                    override fun openUserPinSetupScreen(currentPin: String?, isRemovingPin: Boolean) = Unit
-                    override fun goBack() = Unit
-                    override fun openHomeScreen() = Unit
-                },
-                avatarResultRecipient = object : ResultRecipient<UserAvatarSelectScreenDestination, Int> {
-                    @Composable
-                    override fun onNavResult(listener: (NavResult<Int>) -> Unit) = Unit
-                    @Composable
-                    override fun onResult(listener: (Int) -> Unit) = Unit
-                },
-                pinResultRecipient = object : ResultRecipient<PinSetupScreenDestination, PinWithHintResult> {
-                    @Composable
-                    override fun onNavResult(listener: (NavResult<PinWithHintResult>) -> Unit) = Unit
-                    @Composable
-                    override fun onResult(listener: (PinWithHintResult) -> Unit) = Unit
-                },
-                userArg = User(
-                    id = 0,
-                    image = 0,
-                    name = "John Doe"
-                )
+                navigator =
+                    object : UserEditScreenNavigator {
+                        override fun openUserAvatarSelectScreen(selected: Int) = Unit
+
+                        override fun openUserPinSetupScreen(
+                            currentPin: String?,
+                            isRemovingPin: Boolean,
+                        ) = Unit
+
+                        override fun goBack() = Unit
+                    },
+                avatarResultRecipient =
+                    object : ResultRecipient<UserAvatarSelectScreenDestination, Int> {
+                        @Composable
+                        override fun onNavResult(listener: (NavResult<Int>) -> Unit) = Unit
+
+                        @Composable
+                        override fun onResult(listener: (Int) -> Unit) = Unit
+                    },
+                pinResultRecipient =
+                    object : ResultRecipient<PinSetupScreenDestination, PinWithHintResult> {
+                        @Composable
+                        override fun onNavResult(listener: (NavResult<PinWithHintResult>) -> Unit) = Unit
+
+                        @Composable
+                        override fun onResult(listener: (PinWithHintResult) -> Unit) = Unit
+                    },
+                userArg =
+                    User(
+                        id = 0,
+                        image = 0,
+                        name = "John Doe",
+                    ),
             )
         }
     }

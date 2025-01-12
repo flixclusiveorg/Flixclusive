@@ -66,7 +66,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.navigation.PinWithHintResult
+import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp

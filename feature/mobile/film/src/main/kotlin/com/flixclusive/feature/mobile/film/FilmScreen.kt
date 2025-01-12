@@ -51,7 +51,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop.Companion.toGenreWithBackdrop
-import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewGenreCatalogAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.RetryButton
@@ -69,6 +71,8 @@ import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.util.FilmType
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
+
+interface FilmScreenNavigator : ViewFilmAction, ViewGenreCatalogAction, GoBackAction
 
 internal enum class FilmTab(val stringId: Int) {
     Episodes(LocaleR.string.episodes),

@@ -30,7 +30,8 @@ import androidx.tv.foundation.lazy.list.TvLazyColumn
 import androidx.tv.foundation.lazy.list.rememberTvLazyListState
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
-import com.flixclusive.core.ui.common.navigation.navigator.HomeScreenTvNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.home.HomeScreenViewModel
 import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
@@ -50,6 +51,10 @@ import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
 import java.util.Locale
+
+interface HomeScreenTvNavigator : ViewFilmAction, GoBackAction {
+    fun openPlayerScreen(film: Film)
+}
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Destination

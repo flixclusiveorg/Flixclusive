@@ -29,7 +29,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop.Companion.toGenreWithBackdrop
-import com.flixclusive.core.ui.common.navigation.navigator.HomeNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewAllFilmsAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewGenreCatalogAction
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.home.HomeScreenViewModel
 import com.flixclusive.core.ui.mobile.component.RetryButton
@@ -40,6 +43,8 @@ import com.flixclusive.model.film.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
+
+interface HomeNavigator : ViewFilmAction, ViewGenreCatalogAction, ViewAllFilmsAction, GoBackAction
 
 @Destination
 @Composable

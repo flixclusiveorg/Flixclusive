@@ -11,7 +11,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.CommonTopBar
-import com.flixclusive.core.ui.common.navigation.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.feature.mobile.about.component.BodyContent
 import com.flixclusive.feature.mobile.about.component.Header
 import com.ramcosta.composedestinations.annotation.Destination

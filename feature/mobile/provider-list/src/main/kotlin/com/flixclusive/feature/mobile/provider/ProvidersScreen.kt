@@ -63,7 +63,11 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.dialog.TextAlertDialog
-import com.flixclusive.core.ui.common.navigation.navigator.ProvidersScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.TestProvidersAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewMarkdownAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderSettingsAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
@@ -82,6 +86,15 @@ import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
+
+interface ProvidersScreenNavigator :
+    GoBackAction,
+    TestProvidersAction,
+    ViewMarkdownAction,
+    ViewProviderAction,
+    ViewProviderSettingsAction {
+    fun openAddRepositoryScreen() // TODO: Move this out of here.
+}
 
 private val FabButtonSize = 56.dp
 

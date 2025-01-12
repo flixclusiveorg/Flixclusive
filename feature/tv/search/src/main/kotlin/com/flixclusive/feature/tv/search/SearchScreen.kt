@@ -38,7 +38,8 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
 import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.tv.component.FilmCard
@@ -63,11 +64,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
 
+interface SearchScreenNavigator : GoBackAction, ViewFilmAction
+
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Destination
 @Composable
 internal fun SearchScreen(
-    navigator: CommonScreenNavigator
+    navigator: SearchScreenNavigator
 ) {
     val viewModel: SearchScreenViewModel = hiltViewModel()
     val categories by viewModel.catalogs.collectAsStateWithLifecycle()
@@ -118,7 +121,7 @@ internal fun SearchScreen(
     LocalFocusTransferredOnLaunchProvider {
         LocalDirectionalFocusRequesterProvider {
             val filtersGroupFocusRequester = useLocalDirectionalFocusRequester().right
-            
+
             Row(
                 modifier = Modifier
                     .focusGroup()

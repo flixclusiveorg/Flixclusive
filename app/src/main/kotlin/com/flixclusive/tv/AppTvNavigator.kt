@@ -2,12 +2,12 @@ package com.flixclusive.tv
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
-import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenTvNavigator
-import com.flixclusive.core.ui.common.navigation.navigator.HomeScreenTvNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
+import com.flixclusive.feature.tv.film.FilmScreenTvNavigator
 import com.flixclusive.feature.tv.film.destinations.FilmScreenDestination
+import com.flixclusive.feature.tv.home.HomeScreenTvNavigator
 import com.flixclusive.model.film.Film
 import com.flixclusive.util.navGraph
 import com.flixclusive.util.navigateIfResumed
@@ -19,9 +19,13 @@ internal class AppTvNavigator(
     private val destination: NavDestination,
     private val navController: NavController,
     private val closeApp: () -> Unit,
-) : CommonScreenNavigator, SplashScreenNavigator, FilmScreenTvNavigator, HomeScreenTvNavigator {
+) : ViewFilmAction, SplashScreenNavigator, FilmScreenTvNavigator, HomeScreenTvNavigator {
     override fun goBack() {
         navController.navigateUp()
+    }
+
+    override fun openProfilesScreen(isComingFromSplashScreen: Boolean) {
+        TODO("Not yet implemented")
     }
 
     override fun openFilmScreen(film: Film) {
@@ -106,10 +110,6 @@ internal class AppTvNavigator(
     }
 
     override fun openAddProfileScreen(isInitializing: Boolean) {
-        TODO("Not yet implemented")
-    }
-
-    override fun openProfilesScreenFromSplashScreen() {
         TODO("Not yet implemented")
     }
 

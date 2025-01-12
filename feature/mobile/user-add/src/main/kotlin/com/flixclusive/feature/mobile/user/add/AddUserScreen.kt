@@ -48,8 +48,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import coil3.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.navigation.PinWithHintResult
-import com.flixclusive.core.ui.common.navigation.navigator.CommonUserEditNavigator
+import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.SelectAvatarAction
+import com.flixclusive.core.ui.common.navigation.navigator.SetupPinAction
+import com.flixclusive.core.ui.common.navigation.navigator.StartHomeScreenAction
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
@@ -74,31 +77,37 @@ import com.flixclusive.core.locale.R as LocaleR
 
 private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 
+interface AddUserScreenNavigator :
+    GoBackAction,
+    StartHomeScreenAction,
+    SetupPinAction,
+    SelectAvatarAction
+
 @Destination
 @Composable
 fun AddUserScreen(
     isInitializing: Boolean,
-    navigator: CommonUserEditNavigator,
+    navigator: AddUserScreenNavigator,
     avatarResultRecipient: OpenResultRecipient<Int>,
     pinResultRecipient: OpenResultRecipient<PinWithHintResult>,
 ) {
+    val viewModel = hiltViewModel<AddUserViewModel>()
     val context = LocalContext.current
     val orientation = LocalConfiguration.current.orientation
     val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
-
-    val viewModel = hiltViewModel<AddUserViewModel>()
     val images by viewModel.images.collectAsStateWithLifecycle()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     var currentScreen by rememberSaveable { mutableIntStateOf(0) }
     var canSkip by rememberSaveable { mutableStateOf(false) }
-    val screens = remember {
-        persistentListOf(
-            NameScreen,
-            AvatarScreen(navigator),
-            PinScreen(navigator),
-        )
-    }
+    val screens =
+        remember {
+            persistentListOf(
+                NameScreen,
+                AvatarScreen(navigator),
+                PinScreen(navigator),
+            )
+        }
 
     LaunchedEffect(state) {
         if (state is AddUserState.Added && isInitializing) {
@@ -114,18 +123,20 @@ fun AddUserScreen(
         pinResultRecipient.onNavResult {
             if (it is NavResult.Value) {
                 val (pin, hint) = it.value
-                user.value = user.value.copy(
-                    pin = pin,
-                    pinHint = hint
-                )
+                user.value =
+                    user.value.copy(
+                        pin = pin,
+                        pinHint = hint,
+                    )
             }
         }
 
         avatarResultRecipient.onNavResult {
             if (it is NavResult.Value) {
-                user.value = user.value.copy(
-                    image = it.value
-                )
+                user.value =
+                    user.value.copy(
+                        image = it.value,
+                    )
             }
         }
 
@@ -134,11 +145,13 @@ fun AddUserScreen(
             onBack = {
                 if (currentScreen == 0) {
                     navigator.goBack()
-                } else currentScreen--
+                } else {
+                    currentScreen--
+                }
             },
         ) {
             OnBoardingBackground(
-                backgroundUrl = images.getOrNull(currentScreen)
+                backgroundUrl = images.getOrNull(currentScreen),
             )
 
             AnimatedContent(
@@ -150,13 +163,17 @@ fun AddUserScreen(
                     val widthDivisor = 6
 
                     if (targetState > initialState) {
-                        fadeIn(tweenFloat) + slideInHorizontally(animationSpec = tweenInt) { it / widthDivisor } togetherWith
-                                fadeOut() + slideOutHorizontally { -it / widthDivisor }
+                        fadeIn(
+                            tweenFloat,
+                        ) + slideInHorizontally(animationSpec = tweenInt) { it / widthDivisor } togetherWith
+                            fadeOut() + slideOutHorizontally { -it / widthDivisor }
                     } else {
-                        fadeIn(tweenFloat) + slideInHorizontally(tweenInt) { -it / widthDivisor } + fadeIn() togetherWith
-                                fadeOut() + slideOutHorizontally { it / widthDivisor }
+                        fadeIn(
+                            tweenFloat,
+                        ) + slideInHorizontally(tweenInt) { -it / widthDivisor } + fadeIn() togetherWith
+                            fadeOut() + slideOutHorizontally { it / widthDivisor }
                     }.using(
-                        SizeTransform(clip = false)
+                        SizeTransform(clip = false),
                     )
                 },
                 modifier = Modifier.fillMaxSize(),
@@ -164,13 +181,14 @@ fun AddUserScreen(
                 val screen = screens[position]
 
                 /*
-                * Enqueue next images
-                * */
+                 * Enqueue next images
+                 * */
                 LaunchedEffect(true) {
-                    val request = context.buildImageUrl(
-                        imagePath = images.getOrNull(currentScreen + 1),
-                        imageSize = "original"
-                    )
+                    val request =
+                        context.buildImageUrl(
+                            imagePath = images.getOrNull(currentScreen + 1),
+                            imageSize = "original",
+                        )
 
                     if (request != null) {
                         context.imageLoader.enqueue(request)
@@ -182,33 +200,38 @@ fun AddUserScreen(
                     val keyboardController = LocalSoftwareKeyboardController.current
 
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .noIndicationClickable {
-                                focusManager.clearFocus(true)
-                                keyboardController?.hide()
-                            }
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .noIndicationClickable {
+                                    focusManager.clearFocus(true)
+                                    keyboardController?.hide()
+                                },
                     )
                 }
             }
 
-
             Column(
-                verticalArrangement = Arrangement.spacedBy(
-                    space = getAdaptiveDp(dp = 15.dp, increaseBy = 3.dp),
-                    alignment = if (isLandscape) Alignment.CenterVertically else Alignment.Top
-                ),
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        space = getAdaptiveDp(dp = 15.dp, increaseBy = 3.dp),
+                        alignment = if (isLandscape) Alignment.CenterVertically else Alignment.Top,
+                    ),
                 horizontalAlignment = if (isLandscape) Alignment.End else Alignment.Start,
-                modifier = Modifier
-                    .align(if (isLandscape) Alignment.CenterEnd else Alignment.Center)
-                    .padding(
-                        horizontal = getHorizontalPadding(),
-                        vertical = if (!isLandscape) getHorizontalPadding() else 0.dp
-                    )
+                modifier =
+                    Modifier
+                        .align(if (isLandscape) Alignment.CenterEnd else Alignment.Center)
+                        .padding(
+                            horizontal = getHorizontalPadding(),
+                            vertical = if (!isLandscape) getHorizontalPadding() else 0.dp,
+                        ),
             ) {
-                val contentModifier = if (isLandscape) {
-                    Modifier.fillMaxWidth(LANDSCAPE_CONTENT_WIDTH_FRACTION)
-                } else Modifier.weight(1F)
+                val contentModifier =
+                    if (isLandscape) {
+                        Modifier.fillMaxWidth(LANDSCAPE_CONTENT_WIDTH_FRACTION)
+                    } else {
+                        Modifier.weight(1F)
+                    }
 
                 AnimatedContent(
                     targetState = currentScreen,
@@ -219,13 +242,17 @@ fun AddUserScreen(
                         val widthDivisor = 6
 
                         if (targetState > initialState) {
-                            fadeIn(tweenFloat) + slideInHorizontally(animationSpec = tweenInt) { it / widthDivisor } togetherWith
-                                    fadeOut() + slideOutHorizontally { -it / widthDivisor }
+                            fadeIn(
+                                tweenFloat,
+                            ) + slideInHorizontally(animationSpec = tweenInt) { it / widthDivisor } togetherWith
+                                fadeOut() + slideOutHorizontally { -it / widthDivisor }
                         } else {
-                            fadeIn(tweenFloat) + slideInHorizontally(tweenInt) { -it / widthDivisor } + fadeIn() togetherWith
-                                    fadeOut() + slideOutHorizontally { it / widthDivisor }
+                            fadeIn(
+                                tweenFloat,
+                            ) + slideInHorizontally(tweenInt) { -it / widthDivisor } + fadeIn() togetherWith
+                                fadeOut() + slideOutHorizontally { it / widthDivisor }
                         }.using(
-                            SizeTransform(clip = false)
+                            SizeTransform(clip = false),
                         )
                     },
                     modifier = contentModifier,
@@ -239,21 +266,22 @@ fun AddUserScreen(
                     if (!isLandscape) {
                         AddUserPortraitScreen(
                             screen = screen,
-                            modifier = contentModifier
+                            modifier = contentModifier,
                         )
                     } else {
                         AddUserLandscapeScreen(
                             screen = screen,
-                            modifier = contentModifier
+                            modifier = contentModifier,
                         )
                     }
                 }
 
-                val disableNextButton = when (screens[currentScreen]) {
-                    is NameScreen -> user.value.name.isEmpty()
-                    is PinScreen -> user.value.pin == null
-                    else -> false
-                }
+                val disableNextButton =
+                    when (screens[currentScreen]) {
+                        is NameScreen -> user.value.name.isEmpty()
+                        is PinScreen -> user.value.pin == null
+                        else -> false
+                    }
 
                 NavigationButtons(
                     canSkip = canSkip,
@@ -263,13 +291,16 @@ fun AddUserScreen(
                         if (currentScreen == screens.lastIndex) {
                             viewModel.addUser(
                                 user = user.value,
-                                isSigningIn = isInitializing
+                                isSigningIn = isInitializing,
                             )
-                        } else currentScreen++
+                        } else {
+                            currentScreen++
+                        }
                     },
-                    modifier = Modifier.fillMaxWidth(
-                        if (isLandscape) LANDSCAPE_CONTENT_WIDTH_FRACTION else 1F
-                    )
+                    modifier =
+                        Modifier.fillMaxWidth(
+                            if (isLandscape) LANDSCAPE_CONTENT_WIDTH_FRACTION else 1F,
+                        ),
                 )
             }
         }
@@ -278,46 +309,51 @@ fun AddUserScreen(
 
 @Composable
 private fun AddUserPortraitScreen(
+    screen: OnBoardingScreen,
     modifier: Modifier = Modifier,
-    screen: OnBoardingScreen
 ) {
     val widthModifier = Modifier.fillOnBoardingContentWidth()
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(
-            space = getAdaptiveDp(dp = 5.dp, increaseBy = 3.dp),
-            alignment = Alignment.Bottom
-        ),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                space = getAdaptiveDp(dp = 5.dp, increaseBy = 3.dp),
+                alignment = Alignment.Bottom,
+            ),
         horizontalAlignment = Alignment.Start,
-        modifier = modifier
+        modifier = modifier,
     ) {
         Text(
             text = screen.title.asString(),
-            style = getAdaptiveTextStyle(
-                size = 22.sp,
-                increaseBy = 16.sp,
-                style = TypographyStyle.Headline,
-                mode = TextStyleMode.Emphasized
-            ),
-            modifier = Modifier
-                .padding(top = 20.dp)
+            style =
+                getAdaptiveTextStyle(
+                    size = 22.sp,
+                    increaseBy = 16.sp,
+                    style = TypographyStyle.Headline,
+                    mode = TextStyleMode.Emphasized,
+                ),
+            modifier =
+                Modifier
+                    .padding(top = 20.dp),
         )
 
         Text(
             text = screen.description.asString(),
-            style = getAdaptiveTextStyle(
-                size = 14.sp,
-                increaseBy = 10.sp,
-                style = TypographyStyle.Body,
-                mode = TextStyleMode.NonEmphasized
-            ),
-            modifier = widthModifier
-                .padding(bottom = getAdaptiveDp(10.dp))
+            style =
+                getAdaptiveTextStyle(
+                    size = 14.sp,
+                    increaseBy = 10.sp,
+                    style = TypographyStyle.Body,
+                    mode = TextStyleMode.NonEmphasized,
+                ),
+            modifier =
+                widthModifier
+                    .padding(bottom = getAdaptiveDp(10.dp)),
         )
 
         Box(
             contentAlignment = Alignment.CenterStart,
-            modifier = widthModifier
+            modifier = widthModifier,
         ) {
             screen.Content()
         }
@@ -326,36 +362,40 @@ private fun AddUserPortraitScreen(
 
 @Composable
 private fun AddUserLandscapeScreen(
+    screen: OnBoardingScreen,
     modifier: Modifier = Modifier,
-    screen: OnBoardingScreen
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(5.dp),
         horizontalAlignment = Alignment.Start,
-        modifier = modifier
+        modifier = modifier,
     ) {
         Text(
             text = screen.title.asString(),
-            style = getAdaptiveTextStyle(
-                size = 24.sp,
-                increaseBy = 6.sp,
-                style = TypographyStyle.Display,
-                mode = TextStyleMode.Emphasized
-            ),
-            modifier = Modifier
-                .padding(top = 20.dp)
+            style =
+                getAdaptiveTextStyle(
+                    size = 24.sp,
+                    increaseBy = 6.sp,
+                    style = TypographyStyle.Display,
+                    mode = TextStyleMode.Emphasized,
+                ),
+            modifier =
+                Modifier
+                    .padding(top = 20.dp),
         )
 
         Text(
             text = screen.description.asString(),
-            style = getAdaptiveTextStyle(
-                size = 16.sp,
-                increaseBy = 6.sp,
-                style = TypographyStyle.Body,
-                mode = TextStyleMode.NonEmphasized
-            ),
-            modifier = Modifier
-                .padding(bottom = 10.dp)
+            style =
+                getAdaptiveTextStyle(
+                    size = 16.sp,
+                    increaseBy = 6.sp,
+                    style = TypographyStyle.Body,
+                    mode = TextStyleMode.NonEmphasized,
+                ),
+            modifier =
+                Modifier
+                    .padding(bottom = 10.dp),
         )
 
         screen.Content()
@@ -364,53 +404,56 @@ private fun AddUserLandscapeScreen(
 
 @Composable
 private fun OnBoardingBackground(
+    backgroundUrl: String?,
     modifier: Modifier = Modifier,
-    backgroundUrl: String?
 ) {
     val surface = MaterialTheme.colorScheme.surface
     val orientation = LocalConfiguration.current.orientation
 
     Box(
-        modifier = modifier
-            .drawWithContent {
-                drawContent()
-                if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    drawRect(
-                        Brush.verticalGradient(
-                            0F to surface,
-                            0.2F to surface.copy(0.8F),
-                            0.5F to surface.copy(0.6F),
-                            0.7F to surface
+        modifier =
+            modifier
+                .drawWithContent {
+                    drawContent()
+                    if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                        drawRect(
+                            Brush.verticalGradient(
+                                0F to surface,
+                                0.2F to surface.copy(0.8F),
+                                0.5F to surface.copy(0.6F),
+                                0.7F to surface,
+                            ),
                         )
-                    )
-                } else {
-                    drawRect(
-                        Brush.verticalGradient(
-                            0F to surface,
-                            0.4F to surface.copy(0.3F),
-                            1F to Color.Transparent
+                    } else {
+                        drawRect(
+                            Brush.verticalGradient(
+                                0F to surface,
+                                0.4F to surface.copy(0.3F),
+                                1F to Color.Transparent,
+                            ),
                         )
-                    )
-                    drawRect(
-                        Brush.horizontalGradient(
-                            0F to surface.copy(0.8F),
-                            1F to surface
+                        drawRect(
+                            Brush.horizontalGradient(
+                                0F to surface.copy(0.8F),
+                                1F to surface,
+                            ),
                         )
-                    )
-                }
-            }
+                    }
+                },
     ) {
         ProvideAsyncImagePreviewHandler {
             AsyncImage(
-                model = LocalContext.current
-                    .buildImageUrl(
-                        imagePath = backgroundUrl,
-                        imageSize = "original"
-                    ),
+                model =
+                    LocalContext.current
+                        .buildImageUrl(
+                            imagePath = backgroundUrl,
+                            imageSize = "original",
+                        ),
                 contentDescription = stringResource(LocaleR.string.on_boarding_background_content_desc),
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxHeight()
+                modifier =
+                    Modifier
+                        .fillMaxHeight(),
             )
         }
     }
@@ -424,20 +467,29 @@ private fun AddUserScreenBasePreview() {
         Surface {
             AddUserScreen(
                 isInitializing = false,
-                navigator = object : CommonUserEditNavigator {
-                    override fun openUserAvatarSelectScreen(selected: Int) = Unit
-                    override fun openUserPinSetupScreen(currentPin: String?, isRemovingPin: Boolean) = Unit
-                    override fun goBack() = Unit
-                    override fun openHomeScreen() = Unit
-                },
-                avatarResultRecipient = object : OpenResultRecipient<Int> {
-                    @Composable
-                    override fun onNavResult(listener: (NavResult<Int>) -> Unit) = Unit
-                },
-                pinResultRecipient = object : OpenResultRecipient<PinWithHintResult> {
-                    @Composable
-                    override fun onNavResult(listener: (NavResult<PinWithHintResult>) -> Unit) = Unit
-                }
+                navigator =
+                    object : AddUserScreenNavigator {
+                        override fun openUserAvatarSelectScreen(selected: Int) = Unit
+
+                        override fun openUserPinSetupScreen(
+                            currentPin: String?,
+                            isRemovingPin: Boolean,
+                        ) = Unit
+
+                        override fun goBack() = Unit
+
+                        override fun openHomeScreen() = Unit
+                    },
+                avatarResultRecipient =
+                    object : OpenResultRecipient<Int> {
+                        @Composable
+                        override fun onNavResult(listener: (NavResult<Int>) -> Unit) = Unit
+                    },
+                pinResultRecipient =
+                    object : OpenResultRecipient<PinWithHintResult> {
+                        @Composable
+                        override fun onNavResult(listener: (NavResult<PinWithHintResult>) -> Unit) = Unit
+                    },
             )
         }
     }

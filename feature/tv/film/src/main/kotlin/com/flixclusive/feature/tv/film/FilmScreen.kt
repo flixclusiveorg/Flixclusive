@@ -46,7 +46,7 @@ import androidx.tv.foundation.lazy.list.TvLazyColumn
 import coil3.compose.AsyncImage
 import coil3.imageLoader
 import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.ui.common.navigation.navigator.FilmScreenTvNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.ifElse
@@ -69,6 +69,7 @@ import com.flixclusive.feature.tv.film.component.buttons.MainButtons
 import com.flixclusive.feature.tv.film.component.buttons.PLAY_BUTTON_KEY
 import com.flixclusive.feature.tv.film.component.episodes.EpisodesPanel
 import com.flixclusive.feature.tv.player.PlayerScreen
+import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
@@ -76,6 +77,10 @@ import com.flixclusive.model.film.util.FilmType
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
+
+interface FilmScreenTvNavigator : GoBackAction {
+    fun openFilmScreenSeamlessly(film: Film)
+}
 
 @Destination(
     navArgsDelegate = FilmScreenNavArgs::class,

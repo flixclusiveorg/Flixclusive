@@ -41,6 +41,7 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,10 +68,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.navigation.GoBackAction
-import com.flixclusive.core.ui.common.navigation.StartHomeScreenAction
-import com.flixclusive.core.ui.common.navigation.navigator.AddProfileNavigator
-import com.flixclusive.core.ui.common.navigation.navigator.ExitNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.AddProfileAction
+import com.flixclusive.core.ui.common.navigation.navigator.EditUserAction
+import com.flixclusive.core.ui.common.navigation.navigator.ExitAction
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.SelectAvatarAction
+import com.flixclusive.core.ui.common.navigation.navigator.SetupPinAction
+import com.flixclusive.core.ui.common.navigation.navigator.StartHomeScreenAction
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
@@ -82,24 +86,30 @@ import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface UserProfilesNavigator :
-    ExitNavigator,
+interface UserProfilesScreenNavigator :
+    ExitAction,
     GoBackAction,
     StartHomeScreenAction,
-    AddProfileNavigator {
-    fun openEditUserScreen(user: User)
-}
+    AddProfileAction,
+    SetupPinAction,
+    SelectAvatarAction,
+    EditUserAction
 
 @Destination
 @Composable
 internal fun UserProfilesScreen(
-    navigator: UserProfilesNavigator,
+    navigator: UserProfilesScreenNavigator,
     isFromSplashScreen: Boolean,
     viewModel: UserProfilesViewModel = hiltViewModel(),
 ) {
     val profiles by viewModel.profiles.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val scope = rememberCoroutineScope()
+    LaunchedEffect(uiState) {
+        if (uiState.isLoggingIn) {
+            navigator.openHomeScreen()
+        }
+    }
 
     val (pageCount, initialPage) =
         remember(profiles.size) {
@@ -198,12 +208,7 @@ internal fun UserProfilesScreen(
                                         ClickedProfileScreen(
                                             clickedProfile = profile,
                                             isLoading = isContinueScreenLoading,
-                                            onConfirm = {
-                                                scope.launch {
-                                                    viewModel.onUseProfile(profile)
-                                                    navigator.openHomeScreen()
-                                                }
-                                            },
+                                            onConfirm = { viewModel.onUseProfile(profile) },
                                             onBack = {
                                                 screenType.value = lastScreenTypeUsed.value
                                             },
@@ -304,7 +309,7 @@ private fun TopBar(
                             painter = painterResource(UiCommonR.drawable.flixclusive_tag),
                             contentDescription =
                                 stringResource(
-                                    id = com.flixclusive.core.locale.R.string.flixclusive_tag_content_desc,
+                                    id = LocaleR.string.flixclusive_tag_content_desc,
                                 ),
                             contentScale = ContentScale.Fit,
                             modifier =
@@ -513,7 +518,7 @@ private fun UserProfilesScreenBasePreview() {
             UserProfilesScreen(
                 isFromSplashScreen = false,
                 navigator =
-                    object : UserProfilesNavigator {
+                    object : UserProfilesScreenNavigator {
                         override fun goBack() = Unit
 
                         override fun onExitApplication() = Unit
@@ -523,6 +528,13 @@ private fun UserProfilesScreenBasePreview() {
                         override fun openEditUserScreen(user: User) = Unit
 
                         override fun openHomeScreen() = Unit
+
+                        override fun openUserAvatarSelectScreen(selected: Int) = Unit
+
+                        override fun openUserPinSetupScreen(
+                            currentPin: String?,
+                            isRemovingPin: Boolean,
+                        ) = Unit
                     },
             )
         }

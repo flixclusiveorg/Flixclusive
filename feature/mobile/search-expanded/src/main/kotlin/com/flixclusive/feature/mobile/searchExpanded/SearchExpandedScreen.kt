@@ -24,7 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.navigation.navigator.CommonScreenNavigator
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
 import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.ui.mobile.util.shouldPaginate
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchBarInput
@@ -39,6 +40,7 @@ import com.flixclusive.provider.filter.FilterList
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 
+interface SearchExpandedScreenNavigator : GoBackAction, ViewFilmAction
 internal enum class SearchItemViewType {
     SearchHistory,
     Providers,
@@ -48,7 +50,7 @@ internal enum class SearchItemViewType {
 @Destination
 @Composable
 internal fun SearchExpandedScreen(
-    navigator: CommonScreenNavigator,
+    navigator: SearchExpandedScreenNavigator,
     viewModel: SearchExpandedScreenViewModel = hiltViewModel(),
     previewFilm: (Film) -> Unit,
 ) {
