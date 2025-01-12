@@ -79,7 +79,7 @@ internal fun DetailsScaffold(
             1F to MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
         )
 
-    var searchQuery by remember { mutableStateOf("") }
+    var searchQuery = remember { mutableStateOf("") }
     var isSearching by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -89,8 +89,8 @@ internal fun DetailsScaffold(
             if (isDetailsVisible) {
                 DetailsScaffoldTopBar(
                     isSearching = isSearching,
-                    searchQuery = searchQuery,
-                    onQueryChange = { searchQuery = it },
+                    searchQuery = searchQuery.value,
+                    onQueryChange = { searchQuery.value = it },
                     onToggleSearchBar = { isSearching = it },
                     onNavigateBack = navigateBack,
                 )

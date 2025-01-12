@@ -1,7 +1,8 @@
 package com.flixclusive.feature.mobile.settings.component
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,23 +12,24 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.settings.TweakPaddingHorizontal
+import com.flixclusive.feature.mobile.settings.util.betterClickable
 
 internal val TweakTouchSize = 56.dp
 internal val TweakIconSize = 25.dp
 
 @Composable
 internal fun BaseTweakComponent(
-    modifier: Modifier = Modifier,
     title: String,
-    description: String? = null,
-    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+    descriptionProvider: (() -> String)? = null,
+    enabledProvider: () -> Boolean = { true },
     onClick: (() -> Unit)? = null,
     extraContent: @Composable (() -> Unit)? = null,
     startContent: @Composable (() -> Unit)? = null,
@@ -36,35 +38,40 @@ internal fun BaseTweakComponent(
     val defaultHorizontalPadding = getAdaptiveDp(TweakPaddingHorizontal * 2F)
     val defaultIconWidthSpace = getAdaptiveDp(TweakIconSize)
 
-    val alpha by animateFloatAsState(
-        label = "alpha",
-        targetValue = if (enabled) 1F else 0.6F,
-    )
+    val interactionSource = remember { MutableInteractionSource() }
 
     Column(
-        modifier = modifier.alpha(alpha),
+        modifier =
+            modifier
+                .betterClickable(
+                    interactionSource = interactionSource,
+                    onClick = onClick,
+                    enabled = enabledProvider,
+                ).graphicsLayer {
+                    alpha = if (enabledProvider()) 1F else 0.6F
+                },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(defaultHorizontalPadding),
-            modifier = Modifier
-                .clickable(
-                    enabled = onClick != null && enabled,
-                    onClick = { onClick?.invoke() }
-                )
-                .padding(
-                    vertical = getAdaptiveDp(10.dp),
-                    horizontal = defaultHorizontalPadding
-                )
-                .fillMaxWidth()
-                .heightIn(min = getAdaptiveDp(TweakTouchSize))
+            modifier =
+                Modifier
+                    .indication(
+                        interactionSource = interactionSource,
+                        indication = LocalIndication.current,
+                    ).padding(
+                        vertical = getAdaptiveDp(10.dp),
+                        horizontal = defaultHorizontalPadding,
+                    ).fillMaxWidth()
+                    .heightIn(min = getAdaptiveDp(TweakTouchSize)),
         ) {
             if (startContent != null) {
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .width(defaultIconWidthSpace)
+                    modifier =
+                        Modifier
+                            .width(defaultIconWidthSpace),
                 ) {
                     startContent()
                 }
@@ -72,16 +79,19 @@ internal fun BaseTweakComponent(
 
             TitleDescriptionHeader(
                 title = title,
-                description = description,
-                modifier = Modifier.weight(1F)
-                    .padding(end = defaultHorizontalPadding)
+                descriptionProvider = descriptionProvider,
+                modifier =
+                    Modifier
+                        .weight(1F)
+                        .padding(end = defaultHorizontalPadding),
             )
 
             if (endContent != null) {
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .width(defaultIconWidthSpace)
+                    modifier =
+                        Modifier
+                            .width(defaultIconWidthSpace),
                 ) {
                     endContent()
                 }
@@ -91,8 +101,9 @@ internal fun BaseTweakComponent(
         if (extraContent != null) {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .padding(horizontal = defaultHorizontalPadding)
+                modifier =
+                    Modifier
+                        .padding(horizontal = defaultHorizontalPadding),
             ) {
                 extraContent()
             }

@@ -17,29 +17,29 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun SwitchComponent(
-    modifier: Modifier = Modifier,
     title: String,
-    description: String? = null,
+    checked: () -> Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
     icon: Painter? = null,
-    enabled: Boolean = true,
-    checked: Boolean = false,
-    onCheckedChanged: (Boolean) -> Unit,
+    descriptionProvider: (() -> String)? = null,
+    enabledProvider: () -> Boolean = { true },
 ) {
     ClickableComponent(
         modifier = modifier,
         title = title,
-        description = description,
+        descriptionProvider = descriptionProvider,
         icon = icon,
-        enabled = enabled,
+        enabledProvider = enabledProvider,
         endContent = {
             Switch(
-                checked = checked,
-                enabled = enabled,
-                onCheckedChange = onCheckedChanged,
+                checked = checked(),
+                enabled = enabledProvider(),
+                onCheckedChange = onCheckedChange,
                 modifier = Modifier.padding(end = getAdaptiveDp(10.dp)),
             )
         },
-        onClick = { onCheckedChanged(!checked) },
+        onClick = { onCheckedChange(!checked()) },
     )
 }
 
@@ -48,31 +48,31 @@ internal fun SwitchComponent(
 private fun SwitchComponentBasePreview() {
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Column {
                 SwitchComponent(
                     title = "Switch tweak with icon",
-                    description = "Switch tweak summary",
+                    descriptionProvider = { "Switch tweak summary" },
                     icon = painterResource(UiCommonR.drawable.happy_emphasized),
-                    checked = true,
-                    onCheckedChanged = {},
+                    checked = { true },
+                    onCheckedChange = {},
                 )
                 SwitchComponent(
                     title = "Switch tweak",
-                    description = "Switch tweak summary",
-                    checked = false,
-                    onCheckedChanged = {},
+                    descriptionProvider = { "Switch tweak summary" },
+                    checked = { false },
+                    onCheckedChange = {},
                 )
                 SwitchComponent(
                     title = "Switch tweak no summary",
-                    checked = false,
-                    onCheckedChanged = {},
+                    checked = { false },
+                    onCheckedChange = {},
                 )
                 SwitchComponent(
                     title = "Another switch tweak no summary",
-                    checked = false,
-                    onCheckedChanged = {},
+                    checked = { false },
+                    onCheckedChange = {},
                 )
             }
         }

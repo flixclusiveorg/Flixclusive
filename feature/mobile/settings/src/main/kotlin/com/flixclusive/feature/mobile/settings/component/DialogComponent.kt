@@ -21,21 +21,23 @@ internal fun DialogComponent(
     title: String,
     dialogTitle: String,
     dialogMessage: String,
-    description: String? = null,
-    icon: Painter? = null,
-    enabled: Boolean = true,
-    modifier: Modifier = Modifier,
     onConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabledProvider: () -> Boolean = { true },
+    descriptionProvider: (() -> String)? = null,
+    icon: Painter? = null,
 ) {
     var isDialogShown by rememberSaveable { mutableStateOf(false) }
 
-    val onDismissRequest = fun () { isDialogShown = false }
+    val onDismissRequest = fun() {
+        isDialogShown = false
+    }
 
     ClickableComponent(
         modifier = modifier,
         title = title,
-        description = description,
-        enabled = enabled,
+        descriptionProvider = descriptionProvider,
+        enabledProvider = enabledProvider,
         icon = icon,
         onClick = { isDialogShown = true },
     )
@@ -55,12 +57,12 @@ internal fun DialogComponent(
 private fun DialogComponentBasePreview() {
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Column {
                 DialogComponent(
                     title = "Dialog tweak with icon",
-                    description = "Dialog tweak summary",
+                    descriptionProvider = { "Dialog tweak summary" },
                     dialogTitle = "Dialog tweak",
                     dialogMessage = "Dialog tweak summary",
                     icon = painterResource(UiCommonR.drawable.happy_emphasized),
@@ -69,7 +71,7 @@ private fun DialogComponentBasePreview() {
 
                 DialogComponent(
                     title = "Dialog tweak",
-                    description = "Dialog tweak summary",
+                    descriptionProvider = { "Dialog tweak summary" },
                     dialogTitle = "Dialog tweak",
                     dialogMessage = "Dialog tweak summary",
                     onConfirm = {},

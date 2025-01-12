@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -36,6 +37,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
+import kotlin.String
 import com.flixclusive.core.locale.R as LocaleR
 
 private const val DEFAULT_TEXT_PREVIEW = "Abc"
@@ -61,6 +63,7 @@ internal class SubtitlesTweakScreen(
 
     @Composable
     override fun getTweaks(): List<Tweak> {
+        val context = LocalContext.current
         val subtitlePreferences by preferencesAsState.collectAsStateWithLifecycle()
 
         val areSubtitlesAvailable = remember { mutableStateOf(subtitlePreferences.isSubtitleEnabled) }
@@ -77,14 +80,9 @@ internal class SubtitlesTweakScreen(
             }
 
         return listOf(
-            TweakUI.CustomContentTweak(
-                content = {
-                    SubtitlePreview(subtitlePreferences)
-                },
-            ),
             TweakUI.SwitchTweak(
                 title = stringResource(LocaleR.string.subtitle),
-                description = stringResource(LocaleR.string.subtitles_toggle_desc),
+                descriptionProvider = { context.getString(LocaleR.string.subtitles_toggle_desc) },
                 value = areSubtitlesAvailable,
                 onTweaked = {
                     onUpdatePreferences { prefs ->
@@ -92,21 +90,21 @@ internal class SubtitlesTweakScreen(
                     }
                 },
             ),
-            getUiTweaks(
-                subtitlePreferences = subtitlePreferences,
-            ),
-            TweakUI.Divider,
             TweakUI.ListTweak(
                 title = stringResource(LocaleR.string.language),
                 value = currentSubtitleLanguage,
-                description = Locale(currentSubtitleLanguage.value).displayLanguage,
-                enabled = subtitlePreferences.isSubtitleEnabled,
+                descriptionProvider = { Locale(currentSubtitleLanguage.value).displayLanguage },
+                enabledProvider = { areSubtitlesAvailable.value },
                 options = languages,
                 onTweaked = {
                     onUpdatePreferences { prefs ->
                         prefs.copy(subtitleLanguage = it)
                     }
                 },
+            ),
+            getUiTweaks(
+                areSubtitlesAvailableProvider = { areSubtitlesAvailable.value },
+                subtitlePreferencesProvider = { subtitlePreferences },
             ),
         )
     }
@@ -125,10 +123,15 @@ internal class SubtitlesTweakScreen(
     }
 
     @Composable
-    private fun getUiTweaks(subtitlePreferences: SubtitlesPreferences): TweakGroup {
-        val fontStyle = remember { mutableStateOf(subtitlePreferences.subtitleFontStyle) }
-        val edgeType = remember { mutableStateOf(subtitlePreferences.subtitleEdgeType) }
-        val fontSize = remember { mutableFloatStateOf(subtitlePreferences.subtitleSize) }
+    private fun getUiTweaks(
+        areSubtitlesAvailableProvider: () -> Boolean,
+        subtitlePreferencesProvider: () -> SubtitlesPreferences,
+    ): TweakGroup {
+        val context = LocalContext.current
+
+        val fontStyle = remember { mutableStateOf(subtitlePreferencesProvider().subtitleFontStyle) }
+        val edgeType = remember { mutableStateOf(subtitlePreferencesProvider().subtitleEdgeType) }
+        val fontSize = remember { mutableFloatStateOf(subtitlePreferencesProvider().subtitleSize) }
         val fontStyles =
             remember {
                 CaptionStylePreference.entries
@@ -142,19 +145,36 @@ internal class SubtitlesTweakScreen(
                     .toImmutableMap()
             }
 
-        val alpha = remember { mutableFloatStateOf(Color(subtitlePreferences.subtitleBackgroundColor).alpha) }
+        val alpha = remember { mutableFloatStateOf(Color(subtitlePreferencesProvider().subtitleBackgroundColor).alpha) }
 
         return TweakGroup(
             title = stringResource(LocaleR.string.style),
-            enabled = subtitlePreferences.isSubtitleEnabled,
+            enabledProvider = areSubtitlesAvailableProvider,
             tweaks =
                 persistentListOf(
+                    TweakUI.CustomContentTweak(
+                        title = "Subtitle Preview",
+                        content = {
+                            SubtitlePreview(
+                                subtitlePreferencesProvider = subtitlePreferencesProvider,
+                                areSubtitlesAvailableProvider = areSubtitlesAvailableProvider,
+                            )
+                        },
+                    ),
                     TweakUI.SliderTweak(
                         title = stringResource(LocaleR.string.subtitles_size),
-                        description = "${String.format(Locale.getDefault(), "%.2f", fontSize.floatValue)} sp",
+                        descriptionProvider = {
+                            "${
+                                String.format(
+                                    Locale.getDefault(),
+                                    "%.2f",
+                                    fontSize.floatValue,
+                                )
+                            } sp"
+                        },
                         value = fontSize,
                         range = MIN_SUBTITLE_SIZE..MAX_SUBTITLE_SIZE,
-                        enabled = subtitlePreferences.isSubtitleEnabled,
+                        enabledProvider = areSubtitlesAvailableProvider,
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
                                 oldValue.copy(subtitleSize = it)
@@ -163,10 +183,10 @@ internal class SubtitlesTweakScreen(
                     ),
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.subtitles_font_style),
-                        description = fontStyle.value.toString(),
+                        descriptionProvider = { fontStyle.value.toString() },
                         value = fontStyle,
                         options = fontStyles,
-                        enabled = subtitlePreferences.isSubtitleEnabled,
+                        enabledProvider = areSubtitlesAvailableProvider,
                         endContent = {
                             Text(
                                 text = DEFAULT_TEXT_PREVIEW,
@@ -204,10 +224,10 @@ internal class SubtitlesTweakScreen(
                     ),
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.subtitles_edge_type),
-                        description = subtitlePreferences.subtitleEdgeType.toUiText().asString(),
+                        descriptionProvider = { edgeType.value.toUiText().asString(context) },
                         value = edgeType,
                         options = edgeTypes,
-                        enabled = subtitlePreferences.isSubtitleEnabled,
+                        enabledProvider = areSubtitlesAvailableProvider,
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
                                 oldValue.copy(subtitleEdgeType = it)
@@ -215,13 +235,14 @@ internal class SubtitlesTweakScreen(
                         },
                     ),
                     TweakUI.CustomContentTweak(
+                        title = stringResource(LocaleR.string.subtitles_color),
                         content = {
                             ColorPicker(
                                 title = stringResource(LocaleR.string.subtitles_color),
                                 description = stringResource(LocaleR.string.subtitles_color_desc),
-                                selectedColor = remember { subtitlePreferences.subtitleColor },
+                                selectedColor = remember { subtitlePreferencesProvider().subtitleColor },
                                 colors = availableColors,
-                                enabled = subtitlePreferences.isSubtitleEnabled,
+                                enabledProvider = areSubtitlesAvailableProvider,
                                 onPick = {
                                     launchOnIO {
                                         onUpdatePreferences { oldValue ->
@@ -233,20 +254,20 @@ internal class SubtitlesTweakScreen(
                         },
                     ),
                     TweakUI.CustomContentTweak(
+                        title = stringResource(LocaleR.string.subtitles_background_color),
                         content = {
                             ColorPickerWithAlpha(
                                 title = stringResource(LocaleR.string.subtitles_background_color),
                                 description = stringResource(LocaleR.string.subtitles_background_color_desc),
-                                selectedColor = remember { subtitlePreferences.subtitleBackgroundColor },
+                                selectedColor = remember { subtitlePreferencesProvider().subtitleBackgroundColor },
                                 colors = availableColors,
-                                enabled = subtitlePreferences.isSubtitleEnabled,
+                                enabledProvider = areSubtitlesAvailableProvider,
                                 transparencyProvider = { alpha.floatValue },
                                 onAlphaChange = { alpha.floatValue = it },
-                                onPick = {
+                                onPick = { newColor ->
                                     launchOnIO {
                                         onUpdatePreferences { oldValue ->
-                                            val newColorWithAlpha =
-                                                Color(oldValue.subtitleBackgroundColor).copy(alpha.floatValue)
+                                            val newColorWithAlpha = newColor.copy(alpha.floatValue)
                                             oldValue.copy(subtitleBackgroundColor = newColorWithAlpha.toArgb())
                                         }
                                     }

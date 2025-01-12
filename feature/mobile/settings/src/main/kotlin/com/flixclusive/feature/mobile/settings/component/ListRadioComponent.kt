@@ -33,86 +33,99 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdapti
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.toImmutableMap
 import kotlin.math.max
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun <T> ListRadioComponent(
-    selectedValue: T,
+    selectedValueProvider: () -> T,
     title: String,
-    options: Map<out T, String>,
-    description: String? = null,
-    icon: Painter? = null,
-    enabled: Boolean = true,
-    endContent: @Composable (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
+    options: ImmutableMap<out T, String>,
     onValueChange: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    icon: Painter? = null,
+    descriptionProvider: (() -> String)? = null,
+    enabledProvider: () -> Boolean = { true },
+    endContent: @Composable (() -> Unit)? = null,
 ) {
     var isDialogShown by rememberSaveable { mutableStateOf(false) }
 
-    val onDismissRequest = fun () { isDialogShown = false }
+    val onDismissRequest = fun() {
+        isDialogShown = false
+    }
 
     ClickableComponent(
         modifier = modifier,
         title = title,
-        description = description,
+        descriptionProvider = descriptionProvider,
+        enabledProvider = enabledProvider,
         endContent = endContent,
-        enabled = enabled,
         icon = icon,
         onClick = { isDialogShown = true },
     )
 
     if (isDialogShown) {
-        var selected by remember { mutableStateOf(selectedValue) }
-        val indexOfSelected = remember {
-            options.keys
-                .indexOfFirst { it == selected }
-        }
+        var selected by remember { mutableStateOf(selectedValueProvider()) }
+        val indexOfSelected =
+            remember {
+                options.keys
+                    .indexOfFirst { it == selected }
+            }
 
-        val listState = rememberLazyListState(
-            initialFirstVisibleItemIndex = max(indexOfSelected, 0)
-        )
+        val listState =
+            rememberLazyListState(
+                initialFirstVisibleItemIndex = max(indexOfSelected, 0),
+            )
 
         BaseTweakDialog(
             title = title,
             onDismissRequest = onDismissRequest,
-            onConfirm = { onValueChange(selected) }
+            onConfirm = { onValueChange(selected) },
         ) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .heightIn(max = getAdaptiveDp(400.dp, 50.dp))
+                modifier =
+                    Modifier
+                        .heightIn(max = getAdaptiveDp(400.dp, 50.dp)),
             ) {
                 options.forEach { (option, label) ->
                     val isSelected = selected == option
 
                     item {
                         Row(
-                            modifier = Modifier
+                            modifier =
+                            Modifier
                                 .clip(MaterialTheme.shapes.small)
                                 .selectable(
                                     selected = isSelected,
-                                    onClick = { selected = option }
+                                    onClick = { selected = option },
                                 )
                                 .fillMaxWidth()
                                 .minimumInteractiveComponentSize(),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             RadioButton(
                                 selected = isSelected,
-                                onClick = { selected = option }
+                                onClick = { selected = option },
                             )
 
                             Text(
                                 text = label,
-                                style = getAdaptiveTextStyle(
-                                    style = TypographyStyle.Title
-                                ).copy(
-                                    fontSize = 16.sp,
-                                    fontWeight = if(isSelected) FontWeight.Medium else FontWeight.Normal,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
-                                )
+                                style =
+                                    getAdaptiveTextStyle(
+                                        style = TypographyStyle.Title,
+                                    ).copy(
+                                        fontSize = 16.sp,
+                                        fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+                                        color =
+                                            if (isSelected) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
+                                            },
+                                    ),
                             )
                         }
                     }
@@ -125,35 +138,37 @@ internal fun <T> ListRadioComponent(
 @Preview
 @Composable
 private fun ListRadioComponentBasePreview() {
-    val list = List(20) {
-        "Option $it"
-    }.associateWith { it }
+    val list =
+        List(20) {
+            "Option $it"
+        }.associateWith { it }
+            .toImmutableMap()
 
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Column {
                 ListRadioComponent(
                     title = "List radio tweak with icon",
-                    description = "List radio tweak summary",
+                    descriptionProvider = { "List radio tweak summary" },
                     icon = painterResource(UiCommonR.drawable.happy_emphasized),
-                    selectedValue = list.keys.last(),
+                    selectedValueProvider = { list.keys.last() },
                     options = list,
                     onValueChange = {},
                 )
 
                 ListRadioComponent(
                     title = "List radio tweak",
-                    description = "List radio tweak summary",
-                    selectedValue = list.keys.last(),
+                    descriptionProvider = { "List radio tweak summary" },
+                    selectedValueProvider = { list.keys.last() },
                     options = list,
                     onValueChange = {},
                 )
 
                 ListRadioComponent(
                     title = "List radio tweak no summary",
-                    selectedValue = list.keys.last(),
+                    selectedValueProvider = { list.keys.last() },
                     options = list,
                     onValueChange = {},
                 )

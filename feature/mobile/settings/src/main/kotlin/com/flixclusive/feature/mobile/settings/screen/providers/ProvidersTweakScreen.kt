@@ -1,7 +1,6 @@
 package com.flixclusive.feature.mobile.settings.screen.providers
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.painter.Painter
@@ -42,31 +41,34 @@ internal class ProvidersTweakScreen(
 
     @Composable
     override fun getTweaks(): List<Tweak> {
+        val context = LocalContext.current
         val navigator = LocalSettingsNavigator.current!!
-        val providerPreferences by preferencesAsState.collectAsStateWithLifecycle()
+        val providerPreferences = preferencesAsState.collectAsStateWithLifecycle()
 
         return listOf(
             TweakUI.ClickableTweak(
                 title = stringResource(LocaleR.string.manage_providers),
-                description = stringResource(LocaleR.string.providers_button_settings_description),
+                descriptionProvider = { context.getString(LocaleR.string.providers_button_settings_description) },
                 iconId = UiCommonR.drawable.provider_logo,
                 onClick = navigator::openProvidersScreen,
             ),
             TweakUI.Divider,
-            getGeneralTweaks(providerPreferences),
-            getTestingTweaks(providerPreferences),
-            getDataTweaks(providerPreferences),
+            getGeneralTweaks({ providerPreferences.value }),
+            getTestingTweaks({ providerPreferences.value }),
+            getDataTweaks({ providerPreferences.value }),
         )
     }
 
     @Composable
-    private fun getGeneralTweaks(providerPreferences: ProviderPreferences): TweakGroup =
-        TweakGroup(
+    private fun getGeneralTweaks(providerPreferences: () -> ProviderPreferences): TweakGroup {
+        val context = LocalContext.current
+
+        return TweakGroup(
             title = stringResource(LocaleR.string.general),
             tweaks =
                 persistentListOf(
                     TweakUI.SwitchTweak(
-                        value = remember { mutableStateOf(providerPreferences.isAutoUpdateEnabled) },
+                        value = remember { mutableStateOf(providerPreferences().isAutoUpdateEnabled) },
                         title = stringResource(LocaleR.string.auto_update_providers),
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
@@ -75,9 +77,13 @@ internal class ProvidersTweakScreen(
                         },
                     ),
                     TweakUI.SwitchTweak(
-                        value = remember { mutableStateOf(providerPreferences.shouldWarnBeforeInstall) },
+                        value = remember { mutableStateOf(providerPreferences().shouldWarnBeforeInstall) },
                         title = stringResource(LocaleR.string.warn_on_unsafe_install),
-                        description = stringResource(LocaleR.string.warn_on_unsafe_install_description),
+                        descriptionProvider = {
+                            context.getString(
+                                LocaleR.string.warn_on_unsafe_install_description,
+                            )
+                        },
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
                                 oldValue.copy(shouldWarnBeforeInstall = it)
@@ -86,17 +92,23 @@ internal class ProvidersTweakScreen(
                     ),
                 ),
         )
+    }
 
     @Composable
-    private fun getTestingTweaks(providerPreferences: ProviderPreferences): TweakGroup =
-        TweakGroup(
+    private fun getTestingTweaks(providerPreferences: () -> ProviderPreferences): TweakGroup {
+        val context = LocalContext.current
+        return TweakGroup(
             title = stringResource(LocaleR.string.test),
             tweaks =
                 persistentListOf(
                     TweakUI.SwitchTweak(
-                        value = remember { mutableStateOf(providerPreferences.shouldAddDebugPrefix) },
+                        value = remember { mutableStateOf(providerPreferences().shouldAddDebugPrefix) },
                         title = stringResource(LocaleR.string.add_debug_prefix),
-                        description = stringResource(LocaleR.string.add_debug_prefix_settings_description),
+                        descriptionProvider = {
+                            context.getString(
+                                LocaleR.string.add_debug_prefix_settings_description,
+                            )
+                        },
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
                                 oldValue.copy(shouldAddDebugPrefix = it)
@@ -105,26 +117,33 @@ internal class ProvidersTweakScreen(
                     ),
                 ),
         )
+    }
 
     @Composable
-    private fun getDataTweaks(providerPreferences: ProviderPreferences): TweakGroup {
+    private fun getDataTweaks(providerPreferences: () -> ProviderPreferences): TweakGroup {
         val context = LocalContext.current
         val clearCachedLinksLabel = stringResource(LocaleR.string.clear_cached_links)
         val deleteProvidersLabel = stringResource(LocaleR.string.delete_providers)
         val deleteRepositoriesLabel = stringResource(LocaleR.string.delete_repositories)
         val warningLabel = stringResource(LocaleR.string.warning)
 
-        val formatWarningMessage = fun (action: String): String =
+        val formatWarningMessage = fun(action: String): String =
             context.getString(
                 LocaleR.string.action_warning_format_message,
                 action,
             )
 
-        val formatWarningCountDescription = fun (items: Int): String =
+        val formatWarningCountDescription = fun(items: Int): String =
             context.getString(
                 LocaleR.string.warn_delete_items_format,
                 items,
             )
+
+        val providers = remember { mutableStateOf(providerPreferences().providers) }
+        val onDeleteProviders = remember(viewModel) { viewModel::deleteProviders }
+
+        val repositories = remember { mutableStateOf(providerPreferences().repositories) }
+        val onDeleteRepositories = remember(viewModel) { viewModel::deleteRepositories }
 
         return TweakGroup(
             title = stringResource(LocaleR.string.data),
@@ -133,31 +152,41 @@ internal class ProvidersTweakScreen(
                     TweakUI.DialogTweak(
                         title = clearCachedLinksLabel,
                         dialogTitle = warningLabel,
-                        description =
-                            stringResource(
+                        enabledProvider = { viewModel.cachedLinksSize > 0 },
+                        descriptionProvider = {
+                            context.getString(
                                 LocaleR.string.cached_links_description_format,
                                 viewModel.cachedLinksSize,
-                            ),
+                            )
+                        },
                         dialogMessage = formatWarningMessage(clearCachedLinksLabel),
                         onConfirm = viewModel::clearCacheLinks,
                     ),
                     TweakUI.DialogTweak(
                         title = deleteProvidersLabel,
                         iconId = UiCommonR.drawable.warning_outline,
-                        enabled = providerPreferences.providers.isNotEmpty(),
-                        description = formatWarningCountDescription(providerPreferences.providers.size),
+                        enabledProvider = { providers.value.isNotEmpty() },
+                        descriptionProvider = { formatWarningCountDescription(providers.value.size) },
                         dialogTitle = warningLabel,
                         dialogMessage = formatWarningMessage(deleteProvidersLabel),
-                        onConfirm = viewModel::deleteProviders,
+                        onConfirm = {
+                            onDeleteProviders()
+                            providers.value = emptyList()
+                        },
                     ),
                     TweakUI.DialogTweak(
                         title = deleteRepositoriesLabel,
                         iconId = UiCommonR.drawable.warning_outline,
-                        enabled = providerPreferences.repositories.isNotEmpty(),
-                        description = formatWarningCountDescription(providerPreferences.repositories.size),
+                        enabledProvider = { repositories.value.isNotEmpty() },
+                        descriptionProvider = {
+                            formatWarningCountDescription(repositories.value.size,)
+                        },
                         dialogTitle = warningLabel,
                         dialogMessage = formatWarningMessage(deleteRepositoriesLabel),
-                        onConfirm = viewModel::deleteRepositories,
+                        onConfirm = {
+                            onDeleteRepositories()
+                            repositories.value = emptyList()
+                        },
                     ),
                 ),
         )

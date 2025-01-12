@@ -31,14 +31,14 @@ internal fun ColorPickerWithAlpha(
     title: String,
     selectedColor: Int,
     transparencyProvider: () -> Float,
-    enabled: Boolean,
+    enabledProvider: () -> Boolean,
     colors: List<Color>,
     onAlphaChange: (Float) -> Unit,
     onPick: (Color) -> Unit,
     modifier: Modifier = Modifier,
     description: String? = null,
 ) {
-    val currentColor = remember { mutableStateOf(Color(selectedColor)) }
+    val currentColor = remember { mutableStateOf(Color(selectedColor).copy(alpha = 1F)) }
     val interactionSource = remember { MutableInteractionSource() }
     val isSliding by interactionSource.collectIsDraggedAsState()
 
@@ -60,20 +60,22 @@ internal fun ColorPickerWithAlpha(
             description = description,
             selectedColor = currentColor.value.toArgb(),
             colors = colors,
-            enabled = enabled,
+            enabledProvider = enabledProvider,
             onPick = {
-                onPick(it)
+                onPickUpdated(it)
                 onAlphaChange(1F)
                 currentColor.value = it
             },
+            modifier = Modifier
+                .padding(top = getAdaptiveDp(10.dp))
         )
 
         SliderComponent(
             title = stringResource(LocaleR.string.bg_transparency),
-            description = String.format(Locale.getDefault(), "%.0f%%", transparencyProvider() * 100f),
+            descriptionProvider = { String.format(Locale.getDefault(), "%.0f%%", transparencyProvider() * 100f) },
             selectedValueProvider = transparencyProvider,
             interactionSource = interactionSource,
-            enabled = enabled,
+            enabledProvider = enabledProvider,
             range = 0F..1F,
             steps = 0,
             onValueChange = onAlphaChange,
@@ -94,7 +96,7 @@ private fun ColorPickerWithAlphaBasePreview() {
                 selectedColor = selectedColor,
                 transparencyProvider = { alpha },
                 title = "Subtitle",
-                enabled = true,
+                enabledProvider = { true },
                 colors =
                     listOf(
                         Color.White,

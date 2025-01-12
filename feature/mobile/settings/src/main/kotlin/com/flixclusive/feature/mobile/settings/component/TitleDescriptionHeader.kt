@@ -13,10 +13,11 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdapti
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 
+// TODO: Optimize
 @Composable
 internal fun TitleDescriptionHeader(
     title: String,
-    description: String?,
+    descriptionProvider: (() -> String)?,
     modifier: Modifier = Modifier,
     titleStyle: TextStyle = getAdaptiveTextStyle(
         style = TypographyStyle.Title,
@@ -39,9 +40,9 @@ internal fun TitleDescriptionHeader(
                 style = titleStyle,
             )
 
-            if (description?.isNotBlank() == true) {
+            if (descriptionProvider?.invoke()?.isNotEmpty() == true) {
                 Text(
-                    text = description,
+                    text = descriptionProvider(),
                     style = descriptionStyle,
                     maxLines = 10,
                 )

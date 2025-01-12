@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,20 +44,25 @@ internal class AppearanceTweakScreen(
         val uiPreferences by preferencesAsState.collectAsStateWithLifecycle()
 
         return listOf(
-            getGeneralTweaks(uiPreferences = uiPreferences),
+            getGeneralTweaks(shouldShowTitleOnCardsProvider = { uiPreferences.shouldShowTitleOnCards }),
         )
     }
 
     @Composable
-    private fun getGeneralTweaks(uiPreferences: UiPreferences): TweakGroup =
-        TweakGroup(
+    private fun getGeneralTweaks(shouldShowTitleOnCardsProvider: () -> Boolean): TweakGroup {
+        val context = LocalContext.current
+        return TweakGroup(
             title = stringResource(LocaleR.string.general),
             tweaks =
                 persistentListOf(
                     TweakUI.SwitchTweak(
                         title = stringResource(LocaleR.string.film_card_titles),
-                        description = stringResource(LocaleR.string.film_card_titles_settings_description),
-                        value = remember { mutableStateOf(uiPreferences.shouldShowTitleOnCards) },
+                        descriptionProvider = {
+                            context.getString(
+                                LocaleR.string.film_card_titles_settings_description,
+                            )
+                        },
+                        value = remember { mutableStateOf(shouldShowTitleOnCardsProvider()) },
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
                                 oldValue.copy(shouldShowTitleOnCards = it)
@@ -65,4 +71,5 @@ internal class AppearanceTweakScreen(
                     ),
                 ),
         )
+    }
 }

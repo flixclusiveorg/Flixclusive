@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,58 +25,61 @@ internal class DataTweakScreen(
     private val viewModel: SettingsViewModel,
 ) : BaseTweakScreen<DataPreferences> {
     override val key = UserPreferences.DATA_PREFS_KEY
-    override val preferencesAsState: StateFlow<DataPreferences>
-        = viewModel.getUserPrefsAsState<DataPreferences>(key)
-    override val onUpdatePreferences: suspend (suspend (DataPreferences) -> DataPreferences) -> Boolean
-        = { viewModel.updateUserPrefs(key, it) }
+    override val preferencesAsState: StateFlow<DataPreferences> = viewModel.getUserPrefsAsState<DataPreferences>(key)
+    override val onUpdatePreferences: suspend (suspend (DataPreferences) -> DataPreferences) -> Boolean =
+        { viewModel.updateUserPrefs(key, it) }
 
     @Composable
-    override fun getTitle(): String
-        = stringResource(LocaleR.string.data_and_backup)
+    override fun getTitle(): String = stringResource(LocaleR.string.data_and_backup)
 
     @Composable
-    override fun getIconPainter(): Painter
-        = painterResource(UiCommonR.drawable.database_icon_thin)
+    override fun getIconPainter(): Painter = painterResource(UiCommonR.drawable.database_icon_thin)
 
     @Composable
-    override fun getDescription(): String
-        = stringResource(LocaleR.string.appearance_settings_content_desc)
+    override fun getDescription(): String = stringResource(LocaleR.string.appearance_settings_content_desc)
 
     @Composable
     override fun getTweaks(): List<Tweak> {
         val dataPreferences by preferencesAsState.collectAsStateWithLifecycle()
+        val context = LocalContext.current
 
         return listOf(
             TweakUI.SwitchTweak(
                 value = remember { mutableStateOf(dataPreferences.isIncognito) },
                 title = stringResource(LocaleR.string.incognito),
-                description = stringResource(LocaleR.string.incognito_content_desc),
+                descriptionProvider = { context.getString(LocaleR.string.incognito_content_desc) },
                 onTweaked = {
                     onUpdatePreferences { oldValue ->
                         oldValue.copy(isIncognito = it)
                     }
-                }
+                },
             ),
-            getSearchTweaks(dataPreferences)
+            getSearchTweaks({ dataPreferences }),
         )
     }
 
     @Composable
-    private fun getSearchTweaks(
-        dataPreferences: DataPreferences
-    ): TweakGroup {
-        val searchHistoryCount by viewModel.searchHistoryCount.collectAsStateWithLifecycle()
+    private fun getSearchTweaks(dataPreferences: () -> DataPreferences): TweakGroup {
+        val context = LocalContext.current
+        val searchHistoryCount = viewModel.searchHistoryCount.collectAsStateWithLifecycle()
+        val onClearSearchHistory = remember(viewModel) { viewModel::clearSearchHistory }
 
         return TweakGroup(
             title = stringResource(LocaleR.string.search),
-            tweaks = persistentListOf(
-                TweakUI.ClickableTweak(
-                    title = stringResource(LocaleR.string.clear_search_history),
-                    enabled = searchHistoryCount > 0,
-                    description = stringResource(LocaleR.string.search_history_item_count_format, searchHistoryCount),
-                    onClick = viewModel::clearSearchHistory,
+            tweaks =
+                persistentListOf(
+                    TweakUI.ClickableTweak(
+                        title = stringResource(LocaleR.string.clear_search_history),
+                        enabledProvider = { searchHistoryCount.value > 0 },
+                        descriptionProvider = {
+                            context.getString(
+                                LocaleR.string.search_history_item_count_format,
+                                searchHistoryCount.value,
+                            )
+                        },
+                        onClick = onClearSearchHistory,
+                    ),
                 ),
-            )
         )
     }
 }

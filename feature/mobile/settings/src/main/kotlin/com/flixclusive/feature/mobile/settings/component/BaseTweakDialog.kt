@@ -29,7 +29,7 @@ internal fun BaseTweakDialog(
     title: String,
     onDismissRequest: () -> Unit,
     onConfirm: (() -> Unit)? = null,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     val buttonMinHeight = 50.dp
     val buttonShape = MaterialTheme.shapes.medium
@@ -39,9 +39,10 @@ internal fun BaseTweakDialog(
         action = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier
-                    .padding(horizontal = 10.dp)
-                    .padding(bottom = 10.dp)
+                modifier =
+                    Modifier
+                        .padding(horizontal = 10.dp)
+                        .padding(bottom = 10.dp),
             ) {
                 Button(
                     enabled = onConfirm != null,
@@ -49,56 +50,63 @@ internal fun BaseTweakDialog(
                         onConfirm?.invoke()
                         onDismissRequest()
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
                     shape = buttonShape,
-                    modifier = Modifier
-                        .weight(1F)
-                        .heightIn(min = getAdaptiveDp(buttonMinHeight))
+                    modifier =
+                        Modifier
+                            .weight(1F)
+                            .heightIn(min = getAdaptiveDp(buttonMinHeight)),
                 ) {
                     Text(
                         text = stringResource(id = R.string.confirm),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(end = 2.dp)
+                        modifier =
+                            Modifier
+                                .padding(end = 2.dp),
                     )
                 }
 
                 Button(
                     onClick = onDismissRequest,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = Color.Black
-                    ),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = Color.Black,
+                        ),
                     shape = buttonShape,
-                    modifier = Modifier
-                        .weight(1F)
-                        .heightIn(min = getAdaptiveDp(buttonMinHeight))
+                    modifier =
+                        Modifier
+                            .weight(1F)
+                            .heightIn(min = getAdaptiveDp(buttonMinHeight)),
                 ) {
                     Text(
                         text = stringResource(R.string.cancel),
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Light
+                        fontWeight = FontWeight.Light,
                     )
                 }
             }
-        }
+        },
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceEvenly,
         ) {
             Text(
                 text = title,
-                style = getAdaptiveTextStyle(
-                    style = TypographyStyle.Headline,
-                    mode = TextStyleMode.Emphasized,
-                    size = 20.sp
-                ),
-                modifier = Modifier
-                    .padding(10.dp)
+                style =
+                    getAdaptiveTextStyle(
+                        style = TypographyStyle.Headline,
+                        mode = TextStyleMode.Emphasized,
+                        size = 20.sp,
+                    ),
+                modifier =
+                    Modifier
+                        .padding(10.dp),
             )
 
             content()

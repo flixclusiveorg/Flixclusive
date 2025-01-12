@@ -20,25 +20,25 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun SliderComponent(
-    selectedValueProvider: () -> Float,
     title: String,
+    selectedValueProvider: () -> Float,
     onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier,
     range: ClosedFloatingPointRange<Float> = 0F..1F,
     steps: Int = 0,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    enabled: Boolean = true,
-    description: String? = null,
+    enabledProvider: () -> Boolean = { true },
+    descriptionProvider: (() -> String)? = null,
     icon: Painter? = null,
 ) {
     BaseTweakComponent(
         modifier = modifier,
         title = title,
-        description = description,
-        enabled = enabled,
+        descriptionProvider = descriptionProvider,
+        enabledProvider = enabledProvider,
         extraContent = {
             Slider(
-                enabled = enabled,
+                enabled = enabledProvider(),
                 value = selectedValueProvider(),
                 steps = steps,
                 valueRange = range,
@@ -75,7 +75,7 @@ private fun SliderComponentBasePreview() {
             Column {
                 SliderComponent(
                     title = "Slider tweak with icon",
-                    description = "Slider tweak summary",
+                    descriptionProvider = { "Slider tweak summary" },
                     icon = painterResource(UiCommonR.drawable.happy_emphasized),
                     selectedValueProvider = { value },
                     onValueChange = { value = it },
@@ -84,7 +84,7 @@ private fun SliderComponentBasePreview() {
                 )
                 SliderComponent(
                     title = "Slider tweak",
-                    description = "Slider tweak summary",
+                    descriptionProvider = { "Slider tweak summary" },
                     selectedValueProvider = { value2 },
                     onValueChange = { value2 = it },
                     range = 0F..1F,

@@ -1,13 +1,12 @@
 package com.flixclusive.feature.mobile.settings.screen.subtitles.component
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -28,8 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -43,61 +43,73 @@ import com.flixclusive.core.ui.common.util.boxShadow
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.settings.TweakPaddingHorizontal
 import com.flixclusive.feature.mobile.settings.component.TitleDescriptionHeader
+import com.flixclusive.feature.mobile.settings.util.betterClickable
 import kotlinx.collections.immutable.persistentListOf
+import kotlin.math.max
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-internal val availableColors = persistentListOf(
-    Color.White,
-    Color.Black,
-    Color.Red,
-    Color.Green,
-    Color.Blue,
-    Color.Yellow,
-    Color(0xFFFFA500),
-    Color(0xFF800080),
-    Color.Cyan,
-    Color.Gray,
-)
+internal val availableColors =
+    persistentListOf(
+        Color.White,
+        Color.Black,
+        Color.Red,
+        Color.Green,
+        Color.Blue,
+        Color.Yellow,
+        Color(0xFFFFA500),
+        Color(0xFF800080),
+        Color.Cyan,
+        Color.Gray,
+    )
 
 @Composable
 internal fun ColorPicker(
     title: String,
     selectedColor: Int,
-    enabled: Boolean,
+    enabledProvider: () -> Boolean,
     colors: List<Color>,
     onPick: (Color) -> Unit,
     modifier: Modifier = Modifier,
     description: String? = null,
 ) {
     val fontColor = remember { mutableIntStateOf(selectedColor) }
+    val verticalPadding = getAdaptiveDp(10.dp)
     val horizontalPadding = getAdaptiveDp(TweakPaddingHorizontal * 2F)
-    val alpha by animateFloatAsState(
-        label = "alpha",
-        targetValue = if (enabled) 1F else 0.6F,
-    )
 
-    Column(modifier = modifier.alpha(alpha)) {
+    val initialFirstVisibleItemIndex = remember { max(colors.indexOf(Color(fontColor.intValue)), 0) }
+    val listState =
+        rememberLazyListState(
+            initialFirstVisibleItemIndex = initialFirstVisibleItemIndex,
+        )
+
+    Column(
+        modifier =
+            modifier
+                .padding(vertical = verticalPadding)
+                .graphicsLayer {
+                    alpha = if (enabledProvider()) 1F else 0.6F
+                },
+    ) {
         TitleDescriptionHeader(
             title = title,
-            description = description,
-            modifier = Modifier
-                .padding(
-                    horizontal = horizontalPadding,
-                    vertical = getAdaptiveDp(10.dp),
-                )
+            descriptionProvider = { description ?: "" },
+            modifier =
+                Modifier
+                    .padding(horizontal = horizontalPadding),
         )
 
         LazyRow(
-            modifier = Modifier.padding(top = 15.dp),
+            modifier = Modifier.padding(top = verticalPadding),
+            state = listState,
             contentPadding = PaddingValues(horizontal = horizontalPadding),
             horizontalArrangement = Arrangement.spacedBy(25.dp),
-            userScrollEnabled = enabled,
+            userScrollEnabled = enabledProvider(),
         ) {
             items(items = colors) { color ->
                 ColorButton(
                     color = color,
-                    enabled = enabled,
+                    enabled = enabledProvider,
                     isSelected = fontColor.intValue == color.toArgb(),
                     onPick = {
                         onPick(color)
@@ -112,21 +124,24 @@ internal fun ColorPicker(
 @Composable
 private fun ColorButton(
     color: Color,
-    enabled: Boolean,
+    enabled: () -> Boolean,
     isSelected: Boolean,
     onPick: () -> Unit,
 ) {
     val size = getAdaptiveDp(45.dp)
     val shadowColor = MaterialTheme.colorScheme.surface.onMediumEmphasis(0.3F)
+    val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         contentAlignment = Alignment.Center,
         modifier =
             Modifier
-                .clickable(
-                    enabled = !isSelected && enabled,
+                .betterClickable(
+                    interactionSource = interactionSource,
                     onClick = onPick,
-                    interactionSource = remember { MutableInteractionSource() },
+                    enabled = enabled,
+                ).indication(
+                    interactionSource = interactionSource,
                     indication =
                         ripple(
                             bounded = false,
@@ -151,7 +166,7 @@ private fun ColorButton(
         )
 
         AnimatedVisibility(
-            visible = isSelected && enabled,
+            visible = isSelected && enabled(),
             enter = scaleIn(),
             exit = scaleOut() + fadeOut(),
             modifier =
@@ -196,7 +211,7 @@ private fun ColorPickerBasePreview() {
             ColorPicker(
                 selectedColor = selectedColor,
                 title = "Subtitle",
-                enabled = false,
+                enabledProvider = { false },
                 colors =
                     listOf(
                         Color.White,

@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.settings.component
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Column
@@ -44,37 +45,42 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 @Composable
 internal fun TextFieldComponent(
     title: String,
-    value: String,
-    description: String? = null,
-    icon: Painter? = null,
-    enabled: Boolean = true,
+    valueProvider: () -> String,
     modifier: Modifier = Modifier,
+    descriptionProvider: (() -> String)? = null,
+    enabledProvider: () -> Boolean = { true },
+    icon: Painter? = null,
     onValueChange: (String) -> Unit,
 ) {
     var isDialogShown by rememberSaveable { mutableStateOf(false) }
 
-    val onDismissRequest = fun () { isDialogShown = false }
+    val onDismissRequest = fun() {
+        isDialogShown = false
+    }
 
     ClickableComponent(
         modifier = modifier,
         title = title,
-        description = description,
-        enabled = enabled,
+        descriptionProvider = descriptionProvider,
+        enabledProvider = enabledProvider,
         icon = icon,
         onClick = { isDialogShown = true },
     )
 
     if (isDialogShown) {
-        var currentValue by remember { mutableStateOf(value.createTextFieldValue()) }
+        var currentValue by remember { mutableStateOf(valueProvider().createTextFieldValue()) }
 
         BaseTweakDialog(
             title = title,
             onDismissRequest = onDismissRequest,
-            onConfirm = if (currentValue.text != value && currentValue.text.isNotBlank()) {
-                fun () {
-                    onValueChange(currentValue.text)
-                }
-            } else null
+            onConfirm =
+                if (currentValue.text != valueProvider() && currentValue.text.isNotBlank()) {
+                    fun() {
+                        onValueChange(currentValue.text)
+                    }
+                } else {
+                    null
+                },
         ) {
             val defaultContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
 
@@ -84,46 +90,43 @@ internal fun TextFieldComponent(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 isError = currentValue.text.isEmpty(),
                 trailingIcon = {
-                    androidx.compose.animation.AnimatedVisibility(
+                    AnimatedVisibility(
                         visible = currentValue.text.isNotEmpty(),
                         enter = scaleIn(),
                         exit = scaleOut(),
                     ) {
-                        IconButton(
-                            onClick = { currentValue = "".createTextFieldValue() }
-                        ) {
+                        IconButton(onClick = { currentValue = "".createTextFieldValue() }) {
                             Icon(
                                 painter = painterResource(UiCommonR.drawable.outline_close_square),
-                                contentDescription = stringResource(LocaleR.string.clear_text_button)
+                                contentDescription = stringResource(LocaleR.string.clear_text_button),
                             )
                         }
                     }
                 },
-                textStyle = getAdaptiveTextStyle(
-                    size = 16.sp,
-                    style = TypographyStyle.Body,
-                    mode = TextStyleMode.Normal
-                ).copy(
-                    textAlign = TextAlign.Start
-                ),
+                textStyle =
+                    getAdaptiveTextStyle(
+                        size = 16.sp,
+                        style = TypographyStyle.Body,
+                        mode = TextStyleMode.Normal,
+                    ).copy(
+                        textAlign = TextAlign.Start,
+                    ),
                 singleLine = true,
                 shape = MaterialTheme.shapes.small,
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = defaultContainerColor,
-                    focusedContainerColor = defaultContainerColor,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                ),
-                modifier = Modifier
-                    .showSoftKeyboard(true)
-                    .clearFocusOnSoftKeyboardHide()
-                    .fillMaxWidth()
-                    .height(
+                colors =
+                    TextFieldDefaults.colors(
+                        unfocusedContainerColor = defaultContainerColor,
+                        focusedContainerColor = defaultContainerColor,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                    ),
+                modifier =
+                    Modifier.showSoftKeyboard(true).clearFocusOnSoftKeyboardHide().fillMaxWidth().height(
                         getAdaptiveDp(
                             dp = 65.dp,
-                            increaseBy = 15.dp
-                        )
-                    )
+                            increaseBy = 15.dp,
+                        ),
+                    ),
             )
         }
     }
@@ -136,28 +139,28 @@ private fun TextFieldComponentBasePreview() {
 
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Column {
                 TextFieldComponent(
                     title = "TextField tweak with icon",
-                    description = "TextField tweak summary",
+                    descriptionProvider = { "TextField tweak summary" },
                     icon = painterResource(UiCommonR.drawable.happy_emphasized),
-                    value = value,
-                    onValueChange = { value = it }
+                    valueProvider = { value },
+                    onValueChange = { value = it },
                 )
 
                 TextFieldComponent(
                     title = "TextField tweak",
-                    description = "TextField tweak summary",
-                    value = value,
-                    onValueChange = { value = it }
+                    descriptionProvider = { "TextField tweak summary" },
+                    valueProvider = { value },
+                    onValueChange = { value = it },
                 )
 
                 TextFieldComponent(
                     title = "TextField tweak no summary",
-                    value = value,
-                    onValueChange = { value = it }
+                    valueProvider = { value },
+                    onValueChange = { value = it },
                 )
             }
         }

@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.settings
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,8 +21,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +49,8 @@ import com.flixclusive.feature.mobile.settings.component.TitleDescriptionHeader
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsSearchQuery
 import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 internal val TweakPaddingHorizontal = 10.dp
@@ -66,23 +68,30 @@ internal fun TweakScaffold(
     val settingsSearchQuery = LocalSettingsSearchQuery.current
     var tweaksFiltered by remember { mutableStateOf<List<Tweak>?>(null) }
 
-    LaunchedEffect(tweaks, settingsSearchQuery) {
-        if (settingsSearchQuery.isEmpty()) {
-            tweaksFiltered = null
-            return@LaunchedEffect
-        }
+    LaunchedEffect(settingsSearchQuery) {
+        snapshotFlow {
+            settingsSearchQuery.value
+        }.distinctUntilChanged()
+            .collectLatest { query ->
+                if (query.isEmpty()) {
+                    tweaksFiltered = null
+                    return@collectLatest
+                }
 
-        delay(800)
-        tweaksFiltered = tweaks.fastFlatMap {
-            when (it) {
-                is TweakGroup -> it.tweaks
-                is TweakUI<*> -> listOf(it)
-                else -> emptyList()
+                delay(800)
+                tweaksFiltered =
+                    tweaks
+                        .fastFlatMap {
+                            when (it) {
+                                is TweakGroup -> it.tweaks
+                                is TweakUI<*> -> listOf(it)
+                                else -> emptyList()
+                            }
+                        }.fastFilter {
+                            it.descriptionProvider?.invoke()?.contains(query, true) == true ||
+                                it.title.contains(query, true)
+                        }
             }
-        }.fastFilter {
-            it.description?.contains(settingsSearchQuery, true) == true ||
-                it.title.contains(settingsSearchQuery, true)
-        }
     }
 
     LazyColumn(
@@ -94,9 +103,9 @@ internal fun TweakScaffold(
                     title = title,
                     description = description,
                     modifier =
-                    Modifier
-                        .padding(horizontal = screenPadding)
-                        .animateItem(),
+                        Modifier
+                            .padding(horizontal = screenPadding)
+                            .animateItem(),
                 )
             }
 
@@ -154,28 +163,23 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
 
             is TweakGroup -> {
                 item(key = tweak.title) {
-                    val alpha by animateFloatAsState(
-                        label = "alpha",
-                        targetValue = if (tweak.enabled) 1F else 0.6F,
-                    )
-
                     TitleDescriptionHeader(
                         title = tweak.title,
-                        description = tweak.description,
+                        descriptionProvider = tweak.descriptionProvider,
                         titleStyle =
                             getEmphasizedLabel(
                                 size = 20.sp,
                                 letterSpacing = 0.1.sp,
                             ).copy(color = LocalContentColor.current.onMediumEmphasis(0.8F)),
                         modifier =
-                        Modifier
-                            .animateItem()
-                            .alpha(alpha)
-                            .padding(
-                                bottom = getAdaptiveDp(10.dp),
-                                top = TweakGroupSpacing,
-                            )
-                            .padding(horizontal = TweakPaddingHorizontal),
+                            Modifier
+                                .animateItem()
+                                .graphicsLayer {
+                                    alpha = if (tweak.enabledProvider()) 1F else 0.6F
+                                }.padding(
+                                    bottom = getAdaptiveDp(10.dp),
+                                    top = TweakGroupSpacing,
+                                ).padding(horizontal = TweakPaddingHorizontal),
                     )
                 }
 
@@ -186,7 +190,7 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                     )
                 }
 
-                item {
+                item(key = "${tweak.title}-$i-divider") {
                     if (i < tweaks.lastIndex) {
                         Spacer(modifier = Modifier.height(getAdaptiveDp(TweakGroupSpacing)))
                     }
@@ -222,8 +226,8 @@ private fun RenderTweakUi(
             BaseTweakComponent(
                 modifier = modifier,
                 title = tweak.title,
-                description = tweak.description,
-                enabled = tweak.enabled,
+                descriptionProvider = tweak.descriptionProvider,
+                enabledProvider = tweak.enabledProvider,
                 startContent = {
                     AdaptiveIcon(
                         imageVector = Icons.Outlined.Info,
@@ -238,12 +242,12 @@ private fun RenderTweakUi(
             SliderComponent(
                 modifier = modifier,
                 title = tweak.title,
-                description = tweak.description,
+                descriptionProvider = tweak.descriptionProvider,
                 icon = icon,
                 selectedValueProvider = { tweak.value.value },
                 range = tweak.range,
                 steps = tweak.steps,
-                enabled = tweak.enabled,
+                enabledProvider = tweak.enabledProvider,
                 onValueChange = {
                     scope.launch {
                         if (tweak.onTweaked(it)) {
@@ -258,11 +262,11 @@ private fun RenderTweakUi(
             SwitchComponent(
                 modifier = modifier,
                 title = tweak.title,
-                description = tweak.description,
+                descriptionProvider = tweak.descriptionProvider,
                 icon = icon,
-                enabled = tweak.enabled,
-                checked = tweak.value.value,
-                onCheckedChanged = {
+                enabledProvider = tweak.enabledProvider,
+                checked = { tweak.value.value },
+                onCheckedChange = {
                     scope.launch {
                         if (tweak.onTweaked(it)) {
                             tweak.value.value = it
@@ -276,10 +280,10 @@ private fun RenderTweakUi(
             TextFieldComponent(
                 modifier = modifier,
                 title = tweak.title,
-                description = tweak.description,
+                descriptionProvider = tweak.descriptionProvider,
                 icon = icon,
-                value = tweak.value.value,
-                enabled = tweak.enabled,
+                valueProvider = { tweak.value.value },
+                enabledProvider = tweak.enabledProvider,
                 onValueChange = {
                     scope.launch {
                         if (tweak.onTweaked(it)) {
@@ -294,12 +298,12 @@ private fun RenderTweakUi(
             ListRadioComponent(
                 modifier = modifier,
                 title = tweak.title,
-                description = tweak.description,
+                descriptionProvider = tweak.descriptionProvider,
                 icon = icon,
                 endContent = tweak.endContent,
                 options = tweak.options,
-                selectedValue = tweak.value.value,
-                enabled = tweak.enabled,
+                selectedValueProvider = { tweak.value.value },
+                enabledProvider = tweak.enabledProvider,
                 onValueChange = {
                     scope.launch {
                         if (tweak.internalOnValueChanged(it!!)) {
@@ -314,12 +318,12 @@ private fun RenderTweakUi(
             ListSelectComponent(
                 modifier = modifier,
                 title = tweak.title,
-                description = tweak.description,
+                descriptionProvider = tweak.descriptionProvider,
                 icon = icon,
                 endContent = tweak.endContent,
                 options = tweak.options,
-                selectedValues = tweak.values.value,
-                enabled = tweak.enabled,
+                selectedValuesProvider = { tweak.values.value },
+                enabledProvider = tweak.enabledProvider,
                 onValueChange = {
                     scope.launch {
                         if (tweak.internalOnValueChanged(it)) {
@@ -334,10 +338,10 @@ private fun RenderTweakUi(
             ClickableComponent(
                 modifier = modifier,
                 title = tweak.title,
-                description = tweak.description,
+                descriptionProvider = tweak.descriptionProvider,
                 icon = icon,
                 onClick = tweak.onClick,
-                enabled = tweak.enabled,
+                enabledProvider = tweak.enabledProvider,
             )
         }
 
@@ -345,11 +349,11 @@ private fun RenderTweakUi(
             DialogComponent(
                 modifier = modifier,
                 title = tweak.title,
-                description = tweak.description,
+                descriptionProvider = tweak.descriptionProvider,
                 dialogTitle = tweak.dialogTitle,
                 dialogMessage = tweak.dialogMessage,
                 icon = icon,
-                enabled = tweak.enabled,
+                enabledProvider = tweak.enabledProvider,
                 onConfirm = tweak.onConfirm,
             )
         }

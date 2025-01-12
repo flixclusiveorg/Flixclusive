@@ -17,6 +17,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
@@ -34,54 +35,64 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.LabeledCheckbox
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.toImmutableMap
 import kotlin.math.max
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun <T> ListSelectComponent(
-    selectedValues: Set<T>,
+    selectedValuesProvider: () -> Set<T>,
     title: String,
-    options: Map<out T, String>,
-    description: String? = null,
-    icon: Painter? = null,
-    enabled: Boolean = true,
-    endContent: @Composable (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
+    options: ImmutableMap<out T, String>,
     onValueChange: (Set<T>) -> Unit,
+    modifier: Modifier = Modifier,
+    icon: Painter? = null,
+    descriptionProvider: (() -> String)? = null,
+    enabledProvider: () -> Boolean = { true },
+    endContent: @Composable (() -> Unit)? = null,
 ) {
     var isDialogShown by rememberSaveable { mutableStateOf(false) }
 
-    val onDismissRequest = fun () { isDialogShown = false }
+    val onDismissRequest = fun() {
+        isDialogShown = false
+    }
 
     ClickableComponent(
         modifier = modifier,
         title = title,
-        description = description,
+        descriptionProvider = descriptionProvider,
         endContent = endContent,
-        enabled = enabled,
+        enabledProvider = enabledProvider,
         icon = icon,
         onClick = { isDialogShown = true },
     )
 
     if (isDialogShown) {
+        val selectedValuesProviderUpdated by rememberUpdatedState(selectedValuesProvider)
         val selected by remember {
             derivedStateOf {
                 options.keys
-                    .filter { selectedValues.contains(it) }
+                    .filter { selectedValuesProviderUpdated().contains(it) }
                     .toMutableStateList()
             }
         }
 
-        val indexOfSelected = remember {
-            options.keys
-                .indexOfFirst { it == selected.firstOrNull() }
-        }
+        val indexOfSelected =
+            remember {
+                options.keys
+                    .indexOfFirst { it == selected.firstOrNull() }
+            }
 
-        val listState = rememberLazyListState(
-            initialFirstVisibleItemIndex = max(indexOfSelected, 0)
-        )
+        val listState =
+            rememberLazyListState(
+                initialFirstVisibleItemIndex = max(indexOfSelected, 0),
+            )
 
-        val onSelect = fun (isAdding: Boolean, option: T) {
+        val onSelect = fun(
+            isAdding: Boolean,
+            option: T,
+        ) {
             when {
                 isAdding -> selected.add(option)
                 else -> selected.remove(option)
@@ -91,12 +102,13 @@ internal fun <T> ListSelectComponent(
         BaseTweakDialog(
             title = title,
             onDismissRequest = onDismissRequest,
-            onConfirm = { onValueChange(selected.toSet()) }
+            onConfirm = { onValueChange(selected.toSet()) },
         ) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .heightIn(max = getAdaptiveDp(400.dp, 50.dp))
+                modifier =
+                    Modifier
+                        .heightIn(max = getAdaptiveDp(400.dp, 50.dp)),
             ) {
                 options.forEach { (option, label) ->
                     val isSelected = selected.contains(option)
@@ -105,25 +117,32 @@ internal fun <T> ListSelectComponent(
                         LabeledCheckbox(
                             checked = isSelected,
                             onCheckedChange = { onSelect(it, option) },
-                            modifier = Modifier
-                                .clip(MaterialTheme.shapes.small)
-                                .clickable(onClick = { onSelect(!isSelected, option) })
-                                .fillMaxWidth()
-                                .minimumInteractiveComponentSize()
-                                .padding(horizontal = getAdaptiveDp(10.dp)),
+                            modifier =
+                                Modifier
+                                    .clip(MaterialTheme.shapes.small)
+                                    .clickable(onClick = { onSelect(!isSelected, option) })
+                                    .fillMaxWidth()
+                                    .minimumInteractiveComponentSize()
+                                    .padding(horizontal = getAdaptiveDp(10.dp)),
                         ) {
                             Text(
                                 text = label,
-                                style = getAdaptiveTextStyle(
-                                    style = TypographyStyle.Title
-                                ).copy(
-                                    fontSize = 16.sp,
-                                    fontWeight = if(isSelected) FontWeight.Medium else FontWeight.Normal,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
-                                ),
-                                modifier = Modifier
-                                    .padding(start = getAdaptiveDp(10.dp))
+                                style =
+                                    getAdaptiveTextStyle(
+                                        style = TypographyStyle.Title,
+                                    ).copy(
+                                        fontSize = 16.sp,
+                                        fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+                                        color =
+                                            if (isSelected) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
+                                            },
+                                    ),
+                                modifier =
+                                    Modifier
+                                        .padding(start = getAdaptiveDp(10.dp)),
                             )
                         }
                     }
@@ -137,37 +156,39 @@ internal fun <T> ListSelectComponent(
 @Composable
 private fun ListSelectComponentBasePreview() {
     var selected by remember { mutableStateOf(setOf<String>()) }
-    val list = List(20) {
-        "Option $it"
-    }.associateWith { it }
+    val list =
+        List(20) {
+            "Option $it"
+        }.associateWith { it }
+            .toImmutableMap()
 
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Column {
                 ListSelectComponent(
                     title = "List select tweak with icon",
-                    description = "List select tweak summary",
+                    descriptionProvider = { "List select tweak summary" },
                     icon = painterResource(UiCommonR.drawable.happy_emphasized),
-                    selectedValues = selected,
+                    selectedValuesProvider = { selected },
                     options = list,
-                    onValueChange = { selected = it }
+                    onValueChange = { selected = it },
                 )
 
                 ListSelectComponent(
                     title = "List select tweak",
-                    description = "List select tweak summary",
-                    selectedValues = selected.toSet(),
+                    descriptionProvider = { "List select tweak summary" },
+                    selectedValuesProvider = { selected.toSet() },
                     options = list,
-                    onValueChange = { selected = it }
+                    onValueChange = { selected = it },
                 )
 
                 ListSelectComponent(
                     title = "List select tweak no summary",
-                    selectedValues = selected.toSet(),
+                    selectedValuesProvider = { selected.toSet() },
                     options = list,
-                    onValueChange = { selected = it }
+                    onValueChange = { selected = it },
                 )
             }
         }

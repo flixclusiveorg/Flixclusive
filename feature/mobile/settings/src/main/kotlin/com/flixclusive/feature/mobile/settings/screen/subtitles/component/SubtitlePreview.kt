@@ -1,8 +1,6 @@
 package com.flixclusive.feature.mobile.settings.screen.subtitles.component
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
@@ -12,9 +10,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -27,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,24 +41,19 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun SubtitlePreview(
-    subtitlePreferences: SubtitlesPreferences
+    subtitlePreferencesProvider: () -> SubtitlesPreferences,
+    areSubtitlesAvailableProvider: () -> Boolean,
 ) {
     val shape = MaterialTheme.shapes.medium
-    val alpha =
-        animateFloatAsState(
-            targetValue = if (subtitlePreferences.isSubtitleEnabled) 1F else 0.4F,
-            label = "PreviewAlpha",
-        )
 
-    val subtitlesTextStyle = remember(subtitlePreferences) {
-        with (subtitlePreferences) {
+    val subtitlesTextStyle =
+        with(subtitlePreferencesProvider()) {
             subtitleFontStyle.getTextStyle().copy(
                 textAlign = TextAlign.Center,
                 color = Color(subtitleColor),
                 fontSize = subtitleSize.sp,
             )
         }
-    }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -74,7 +68,7 @@ internal fun SubtitlePreview(
                     elevation = 15.dp,
                     shape = shape,
                 ).graphicsLayer {
-                    this@graphicsLayer.alpha = alpha.value
+                    alpha = if (areSubtitlesAvailableProvider()) 1F else 0.4F
                 },
     ) {
         Image(
@@ -87,29 +81,35 @@ internal fun SubtitlePreview(
                     .height(getAdaptiveDp(90.dp)),
         )
 
-        if (subtitlePreferences.subtitleEdgeType == CaptionEdgeTypePreference.Drop_Shadow) {
+        if (subtitlePreferencesProvider().subtitleEdgeType == CaptionEdgeTypePreference.Drop_Shadow) {
             DropShadowTextPreview(
                 style = subtitlesTextStyle,
-                subtitleBackgroundColor = subtitlePreferences.subtitleBackgroundColor,
+                subtitleBackgroundColor = { subtitlePreferencesProvider().subtitleBackgroundColor },
             )
         } else {
-            OutlineTextPreview(style = subtitlesTextStyle)
+            OutlineTextPreview(
+                style = subtitlesTextStyle,
+                subtitleBackgroundColor = { subtitlePreferencesProvider().subtitleBackgroundColor },
+            )
         }
     }
 }
 
 @Composable
 internal fun DropShadowTextPreview(
-    subtitleBackgroundColor: Int,
+    subtitleBackgroundColor: () -> Int,
     style: TextStyle,
 ) {
     Box(
         modifier =
-            Modifier
-                .background(Color(subtitleBackgroundColor)),
+            Modifier.drawBehind {
+                drawRect(Color(subtitleBackgroundColor()))
+            },
     ) {
         Text(
             text = stringResource(LocaleR.string.sample_subtitle_text),
+            maxLines = 1,
+            overflow = TextOverflow.Clip,
             style =
                 style.copy(
                     shadow =
@@ -123,7 +123,10 @@ internal fun DropShadowTextPreview(
 }
 
 @Composable
-internal fun OutlineTextPreview(style: TextStyle) {
+internal fun OutlineTextPreview(
+    subtitleBackgroundColor: () -> Int,
+    style: TextStyle,
+) {
     OutlinedText(
         text = stringResource(LocaleR.string.sample_subtitle_text),
         style = style,
@@ -133,6 +136,10 @@ internal fun OutlineTextPreview(style: TextStyle) {
                 width = 10F,
                 join = StrokeJoin.Round,
             ),
+        modifier =
+            Modifier.drawBehind {
+                drawRect(Color(subtitleBackgroundColor()))
+            },
     )
 }
 
@@ -142,9 +149,12 @@ private fun SubtitlePreviewBasePreview() {
     FlixclusiveTheme {
         Surface {
             SubtitlePreview(
-                subtitlePreferences = SubtitlesPreferences(
-                    subtitleEdgeType = CaptionEdgeTypePreference.Outline
-                ),
+                areSubtitlesAvailableProvider = { false },
+                subtitlePreferencesProvider = {
+                    SubtitlesPreferences(
+                        subtitleEdgeType = CaptionEdgeTypePreference.Outline,
+                    )
+                }
             )
         }
     }

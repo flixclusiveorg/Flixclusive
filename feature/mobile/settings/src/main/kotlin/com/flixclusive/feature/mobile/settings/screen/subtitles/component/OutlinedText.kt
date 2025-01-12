@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.invisibleToUser
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 internal fun OutlinedText(
@@ -22,6 +23,8 @@ internal fun OutlinedText(
             text = text,
             modifier = Modifier.semantics { invisibleToUser() },
             color = Color.Black,
+            maxLines = 1,
+            overflow = TextOverflow.Clip,
             style = style.copy(
                 shadow = null,
                 drawStyle = outlineDrawStyle,
@@ -31,6 +34,8 @@ internal fun OutlinedText(
         Text(
             text = text,
             style = style,
+            maxLines = 1,
+            overflow = TextOverflow.Clip,
         )
     }
 }

@@ -16,18 +16,18 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 internal fun ClickableComponent(
     title: String,
     onClick: () -> Unit,
-    enabled: Boolean = true,
-    description: String? = null,
-    icon: Painter? = null,
     modifier: Modifier = Modifier,
+    enabledProvider: () -> Boolean = { true },
+    descriptionProvider: (() -> String)? = null,
+    icon: Painter? = null,
     endContent: @Composable (() -> Unit)? = null,
 ) {
     BaseTweakComponent(
         modifier = modifier,
         title = title,
-        description = description,
+        descriptionProvider = descriptionProvider,
+        enabledProvider = enabledProvider,
         endContent = endContent,
-        enabled = enabled,
         startContent =
             if (icon != null) {
                 {
@@ -36,7 +36,9 @@ internal fun ClickableComponent(
                         contentDescription = null,
                     )
                 }
-            } else null,
+            } else {
+                null
+            },
         onClick = onClick,
     )
 }
@@ -46,18 +48,18 @@ internal fun ClickableComponent(
 private fun ClickableComponentBasePreview() {
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Column {
                 ClickableComponent(
                     title = "Clickable tweak with icon",
-                    description = "Clickable tweak summary",
+                    descriptionProvider = { "Clickable tweak summary" },
                     icon = painterResource(UiCommonR.drawable.happy_emphasized),
                     onClick = {},
                 )
                 ClickableComponent(
                     title = "Clickable tweak",
-                    description = "Clickable tweak summary",
+                    descriptionProvider = { "Clickable tweak summary" },
                     onClick = {},
                 )
             }
