@@ -1,15 +1,14 @@
 package com.flixclusive.feature.mobile.user.edit
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.data.watchlist.WatchlistRepository
 import com.flixclusive.model.database.User
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.flixclusive.core.locale.R as LocaleR
 
@@ -38,19 +37,19 @@ internal class UserEditViewModel @Inject constructor(
     private val watchHistoryRepository: WatchHistoryRepository
 ) : ViewModel() {
     fun onRemoveUser(userId: Int) {
-        viewModelScope.launch {
+        launchOnIO {
             userRepository.deleteUser(userId)
         }
     }
 
     fun onEditUser(user: User) {
-        viewModelScope.launch {
+        launchOnIO {
             userRepository.updateUser(user)
         }
     }
 
     fun onClearSearchHistory(userId: Int) {
-        viewModelScope.launch {
+        launchOnIO {
             searchHistoryRepository.clearAll(ownerId = userId)
         }
     }
@@ -59,7 +58,7 @@ internal class UserEditViewModel @Inject constructor(
         userId: Int,
         libraries: List<Library>
     ) {
-        viewModelScope.launch {
+        launchOnIO {
             libraries.forEach {
                 when (it) {
                     is Library.Watchlist -> watchlistRepository.removeAll(userId)
