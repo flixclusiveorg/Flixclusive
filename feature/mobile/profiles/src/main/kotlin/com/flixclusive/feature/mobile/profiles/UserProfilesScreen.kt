@@ -41,6 +41,7 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -68,12 +69,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
+import com.flixclusive.core.ui.common.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.ui.common.navigation.navigator.AddProfileAction
 import com.flixclusive.core.ui.common.navigation.navigator.EditUserAction
 import com.flixclusive.core.ui.common.navigation.navigator.ExitAction
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.OpenPinScreenAction
+import com.flixclusive.core.ui.common.navigation.navigator.PinAction
 import com.flixclusive.core.ui.common.navigation.navigator.SelectAvatarAction
-import com.flixclusive.core.ui.common.navigation.navigator.SetupPinAction
 import com.flixclusive.core.ui.common.navigation.navigator.StartHomeScreenAction
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
@@ -82,6 +85,8 @@ import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideShared
 import com.flixclusive.feature.mobile.profiles.util.UxUtil.getSlidingTransition
 import com.flixclusive.model.database.User
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.result.NavResult
+import com.ramcosta.composedestinations.result.OpenResultRecipient
 import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -91,15 +96,16 @@ interface UserProfilesScreenNavigator :
     GoBackAction,
     StartHomeScreenAction,
     AddProfileAction,
-    SetupPinAction,
+    OpenPinScreenAction,
     SelectAvatarAction,
     EditUserAction
 
 @Destination
 @Composable
-internal fun UserProfilesScreen(
+fun UserProfilesScreen(
     navigator: UserProfilesScreenNavigator,
     isFromSplashScreen: Boolean,
+    pinVerifyResultRecipient: OpenResultRecipient<PinVerificationResult>,
     viewModel: UserProfilesViewModel = hiltViewModel(),
 ) {
     val profiles by viewModel.profiles.collectAsStateWithLifecycle()
@@ -141,6 +147,15 @@ internal fun UserProfilesScreen(
     val lastScreenTypeUsed = rememberSaveable { mutableStateOf(ScreenType.Pager) }
     val isContinueScreenLoading = rememberSaveable { mutableStateOf(false) }
     var clickedProfile by remember { mutableStateOf<User?>(null) }
+
+    pinVerifyResultRecipient.onNavResult { result ->
+        if (result is NavResult.Value && result.value.isVerified) {
+            viewModel.onUseProfile(result.value.user)
+        } else if (result is NavResult.Value) {
+            clickedProfile = result.value.user
+            isContinueScreenLoading.value = false
+        }
+    }
 
     Box(
         modifier =
@@ -208,7 +223,15 @@ internal fun UserProfilesScreen(
                                         ClickedProfileScreen(
                                             clickedProfile = profile,
                                             isLoading = isContinueScreenLoading,
-                                            onConfirm = { viewModel.onUseProfile(profile) },
+                                            onConfirm = {
+                                                if (profile.pin.isNullOrEmpty()) {
+                                                    viewModel.onUseProfile(profile)
+                                                } else {
+                                                    navigator.openUserPinScreen(
+                                                        PinAction.Verify(profile),
+                                                    )
+                                                }
+                                            },
                                             onBack = {
                                                 screenType.value = lastScreenTypeUsed.value
                                             },
@@ -517,6 +540,13 @@ private fun UserProfilesScreenBasePreview() {
         ) {
             UserProfilesScreen(
                 isFromSplashScreen = false,
+                pinVerifyResultRecipient =
+                    object : OpenResultRecipient<PinVerificationResult> {
+                        @Composable
+                        override fun onNavResult(
+                            listener: @DisallowComposableCalls ((NavResult<PinVerificationResult>) -> Unit),
+                        ) = Unit
+                    },
                 navigator =
                     object : UserProfilesScreenNavigator {
                         override fun goBack() = Unit
@@ -531,10 +561,7 @@ private fun UserProfilesScreenBasePreview() {
 
                         override fun openUserAvatarSelectScreen(selected: Int) = Unit
 
-                        override fun openUserPinSetupScreen(
-                            currentPin: String?,
-                            isRemovingPin: Boolean,
-                        ) = Unit
+                        override fun openUserPinScreen(action: PinAction) = Unit
                     },
             )
         }

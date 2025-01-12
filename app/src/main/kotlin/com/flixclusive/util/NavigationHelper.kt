@@ -22,10 +22,14 @@ import androidx.navigation.NavGraph
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
 import com.flixclusive.ROOT
+import com.flixclusive.core.ui.common.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
+import com.flixclusive.feature.mobile.profiles.UserProfilesScreen
+import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
 import com.flixclusive.feature.mobile.user.add.AddUserScreen
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.mobile.MobileAppNavigator
 import com.flixclusive.mobile.MobileNavGraphs
@@ -154,6 +158,18 @@ internal fun AppNavHost(
                     ),
                     avatarResultRecipient = resultRecipient<UserAvatarSelectScreenDestination, Int>(),
                     pinResultRecipient = resultRecipient<PinSetupScreenDestination, PinWithHintResult>(),
+                )
+            }
+
+            composable(UserProfilesScreenDestination) {
+                UserProfilesScreen(
+                    isFromSplashScreen = navArgs.isFromSplashScreen,
+                    navigator = mobileNavigator(
+                        navBackStackEntry = navBackStackEntry,
+                        closeApp = closeApp,
+                        navController = navController
+                    ),
+                    pinVerifyResultRecipient = resultRecipient<PinVerifyScreenDestination, PinVerificationResult>()
                 )
             }
         }

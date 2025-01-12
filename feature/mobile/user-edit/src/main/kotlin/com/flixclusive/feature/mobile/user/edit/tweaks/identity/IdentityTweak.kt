@@ -13,7 +13,7 @@ internal class IdentityTweak(
     private val initialName: String,
     private val userHasPin: Boolean,
     private val onNameChange: (String) -> Unit,
-    private val onSetupPin: (isRemoving: Boolean) -> Unit,
+    private val onOpenPinScreen: (isRemoving: Boolean) -> Unit,
 ) : BaseProfileTweak {
     @Composable
     override fun getLabel()
@@ -30,7 +30,7 @@ internal class IdentityTweak(
                 label = UiText.StringResource(LocaleR.string.pin),
                 description = if (userHasPin) UiText.StringResource(LocaleR.string.pin_remove_content_desc) else UiText.StringResource(LocaleR.string.pin_content_desc),
                 icon = IconResource.fromDrawableResource(UiCommonR.drawable.pin_lock),
-                onClick = { onSetupPin(userHasPin) }
+                onClick = { onOpenPinScreen(userHasPin) }
             ),
         )
     }

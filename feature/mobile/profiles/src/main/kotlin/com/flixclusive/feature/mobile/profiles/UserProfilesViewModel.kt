@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.profiles
 
+import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
@@ -12,12 +13,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
-internal class UserProfilesViewModel
+class UserProfilesViewModel
     @Inject
     constructor(
         private val userSessionManager: UserSessionManager,
@@ -29,6 +31,7 @@ internal class UserProfilesViewModel
         val profiles =
             userRepository
                 .observeUsers()
+                .mapLatest { it.filterOutCurrentLoggedInUser() }
                 .stateIn(
                     scope = viewModelScope,
                     started = WhileSubscribed(5000),
@@ -49,8 +52,11 @@ internal class UserProfilesViewModel
         private suspend fun signOutOldSession() {
             userSessionManager.signOut()
         }
+
+        private fun List<User>.filterOutCurrentLoggedInUser()
+            = fastFilter { it.id != userSessionManager.currentUser.value?.id }
     }
 
-internal data class ProfilesScreenUiState(
+data class ProfilesScreenUiState(
     val isLoggingIn: Boolean = false,
 )

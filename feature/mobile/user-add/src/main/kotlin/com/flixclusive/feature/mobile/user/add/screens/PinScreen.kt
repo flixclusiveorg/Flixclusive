@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
+import com.flixclusive.core.ui.common.navigation.navigator.PinAction
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
@@ -58,7 +59,7 @@ internal class PinScreen(
                     )
                 )
                 .clickable {
-                    navigator.openUserPinSetupScreen()
+                    navigator.openUserPinScreen(PinAction.Setup)
                 }
                 .background(
                     color = surface,

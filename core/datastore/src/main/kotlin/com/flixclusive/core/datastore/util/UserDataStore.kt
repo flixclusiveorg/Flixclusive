@@ -11,6 +11,8 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import com.flixclusive.core.datastore.util.DataStoreLock.USER_PREFS_INSTANCE
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 
 private const val USER_PREFERENCE_FILENAME = "users/user-preferences"
 
@@ -18,12 +20,15 @@ fun Context.createUserPreferences(
     userId: Int,
     corruptionHandler: ReplaceFileCorruptionHandler<Preferences>? = null,
     produceMigrations: (Context) -> List<DataMigration<Preferences>> = { listOf() },
-    scope: CoroutineScope = AppDispatchers.IO.scope,
+    scope: CoroutineScope = CoroutineScope(AppDispatchers.IO.dispatcher + SupervisorJob()),
 ): DataStore<Preferences> {
     synchronized(DataStoreLock.lock) {
         if (DataStoreLock.CURRENT_USER_ID != userId) {
+            DataStoreLock.CURRENT_SCOPE_USED?.cancel()
+
             USER_PREFS_INSTANCE = null
             DataStoreLock.CURRENT_USER_ID = userId
+            DataStoreLock.CURRENT_SCOPE_USED = scope
         }
     }
 
@@ -38,12 +43,13 @@ fun Context.createUserPreferences(
                     applicationContext.preferencesDataStoreFile("$USER_PREFERENCE_FILENAME-$userId")
                 }
         }
+
         USER_PREFS_INSTANCE!!
     }
 }
 
 @Suppress("unused", "ktlint:standard:property-naming")
-internal object DataStoreLock {
+private object DataStoreLock {
     val lock = Any()
 
     @GuardedBy("lock")
@@ -53,4 +59,8 @@ internal object DataStoreLock {
     @GuardedBy("lock")
     @Volatile
     var CURRENT_USER_ID: Int? = null
+
+    @GuardedBy("lock")
+    @Volatile
+    var CURRENT_SCOPE_USED: CoroutineScope? = null
 }

@@ -4,8 +4,11 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +50,7 @@ import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
 import com.flixclusive.core.ui.mobile.component.provider.MediaLinksBottomSheet
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.util.webview.WebViewDriver
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
@@ -55,6 +60,7 @@ import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpanded
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
@@ -74,12 +80,10 @@ import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 import com.flixclusive.core.locale.R as LocaleR
 
-@SuppressLint("DiscouragedApi")
+@SuppressLint("DiscouragedApi", "UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun MobileActivity.MobileApp(
-    viewModel: MobileAppViewModel
-) {
+internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     val context = LocalContext.current
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -98,13 +102,14 @@ internal fun MobileActivity.MobileApp(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val skipPartiallyExpanded by remember { mutableStateOf(true) }
-    val bottomSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = skipPartiallyExpanded
-    )
+    val bottomSheetState =
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = skipPartiallyExpanded,
+        )
 
     val navController = rememberNavController()
     val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(
-        initialValue = MobileNavGraphs.root.startRoute
+        initialValue = MobileNavGraphs.root.startRoute,
     )
     val currentNavGraph by navController.currentScreenAsState(MobileNavGraphs.home)
 
@@ -117,46 +122,52 @@ internal fun MobileActivity.MobileApp(
         navController.navigateIfResumed(
             PlayerScreenDestination(
                 film = filmToPreview!!,
-                episodeToPlay = episodeToPlay
-            )
+                episodeToPlay = episodeToPlay,
+            ),
         )
     }
 
     LaunchedEffect(hasSeenNewChangelogs, currentSelectedScreen) {
         if (hasSeenNewChangelogs && currentSelectedScreen != SplashScreenDestination) {
             delay(1000L) // Add delay for smooth transition
-            val changelogsId = context.resources
-                .getIdentifier(
-                    /* name = */ "changelog_${viewModel.currentVersionCode}",
-                    /* defType = */ "array",
-                    /* defPackage = */ context.packageName
-                )
+            val changelogsId =
+                context.resources
+                    .getIdentifier(
+                        // name =
+                        "changelog_${viewModel.currentVersionCode}",
+                        // defType =
+                        "array",
+                        // defPackage =
+                        context.packageName,
+                    )
 
-            if (changelogsId == 0)
+            if (changelogsId == 0) {
                 return@LaunchedEffect
+            }
 
             val (title, changelogs) = context.resources.getStringArray(changelogsId)
 
             navController.navigateIfResumed(
-                direction = MarkdownScreenDestination(
-                    title = title,
-                    description = changelogs
-                )
+                direction =
+                    MarkdownScreenDestination(
+                        title = title,
+                        description = changelogs,
+                    ),
             ) {
                 launchSingleTop = true
                 restoreState = true
             }
 
             viewModel.onSaveLastSeenChangelogs(
-                version = viewModel.currentVersionCode
+                version = viewModel.currentVersionCode,
             )
         }
     }
 
     LaunchedEffect(cachedLinks?.streams?.size, uiState.mediaLinkResourceState) {
         if (
-            uiState.mediaLinkResourceState == MediaLinkResourceState.Success
-            && currentSelectedScreen != PlayerScreenDestination
+            uiState.mediaLinkResourceState == MediaLinkResourceState.Success &&
+            currentSelectedScreen != PlayerScreenDestination
         ) {
             onStartPlayer()
         }
@@ -179,28 +190,30 @@ internal fun MobileActivity.MobileApp(
             snackbarHostState.showSnackbar(
                 InternetMonitorSnackbarVisuals(
                     message = UiText.StringResource(LocaleR.string.offline_message).asString(context),
-                    isDisconnected = true
-                )
+                    isDisconnected = true,
+                ),
             )
         } else if (hasBeenDisconnected) {
             hasBeenDisconnected = false
             snackbarHostState.showSnackbar(
                 InternetMonitorSnackbarVisuals(
                     message = UiText.StringResource(LocaleR.string.online_message).asString(context),
-                    isDisconnected = false
-                )
+                    isDisconnected = false,
+                ),
             )
         }
     }
 
-    val useBottomBar = remember(currentSelectedScreen) {
-        shouldHideBottomBar(route = currentSelectedScreen)
-    }
+    val useBottomBar =
+        remember(currentSelectedScreen) {
+            shouldHideBottomBar(route = currentSelectedScreen)
+        }
 
-    val windowInsets = when (currentSelectedScreen) {
-        SplashScreenDestination -> WindowInsets.systemBars
-        else -> WindowInsets(0.dp)
-    }
+    val windowInsets =
+        when (currentSelectedScreen) {
+            SplashScreenDestination -> WindowInsets.systemBars
+            else -> WindowInsets(0.dp)
+        }
 
     Scaffold(
         contentWindowInsets = windowInsets,
@@ -210,7 +223,11 @@ internal fun MobileActivity.MobileApp(
             }
         },
         bottomBar = {
-            if (useBottomBar) {
+            AnimatedVisibility(
+                visible = useBottomBar,
+                enter = slideInVertically(tween(450)) { it },
+                exit = slideOutVertically(tween(400)) { it },
+            ) {
                 BottomBar(
                     currentSelectedScreen = currentNavGraph,
                     onNavigate = { screen ->
@@ -230,13 +247,13 @@ internal fun MobileActivity.MobileApp(
                                 restoreState = true
                             }
                         }
-                    }
+                    },
                 )
             }
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier.padding(innerPadding)
+        },
+    ) { padding ->
+        CompositionLocalProvider(
+            LocalGlobalScaffoldPadding provides padding
         ) {
             AppNavHost(
                 navController = navController,
@@ -244,13 +261,13 @@ internal fun MobileActivity.MobileApp(
                 play = { film, episode ->
                     viewModel.onPlayClick(
                         film = film,
-                        episode = episode
+                        episode = episode,
                     )
                 },
                 closeApp = {
                     finish()
                     exitProcess(0)
-                }
+                },
             )
         }
     }
@@ -259,10 +276,11 @@ internal fun MobileActivity.MobileApp(
         if (uiState.isShowingBottomSheetCard && filmToPreview != null) {
             val navigateToFilmScreen = {
                 navController.navigateIfResumed(
-                    direction = FilmScreenDestination(
-                        film = filmToPreview!!,
-                        startPlayerAutomatically = false
-                    ) within currentNavGraph
+                    direction =
+                        FilmScreenDestination(
+                            film = filmToPreview!!,
+                            startPlayerAutomatically = false,
+                        ) within currentNavGraph,
                 )
                 viewModel.onBottomSheetClose()
             }
@@ -277,13 +295,14 @@ internal fun MobileActivity.MobileApp(
                 onSeeMoreClick = {
                     navigateToFilmScreen()
 
-                    scope.launch {
-                        bottomSheetState.hide()
-                    }.invokeOnCompletion {
-                        if (!bottomSheetState.isVisible) {
-                            viewModel.onBottomSheetClose()
+                    scope
+                        .launch {
+                            bottomSheetState.hide()
+                        }.invokeOnCompletion {
+                            if (!bottomSheetState.isVisible) {
+                                viewModel.onBottomSheetClose()
+                            }
                         }
-                    }
                 },
                 onDismissRequest = viewModel::onBottomSheetClose,
                 onPlayClick = {
@@ -292,7 +311,7 @@ internal fun MobileActivity.MobileApp(
                 },
                 onImageClick = {
                     fullScreenImageToShow = it
-                }
+                },
             )
         }
 
@@ -307,7 +326,7 @@ internal fun MobileActivity.MobileApp(
                 onDismiss = {
                     viewModel.onConsumeSourceDataDialog(isForceClosing = true)
                     viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
-                }
+                },
             )
         } else {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -316,14 +335,14 @@ internal fun MobileActivity.MobileApp(
         AnimatedVisibility(
             visible = fullScreenImageToShow != null,
             enter = fadeIn(),
-            exit = fadeOut()
+            exit = fadeOut(),
         ) {
             fullScreenImageToShow?.let {
                 FilmCoverPreview(
                     imagePath = it,
                     onDismiss = {
                         fullScreenImageToShow = null
-                    }
+                    },
                 )
             }
         }
@@ -332,80 +351,89 @@ internal fun MobileActivity.MobileApp(
     if (webViewDriver != null) {
         WebViewDriverDialog(
             webView = webViewDriver!!,
-            onDismiss = viewModel::hideWebViewDriver
+            onDismiss = viewModel::hideWebViewDriver,
         )
     }
 }
 
 private fun shouldHideBottomBar(route: Route): Boolean {
-    val noBottomBarScreens = listOf(
-        PlayerScreenDestination,
-        SplashScreenDestination,
-        UpdateScreenDestination,
-        MarkdownScreenDestination,
-        AddUserScreenDestination,
-        UserEditScreenDestination,
-        UserAvatarSelectScreenDestination,
-        UserProfilesScreenDestination,
-        PinSetupScreenDestination
-    )
+    val noBottomBarScreens =
+        listOf(
+            PlayerScreenDestination,
+            SplashScreenDestination,
+            UpdateScreenDestination,
+            MarkdownScreenDestination,
+            AddUserScreenDestination,
+            UserEditScreenDestination,
+            UserAvatarSelectScreenDestination,
+            UserProfilesScreenDestination,
+            PinSetupScreenDestination,
+            PinVerifyScreenDestination,
+        )
 
-    return route.route != SearchExpandedScreenDestination.within(MobileNavGraphs.search).route
-        && noBottomBarScreens.none { it == route }
+    return route.route != SearchExpandedScreenDestination.within(MobileNavGraphs.search).route &&
+        noBottomBarScreens.none { it == route }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WebViewDriverDialog(
     webView: WebViewDriver,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     BasicAlertDialog(
-        properties = DialogProperties(
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false
-        ),
+        properties =
+            DialogProperties(
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+            ),
         onDismissRequest = onDismiss,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxHeight(0.9F)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier =
+                Modifier
+                    .fillMaxHeight(0.9F)
+                    .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Surface(tonalElevation = 3.dp) {
                 Box(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surface)
-                        .clip(MaterialTheme.shapes.extraSmall)
-                        .padding(bottom = 6.dp)
+                    modifier =
+                        Modifier
+                            .background(MaterialTheme.colorScheme.surface)
+                            .clip(MaterialTheme.shapes.extraSmall)
+                            .padding(bottom = 6.dp),
                 ) {
                     Text(
                         text = webView.name,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier
-                            .padding(10.dp)
+                        style =
+                            MaterialTheme.typography.titleLarge.copy(
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                            ),
+                        modifier =
+                            Modifier
+                                .padding(10.dp),
                     )
                 }
             }
 
             AndroidView(
-                modifier = Modifier
-                    .weight(0.7F)
-                    .alpha(0.99F)
-                    .fillMaxWidth()
-                    .padding(26.dp),
+                modifier =
+                    Modifier
+                        .weight(0.7F)
+                        .alpha(0.99F)
+                        .fillMaxWidth()
+                        .padding(26.dp),
                 factory = {
                     webView.apply {
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
+                        layoutParams =
+                            ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                            )
                     }
-                }
+                },
             )
         }
     }

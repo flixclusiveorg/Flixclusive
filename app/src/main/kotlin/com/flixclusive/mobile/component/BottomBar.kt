@@ -26,7 +26,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,25 +52,22 @@ import com.ramcosta.composedestinations.spec.NavGraphSpec
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
+internal val MaxBottomBarHeight = 60.dp
+
 @Composable
 internal fun BottomBar(
     currentSelectedScreen: NavGraphSpec,
     onNavigate: (NavGraphSpec) -> Unit
 ) {
-    val insets = when(LocalConfiguration.current.orientation) {
-        Configuration.ORIENTATION_LANDSCAPE ->  WindowInsets(0.dp)
-        else -> WindowInsets.navigationBars
-    }
-
     Box(
         modifier = Modifier
-            .windowInsetsPadding(insets)
             .background(MaterialTheme.colorScheme.surface)
+            .windowInsetsPadding(getProperInsets())
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)
+                .height(MaxBottomBarHeight)
                 .background(MaterialTheme.colorScheme.surface)
                 .drawBehind {
                     val strokeWidth = 2F
@@ -161,6 +163,21 @@ private fun CustomNavItem(
     }
 }
 
+@Composable
+internal fun getProperInsets(): WindowInsets {
+    var orientation by remember { mutableIntStateOf(Configuration.ORIENTATION_PORTRAIT) }
+    val configuration = LocalConfiguration.current
+
+    LaunchedEffect(configuration) {
+        snapshotFlow { configuration.orientation }
+            .collect { orientation = it }
+    }
+
+    return when(orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> WindowInsets(0.dp)
+        else -> WindowInsets.navigationBars
+    }
+}
 
 private val mobileNavigationItems = listOf(
     AppNavigationItem(

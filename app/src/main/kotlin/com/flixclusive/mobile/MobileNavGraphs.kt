@@ -20,6 +20,7 @@ import com.flixclusive.feature.mobile.settings.screen.root.destinations.Settings
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
@@ -28,93 +29,104 @@ import com.ramcosta.composedestinations.spec.DestinationSpec
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 
 internal object MobileNavGraphs {
+    val home =
+        object : NavGraphSpec {
+            override val route = "home"
 
-    val home = object : NavGraphSpec {
-        override val route = "home"
+            override val startRoute = HomeScreenDestination routedIn this
 
-        override val startRoute = HomeScreenDestination routedIn this
+            override val destinationsByRoute =
+                listOf<DestinationSpec<*>>(
+                    HomeScreenDestination,
+                    FilmScreenDestination,
+                    GenreScreenDestination,
+                    SeeAllScreenDestination,
+                ).routedIn(this)
+                    .associateBy { it.route }
+        }
 
-        override val destinationsByRoute = listOf<DestinationSpec<*>>(
-            HomeScreenDestination,
-            FilmScreenDestination,
-            GenreScreenDestination,
-            SeeAllScreenDestination
-        ).routedIn(this)
-            .associateBy { it.route }
-    }
+    val search =
+        object : NavGraphSpec {
+            override val route = "search"
 
-    val search = object : NavGraphSpec {
-        override val route = "search"
+            override val startRoute = SearchScreenDestination routedIn this
 
-        override val startRoute = SearchScreenDestination routedIn this
+            override val destinationsByRoute =
+                listOf<DestinationSpec<*>>(
+                    SearchScreenDestination,
+                    SearchExpandedScreenDestination,
+                    FilmScreenDestination,
+                    GenreScreenDestination,
+                    SeeAllScreenDestination,
+                ).routedIn(this)
+                    .associateBy { it.route }
+        }
 
-        override val destinationsByRoute = listOf<DestinationSpec<*>>(
-            SearchScreenDestination,
-            SearchExpandedScreenDestination,
-            FilmScreenDestination,
-            GenreScreenDestination,
-            SeeAllScreenDestination
-        ).routedIn(this)
-            .associateBy { it.route }
-    }
+    val providers =
+        object : NavGraphSpec {
+            override val route = "providers"
 
-    val providers = object : NavGraphSpec {
-        override val route = "providers"
+            override val startRoute = ProvidersScreenDestination routedIn this
 
-        override val startRoute = ProvidersScreenDestination routedIn this
+            override val destinationsByRoute =
+                listOf<DestinationSpec<*>>(
+                    ProvidersScreenDestination,
+                    RepositorySearchScreenDestination,
+                    RepositoryScreenDestination,
+                    ProviderInfoScreenDestination,
+                    ProviderSettingsScreenDestination,
+                    MarkdownScreenDestination,
+                    ProviderTestScreenDestination,
+                ).routedIn(this)
+                    .associateBy { it.route }
+        }
 
-        override val destinationsByRoute = listOf<DestinationSpec<*>>(
-            ProvidersScreenDestination,
-            RepositorySearchScreenDestination,
-            RepositoryScreenDestination,
-            ProviderInfoScreenDestination,
-            ProviderSettingsScreenDestination,
-            MarkdownScreenDestination,
-            ProviderTestScreenDestination
-        ).routedIn(this)
-            .associateBy { it.route }
-    }
+    val settings =
+        object : NavGraphSpec {
+            override val route = "settings"
 
-    val settings = object : NavGraphSpec {
-        override val route = "settings"
+            override val startRoute = SettingsScreenDestination routedIn this
 
-        override val startRoute = SettingsScreenDestination routedIn this
+            override val destinationsByRoute =
+                listOf<DestinationSpec<*>>(
+                    SettingsScreenDestination,
+                    ProvidersScreenDestination,
+                    RepositorySearchScreenDestination,
+                    RepositoryScreenDestination,
+                    ProviderInfoScreenDestination,
+                    ProviderSettingsScreenDestination,
+                    MarkdownScreenDestination,
+                    ProviderTestScreenDestination,
+                ).routedIn(this)
+                    .associateBy { it.route }
+        }
 
-        override val destinationsByRoute = listOf<DestinationSpec<*>>(
-            SettingsScreenDestination,
-            ProvidersScreenDestination,
-            RepositorySearchScreenDestination,
-            RepositoryScreenDestination,
-            ProviderInfoScreenDestination,
-            ProviderSettingsScreenDestination,
-            MarkdownScreenDestination,
-            ProviderTestScreenDestination
-        ).routedIn(this)
-            .associateBy { it.route }
-    }
+    val root =
+        object : NavGraphSpec {
+            override val route = ROOT
 
-    val root = object : NavGraphSpec {
-        override val route = ROOT
+            override val startRoute = SplashScreenDestination
 
-        override val startRoute = SplashScreenDestination
+            override val destinationsByRoute =
+                listOf<DestinationSpec<*>>(
+                    PlayerScreenDestination,
+                    SplashScreenDestination,
+                    UpdateScreenDestination,
+                    UserEditScreenDestination,
+                    UserProfilesScreenDestination,
+                    UserAvatarSelectScreenDestination,
+                    AddUserScreenDestination,
+                    MarkdownScreenDestination,
+                    PinSetupScreenDestination,
+                    PinVerifyScreenDestination,
+                ).associateBy { it.route }
 
-        override val destinationsByRoute = listOf<DestinationSpec<*>>(
-            PlayerScreenDestination,
-            SplashScreenDestination,
-            UpdateScreenDestination,
-            UserEditScreenDestination,
-            UserProfilesScreenDestination,
-            UserAvatarSelectScreenDestination,
-            AddUserScreenDestination,
-            MarkdownScreenDestination,
-            PinSetupScreenDestination,
-        ).associateBy { it.route }
-
-        override val nestedNavGraphs = listOf(
-            home,
-            search,
-            providers,
-            settings,
-        )
-    }
+            override val nestedNavGraphs =
+                listOf(
+                    home,
+                    search,
+                    providers,
+                    settings,
+                )
+        }
 }

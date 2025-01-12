@@ -8,8 +8,9 @@ import com.flixclusive.core.ui.common.navigation.navigator.AddProfileAction
 import com.flixclusive.core.ui.common.navigation.navigator.ChooseProfileAction
 import com.flixclusive.core.ui.common.navigation.navigator.EditUserAction
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.OpenPinScreenAction
+import com.flixclusive.core.ui.common.navigation.navigator.PinAction
 import com.flixclusive.core.ui.common.navigation.navigator.SelectAvatarAction
-import com.flixclusive.core.ui.common.navigation.navigator.SetupPinAction
 import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
 import com.flixclusive.core.ui.common.navigation.navigator.TestProvidersAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewAllFilmsAction
@@ -51,6 +52,7 @@ import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestinatio
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
@@ -90,7 +92,7 @@ internal class MobileAppNavigator(
     SeeAllScreenNavigator,
     SelectAvatarAction,
     SettingsScreenNavigator,
-    SetupPinAction,
+    OpenPinScreenAction,
     SplashScreenNavigator,
     TestProvidersAction,
     UpdateDialogNavigator,
@@ -169,11 +171,8 @@ internal class MobileAppNavigator(
     override fun openHomeScreen() {
         navController.navigate(MobileNavGraphs.home) {
             popUpTo(MobileNavGraphs.root) {
-                saveState = true
+                inclusive = true
             }
-
-            launchSingleTop = true
-            restoreState = true
         }
     }
 
@@ -183,11 +182,8 @@ internal class MobileAppNavigator(
         ) {
             if (isComingFromSplashScreen) {
                 popUpTo(MobileNavGraphs.root) {
-                    saveState = true
+                    inclusive = true
                 }
-
-                launchSingleTop = true
-                restoreState = true
             }
         }
     }
@@ -198,16 +194,15 @@ internal class MobileAppNavigator(
         )
     }
 
-    override fun openUserPinSetupScreen(
-        currentPin: String?,
-        isRemovingPin: Boolean,
+    override fun openUserPinScreen(
+        action: PinAction
     ) {
-        navController.navigateIfResumed(
-            PinSetupScreenDestination(
-                currentPin = currentPin,
-                isRemovingPin = isRemovingPin,
-            ),
-        )
+        val destination = when (action) {
+            is PinAction.Setup -> PinSetupScreenDestination()
+            is PinAction.Verify -> PinVerifyScreenDestination(user = action.user)
+        }
+
+        navController.navigateIfResumed(destination)
     }
 
     override fun openEditUserScreen(user: User) {

@@ -23,7 +23,6 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,7 +55,6 @@ import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalShare
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.model.database.User
 import kotlinx.coroutines.delay
-import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import com.flixclusive.core.locale.R as LocaleR
 
@@ -78,8 +76,6 @@ internal fun ClickedProfileScreen(
 ) {
     val sharedTransitionScope = getLocalSharedTransitionScope()
     val animatedVisibilityScope = getLocalAnimatedVisibilityScope()
-
-    val isPressed = remember { mutableStateOf(false) }
 
     BackHandler(
         enabled = !isLoading.value,
@@ -180,7 +176,6 @@ internal fun ClickedProfileScreen(
                     )
                 } else {
                     ContinueButton(
-                        isPressed = isPressed,
                         onClick = { isLoading.value = true }
                     )
                 }
@@ -191,9 +186,10 @@ internal fun ClickedProfileScreen(
 
 @Composable
 private fun ContinueButton(
-    isPressed: MutableState<Boolean>,
     onClick: () -> Unit
 ) {
+    val isPressed = remember { mutableStateOf(false) }
+
     val buttonShape = MaterialTheme.shapes.extraSmall
     val buttonContainerGradient = with(MaterialTheme.colorScheme) {
         Brush.linearGradient(
@@ -254,32 +250,6 @@ private fun ContinueButton(
             )
         )
     }
-}
-
-/**
- * Adjusts the brightness of a color represented as an Int.
- *
- * @param color The original color as an Int.
- * @param factor The brightness factor:
- *               - Greater than 1.0 brightens the color.
- *               - Between 0.0 and 1.0 darkens the color.
- * @return The adjusted color as an Int.
- */
-@Stable
-private fun adjustBrightness(color: Int, factor: Float): Int {
-    // Extract the individual components (Alpha, Red, Green, Blue)
-    val alpha = android.graphics.Color.alpha(color)
-    val red = android.graphics.Color.red(color)
-    val green = android.graphics.Color.green(color)
-    val blue = android.graphics.Color.blue(color)
-
-    // Adjust each component, ensuring the values are clamped between 0 and 255
-    val newRed = (red * factor).coerceIn(0f, 255f).roundToInt()
-    val newGreen = (green * factor).coerceIn(0f, 255f).roundToInt()
-    val newBlue = (blue * factor).coerceIn(0f, 255f).roundToInt()
-
-    // Combine the adjusted components back into a color Int
-    return android.graphics.Color.argb(alpha, newRed, newGreen, newBlue)
 }
 
 @Preview

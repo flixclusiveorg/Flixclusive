@@ -34,15 +34,18 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
+import com.flixclusive.core.ui.common.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.OpenPinScreenAction
+import com.flixclusive.core.ui.common.navigation.navigator.PinAction
 import com.flixclusive.core.ui.common.navigation.navigator.SelectAvatarAction
-import com.flixclusive.core.ui.common.navigation.navigator.SetupPinAction
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
+import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.edit.tweaks.data.DataTweak
 import com.flixclusive.feature.mobile.user.edit.tweaks.identity.IdentityTweak
@@ -55,7 +58,7 @@ import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 interface UserEditScreenNavigator :
-    SetupPinAction,
+    OpenPinScreenAction,
     SelectAvatarAction,
     GoBackAction
 
@@ -64,7 +67,8 @@ interface UserEditScreenNavigator :
 internal fun UserEditScreen(
     navigator: UserEditScreenNavigator,
     avatarResultRecipient: ResultRecipient<UserAvatarSelectScreenDestination, Int>,
-    pinResultRecipient: ResultRecipient<PinSetupScreenDestination, PinWithHintResult>,
+    pinSetupResultRecipient: ResultRecipient<PinSetupScreenDestination, PinWithHintResult>,
+    pinRemoveResultRecipient: ResultRecipient<PinVerifyScreenDestination, PinVerificationResult>,
     userArg: User,
     viewModel: UserEditViewModel = hiltViewModel(),
 ) {
@@ -76,11 +80,12 @@ internal fun UserEditScreen(
                 IdentityTweak(
                     initialName = user.name,
                     userHasPin = user.pin != null,
-                    onSetupPin = { isRemovingPin ->
-                        navigator.openUserPinSetupScreen(
-                            currentPin = user.pin,
-                            isRemovingPin = isRemovingPin,
-                        )
+                    onOpenPinScreen = { isRemovingPin ->
+                        val action = if (isRemovingPin) {
+                            PinAction.Verify(user)
+                        } else PinAction.Setup
+
+                        navigator.openUserPinScreen(action = action)
                     },
                     onNameChange = {
                         user = user.copy(name = it)
@@ -110,14 +115,17 @@ internal fun UserEditScreen(
         }
     }
 
-    pinResultRecipient.onNavResult { result ->
+    pinSetupResultRecipient.onNavResult { result ->
         if (result is NavResult.Value) {
             val (pin, hint) = result.value
-            user =
-                user.copy(
-                    pin = pin,
-                    pinHint = hint,
-                )
+            user = user.copy(pin = pin, pinHint = hint)
+            viewModel.onEditUser(user = user)
+        }
+    }
+
+    pinRemoveResultRecipient.onNavResult { result ->
+        if (result is NavResult.Value && result.value.isVerified) {
+            user = result.value.user.copy(pin = null, pinHint = null)
             viewModel.onEditUser(user = user)
         }
     }
@@ -247,12 +255,9 @@ private fun UserEditScreenBasePreview() {
                     object : UserEditScreenNavigator {
                         override fun openUserAvatarSelectScreen(selected: Int) = Unit
 
-                        override fun openUserPinSetupScreen(
-                            currentPin: String?,
-                            isRemovingPin: Boolean,
-                        ) = Unit
-
                         override fun goBack() = Unit
+
+                        override fun openUserPinScreen(action: PinAction) = Unit
                     },
                 avatarResultRecipient =
                     object : ResultRecipient<UserAvatarSelectScreenDestination, Int> {
@@ -262,13 +267,21 @@ private fun UserEditScreenBasePreview() {
                         @Composable
                         override fun onResult(listener: (Int) -> Unit) = Unit
                     },
-                pinResultRecipient =
+                pinSetupResultRecipient =
                     object : ResultRecipient<PinSetupScreenDestination, PinWithHintResult> {
                         @Composable
                         override fun onNavResult(listener: (NavResult<PinWithHintResult>) -> Unit) = Unit
 
                         @Composable
                         override fun onResult(listener: (PinWithHintResult) -> Unit) = Unit
+                    },
+                pinRemoveResultRecipient =
+                    object : ResultRecipient<PinVerifyScreenDestination, PinVerificationResult> {
+                        @Composable
+                        override fun onNavResult(listener: (NavResult<PinVerificationResult>) -> Unit) = Unit
+
+                        @Composable
+                        override fun onResult(listener: (PinVerificationResult) -> Unit) = Unit
                     },
                 userArg =
                     User(

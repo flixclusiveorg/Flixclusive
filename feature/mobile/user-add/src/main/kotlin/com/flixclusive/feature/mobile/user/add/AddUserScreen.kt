@@ -50,8 +50,9 @@ import coil3.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.OpenPinScreenAction
+import com.flixclusive.core.ui.common.navigation.navigator.PinAction
 import com.flixclusive.core.ui.common.navigation.navigator.SelectAvatarAction
-import com.flixclusive.core.ui.common.navigation.navigator.SetupPinAction
 import com.flixclusive.core.ui.common.navigation.navigator.StartHomeScreenAction
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
@@ -80,7 +81,7 @@ private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 interface AddUserScreenNavigator :
     GoBackAction,
     StartHomeScreenAction,
-    SetupPinAction,
+    OpenPinScreenAction,
     SelectAvatarAction
 
 @Destination
@@ -471,10 +472,7 @@ private fun AddUserScreenBasePreview() {
                     object : AddUserScreenNavigator {
                         override fun openUserAvatarSelectScreen(selected: Int) = Unit
 
-                        override fun openUserPinSetupScreen(
-                            currentPin: String?,
-                            isRemovingPin: Boolean,
-                        ) = Unit
+                        override fun openUserPinScreen(action: PinAction) = Unit
 
                         override fun goBack() = Unit
 

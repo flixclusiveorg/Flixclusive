@@ -2,31 +2,21 @@ package com.flixclusive.feature.mobile.user.pin
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FilledTonalButton
@@ -34,8 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,7 +40,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -64,8 +51,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.CommonTopBar
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
@@ -77,18 +62,17 @@ import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.util.ComposeUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.DefaultShape
-import com.flixclusive.model.database.MAX_USER_PIN_LENGTH
+import com.flixclusive.feature.mobile.user.pin.component.DEFAULT_DELAY
+import com.flixclusive.feature.mobile.user.pin.component.HeaderLabel
+import com.flixclusive.feature.mobile.user.pin.component.PinScreenDefault
+import com.flixclusive.feature.mobile.user.pin.component.PinSetupScreenCompactLandscape
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 import kotlinx.coroutines.delay
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-private const val MAX_NUMBER_LENGTH = 10
-private const val DEFAULT_DELAY = 2000L
-
 private enum class PinSetupStep {
-    Verify,
     Setup,
     Confirm,
     Hint,
@@ -96,11 +80,7 @@ private enum class PinSetupStep {
 
 @Destination
 @Composable
-internal fun PinSetupScreen(
-    currentPin: String? = null,
-    isRemovingPin: Boolean = false,
-    resultNavigator: ResultBackNavigator<PinWithHintResult>,
-) {
+internal fun PinSetupScreen(resultNavigator: ResultBackNavigator<PinWithHintResult>) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowHeightSizeClass
 
     val newPin = rememberSaveable { mutableStateOf("") }
@@ -111,7 +91,7 @@ internal fun PinSetupScreen(
     val hasErrors = rememberSaveable { mutableStateOf(false) }
 
     var stepState by rememberSaveable {
-        val state = if (currentPin != null) PinSetupStep.Verify else PinSetupStep.Setup
+        val state = PinSetupStep.Setup
         mutableStateOf(state)
     }
 
@@ -125,23 +105,10 @@ internal fun PinSetupScreen(
         hasErrors.value = false
     }
 
-    val onConfirm = fun () {
-        val isCurrentPinVerificationCorrect = stepState == PinSetupStep.Verify && newPin.value == currentPin
+    val onConfirm = fun() {
         val isNewPinSame = stepState == PinSetupStep.Confirm && newPin.value == pinToConfirm
 
-        if (isCurrentPinVerificationCorrect && isRemovingPin) {
-            resultNavigator.navigateBack(
-                onlyIfResumed = true,
-                result =
-                    PinWithHintResult(
-                        pin = null,
-                        pinHint = null,
-                    ),
-            )
-        } else if (isCurrentPinVerificationCorrect) {
-            newPin.value = ""
-            stepState = PinSetupStep.Setup
-        } else if (stepState == PinSetupStep.Setup) {
+        if (stepState == PinSetupStep.Setup) {
             pinToConfirm = newPin.value
             newPin.value = ""
             stepState = PinSetupStep.Confirm
@@ -157,7 +124,6 @@ internal fun PinSetupScreen(
                     ),
             )
         } else if (stepState == PinSetupStep.Confirm ||
-            stepState == PinSetupStep.Verify ||
             stepState == PinSetupStep.Hint
         ) {
             hasErrors.value = true
@@ -165,7 +131,7 @@ internal fun PinSetupScreen(
     }
 
     val onBack = {
-        if (stepState == PinSetupStep.Verify || stepState == PinSetupStep.Setup) {
+        if (stepState == PinSetupStep.Setup) {
             resultNavigator.navigateBack(onlyIfResumed = true)
         } else if (stepState == PinSetupStep.Confirm || stepState == PinSetupStep.Hint) {
             newPin.value = ""
@@ -201,7 +167,6 @@ internal fun PinSetupScreen(
             )
         } else if (windowSizeClass.isCompact) {
             PinSetupScreenCompactLandscape(
-                currentPin = currentPin,
                 pin = newPin,
                 isTyping = isTyping,
                 hasErrors = hasErrors,
@@ -211,7 +176,6 @@ internal fun PinSetupScreen(
             )
         } else {
             PinSetupScreenDefault(
-                currentPin = currentPin,
                 pin = newPin,
                 isTyping = isTyping,
                 hasErrors = hasErrors,
@@ -226,7 +190,6 @@ internal fun PinSetupScreen(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PinSetupScreenCompactLandscape(
-    currentPin: String? = null,
     pin: MutableState<String>,
     isTyping: MutableState<Boolean>,
     hasErrors: MutableState<Boolean>,
@@ -234,133 +197,29 @@ private fun PinSetupScreenCompactLandscape(
     onBack: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
+    PinSetupScreenCompactLandscape(
+        pin = pin,
+        isTyping = isTyping,
+        hasErrors = hasErrors,
+        onBack = onBack,
+        onConfirm = onConfirm,
     ) {
-        CommonTopBar(
-            title = "",
-            onNavigate = onBack,
-            rowModifier =
-                Modifier
-                    .align(Alignment.TopCenter),
-        )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier =
-                Modifier
-                    .fillMaxWidth(0.8F)
-                    .align(Alignment.Center)
-                    .scale(0.85F),
+        AnimatedContent(
+            targetState = stepState,
+            label = "PinSetupStep",
+            transitionSpec = {
+                fadeIn(tween(durationMillis = 500)) togetherWith fadeOut()
+            },
         ) {
-            Column(
-                modifier = Modifier.weight(0.5F),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement =
-                    Arrangement.spacedBy(
-                        space = 25.dp,
-                        alignment = Alignment.CenterVertically,
-                    ),
-            ) {
-                AnimatedContent(
-                    targetState = stepState,
-                    label = "PinSetupStep",
-                    transitionSpec = {
-                        fadeIn(tween(durationMillis = 500)) togetherWith fadeOut()
-                    },
-                ) {
-                    val title =
-                        when (it) {
-                            PinSetupStep.Verify -> stringResource(LocaleR.string.pin_verify)
-                            PinSetupStep.Setup -> stringResource(LocaleR.string.pin_setup)
-                            PinSetupStep.Confirm -> stringResource(LocaleR.string.pin_confirm)
-                            else -> null
-                        }
-
-                    if (title != null) {
-                        HeaderLabel(title = title)
-                    }
+            val title =
+                when (it) {
+                    PinSetupStep.Setup -> stringResource(LocaleR.string.pin_setup)
+                    PinSetupStep.Confirm -> stringResource(LocaleR.string.pin_confirm)
+                    else -> null
                 }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    repeat(MAX_USER_PIN_LENGTH) {
-                        PinPlaceholder(
-                            showPin = it == pin.value.length - 1 && isTyping.value,
-                            hasErrors = hasErrors.value,
-                            char = pin.value.getOrNull(it),
-                        )
-                    }
-                }
-            }
-
-            val pinPadding = getAdaptiveDp(20.dp)
-
-            FlowRow(
-                modifier = Modifier.weight(0.5F),
-                horizontalArrangement =
-                    Arrangement.spacedBy(
-                        space = pinPadding,
-                        alignment = Alignment.CenterHorizontally,
-                    ),
-                verticalArrangement = Arrangement.spacedBy(pinPadding),
-                maxItemsInEachRow = 3,
-            ) {
-                repeat(MAX_NUMBER_LENGTH + 2) {
-                    when (val digit = it + 1) {
-                        10 -> {
-                            PinButton(
-                                enabled = pin.value.isNotEmpty(),
-                                noEmphasis = true,
-                                onClick = {
-                                    if (pin.value.isNotEmpty()) {
-                                        isTyping.value = false
-                                        pin.value = pin.value.dropLast(1)
-                                    }
-                                },
-                            ) {
-                                AdaptiveIcon(
-                                    painter = painterResource(UiCommonR.drawable.backspace_filled),
-                                    contentDescription = stringResource(LocaleR.string.backspace_content_desc),
-                                )
-                            }
-                        }
-                        MAX_NUMBER_LENGTH + 2 -> {
-                            PinButton(
-                                enabled = pin.value.length == MAX_USER_PIN_LENGTH,
-                                noEmphasis = true,
-                                onClick = {
-                                    if (pin.value.length == MAX_USER_PIN_LENGTH) {
-                                        onConfirm()
-                                    }
-                                },
-                            ) {
-                                Text(
-                                    text = stringResource(LocaleR.string.ok),
-                                    style =
-                                        getAdaptiveTextStyle(
-                                            style = TypographyStyle.Title,
-                                            mode = TextStyleMode.Emphasized,
-                                        ),
-                                )
-                            }
-                        }
-                        else -> {
-                            val coercedDigit = digit.coerceAtMost(MAX_NUMBER_LENGTH)
-                            PinButton(
-                                digit = coercedDigit % MAX_NUMBER_LENGTH,
-                                onClick = {
-                                    if (pin.value.length < MAX_USER_PIN_LENGTH) {
-                                        isTyping.value = true
-                                        hasErrors.value = false
-                                        pin.value += "${coercedDigit % MAX_NUMBER_LENGTH}"
-                                    }
-                                },
-                            )
-                        }
-                    }
-                }
+            if (title != null) {
+                HeaderLabel(title = title)
             }
         }
     }
@@ -369,7 +228,6 @@ private fun PinSetupScreenCompactLandscape(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PinSetupScreenDefault(
-    currentPin: String? = null,
     pin: MutableState<String>,
     isTyping: MutableState<Boolean>,
     hasErrors: MutableState<Boolean>,
@@ -377,133 +235,32 @@ private fun PinSetupScreenDefault(
     onBack: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    Scaffold(
-        topBar = {
-            CommonTopBar(
-                title = "",
-                onNavigate = onBack,
-            )
-        },
-    ) { padding ->
-        Column(
+    PinScreenDefault(
+        pin = pin,
+        isTyping = isTyping,
+        hasErrors = hasErrors,
+        onBack = onBack,
+        onConfirm = onConfirm,
+    ) {
+        AnimatedContent(
+            targetState = stepState,
+            label = "PinSetupStep",
+            transitionSpec = {
+                fadeIn(tween(durationMillis = 500)) togetherWith fadeOut()
+            },
             modifier =
                 Modifier
-                    .padding(padding)
-                    .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement =
-                Arrangement.spacedBy(
-                    space = 25.dp,
-                    alignment = Alignment.CenterVertically,
-                ),
+                    .align(Alignment.CenterHorizontally),
         ) {
-            AnimatedContent(
-                targetState = stepState,
-                label = "PinSetupStep",
-                transitionSpec = {
-                    fadeIn(tween(durationMillis = 500)) togetherWith fadeOut()
-                },
-                modifier =
-                    Modifier
-                        .align(Alignment.CenterHorizontally),
-            ) {
-                val title =
-                    when (it) {
-                        PinSetupStep.Verify -> stringResource(LocaleR.string.pin_verify)
-                        PinSetupStep.Setup -> stringResource(LocaleR.string.pin_setup)
-                        PinSetupStep.Confirm -> stringResource(LocaleR.string.pin_confirm)
-                        else -> null
-                    }
-
-                if (title != null) {
-                    HeaderLabel(title = title)
+            val title =
+                when (it) {
+                    PinSetupStep.Setup -> stringResource(LocaleR.string.pin_setup)
+                    PinSetupStep.Confirm -> stringResource(LocaleR.string.pin_confirm)
+                    else -> null
                 }
-            }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier =
-                    Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(bottom = 25.dp),
-            ) {
-                repeat(MAX_USER_PIN_LENGTH) {
-                    PinPlaceholder(
-                        showPin = it == pin.value.length - 1 && isTyping.value,
-                        hasErrors = hasErrors.value,
-                        char = pin.value.getOrNull(it),
-                    )
-                }
-            }
-
-            val pinPadding = getAdaptiveDp(20.dp)
-
-            FlowRow(
-                horizontalArrangement =
-                    Arrangement.spacedBy(
-                        space = pinPadding,
-                        alignment = Alignment.CenterHorizontally,
-                    ),
-                verticalArrangement = Arrangement.spacedBy(pinPadding),
-                maxItemsInEachRow = 3,
-                modifier =
-                    Modifier
-                        .align(Alignment.CenterHorizontally),
-            ) {
-                repeat(MAX_NUMBER_LENGTH + 2) {
-                    when (val digit = it + 1) {
-                        10 -> {
-                            PinButton(
-                                enabled = pin.value.isNotEmpty(),
-                                noEmphasis = true,
-                                onClick = {
-                                    if (pin.value.isNotEmpty()) {
-                                        isTyping.value = false
-                                        pin.value = pin.value.dropLast(1)
-                                    }
-                                },
-                            ) {
-                                AdaptiveIcon(
-                                    painter = painterResource(UiCommonR.drawable.backspace_filled),
-                                    contentDescription = stringResource(LocaleR.string.backspace_content_desc),
-                                )
-                            }
-                        }
-                        MAX_NUMBER_LENGTH + 2 -> {
-                            PinButton(
-                                enabled = pin.value.length == MAX_USER_PIN_LENGTH,
-                                noEmphasis = true,
-                                onClick = {
-                                    if (pin.value.length == MAX_USER_PIN_LENGTH) {
-                                        onConfirm()
-                                    }
-                                },
-                            ) {
-                                Text(
-                                    text = stringResource(LocaleR.string.ok),
-                                    style =
-                                        getAdaptiveTextStyle(
-                                            style = TypographyStyle.Title,
-                                            mode = TextStyleMode.Emphasized,
-                                        ),
-                                )
-                            }
-                        }
-                        else -> {
-                            val coercedDigit = digit.coerceAtMost(MAX_NUMBER_LENGTH)
-                            PinButton(
-                                digit = coercedDigit % MAX_NUMBER_LENGTH,
-                                onClick = {
-                                    if (pin.value.length < MAX_USER_PIN_LENGTH) {
-                                        isTyping.value = true
-                                        hasErrors.value = false
-                                        pin.value += "${coercedDigit % MAX_NUMBER_LENGTH}"
-                                    }
-                                },
-                            )
-                        }
-                    }
-                }
+            if (title != null) {
+                HeaderLabel(title = title)
             }
         }
     }
@@ -676,136 +433,12 @@ private fun PinSetupHintScreen(
     }
 }
 
-@Composable
-private fun PinPlaceholder(
-    showPin: Boolean,
-    hasErrors: Boolean,
-    char: Char?,
-) {
-    val size = getAdaptiveDp(16.dp)
-
-    val inputColor by animateColorAsState(
-        label = "PinPlaceholderInputColor",
-        targetValue =
-            if (char != null && hasErrors) {
-                MaterialTheme.colorScheme.error
-            } else if (char != null) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.surfaceColorAtElevation(20.dp)
-            },
-    )
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement =
-            Arrangement.spacedBy(
-                space = 5.dp,
-                alignment = Alignment.Bottom,
-            ),
-        modifier =
-            Modifier
-                .heightIn(size * 4F),
-    ) {
-        AnimatedVisibility(
-            visible = showPin,
-            enter = fadeIn() + slideInVertically(tween(100)) { it / 4 },
-            exit = fadeOut(),
-        ) {
-            Text(
-                text = "${char ?: ""}",
-                style =
-                    getAdaptiveTextStyle(
-                        style = TypographyStyle.Title,
-                        mode = TextStyleMode.Emphasized,
-                        size = 25.sp,
-                    ),
-            )
-        }
-
-        Spacer(
-            modifier =
-                Modifier
-                    .size(size)
-                    .background(
-                        color = inputColor,
-                        shape = CircleShape,
-                    ),
-        )
-    }
-}
-
-@Composable
-private fun PinButton(
-    digit: Int,
-    onClick: () -> Unit,
-) {
-    PinButton(
-        onClick = onClick,
-    ) {
-        Text(
-            text = "$digit",
-            style =
-                getAdaptiveTextStyle(
-                    style = TypographyStyle.Title,
-                    mode = TextStyleMode.Emphasized,
-                ),
-        )
-    }
-}
-
-@Composable
-private fun HeaderLabel(title: String) {
-    Text(
-        text = title,
-        style =
-            getAdaptiveTextStyle(
-                style = TypographyStyle.Title,
-                mode = TextStyleMode.Emphasized,
-                size = 25.sp,
-            ),
-    )
-}
-
-@Composable
-private fun PinButton(
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-    noEmphasis: Boolean = false,
-    content: @Composable RowScope.() -> Unit,
-) {
-    if (noEmphasis) {
-        TextButton(
-            enabled = enabled,
-            content = content,
-            onClick = onClick,
-            shape = MaterialTheme.shapes.small,
-            contentPadding = PaddingValues(0.dp),
-            modifier =
-                Modifier
-                    .size(getAdaptiveDp(65.dp)),
-        )
-    } else {
-        OutlinedButton(
-            enabled = enabled,
-            content = content,
-            onClick = onClick,
-            shape = MaterialTheme.shapes.small,
-            contentPadding = PaddingValues(0.dp),
-            modifier =
-                Modifier
-                    .size(getAdaptiveDp(65.dp)),
-        )
-    }
-}
-
 @Preview
 @Composable
 private fun PinSetupScreenBasePreview() {
     FlixclusiveTheme {
         Surface {
             PinSetupScreen(
-                currentPin = "0000",
                 resultNavigator =
                     object : ResultBackNavigator<PinWithHintResult> {
                         override fun navigateBack(
