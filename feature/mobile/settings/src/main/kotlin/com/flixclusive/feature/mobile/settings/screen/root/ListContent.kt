@@ -295,11 +295,11 @@ private fun MenuItem(
     Row(
         modifier =
             Modifier
+                .clip(MaterialTheme.shapes.extraSmall)
+                .clickable(onClick = onClick)
                 .fillMaxWidth()
                 .height(NavigationButtonHeight)
-                .clip(MaterialTheme.shapes.extraSmall)
-                .padding(horizontal = UserScreenHorizontalPadding)
-                .clickable(onClick = onClick),
+                .padding(horizontal = UserScreenHorizontalPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
