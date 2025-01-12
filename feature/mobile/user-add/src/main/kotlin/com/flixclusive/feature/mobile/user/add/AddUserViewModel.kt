@@ -2,9 +2,9 @@ package com.flixclusive.feature.mobile.user.add
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
 import com.flixclusive.core.util.coroutines.AppDispatchers
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
@@ -16,10 +16,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -57,14 +55,13 @@ internal class AddUserViewModel
         val images = _images.asStateFlow()
 
         init {
-            viewModelScope.launch {
+            launchOnIO {
                 with(homeItemsProviderUseCase) {
                     this@with
                         .state
-                        .takeWhile { it.rowItems[1].isEmpty() }
-                        .onEach {
-                            val firstCatalog = it.catalogs.first()
-                            val firstRowOfFilms = it.rowItems.first()
+                        .mapLatest {
+                            val firstCatalog = it.catalogs.firstOrNull() ?: return@mapLatest
+                            val firstRowOfFilms = it.rowItems.firstOrNull() ?: return@mapLatest
 
                             var backgrounds: List<String>? = null
                             if (firstRowOfFilms.isEmpty()) {
@@ -73,19 +70,18 @@ internal class AddUserViewModel
                                     index = 0,
                                     page = 1,
                                 )
-                            } else {
-                                backgrounds =
-                                    firstRowOfFilms
-                                        .mapNotNull { media ->
-                                            media.getBestImage()
-                                        }.take(3)
+                                return@mapLatest
                             }
 
-                            if (backgrounds?.size == 3) {
-                                _images.update { backgrounds }
-                                cancel()
-                            }
-                        }.catch { _images.value = defaultBackgrounds }
+                            backgrounds =
+                                firstRowOfFilms
+                                    .mapNotNull { media ->
+                                        media.getBestImage()
+                                    }.take(3)
+
+                            _images.update { backgrounds }
+                            cancel()
+                        }
                         .collect()
                 }
             }
