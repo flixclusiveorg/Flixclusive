@@ -58,6 +58,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.film.component.EpisodeCard
 import com.flixclusive.feature.mobile.film.component.EpisodeCardPlaceholder
 import com.flixclusive.feature.mobile.film.component.FilmOverview
@@ -102,7 +103,10 @@ internal fun FilmScreen(
         derivedStateOf { listState.firstVisibleItemIndex > 0 }
     }
 
-    Box {
+    Box(
+        modifier = Modifier
+            .padding(LocalGlobalScaffoldPadding.current)
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()

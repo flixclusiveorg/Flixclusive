@@ -359,16 +359,16 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 private fun shouldHideBottomBar(route: Route): Boolean {
     val noBottomBarScreens =
         listOf(
+            AddUserScreenDestination,
+            MarkdownScreenDestination,
+            PinSetupScreenDestination,
+            PinVerifyScreenDestination,
             PlayerScreenDestination,
             SplashScreenDestination,
             UpdateScreenDestination,
-            MarkdownScreenDestination,
-            AddUserScreenDestination,
-            UserEditScreenDestination,
             UserAvatarSelectScreenDestination,
+            UserEditScreenDestination,
             UserProfilesScreenDestination,
-            PinSetupScreenDestination,
-            PinVerifyScreenDestination,
         )
 
     return route.route != SearchExpandedScreenDestination.within(MobileNavGraphs.search).route &&

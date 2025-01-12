@@ -43,6 +43,7 @@ import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderSettingsA
 import com.flixclusive.core.ui.common.navigation.navigator.ViewRepositoryAction
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.mobile.component.dialog.UnsafeInstallAlertDialog
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
@@ -110,6 +111,7 @@ internal fun ProviderInfoScreen(
     }
 
     Scaffold(
+        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {

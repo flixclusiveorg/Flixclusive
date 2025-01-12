@@ -30,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewRepositoryAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
@@ -98,6 +99,7 @@ internal fun RepositorySearchScreen(
     }
 
     Scaffold(
+        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)

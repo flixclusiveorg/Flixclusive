@@ -6,7 +6,6 @@
     <string name="title_activity_crash">CrashActivity</string>
 
     <!--  Navigation Items  -->
-    <string name="about">About Flixclusive</string>
     <string name="home">Home</string>
     <string name="preferences">Preferences</string>
     <string name="profiles">Profiles</string>
@@ -15,16 +14,6 @@
     <string name="search">Search</string>
     <string name="settings">Settings</string>
     <string name="watchlist">Watchlist</string>
-
-    <!--  About the app information  -->
-    <string name="app_description">A modern streaming service app that provides users with a convenient way to play and watch the latest movies and TV shows available on the internet. With a user-friendly interface and a vast collection of content, it aims to deliver an exceptional streaming experience to its users.</string>
-    <string name="app_features">App Features:</string>
-    <string name="extensive_library">Extensive Library</string>
-    <string name="high_quality_streaming">High-Quality Streaming</string>
-    <string name="personalized_recommendations">Personalized Recommendations</string>
-    <string name="search_and_discover">Search and Discover</string>
-    <string name="smart_watch_history">Smart Watch History</string>
-    <string name="subtitle_selections">Subtitle Selections</string>
 
     <!--  Errors  -->
     <string name="no_changelogs">No update changelogs found</string>
@@ -174,7 +163,6 @@
     <string name="genres">Genres</string>
     <string name="get_search_results_from">Get search results from:</string>
     <string name="github">GITHUB</string>
-    <string name="github_repository">Github Repository</string>
     <string name="heads_up">Heads up!</string>
     <string name="help">Help</string>
     <string name="hide_error_logs">Hide error logs</string>

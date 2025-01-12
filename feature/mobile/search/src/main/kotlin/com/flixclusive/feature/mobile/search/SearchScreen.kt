@@ -40,6 +40,7 @@ import com.flixclusive.core.ui.common.navigation.navigator.ViewGenreCatalogActio
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
 import com.flixclusive.core.ui.mobile.component.RetryButton
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.search.component.SearchItemCard
 import com.flixclusive.feature.mobile.search.component.SearchItemCardPlaceholderWithText
 import com.flixclusive.feature.mobile.search.component.SearchItemRow
@@ -62,6 +63,7 @@ internal fun SearchScreen(
     val genreCards by viewModel.genreCards.collectAsStateWithLifecycle()
 
     LazyVerticalGrid(
+        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
         columns = GridCells.Adaptive(minSize = 180.dp),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {

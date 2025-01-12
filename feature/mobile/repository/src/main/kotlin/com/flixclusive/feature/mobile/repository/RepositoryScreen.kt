@@ -50,6 +50,7 @@ import com.flixclusive.core.ui.mobile.component.provider.ButtonWithCircularProgr
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCard
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCardPlaceholder
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
@@ -116,6 +117,7 @@ internal fun RepositoryScreen(
     }
 
     Scaffold(
+        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)

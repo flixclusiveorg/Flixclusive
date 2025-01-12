@@ -31,7 +31,6 @@ include(":core:ui:player")
 include(":feature:splash-screen")
 
 // Mobile features
-include(":feature:mobile:about")
 include(":feature:mobile:crash")
 include(":feature:mobile:film")
 include(":feature:mobile:genre")

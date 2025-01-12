@@ -15,6 +15,7 @@ import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.CommonTopBarDefaults.DefaultTopBarHeight
 import com.flixclusive.core.ui.common.navigation.navargs.ProviderMetadataNavArgs
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.provider.util.res.LocalResources
 import com.ramcosta.composedestinations.annotation.Destination
 
@@ -31,7 +32,8 @@ internal fun ProviderSettingsScreen(
 
     Box(
         modifier = Modifier
-            .fillMaxSize()
+            .padding(LocalGlobalScaffoldPadding.current)
+            .fillMaxSize(),
     ) {
         Box(
             modifier = Modifier

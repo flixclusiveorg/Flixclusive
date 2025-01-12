@@ -67,7 +67,6 @@ android {
 }
 
 dependencies {
-    implementation(projects.feature.mobile.about)
     implementation(projects.feature.mobile.crash)
     implementation(projects.feature.mobile.film)
     implementation(projects.feature.mobile.genre)

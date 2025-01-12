@@ -71,6 +71,7 @@ import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderSettingsA
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.data.provider.util.isNotUsable
@@ -169,6 +170,7 @@ internal fun ProvidersScreen(
     }
 
     Scaffold(
+        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             ProvidersTopBar(

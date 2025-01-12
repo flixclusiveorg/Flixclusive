@@ -9,6 +9,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -46,6 +47,7 @@ import com.flixclusive.core.ui.common.navigation.navigator.ChooseProfileAction
 import com.flixclusive.core.ui.common.navigation.navigator.EditUserAction
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.user.getAvatarResource
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.appearance.AppearanceTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.data.DataTweakScreen
@@ -132,11 +134,13 @@ internal fun SettingsScreen(
         ) {
             ListDetailPaneScaffold(
                 modifier =
-                    Modifier.drawBehind {
-                        if (isListAndDetailVisible) {
-                            drawRect(backgroundBrush, alpha = backgroundAlpha.floatValue)
-                        }
-                    },
+                    Modifier
+                        .padding(LocalGlobalScaffoldPadding.current)
+                        .drawBehind {
+                            if (isListAndDetailVisible) {
+                                drawRect(backgroundBrush, alpha = backgroundAlpha.floatValue)
+                            }
+                        },
                 directive = scaffoldNavigator.scaffoldDirective,
                 value = scaffoldNavigator.scaffoldValue,
                 listPane = {
@@ -245,17 +249,25 @@ private fun getAdaptiveBackground(currentUser: User?): Brush {
     }
 }
 
-interface SettingsScreenNavigator : GoBackAction, ChooseProfileAction, EditUserAction {
+interface SettingsScreenNavigator :
+    GoBackAction,
+    ChooseProfileAction,
+    EditUserAction {
     fun openProvidersScreen()
+
     fun openLink(url: String)
 }
 
 internal fun getNavigatorPreview() =
     object : SettingsScreenNavigator {
         override fun openProvidersScreen() = Unit
+
         override fun openLink(url: String) = Unit
+
         override fun goBack() = Unit
+
         override fun openProfilesScreen(isComingFromSplashScreen: Boolean) = Unit
+
         override fun openEditUserScreen(user: User) = Unit
     }
 

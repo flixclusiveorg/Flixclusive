@@ -37,6 +37,7 @@ import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.home.HomeScreenViewModel
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode
@@ -81,7 +82,9 @@ internal fun HomeScreen(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(LocalGlobalScaffoldPadding.current)
     ) {
         HomeScreenContentLoadingScreen(isLoading = uiState.status.isLoading)
 

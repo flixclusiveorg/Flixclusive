@@ -50,6 +50,7 @@ import com.flixclusive.core.ui.mobile.R
 import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.SMALL_ERROR
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.util.exception.safeCall
@@ -61,16 +62,16 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 fun FilmsGridScreen(
-    modifier: Modifier = Modifier,
     screenTitle: String,
     films: List<Film>,
     isShowingFilmCardTitle: Boolean,
+    onFilmClick: (Film) -> Unit,
+    onFilmLongClick: (Film) -> Unit,
+    modifier: Modifier = Modifier,
     listState: LazyGridState = rememberLazyGridState(),
     pagingState: PagingState = PagingState.IDLE,
     currentFilter: FilmType? = null,
     onRetry: () -> Unit = {},
-    onFilmClick: (Film) -> Unit,
-    onFilmLongClick: (Film) -> Unit,
     onFilterChange: ((FilmType) -> Unit)? = null,
     onNavigationIconClick: (() -> Unit)? = null,
 ) {
@@ -108,7 +109,7 @@ fun FilmsGridScreen(
     }
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.padding(LocalGlobalScaffoldPadding.current),
         topBar = {
             AnimatedVisibility(
                 visible = shouldShowTopBar,
@@ -178,8 +179,8 @@ fun FilmsGridScreen(
 private fun FilmsGridHeader(
     headerTitle: String,
     shouldOpenFilterSheet: Boolean,
-    currentFilterSelected: FilmType? = null,
     onFilterClick: () -> Unit,
+    currentFilterSelected: FilmType? = null,
     onNavigationIconClick: (() -> Unit)? = null,
     onFilterChange: ((FilmType) -> Unit)? = null,
 ) {
