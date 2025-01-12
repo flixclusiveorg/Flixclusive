@@ -4,8 +4,8 @@ import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
@@ -171,33 +172,33 @@ internal fun SettingsScreen(
                             scaffoldNavigator.scaffoldValue[ListDetailPaneScaffoldRole.List] ==
                                 PaneAdaptedValue.Expanded
 
-                        AnimatedPane {
-                            AnimatedContent(
-                                targetState = screen!!,
-                                label = "DetailsContent",
-                                transitionSpec = {
-                                    if (initialState.isSubNavigation == true) {
-                                        fadeIn() + slideInHorizontally { -it / 4 } togetherWith
-                                            slideOutHorizontally { it / 4 } + fadeOut()
-                                    } else {
-                                        fadeIn() + slideInHorizontally { it / 4 } togetherWith
-                                            slideOutHorizontally { -it / 4 } + fadeOut()
+                        AnimatedContent(
+                            targetState = screen!!,
+                            label = "DetailsContent",
+                            transitionSpec = {
+                                val spring = spring<IntOffset>(Spring.DampingRatioLowBouncy)
+
+                                if (initialState.isSubNavigation == true) {
+                                    slideInHorizontally(spring) { -it } togetherWith
+                                        slideOutHorizontally(spring) { it }
+                                } else {
+                                    slideInHorizontally(spring) { it } togetherWith
+                                        slideOutHorizontally(spring) { -it }
+                                }
+                            },
+                        ) {
+                            DetailsScaffold(
+                                isListAndDetailVisible = isListAndDetailVisible,
+                                isDetailsVisible = !isListVisible,
+                                content = { it.Content() },
+                                navigateBack = {
+                                    if (scaffoldNavigator.canNavigateBack()) {
+                                        scaffoldNavigator.navigateBack(
+                                            backNavigationBehavior = BackNavigationBehavior.PopLatest,
+                                        )
                                     }
                                 },
-                            ) {
-                                DetailsScaffold(
-                                    isListAndDetailVisible = isListAndDetailVisible,
-                                    isDetailsVisible = !isListVisible,
-                                    content = { it.Content() },
-                                    navigateBack = {
-                                        if (scaffoldNavigator.canNavigateBack()) {
-                                            scaffoldNavigator.navigateBack(
-                                                backNavigationBehavior = BackNavigationBehavior.PopLatest,
-                                            )
-                                        }
-                                    },
-                                )
-                            }
+                            )
                         }
                     }
                 },
