@@ -24,7 +24,7 @@ internal class AppTvNavigator(
         navController.navigateUp()
     }
 
-    override fun openProfilesScreen(isComingFromSplashScreen: Boolean) {
+    override fun openProfilesScreen(shouldPopBackStack: Boolean) {
         TODO("Not yet implemented")
     }
 

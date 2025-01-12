@@ -19,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
+import com.flixclusive.core.ui.common.navigation.navigator.ChooseProfileAction
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.OpenPinScreenAction
 import com.flixclusive.core.ui.common.navigation.navigator.PinAction
@@ -60,6 +62,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 interface UserEditScreenNavigator :
     OpenPinScreenAction,
     SelectAvatarAction,
+    ChooseProfileAction,
     GoBackAction
 
 @Destination
@@ -73,6 +76,13 @@ internal fun UserEditScreen(
     viewModel: UserEditViewModel = hiltViewModel(),
 ) {
     var user by remember { mutableStateOf(userArg) }
+
+    LaunchedEffect(true) {
+        viewModel.isDeleted
+            .collect {
+                navigator.openProfilesScreen(shouldPopBackStack = true)
+            }
+    }
 
     val tweaks =
         remember(user.pin) {
@@ -254,6 +264,8 @@ private fun UserEditScreenBasePreview() {
                 navigator =
                     object : UserEditScreenNavigator {
                         override fun openUserAvatarSelectScreen(selected: Int) = Unit
+
+                        override fun openProfilesScreen(shouldPopBackStack: Boolean) = Unit
 
                         override fun goBack() = Unit
 

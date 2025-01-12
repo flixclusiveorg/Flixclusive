@@ -266,7 +266,7 @@ internal fun getNavigatorPreview() =
 
         override fun goBack() = Unit
 
-        override fun openProfilesScreen(isComingFromSplashScreen: Boolean) = Unit
+        override fun openProfilesScreen(shouldPopBackStack: Boolean) = Unit
 
         override fun openEditUserScreen(user: User) = Unit
     }

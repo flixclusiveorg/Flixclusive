@@ -7,8 +7,11 @@ import com.flixclusive.data.search_history.SearchHistoryRepository
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.data.watchlist.WatchlistRepository
+import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.User
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
 import com.flixclusive.core.locale.R as LocaleR
 
@@ -32,13 +35,27 @@ internal sealed class Library {
 @HiltViewModel
 internal class UserEditViewModel @Inject constructor(
     private val userRepository: UserRepository,
+    private val userSessionManager: UserSessionManager,
     private val searchHistoryRepository: SearchHistoryRepository,
     private val watchlistRepository: WatchlistRepository,
     private val watchHistoryRepository: WatchHistoryRepository
 ) : ViewModel() {
+    private val _isDeleted = MutableSharedFlow<Boolean>()
+    val isDeleted = _isDeleted.asSharedFlow()
+
+    private suspend fun trySigningOutUser(userId: Int) {
+        val loggedInUserId = userSessionManager.currentUser.value?.id
+
+        if (loggedInUserId == userId) {
+            userSessionManager.signOut()
+        }
+    }
+
     fun onRemoveUser(userId: Int) {
         launchOnIO {
+            trySigningOutUser(userId)
             userRepository.deleteUser(userId)
+            _isDeleted.emit(true)
         }
     }
 

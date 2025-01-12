@@ -176,11 +176,11 @@ internal class MobileAppNavigator(
         }
     }
 
-    override fun openProfilesScreen(isComingFromSplashScreen: Boolean) {
+    override fun openProfilesScreen(shouldPopBackStack: Boolean) {
         navController.navigateIfResumed(
-            UserProfilesScreenDestination(isFromSplashScreen = isComingFromSplashScreen),
+            UserProfilesScreenDestination(isFromSplashScreen = shouldPopBackStack),
         ) {
-            if (isComingFromSplashScreen) {
+            if (shouldPopBackStack) {
                 popUpTo(MobileNavGraphs.root) {
                     inclusive = true
                 }
