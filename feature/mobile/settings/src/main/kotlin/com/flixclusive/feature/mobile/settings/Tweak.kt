@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
+import kotlin.random.Random
 
 /**
  *
@@ -46,8 +47,8 @@ sealed class TweakUI<T> : Tweak() {
     /**
      * A tweak that is only used for displaying texts
      * */
-    data object Divider : TweakUI<Unit>() {
-        override val title: String = ""
+    class Divider() : TweakUI<Unit>() {
+        override val title: String by lazy { Random.nextDouble().toString() }
         override val descriptionProvider: (() -> String)? = null
         override val enabledProvider: () -> Boolean = { true }
         override val onTweaked: suspend (newValue: Unit) -> Boolean = { true }
