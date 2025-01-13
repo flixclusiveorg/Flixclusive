@@ -12,7 +12,7 @@ import com.flixclusive.feature.mobile.provider.details.destinations.ProviderDeta
 import com.flixclusive.feature.mobile.provider.manage.destinations.ProviderManagerScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
-import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
+import com.flixclusive.feature.mobile.repository.details.destinations.RepositoryDetailsScreenDestination
 import com.flixclusive.feature.mobile.repository.manage.destinations.RepositoryManagerScreenDestination
 import com.flixclusive.feature.mobile.search.destinations.SearchScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
@@ -87,7 +87,7 @@ internal object MobileNavGraphs {
                     SettingsScreenDestination,
                     ProviderManagerScreenDestination,
                     RepositoryManagerScreenDestination,
-                    RepositoryScreenDestination,
+                    RepositoryDetailsScreenDestination,
                     ProviderDetailsScreenDestination,
                     ProviderSettingsScreenDestination,
                     MarkdownScreenDestination,

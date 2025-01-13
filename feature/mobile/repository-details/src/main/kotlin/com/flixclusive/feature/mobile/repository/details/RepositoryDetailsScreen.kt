@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.repository
+package com.flixclusive.feature.mobile.repository.details
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -54,8 +54,8 @@ import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
-import com.flixclusive.feature.mobile.repository.component.RepositoryHeader
-import com.flixclusive.feature.mobile.repository.component.RepositoryTopBar
+import com.flixclusive.feature.mobile.repository.details.component.RepositoryHeader
+import com.flixclusive.feature.mobile.repository.details.component.RepositoryTopBar
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
@@ -68,13 +68,13 @@ import com.flixclusive.core.ui.common.R as UiCommonR
     navArgsDelegate = RepositoryScreenNavArgs::class
 )
 @Composable
-internal fun RepositoryScreen(
+internal fun RepositoryDetailsScreen(
     navigator: GoBackAction,
     args: RepositoryScreenNavArgs
 ) {
     val context = LocalContext.current
 
-    val viewModel = hiltViewModel<RepositoryScreenViewModel>()
+    val viewModel = hiltViewModel<RepositoryDetailsViewModel>()
 
     val warnOnInstall by viewModel.warnOnInstall.collectAsStateWithLifecycle()
     val providerMetadataList by remember {

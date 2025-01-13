@@ -162,7 +162,7 @@ internal fun ProviderDetailsScreen(
                         modifier = Modifier.padding(horizontal = HORIZONTAL_PADDING),
                         providerMetadata = viewModel.providerMetadata,
                         openRepositoryScreen = {
-                            viewModel.repository?.let(navigator::openRepositoryScreen)
+                            viewModel.repository?.let(navigator::openRepositoryDetails)
                         },
                     )
                 }
@@ -291,7 +291,7 @@ private fun ProviderInfoScreenPreview() {
 
                         override fun openProviderSettings(providerMetadata: ProviderMetadata) {}
 
-                        override fun openRepositoryScreen(repository: Repository) {}
+                        override fun openRepositoryDetails(repository: Repository) {}
                     },
                 args =
                     ProviderMetadataNavArgs(

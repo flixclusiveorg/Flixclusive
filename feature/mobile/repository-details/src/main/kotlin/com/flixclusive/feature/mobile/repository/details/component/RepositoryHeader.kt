@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.repository.component
+package com.flixclusive.feature.mobile.repository.details.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,13 +20,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.core.ui.mobile.component.provider.ButtonWithCircularProgressIndicator
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.model.provider.Repository
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun RepositoryHeader(

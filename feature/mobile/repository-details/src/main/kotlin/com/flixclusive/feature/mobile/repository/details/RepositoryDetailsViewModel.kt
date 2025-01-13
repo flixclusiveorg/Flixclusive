@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.repository
+package com.flixclusive.feature.mobile.repository.details
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -33,7 +33,7 @@ import javax.inject.Inject
 import com.flixclusive.core.locale.R as LocaleR
 
 @HiltViewModel
-internal class RepositoryScreenViewModel
+internal class RepositoryDetailsViewModel
     @Inject
     constructor(
         private val providerLoaderUseCase: ProviderLoaderUseCase,

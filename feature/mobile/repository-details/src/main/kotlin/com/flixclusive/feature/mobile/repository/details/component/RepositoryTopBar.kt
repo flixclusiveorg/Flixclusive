@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.repository.component
+package com.flixclusive.feature.mobile.repository.details.component
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
@@ -49,8 +49,8 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @SuppressLint("UnusedCrossfadeTargetStateParameter")
 @Composable

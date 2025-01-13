@@ -165,7 +165,7 @@ internal fun RepositoryManagerScreen(
                                 return@RepositoryCard
                             }
 
-                            navigator.openRepositoryScreen(repository)
+                            navigator.openRepositoryDetails(repository)
                         },
                         onLongClick = {
                             if (isSelecting.value) {

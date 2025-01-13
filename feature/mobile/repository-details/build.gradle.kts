@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.feature.mobile.repository"
+    namespace = "com.flixclusive.feature.mobile.repository.details"
 }
 
 dependencies {

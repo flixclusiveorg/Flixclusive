@@ -37,7 +37,7 @@ import com.flixclusive.feature.mobile.provider.manage.ProviderManagerScreenNavig
 import com.flixclusive.feature.mobile.provider.manage.destinations.ProviderManagerScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
-import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
+import com.flixclusive.feature.mobile.repository.details.destinations.RepositoryDetailsScreenDestination
 import com.flixclusive.feature.mobile.repository.manage.RepositoryManagerScreenNavigator
 import com.flixclusive.feature.mobile.repository.manage.destinations.RepositoryManagerScreenDestination
 import com.flixclusive.feature.mobile.search.SearchScreenNavigator
@@ -249,9 +249,9 @@ internal class MobileAppNavigator(
         )
     }
 
-    override fun openRepositoryScreen(repository: Repository) {
+    override fun openRepositoryDetails(repository: Repository) {
         navController.navigateIfResumed(
-            RepositoryScreenDestination(repository = repository) within destination.navGraph(),
+            RepositoryDetailsScreenDestination(repository = repository) within destination.navGraph(),
         )
     }
 
