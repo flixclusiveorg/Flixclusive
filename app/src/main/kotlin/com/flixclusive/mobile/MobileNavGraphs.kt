@@ -4,6 +4,7 @@ import com.flixclusive.ROOT
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.destinations.HomeScreenDestination
+import com.flixclusive.feature.mobile.library.destinations.LibraryScreenDestination
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
@@ -62,21 +63,15 @@ internal object MobileNavGraphs {
                     .associateBy { it.route }
         }
 
-    val providers =
+    val library =
         object : NavGraphSpec {
-            override val route = "providers"
+            override val route = "library"
 
-            override val startRoute = ProvidersScreenDestination routedIn this
+            override val startRoute = LibraryScreenDestination
 
             override val destinationsByRoute =
                 listOf<DestinationSpec<*>>(
-                    ProvidersScreenDestination,
-                    RepositorySearchScreenDestination,
-                    RepositoryScreenDestination,
-                    ProviderInfoScreenDestination,
-                    ProviderSettingsScreenDestination,
-                    MarkdownScreenDestination,
-                    ProviderTestScreenDestination,
+                    // TODO: Add nested library destinations here
                 ).routedIn(this)
                     .associateBy { it.route }
         }
@@ -122,11 +117,6 @@ internal object MobileNavGraphs {
                 ).associateBy { it.route }
 
             override val nestedNavGraphs =
-                listOf(
-                    home,
-                    search,
-                    providers,
-                    settings,
-                )
+                listOf(home, search, library, settings,)
         }
 }

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.feature.mobile.recentlyWatched"
+    namespace = "com.flixclusive.feature.mobile.library"
 }
 
 dependencies {

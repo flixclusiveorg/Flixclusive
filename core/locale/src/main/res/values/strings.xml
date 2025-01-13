@@ -7,7 +7,6 @@
 
     <!--  Navigation Items  -->
     <string name="home">Home</string>
-    <string name="preferences">Preferences</string>
     <string name="profiles">Profiles</string>
     <string name="providers">Providers</string>
     <string name="recently_watched">Recently Watched</string>
@@ -114,6 +113,7 @@
     <string name="choose_an_avatar">Choose an avatar</string>
     <string name="clear_app_cache">Clear app cache</string>
     <string name="clear_cached_links">Clear cached links</string>
+    <string name="library">Library</string>
     <string name="clear_library">Clear library</string>
     <string name="clear_search_history">Clear search history</string>
     <string name="clear_tests">Clear tests</string>

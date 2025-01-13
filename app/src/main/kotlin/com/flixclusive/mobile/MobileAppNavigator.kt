@@ -25,6 +25,7 @@ import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.GenreScreenNavigator
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.HomeNavigator
+import com.flixclusive.feature.mobile.library.LibraryScreenNavigator
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
@@ -36,7 +37,6 @@ import com.flixclusive.feature.mobile.provider.info.ProviderInfoNavigator
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
-import com.flixclusive.feature.mobile.recentlyWatched.RecentlyWatchedScreenNavigator
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
 import com.flixclusive.feature.mobile.repository.search.RepositorySearchScreenNavigator
 import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
@@ -56,7 +56,6 @@ import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestinati
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
-import com.flixclusive.feature.mobile.watchlist.WatchlistScreenNavigator
 import com.flixclusive.model.database.User
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode
@@ -85,7 +84,7 @@ internal class MobileAppNavigator(
     PlayerScreenNavigator,
     ProviderInfoNavigator,
     ProvidersScreenNavigator,
-    RecentlyWatchedScreenNavigator,
+    LibraryScreenNavigator,
     RepositorySearchScreenNavigator,
     SearchExpandedScreenNavigator,
     SearchScreenNavigator,
@@ -105,8 +104,7 @@ internal class MobileAppNavigator(
     ViewMarkdownAction,
     ViewNewAppUpdatesAction,
     ViewProviderAction,
-    ViewRepositoryAction,
-    WatchlistScreenNavigator {
+    ViewRepositoryAction {
     override fun goBack() {
         navController.navigateUp()
     }
@@ -194,13 +192,12 @@ internal class MobileAppNavigator(
         )
     }
 
-    override fun openUserPinScreen(
-        action: PinAction
-    ) {
-        val destination = when (action) {
-            is PinAction.Setup -> PinSetupScreenDestination()
-            is PinAction.Verify -> PinVerifyScreenDestination(user = action.user)
-        }
+    override fun openUserPinScreen(action: PinAction) {
+        val destination =
+            when (action) {
+                is PinAction.Setup -> PinSetupScreenDestination()
+                is PinAction.Verify -> PinVerifyScreenDestination(user = action.user)
+            }
 
         navController.navigateIfResumed(destination)
     }

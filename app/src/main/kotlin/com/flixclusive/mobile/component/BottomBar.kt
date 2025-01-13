@@ -57,31 +57,33 @@ internal val MaxBottomBarHeight = 60.dp
 @Composable
 internal fun BottomBar(
     currentSelectedScreen: NavGraphSpec,
-    onNavigate: (NavGraphSpec) -> Unit
+    onNavigate: (NavGraphSpec) -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.surface)
-            .windowInsetsPadding(getProperInsets())
+        modifier =
+            Modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .windowInsetsPadding(getProperInsets()),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(MaxBottomBarHeight)
-                .background(MaterialTheme.colorScheme.surface)
-                .drawBehind {
-                    val strokeWidth = 2F
-                    val x = size.width - strokeWidth
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(MaxBottomBarHeight)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .drawBehind {
+                        val strokeWidth = 2F
+                        val x = size.width - strokeWidth
 
-                    drawLine(
-                        color = Color.LightGray,
-                        start = Offset(0F, 0F),
-                        end = Offset(x, 0F),
-                        strokeWidth = strokeWidth
-                    )
-                },
+                        drawLine(
+                            color = Color.LightGray,
+                            start = Offset(0F, 0F),
+                            end = Offset(x, 0F),
+                            strokeWidth = strokeWidth,
+                        )
+                    },
             horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             mobileNavigationItems.forEach {
                 CustomNavItem(
@@ -89,7 +91,7 @@ internal fun BottomBar(
                     isSelected = currentSelectedScreen == it.screen,
                     onClick = {
                         onNavigate(it.screen)
-                    }
+                    },
                 )
             }
         }
@@ -105,27 +107,24 @@ private fun CustomNavItem(
     val interactionSource = remember { MutableInteractionSource() }
 
     val unselectedContentColor = LocalContentColor.current.onMediumEmphasis()
-    val contentColor = remember(isSelected) {
-        if(isSelected) Color.White
-        else unselectedContentColor
-    }
 
     Column(
-        modifier = Modifier
-            .minimumInteractiveComponentSize()
-            .size(64.dp)
-            .background(color = Color.Transparent)
-            .clickable(
-                onClick = onClick,
-                role = Role.Button,
-                interactionSource = interactionSource,
-                indication = null,
-            ),
+        modifier =
+            Modifier
+                .minimumInteractiveComponentSize()
+                .size(64.dp)
+                .background(color = Color.Transparent)
+                .clickable(
+                    onClick = onClick,
+                    role = Role.Button,
+                    interactionSource = interactionSource,
+                    indication = null,
+                ),
         verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Box(
                 Modifier
@@ -134,17 +133,17 @@ private fun CustomNavItem(
                     .height(28.dp)
                     .indication(
                         interactionSource = interactionSource,
-                        indication = ripple()
-                    )
+                        indication = ripple(),
+                    ),
             )
 
             Crossfade(
                 targetState = isSelected,
-                label = ""
+                label = "",
             ) {
                 Icon(
-                    painter = if(it) painterResource(item.iconSelected) else painterResource(item.iconUnselected),
-                    contentDescription = stringResource(id = item.label)
+                    painter = if (it) painterResource(item.iconSelected) else painterResource(item.iconUnselected),
+                    contentDescription = stringResource(id = item.label),
                 )
             }
         }
@@ -153,12 +152,19 @@ private fun CustomNavItem(
             text = stringResource(id = item.label),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = contentColor,
-                fontWeight = FontWeight.Medium
-            ),
-            modifier = Modifier
-                .padding(bottom = 1.5.dp)
+            style =
+                MaterialTheme.typography.labelSmall.copy(
+                    color =
+                        if (isSelected) {
+                            Color.White
+                        } else {
+                            unselectedContentColor
+                        },
+                    fontWeight = FontWeight.Medium,
+                ),
+            modifier =
+                Modifier
+                    .padding(bottom = 1.5.dp),
         )
     }
 }
@@ -173,35 +179,36 @@ internal fun getProperInsets(): WindowInsets {
             .collect { orientation = it }
     }
 
-    return when(orientation) {
+    return when (orientation) {
         Configuration.ORIENTATION_LANDSCAPE -> WindowInsets(0.dp)
         else -> WindowInsets.navigationBars
     }
 }
 
-private val mobileNavigationItems = listOf(
-    AppNavigationItem(
-        screen = MobileNavGraphs.home,
-        iconSelected = UiCommonR.drawable.home,
-        iconUnselected = UiCommonR.drawable.home_outlined,
-        label = LocaleR.string.home
-    ),
-    AppNavigationItem(
-        screen = MobileNavGraphs.search,
-        iconSelected = UiCommonR.drawable.search,
-        iconUnselected = UiCommonR.drawable.search_outlined,
-        label = LocaleR.string.search
-    ),
-    AppNavigationItem(
-        screen = MobileNavGraphs.providers,
-        iconSelected = UiCommonR.drawable.provider_logo_fill,
-        iconUnselected = UiCommonR.drawable.provider_logo,
-        label = LocaleR.string.providers
-    ),
-    AppNavigationItem(
-        screen = MobileNavGraphs.settings,
-        iconSelected = UiCommonR.drawable.settings_filled,
-        iconUnselected = UiCommonR.drawable.settings,
-        label = LocaleR.string.preferences
-    ),
-)
+private val mobileNavigationItems =
+    listOf(
+        AppNavigationItem(
+            screen = MobileNavGraphs.home,
+            iconSelected = UiCommonR.drawable.home,
+            iconUnselected = UiCommonR.drawable.home_outlined,
+            label = LocaleR.string.home,
+        ),
+        AppNavigationItem(
+            screen = MobileNavGraphs.search,
+            iconSelected = UiCommonR.drawable.search,
+            iconUnselected = UiCommonR.drawable.search_outlined,
+            label = LocaleR.string.search,
+        ),
+        AppNavigationItem(
+            screen = MobileNavGraphs.library,
+            iconSelected = UiCommonR.drawable.library_outline,
+            iconUnselected = UiCommonR.drawable.round_library,
+            label = LocaleR.string.library,
+        ),
+        AppNavigationItem(
+            screen = MobileNavGraphs.settings,
+            iconSelected = UiCommonR.drawable.settings_filled,
+            iconUnselected = UiCommonR.drawable.settings,
+            label = LocaleR.string.settings,
+        ),
+    )

@@ -74,7 +74,7 @@ dependencies {
     implementation(projects.feature.mobile.providerSettings)
     implementation(projects.feature.mobile.providerTest)
     implementation(projects.feature.mobile.markdown)
-    implementation(projects.feature.mobile.recentlyWatched)
+    implementation(projects.feature.mobile.library)
     implementation(projects.feature.mobile.repository)
     implementation(projects.feature.mobile.repositorySearch)
     implementation(projects.feature.mobile.search)
@@ -86,7 +86,6 @@ dependencies {
     implementation(projects.feature.mobile.profiles)
     implementation(projects.feature.mobile.userAdd)
     implementation(projects.feature.mobile.userEdit)
-    implementation(projects.feature.mobile.watchlist)
 
     implementation(projects.feature.tv.home)
     implementation(projects.feature.tv.search)
