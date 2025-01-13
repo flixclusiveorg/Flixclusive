@@ -201,8 +201,8 @@ private val mobileNavigationItems =
         ),
         AppNavigationItem(
             screen = MobileNavGraphs.library,
-            iconSelected = UiCommonR.drawable.library_outline,
-            iconUnselected = UiCommonR.drawable.round_library,
+            iconSelected = UiCommonR.drawable.round_library,
+            iconUnselected = UiCommonR.drawable.library_outline,
             label = LocaleR.string.library,
         ),
         AppNavigationItem(
