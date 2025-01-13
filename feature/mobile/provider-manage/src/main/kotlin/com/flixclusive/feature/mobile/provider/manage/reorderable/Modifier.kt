@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:compose:modifier-composed-check")
 
-package com.flixclusive.feature.mobile.provider.reorderable
+package com.flixclusive.feature.mobile.provider.manage.reorderable
 
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress

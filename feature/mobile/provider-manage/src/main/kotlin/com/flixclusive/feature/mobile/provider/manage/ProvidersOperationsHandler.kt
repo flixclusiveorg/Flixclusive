@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider
+package com.flixclusive.feature.mobile.provider.manage
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.flixclusive.data.provider.ProviderRepository

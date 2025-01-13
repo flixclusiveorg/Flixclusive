@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider
+package com.flixclusive.feature.mobile.provider.manage
 
 import android.content.Context
 import androidx.compose.animation.AnimatedContent
@@ -76,19 +76,19 @@ import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.data.provider.util.isNotUsable
 import com.flixclusive.domain.provider.util.getApiCrashMessage
-import com.flixclusive.feature.mobile.provider.component.CustomButton
-import com.flixclusive.feature.mobile.provider.component.InstalledProviderCard
-import com.flixclusive.feature.mobile.provider.component.ProfileHandlerButtons
-import com.flixclusive.feature.mobile.provider.component.ProvidersTopBar
-import com.flixclusive.feature.mobile.provider.reorderable.ReorderableItem
-import com.flixclusive.feature.mobile.provider.reorderable.rememberReorderableLazyListState
+import com.flixclusive.feature.mobile.provider.manage.component.CustomButton
+import com.flixclusive.feature.mobile.provider.manage.component.InstalledProviderCard
+import com.flixclusive.feature.mobile.provider.manage.component.ProfileHandlerButtons
+import com.flixclusive.feature.mobile.provider.manage.component.ProvidersTopBar
+import com.flixclusive.feature.mobile.provider.manage.reorderable.ReorderableItem
+import com.flixclusive.feature.mobile.provider.manage.reorderable.rememberReorderableLazyListState
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface ProvidersScreenNavigator :
+interface ProviderManagerScreenNavigator :
     GoBackAction,
     TestProvidersAction,
     ViewMarkdownAction,
@@ -104,9 +104,9 @@ private fun Context.getHelpGuideTexts() = resources.getStringArray(LocaleR.array
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination
 @Composable
-internal fun ProvidersScreen(
-    navigator: ProvidersScreenNavigator,
-    viewModel: ProvidersScreenViewModel = hiltViewModel(),
+internal fun ProviderManagerScreen(
+    navigator: ProviderManagerScreenNavigator,
+    viewModel: ProviderManagerViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val providerToggles by viewModel.providerPrefs.collectAsStateWithLifecycle()

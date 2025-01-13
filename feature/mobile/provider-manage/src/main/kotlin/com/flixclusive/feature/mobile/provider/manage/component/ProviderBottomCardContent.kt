@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.component
+package com.flixclusive.feature.mobile.provider.manage.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

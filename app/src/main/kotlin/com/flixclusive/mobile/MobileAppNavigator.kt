@@ -31,15 +31,15 @@ import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreenNavigator
 import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
-import com.flixclusive.feature.mobile.provider.ProvidersScreenNavigator
-import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
 import com.flixclusive.feature.mobile.provider.info.ProviderInfoNavigator
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
+import com.flixclusive.feature.mobile.provider.manage.ProviderManagerScreenNavigator
+import com.flixclusive.feature.mobile.provider.manage.destinations.ProviderManagerScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
 import com.flixclusive.feature.mobile.repository.manage.RepositoryManagerScreenNavigator
-import com.flixclusive.feature.mobile.repository.manage.destinations.RepositorySearchScreenDestination
+import com.flixclusive.feature.mobile.repository.manage.destinations.RepositoryManagerScreenDestination
 import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
@@ -83,7 +83,7 @@ internal class MobileAppNavigator(
     HomeNavigator,
     PlayerScreenNavigator,
     ProviderInfoNavigator,
-    ProvidersScreenNavigator,
+    ProviderManagerScreenNavigator,
     LibraryScreenNavigator,
     RepositoryManagerScreenNavigator,
     SearchExpandedScreenNavigator,
@@ -245,7 +245,7 @@ internal class MobileAppNavigator(
 
     override fun openAddRepositoryScreen() {
         navController.navigateIfResumed(
-            RepositorySearchScreenDestination within destination.navGraph(),
+            RepositoryManagerScreenDestination within destination.navGraph(),
         )
     }
 
@@ -281,7 +281,7 @@ internal class MobileAppNavigator(
 
     override fun openProvidersScreen() {
         navController.navigateIfResumed(
-            ProvidersScreenDestination within destination.navGraph(),
+            ProviderManagerScreenDestination within destination.navGraph(),
         )
     }
 

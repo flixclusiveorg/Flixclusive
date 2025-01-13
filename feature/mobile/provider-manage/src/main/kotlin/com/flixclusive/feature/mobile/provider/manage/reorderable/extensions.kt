@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.reorderable
+package com.flixclusive.feature.mobile.provider.manage.reorderable
 
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.ui.geometry.Offset

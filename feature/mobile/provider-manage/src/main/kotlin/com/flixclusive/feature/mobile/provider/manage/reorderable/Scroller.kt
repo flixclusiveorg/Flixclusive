@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.reorderable
+package com.flixclusive.feature.mobile.provider.manage.reorderable
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween

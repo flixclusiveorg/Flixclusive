@@ -8,12 +8,12 @@ import com.flixclusive.feature.mobile.library.destinations.LibraryScreenDestinat
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
-import com.flixclusive.feature.mobile.provider.destinations.ProvidersScreenDestination
 import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
+import com.flixclusive.feature.mobile.provider.manage.destinations.ProviderManagerScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
-import com.flixclusive.feature.mobile.repository.manage.destinations.RepositorySearchScreenDestination
+import com.flixclusive.feature.mobile.repository.manage.destinations.RepositoryManagerScreenDestination
 import com.flixclusive.feature.mobile.search.destinations.SearchScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
@@ -85,8 +85,8 @@ internal object MobileNavGraphs {
             override val destinationsByRoute =
                 listOf<DestinationSpec<*>>(
                     SettingsScreenDestination,
-                    ProvidersScreenDestination,
-                    RepositorySearchScreenDestination,
+                    ProviderManagerScreenDestination,
+                    RepositoryManagerScreenDestination,
                     RepositoryScreenDestination,
                     ProviderInfoScreenDestination,
                     ProviderSettingsScreenDestination,

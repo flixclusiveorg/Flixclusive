@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider
+package com.flixclusive.feature.mobile.provider.manage
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -13,7 +13,6 @@ import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.domain.provider.ProviderLoaderUseCase
 import com.flixclusive.domain.provider.ProviderUnloaderUseCase
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserOnBoarding
@@ -35,10 +34,9 @@ internal data class ProviderError(
 )
 
 @HiltViewModel
-internal class ProvidersScreenViewModel
+internal class ProviderManagerViewModel
     @Inject
     constructor(
-        private val providerLoaderUseCase: ProviderLoaderUseCase,
         private val providerUnloaderUseCase: ProviderUnloaderUseCase,
         private val dataStoreManager: DataStoreManager,
         private val providerRepository: ProviderRepository,
