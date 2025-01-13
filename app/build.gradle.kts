@@ -1,5 +1,3 @@
-import java.io.ByteArrayOutputStream
-
 plugins {
     alias(libs.plugins.flixclusive.application)
     alias(libs.plugins.flixclusive.compose)
@@ -14,34 +12,33 @@ val versionMinor = 2
 val versionPatch = 0
 val versionBuild = 0
 val applicationName: String = libs.versions.applicationName.get()
-val _applicationId: String = libs.versions.applicationId.get()
-val _versionName = "${versionMajor}.${versionMinor}.${versionPatch}"
+val appIdFromLib: String = libs.versions.applicationId.get()
+val formattedVersion = "$versionMajor.$versionMinor.$versionPatch"
+
+val gitCommitVersionProvider = providers.exec {
+    commandLine = "git rev-parse --short HEAD".split(" ")
+}
 
 fun Project.getCommitVersion(): String {
-    val byteOut = ByteArrayOutputStream()
-    project.exec {
-        commandLine = "git rev-parse --short HEAD".split(" ")
-        standardOutput = byteOut
-    }
-    return String(byteOut.toByteArray()).trim()
+    return gitCommitVersionProvider.standardOutput.asText.get().trim()
 }
 
 android {
-    namespace = _applicationId
+    namespace = appIdFromLib
 
     defaultConfig {
-        applicationId = _applicationId
+        applicationId = appIdFromLib
         versionCode = versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
-        versionName = _versionName
+        versionName = formattedVersion
         vectorDrawables {
             useSupportLibrary = true
         }
 
         resValue("string", "build", versionCode.toString())
         resValue("string", "app_name", applicationName)
-        resValue("string", "application_id", _applicationId)
+        resValue("string", "application_id", appIdFromLib)
         resValue("string", "debug_mode", "false")
-        resValue("string", "version_name", _versionName)
+        resValue("string", "version_name", formattedVersion)
         resValue("string", "commit_version", getCommitVersion())
     }
 
@@ -51,9 +48,9 @@ android {
             versionNameSuffix = "-DEBUG"
 
             resValue("string", "app_name", "$applicationName Debug")
-            resValue("string", "application_id", _applicationId + applicationIdSuffix)
+            resValue("string", "application_id", appIdFromLib + applicationIdSuffix)
             resValue("string", "debug_mode", "true")
-            resValue("string", "version_name", _versionName + versionNameSuffix)
+            resValue("string", "version_name", formattedVersion + versionNameSuffix)
         }
     }
 

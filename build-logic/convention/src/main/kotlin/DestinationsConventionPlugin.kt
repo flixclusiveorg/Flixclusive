@@ -1,4 +1,3 @@
-
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
@@ -18,18 +17,19 @@ class DestinationsConventionPlugin : Plugin<Project> {
             }
 
             extensions.configure<BaseExtension> {
-                when(this) {
+                when (this) {
                     is BaseAppModuleExtension -> {
                         applicationVariants.all {
                             addJavaSourceFoldersToModel(
-                                File(buildDir, "generated/ksp/$name/kotlin")
+                                File(layout.buildDirectory.asFile.get(), "generated/ksp/$name/kotlin"),
                             )
                         }
                     }
+
                     is LibraryExtension -> {
                         libraryVariants.all {
                             addJavaSourceFoldersToModel(
-                                File(buildDir, "generated/ksp/$name/kotlin")
+                                File(layout.buildDirectory.asFile.get(), "generated/ksp/$name/kotlin"),
                             )
                         }
                     }
@@ -38,7 +38,9 @@ class DestinationsConventionPlugin : Plugin<Project> {
 
             afterEvaluate {
                 // Custom task to generate destinations
-                val hasValidDestinations = project.parent?.name?.equals("mobile") == true || project.parent?.name?.equals("tv") == true
+                val hasValidDestinations =
+                    project.parent?.name?.equals("mobile") == true ||
+                        project.parent?.name?.equals("tv") == true
                 if (hasValidDestinations) {
                     tasks.register("generateDestinations") {
                         dependsOn("kspDebugKotlin")
@@ -59,8 +61,6 @@ class DestinationsConventionPlugin : Plugin<Project> {
                 add("ksp", libs.findLibrary("destinations-ksp").get())
                 add("implementation", libs.findLibrary("destinations-animations").get())
             }
-
         }
     }
-
 }
