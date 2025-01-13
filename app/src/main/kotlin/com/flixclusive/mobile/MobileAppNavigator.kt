@@ -31,8 +31,8 @@ import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreenNavigator
 import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
-import com.flixclusive.feature.mobile.provider.info.ProviderInfoNavigator
-import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScreenDestination
+import com.flixclusive.feature.mobile.provider.details.ProviderDetailsNavigator
+import com.flixclusive.feature.mobile.provider.details.destinations.ProviderDetailsScreenDestination
 import com.flixclusive.feature.mobile.provider.manage.ProviderManagerScreenNavigator
 import com.flixclusive.feature.mobile.provider.manage.destinations.ProviderManagerScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
@@ -82,7 +82,7 @@ internal class MobileAppNavigator(
     GoBackAction,
     HomeNavigator,
     PlayerScreenNavigator,
-    ProviderInfoNavigator,
+    ProviderDetailsNavigator,
     ProviderManagerScreenNavigator,
     LibraryScreenNavigator,
     RepositoryManagerScreenNavigator,
@@ -243,7 +243,7 @@ internal class MobileAppNavigator(
         )
     }
 
-    override fun openAddRepositoryScreen() {
+    override fun openRepositoryManagerScreen() {
         navController.navigateIfResumed(
             RepositoryManagerScreenDestination within destination.navGraph(),
         )
@@ -261,9 +261,9 @@ internal class MobileAppNavigator(
         )
     }
 
-    override fun openProviderInfo(providerMetadata: ProviderMetadata) {
+    override fun openProviderDetails(providerMetadata: ProviderMetadata) {
         navController.navigateIfResumed(
-            ProviderInfoScreenDestination(providerMetadata = providerMetadata) within destination.navGraph(),
+            ProviderDetailsScreenDestination(providerMetadata = providerMetadata) within destination.navGraph(),
         )
     }
 
@@ -279,7 +279,7 @@ internal class MobileAppNavigator(
         )
     }
 
-    override fun openProvidersScreen() {
+    override fun openProviderManagerScreen() {
         navController.navigateIfResumed(
             ProviderManagerScreenDestination within destination.navGraph(),
         )

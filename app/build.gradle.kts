@@ -69,7 +69,7 @@ dependencies {
     implementation(projects.feature.mobile.genre)
     implementation(projects.feature.mobile.home)
     implementation(projects.feature.mobile.player)
-    implementation(projects.feature.mobile.providerInfo)
+    implementation(projects.feature.mobile.providerDetails)
     implementation(projects.feature.mobile.providerManage)
     implementation(projects.feature.mobile.providerSettings)
     implementation(projects.feature.mobile.providerTest)

@@ -253,14 +253,14 @@ interface SettingsScreenNavigator :
     GoBackAction,
     ChooseProfileAction,
     EditUserAction {
-    fun openProvidersScreen()
+    fun openProviderManagerScreen()
 
     fun openLink(url: String)
 }
 
 internal fun getNavigatorPreview() =
     object : SettingsScreenNavigator {
-        override fun openProvidersScreen() = Unit
+        override fun openProviderManagerScreen() = Unit
 
         override fun openLink(url: String) = Unit
 

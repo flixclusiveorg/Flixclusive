@@ -94,7 +94,7 @@ interface ProviderManagerScreenNavigator :
     ViewMarkdownAction,
     ViewProviderAction,
     ViewProviderSettingsAction {
-    fun openAddRepositoryScreen() // TODO: Move this out of here.
+    fun openRepositoryManagerScreen() // TODO: Move this out of here.
 }
 
 private val FabButtonSize = 56.dp
@@ -185,7 +185,7 @@ internal fun ProviderManagerScreen(
         floatingActionButton = {
             if (viewModel.providers.isNotEmpty()) {
                 ExtendedFloatingActionButton(
-                    onClick = navigator::openAddRepositoryScreen,
+                    onClick = navigator::openRepositoryManagerScreen,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     shape = MaterialTheme.shapes.medium,
                     expanded = !shouldShowTopBar,
@@ -237,7 +237,7 @@ internal fun ProviderManagerScreen(
                         ) {
                             MissingProvidersLogo()
                             OutlinedButton(
-                                onClick = navigator::openAddRepositoryScreen,
+                                onClick = navigator::openRepositoryManagerScreen,
                                 modifier = Modifier,
                             ) {
                                 Text(text = stringResource(LocaleR.string.add_provider))
@@ -300,7 +300,7 @@ internal fun ProviderManagerScreen(
                                     interactionSource = interactionSource,
                                     isDraggableProvider = { !searchExpanded.value },
                                     openSettings = { navigator.openProviderSettings(metadata) },
-                                    onClick = { navigator.openProviderInfo(metadata) },
+                                    onClick = { navigator.openProviderDetails(metadata) },
                                     uninstallProvider = { providerToUninstall = metadata },
                                     onToggleProvider = { viewModel.toggleProvider(id = metadata.id) },
                                     enabledProvider = {

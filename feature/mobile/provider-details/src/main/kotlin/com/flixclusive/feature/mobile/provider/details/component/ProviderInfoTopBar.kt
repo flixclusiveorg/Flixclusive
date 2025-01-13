@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.info.component
+package com.flixclusive.feature.mobile.provider.details.component
 
 
 import androidx.compose.animation.AnimatedVisibility

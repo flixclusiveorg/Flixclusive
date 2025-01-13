@@ -50,7 +50,7 @@ internal class ProvidersTweakScreen(
                 title = stringResource(LocaleR.string.manage_providers),
                 descriptionProvider = { context.getString(LocaleR.string.providers_button_settings_description) },
                 iconId = UiCommonR.drawable.provider_logo,
-                onClick = navigator::openProvidersScreen,
+                onClick = navigator::openProviderManagerScreen,
             ),
             TweakUI.Divider,
             getGeneralTweaks({ providerPreferences.value }),

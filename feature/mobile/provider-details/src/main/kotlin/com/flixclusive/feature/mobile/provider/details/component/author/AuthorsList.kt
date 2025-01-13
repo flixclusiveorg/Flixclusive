@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.info.component.author
+package com.flixclusive.feature.mobile.provider.details.component.author
 
 
 import androidx.compose.foundation.layout.Arrangement
@@ -16,8 +16,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.feature.mobile.provider.info.HORIZONTAL_PADDING
-import com.flixclusive.feature.mobile.provider.info.component.Title
+import com.flixclusive.feature.mobile.provider.details.HORIZONTAL_PADDING
+import com.flixclusive.feature.mobile.provider.details.component.Title
 import com.flixclusive.model.provider.Author
 import com.flixclusive.core.locale.R as LocaleR
 

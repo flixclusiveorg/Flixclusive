@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.info.component
+package com.flixclusive.feature.mobile.provider.details.component
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import com.flixclusive.feature.mobile.provider.info.LABEL_SIZE_IN_SP
+import com.flixclusive.feature.mobile.provider.details.LABEL_SIZE_IN_SP
 
 @Composable
 internal fun Title(

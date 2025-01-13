@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.info
+package com.flixclusive.feature.mobile.provider.details
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -47,13 +47,13 @@ import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
-import com.flixclusive.feature.mobile.provider.info.component.DescriptionBlock
-import com.flixclusive.feature.mobile.provider.info.component.MainButtons
-import com.flixclusive.feature.mobile.provider.info.component.NavigationItem
-import com.flixclusive.feature.mobile.provider.info.component.ProviderInfoHeader
-import com.flixclusive.feature.mobile.provider.info.component.ProviderInfoTopBar
-import com.flixclusive.feature.mobile.provider.info.component.author.AuthorsList
-import com.flixclusive.feature.mobile.provider.info.component.subdetails.SubDetailsList
+import com.flixclusive.feature.mobile.provider.details.component.DescriptionBlock
+import com.flixclusive.feature.mobile.provider.details.component.MainButtons
+import com.flixclusive.feature.mobile.provider.details.component.NavigationItem
+import com.flixclusive.feature.mobile.provider.details.component.ProviderInfoHeader
+import com.flixclusive.feature.mobile.provider.details.component.ProviderInfoTopBar
+import com.flixclusive.feature.mobile.provider.details.component.author.AuthorsList
+import com.flixclusive.feature.mobile.provider.details.component.subdetails.SubDetailsList
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import com.ramcosta.composedestinations.annotation.Destination
@@ -66,7 +66,7 @@ internal val LABEL_SIZE_IN_SP = LABEL_SIZE.sp
 internal val LABEL_SIZE_IN_DP = LABEL_SIZE.dp
 internal val SUB_LABEL_SIZE = 13.sp
 
-interface ProviderInfoNavigator :
+interface ProviderDetailsNavigator :
     GoBackAction,
     ViewProviderSettingsAction,
     ViewRepositoryAction,
@@ -77,10 +77,10 @@ interface ProviderInfoNavigator :
     navArgsDelegate = ProviderMetadataNavArgs::class,
 )
 @Composable
-internal fun ProviderInfoScreen(
-    navigator: ProviderInfoNavigator,
+internal fun ProviderDetailsScreen(
+    navigator: ProviderDetailsNavigator,
     args: ProviderMetadataNavArgs,
-    viewModel: ProviderInfoScreenViewModel = hiltViewModel(),
+    viewModel: ProviderDetailsViewModel = hiltViewModel(),
 ) {
     val providerPreferences by viewModel.providerPreferences.collectAsStateWithLifecycle()
     var openWarnOnInstallDialog by rememberSaveable { mutableStateOf(false) }
@@ -277,9 +277,9 @@ private fun ProviderInfoScreenPreview() {
 
     FlixclusiveTheme {
         Surface {
-            ProviderInfoScreen(
+            ProviderDetailsScreen(
                 navigator =
-                    object : ProviderInfoNavigator {
+                    object : ProviderDetailsNavigator {
                         override fun goBack() {}
 
                         override fun testProviders(providers: ArrayList<ProviderMetadata>) {}

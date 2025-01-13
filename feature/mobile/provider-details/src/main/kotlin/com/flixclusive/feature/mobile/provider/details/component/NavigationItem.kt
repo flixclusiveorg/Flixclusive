@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.info.component
+package com.flixclusive.feature.mobile.provider.details.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +21,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.provider.info.HORIZONTAL_PADDING
-import com.flixclusive.feature.mobile.provider.info.LABEL_SIZE_IN_DP
+import com.flixclusive.feature.mobile.provider.details.HORIZONTAL_PADDING
+import com.flixclusive.feature.mobile.provider.details.LABEL_SIZE_IN_DP
 import com.flixclusive.core.ui.mobile.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
 

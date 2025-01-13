@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.info.component.author
+package com.flixclusive.feature.mobile.provider.details.component.author
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
-import com.flixclusive.feature.mobile.provider.info.SUB_LABEL_SIZE
+import com.flixclusive.feature.mobile.provider.details.SUB_LABEL_SIZE
 import com.flixclusive.model.provider.Author
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR

@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.info.component.subdetails
+package com.flixclusive.feature.mobile.provider.details.component.subdetails
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
@@ -22,7 +22,7 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.provider.info.HORIZONTAL_PADDING
+import com.flixclusive.feature.mobile.provider.details.HORIZONTAL_PADDING
 import com.flixclusive.model.provider.ProviderMetadata
 import java.util.Locale
 import com.flixclusive.core.locale.R as LocaleR

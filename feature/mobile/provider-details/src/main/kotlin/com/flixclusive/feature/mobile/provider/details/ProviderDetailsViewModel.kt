@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.info
+package com.flixclusive.feature.mobile.provider.details
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,7 +30,7 @@ import javax.inject.Inject
 import com.flixclusive.core.locale.R as LocaleR
 
 @HiltViewModel
-internal class ProviderInfoScreenViewModel
+internal class ProviderDetailsViewModel
     @Inject
     constructor(
         private val dataStoreManager: DataStoreManager,

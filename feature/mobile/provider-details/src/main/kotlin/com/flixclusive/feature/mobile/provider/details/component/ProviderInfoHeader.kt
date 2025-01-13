@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.info.component
+package com.flixclusive.feature.mobile.provider.details.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -95,7 +95,7 @@ internal fun ProviderInfoHeader(
 @Composable
 private fun ProviderSettingsHeaderPreview() {
     val providerMetadata = getDummyProviderMetadata()
-    
+
     FlixclusiveTheme {
         Surface(
             modifier = Modifier

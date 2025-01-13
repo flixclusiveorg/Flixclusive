@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.info.component.subdetails
+package com.flixclusive.feature.mobile.provider.details.component.subdetails
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.LocalContentColor
@@ -11,8 +11,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.provider.info.LABEL_SIZE_IN_SP
-import com.flixclusive.feature.mobile.provider.info.SUB_LABEL_SIZE
+import com.flixclusive.feature.mobile.provider.details.LABEL_SIZE_IN_SP
+import com.flixclusive.feature.mobile.provider.details.SUB_LABEL_SIZE
 
 @Composable
 internal fun SubDetailsItem(
