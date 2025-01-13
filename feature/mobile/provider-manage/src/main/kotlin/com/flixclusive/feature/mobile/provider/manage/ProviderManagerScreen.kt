@@ -2,7 +2,6 @@ package com.flixclusive.feature.mobile.provider.manage
 
 import android.content.Context
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,7 +20,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -76,9 +73,7 @@ import com.flixclusive.core.ui.mobile.util.isAtTop
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.data.provider.util.isNotUsable
 import com.flixclusive.domain.provider.util.getApiCrashMessage
-import com.flixclusive.feature.mobile.provider.manage.component.CustomButton
 import com.flixclusive.feature.mobile.provider.manage.component.InstalledProviderCard
-import com.flixclusive.feature.mobile.provider.manage.component.ProfileHandlerButtons
 import com.flixclusive.feature.mobile.provider.manage.component.ProvidersTopBar
 import com.flixclusive.feature.mobile.provider.manage.reorderable.ReorderableItem
 import com.flixclusive.feature.mobile.provider.manage.reorderable.rememberReorderableLazyListState
@@ -94,13 +89,14 @@ interface ProviderManagerScreenNavigator :
     ViewMarkdownAction,
     ViewProviderAction,
     ViewProviderSettingsAction {
-    fun openRepositoryManagerScreen() // TODO: Move this out of here.
+    fun openAddProviderScreen()
 }
 
 private val FabButtonSize = 56.dp
 
 private fun Context.getHelpGuideTexts() = resources.getStringArray(LocaleR.array.providers_screen_help)
 
+// TODO: Refactor for cleaner code
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination
 @Composable
@@ -157,10 +153,6 @@ internal fun ProviderManagerScreen(
         }
     }
 
-    val featureComingSoonCallback = {
-        context.showToast(context.getString(LocaleR.string.coming_soon_feature))
-    }
-
     val onNeedHelp = {
         val (title, description) = context.getHelpGuideTexts()
         navigator.openMarkdownScreen(
@@ -185,7 +177,7 @@ internal fun ProviderManagerScreen(
         floatingActionButton = {
             if (viewModel.providers.isNotEmpty()) {
                 ExtendedFloatingActionButton(
-                    onClick = navigator::openRepositoryManagerScreen,
+                    onClick = navigator::openAddProviderScreen,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     shape = MaterialTheme.shapes.medium,
                     expanded = !shouldShowTopBar,
@@ -237,7 +229,7 @@ internal fun ProviderManagerScreen(
                         ) {
                             MissingProvidersLogo()
                             OutlinedButton(
-                                onClick = navigator::openRepositoryManagerScreen,
+                                onClick = navigator::openAddProviderScreen,
                                 modifier = Modifier,
                             ) {
                                 Text(text = stringResource(LocaleR.string.add_provider))
@@ -251,43 +243,6 @@ internal fun ProviderManagerScreen(
                             PaddingValues(bottom = FabButtonSize * 2, end = 10.dp, start = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        item {
-                            AnimatedVisibility(
-                                visible = !searchExpanded.value,
-                                enter = fadeIn(),
-                                exit = fadeOut(),
-                            ) {
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    ProfileHandlerButtons(
-                                        modifier = Modifier.padding(top = 15.dp),
-                                        onImport = featureComingSoonCallback,
-                                        onExport = featureComingSoonCallback,
-                                    )
-
-                                    CustomButton(
-                                        onClick = {
-                                            navigator.testProviders(
-                                                providers = viewModel.providers.toCollection(ArrayList()),
-                                            )
-                                        },
-                                        iconId = UiCommonR.drawable.test,
-                                        label = stringResource(id = LocaleR.string.test_providers),
-                                        modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .padding(bottom = 3.dp),
-                                    )
-
-                                    HorizontalDivider(
-                                        thickness = 1.dp,
-                                        color = LocalContentColor.current.onMediumEmphasis(0.4F),
-                                    )
-                                }
-                            }
-                        }
-
                         itemsIndexed(
                             items = filteredProviders ?: viewModel.providers,
                             key = { _, item -> item.id },

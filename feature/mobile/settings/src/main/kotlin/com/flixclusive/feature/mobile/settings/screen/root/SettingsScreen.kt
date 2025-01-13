@@ -46,6 +46,7 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.ChooseProfileAction
 import com.flixclusive.core.ui.common.navigation.navigator.EditUserAction
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.navigation.navigator.TestProvidersAction
 import com.flixclusive.core.ui.common.user.getAvatarResource
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
@@ -62,6 +63,7 @@ import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
 import com.flixclusive.model.database.User
 import com.flixclusive.model.datastore.user.UserPreferences
+import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.collections.immutable.persistentMapOf
 import com.flixclusive.core.locale.R as LocaleR
@@ -252,7 +254,10 @@ private fun getAdaptiveBackground(currentUser: User?): Brush {
 interface SettingsScreenNavigator :
     GoBackAction,
     ChooseProfileAction,
+    TestProvidersAction,
     EditUserAction {
+    fun openRepositoryManagerScreen()
+
     fun openProviderManagerScreen()
 
     fun openLink(url: String)
@@ -260,7 +265,11 @@ interface SettingsScreenNavigator :
 
 internal fun getNavigatorPreview() =
     object : SettingsScreenNavigator {
+        override fun testProviders(providers: ArrayList<ProviderMetadata>) = Unit
+
         override fun openProviderManagerScreen() = Unit
+
+        override fun openRepositoryManagerScreen() = Unit
 
         override fun openLink(url: String) = Unit
 

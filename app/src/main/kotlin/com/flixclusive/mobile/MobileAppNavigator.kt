@@ -255,6 +255,10 @@ internal class MobileAppNavigator(
         )
     }
 
+    override fun openAddProviderScreen() {
+        TODO("Add the destination screen for adding providers here.")
+    }
+
     override fun testProviders(providers: ArrayList<ProviderMetadata>) {
         navController.navigateIfResumed(
             ProviderTestScreenDestination(providers = providers) within destination.navGraph(),

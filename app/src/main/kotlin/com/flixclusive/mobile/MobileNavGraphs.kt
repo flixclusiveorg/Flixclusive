@@ -117,6 +117,6 @@ internal object MobileNavGraphs {
                 ).associateBy { it.route }
 
             override val nestedNavGraphs =
-                listOf(home, search, library, settings,)
+                listOf(home, search, library, settings)
         }
 }

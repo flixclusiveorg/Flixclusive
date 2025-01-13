@@ -178,6 +178,7 @@
     <string name="lock">Lock</string>
     <string name="maintenance_all_caps">MAINTENANCE</string>
     <string name="manage_providers">Manage providers</string>
+    <string name="manage_repositories">Manage repositories</string>
     <string name="more_details">More details</string>
     <string name="more_like_this">More like this</string>
     <string name="name">Name</string>
@@ -466,7 +467,9 @@
     <string name="provider_icon_content_desc">Default icon of a provider</string>
     <string name="provider_snackbar_message">Provider set to %1$s</string>
     <string name="provider_updates_log">Provider\'s update logs</string>
+    <string name="test_providers_button_settings_description">Test and verify your providers to ensure they are working correctly.</string>
     <string name="providers_button_settings_description">Add, remove, or modify providers to suit your preferences.</string>
+    <string name="repositories_button_settings_description">Add or remove online repositories to discover and download new providers.</string>
     <string name="quality_snackbar_message">Quality set to %1$s</string>
     <string name="rating_icon">Rating Icon</string>
     <string name="release_player_desc">Releases player when minimizing the app. For seamless playback, turn this off. Though, this is required to free device memory.</string>
