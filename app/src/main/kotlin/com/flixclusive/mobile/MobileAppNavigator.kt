@@ -38,8 +38,8 @@ import com.flixclusive.feature.mobile.provider.info.destinations.ProviderInfoScr
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
 import com.flixclusive.feature.mobile.repository.destinations.RepositoryScreenDestination
-import com.flixclusive.feature.mobile.repository.search.RepositorySearchScreenNavigator
-import com.flixclusive.feature.mobile.repository.search.destinations.RepositorySearchScreenDestination
+import com.flixclusive.feature.mobile.repository.manage.RepositoryManagerScreenNavigator
+import com.flixclusive.feature.mobile.repository.manage.destinations.RepositorySearchScreenDestination
 import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
@@ -85,7 +85,7 @@ internal class MobileAppNavigator(
     ProviderInfoNavigator,
     ProvidersScreenNavigator,
     LibraryScreenNavigator,
-    RepositorySearchScreenNavigator,
+    RepositoryManagerScreenNavigator,
     SearchExpandedScreenNavigator,
     SearchScreenNavigator,
     SeeAllScreenNavigator,

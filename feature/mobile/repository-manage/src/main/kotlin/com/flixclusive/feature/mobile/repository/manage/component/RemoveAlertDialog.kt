@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.repository.search.component
+package com.flixclusive.feature.mobile.repository.manage.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

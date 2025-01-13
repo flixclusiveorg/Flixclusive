@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.repository.search.component
+package com.flixclusive.feature.mobile.repository.manage.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.scaleIn
@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.repository.search.util.parseGithubUrl
+import com.flixclusive.feature.mobile.repository.manage.util.parseGithubUrl
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 

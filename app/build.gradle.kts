@@ -76,7 +76,7 @@ dependencies {
     implementation(projects.feature.mobile.markdown)
     implementation(projects.feature.mobile.library)
     implementation(projects.feature.mobile.repository)
-    implementation(projects.feature.mobile.repositorySearch)
+    implementation(projects.feature.mobile.repositoryManage)
     implementation(projects.feature.mobile.search)
     implementation(projects.feature.mobile.searchExpanded)
     implementation(projects.feature.mobile.seeAll)

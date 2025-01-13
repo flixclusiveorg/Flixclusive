@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.repository.search
+package com.flixclusive.feature.mobile.repository.manage
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,21 +34,21 @@ import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
-import com.flixclusive.feature.mobile.repository.search.component.AddRepositoryBar
-import com.flixclusive.feature.mobile.repository.search.component.RemoveAlertDialog
-import com.flixclusive.feature.mobile.repository.search.component.RepositoryCard
-import com.flixclusive.feature.mobile.repository.search.component.RepositorySearchTopBar
+import com.flixclusive.feature.mobile.repository.manage.component.AddRepositoryBar
+import com.flixclusive.feature.mobile.repository.manage.component.RemoveAlertDialog
+import com.flixclusive.feature.mobile.repository.manage.component.RepositoryCard
+import com.flixclusive.feature.mobile.repository.manage.component.RepositorySearchTopBar
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
 
-interface RepositorySearchScreenNavigator :
+interface RepositoryManagerScreenNavigator :
     ViewRepositoryAction,
     GoBackAction
 
 @Destination
 @Composable
-internal fun RepositorySearchScreen(
-    navigator: RepositorySearchScreenNavigator,
+internal fun RepositoryManagerScreen(
+    navigator: RepositoryManagerScreenNavigator,
     viewModel: RepositorySearchScreenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current

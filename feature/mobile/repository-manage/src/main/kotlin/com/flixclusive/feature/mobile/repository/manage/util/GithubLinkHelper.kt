@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.repository.search.util
+package com.flixclusive.feature.mobile.repository.manage.util
 
 import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
 

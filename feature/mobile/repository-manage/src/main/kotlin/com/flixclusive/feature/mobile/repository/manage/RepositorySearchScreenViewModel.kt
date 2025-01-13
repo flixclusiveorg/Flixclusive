@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.repository.search
+package com.flixclusive.feature.mobile.repository.manage
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -89,7 +89,7 @@ internal class RepositorySearchScreenViewModel @Inject constructor(
             clearSelection()
         }
     }
-    
+
     private suspend fun updateProviderPrefs(
         transform: suspend (ProviderPreferences) -> ProviderPreferences
     ) {

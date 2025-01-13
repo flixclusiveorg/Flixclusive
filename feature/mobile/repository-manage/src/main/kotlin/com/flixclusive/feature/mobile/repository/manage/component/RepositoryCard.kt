@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.repository.search.component
+package com.flixclusive.feature.mobile.repository.manage.component
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
