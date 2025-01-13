@@ -54,9 +54,10 @@ internal class ProvidersTweakScreen(
             ),
             TweakUI.ClickableTweak(
                 title = stringResource(LocaleR.string.test_providers),
+                enabledProvider = { providerPreferences.value.providers.isNotEmpty() },
                 descriptionProvider = { context.getString(LocaleR.string.test_providers_button_settings_description) },
                 iconId = UiCommonR.drawable.test,
-                onClick = navigator::openProviderManagerScreen,
+                onClick = { navigator.testProviders(arrayListOf()) },
             ),
             TweakUI.Divider(),
             TweakUI.ClickableTweak(

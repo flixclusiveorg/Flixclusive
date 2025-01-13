@@ -32,7 +32,7 @@ import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
-internal fun RepositorySearchTopBar(
+internal fun RepositoryManagerTopBar(
     isVisible: Boolean,
     isSelecting: MutableState<Boolean>,
     selectCount: Int,
@@ -64,7 +64,7 @@ internal fun RepositorySearchTopBar(
                         )
                     }
                     false -> {
-                        CollapsedTopBar(onNavigationIconClick = onNavigationIconClick,)
+                        CollapsedTopBar(onNavigationIconClick = onNavigationIconClick)
                     }
                 }
             }
@@ -74,8 +74,8 @@ internal fun RepositorySearchTopBar(
 
 @Composable
 private fun CollapsedTopBar(
-    modifier: Modifier = Modifier,
     onNavigationIconClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
@@ -92,7 +92,7 @@ private fun CollapsedTopBar(
         }
 
         Text(
-            text = stringResource(id = LocaleR.string.add_provider),
+            text = stringResource(id = LocaleR.string.manage_repositories),
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontWeight = FontWeight.SemiBold
             ),
@@ -107,13 +107,13 @@ private fun CollapsedTopBar(
 
 @Composable
 private fun ExpandedTopBar(
-    modifier: Modifier = Modifier,
     selectCount: Int,
     onRemove: () -> Unit,
     onCollapseTopBar: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically

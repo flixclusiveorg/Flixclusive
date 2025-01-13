@@ -37,7 +37,7 @@ import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.repository.manage.component.AddRepositoryBar
 import com.flixclusive.feature.mobile.repository.manage.component.RemoveAlertDialog
 import com.flixclusive.feature.mobile.repository.manage.component.RepositoryCard
-import com.flixclusive.feature.mobile.repository.manage.component.RepositorySearchTopBar
+import com.flixclusive.feature.mobile.repository.manage.component.RepositoryManagerTopBar
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
 
@@ -45,11 +45,12 @@ interface RepositoryManagerScreenNavigator :
     ViewRepositoryAction,
     GoBackAction
 
+// TODO: Refactor for cleaner code
 @Destination
 @Composable
 internal fun RepositoryManagerScreen(
     navigator: RepositoryManagerScreenNavigator,
-    viewModel: RepositorySearchScreenViewModel = hiltViewModel(),
+    viewModel: RepositoryManagerViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -69,7 +70,7 @@ internal fun RepositoryManagerScreen(
     }
 
     LaunchedEffect(viewModel.selectedRepositories.size) {
-        if (viewModel.selectedRepositories.size == 0) {
+        if (viewModel.selectedRepositories.isEmpty()) {
             isSelecting.value = false
         }
     }
@@ -105,7 +106,7 @@ internal fun RepositoryManagerScreen(
             SnackbarHost(hostState = snackbarHostState)
         },
         topBar = {
-            RepositorySearchTopBar(
+            RepositoryManagerTopBar(
                 isVisible = shouldShowTopBar,
                 isSelecting = isSelecting,
                 selectCount = viewModel.selectedRepositories.size,

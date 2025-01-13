@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.ViewModel
+import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.domain.provider.test.TestProviderUseCase
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class ProviderTestScreenViewModel @Inject constructor(
-    val testProviderUseCase: TestProviderUseCase
+    val testProviderUseCase: TestProviderUseCase,
+    val providerRepository: ProviderRepository,
 ) : ViewModel() {
     var showRepetitiveTestWarning by mutableStateOf(false)
         private set
@@ -64,7 +66,9 @@ internal class ProviderTestScreenViewModel @Inject constructor(
         }
 
         val providersToTest = providers.let {
-            if (skipTestedProviders) {
+            if (it.isEmpty()) {
+                ArrayList(providerRepository.getProviders())
+            } else if (skipTestedProviders) {
                 return@let it.fastFilter { provider ->
                     !provider.hasAlreadyBeenTested()
                 }.toCollection(ArrayList())

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -56,12 +57,19 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.CommonTopBar
+import com.flixclusive.core.ui.common.CommonTopBarDefaults.getAdaptiveTopBarHeight
+import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
+import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -69,54 +77,60 @@ import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-
 private val SearchIconSize = 18.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ProvidersTopBar(
+internal fun ProviderManagerTopBar(
     isVisible: Boolean,
     searchExpanded: MutableState<Boolean>,
     searchQuery: String,
     tooltipState: TooltipState,
+    onNavigationClick: () -> Unit,
     onQueryChange: (String) -> Unit,
     onNeedHelp: () -> Unit,
 ) {
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut()
+        exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
     ) {
         Box(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.surface)
-                .noIndicationClickable {},
-            contentAlignment = Alignment.TopCenter
+            modifier =
+                Modifier
+                    .background(MaterialTheme.colorScheme.surface)
+                    .noIndicationClickable {},
+            contentAlignment = Alignment.TopCenter,
         ) {
             Crossfade(
                 targetState = searchExpanded.value,
-                label = ""
+                label = "",
             ) {
-                when(it) {
+                when (it) {
                     true -> {
                         Box(
-                            modifier = Modifier
-                                .statusBarsPadding()
+                            modifier =
+                                Modifier
+                                    .statusBarsPadding()
+                                    .height(getAdaptiveTopBarHeight()),
                         ) {
                             ExpandedTopBar(
                                 searchQuery = searchQuery,
                                 onQueryChange = onQueryChange,
-                                onCollapseTopBar = { searchExpanded.value = false }
+                                onCollapseTopBar = { searchExpanded.value = false },
                             )
                         }
                     }
+
                     false -> {
                         CollapsedTopBar(
                             onExpandTopBar = { searchExpanded.value = true },
                             onNeedHelp = onNeedHelp,
                             tooltipState = tooltipState,
-                            modifier = Modifier
-                                .statusBarsPadding()
+                            onNavigationClick = onNavigationClick,
+                            modifier =
+                                Modifier
+                                    .statusBarsPadding(),
                         )
                     }
                 }
@@ -128,109 +142,137 @@ internal fun ProvidersTopBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CollapsedTopBar(
-    modifier: Modifier = Modifier,
     tooltipState: TooltipState,
+    onNavigationClick: () -> Unit,
     onExpandTopBar: () -> Unit,
     onNeedHelp: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(15.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .weight(1F)
-                .padding(end = 15.dp, start = 5.dp)
-        ) {
-            Text(
-                text = stringResource(id = LocaleR.string.providers),
-                style = MaterialTheme.typography.headlineMedium,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1
-            )
+    CommonTopBar(
+        navigationIcon = {
+            IconButton(onClick = onNavigationClick) {
+                AdaptiveIcon(
+                    painter = painterResource(UiCommonR.drawable.left_arrow),
+                    contentDescription = stringResource(LocaleR.string.navigate_up),
+                    dp = 16.dp,
+                    increaseBy = 3.dp,
+                )
+            }
+        },
+        body = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier =
+                Modifier
+                    .weight(1F)
+                    .padding(end = 15.dp, start = 5.dp),
+            ) {
+                Text(
+                    text = stringResource(id = LocaleR.string.manage_providers),
+                    style =
+                    getAdaptiveTextStyle(
+                        mode = TextStyleMode.Normal,
+                        style = TypographyStyle.Body,
+                    ).copy(fontWeight = FontWeight.SemiBold, fontSize = 20.sp),
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    modifier = Modifier.padding(start = 15.dp),
+                )
 
-            TooltipBox(
-                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                tooltip = {
-                    RichTooltip(
-                        title = {
-                            Text(
-                                text = stringResource(id = LocaleR.string.understanding_providers),
-                                style = LocalTextStyle.current.copy(
-                                    fontSize = 18.sp
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip = {
+                        RichTooltip(
+                            title = {
+                                Text(
+                                    text = stringResource(id = LocaleR.string.understanding_providers),
+                                    style =
+                                    LocalTextStyle.current.copy(
+                                        fontSize = 18.sp,
+                                    ),
                                 )
-                            )
-                        },
-                        action = {
-                            TextButton(
-                                onClick = {
-                                    scope.launch {
-                                        tooltipState.dismiss()
-                                    }
+                            },
+                            action = {
+                                TextButton(
+                                    onClick = {
+                                        scope.launch {
+                                            tooltipState.dismiss()
+                                        }
+                                    },
+                                ) {
+                                    Text(stringResource(id = LocaleR.string.ok))
                                 }
-                            ) {
-                                Text(stringResource(id = LocaleR.string.ok))
-                            }
+                            },
+                        ) {
+                            Text(
+                                text = stringResource(id = LocaleR.string.tooltip_providers_screen_help_guide),
+                            )
+                        }
+                    },
+                    state = tooltipState,
+                ) {
+                    Box(
+                        modifier =
+                        Modifier.clickable {
+                            onNeedHelp()
                         },
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = stringResource(id = LocaleR.string.tooltip_providers_screen_help_guide)
+                        Icon(
+                            painter = painterResource(id = UiCommonR.drawable.help),
+                            contentDescription = stringResource(id = LocaleR.string.help),
                         )
                     }
-                },
-                state = tooltipState
+                }
+            }
+        },
+        actions = {
+            Row(
+                modifier =
+                modifier
+                    .height(65.dp)
+                    .padding(horizontal = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(15.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    modifier = Modifier.clickable {
-                        onNeedHelp()
-                    },
-                    contentAlignment = Alignment.Center
+                    modifier =
+                    Modifier
+                        .size(SearchIconSize.times(2))
+                        .clickable(
+                            onClick = onExpandTopBar,
+                            role = Role.Button,
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication =
+                            ripple(
+                                bounded = false,
+                                radius = SearchIconSize,
+                            ),
+                        ),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        painter = painterResource(id = UiCommonR.drawable.help),
-                        contentDescription = stringResource(id = LocaleR.string.help)
+                        painter = painterResource(id = UiCommonR.drawable.search_outlined),
+                        contentDescription = stringResource(id = LocaleR.string.search_for_providers),
+                        modifier =
+                        Modifier
+                            .size(SearchIconSize),
                     )
                 }
             }
         }
-
-        Box(
-            modifier = Modifier
-                .size(SearchIconSize.times(2))
-                .clickable(
-                    onClick = onExpandTopBar,
-                    role = Role.Button,
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(
-                        bounded = false,
-                        radius = SearchIconSize
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = UiCommonR.drawable.search_outlined),
-                contentDescription = stringResource(id = LocaleR.string.search_for_providers),
-                modifier = Modifier
-                    .size(SearchIconSize)
-            )
-        }
-    }
+    )
 }
 
 @Composable
 private fun ExpandedTopBar(
-    modifier: Modifier = Modifier,
     searchQuery: String,
     onQueryChange: (String) -> Unit,
     onCollapseTopBar: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardManager = LocalSoftwareKeyboardController.current
@@ -261,7 +303,7 @@ private fun ExpandedTopBar(
             IconButton(onClick = onCollapseTopBar) {
                 Icon(
                     painter = painterResource(UiCommonR.drawable.round_close_24),
-                    contentDescription = stringResource(LocaleR.string.close_label)
+                    contentDescription = stringResource(LocaleR.string.close_label),
                 )
             }
         },
@@ -271,26 +313,28 @@ private fun ExpandedTopBar(
                 style = MaterialTheme.typography.bodyMedium,
                 color = LocalContentColor.current.onMediumEmphasis(),
                 overflow = TextOverflow.Ellipsis,
-                maxLines = 1
+                maxLines = 1,
             )
         },
         textStyle = MaterialTheme.typography.bodyMedium,
         singleLine = true,
-        modifier = modifier
-            .fillMaxWidth()
-            .focusRequester(textFieldFocusRequester),
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Search
-        ),
-        keyboardActions = KeyboardActions(
-            onSearch = {
-                focusManager.clearFocus()
-                keyboardManager?.hide()
-            }
-        )
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .focusRequester(textFieldFocusRequester),
+        keyboardOptions =
+            KeyboardOptions(
+                imeAction = ImeAction.Search,
+            ),
+        keyboardActions =
+            KeyboardActions(
+                onSearch = {
+                    focusManager.clearFocus()
+                    keyboardManager?.hide()
+                },
+            ),
     )
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
@@ -301,37 +345,38 @@ private fun TopBarPreview() {
             Scaffold(
                 contentWindowInsets = WindowInsets(0.dp),
                 topBar = {
-                    ProvidersTopBar(
+                    ProviderManagerTopBar(
                         isVisible = true,
                         searchExpanded = remember { mutableStateOf(false) },
                         searchQuery = "",
                         tooltipState = rememberTooltipState(),
                         onNeedHelp = {},
-                        onQueryChange = {}
+                        onQueryChange = {},
+                        onNavigationClick = {},
                     )
                 },
                 floatingActionButton = {
                     ExtendedFloatingActionButton(
-                        onClick = {  },
+                        onClick = { },
                         containerColor = MaterialTheme.colorScheme.surface,
                         text = {
-                            Text(text = stringResource(LocaleR.string.add_provider))
+                            Text(text = stringResource(LocaleR.string.manage_providers))
                         },
                         icon = {
                             Icon(
                                 painter = painterResource(id = UiCommonR.drawable.round_add_24),
-                                contentDescription = stringResource(LocaleR.string.add_provider)
+                                contentDescription = stringResource(LocaleR.string.manage_providers),
                             )
-                        }
+                        },
                     )
-                }
+                },
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(it)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(it),
                 ) {
-
                 }
             }
         }

@@ -74,7 +74,7 @@ import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.data.provider.util.isNotUsable
 import com.flixclusive.domain.provider.util.getApiCrashMessage
 import com.flixclusive.feature.mobile.provider.manage.component.InstalledProviderCard
-import com.flixclusive.feature.mobile.provider.manage.component.ProvidersTopBar
+import com.flixclusive.feature.mobile.provider.manage.component.ProviderManagerTopBar
 import com.flixclusive.feature.mobile.provider.manage.reorderable.ReorderableItem
 import com.flixclusive.feature.mobile.provider.manage.reorderable.rememberReorderableLazyListState
 import com.flixclusive.model.provider.ProviderMetadata
@@ -165,12 +165,13 @@ internal fun ProviderManagerScreen(
         modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
-            ProvidersTopBar(
+            ProviderManagerTopBar(
                 isVisible = shouldShowTopBar,
                 searchQuery = viewModel.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChange,
                 tooltipState = helpTooltipState,
                 searchExpanded = searchExpanded,
+                onNavigationClick = navigator::goBack,
                 onNeedHelp = onNeedHelp,
             )
         },

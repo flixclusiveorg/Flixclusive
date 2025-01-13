@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class RepositorySearchScreenViewModel @Inject constructor(
+internal class RepositoryManagerViewModel @Inject constructor(
     private val getRepositoryUseCase: GetRepositoryUseCase,
     private val dataStoreManager: DataStoreManager,
 ) : ViewModel() {
