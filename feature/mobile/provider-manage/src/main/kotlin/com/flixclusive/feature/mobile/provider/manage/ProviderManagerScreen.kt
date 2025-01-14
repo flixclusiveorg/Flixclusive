@@ -108,7 +108,7 @@ internal fun ProviderManagerScreen(
     val providerToggles by viewModel.providerPrefs.collectAsStateWithLifecycle()
     val userOnBoardingPrefs by viewModel.userOnBoardingPrefs.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle(null)
-    val searchExpanded = rememberSaveable { mutableStateOf(false) }
+    var isSearching by rememberSaveable { mutableStateOf(false) }
     var providerToUninstall by rememberSaveable { mutableStateOf<ProviderMetadata?>(null) }
 
     val view = LocalView.current
@@ -119,7 +119,7 @@ internal fun ProviderManagerScreen(
         rememberReorderableLazyListState(
             lazyListState = lazyListState,
             onMove = { from, to ->
-                if (!searchExpanded.value) {
+                if (!isSearching) {
                     // -1 since there's a header
                     with(viewModel.providers) {
                         add(from.index - 1, removeAt(to.index - 1))
@@ -146,7 +146,7 @@ internal fun ProviderManagerScreen(
 
     val filteredProviders by remember {
         derivedStateOf {
-            when (viewModel.searchQuery.isNotEmpty() && searchExpanded.value) {
+            when (viewModel.searchQuery.isNotEmpty() && isSearching) {
                 true -> viewModel.providers.fastFilter { it.name.contains(viewModel.searchQuery, true) }
                 false -> null
             }
@@ -170,7 +170,8 @@ internal fun ProviderManagerScreen(
                 searchQuery = viewModel.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChange,
                 tooltipState = helpTooltipState,
-                searchExpanded = searchExpanded,
+                isSearching = isSearching,
+                onToggleSearchBar = { isSearching = it },
                 onNavigationClick = navigator::goBack,
                 onNeedHelp = onNeedHelp,
             )
@@ -254,7 +255,7 @@ internal fun ProviderManagerScreen(
                                 InstalledProviderCard(
                                     providerMetadata = metadata,
                                     interactionSource = interactionSource,
-                                    isDraggableProvider = { !searchExpanded.value },
+                                    isDraggable = !isSearching,
                                     openSettings = { navigator.openProviderSettings(metadata) },
                                     onClick = { navigator.openProviderDetails(metadata) },
                                     uninstallProvider = { providerToUninstall = metadata },

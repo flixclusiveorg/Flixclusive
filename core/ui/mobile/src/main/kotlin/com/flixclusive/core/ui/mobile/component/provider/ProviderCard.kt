@@ -76,7 +76,7 @@ fun ProviderCard(
                     ),
         ) {
             ProviderTopCardContent(
-                isDraggableProvider = { false },
+                isDraggable = false,
                 providerMetadata = providerMetadata,
             )
 

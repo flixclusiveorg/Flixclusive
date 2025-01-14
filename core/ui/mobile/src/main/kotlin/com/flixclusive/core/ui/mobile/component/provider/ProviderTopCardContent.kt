@@ -32,7 +32,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 @Composable
 fun ProviderTopCardContent(
     providerMetadata: ProviderMetadata,
-    isDraggableProvider: () -> Boolean,
+    isDraggable: Boolean,
     dragModifier: Modifier = Modifier,
 ) {
     Row(
@@ -40,7 +40,7 @@ fun ProviderTopCardContent(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         AnimatedContent(
-            targetState = isDraggableProvider(),
+            targetState = isDraggable,
             label = "",
             modifier = dragModifier,
         ) { state ->

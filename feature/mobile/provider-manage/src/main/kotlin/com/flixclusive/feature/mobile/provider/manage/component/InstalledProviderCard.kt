@@ -23,7 +23,7 @@ internal fun InstalledProviderCard(
     providerMetadata: ProviderMetadata,
     interactionSource: MutableInteractionSource,
     enabledProvider: () -> Boolean,
-    isDraggableProvider: () -> Boolean,
+    isDraggable: Boolean,
     isDraggingProvider: () -> Boolean,
     onClick: () -> Unit,
     openSettings: () -> Unit,
@@ -34,7 +34,7 @@ internal fun InstalledProviderCard(
 ) {
     val cardAlpha =
         animateFloatAsState(
-            targetValue = if ((isDraggingProvider() && isDraggableProvider()) || enabledProvider()) 1F else 0.6F,
+            targetValue = if ((isDraggingProvider() && isDraggable) || enabledProvider()) 1F else 0.6F,
             label = "CardAlpha",
         )
 
@@ -64,7 +64,7 @@ internal fun InstalledProviderCard(
                     ),
         ) {
             ProviderTopCardContent(
-                isDraggableProvider = isDraggableProvider,
+                isDraggable = isDraggable,
                 providerMetadata = providerMetadata,
                 dragModifier = dragModifier,
             )
