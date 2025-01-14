@@ -35,8 +35,8 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdapti
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.toTextFieldValue
 import com.flixclusive.feature.mobile.user.edit.tweaks.ProfileTweakUI
 import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.DefaultShape
 import kotlinx.coroutines.Job
@@ -51,7 +51,7 @@ private const val ON_NAME_CHANGE_DELAY = 800L
 internal fun TweakTextField(
     tweak: ProfileTweakUI.TextField
 ) {
-    var value by remember { mutableStateOf(tweak.initialValue.createTextFieldValue()) }
+    var value by remember { mutableStateOf(tweak.initialValue.toTextFieldValue()) }
 
     val changeCallback = onValueChangeWithDelay(tweak.onValueChange)
 
@@ -93,7 +93,7 @@ internal fun TweakTextField(
                 exit = scaleOut(),
             ) {
                 IconButton(
-                    onClick = { value = "".createTextFieldValue() }
+                    onClick = { value = "".toTextFieldValue() }
                 ) {
                     Icon(
                         painter = painterResource(UiCommonR.drawable.outline_close_square),

@@ -53,10 +53,10 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.clearFocusOnSoftKeyboardHide
-import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showSoftKeyboard
+import com.flixclusive.core.ui.common.util.toTextFieldValue
 import com.flixclusive.core.locale.R as LocaleR
 
 const val TOP_BAR_BODY_FADE_DURATION = 200
@@ -248,7 +248,7 @@ private fun TopBarTextField(
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val textFieldValue = remember { mutableStateOf(searchQuery.createTextFieldValue()) }
+    val textFieldValue = remember { mutableStateOf(searchQuery.toTextFieldValue()) }
 
     val focusManager = LocalFocusManager.current
     val keyboardManager = LocalSoftwareKeyboardController.current
@@ -279,7 +279,7 @@ private fun TopBarTextField(
             ) {
                 IconButton(
                     onClick = {
-                        textFieldValue.value = "".createTextFieldValue()
+                        textFieldValue.value = "".toTextFieldValue()
                         onQueryChange("")
                     },
                 ) {

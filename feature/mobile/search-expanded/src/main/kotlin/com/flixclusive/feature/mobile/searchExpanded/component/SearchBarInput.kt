@@ -52,8 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
-import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.toTextFieldValue
 import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
 import com.flixclusive.feature.mobile.searchExpanded.SearchItemViewType
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.ProviderFilterButton
@@ -82,7 +82,7 @@ internal fun SearchBarInput(
 
     var isError by remember { mutableStateOf(false) }
     var textFieldValue by remember(searchQuery) {
-        mutableStateOf(searchQuery.createTextFieldValue())
+        mutableStateOf(searchQuery.toTextFieldValue())
     }
     val focusRequester = remember { FocusRequester() }
 

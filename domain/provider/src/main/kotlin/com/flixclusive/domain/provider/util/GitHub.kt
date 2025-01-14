@@ -11,3 +11,9 @@ fun extractGithubInfoFromLink(url: String): Pair<String?, String?>? {
     }
     return null
 }
+
+fun String.toGithubUrl(): String? {
+    val (username, repository) = extractGithubInfoFromLink(this) ?: return null
+
+    return "https://github.com/$username/$repository"
+}

@@ -40,11 +40,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.applyDropShadow
-import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.toTextFieldValue
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
-import com.flixclusive.core.ui.player.R as PlayerR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.player.R as PlayerR
 
 @Composable
 internal fun SubtitleSyncPanel(
@@ -53,11 +53,11 @@ internal fun SubtitleSyncPanel(
     val player by rememberLocalPlayerManager()
 
     var textFieldValue by remember(player.subtitleOffset) {
-        mutableStateOf(player.subtitleOffset.toString().createTextFieldValue())
+        mutableStateOf(player.subtitleOffset.toString().toTextFieldValue())
     }
 
     fun changeOffset(by: Long) {
-        textFieldValue = by.toString().createTextFieldValue()
+        textFieldValue = by.toString().toTextFieldValue()
         player.onSubtitleOffsetChange(by)
     }
 
@@ -93,12 +93,12 @@ internal fun SubtitleSyncPanel(
             onValueChange = {
                 if (it.text.isBlank()) {
                     player.onSubtitleOffsetChange(0)
-                    textFieldValue = "0".createTextFieldValue()
+                    textFieldValue = "0".toTextFieldValue()
                 }
 
                 it.text.toLongOrNull()?.let { ms ->
                     player.onSubtitleOffsetChange(ms)
-                    textFieldValue = ms.toString().createTextFieldValue()
+                    textFieldValue = ms.toString().toTextFieldValue()
                 }
             },
             colors = TextFieldDefaults.colors(

@@ -1,10 +1,13 @@
+@file:Suppress("ktlint:compose:lambda-param-in-effect")
+
 package com.flixclusive.feature.mobile.repository.manage.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.KeyboardActions
@@ -20,7 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,26 +38,30 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.createTextFieldValue
+import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.repository.manage.util.parseGithubUrl
+import com.flixclusive.core.ui.common.util.toTextFieldValue
+import com.flixclusive.domain.provider.util.toGithubUrl
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
+private val DefaultTextFieldHeight = 50.dp
+
 @Composable
 internal fun AddRepositoryBar(
-    modifier: Modifier = Modifier,
-    urlQuery: MutableState<String>,
-    isError: MutableState<Boolean>,
+    urlQuery: String,
+    isParseError: Boolean,
     focusRequester: FocusRequester,
+    onUrlQueryChange: (String) -> Unit,
     onAdd: () -> Unit,
+    onConsumeError: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -63,82 +70,90 @@ internal fun AddRepositoryBar(
     val containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     val focusedContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp)
 
-    var textFieldValue by remember {
-        val text = clipboardManager.getText()
-            ?.text?.let(::parseGithubUrl)
-            ?: urlQuery.value
+    var isClipboardParsed by remember { mutableStateOf(false) }
+    var textFieldError by remember { mutableStateOf(false) }
+    LaunchedEffect(true) {
+        if (!isClipboardParsed) {
+            val parsedClipboard =
+                clipboardManager
+                    .getText()
+                    ?.text
+                    ?.toGithubUrl()
+                    ?.toTextFieldValue()
 
-        mutableStateOf(text.createTextFieldValue())
+            if (parsedClipboard != null) {
+                onUrlQueryChange(parsedClipboard.text)
+            }
+        }
+
+        isClipboardParsed = true
     }
 
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .fillMaxWidth()
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.fillMaxWidth(),
     ) {
         OutlinedTextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
-            value = textFieldValue,
+            modifier =
+                Modifier
+                    .height(getAdaptiveDp(DefaultTextFieldHeight))
+                    .weight(1F)
+                    .focusRequester(focusRequester),
+            value = urlQuery,
             onValueChange = {
-                isError.value = false
-                textFieldValue = it
-                urlQuery.value = it.text
+                textFieldError = false
+                onConsumeError()
+                onUrlQueryChange(it)
             },
             singleLine = true,
             textStyle = MaterialTheme.typography.bodySmall,
-            keyboardActions = KeyboardActions(
-                onGo = {
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
+            keyboardActions =
+                KeyboardActions(
+                    onGo = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
 
-                    if(urlQuery.value.isEmpty()) {
-                        isError.value = true
-                        return@KeyboardActions
-                    }
+                        if (urlQuery.isEmpty()) {
+                            textFieldError = true
+                            return@KeyboardActions
+                        }
 
-                    onAdd()
-                }
-            ),
-            isError = isError.value,
+                        onAdd()
+                    },
+                ),
+            isError = isParseError || textFieldError,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
             shape = MaterialTheme.shapes.extraSmall,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = focusedContainerColor,
-                unfocusedContainerColor = containerColor,
-                errorContainerColor = containerColor,
-                disabledTextColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-            ),
+            colors =
+                TextFieldDefaults.colors(
+                    focusedContainerColor = focusedContainerColor,
+                    unfocusedContainerColor = containerColor,
+                    errorContainerColor = containerColor,
+                    disabledTextColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                ),
             placeholder = {
                 Text(
                     text = stringResource(LocaleR.string.search_repository_url_suggestion),
                     style = MaterialTheme.typography.bodySmall,
                     color = LocalContentColor.current.onMediumEmphasis(),
                     overflow = TextOverflow.Ellipsis,
-                    maxLines = 1
+                    maxLines = 1,
                 )
             },
             trailingIcon = {
-                this@Column.AnimatedVisibility(
-                    visible = textFieldValue.text.isNotEmpty(),
+                this@Row.AnimatedVisibility(
+                    visible = urlQuery.isNotEmpty(),
                     enter = scaleIn(),
                     exit = scaleOut(),
                 ) {
-                    IconButton(
-                        onClick = {
-                            urlQuery.value = ""
-                            textFieldValue = "".createTextFieldValue()
-                        }
-                    ) {
+                    IconButton(onClick = { onUrlQueryChange("") }) {
                         Icon(
-                            painter = painterResource(UiCommonR.drawable.outline_close_square),
-                            contentDescription = stringResource(LocaleR.string.clear_text_button)
+                            painter = painterResource(UiCommonR.drawable.round_close_24),
+                            contentDescription = stringResource(LocaleR.string.clear_text_button),
                         )
                     }
                 }
@@ -147,33 +162,19 @@ internal fun AddRepositoryBar(
 
         ElevatedButton(
             onClick = {
-                if (urlQuery.value.contains("raw.githubusercontent.com", true)) {
-                    val parsedGithubUrl = parseGithubUrl(urlQuery.value)
-
-                    if (parsedGithubUrl == null) {
-                        isError.value = true
-                        return@ElevatedButton
-                    }
-
-                    urlQuery.value = parsedGithubUrl
-                }
-
                 keyboardController?.hide()
                 focusManager.clearFocus()
-
                 onAdd()
             },
+            enabled = urlQuery.isNotEmpty(),
+            contentPadding = PaddingValues(horizontal = 5.dp),
             shape = MaterialTheme.shapes.extraSmall,
             modifier = Modifier
-                .height(50.dp)
-                .fillMaxWidth()
+                .height(getAdaptiveDp(DefaultTextFieldHeight)),
         ) {
-            Text(
-                text = stringResource(id = LocaleR.string.load_url),
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.Black,
-                    fontSize = 14.sp
-                )
+            AdaptiveIcon(
+                painter = painterResource(UiCommonR.drawable.round_add_24),
+                contentDescription = stringResource(LocaleR.string.load_url),
             )
         }
     }
@@ -182,15 +183,18 @@ internal fun AddRepositoryBar(
 @Preview
 @Composable
 private fun SearchBarPreview() {
+    val isParseError = remember { mutableStateOf(false) }
+    val urlQuery = remember { mutableStateOf("") }
     FlixclusiveTheme {
         Surface {
             AddRepositoryBar(
-                urlQuery = remember { mutableStateOf("") },
-                isError = remember { mutableStateOf(false) },
-                focusRequester = remember { FocusRequester() }
-            ) {
-
-            }
+                urlQuery = urlQuery.value,
+                isParseError = isParseError.value,
+                focusRequester = remember { FocusRequester() },
+                onUrlQueryChange = { urlQuery.value = it },
+                onAdd = {},
+                onConsumeError = { isParseError.value = false },
+            )
         }
     }
 }

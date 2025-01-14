@@ -48,7 +48,8 @@
     <string name="film_data_fetch_failed">Failed to fetch film data</string>
     <string name="film_not_found">Film not found</string>
     <string name="invalid_repo_link">Could not parse url link.</string>
-    <string name="invalid_repository">Repository does not have `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
+    <string name="invalid_repository_url">Repository URL is invalid</string>
+    <string name="invalid_repository">Repository does not have an `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
     <string name="invalid_tmdb_id">The TMDB ID shouldn\'t be null or must be an integer.</string>
     <string name="load_link_job_active_error_message">Still processing the last request…</string>
     <string name="null_repository_url_error">No repository url has been given for this provider</string>
@@ -137,6 +138,7 @@
     <string name="default_user_agent">Default user agent</string>
     <string name="delete_profile">Delete profile</string>
     <string name="delete_providers">Delete all providers</string>
+    <string name="delete_repository">Delete repository</string>
     <string name="delete_repositories">Delete all repositories</string>
     <string name="delete_search_history_item">Delete search history item</string>
     <string name="description">Description</string>
@@ -196,7 +198,7 @@
     <string name="notify_about_new_app_updates">Notify about new app updates</string>
     <string name="off_subtitles">Off</string>
     <string name="ok">OK</string>
-    <string name="open_web_icon">Open in Web</string>
+    <string name="open_in_web">Open in Web</string>
     <string name="opt_in_prerelease">Ok 🗿</string>
     <string name="opt_out_prerelease">Hell nah 😭</string>
     <string name="other_films_message">Other films you might like!</string>
@@ -227,7 +229,6 @@
     <string name="release_player">Release player on memory</string>
     <string name="remove">Remove</string>
     <string name="remove_from_watchlist">Remove from Watchlist</string>
-    <string name="remove_repositories">Remove repositories</string>
     <string name="repository">Repository</string>
     <string name="switch_profile">Switch profile</string>
     <string name="reset">Reset</string>
@@ -351,6 +352,7 @@
     <string name="download_completed">Download completed</string>
     <string name="download_in_progress">Downloading</string>
     <string name="empty_list_default_message">No items found.</string>
+    <string name="empty_repositories_list_message">No repositories found</string>
     <string name="empty_providers_list_message">No providers installed</string>
     <string name="empty_recently_watched_list_message">Start watching now!</string>
     <string name="empty_user_profiles_list_message">Create a profile now!</string>
@@ -368,7 +370,6 @@
     <string name="provider_test_stage_idle">Testing has not started</string>
     <string name="provider_test_stage_stage1">Testing API properties…</string>
     <string name="provider_test_stage_stage2">Testing API methods…</string>
-    <string name="remove_repositories_notice_msg">Are you sure you want to remove the selected repositories?</string>
     <string name="restart_app_for_changes_message">Restart is required for this to take effect.</string>
     <string name="skip_loading_message">Skip loading links</string>
     <string name="source_data_dialog_state_error_default">Something went wrong trying to get links</string>
@@ -399,6 +400,7 @@
 
     <!--  Content descriptions  -->
     <string name="action_warning_format_message">Are you sure you want to do the following action: %1$s?</string>
+    <string name="action_warning_default_message">This is an irreversible action, do you still wish to proceed?</string>
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>
     <string name="add_500ms_content_description">Add 500ms on subtitle delay</string>
     <string name="add_debug_prefix_settings_description">Automatically adds a \'-debug\' prefix to providers you\'re currently debugging or developing.</string>

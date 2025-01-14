@@ -47,8 +47,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.toTextFieldValue
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -154,7 +154,7 @@ private fun ExpandedTopBar(
     }
 
     var textFieldValue by remember {
-        mutableStateOf(searchQuery.createTextFieldValue())
+        mutableStateOf(searchQuery.toTextFieldValue())
     }
 
     OutlinedTextField(

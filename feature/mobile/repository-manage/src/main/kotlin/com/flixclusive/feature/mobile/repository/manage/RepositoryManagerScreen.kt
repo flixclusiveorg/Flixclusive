@@ -1,51 +1,57 @@
 package com.flixclusive.feature.mobile.repository.manage
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewRepositoryAction
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
+import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.repository.manage.component.AddRepositoryBar
-import com.flixclusive.feature.mobile.repository.manage.component.RemoveAlertDialog
 import com.flixclusive.feature.mobile.repository.manage.component.RepositoryCard
 import com.flixclusive.feature.mobile.repository.manage.component.RepositoryManagerTopBar
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 interface RepositoryManagerScreenNavigator :
     ViewRepositoryAction,
     GoBackAction
 
-// TODO: Refactor for cleaner code
 @Destination
 @Composable
 internal fun RepositoryManagerScreen(
@@ -53,39 +59,21 @@ internal fun RepositoryManagerScreen(
     viewModel: RepositoryManagerViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val focusManager = LocalFocusManager.current
-    val repositories by viewModel.repositories.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val selectedRepositories by viewModel.selectedRepositories.collectAsStateWithLifecycle()
+
+    val clipboardManager = rememberClipboardManager()
 
     val listState = rememberLazyListState()
     val shouldShowTopBar by listState.isScrollingUp()
 
-    val isSelecting = rememberSaveable { mutableStateOf(false) }
-    val isRemoving = rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(isSelecting.value) {
-        if (!isSelecting.value) {
-            viewModel.clearSelection()
-        } else {
-            focusManager.clearFocus()
-        }
-    }
-
-    LaunchedEffect(viewModel.selectedRepositories.size) {
-        if (viewModel.selectedRepositories.isEmpty()) {
-            isSelecting.value = false
-        }
-    }
-
-    val hasQueryBoxError =
-        remember(viewModel.errorMessage.value) {
-            mutableStateOf(viewModel.errorMessage.value != null)
-        }
-
     val hapticFeedBack = getFeedbackOnLongPress()
     val snackbarHostState = remember { SnackbarHostState() }
-    LaunchedEffect(viewModel.errorMessage.value) {
-        if (viewModel.errorMessage.value != null) {
+
+    LaunchedEffect(uiState.error) {
+        if (uiState.error != null) {
             val message =
-                viewModel.errorMessage.value!!
+                uiState.error!!
                     .error
                     ?.asString(context)
                     ?: context.getString(LocaleR.string.default_error)
@@ -95,23 +83,30 @@ internal fun RepositoryManagerScreen(
     }
 
     val focusRequester = remember { FocusRequester() }
+
     LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+        if (uiState.isFocusedInitialized) {
+            focusRequester.requestFocus()
+            viewModel.onInitializeFocus()
+        }
     }
 
     Scaffold(
         modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             RepositoryManagerTopBar(
                 isVisible = shouldShowTopBar,
-                isSelecting = isSelecting,
-                selectCount = viewModel.selectedRepositories.size,
-                onRemoveRepositories = { isRemoving.value = true },
-                onNavigationIconClick = navigator::goBack,
+                isSelecting = selectedRepositories.isNotEmpty(),
+                selectCount = selectedRepositories.size,
+                onRemoveRepositories = { viewModel.onToggleAlertDialog(true) },
+                onNavigationClick = navigator::goBack,
+                onCollapseTopBar = { viewModel.clearSelection() },
+                searchQuery = uiState.searchQuery,
+                onQueryChange = viewModel::onSearchQueryChange,
+                isSearching = uiState.isShowingSearchBar,
+                onToggleSearchBar = viewModel::onToggleSearchBar,
             )
         },
     ) {
@@ -131,37 +126,31 @@ internal fun RepositoryManagerScreen(
             ) {
                 item {
                     AddRepositoryBar(
-                        urlQuery = viewModel.urlQuery,
-                        isError = hasQueryBoxError,
+                        urlQuery = uiState.urlQuery,
+                        isParseError = uiState.error != null,
                         focusRequester = focusRequester,
                         onAdd = viewModel::onAddLink,
+                        onUrlQueryChange = viewModel::onUrlQueryChange,
+                        onConsumeError = viewModel::onConsumeError,
                     )
                 }
 
                 item {
-                    HorizontalDivider(
-                        modifier =
-                            Modifier
-                                .padding(vertical = 10.dp),
-                        thickness = 1.dp,
-                        color = LocalContentColor.current.onMediumEmphasis(0.4F),
-                    )
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
 
-                items(repositories) { repository ->
-                    val isSelected =
-                        remember(viewModel.selectedRepositories.size) {
-                            viewModel.selectedRepositories.contains(repository)
-                        }
-
+                items(uiState.repositories, key = { it.url }) { repository ->
                     RepositoryCard(
                         repository = repository,
-                        isSelected = isSelected,
+                        isSelected = selectedRepositories.contains(repository),
                         onClick = {
-                            if (isSelecting.value && !isSelected) {
+                            val isSelected = selectedRepositories.contains(repository)
+                            val isSelecting = selectedRepositories.isNotEmpty()
+
+                            if (isSelecting && !isSelected) {
                                 viewModel.selectRepository(repository)
                                 return@RepositoryCard
-                            } else if (isSelecting.value) {
+                            } else if (isSelecting) {
                                 viewModel.unselectRepository(repository)
                                 return@RepositoryCard
                             }
@@ -169,32 +158,52 @@ internal fun RepositoryManagerScreen(
                             navigator.openRepositoryDetails(repository)
                         },
                         onLongClick = {
-                            if (isSelecting.value) {
-                                return@RepositoryCard
-                            }
+                            val isSelecting = selectedRepositories.isNotEmpty()
+                            if (isSelecting) return@RepositoryCard
 
                             hapticFeedBack()
                             viewModel.selectRepository(repository)
-                            isSelecting.value = true
                         },
-                        modifier =
-                            Modifier
-                                .padding(vertical = 5.dp),
+                        onDeleteRepository = { viewModel.onToggleAlertDialog(true, repository) },
+                        onCopy = clipboardManager::setText,
+                        modifier = Modifier
+                            .padding(vertical = 5.dp)
+                            .animateItem(),
                     )
                 }
+            }
+
+            AnimatedVisibility(
+                visible = uiState.repositories.isEmpty(),
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .fillMaxSize()
+            ) {
+                EmptyDataMessage(
+                    description = stringResource(LocaleR.string.empty_repositories_list_message),
+                    modifier = Modifier.alpha(0.8F)
+                )
             }
         }
     }
 
-    if (isRemoving.value) {
-        RemoveAlertDialog(
-            confirm = {
-                viewModel.onRemoveRepositories()
-                isRemoving.value = false
+    if (uiState.isShowingAlertDialog) {
+        IconAlertDialog(
+            painter = painterResource(UiCommonR.drawable.warning_outline),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error,
+            description = stringResource(LocaleR.string.action_warning_default_message),
+            onConfirm = {
+                if (uiState.singleRepositoryToRemove != null) {
+                    viewModel.onRemoveRepository(uiState.singleRepositoryToRemove!!)
+                } else {
+                    viewModel.onRemoveRepositories()
+                }
             },
-            cancel = {
-                isSelecting.value = false
-                isRemoving.value = false
+            onDismiss = {
+                viewModel.onToggleAlertDialog(false)
             },
         )
     }

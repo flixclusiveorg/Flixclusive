@@ -70,7 +70,7 @@ internal fun ProviderInfoTopBar(
                 IconButton(onClick = onSettingsClick) {
                     Icon(
                         painter = painterResource(UiCommonR.drawable.provider_settings),
-                        contentDescription = stringResource(LocaleR.string.open_web_icon),
+                        contentDescription = stringResource(LocaleR.string.open_in_web),
                     )
                 }
             }

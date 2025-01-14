@@ -37,8 +37,8 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.clearFocusOnSoftKeyboardHide
-import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.showSoftKeyboard
+import com.flixclusive.core.ui.common.util.toTextFieldValue
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -68,7 +68,7 @@ internal fun TextFieldComponent(
     )
 
     if (isDialogShown) {
-        var currentValue by remember { mutableStateOf(valueProvider().createTextFieldValue()) }
+        var currentValue by remember { mutableStateOf(valueProvider().toTextFieldValue()) }
 
         BaseTweakDialog(
             title = title,
@@ -95,7 +95,7 @@ internal fun TextFieldComponent(
                         enter = scaleIn(),
                         exit = scaleOut(),
                     ) {
-                        IconButton(onClick = { currentValue = "".createTextFieldValue() }) {
+                        IconButton(onClick = { currentValue = "".toTextFieldValue() }) {
                             Icon(
                                 painter = painterResource(UiCommonR.drawable.outline_close_square),
                                 contentDescription = stringResource(LocaleR.string.clear_text_button),

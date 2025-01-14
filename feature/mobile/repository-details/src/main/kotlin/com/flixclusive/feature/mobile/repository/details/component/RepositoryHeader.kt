@@ -88,7 +88,7 @@ internal fun RepositoryHeader(
             ButtonWithCircularProgressIndicator(
                 onClick = { uriHandler.openUri(repository.url) },
                 iconId = UiCommonR.drawable.web_browser,
-                label = stringResource(id = LocaleR.string.open_web_icon),
+                label = stringResource(id = LocaleR.string.open_in_web),
                 modifier = Modifier
                     .weight(1F)
             )

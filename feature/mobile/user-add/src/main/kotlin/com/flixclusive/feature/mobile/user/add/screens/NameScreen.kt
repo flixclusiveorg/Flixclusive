@@ -41,8 +41,8 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdapti
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.common.util.toTextFieldValue
 import com.flixclusive.feature.mobile.user.add.OnBoardingScreen
 import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.LocalUserToAdd
 import com.flixclusive.core.locale.R as LocaleR
@@ -59,7 +59,7 @@ internal object NameScreen : OnBoardingScreen {
 
         var isError by remember { mutableStateOf(false) }
         var name by remember {
-            mutableStateOf(userToAdd.value.name.createTextFieldValue())
+            mutableStateOf(userToAdd.value.name.toTextFieldValue())
         }
         val defaultContainerColor = MaterialTheme.colorScheme
             .surfaceColorAtElevation(1.dp)
@@ -103,7 +103,7 @@ internal object NameScreen : OnBoardingScreen {
                     exit = scaleOut(),
                 ) {
                     IconButton(
-                        onClick = { name = "".createTextFieldValue() }
+                        onClick = { name = "".toTextFieldValue() }
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.outline_close_square),

@@ -4,8 +4,8 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
 import com.flixclusive.domain.provider.util.isUrlOnline
+import com.flixclusive.domain.provider.util.toGithubUrl
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.Repository
@@ -41,19 +41,22 @@ class GetRepositoryUseCase
                             .first()
                             .repositories
 
-                    val (username, repositoryName) = extractGithubInfoFromLink(url)!!
+                    val repositoryUrl = url.toGithubUrl()
+                    if (repositoryUrl == null) {
+                        return@withIOContext Resource.Failure(LocaleR.string.invalid_repository_url)
+                    }
 
+                    val repository = repositoryUrl.toValidRepositoryLink()
                     val isAlreadyAdded =
                         repositories.any {
-                            it.owner.equals(username, true) &&
-                                it.name == repositoryName
+                            it.owner.equals(repository.owner, true) &&
+                                it.name == repository.name
                         }
 
                     if (isAlreadyAdded) {
                         return@withIOContext Resource.Failure(LocaleR.string.already_added_repo_error)
                     }
 
-                    val repository = url.toValidRepositoryLink()
                     val providerBranch =
                         repository.getRawLink(
                             filename = "updater.json",
