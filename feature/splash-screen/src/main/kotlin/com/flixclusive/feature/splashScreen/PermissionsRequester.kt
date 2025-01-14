@@ -50,10 +50,17 @@ internal fun Context.getAllRequiredPermissions(): List<String> {
         requiredPermissions.add(Manifest.permission.POST_NOTIFICATIONS)
     }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        requiredPermissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-        requiredPermissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    }
+//    TODO: Uncomment when needed
+//    val isAndroid6AndAbove = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+//    val isAndroid9AndBelow = Build.VERSION.SDK_INT <= Build.VERSION_CODES.P
+//    if (isAndroid6AndAbove && isAndroid9AndBelow) {
+//        requiredPermissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+//    }
+//
+//    val isAndroid10AndBelow = Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q
+//    if (isAndroid6AndAbove && isAndroid10AndBelow) {
+//        requiredPermissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//    }
 
     return requiredPermissions.filterNot { permission ->
         checkCallingOrSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
