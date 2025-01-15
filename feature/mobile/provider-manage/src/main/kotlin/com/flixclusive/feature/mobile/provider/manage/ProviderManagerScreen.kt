@@ -3,7 +3,6 @@ package com.flixclusive.feature.mobile.provider.manage
 import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,6 +26,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -40,6 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -69,8 +70,6 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.core.ui.mobile.util.isAtTop
-import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.data.provider.util.isNotUsable
 import com.flixclusive.domain.provider.util.getApiCrashMessage
 import com.flixclusive.feature.mobile.provider.manage.component.InstalledProviderCard
@@ -79,6 +78,7 @@ import com.flixclusive.feature.mobile.provider.manage.reorderable.ReorderableIte
 import com.flixclusive.feature.mobile.provider.manage.reorderable.rememberReorderableLazyListState
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -132,8 +132,6 @@ internal fun ProviderManagerScreen(
                 }
             },
         )
-    val shouldShowTopBar by lazyListState.isScrollingUp()
-    val listIsAtTop by lazyListState.isAtTop()
 
     LaunchedEffect(error) {
         if (error == null) return@LaunchedEffect
@@ -161,18 +159,28 @@ internal fun ProviderManagerScreen(
         )
     }
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    var isFabExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(scrollBehavior.state.heightOffset) {
+        delay(800)
+        isFabExpanded = scrollBehavior.state.heightOffset < 0f
+    }
+
     Scaffold(
-        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             ProviderManagerTopBar(
-                isVisible = shouldShowTopBar,
-                searchQuery = viewModel.searchQuery,
+                searchQuery = { viewModel.searchQuery },
                 onQueryChange = viewModel::onSearchQueryChange,
                 tooltipState = helpTooltipState,
                 isSearching = isSearching,
                 onToggleSearchBar = { isSearching = it },
                 onNavigationClick = navigator::goBack,
+                scrollBehavior = scrollBehavior,
                 onNeedHelp = onNeedHelp,
             )
         },
@@ -182,7 +190,7 @@ internal fun ProviderManagerScreen(
                     onClick = navigator::openAddProviderScreen,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     shape = MaterialTheme.shapes.medium,
-                    expanded = !shouldShowTopBar,
+                    expanded = isFabExpanded,
                     text = {
                         Text(text = stringResource(LocaleR.string.add_provider))
                     },
@@ -196,16 +204,11 @@ internal fun ProviderManagerScreen(
             }
         },
     ) { innerPadding ->
-        val topPadding by animateDpAsState(
-            targetValue = if (listIsAtTop) innerPadding.calculateTopPadding() else 0.dp,
-            label = "",
-        )
-
         Box(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(top = topPadding),
+                    .padding(innerPadding),
         ) {
             AnimatedContent(
                 targetState = viewModel.providers.isEmpty(),

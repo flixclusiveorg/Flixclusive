@@ -2,21 +2,16 @@ package com.flixclusive.core.ui.mobile.component.film
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -26,60 +21,63 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.PagingState
-import com.flixclusive.core.ui.mobile.R
 import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.SMALL_ERROR
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.core.ui.mobile.util.isAtTop
-import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.util.FilmType
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 fun FilmsGridScreen(
-    screenTitle: String,
+    title: String,
     films: List<Film>,
     isShowingFilmCardTitle: Boolean,
     onFilmClick: (Film) -> Unit,
     onFilmLongClick: (Film) -> Unit,
+    onNavigationIconClick: () -> Unit,
     modifier: Modifier = Modifier,
     listState: LazyGridState = rememberLazyGridState(),
     pagingState: PagingState = PagingState.IDLE,
     currentFilter: FilmType? = null,
     onRetry: () -> Unit = {},
-    onFilterChange: ((FilmType) -> Unit)? = null,
-    onNavigationIconClick: (() -> Unit)? = null,
+    onFilterChange: (FilmType) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
 
-    var shouldShowFilterSheet by rememberSaveable { mutableStateOf(true) }
-    val shouldShowTopBar by listState.isScrollingUp()
-    val listIsAtTop by listState.isAtTop()
+    var isFilterSheetOpen by rememberSaveable { mutableStateOf(true) }
 
     val isScrollToTopEnabled by remember {
         derivedStateOf {
@@ -88,170 +86,216 @@ fun FilmsGridScreen(
     }
 
     BackHandler(
-        enabled = isScrollToTopEnabled
+        enabled = isScrollToTopEnabled,
     ) {
         scope.launch {
             safeCall { listState.animateScrollToItem(0) }
         }
     }
 
-    val errorHeight = remember(films.size) {
-        if (films.isEmpty()) {
-            LARGE_ERROR
-        } else {
-            SMALL_ERROR
+    val errorHeight =
+        remember(films.size) {
+            if (films.isEmpty()) {
+                LARGE_ERROR
+            } else {
+                SMALL_ERROR
+            }
+        }
+
+    val localDensity = LocalDensity.current
+    val defaultHeight = CommonTopBarDefaults.getAdaptiveTopBarHeight()
+    var topBarHeightPx = remember { mutableFloatStateOf(0f) }
+    val topBarOffsetHeightPx = remember { mutableFloatStateOf(0f) }
+    val nestedScrollConnection =
+        remember {
+            object : NestedScrollConnection {
+                override fun onPreScroll(
+                    available: Offset,
+                    source: NestedScrollSource,
+                ): Offset {
+                    // try to consume before LazyColumn to collapse toolbar if needed, hence pre-scroll
+                    val delta = available.y
+                    val newOffset = topBarOffsetHeightPx.floatValue + delta
+                    topBarOffsetHeightPx.floatValue = newOffset.coerceIn(-topBarHeightPx.floatValue, 0f)
+                    // here's the catch: let's pretend we consumed 0 in any case, since we want
+                    // LazyColumn to scroll anyway for good UX
+                    // We're basically watching scroll without taking it
+                    return Offset.Zero
+                }
+            }
+        }
+
+    val topBarHeightInDp by remember {
+        derivedStateOf {
+            if (topBarHeightPx.floatValue == 0f) {
+                return@derivedStateOf defaultHeight
+            }
+
+            with(localDensity) { topBarHeightPx.floatValue.toDp() }
         }
     }
 
-    LaunchedEffect(listIsAtTop, shouldShowTopBar) {
-        shouldShowFilterSheet = if (shouldShowTopBar && !listIsAtTop) false
-        else shouldShowTopBar
-    }
-
-    Scaffold(
-        modifier = modifier.padding(LocalGlobalScaffoldPadding.current),
-        topBar = {
-            AnimatedVisibility(
-                visible = shouldShowTopBar,
-                enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-                exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut()
-            ) {
-                FilmsGridHeader(
-                    headerTitle = screenTitle,
-                    shouldOpenFilterSheet = shouldShowFilterSheet,
-                    currentFilterSelected = currentFilter,
-                    onNavigationIconClick = onNavigationIconClick,
-                    onFilterChange = onFilterChange,
-                    onFilterClick = {
-                        shouldShowFilterSheet = !shouldShowFilterSheet
-                    }
-                )
-            }
-        },
-        contentWindowInsets = WindowInsets(0.dp)
-    ) { innerPadding ->
-        val topPadding by animateDpAsState(
-            targetValue = if (listIsAtTop) innerPadding.calculateTopPadding() else 0.dp,
-            label = ""
-        )
-
+    Box(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(LocalGlobalScaffoldPadding.current)
+                .nestedScroll(nestedScrollConnection),
+    ) {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(110.dp),
             state = listState,
-            modifier = Modifier.padding(top = topPadding)
         ) {
-            itemsIndexed(items = films) { _, film ->
+            item(
+                span = { GridItemSpan(maxLineSpan) },
+                key = "PaddingSpacer",
+            ) {
+                Spacer(modifier = Modifier.heightIn(topBarHeightInDp),)
+            }
+
+            itemsIndexed(
+                items = films,
+                key = { _, film -> film.identifier }
+            ) { _, film ->
                 FilmCard(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(),
                     isShowingTitle = isShowingFilmCardTitle,
                     film = film,
                     onClick = onFilmClick,
-                    onLongClick = onFilmLongClick
+                    onLongClick = onFilmLongClick,
                 )
             }
 
             if (pagingState == PagingState.LOADING || pagingState == PagingState.PAGINATING) {
                 items(20) {
                     FilmCardPlaceholder(
-                        modifier = Modifier
-                            .padding(3.dp)
-                            .fillMaxSize()
+                        modifier =
+                            Modifier
+                                .padding(3.dp)
+                                .fillMaxSize(),
                     )
                 }
             }
 
             item(span = { GridItemSpan(maxLineSpan) }) {
                 RetryButton(
-                    modifier = Modifier
-                        .height(errorHeight)
-                        .fillMaxWidth(),
+                    modifier =
+                        Modifier
+                            .height(errorHeight)
+                            .fillMaxWidth(),
                     shouldShowError = pagingState == PagingState.ERROR,
                     error = stringResource(id = LocaleR.string.pagination_error_message),
-                    onRetry = onRetry
+                    onRetry = onRetry,
                 )
             }
         }
+
+        FilmsGridTopBar(
+            headerTitle = title,
+            isFilterSheetOpen = isFilterSheetOpen,
+            currentFilterSelected = currentFilter,
+            onNavigationIconClick = onNavigationIconClick,
+            onFilterChange = onFilterChange,
+            onFilterClick = { isFilterSheetOpen = !isFilterSheetOpen },
+            modifier =
+                Modifier
+                    .offset {
+                        IntOffset(0, topBarOffsetHeightPx.floatValue.roundToInt())
+                    }.onGloballyPositioned {
+                        topBarHeightPx.floatValue = it.size.height.toFloat()
+                    },
+        )
     }
 }
 
 @Composable
-private fun FilmsGridHeader(
+private fun FilmsGridTopBar(
     headerTitle: String,
-    shouldOpenFilterSheet: Boolean,
+    isFilterSheetOpen: Boolean,
     onFilterClick: () -> Unit,
+    onNavigationIconClick: () -> Unit,
+    modifier: Modifier = Modifier,
     currentFilterSelected: FilmType? = null,
-    onNavigationIconClick: (() -> Unit)? = null,
     onFilterChange: ((FilmType) -> Unit)? = null,
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surface
 
     Column(
-        modifier = Modifier
-            .drawBehind {
-                drawRect(surfaceColor)
-            }
+        modifier =
+            modifier
+                .background(surfaceColor),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .height(65.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if(onNavigationIconClick != null) {
-                IconButton(onClick = onNavigationIconClick) {
-                    Icon(
-                        painter = painterResource(UiCommonR.drawable.left_arrow),
-                        contentDescription = stringResource(LocaleR.string.navigate_up)
-                    )
+        CommonTopBar(
+            title = headerTitle,
+            onNavigate = onNavigationIconClick,
+            actions = {
+                if (currentFilterSelected != null) {
+                    IconButton(
+                        onClick = onFilterClick,
+                        modifier =
+                            Modifier
+                                .padding(end = 15.dp),
+                    ) {
+                        Icon(
+                            painter = painterResource(UiCommonR.drawable.filter_list),
+                            contentDescription = stringResource(LocaleR.string.filter_button),
+                        )
+                    }
                 }
-            }
+            },
+        )
 
-            Text(
-                text = headerTitle,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                modifier = Modifier
-                    .weight(1F)
-                    .padding(start = 15.dp)
-            )
-
-            if (currentFilterSelected != null) {
-                IconButton(
-                    onClick = onFilterClick,
-                    modifier = Modifier
-                        .padding(end = 15.dp)
+        if (currentFilterSelected != null) {
+            AnimatedVisibility(visible = isFilterSheetOpen) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(surfaceColor),
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.filter),
-                        contentDescription = stringResource(LocaleR.string.filter_button)
+                    FilmTypeFilters(
+                        currentFilterSelected = currentFilterSelected,
+                        onFilterChange = onFilterChange!!,
                     )
                 }
             }
         }
+    }
+}
 
-        if(currentFilterSelected != null) {
-            AnimatedVisibility(
-                visible = shouldOpenFilterSheet
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .drawBehind {
-                            drawRect(surfaceColor)
-                        }
-                ) {
-                    FilmTypeFilters(
-                        currentFilterSelected = currentFilterSelected,
-                        onFilterChange = onFilterChange!!
-                    )
-                }
+@Preview
+@Composable
+private fun FilmsGridScreenPreview() {
+    val films =
+        remember {
+            List(100) {
+                Movie(
+                    tmdbId = it,
+                    imdbId = "tt4154796",
+                    title = "Avengers: Endgame",
+                    posterImage = null,
+                    backdropImage = "/orjiB3oUIsyz60hoEqkiGpy5CeO.jpg",
+                    homePage = null,
+                    id = null,
+                    providerId = "TMDB",
+                )
             }
+        }
+
+    FlixclusiveTheme {
+        Surface {
+            FilmsGridScreen(
+                title = "Trending",
+                films = films,
+                isShowingFilmCardTitle = false,
+                currentFilter = FilmType.MOVIE,
+                onFilmClick = {},
+                onFilmLongClick = {},
+                onNavigationIconClick = {},
+                onFilterChange = {},
+            )
         }
     }
 }

@@ -44,9 +44,6 @@ internal fun PinSetupScreenCompactLandscape(
         CommonTopBar(
             title = "",
             onNavigate = onBack,
-            rowModifier =
-                Modifier
-                    .align(Alignment.TopCenter),
         )
 
         Row(

@@ -153,7 +153,7 @@
     <string name="export_label">Export</string>
     <string name="feature_request">Feature request</string>
     <string name="film_card_titles">Detailed film cards</string>
-    <string name="film_filter">Film Type</string>
+    <string name="film_filter">Film type</string>
     <string name="finish">Finish</string>
     <string name="first_time_providers_screen_title">Welcome to the Providers Screen!</string>
     <string name="flixclusive_providers">Flixclusive Providers</string>
@@ -441,7 +441,7 @@
     <string name="expand_card_icon_content_desc">Expand test result card icon</string>
     <string name="film_card_titles_settings_description">Display the titles on under the media cards.</string>
     <string name="film_item_content_description">A film\'s backdrop, picture or poster.</string>
-    <string name="filter_button">Filter button</string>
+    <string name="filter_button">Filter</string>
     <string name="flixclusive_icon_content_desc">Flixclusive icon</string>
     <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>
     <string name="forward_button_content_description">Forward button for the player</string>

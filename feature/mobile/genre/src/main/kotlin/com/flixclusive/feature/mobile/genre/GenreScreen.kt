@@ -51,7 +51,7 @@ internal fun GenreScreen(
         pagingState = viewModel.pagingState,
         isShowingFilmCardTitle = uiPreferences.shouldShowTitleOnCards,
         currentFilter = if(viewModel.filmTypeCouldBeBoth) viewModel.currentFilterSelected else null,
-        screenTitle = args.genre.name,
+        title = args.genre.name,
         films = viewModel.films,
         onFilterChange = viewModel::onFilterChange,
         onFilmLongClick = previewFilm,

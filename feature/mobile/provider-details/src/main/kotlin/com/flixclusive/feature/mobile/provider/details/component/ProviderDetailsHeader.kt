@@ -31,13 +31,13 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 
 
 @Composable
-internal fun ProviderInfoHeader(
-    modifier: Modifier = Modifier,
+internal fun ProviderDetailsHeader(
     providerMetadata: ProviderMetadata,
-    openRepositoryScreen: () -> Unit
+    openRepositoryScreen: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val (_, repository) =  remember {
-        extractGithubInfoFromLink(providerMetadata.repositoryUrl ?: "") ?: (null to null)
+        extractGithubInfoFromLink(providerMetadata.repositoryUrl) ?: (null to null)
     }
 
     Row(
@@ -105,7 +105,7 @@ private fun ProviderSettingsHeaderPreview() {
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
             ) {
-                ProviderInfoHeader(
+                ProviderDetailsHeader(
                     providerMetadata = providerMetadata,
                     openRepositoryScreen = {}
                 )

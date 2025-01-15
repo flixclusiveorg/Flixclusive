@@ -53,7 +53,7 @@ internal fun SeeAllScreen(
             else -> null
         },
         isShowingFilmCardTitle = uiPreferences.shouldShowTitleOnCards,
-        screenTitle = viewModel.catalog.name,
+        title = viewModel.catalog.name,
         films = viewModel.films,
         onRetry = {
             viewModel.resetPagingState()

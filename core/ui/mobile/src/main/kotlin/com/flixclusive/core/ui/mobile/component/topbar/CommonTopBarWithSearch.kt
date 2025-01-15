@@ -12,20 +12,26 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,6 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -52,204 +60,189 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.clearFocusOnSoftKeyboardHide
-import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showSoftKeyboard
 import com.flixclusive.core.ui.common.util.toTextFieldValue
+import com.flixclusive.core.ui.mobile.component.PlainTooltipBox
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getAdaptiveTopBarHeight
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-const val TOP_BAR_BODY_FADE_DURATION = 200
-
 @Composable
 fun CommonTopBarWithSearch(
     isSearching: Boolean,
-    searchQuery: String,
-    onNavigateBack: () -> Unit,
+    searchQuery: () -> String,
+    onNavigate: () -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
     onQueryChange: (String) -> Unit,
-    boxModifier: Modifier = Modifier,
-    rowModifier: Modifier = Modifier,
+    modifier: Modifier = Modifier,
+    navigationIconColor: Color = LocalContentColor.current,
+    titleColor: Color = LocalContentColor.current,
+    actionsColor: Color = LocalContentColor.current,
+    scrollBehavior: TopAppBarScrollBehavior? = null,
     title: String? = null,
+    extraActions: @Composable RowScope.() -> Unit = {},
 ) {
-    CommonTopBar(
-        boxModifier = boxModifier,
-        rowModifier = rowModifier,
-        navigationIcon = {
-            IconButton(
-                onClick = {
-                    if (isSearching) {
-                        onToggleSearchBar(false)
-                    } else {
-                        onNavigateBack()
-                    }
-                },
-            ) {
-                AdaptiveIcon(
-                    painter = painterResource(UiCommonR.drawable.left_arrow),
-                    contentDescription = stringResource(LocaleR.string.navigate_up),
-                    dp = 16.dp,
-                    increaseBy = 3.dp,
-                )
-            }
-        },
-        body = {
-            AnimatedVisibility(
-                visible = title != null && !isSearching,
-                enter = fadeIn(),
-                exit = fadeOut(tween(TOP_BAR_BODY_FADE_DURATION)),
-                modifier =
-                    Modifier.ifElse(
-                        condition = title != null && !isSearching,
-                        ifTrueModifier = Modifier.weight(1F),
-                    ),
-            ) {
-                Text(
-                    text = title!!,
-                    style =
-                        getAdaptiveTextStyle(
-                            style = TypographyStyle.Body,
-                            mode = TextStyleMode.Normal,
-                            size = 20.sp,
-                            increaseBy = 5.sp,
-                        ).copy(fontWeight = FontWeight.SemiBold),
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                    modifier =
-                        Modifier
-                            .padding(start = 15.dp),
-                )
-            }
-        },
-        actions = {
-            Box(
-                modifier =
-                    Modifier.ifElse(
-                        condition = title == null || isSearching,
-                        ifTrueModifier = Modifier.weight(1F),
-                    ),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                AnimatedContent(
-                    targetState = isSearching,
-                    label = "TopBarAction",
-                    transitionSpec = { getSearchTransition() },
-                ) { state ->
-                    val heightModifier =
-                        Modifier
-                            .height(getAdaptiveTopBarHeight())
-                            .padding(getAdaptiveDp(8.dp))
-
-                    if (state) {
-                        TopBarTextField(
-                            searchQuery = searchQuery,
-                            onQueryChange = onQueryChange,
-                            modifier = heightModifier.fillMaxWidth(),
-                        )
-                    } else {
-                        IconButton(
-                            onClick = { onToggleSearchBar(true) },
-                            modifier = heightModifier,
-                        ) {
-                            AdaptiveIcon(
-                                painter = painterResource(UiCommonR.drawable.search_outlined),
-                                contentDescription = stringResource(LocaleR.string.search),
-                                dp = 18.dp,
-                                increaseBy = 3.dp,
-                            )
-                        }
-                    }
+    CommonTopBarWithSearch(
+        modifier = modifier,
+        scrollBehavior = scrollBehavior,
+        navigationIconColor = navigationIconColor,
+        titleColor = titleColor,
+        actionsColor = actionsColor,
+        isSearching = isSearching,
+        searchQuery = searchQuery,
+        onNavigate = onNavigate,
+        onToggleSearchBar = onToggleSearchBar,
+        onQueryChange = onQueryChange,
+        extraActions = extraActions,
+        titleContent =
+            if (title != null) {
+                {
+                    Text(
+                        text = title,
+                        style =
+                            getAdaptiveTextStyle(
+                                style = TypographyStyle.Body,
+                                mode = TextStyleMode.Normal,
+                                size = 20.sp,
+                                increaseBy = 5.sp,
+                            ).copy(fontWeight = FontWeight.SemiBold),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        modifier = Modifier.padding(start = 15.dp),
+                    )
                 }
-            }
-        },
+            } else {
+                null
+            },
     )
 }
 
 @Composable
 fun CommonTopBarWithSearch(
     isSearching: Boolean,
-    searchQuery: String,
-    onNavigateBack: () -> Unit,
+    searchQuery: () -> String,
+    onNavigate: () -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
     onQueryChange: (String) -> Unit,
-    boxModifier: Modifier = Modifier,
-    rowModifier: Modifier = Modifier,
-    body: (@Composable RowScope.() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+    navigationIconColor: Color = LocalContentColor.current,
+    titleColor: Color = LocalContentColor.current,
+    actionsColor: Color = LocalContentColor.current,
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    titleContent: (@Composable () -> Unit)? = null,
+    extraActions: @Composable RowScope.() -> Unit = {},
 ) {
     CommonTopBar(
-        boxModifier = boxModifier,
-        rowModifier = rowModifier,
+        modifier = modifier,
+        scrollBehavior = scrollBehavior,
+        navigationIconColor = navigationIconColor,
+        titleColor = titleColor,
+        actionsColor = actionsColor,
         navigationIcon = {
-            IconButton(
-                onClick = {
-                    if (isSearching) {
-                        onToggleSearchBar(false)
-                    } else {
-                        onNavigateBack()
-                    }
-                },
-            ) {
-                AdaptiveIcon(
-                    painter = painterResource(UiCommonR.drawable.left_arrow),
-                    contentDescription = stringResource(LocaleR.string.navigate_up),
-                    dp = 16.dp,
-                    increaseBy = 3.dp,
-                )
-            }
-        },
-        body = { body?.invoke(this) },
-        actions = {
-            Box(
-                modifier =
-                    Modifier.ifElse(
-                        condition = body == null || isSearching,
-                        ifTrueModifier = Modifier.weight(1F),
-                    ),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                AnimatedContent(
-                    targetState = isSearching,
-                    label = "TopBarAction",
-                    transitionSpec = { getSearchTransition() },
-                ) { state ->
-                    val heightModifier =
-                        Modifier
-                            .height(getAdaptiveTopBarHeight())
-                            .padding(getAdaptiveDp(8.dp))
-
-                    if (state) {
-                        TopBarTextField(
-                            searchQuery = searchQuery,
-                            onQueryChange = onQueryChange,
-                            modifier = heightModifier.fillMaxWidth(),
-                        )
-                    } else {
-                        IconButton(
-                            onClick = { onToggleSearchBar(true) },
-                            modifier = heightModifier,
-                        ) {
-                            AdaptiveIcon(
-                                painter = painterResource(UiCommonR.drawable.search_outlined),
-                                contentDescription = stringResource(LocaleR.string.search),
-                                dp = 18.dp,
-                                increaseBy = 3.dp,
-                            )
+            PlainTooltipBox(description = stringResource(LocaleR.string.navigate_up)) {
+                ActionButton(
+                    onClick = {
+                        if (isSearching) {
+                            onToggleSearchBar(false)
+                        } else {
+                            onNavigate()
                         }
-                    }
+                    },
+                ) {
+                    AdaptiveIcon(
+                        painter = painterResource(UiCommonR.drawable.left_arrow),
+                        contentDescription = stringResource(LocaleR.string.navigate_up),
+                        dp = 16.dp,
+                        increaseBy = 3.dp,
+                    )
                 }
             }
         },
+        title = {
+            titleContent?.let {
+                AnimatedVisibility(
+                    visible = !isSearching,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    it.invoke()
+                }
+            }
+        },
+        actions = {
+            SearchTextFieldAction(
+                isSearching = isSearching,
+                searchQuery = searchQuery,
+                onQueryChange = onQueryChange,
+                onToggleSearchBar = onToggleSearchBar,
+                extraActions = extraActions,
+            )
+        },
     )
+}
+
+@Composable
+private fun RowScope.SearchTextFieldAction(
+    isSearching: Boolean,
+    searchQuery: () -> String,
+    onQueryChange: (String) -> Unit,
+    onToggleSearchBar: (Boolean) -> Unit,
+    extraActions: @Composable RowScope.() -> Unit = {},
+) {
+    AnimatedContent(
+        targetState = isSearching,
+        label = "TopBarAction",
+        transitionSpec = { getSearchTransition() },
+    ) { state ->
+        val heightModifier =
+            Modifier
+                .height(getAdaptiveTopBarHeight())
+                .padding(getAdaptiveDp(8.dp))
+
+        if (state) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Spacer(modifier = Modifier.minimumInteractiveComponentSize())
+
+                TopBarTextField(
+                    searchQuery = searchQuery,
+                    onQueryChange = onQueryChange,
+                    modifier = heightModifier.weight(1F),
+                )
+            }
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                extraActions()
+
+                PlainTooltipBox(description = stringResource(LocaleR.string.search)) {
+                    ActionButton(
+                        onClick = { onToggleSearchBar(true) },
+                        modifier = heightModifier,
+                    ) {
+                        AdaptiveIcon(
+                            painter = painterResource(UiCommonR.drawable.search_outlined),
+                            contentDescription = stringResource(LocaleR.string.search),
+                            dp = 18.dp,
+                            increaseBy = 3.dp,
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
 private fun TopBarTextField(
-    searchQuery: String,
+    searchQuery: () -> String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val textFieldValue = remember { mutableStateOf(searchQuery.toTextFieldValue()) }
+    val textFieldValue = remember { mutableStateOf(searchQuery().toTextFieldValue()) }
 
     val focusManager = LocalFocusManager.current
     val keyboardManager = LocalSoftwareKeyboardController.current
@@ -278,7 +271,7 @@ private fun TopBarTextField(
                 enter = scaleIn(),
                 exit = scaleOut(),
             ) {
-                IconButton(
+                ActionButton(
                     onClick = {
                         textFieldValue.value = "".toTextFieldValue()
                         onQueryChange("")
@@ -322,7 +315,7 @@ private fun TopBarTextField(
 }
 
 private fun AnimatedContentTransitionScope<Boolean>.getSearchTransition(): ContentTransform {
-    return fadeIn(animationSpec = tween(300, delayMillis = TOP_BAR_BODY_FADE_DURATION)) togetherWith
+    return fadeIn(animationSpec = tween(300)) togetherWith
         fadeOut(animationSpec = tween(150)) using
         SizeTransform { initialSize, targetSize ->
             if (targetState) {
@@ -345,16 +338,46 @@ private fun CommonTopBarWithSearchBasePreview() {
     var isSearching by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     FlixclusiveTheme {
         Surface {
-            CommonTopBarWithSearch(
-                title = "Test",
-                isSearching = isSearching,
-                searchQuery = searchQuery,
-                onNavigateBack = {},
-                onToggleSearchBar = { isSearching = it },
-                onQueryChange = { searchQuery = it },
-            )
+            Scaffold(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    CommonTopBarWithSearch(
+                        title = "Test",
+                        isSearching = isSearching,
+                        searchQuery = { searchQuery },
+                        onNavigate = {},
+                        onToggleSearchBar = { isSearching = it },
+                        onQueryChange = { searchQuery = it },
+                        scrollBehavior = scrollBehavior,
+                        extraActions = {
+                            ActionButton(onClick = {}) {
+                                AdaptiveIcon(
+                                    painter = painterResource(UiCommonR.drawable.filter_list),
+                                    contentDescription = null,
+                                    tint = LocalContentColor.current.onMediumEmphasis(),
+                                )
+                            }
+                        },
+                    )
+                },
+            ) {
+                LazyColumn(
+                    modifier = Modifier.padding(it),
+                ) {
+                    items(100) { i ->
+                        Text(
+                            text = "Item $i",
+                            modifier =
+                                Modifier
+                                    .minimumInteractiveComponentSize()
+                                    .fillMaxWidth(),
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -24,6 +24,7 @@ internal fun CustomIconButton(
     onClick: () -> Unit,
     content: @Composable BoxScope.() -> Unit,
 ) {
+    // TODO: Migrate to PlainTooltipBox
     val tooltipState = rememberTooltipState(isPersistent = true)
     TooltipBox(
         positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
@@ -35,12 +36,13 @@ internal fun CustomIconButton(
         },
     ) {
         Box(
-            modifier = Modifier
-                .size(35.dp)
-                .clip(CircleShape)
-                .clickable(onClick = onClick),
+            modifier =
+                Modifier
+                    .size(35.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onClick),
             contentAlignment = Alignment.Center,
-            content = content
+            content = content,
         )
     }
 }

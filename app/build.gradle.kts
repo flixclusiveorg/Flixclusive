@@ -15,12 +15,15 @@ val applicationName: String = libs.versions.applicationName.get()
 val appIdFromLib: String = libs.versions.applicationId.get()
 val formattedVersion = "$versionMajor.$versionMinor.$versionPatch"
 
-val gitCommitVersionProvider = providers.exec {
-    commandLine = "git rev-parse --short HEAD".split(" ")
-}
+val gitCommitVersionProvider =
+    providers.exec {
+        commandLine = "git rev-parse --short HEAD".split(" ")
+    }
 
 fun Project.getCommitVersion(): String {
-    return gitCommitVersionProvider.standardOutput.asText.get().trim()
+    return gitCommitVersionProvider.standardOutput.asText
+        .get()
+        .trim()
 }
 
 android {
@@ -69,6 +72,7 @@ dependencies {
     implementation(projects.feature.mobile.genre)
     implementation(projects.feature.mobile.home)
     implementation(projects.feature.mobile.player)
+    implementation(projects.feature.mobile.providerAdd)
     implementation(projects.feature.mobile.providerDetails)
     implementation(projects.feature.mobile.providerManage)
     implementation(projects.feature.mobile.providerSettings)

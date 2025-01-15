@@ -68,6 +68,7 @@ internal class SeeAllViewModel @Inject constructor(
         pagingState = PagingState.IDLE
     }
 
+    // TODO: Add job checking here
     fun getFilms() {
         viewModelScope.launch {
             if (hasNextPage) return@launch

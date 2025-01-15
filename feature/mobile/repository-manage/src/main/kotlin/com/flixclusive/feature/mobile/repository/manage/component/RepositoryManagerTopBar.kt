@@ -1,14 +1,10 @@
 package com.flixclusive.feature.mobile.repository.manage.component
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,47 +30,43 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun RepositoryManagerTopBar(
-    isVisible: Boolean,
     isSelecting: Boolean,
     selectCount: Int,
     onRemoveRepositories: () -> Unit,
     onCopyRepositories: () -> Unit,
     isSearching: Boolean,
-    searchQuery: String,
+    searchQuery: () -> String,
     onCollapseTopBar: () -> Unit,
     onNavigationClick: () -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
     onQueryChange: (String) -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
 ) {
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+    Crossfade(
+        targetState = isSelecting,
+        label = "",
     ) {
-        Crossfade(
-            targetState = isSelecting,
-            label = "",
-        ) {
-            when (it) {
-                true -> {
-                    MultiSelectTopBar(
-                        selectCount = selectCount,
-                        onRemove = onRemoveRepositories,
-                        onCopyLinks = onCopyRepositories,
-                        onCollapseTopBar = onCollapseTopBar,
-                    )
-                }
+        when (it) {
+            true -> {
+                MultiSelectTopBar(
+                    selectCount = selectCount,
+                    onRemove = onRemoveRepositories,
+                    onCopyLinks = onCopyRepositories,
+                    onCollapseTopBar = onCollapseTopBar,
+                    scrollBehavior = scrollBehavior,
+                )
+            }
 
-                false -> {
-                    CommonTopBarWithSearch(
-                        title = stringResource(LocaleR.string.manage_repositories),
-                        isSearching = isSearching,
-                        searchQuery = searchQuery,
-                        onNavigateBack = onNavigationClick,
-                        onToggleSearchBar = onToggleSearchBar,
-                        onQueryChange = onQueryChange,
-                    )
-                }
+            false -> {
+                CommonTopBarWithSearch(
+                    title = stringResource(LocaleR.string.manage_repositories),
+                    isSearching = isSearching,
+                    searchQuery = searchQuery,
+                    onNavigate = onNavigationClick,
+                    onToggleSearchBar = onToggleSearchBar,
+                    onQueryChange = onQueryChange,
+                    scrollBehavior = scrollBehavior,
+                )
             }
         }
     }
@@ -86,6 +78,7 @@ private fun MultiSelectTopBar(
     onRemove: () -> Unit,
     onCopyLinks: () -> Unit,
     onCollapseTopBar: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
     modifier: Modifier = Modifier,
 ) {
     var count by remember { mutableIntStateOf(selectCount) }
@@ -94,7 +87,8 @@ private fun MultiSelectTopBar(
     }
 
     CommonTopBar(
-        boxModifier = modifier,
+        modifier = modifier,
+        scrollBehavior = scrollBehavior,
         navigationIcon = {
             IconButton(onClick = onCollapseTopBar) {
                 AdaptiveIcon(
@@ -103,7 +97,7 @@ private fun MultiSelectTopBar(
                 )
             }
         },
-        body = {
+        title = {
             Text(
                 text = stringResource(LocaleR.string.count_selection_format, count),
                 style =
@@ -117,7 +111,6 @@ private fun MultiSelectTopBar(
                 maxLines = 1,
                 modifier =
                     Modifier
-                        .weight(1F)
                         .padding(horizontal = 15.dp),
             )
         },

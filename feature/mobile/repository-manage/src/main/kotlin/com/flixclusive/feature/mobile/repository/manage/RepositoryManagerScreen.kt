@@ -13,11 +13,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -39,7 +40,6 @@ import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.reme
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
-import com.flixclusive.core.ui.mobile.util.isScrollingUp
 import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.repository.manage.component.AddRepositoryBar
 import com.flixclusive.feature.mobile.repository.manage.component.RepositoryCard
@@ -63,9 +63,6 @@ internal fun RepositoryManagerScreen(
     val selectedRepositories by viewModel.selectedRepositories.collectAsStateWithLifecycle()
 
     val clipboardManager = rememberClipboardManager()
-
-    val listState = rememberLazyListState()
-    val shouldShowTopBar by listState.isScrollingUp()
 
     val hapticFeedBack = getFeedbackOnLongPress()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -91,16 +88,19 @@ internal fun RepositoryManagerScreen(
         }
     }
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
-        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
+        modifier =
+            Modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             RepositoryManagerTopBar(
-                isVisible = shouldShowTopBar,
                 isSelecting = selectedRepositories.isNotEmpty(),
                 selectCount = selectedRepositories.size,
-                searchQuery = uiState.searchQuery,
+                searchQuery = { uiState.searchQuery },
                 isSearching = uiState.isShowingSearchBar,
                 onRemoveRepositories = { viewModel.onToggleAlertDialog(true) },
                 onCopyRepositories = {
@@ -111,6 +111,7 @@ internal fun RepositoryManagerScreen(
                 onCollapseTopBar = viewModel::clearSelection,
                 onQueryChange = viewModel::onSearchQueryChange,
                 onToggleSearchBar = viewModel::onToggleSearchBar,
+                scrollBehavior = scrollBehavior,
             )
         },
     ) {
@@ -121,7 +122,6 @@ internal fun RepositoryManagerScreen(
                     .fillMaxSize(),
         ) {
             LazyColumn(
-                state = listState,
                 contentPadding = PaddingValues(horizontal = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier =

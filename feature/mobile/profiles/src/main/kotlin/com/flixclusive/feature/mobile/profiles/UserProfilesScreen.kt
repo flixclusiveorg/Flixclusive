@@ -473,16 +473,16 @@ private fun RowScope.TopBarForNonEmptyScreen(
     isFromSplashScreen: Boolean,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    endContent: @Composable () -> Unit,
+    endContent: @Composable RowScope.() -> Unit,
 ) {
     val headerLabel = stringResource(id = LocaleR.string.profiles)
 
     if (!isFromSplashScreen) {
         CommonTopBar(
-            boxModifier = modifier,
+            modifier = modifier,
             title = headerLabel,
             onNavigate = onBack,
-            endContent = endContent,
+            actions = endContent,
         )
     } else {
         Box(
