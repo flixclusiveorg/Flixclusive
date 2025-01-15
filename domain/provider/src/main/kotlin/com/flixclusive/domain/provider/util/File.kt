@@ -1,33 +1,10 @@
 package com.flixclusive.domain.provider.util
 
 import android.content.Context
-import com.flixclusive.domain.provider.PROVIDERS_FOLDER_NAME
+import com.flixclusive.core.datastore.util.getProvidersPathPrefix
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import java.io.File
-
-/**
- *
- * Deletes recursively
- * */
-internal fun rmrf(file: File) {
-    if (file.isDirectory) {
-        val files = file.listFiles() ?: emptyArray()
-        for (subFiles in files) rmrf(subFiles)
-    }
-
-    file.delete()
-}
-
-internal fun Context.getExternalDirPath(): String? {
-    val externalDir = getExternalFilesDir(null)
-    val externalDirPath = externalDir?.absolutePath
-
-    return externalDirPath
-}
-
-private fun Context.getProvidersPathPrefix(userId: Int): String =
-    getExternalDirPath() + "/${PROVIDERS_FOLDER_NAME}/user-$userId"
 
 internal fun Context.createFileForProvider(
     provider: ProviderMetadata,

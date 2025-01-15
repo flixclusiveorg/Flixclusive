@@ -3,13 +3,13 @@ package com.flixclusive.domain.provider
 import android.content.Context
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.awaitFirst
+import com.flixclusive.core.datastore.util.rmrf
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withDefaultContext
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.domain.provider.util.rmrf
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderMetadata

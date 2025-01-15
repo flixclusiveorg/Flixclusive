@@ -3,8 +3,12 @@ package com.flixclusive.domain.provider
 import android.content.Context
 import android.widget.Toast
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.PROVIDERS_FOLDER_NAME
+import com.flixclusive.core.datastore.PROVIDERS_SETTINGS_FOLDER_NAME
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.util.awaitFirst
+import com.flixclusive.core.datastore.util.getExternalDirPath
+import com.flixclusive.core.datastore.util.rmrf
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.util.coroutines.blockFirstNotNull
@@ -20,14 +24,12 @@ import com.flixclusive.domain.provider.util.createFileForProvider
 import com.flixclusive.domain.provider.util.downloadProvider
 import com.flixclusive.domain.provider.util.getApiCrashMessage
 import com.flixclusive.domain.provider.util.getCommonCrashMessage
-import com.flixclusive.domain.provider.util.getExternalDirPath
 import com.flixclusive.domain.provider.util.getFileFromPath
 import com.flixclusive.domain.provider.util.getProviderInstance
 import com.flixclusive.domain.provider.util.isClassesDex
 import com.flixclusive.domain.provider.util.isJson
 import com.flixclusive.domain.provider.util.isNotOat
 import com.flixclusive.domain.provider.util.isProviderFile
-import com.flixclusive.domain.provider.util.rmrf
 import com.flixclusive.model.datastore.user.ProviderFromPreferences
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
@@ -42,8 +44,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import com.flixclusive.core.locale.R as LocaleR
 
-internal const val PROVIDERS_FOLDER_NAME = "providers"
-internal const val PROVIDERS_SETTINGS_FOLDER_NAME = "settings"
 internal const val UPDATER_FILE = "updater.json"
 internal const val PROVIDER_DEBUG = "debug"
 

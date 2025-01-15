@@ -6,10 +6,15 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.preferencesDataStoreFile
 import com.flixclusive.core.datastore.migration.SystemPreferencesMigration
 import com.flixclusive.core.datastore.migration.UserPreferencesMigration
 import com.flixclusive.core.datastore.util.SystemPreferencesSerializer
+import com.flixclusive.core.datastore.util.USER_PREFERENCE_FILENAME
 import com.flixclusive.core.datastore.util.createUserPreferences
+import com.flixclusive.core.datastore.util.getProvidersPathPrefix
+import com.flixclusive.core.datastore.util.getProvidersSettingsPathPrefix
+import com.flixclusive.core.datastore.util.rmrf
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.model.datastore.system.SystemPreferences
@@ -20,9 +25,13 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.io.File
 import javax.inject.Inject
 
+const val PROVIDERS_FOLDER_NAME = "providers"
+const val PROVIDERS_SETTINGS_FOLDER_NAME = "settings"
 internal const val SYSTEM_PREFS_FILENAME = "system-preferences.json"
+
 private val Context.systemPreferences: DataStore<SystemPreferences> by dataStore(
     fileName = SYSTEM_PREFS_FILENAME,
     serializer = SystemPreferencesSerializer,
@@ -113,6 +122,18 @@ class DataStoreManager
             systemPreferences.updateData {
                 val newSettings = transform(it)
                 newSettings
+            }
+        }
+
+        suspend fun deleteAllUserRelatedFiles(userId: Int) {
+            withIOContext {
+                val datastoreFile = context.preferencesDataStoreFile("$USER_PREFERENCE_FILENAME-$userId")
+                val providersFolder = context.getProvidersPathPrefix(userId)
+                val providersSettingsFolder = context.getProvidersSettingsPathPrefix(userId)
+
+                rmrf(File(providersFolder))
+                rmrf(File(providersSettingsFolder))
+                datastoreFile.delete()
             }
         }
     }

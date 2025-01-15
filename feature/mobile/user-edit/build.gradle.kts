@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.data.watchHistory)
     implementation(projects.data.watchlist)
     implementation(projects.domain.user)
+    implementation(projects.domain.provider)
 
     implementation(libs.compose.adaptive)
     implementation(libs.compose.foundation)

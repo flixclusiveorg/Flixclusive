@@ -78,9 +78,13 @@ internal fun UserEditScreen(
     var user by remember { mutableStateOf(userArg) }
 
     LaunchedEffect(true) {
-        viewModel.isDeleted
+        viewModel.onRemoveNavigationState
             .collect {
-                navigator.openProfilesScreen(shouldPopBackStack = true)
+                if (it == OnRemoveNavigationState.PopToRoot) {
+                    navigator.openProfilesScreen(shouldPopBackStack = true)
+                } else {
+                    navigator.goBack()
+                }
             }
     }
 
@@ -91,9 +95,12 @@ internal fun UserEditScreen(
                     initialName = user.name,
                     userHasPin = user.pin != null,
                     onOpenPinScreen = { isRemovingPin ->
-                        val action = if (isRemovingPin) {
-                            PinAction.Verify(user)
-                        } else PinAction.Setup
+                        val action =
+                            if (isRemovingPin) {
+                                PinAction.Verify(user)
+                            } else {
+                                PinAction.Setup
+                            }
 
                         navigator.openUserPinScreen(action = action)
                     },

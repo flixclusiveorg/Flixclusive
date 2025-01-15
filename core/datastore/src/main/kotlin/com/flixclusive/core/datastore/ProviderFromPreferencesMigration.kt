@@ -6,9 +6,8 @@ import com.flixclusive.model.datastore.user.ProviderFromPreferences
 import java.io.File
 import java.nio.charset.StandardCharsets
 
-private const val NEW_PROVIDERS_FOLDER_NAME = "providers"
+private const val NEW_PROVIDERS_FOLDER_NAME = PROVIDERS_FOLDER_NAME
 private const val OLD_PROVIDERS_FOLDER_NAME = "flx_providers"
-private const val PROVIDERS_SETTINGS_FOLDER_NAME = "settings"
 
 internal object ProviderFromPreferencesMigration {
     fun migrateToNewPaths(

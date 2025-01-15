@@ -42,8 +42,7 @@ internal class SettingsViewModel
                     searchHistoryRepository
                         .getAllItemsInFlow(ownerId = user.id)
                         .map { it.size }
-                }
-                .stateIn(
+                }.stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5000),
                     initialValue = 0,
@@ -105,7 +104,3 @@ internal class SettingsViewModel
             }
         }
     }
-
-data class SettingsUiState(
-    val isLoggingOut: Boolean = false
-)
