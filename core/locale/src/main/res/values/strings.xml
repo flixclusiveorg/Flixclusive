@@ -126,6 +126,7 @@
     <string name="continue_label">Continue</string>
     <string name="continue_watching">Continue Watching</string>
     <string name="copy_link">Copy link</string>
+    <string name="copy_repository_links">Copy repository links</string>
     <string name="currently_testing">Currently Testing</string>
     <string name="data">Data</string>
     <string name="data_and_backup">Data and backup</string>

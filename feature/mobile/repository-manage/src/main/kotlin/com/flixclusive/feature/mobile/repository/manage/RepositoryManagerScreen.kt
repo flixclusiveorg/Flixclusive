@@ -100,12 +100,16 @@ internal fun RepositoryManagerScreen(
                 isVisible = shouldShowTopBar,
                 isSelecting = selectedRepositories.isNotEmpty(),
                 selectCount = selectedRepositories.size,
-                onRemoveRepositories = { viewModel.onToggleAlertDialog(true) },
-                onNavigationClick = navigator::goBack,
-                onCollapseTopBar = { viewModel.clearSelection() },
                 searchQuery = uiState.searchQuery,
-                onQueryChange = viewModel::onSearchQueryChange,
                 isSearching = uiState.isShowingSearchBar,
+                onRemoveRepositories = { viewModel.onToggleAlertDialog(true) },
+                onCopyRepositories = {
+                    val repositoryUrls = selectedRepositories.joinToString("\n") { it.url }
+                    clipboardManager.setText(repositoryUrls)
+                },
+                onNavigationClick = navigator::goBack,
+                onCollapseTopBar = viewModel::clearSelection,
+                onQueryChange = viewModel::onSearchQueryChange,
                 onToggleSearchBar = viewModel::onToggleSearchBar,
             )
         },
@@ -166,9 +170,10 @@ internal fun RepositoryManagerScreen(
                         },
                         onDeleteRepository = { viewModel.onToggleAlertDialog(true, repository) },
                         onCopy = clipboardManager::setText,
-                        modifier = Modifier
-                            .padding(vertical = 5.dp)
-                            .animateItem(),
+                        modifier =
+                            Modifier
+                                .padding(vertical = 5.dp)
+                                .animateItem(),
                     )
                 }
             }
@@ -177,13 +182,14 @@ internal fun RepositoryManagerScreen(
                 visible = uiState.repositories.isEmpty(),
                 enter = fadeIn(),
                 exit = fadeOut(),
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxSize()
+                modifier =
+                    Modifier
+                        .align(Alignment.Center)
+                        .fillMaxSize(),
             ) {
                 EmptyDataMessage(
                     description = stringResource(LocaleR.string.empty_repositories_list_message),
-                    modifier = Modifier.alpha(0.8F)
+                    modifier = Modifier.alpha(0.8F),
                 )
             }
         }
