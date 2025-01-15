@@ -43,12 +43,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.CommonTopBarWithSearch
-import com.flixclusive.core.ui.common.TOP_BAR_BODY_FADE_DURATION
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.ifElse
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarWithSearch
+import com.flixclusive.core.ui.mobile.component.topbar.TOP_BAR_BODY_FADE_DURATION
 import kotlinx.coroutines.launch
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR

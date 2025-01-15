@@ -31,6 +31,7 @@ import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreenNavigator
 import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
+import com.flixclusive.feature.mobile.provider.add.AddProviderScreenNavigator
 import com.flixclusive.feature.mobile.provider.details.ProviderDetailsNavigator
 import com.flixclusive.feature.mobile.provider.details.destinations.ProviderDetailsScreenDestination
 import com.flixclusive.feature.mobile.provider.manage.ProviderManagerScreenNavigator
@@ -74,6 +75,7 @@ internal class MobileAppNavigator(
     private val uriHandler: UriHandler,
     private val closeApp: () -> Unit,
 ) : AddProfileAction,
+    AddProviderScreenNavigator,
     AddUserScreenNavigator,
     ChooseProfileAction,
     EditUserAction,

@@ -16,15 +16,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
 import com.flixclusive.core.ui.mobile.component.film.FilmsGridScreen
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
 import com.flixclusive.core.locale.R as LocaleR
 
-interface WatchlistScreenNavigator : GoBackAction, ViewFilmAction
+interface WatchlistScreenNavigator :
+    GoBackAction,
+    ViewFilmAction
 
 @Destination
 @Composable

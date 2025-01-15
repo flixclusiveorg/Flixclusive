@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.common
+package com.flixclusive.core.ui.mobile.component.topbar
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.CommonTopBarDefaults.getAdaptiveTopBarHeight
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
@@ -57,7 +56,9 @@ import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showSoftKeyboard
 import com.flixclusive.core.ui.common.util.toTextFieldValue
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getAdaptiveTopBarHeight
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 const val TOP_BAR_BODY_FADE_DURATION = 200
 
@@ -86,7 +87,7 @@ fun CommonTopBarWithSearch(
                 },
             ) {
                 AdaptiveIcon(
-                    painter = painterResource(R.drawable.left_arrow),
+                    painter = painterResource(UiCommonR.drawable.left_arrow),
                     contentDescription = stringResource(LocaleR.string.navigate_up),
                     dp = 16.dp,
                     increaseBy = 3.dp,
@@ -99,35 +100,35 @@ fun CommonTopBarWithSearch(
                 enter = fadeIn(),
                 exit = fadeOut(tween(TOP_BAR_BODY_FADE_DURATION)),
                 modifier =
-                Modifier.ifElse(
-                    condition = title != null && !isSearching,
-                    ifTrueModifier = Modifier.weight(1F),
-                ),
+                    Modifier.ifElse(
+                        condition = title != null && !isSearching,
+                        ifTrueModifier = Modifier.weight(1F),
+                    ),
             ) {
                 Text(
                     text = title!!,
                     style =
-                    getAdaptiveTextStyle(
-                        style = TypographyStyle.Body,
-                        mode = TextStyleMode.Normal,
-                        size = 20.sp,
-                        increaseBy = 5.sp,
-                    ).copy(fontWeight = FontWeight.SemiBold),
+                        getAdaptiveTextStyle(
+                            style = TypographyStyle.Body,
+                            mode = TextStyleMode.Normal,
+                            size = 20.sp,
+                            increaseBy = 5.sp,
+                        ).copy(fontWeight = FontWeight.SemiBold),
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     modifier =
-                    Modifier
-                        .padding(start = 15.dp),
+                        Modifier
+                            .padding(start = 15.dp),
                 )
             }
         },
         actions = {
             Box(
                 modifier =
-                Modifier.ifElse(
-                    condition = title == null || isSearching,
-                    ifTrueModifier = Modifier.weight(1F),
-                ),
+                    Modifier.ifElse(
+                        condition = title == null || isSearching,
+                        ifTrueModifier = Modifier.weight(1F),
+                    ),
                 contentAlignment = Alignment.CenterEnd,
             ) {
                 AnimatedContent(
@@ -152,7 +153,7 @@ fun CommonTopBarWithSearch(
                             modifier = heightModifier,
                         ) {
                             AdaptiveIcon(
-                                painter = painterResource(R.drawable.search_outlined),
+                                painter = painterResource(UiCommonR.drawable.search_outlined),
                                 contentDescription = stringResource(LocaleR.string.search),
                                 dp = 18.dp,
                                 increaseBy = 3.dp,
@@ -190,7 +191,7 @@ fun CommonTopBarWithSearch(
                 },
             ) {
                 AdaptiveIcon(
-                    painter = painterResource(R.drawable.left_arrow),
+                    painter = painterResource(UiCommonR.drawable.left_arrow),
                     contentDescription = stringResource(LocaleR.string.navigate_up),
                     dp = 16.dp,
                     increaseBy = 3.dp,
@@ -229,7 +230,7 @@ fun CommonTopBarWithSearch(
                             modifier = heightModifier,
                         ) {
                             AdaptiveIcon(
-                                painter = painterResource(R.drawable.search_outlined),
+                                painter = painterResource(UiCommonR.drawable.search_outlined),
                                 contentDescription = stringResource(LocaleR.string.search),
                                 dp = 18.dp,
                                 increaseBy = 3.dp,
@@ -265,7 +266,7 @@ private fun TopBarTextField(
             ),
         leadingIcon = {
             AdaptiveIcon(
-                painter = painterResource(R.drawable.search_outlined),
+                painter = painterResource(UiCommonR.drawable.search_outlined),
                 contentDescription = stringResource(LocaleR.string.search),
                 dp = 18.dp,
                 increaseBy = 3.dp,
@@ -284,7 +285,7 @@ private fun TopBarTextField(
                     },
                 ) {
                     AdaptiveIcon(
-                        painter = painterResource(R.drawable.round_close_24),
+                        painter = painterResource(UiCommonR.drawable.round_close_24),
                         contentDescription = stringResource(LocaleR.string.close_label),
                         tint = LocalContentColor.current.onMediumEmphasis(),
                     )

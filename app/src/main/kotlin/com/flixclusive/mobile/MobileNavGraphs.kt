@@ -8,6 +8,7 @@ import com.flixclusive.feature.mobile.library.destinations.LibraryScreenDestinat
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
+import com.flixclusive.feature.mobile.provider.add.destinations.AddProviderScreenDestination
 import com.flixclusive.feature.mobile.provider.details.destinations.ProviderDetailsScreenDestination
 import com.flixclusive.feature.mobile.provider.manage.destinations.ProviderManagerScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
@@ -85,6 +86,7 @@ internal object MobileNavGraphs {
             override val destinationsByRoute =
                 listOf<DestinationSpec<*>>(
                     SettingsScreenDestination,
+                    AddProviderScreenDestination,
                     ProviderManagerScreenDestination,
                     RepositoryManagerScreenDestination,
                     RepositoryDetailsScreenDestination,

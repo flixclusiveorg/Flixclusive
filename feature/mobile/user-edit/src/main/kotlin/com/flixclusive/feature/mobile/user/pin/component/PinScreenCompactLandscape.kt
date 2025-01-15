@@ -18,16 +18,15 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
 import com.flixclusive.model.database.MAX_USER_PIN_LENGTH
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
-
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -46,26 +45,26 @@ internal fun PinSetupScreenCompactLandscape(
             title = "",
             onNavigate = onBack,
             rowModifier =
-            Modifier
-                .align(Alignment.TopCenter),
+                Modifier
+                    .align(Alignment.TopCenter),
         )
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier =
-            Modifier
-                .fillMaxWidth(0.8F)
-                .align(Alignment.Center)
-                .scale(0.85F),
+                Modifier
+                    .fillMaxWidth(0.8F)
+                    .align(Alignment.Center)
+                    .scale(0.85F),
         ) {
             Column(
                 modifier = Modifier.weight(0.5F),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement =
-                Arrangement.spacedBy(
-                    space = 25.dp,
-                    alignment = Alignment.CenterVertically,
-                ),
+                    Arrangement.spacedBy(
+                        space = 25.dp,
+                        alignment = Alignment.CenterVertically,
+                    ),
             ) {
                 title()
 
@@ -87,10 +86,10 @@ internal fun PinSetupScreenCompactLandscape(
             FlowRow(
                 modifier = Modifier.weight(0.5F),
                 horizontalArrangement =
-                Arrangement.spacedBy(
-                    space = pinPadding,
-                    alignment = Alignment.CenterHorizontally,
-                ),
+                    Arrangement.spacedBy(
+                        space = pinPadding,
+                        alignment = Alignment.CenterHorizontally,
+                    ),
                 verticalArrangement = Arrangement.spacedBy(pinPadding),
                 maxItemsInEachRow = 3,
             ) {
@@ -127,10 +126,10 @@ internal fun PinSetupScreenCompactLandscape(
                                 Text(
                                     text = stringResource(LocaleR.string.ok),
                                     style =
-                                    getAdaptiveTextStyle(
-                                        style = TypographyStyle.Title,
-                                        mode = TextStyleMode.Emphasized,
-                                    ),
+                                        getAdaptiveTextStyle(
+                                            style = TypographyStyle.Title,
+                                            mode = TextStyleMode.Emphasized,
+                                        ),
                                 )
                             }
                         }

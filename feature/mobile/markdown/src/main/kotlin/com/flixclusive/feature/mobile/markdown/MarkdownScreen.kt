@@ -30,10 +30,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.imageLoader
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.CommonTopBar
-import com.flixclusive.core.ui.common.CommonTopBarDefaults.DefaultTopBarHeight
 import com.flixclusive.core.ui.common.dialog.TextAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.DefaultTopBarHeight
 import com.ramcosta.composedestinations.annotation.Destination
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.locale.R as LocaleR

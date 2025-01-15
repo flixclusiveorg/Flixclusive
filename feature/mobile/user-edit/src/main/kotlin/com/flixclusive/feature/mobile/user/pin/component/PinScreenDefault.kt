@@ -17,16 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.common.CommonTopBar
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
 import com.flixclusive.model.database.MAX_USER_PIN_LENGTH
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
-
 
 internal const val MAX_NUMBER_LENGTH = 10
 internal const val DEFAULT_DELAY = 2000L
@@ -51,24 +50,24 @@ internal fun PinScreenDefault(
     ) { padding ->
         Column(
             modifier =
-            Modifier
-                .padding(padding)
-                .fillMaxSize(),
+                Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement =
-            Arrangement.spacedBy(
-                space = 25.dp,
-                alignment = Alignment.CenterVertically,
-            ),
+                Arrangement.spacedBy(
+                    space = 25.dp,
+                    alignment = Alignment.CenterVertically,
+                ),
         ) {
             title()
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier =
-                Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(bottom = 25.dp),
+                    Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 25.dp),
             ) {
                 repeat(MAX_USER_PIN_LENGTH) {
                     PinPlaceholder(
@@ -83,15 +82,15 @@ internal fun PinScreenDefault(
 
             FlowRow(
                 horizontalArrangement =
-                Arrangement.spacedBy(
-                    space = pinPadding,
-                    alignment = Alignment.CenterHorizontally,
-                ),
+                    Arrangement.spacedBy(
+                        space = pinPadding,
+                        alignment = Alignment.CenterHorizontally,
+                    ),
                 verticalArrangement = Arrangement.spacedBy(pinPadding),
                 maxItemsInEachRow = 3,
                 modifier =
-                Modifier
-                    .align(Alignment.CenterHorizontally),
+                    Modifier
+                        .align(Alignment.CenterHorizontally),
             ) {
                 repeat(MAX_NUMBER_LENGTH + 2) {
                     when (val digit = it + 1) {
@@ -126,10 +125,10 @@ internal fun PinScreenDefault(
                                 Text(
                                     text = stringResource(LocaleR.string.ok),
                                     style =
-                                    getAdaptiveTextStyle(
-                                        style = TypographyStyle.Title,
-                                        mode = TextStyleMode.Emphasized,
-                                    ),
+                                        getAdaptiveTextStyle(
+                                            style = TypographyStyle.Title,
+                                            mode = TextStyleMode.Emphasized,
+                                        ),
                                 )
                             }
                         }

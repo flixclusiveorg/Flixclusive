@@ -21,8 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.CommonTopBarWithSearch
 import com.flixclusive.core.ui.common.util.ifElse
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarWithSearch
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsSearchQuery
 
 @Composable

@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.common
+package com.flixclusive.core.ui.mobile.component.topbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,12 +29,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.CommonTopBarDefaults.getAdaptiveTopBarHeight
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getAdaptiveTopBarHeight
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 fun CommonTopBar(
@@ -51,7 +52,7 @@ fun CommonTopBar(
             val iconSize = getAdaptiveDp(16.dp, 3.dp)
             IconButton(onClick = onNavigate) {
                 Icon(
-                    painter = painterResource(R.drawable.left_arrow),
+                    painter = painterResource(UiCommonR.drawable.left_arrow),
                     contentDescription = stringResource(LocaleR.string.navigate_up),
                     modifier =
                         Modifier

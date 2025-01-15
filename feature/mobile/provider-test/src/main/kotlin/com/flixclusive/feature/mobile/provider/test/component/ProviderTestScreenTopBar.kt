@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.common.CommonTopBarDefaults.DefaultTopBarHeight
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.DefaultTopBarHeight
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -24,36 +24,38 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 internal fun ProviderTestScreenTopBar(
     modifier: Modifier = Modifier,
     onNavigationIconClick: () -> Unit,
-    onOpenSortBottomSheet: () -> Unit
+    onOpenSortBottomSheet: () -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .statusBarsPadding()
-            .height(DefaultTopBarHeight),
-        contentAlignment = Alignment.TopCenter
+        modifier =
+            modifier
+                .statusBarsPadding()
+                .height(DefaultTopBarHeight),
+        contentAlignment = Alignment.TopCenter,
     ) {
         Spacer(modifier = Modifier.statusBarsPadding())
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onNavigationIconClick) {
                 Icon(
                     painter = painterResource(UiCommonR.drawable.left_arrow),
-                    contentDescription = stringResource(LocaleR.string.navigate_up)
+                    contentDescription = stringResource(LocaleR.string.navigate_up),
                 )
             }
-            
+
             Spacer(modifier = Modifier.weight(1f))
 
             IconButton(onClick = onOpenSortBottomSheet) {
                 Icon(
                     painter = painterResource(UiCommonR.drawable.filter_list),
-                    contentDescription = stringResource(LocaleR.string.settings)
+                    contentDescription = stringResource(LocaleR.string.settings),
                 )
             }
         }
