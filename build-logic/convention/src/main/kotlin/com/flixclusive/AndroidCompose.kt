@@ -4,12 +4,19 @@ import com.android.build.gradle.BaseExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 
-@Suppress("UnstableApiUsage")
 internal fun Project.configureAndroidCompose(commonExtension: BaseExtension) {
     commonExtension.apply {
         buildFeatures.apply {
             compose = true
             viewBinding = true
+        }
+
+        packagingOptions {
+            resources {
+                excludes += "/META-INF/{AL2.0,LGPL2.1}"
+                merges += "META-INF/LICENSE.md"
+                merges += "META-INF/LICENSE-notice.md"
+            }
         }
 
         dependencies {
