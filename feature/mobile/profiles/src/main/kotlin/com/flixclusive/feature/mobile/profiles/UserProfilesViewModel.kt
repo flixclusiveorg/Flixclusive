@@ -5,7 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.runOnIO
+import com.flixclusive.data.provider.ProviderApiRepository
+import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.user.UserRepository
+import com.flixclusive.domain.provider.ProviderLoaderUseCase
+import com.flixclusive.domain.provider.ProviderUpdaterUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.User
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +27,10 @@ class UserProfilesViewModel
     @Inject
     constructor(
         private val userSessionManager: UserSessionManager,
+        private val providerLoaderUseCase: ProviderLoaderUseCase,
+        private val providerUpdaterUseCase: ProviderUpdaterUseCase,
+        private val providerRepository: ProviderRepository,
+        private val providerApiRepository: ProviderApiRepository,
         userRepository: UserRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ProfilesScreenUiState())
@@ -43,18 +51,19 @@ class UserProfilesViewModel
 
         fun onUseProfile(user: User) {
             launchOnIO {
-                signOutOldSession()
+                userSessionManager.signOut()
+                providerRepository.clearAll()
+                providerApiRepository.clearAll()
                 userSessionManager.signIn(user)
+                providerLoaderUseCase.initDebugFolderToPreferences()
+                providerLoaderUseCase.initFromLocal()
+                providerUpdaterUseCase(notify = true)
                 _uiState.update { it.copy(isLoggingIn = true) }
             }
         }
 
-        private suspend fun signOutOldSession() {
-            userSessionManager.signOut()
-        }
-
-        private fun List<User>.filterOutCurrentLoggedInUser()
-            = fastFilter { it.id != userSessionManager.currentUser.value?.id }
+        private fun List<User>.filterOutCurrentLoggedInUser() =
+            fastFilter { it.id != userSessionManager.currentUser.value?.id }
     }
 
 data class ProfilesScreenUiState(

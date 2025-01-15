@@ -64,7 +64,6 @@ class ProviderLoaderUseCase
 
         private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
 
-        private val updaterJsonMap = HashMap<String, List<ProviderMetadata>>()
         private val providerPreferences: ProviderPreferences get() =
             dataStoreManager
                 .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
@@ -126,9 +125,9 @@ class ProviderLoaderUseCase
                     }
                 }
 
-                subDirectory.listFiles()?.forEach { providerFile ->
+                subDirectory.listFiles()?.forEach subDirectory@{ providerFile ->
                     if (!providerFile.name.equals(UPDATER_FILE, true)) {
-                        return@forEach
+                        return@subDirectory
                     }
 
                     addProviderToPreferences(file = providerFile)
@@ -146,7 +145,7 @@ class ProviderLoaderUseCase
                 }
 
                 val metadata =
-                    updaterJsonMap.getProviderMetadataFromUpdater(
+                    getProviderMetadataFromUpdater(
                         id = itemPreference.id,
                         file = file,
                     ) ?: return
@@ -216,7 +215,7 @@ class ProviderLoaderUseCase
             }
         }
 
-        private fun HashMap<String, List<ProviderMetadata>>.getProviderMetadataFromUpdater(
+        private fun getProviderMetadataFromUpdater(
             id: String,
             file: File,
         ): ProviderMetadata? {
@@ -234,10 +233,7 @@ class ProviderLoaderUseCase
                 return null
             }
 
-            val updaterJsonList =
-                getOrPut(updaterFile.absolutePath) {
-                    fromJson<List<ProviderMetadata>>(updaterFile.reader())
-                }
+            val updaterJsonList = fromJson<List<ProviderMetadata>>(updaterFile.reader())
 
             return updaterJsonList.find { it.id == id }
         }

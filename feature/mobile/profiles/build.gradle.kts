@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.core.ui.mobile)
     implementation(projects.data.configuration)
     implementation(projects.domain.user)
+    implementation(projects.domain.provider)
 
     implementation(libs.compose.adaptive)
     implementation(libs.compose.foundation)

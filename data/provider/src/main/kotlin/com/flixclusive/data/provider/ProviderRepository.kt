@@ -11,7 +11,6 @@ import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.Provider
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.first
 import java.util.Collections
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,7 +23,7 @@ class ProviderRepository
     constructor(
         private val dataStoreManager: DataStoreManager,
     ) {
-        private val providerMetadata = LinkedHashMap<String, ProviderMetadata>()
+        private val providerMetadata = HashMap<String, ProviderMetadata>()
         private val providerPositions = ReactiveList<ProviderFromPreferences>()
 
         /** Map containing all loaded provider classes  */
@@ -108,7 +107,6 @@ class ProviderRepository
             classLoaders.clear()
             providerMetadata.clear()
             providerPositions.clear()
-            saveToPreferences()
         }
 
         suspend fun removeFromPreferences(id: String) {
@@ -135,17 +133,6 @@ class ProviderRepository
         private suspend fun saveToPreferences() {
             dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
                 it.copy(providers = providerPositions)
-            }
-        }
-
-        internal suspend fun initializeProviderPositions() {
-            val preferences =
-                dataStoreManager
-                    .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
-                    .first()
-
-            preferences.providers.forEach {
-                providerPositions.add(it)
             }
         }
     }

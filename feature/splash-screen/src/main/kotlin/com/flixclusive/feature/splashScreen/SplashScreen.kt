@@ -51,7 +51,7 @@ internal val TagSize = 300.dp
 @Composable
 internal fun SplashScreen(
     navigator: SplashScreenNavigator,
-    viewModel: SplashScreenViewModel = hiltViewModel()
+    viewModel: SplashScreenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
 
@@ -132,8 +132,7 @@ internal fun SplashScreen(
 
                             val isNavigatingToHome =
                                 ((isAppUpdated && hasAutoUpdate) || isConfigFetched) &&
-                                    isHomeScreenReady &&
-                                    hasOldUserSession
+                                    isHomeScreenReady
                             hasErrors = (updateHasErrors && hasAutoUpdate) || configHasErrors
 
                             if (isAppOutdated && hasAutoUpdate) {
@@ -151,7 +150,7 @@ internal fun SplashScreen(
                                 }
                             } else if (noUsersFound) {
                                 navigator.openAddProfileScreen(isInitializing = true)
-                            } else if (!hasOldUserSession) {
+                            } else if (isNavigatingToHome && !hasOldUserSession) {
                                 navigator.openProfilesScreen(shouldPopBackStack = true)
                             } else if (isNavigatingToHome) {
                                 if (updateHasErrors) {
@@ -188,7 +187,7 @@ internal fun SplashScreen(
                     if (!areAllPermissionsGranted && isDoneLoading) {
                         PermissionsRequester(
                             permissions = requiredPermissions,
-                            onGrantPermissions = { areAllPermissionsGranted = true }
+                            onGrantPermissions = { areAllPermissionsGranted = true },
                         )
                     }
                 }

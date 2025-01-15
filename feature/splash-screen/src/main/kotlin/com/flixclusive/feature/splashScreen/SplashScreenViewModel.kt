@@ -70,16 +70,24 @@ internal class SplashScreenViewModel
                     initialValue = runBlocking { userRepository.observeUsers().first().isEmpty() },
                 )
 
-        val userLoggedIn =
-            userSessionManager
-                .currentUser
-                .stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = null,
-                )
+        val userLoggedIn = userSessionManager.currentUser
 
         init {
+            launchOnIO {
+                val hasOldSession = userSessionManager.hasOldSession()
+
+                if (hasOldSession) {
+                    userSessionManager.restoreSession()
+                    userLoggedIn.first { it != null }
+
+                    providerLoaderUseCase.initDebugFolderToPreferences()
+                    providerLoaderUseCase.initFromLocal()
+                    providerUpdaterUseCase(notify = true)
+                } else {
+                    userSessionManager.signOut()
+                }
+            }
+
             viewModelScope.launch {
                 launch initHomeScreen@{
                     combine(
@@ -107,19 +115,6 @@ internal class SplashScreenViewModel
                         if (newState == SplashScreenUiState.Okay) {
                             this@waitForHomeScreenItems.cancel()
                         }
-                    }
-                }
-            }
-
-            launchOnIO {
-                userLoggedIn.collectLatest {
-                    if (it != null) {
-                        providerLoaderUseCase.initDebugFolderToPreferences()
-                        providerLoaderUseCase.initFromLocal()
-                        providerUpdaterUseCase(notify = true)
-                        cancel()
-                    } else {
-                        userSessionManager.restoreSession()
                     }
                 }
             }
