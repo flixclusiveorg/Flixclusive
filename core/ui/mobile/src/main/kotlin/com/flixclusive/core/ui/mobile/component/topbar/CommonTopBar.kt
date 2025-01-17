@@ -65,16 +65,7 @@ fun CommonTopBar(
         navigationIconColor = navigationIconColor,
         titleColor = titleColor,
         actionsColor = actionsColor,
-        navigationIcon = {
-            PlainTooltipBox(description = stringResource(LocaleR.string.navigate_up)) {
-                ActionButton(onClick = onNavigate) {
-                    AdaptiveIcon(
-                        painter = painterResource(UiCommonR.drawable.left_arrow),
-                        contentDescription = stringResource(LocaleR.string.navigate_up),
-                    )
-                }
-            }
-        },
+        navigationIcon = { DefaultNavigationIcon(onClick = onNavigate) },
         title = {
             Text(
                 text = title,
@@ -161,6 +152,22 @@ fun ActionButton(
         contentAlignment = Alignment.Center
     ) {
         CompositionLocalProvider(LocalContentColor provides tint, content = content)
+    }
+}
+
+@Composable
+fun DefaultNavigationIcon(
+    onClick: () -> Unit
+) {
+    PlainTooltipBox(description = stringResource(LocaleR.string.navigate_up)) {
+        ActionButton(onClick = onClick) {
+            AdaptiveIcon(
+                painter = painterResource(UiCommonR.drawable.left_arrow),
+                contentDescription = stringResource(LocaleR.string.navigate_up),
+                dp = 16.dp,
+                increaseBy = 3.dp,
+            )
+        }
     }
 }
 

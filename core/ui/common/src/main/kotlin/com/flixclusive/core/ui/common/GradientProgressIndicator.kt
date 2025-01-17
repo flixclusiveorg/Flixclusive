@@ -75,8 +75,8 @@ fun GradientCircularProgressIndicator(
 // https://medium.com/@kappdev/creating-a-smooth-animated-progress-bar-in-jetpack-compose-canvas-drawing-and-gradient-animation-ddf07f77bb56
 @Composable
 fun GradientLinearProgressIndicator(
-    modifier: Modifier = Modifier,
     colors: List<Color>,
+    modifier: Modifier = Modifier,
     glowRadius: Dp? = 4.dp,
 ) {
     // Create an infinite animation transition

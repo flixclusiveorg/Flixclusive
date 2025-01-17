@@ -192,12 +192,12 @@ internal fun ProviderManagerScreen(
                     shape = MaterialTheme.shapes.medium,
                     expanded = isFabExpanded,
                     text = {
-                        Text(text = stringResource(LocaleR.string.add_provider))
+                        Text(text = stringResource(LocaleR.string.add_providers))
                     },
                     icon = {
                         Icon(
                             painter = painterResource(id = UiCommonR.drawable.round_add_24),
-                            contentDescription = stringResource(LocaleR.string.add_provider),
+                            contentDescription = stringResource(LocaleR.string.add_providers),
                         )
                     },
                 )
@@ -237,7 +237,7 @@ internal fun ProviderManagerScreen(
                                 onClick = navigator::openAddProviderScreen,
                                 modifier = Modifier,
                             ) {
-                                Text(text = stringResource(LocaleR.string.add_provider))
+                                Text(text = stringResource(LocaleR.string.add_providers))
                             }
                         }
                     }

@@ -59,7 +59,7 @@ class GetRepositoryUseCase
 
                     val providerBranch =
                         repository.getRawLink(
-                            filename = "updater.json",
+                            filename = UPDATER_FILE,
                             branch = "builds",
                         )
 

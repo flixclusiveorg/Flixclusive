@@ -39,7 +39,7 @@ fun TextAlertDialog(
     dismissButtonLabel: String? = stringResource(id = LocaleR.string.cancel),
     dismissOnConfirm: Boolean = true,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
+    onDismiss: () -> Unit = {},
 ) {
     val buttonMinHeight = 50.dp
     val cornerSize = CornerSize(

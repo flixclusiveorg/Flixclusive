@@ -50,6 +50,7 @@ fun EmptyDataMessage(
     modifier: Modifier = Modifier,
     title: String = stringResource(id = LocaleR.string.empty_data_default_label),
     description: String = stringResource(id = LocaleR.string.empty_data_default_sub_label),
+    emojiHeader: String = "\uD83E\uDD97",
     titleStyle: TextStyle = getDefaultTitleStyle(),
     descriptionStyle: TextStyle = getDefaultDescriptionStyle(),
     alignment: Alignment = Alignment.Center,
@@ -72,7 +73,7 @@ fun EmptyDataMessage(
                 icon()
             } else {
                 Text(
-                    text = "\uD83E\uDD97",
+                    text = emojiHeader,
                     style = MaterialTheme.typography.displayMedium.copy(
                         shadow = Shadow(
                             offset = Offset(4F, 5F)

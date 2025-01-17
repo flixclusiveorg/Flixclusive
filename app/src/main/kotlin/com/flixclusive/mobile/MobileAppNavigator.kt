@@ -32,6 +32,7 @@ import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestinatio
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreenNavigator
 import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
 import com.flixclusive.feature.mobile.provider.add.AddProviderScreenNavigator
+import com.flixclusive.feature.mobile.provider.add.destinations.AddProviderScreenDestination
 import com.flixclusive.feature.mobile.provider.details.ProviderDetailsNavigator
 import com.flixclusive.feature.mobile.provider.details.destinations.ProviderDetailsScreenDestination
 import com.flixclusive.feature.mobile.provider.manage.ProviderManagerScreenNavigator
@@ -83,17 +84,17 @@ internal class MobileAppNavigator(
     GenreScreenNavigator,
     GoBackAction,
     HomeNavigator,
+    LibraryScreenNavigator,
+    OpenPinScreenAction,
     PlayerScreenNavigator,
     ProviderDetailsNavigator,
     ProviderManagerScreenNavigator,
-    LibraryScreenNavigator,
     RepositoryManagerScreenNavigator,
     SearchExpandedScreenNavigator,
     SearchScreenNavigator,
     SeeAllScreenNavigator,
     SelectAvatarAction,
     SettingsScreenNavigator,
-    OpenPinScreenAction,
     SplashScreenNavigator,
     TestProvidersAction,
     UpdateDialogNavigator,
@@ -258,7 +259,9 @@ internal class MobileAppNavigator(
     }
 
     override fun openAddProviderScreen() {
-        TODO("Add the destination screen for adding providers here.")
+        navController.navigateIfResumed(
+            AddProviderScreenDestination() within destination.navGraph(),
+        )
     }
 
     override fun testProviders(providers: ArrayList<ProviderMetadata>) {

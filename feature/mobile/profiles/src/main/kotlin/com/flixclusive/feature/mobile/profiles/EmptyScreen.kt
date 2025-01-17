@@ -47,7 +47,7 @@ internal fun EmptyScreen(
         ) {
             Icon(
                 painter = painterResource(id = UiCommonR.drawable.round_add_24),
-                contentDescription = stringResource(LocaleR.string.add_provider),
+                contentDescription = stringResource(LocaleR.string.add_providers),
                 tint = LocalContentColor.current.onMediumEmphasis(0.4F),
                 modifier = Modifier.size(35.dp)
             )

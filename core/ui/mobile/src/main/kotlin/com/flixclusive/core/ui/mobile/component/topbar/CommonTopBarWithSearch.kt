@@ -81,6 +81,17 @@ fun CommonTopBarWithSearch(
     actionsColor: Color = LocalContentColor.current,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     title: String? = null,
+    navigationIcon: @Composable () -> Unit = {
+        DefaultNavigationIcon(
+            onClick = {
+                if (isSearching) {
+                    onToggleSearchBar(false)
+                } else {
+                    onNavigate()
+                }
+            }
+        )
+    },
     extraActions: @Composable RowScope.() -> Unit = {},
 ) {
     CommonTopBarWithSearch(
@@ -95,6 +106,7 @@ fun CommonTopBarWithSearch(
         onToggleSearchBar = onToggleSearchBar,
         onQueryChange = onQueryChange,
         extraActions = extraActions,
+        navigationIcon = navigationIcon,
         titleContent =
             if (title != null) {
                 {
@@ -130,6 +142,17 @@ fun CommonTopBarWithSearch(
     titleColor: Color = LocalContentColor.current,
     actionsColor: Color = LocalContentColor.current,
     scrollBehavior: TopAppBarScrollBehavior? = null,
+    navigationIcon: @Composable () -> Unit = {
+        DefaultNavigationIcon(
+            onClick = {
+                if (isSearching) {
+                    onToggleSearchBar(false)
+                } else {
+                    onNavigate()
+                }
+            }
+        )
+    },
     titleContent: (@Composable () -> Unit)? = null,
     extraActions: @Composable RowScope.() -> Unit = {},
 ) {
@@ -139,26 +162,7 @@ fun CommonTopBarWithSearch(
         navigationIconColor = navigationIconColor,
         titleColor = titleColor,
         actionsColor = actionsColor,
-        navigationIcon = {
-            PlainTooltipBox(description = stringResource(LocaleR.string.navigate_up)) {
-                ActionButton(
-                    onClick = {
-                        if (isSearching) {
-                            onToggleSearchBar(false)
-                        } else {
-                            onNavigate()
-                        }
-                    },
-                ) {
-                    AdaptiveIcon(
-                        painter = painterResource(UiCommonR.drawable.left_arrow),
-                        contentDescription = stringResource(LocaleR.string.navigate_up),
-                        dp = 16.dp,
-                        increaseBy = 3.dp,
-                    )
-                }
-            }
-        },
+        navigationIcon = navigationIcon,
         title = {
             titleContent?.let {
                 AnimatedVisibility(

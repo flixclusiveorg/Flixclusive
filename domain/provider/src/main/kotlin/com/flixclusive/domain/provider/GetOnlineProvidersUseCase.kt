@@ -26,7 +26,8 @@ class GetOnlineProvidersUseCase
     ) {
     /*
      * TODO: Improve this. It can literally
-     *  just use String.format(ProviderMetadata.buildUrl, UPDATER_FILE)
+     *  just use a new `buildsBranch` property then pass that on
+     *  branch parameter in `getRawLink`
      * */
         suspend operator fun invoke(repository: Repository): Resource<List<ProviderMetadata>> {
             return withIOContext {

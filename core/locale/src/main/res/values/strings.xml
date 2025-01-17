@@ -43,7 +43,7 @@
     <string name="failed_to_initialize_home_items">Failed to initialize home items</string>
     <string name="failed_to_initialize_search_items">Failed to initialize search items</string>
     <string name="failed_to_load_online_providers">Could not parse online providers.</string>
-    <string name="failed_to_load_providers">Failed to load providers!</string>
+    <string name="failed_to_load_providers">Failed to load providers</string>
     <string name="failed_to_update_provider">Failed to update the provider.</string>
     <string name="film_data_fetch_failed">Failed to fetch film data</string>
     <string name="film_not_found">Film not found</string>
@@ -89,7 +89,8 @@
     <string name="add_debug_prefix">Add debug prefix</string>
     <string name="add_own_subtitle">Add subs</string>
     <string name="add_profile">Add profile</string>
-    <string name="add_provider">Add provider</string>
+    <string name="add_providers">Add providers</string>
+    <string name="add_repositories">Add repositories</string>
     <string name="add_sync_offset_message">Add if subs are delayed.</string>
     <string name="add_to_watchlist">Add to Watchlist</string>
     <string name="advanced">Advanced</string>
@@ -99,7 +100,9 @@
     <string name="asserting">Asserting…</string>
     <string name="audio">Audio</string>
     <string name="audio_and_subtitle">Audio &amp; Subtitle</string>
+    <string name="author">Author</string>
     <string name="authors">Authors</string>
+    <string name="provider_types">Provider type</string>
     <string name="auto_option">Auto</string>
     <string name="auto_update_providers">Auto-update providers</string>
     <string name="automatic_crash_report_label">Automatically send the crash data to Flixclusive\'s server.</string>
@@ -177,7 +180,9 @@
     <string name="install_all">Install all</string>
     <string name="issue_a_bug">Issue a bug</string>
     <string name="language">Language</string>
+    <string name="languages">Languages</string>
     <string name="load_url">Load URL</string>
+    <string name="loading_filters">Loading filters…</string>
     <string name="lock">Lock</string>
     <string name="maintenance_all_caps">MAINTENANCE</string>
     <string name="manage_providers">Manage providers</string>
@@ -231,6 +236,7 @@
     <string name="remove">Remove</string>
     <string name="remove_from_watchlist">Remove from Watchlist</string>
     <string name="repository">Repository</string>
+    <string name="repositories">Repositories</string>
     <string name="switch_profile">Switch profile</string>
     <string name="reset">Reset</string>
     <string name="reset_settings">Reset settings</string>
@@ -256,6 +262,7 @@
     <string name="show_error_logs">Show error logs</string>
     <string name="sign_up_prerelease">Use pre-release updates</string>
     <string name="skip">Skip</string>
+    <string name="sort_by">Sort by</string>
     <string name="sort_date">Sort by date</string>
     <string name="sort_name">Sort by name</string>
     <string name="sort_score">Sort by score</string>
@@ -363,6 +370,7 @@
     <string name="first_time_providers_screen_message">It seems like this is your first time using the providers system, would you like to read more about it?</string>
     <string name="loading_next_episode">Loading next episode…</string>
     <string name="no_available_providers">No available providers!</string>
+    <string name="no_installable_providers">No installable providers</string>
     <string name="non_configurable_provider_message">This provider has is not configurable.</string>
     <string name="not_trusted_url">Hey! The app doesn\'t monitor external sites, so proceed with caution and use your best internet judgment.</string>
     <string name="offline_message">You\'re offline</string>

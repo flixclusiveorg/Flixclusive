@@ -56,6 +56,7 @@ import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
+import com.flixclusive.feature.mobile.provider.add.destinations.AddProviderScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
@@ -359,6 +360,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 private fun shouldHideBottomBar(route: Route): Boolean {
     val noBottomBarScreens =
         listOf(
+            AddProviderScreenDestination,
             AddUserScreenDestination,
             MarkdownScreenDestination,
             PinSetupScreenDestination,
@@ -371,8 +373,14 @@ private fun shouldHideBottomBar(route: Route): Boolean {
             UserProfilesScreenDestination,
         )
 
-    return route.route != SearchExpandedScreenDestination.within(MobileNavGraphs.search).route &&
-        noBottomBarScreens.none { it == route }
+    val noBottomBarNestedScreens =
+        listOf(
+            SearchExpandedScreenDestination.within(MobileNavGraphs.search).route,
+            AddProviderScreenDestination.within(MobileNavGraphs.settings).route,
+        )
+
+    return noBottomBarNestedScreens.none { it == route.route }
+        && noBottomBarScreens.none { it == route }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

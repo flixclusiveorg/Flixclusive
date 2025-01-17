@@ -7,7 +7,7 @@ import okhttp3.OkHttpClient
 import org.junit.Before
 import org.junit.Test
 
-class CrashReportSenderTest : CrashReportSender {
+class CrashReportSenderLoadingScreen : CrashReportSender {
     private lateinit var client: OkHttpClient
 
     private fun generateDirtyClient(): OkHttpClient {
@@ -27,11 +27,11 @@ class CrashReportSenderTest : CrashReportSender {
     fun `send function should return true`() {
         val errorMessage = """
             ========== ERROR-SAMPLE ===========
-            
-            LOREM IPSUM LOREM IPSUM LOREM IPSUM 
-            LOREM IPSUM LOREM IPSUM LOREM IPSUM 
-            LOREM IPSUM LOREM IPSUM LOREM IPSUM 
-            LOREM IPSUM LOREM IPSUM LOREM IPSUM 
+
+            LOREM IPSUM LOREM IPSUM LOREM IPSUM
+            LOREM IPSUM LOREM IPSUM LOREM IPSUM
+            LOREM IPSUM LOREM IPSUM LOREM IPSUM
+            LOREM IPSUM LOREM IPSUM LOREM IPSUM
             ===================================
         """.trimIndent()
 
