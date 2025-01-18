@@ -12,10 +12,12 @@ import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.User
 import com.flixclusive.model.film.Film
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
@@ -29,6 +31,7 @@ internal sealed class AddUserState {
     data object NotAdded : AddUserState()
 }
 
+// TODO: Fix code
 @HiltViewModel
 internal class AddUserViewModel
     @Inject
@@ -57,6 +60,10 @@ internal class AddUserViewModel
         init {
             launchOnIO {
                 with(homeItemsProviderUseCase) {
+                    // Trying to invoke even if user is not logged in
+                    // TODO: Fix this ugly ass code
+                    invoke(-1)
+
                     this@with
                         .state
                         .mapLatest {
@@ -77,10 +84,15 @@ internal class AddUserViewModel
                                 firstRowOfFilms
                                     .mapNotNull { media ->
                                         media.getBestImage()
-                                    }.take(3)
+                                    }.shuffled()
+                                    .take(3)
 
                             _images.update { backgrounds }
                             cancel()
+                        }.catch {
+                            if (it !is CancellationException) {
+                                _images.value = defaultBackgrounds
+                            }
                         }
                         .collect()
                 }
