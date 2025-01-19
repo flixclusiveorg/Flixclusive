@@ -42,6 +42,7 @@
     <string name="failed_to_init_app">Couldn\'t initialize the app.</string>
     <string name="failed_to_initialize_home_items">Failed to initialize home items</string>
     <string name="failed_to_initialize_search_items">Failed to initialize search items</string>
+    <string name="failed_to_load_the_ff">Failed to load the following:</string>
     <string name="failed_to_load_online_providers">Could not parse online providers.</string>
     <string name="failed_to_load_providers">Failed to load providers</string>
     <string name="failed_to_update_provider">Failed to update the provider.</string>
@@ -371,6 +372,7 @@
     <string name="loading_next_episode">Loading next episode…</string>
     <string name="no_available_providers">No available providers!</string>
     <string name="no_installable_providers">No installable providers</string>
+    <string name="this_seems_empty">This seems empty</string>
     <string name="non_configurable_provider_message">This provider has is not configurable.</string>
     <string name="not_trusted_url">Hey! The app doesn\'t monitor external sites, so proceed with caution and use your best internet judgment.</string>
     <string name="offline_message">You\'re offline</string>

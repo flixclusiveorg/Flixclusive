@@ -69,7 +69,7 @@ class ProviderLoaderUseCase
                 .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
                 .awaitFirst()
 
-        suspend fun load(
+        suspend fun load( // TODO: Implement a custom throwable here
             provider: ProviderMetadata,
             needsDownload: Boolean = false,
             filePath: String? = null,
@@ -309,7 +309,7 @@ class ProviderLoaderUseCase
                             provider = provider,
                         )
                     }
-                } catch (_: Exception) {
+                } catch (_: Throwable) {
                     isApiDisabled = true
 
                     val message = context.getApiCrashMessage(provider = metadata.name)

@@ -7,6 +7,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.util.fastMap
@@ -26,9 +27,9 @@ internal fun Context.getErrorLog(failedToInitializeRepositories: List<Repository
     val textStyle = getAdaptiveTextStyle(mode = TextStyleMode.Normal)
 
     return buildAnnotatedString {
-        withStyle(ParagraphStyle()) {
+        withStyle(ParagraphStyle(textAlign = TextAlign.Start)) {
             withStyle(textStyle.toSpanStyle()) {
-                append(getString(LocaleR.string.failed_to_load_providers))
+                append(getString(LocaleR.string.failed_to_load_the_ff))
             }
             append("\n")
             withStyle(ParagraphStyle(lineHeight = 1.5.em)) {

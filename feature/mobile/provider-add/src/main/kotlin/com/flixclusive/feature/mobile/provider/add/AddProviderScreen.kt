@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.ripple
@@ -100,13 +102,13 @@ internal fun AddProviderScreen(
         derivedStateOf { uiState.value.isLoading }
     }
 
-    val hasErrors by remember {
-        derivedStateOf { uiState.value.hasErrors }
+    val hasInitializationErrors by remember {
+        derivedStateOf { uiState.value.hasInitializationErrors }
     }
 
     var showErrorDialog by remember { mutableStateOf(false) }
     LaunchedEffect(viewModel) {
-        viewModel.error
+        viewModel.initializeError
             .collect { state ->
                 if (!showErrorDialog && state) {
                     showErrorDialog = true
@@ -114,9 +116,26 @@ internal fun AddProviderScreen(
             }
     }
 
-    if (showErrorDialog) {
-        val context = LocalContext.current
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(viewModel) {
+        viewModel.providerLoadErrors
+            .collect { errors ->
+                if (snackbarHostState.currentSnackbarData == null && errors.isNotEmpty()) {
+                    val message =
+                        """
+                        ${context.getString(LocaleR.string.failed_to_load_providers)}: ${errors.joinToString(",")}
+                        """.trimIndent()
 
+                    snackbarHostState.showSnackbar(
+                        message = message,
+                        withDismissAction = true,
+                    )
+                }
+            }
+    }
+
+    if (showErrorDialog) {
         IconAlertDialog(
             painter = painterResource(UiCommonR.drawable.warning_outline),
             contentDescription = null,
@@ -128,14 +147,18 @@ internal fun AddProviderScreen(
 
     AddProviderScreen(
         isLoading = isLoading,
-        hasErrors = hasErrors,
+        hasInitializationErrors = hasInitializationErrors,
         isSearching = isSearching,
         isShowingFilterSheet = isShowingFilterSheet,
+        snackbarHostState = snackbarHostState,
+        installationStatusMap = viewModel.providerInstallationStatusMap,
         selectedProviders = { selectedProviders.value },
         searchQuery = { searchQuery },
         onToggleSearchBar = viewModel::onToggleSearchBar,
         onRetry = viewModel::initialize,
         onGoBack = navigator::goBack,
+        onToggleInstallation = viewModel::onToggleInstallation,
+        onViewProviderDetails = navigator::openProviderDetails,
         onQueryChange = viewModel::onSearchQueryChange,
         onToggleFilterSheet = viewModel::onToggleFilterSheet,
         onUpdateFilter = viewModel::onUpdateFilter,
@@ -143,22 +166,18 @@ internal fun AddProviderScreen(
         providers = { availableProviders.value },
         onToggleSelect = viewModel::onToggleSelect,
         onUnselectAll = viewModel::onUnselectAll,
-        onInstallSelection =
-            remember {
-                fun() {
-                    viewModel.onInstallSelection()
-                    viewModel.onUnselectAll()
-                }
-            },
+        onInstallSelection = viewModel::onInstallSelection,
     )
 }
 
 @Composable
 internal fun AddProviderScreen(
     isLoading: Boolean,
-    hasErrors: Boolean,
+    hasInitializationErrors: Boolean,
     isSearching: Boolean,
+    snackbarHostState: SnackbarHostState,
     isShowingFilterSheet: Boolean,
+    installationStatusMap: Map<String, ProviderInstallationStatus>,
     selectedProviders: () -> List<ProviderMetadata>,
     searchQuery: () -> String,
     providers: () -> List<ProviderMetadata>,
@@ -167,6 +186,8 @@ internal fun AddProviderScreen(
     onGoBack: () -> Unit,
     onInstallSelection: () -> Unit,
     onUnselectAll: () -> Unit,
+    onToggleInstallation: (ProviderMetadata) -> Unit,
+    onViewProviderDetails: (ProviderMetadata) -> Unit,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
     onToggleFilterSheet: (Boolean) -> Unit,
@@ -186,6 +207,7 @@ internal fun AddProviderScreen(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(horizontal = getAdaptiveDp(DefaultScreenPaddingHorizontal, 2.dp))
                 .fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AddProviderTopBar(
                 isSearching = isSearching,
@@ -212,11 +234,12 @@ internal fun AddProviderScreen(
         ) {
             if (isLoading) {
                 LoadingScreen()
-            } else if (providers().isEmpty() && hasErrors) {
+            } else if (providers().isEmpty() && hasInitializationErrors) {
                 ErrorScreen(onRetry = onRetry)
             } else if (providers().isEmpty()) {
                 EmptyDataMessage(
                     emojiHeader = "📂",
+                    title = stringResource(LocaleR.string.this_seems_empty),
                     description = stringResource(LocaleR.string.no_installable_providers),
                 )
             } else {
@@ -227,11 +250,12 @@ internal fun AddProviderScreen(
                 ) {
                     items(providers(), key = { it.id + it.name }) {
                         val interactionSource = remember { MutableInteractionSource() }
+                        val installationStatus = installationStatusMap[it.id] ?: ProviderInstallationStatus.NotInstalled
 
                         ProviderCard(
                             providerMetadata = it,
-                            onClick = {},
-                            status = ProviderInstallationStatus.NotInstalled,
+                            onClick = { onToggleInstallation(it) },
+                            status = installationStatus,
                             modifier =
                                 Modifier
                                     .animateItem()
@@ -256,6 +280,8 @@ internal fun AddProviderScreen(
                                                 val isSelecting = selectedProviders().isNotEmpty()
                                                 if (isSelecting) {
                                                     onToggleSelect(it)
+                                                } else {
+                                                    onViewProviderDetails(it)
                                                 }
                                             },
                                             onPress = { offset ->
@@ -414,9 +440,11 @@ private fun AddProviderScreenBasePreview() {
         Surface {
             AddProviderScreen(
                 isLoading = false,
-                hasErrors = false,
+                hasInitializationErrors = false,
+                snackbarHostState = remember { SnackbarHostState() },
                 isShowingFilterSheet = isShowingFilterSheet,
                 isSearching = isSearching,
+                installationStatusMap = mapOf(),
                 selectedProviders = { selectedProviders },
                 searchQuery = { searchQuery },
                 onQueryChange = { state = state.copy(searchQuery = it) },
@@ -428,6 +456,8 @@ private fun AddProviderScreenBasePreview() {
                 filters = { filters },
                 providers = { providers },
                 onInstallSelection = {},
+                onToggleInstallation = {},
+                onViewProviderDetails = {},
                 onUnselectAll = { state = state.copy(selectedProviders = emptyList()) },
                 onToggleSelect = {
                     state =
