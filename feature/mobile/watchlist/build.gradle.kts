@@ -11,7 +11,7 @@ android {
 dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.ui.mobile)
-    implementation(projects.data.watchlist)
+    implementation(projects.data.libraryWatchlist)
     implementation(projects.domain.user)
 
     implementation(libs.compose.foundation)

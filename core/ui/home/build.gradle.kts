@@ -13,7 +13,7 @@ dependencies {
     api(projects.domain.home)
     implementation(projects.core.ui.tv)
     implementation(projects.data.network)
-    implementation(projects.data.watchHistory)
+    implementation(projects.data.libraryRecent)
     implementation(projects.domain.user)
 
     implementation(libs.compose.runtime)

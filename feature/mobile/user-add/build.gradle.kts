@@ -11,7 +11,7 @@ android {
 dependencies {
     implementation(projects.core.ui.mobile)
     implementation(projects.data.configuration)
-    implementation(projects.data.searchHistory)
+    implementation(projects.data.search)
     implementation(projects.domain.home)
     implementation(projects.domain.user)
 

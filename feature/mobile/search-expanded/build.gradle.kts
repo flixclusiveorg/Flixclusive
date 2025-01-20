@@ -13,7 +13,7 @@ dependencies {
     implementation(projects.core.ui.mobile)
     implementation(projects.data.tmdb)
     implementation(projects.data.provider)
-    implementation(projects.data.searchHistory)
+    implementation(projects.data.search)
     implementation(projects.domain.user)
     implementation(projects.model.configuration)
 

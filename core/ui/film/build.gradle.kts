@@ -12,7 +12,7 @@ dependencies {
     api(projects.core.datastore)
     api(projects.core.ui.common)
     api(projects.core.ui.tv)
-    api(projects.data.watchHistory)
+    api(projects.data.libraryRecent)
     api(projects.domain.database)
     api(projects.domain.tmdb)
     api(projects.domain.user)

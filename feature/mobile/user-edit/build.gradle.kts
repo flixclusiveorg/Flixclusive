@@ -12,9 +12,9 @@ android {
 dependencies {
     implementation(projects.core.ui.mobile)
     implementation(projects.data.configuration)
-    implementation(projects.data.searchHistory)
-    implementation(projects.data.watchHistory)
-    implementation(projects.data.watchlist)
+    implementation(projects.data.search)
+    implementation(projects.data.libraryRecent)
+    implementation(projects.data.libraryWatchlist)
     implementation(projects.domain.user)
     implementation(projects.domain.provider)
 

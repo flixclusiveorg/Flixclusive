@@ -3,7 +3,7 @@ package com.flixclusive.core.database.migration
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-internal class Schema6to7 : Migration(6, 7) {
+internal object Schema6to7 : Migration(6, 7) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.migrateWatchlist()
         db.migrateWatchHistory()

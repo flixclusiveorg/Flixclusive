@@ -9,7 +9,7 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.data.search_history.SearchHistoryRepository
+import com.flixclusive.data.search.SearchHistoryRepository
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.ProviderUnloaderUseCase
 import com.flixclusive.domain.user.UserSessionManager

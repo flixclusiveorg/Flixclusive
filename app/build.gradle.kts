@@ -100,8 +100,9 @@ dependencies {
 
     implementation(projects.data.configuration)
     implementation(projects.data.network)
-    implementation(projects.data.watchHistory)
-    implementation(projects.data.watchlist)
+    implementation(projects.data.libraryRecent)
+    implementation(projects.data.libraryWatchlist)
+    implementation(projects.data.libraryCustom)
     implementation(projects.domain.provider)
     implementation(projects.domain.tmdb)
     implementation(projects.domain.user)

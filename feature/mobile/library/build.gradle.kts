@@ -11,7 +11,7 @@ android {
 dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.ui.mobile)
-    implementation(projects.data.watchHistory)
+    implementation(projects.data.libraryRecent)
     implementation(projects.domain.user)
 
     implementation(libs.compose.foundation)

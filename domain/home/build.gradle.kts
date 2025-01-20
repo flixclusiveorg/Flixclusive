@@ -10,7 +10,7 @@ android {
 
 dependencies {
     api(projects.data.configuration)
-    api(projects.data.watchHistory)
+    api(projects.data.libraryRecent)
     api(projects.domain.catalog)
     api(projects.domain.provider)
     api(projects.domain.tmdb)

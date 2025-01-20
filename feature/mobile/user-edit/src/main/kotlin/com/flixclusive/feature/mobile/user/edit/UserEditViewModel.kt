@@ -5,7 +5,7 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.data.search_history.SearchHistoryRepository
+import com.flixclusive.data.search.SearchHistoryRepository
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.data.watch_history.WatchHistoryRepository
 import com.flixclusive.data.watchlist.WatchlistRepository
@@ -120,7 +120,7 @@ internal sealed class Library {
     abstract val name: UiText
 
     data object Watchlist : Library() {
-        override val name: UiText = UiText.StringResource(LocaleR.string.watchlist)
+        override val name: UiText = UiText.StringResource(LocaleR.string.libraryWatchlist)
     }
 
     data object WatchHistory : Library() {

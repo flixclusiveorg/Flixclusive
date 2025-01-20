@@ -18,7 +18,7 @@ import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOConte
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.data.search_history.SearchHistoryRepository
+import com.flixclusive.data.search.SearchHistoryRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
 import com.flixclusive.domain.user.UserSessionManager

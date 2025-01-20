@@ -8,8 +8,8 @@ android {
 }
 
 dependencies {
-    api(projects.data.watchHistory)
-    api(projects.data.watchlist)
+    api(projects.data.libraryRecent)
+    api(projects.data.libraryWatchlist)
     api(libs.stubs.model.film)
 
     implementation(libs.stubs.util)

@@ -34,7 +34,7 @@ const val TMDB_API_KEY: String = "8d6d91941230817f7807d643736e8a49"
 internal class DefaultTMDBRepository @Inject constructor(
     private val tmdbApiService: TMDBApiService,
     private val okHttpClient: OkHttpClient,
-    private val configurationProvider: AppConfigurationManager
+    private val configurationProvider: AppConfigurationManager, // TODO: Remove this dependency
 ) : TMDBRepository {
     override suspend fun getTrending(
         mediaType: String,

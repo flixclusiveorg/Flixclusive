@@ -1,5 +1,6 @@
 
 import androidx.room.gradle.RoomExtension
+import com.android.build.gradle.LibraryExtension
 import com.flixclusive.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -20,9 +21,17 @@ class RoomConventionPlugin : Plugin<Project> {
                 schemaDirectory("$projectDir/schemas")
             }
 
+            extensions.configure<LibraryExtension> {
+                sourceSets {
+                    // Adds exported schema location as test app assets.
+                    getByName("androidTest").assets.srcDir("$projectDir/schemas")
+                }
+            }
+
             dependencies {
                 add("implementation", libs.findLibrary("room.runtime").get())
                 add("implementation", libs.findLibrary("room.ktx").get())
+                add("androidTestImplementation", libs.findLibrary("room.testing").get())
                 add("ksp", libs.findLibrary("room.compiler").get())
             }
         }
