@@ -9,14 +9,15 @@ import java.util.Date
 
 @Entity(tableName = "watch_history")
 data class WatchHistoryItem(
-    @PrimaryKey val id: String,
+    @PrimaryKey override val id: String,
+    override val film: DBFilm,
     val ownerId: Int,
-    val film: DBFilm,
     val seasons: Int? = null,
     val episodes: Map<Int, Int> = emptyMap(),
     val episodesWatched: List<EpisodeWatched> = emptyList(),
-    val dateWatched: Date = Date()
-) : Serializable
+    val dateWatched: Date = Date(),
+) : Serializable,
+    DBFilmItem
 
 data class EpisodeWatched(
     val episodeId: String = "",
@@ -24,20 +25,20 @@ data class EpisodeWatched(
     val episodeNumber: Int? = null,
     val watchTime: Long = 0,
     val durationTime: Long = 0,
-    val isFinished: Boolean = false
+    val isFinished: Boolean = false,
 ) : Serializable
 
-
 fun Film.toWatchHistoryItem(ownerId: Int): WatchHistoryItem {
-    val seasonCount = when(this is TvShow) {
-        true -> totalSeasons
-        false -> null
-    }
+    val seasonCount =
+        when (this is TvShow) {
+            true -> totalSeasons
+            false -> null
+        }
 
     return WatchHistoryItem(
         id = identifier,
         seasons = seasonCount,
         ownerId = ownerId,
-        film = this.toFilmInstance()
+        film = this.toFilmInstance(),
     )
 }

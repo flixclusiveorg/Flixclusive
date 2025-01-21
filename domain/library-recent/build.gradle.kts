@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.domain.database"
+    namespace = "com.flixclusive.domain.library.recent"
 }
 
 dependencies {

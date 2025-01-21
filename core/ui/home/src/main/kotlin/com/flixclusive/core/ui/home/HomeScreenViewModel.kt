@@ -9,7 +9,7 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.util.InternetMonitor
-import com.flixclusive.data.watch_history.WatchHistoryRepository
+import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.database.WatchHistoryItem

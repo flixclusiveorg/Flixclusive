@@ -7,8 +7,8 @@ import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.search.SearchHistoryRepository
 import com.flixclusive.data.user.UserRepository
-import com.flixclusive.data.watch_history.WatchHistoryRepository
-import com.flixclusive.data.watchlist.WatchlistRepository
+import com.flixclusive.data.library.recent.WatchHistoryRepository
+import com.flixclusive.data.library.watchlist.WatchlistRepository
 import com.flixclusive.domain.provider.ProviderUnloaderUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.feature.mobile.user.edit.OnRemoveNavigationState.Companion.getStateIfUserIsLoggedIn

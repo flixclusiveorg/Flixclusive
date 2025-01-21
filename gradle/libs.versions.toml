@@ -24,7 +24,6 @@ conscrypt = "2.5.2"
 constraintLayout = "1.1.0"
 coreStubs = "1.2.5"
 coroutines = "1.9.0"
-dokka = "1.9.20"
 espresso-core = "3.6.1"
 gson = "2.11.0"
 hilt = "2.49"
@@ -197,7 +196,6 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 room = { id = "androidx.room", version.ref = "room" }
-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 
 

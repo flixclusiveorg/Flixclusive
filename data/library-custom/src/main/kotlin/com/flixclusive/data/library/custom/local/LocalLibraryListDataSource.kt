@@ -1,49 +1,67 @@
 package com.flixclusive.data.library.custom.local
 
+import com.flixclusive.core.database.dao.LibraryListCrossRefDao
 import com.flixclusive.core.database.dao.LibraryListDao
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
+import com.flixclusive.core.database.dao.LibraryListItemDao
 import com.flixclusive.model.database.LibraryList
+import com.flixclusive.model.database.LibraryListAndItemCrossRef
 import com.flixclusive.model.database.LibraryListItem
+import com.flixclusive.model.database.LibraryListItemWithLists
+import com.flixclusive.model.database.LibraryListWithItems
+import com.flixclusive.model.database.UserWithLibraryListsAndItems
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 internal class LocalLibraryListDataSource
     @Inject
     constructor(
-        private val libraryListDao: LibraryListDao,
+        private val listDao: LibraryListDao,
+        private val itemDao: LibraryListItemDao,
+        private val crossRefDao: LibraryListCrossRefDao,
     ) : LibraryListDataSource {
-        override suspend fun createList(list: LibraryList) = withIOContext { libraryListDao.createList(list) }
+        override fun getLists(userId: Int): Flow<List<LibraryList>> = listDao.getLists(userId)
 
-        override suspend fun removeList(list: LibraryList) = withIOContext { libraryListDao.removeList(list) }
+        override fun getList(listId: Int): Flow<LibraryList?> = listDao.getList(listId)
 
-        override suspend fun addItemToList(item: LibraryListItem) = withIOContext { libraryListDao.addItemToList(item) }
+        override fun getListWithItems(listId: Int): Flow<LibraryListWithItems?> = listDao.getListWithItems(listId)
 
-        override suspend fun removeItemFromList(item: LibraryListItem) =
-            withIOContext { libraryListDao.removeItemFromList(item) }
-
-        override fun getLibraryListsAsFlow(ownerId: Int): Flow<List<LibraryList>> =
-            libraryListDao.getLibraryListsAsFlow(ownerId)
-
-        override fun getLibraryListAsFlow(listId: String): Flow<LibraryList?> =
-            libraryListDao.getLibraryListAsFlow(listId)
-
-        override fun getListItemsAsFlow(listId: String): Flow<List<LibraryListItem>> =
-            libraryListDao.getListItemsAsFlow(listId)
-
-        override suspend fun getLibraryLists(ownerId: Int): List<LibraryList> =
-            withIOContext { libraryListDao.getLibraryLists(ownerId) }
-
-        override suspend fun getLibraryList(listId: String): LibraryList? =
-            withIOContext { libraryListDao.getLibraryList(listId) }
-
-        override suspend fun getListItems(listId: String): List<LibraryListItem> =
-            withIOContext { libraryListDao.getListItems(listId) }
-
-        override suspend fun getListItem(id: Long): LibraryListItem? {
-            return withIOContext { libraryListDao.getListItem(id) }
+        override suspend fun insertList(list: LibraryList) {
+            listDao.insertList(list)
         }
 
-        override fun getListItemAsFlow(id: Long): Flow<LibraryListItem?> {
-            return libraryListDao.getListItemAsFlow(id)
+        override suspend fun updateList(list: LibraryList) = listDao.updateList(list)
+
+        override suspend fun deleteList(list: LibraryList) = listDao.deleteList(list)
+
+        override suspend fun deleteListById(listId: Int) = listDao.deleteListById(listId)
+
+        override fun getItem(itemId: String): Flow<LibraryListItem?> = itemDao.getItem(itemId)
+
+        override fun getItemWithLists(itemId: String): Flow<LibraryListItemWithLists?> =
+            itemDao.getItemWithLists(itemId)
+
+        override suspend fun insertItem(item: LibraryListItem) {
+            itemDao.insertItem(item)
         }
+
+        override suspend fun updateItem(item: LibraryListItem) = itemDao.updateItem(item)
+
+        override suspend fun deleteItem(item: LibraryListItem) = itemDao.deleteItem(item)
+
+        override suspend fun insertCrossRef(crossRef: LibraryListAndItemCrossRef) = crossRefDao.insertCrossRef(crossRef)
+
+        override suspend fun deleteCrossRef(crossRef: LibraryListAndItemCrossRef) = crossRefDao.deleteCrossRef(crossRef)
+
+        override suspend fun deleteCrossRefById(
+            listId: Int,
+            itemId: String,
+        ) = crossRefDao.deleteCrossRefById(listId, itemId)
+
+        override fun getUserWithListsAndItems(userId: Int): Flow<UserWithLibraryListsAndItems?> =
+            crossRefDao.getUserWithListsAndItems(userId)
+
+        override fun getItemAddedDetails(
+            listId: Int,
+            itemId: String,
+        ): Flow<LibraryListAndItemCrossRef?> = crossRefDao.getItemAddedDetails(listId, itemId)
     }

@@ -5,7 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.flixclusive.core.database.dao.LibraryListCrossRefDao
 import com.flixclusive.core.database.dao.LibraryListDao
+import com.flixclusive.core.database.dao.LibraryListItemDao
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.database.dao.WatchHistoryDao
@@ -17,11 +19,11 @@ import com.flixclusive.core.database.migration.Schema4to5
 import com.flixclusive.core.database.migration.Schema5to6
 import com.flixclusive.core.database.migration.Schema6to7
 import com.flixclusive.core.database.migration.Schema7to8
-import com.flixclusive.core.database.util.CustomLibraryConverter
 import com.flixclusive.core.database.util.DateConverter
 import com.flixclusive.core.database.util.FilmDataConverter
 import com.flixclusive.core.database.util.WatchHistoryItemConverter
 import com.flixclusive.model.database.LibraryList
+import com.flixclusive.model.database.LibraryListAndItemCrossRef
 import com.flixclusive.model.database.LibraryListItem
 import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.model.database.User
@@ -35,6 +37,7 @@ internal const val APP_DATABASE = "app_database"
     entities = [
         LibraryList::class,
         LibraryListItem::class,
+        LibraryListAndItemCrossRef::class,
         SearchHistory::class,
         User::class,
         WatchHistoryItem::class,
@@ -46,7 +49,6 @@ internal const val APP_DATABASE = "app_database"
 @TypeConverters(
     FilmDataConverter::class,
     WatchHistoryItemConverter::class,
-    CustomLibraryConverter::class,
     DateConverter::class,
 )
 internal abstract class AppDatabase : RoomDatabase() {
@@ -59,6 +61,10 @@ internal abstract class AppDatabase : RoomDatabase() {
     abstract fun searchHistoryDao(): SearchHistoryDao
 
     abstract fun libraryListDao(): LibraryListDao
+
+    abstract fun libraryListItemDao(): LibraryListItemDao
+
+    abstract fun libraryListCrossRefDao(): LibraryListCrossRefDao
 
     companion object {
         @Volatile

@@ -11,7 +11,6 @@ android {
 dependencies {
     api(libs.stubs.util)
     api(projects.core.locale)
-    api(projects.data.tmdb)
     api(projects.model.database)
 
     testImplementation(libs.stubs.model.provider)

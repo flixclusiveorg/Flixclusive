@@ -15,8 +15,8 @@ import com.flixclusive.core.ui.player.BasePlayerViewModel
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.data.watch_history.WatchHistoryRepository
-import com.flixclusive.domain.database.WatchTimeUpdaterUseCase
+import com.flixclusive.data.library.recent.WatchHistoryRepository
+import com.flixclusive.domain.library.recent.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.domain.user.UserSessionManager

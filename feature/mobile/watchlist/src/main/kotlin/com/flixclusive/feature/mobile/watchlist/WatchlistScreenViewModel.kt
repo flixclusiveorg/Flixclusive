@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
-import com.flixclusive.data.watchlist.WatchlistRepository
+import com.flixclusive.data.library.watchlist.WatchlistRepository
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.datastore.user.UiPreferences
 import com.flixclusive.model.datastore.user.UserPreferences

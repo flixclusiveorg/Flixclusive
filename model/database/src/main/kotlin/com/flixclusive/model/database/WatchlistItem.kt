@@ -7,16 +7,16 @@ import java.util.Date
 
 @Entity(tableName = "watchlist")
 data class WatchlistItem(
-    @PrimaryKey val id: String,
+    @PrimaryKey override val id: String,
+    override val film: DBFilm,
     val ownerId: Int,
-    val film: DBFilm,
-    val addedOn: Date = Date()
-)
+    val addedOn: Date = Date(),
+) : DBFilmItem
 
 fun Film.toWatchlistItem(ownerId: Int): WatchlistItem {
     return WatchlistItem(
         id = identifier,
         ownerId = ownerId,
-        film = this.toFilmInstance()
+        film = this.toFilmInstance(),
     )
 }

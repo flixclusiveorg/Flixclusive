@@ -1,7 +1,7 @@
 package com.flixclusive.data.watchlist.di
 
-import com.flixclusive.data.watchlist.DefaultWatchlistRepository
-import com.flixclusive.data.watchlist.WatchlistRepository
+import com.flixclusive.data.library.watchlist.DefaultWatchlistRepository
+import com.flixclusive.data.library.watchlist.WatchlistRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

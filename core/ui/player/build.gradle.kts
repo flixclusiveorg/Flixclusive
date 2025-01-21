@@ -14,7 +14,7 @@ dependencies {
     api(projects.core.ui.common)
     api(projects.core.datastore)
     api(projects.domain.tmdb)
-    api(projects.domain.database)
+    api(projects.domain.libraryRecent)
     api(projects.domain.provider)
     api(projects.domain.user)
 

@@ -1,7 +1,7 @@
 package com.flixclusive.data.watch_history.di
 
-import com.flixclusive.data.watch_history.DefaultWatchHistoryRepository
-import com.flixclusive.data.watch_history.WatchHistoryRepository
+import com.flixclusive.data.library.recent.DefaultWatchHistoryRepository
+import com.flixclusive.data.library.recent.WatchHistoryRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

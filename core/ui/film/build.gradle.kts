@@ -13,7 +13,7 @@ dependencies {
     api(projects.core.ui.common)
     api(projects.core.ui.tv)
     api(projects.data.libraryRecent)
-    api(projects.domain.database)
+    api(projects.domain.libraryWatchlist)
     api(projects.domain.tmdb)
     api(projects.domain.user)
 

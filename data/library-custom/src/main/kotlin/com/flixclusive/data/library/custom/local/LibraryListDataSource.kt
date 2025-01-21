@@ -1,31 +1,54 @@
 package com.flixclusive.data.library.custom.local
 
 import com.flixclusive.model.database.LibraryList
+import com.flixclusive.model.database.LibraryListAndItemCrossRef
 import com.flixclusive.model.database.LibraryListItem
+import com.flixclusive.model.database.LibraryListItemWithLists
+import com.flixclusive.model.database.LibraryListWithItems
+import com.flixclusive.model.database.UserWithLibraryListsAndItems
 import kotlinx.coroutines.flow.Flow
 
 interface LibraryListDataSource {
-    suspend fun createList(list: LibraryList)
+    // Library List operations
+    fun getLists(userId: Int): Flow<List<LibraryList>>
 
-    suspend fun removeList(list: LibraryList)
+    fun getList(listId: Int): Flow<LibraryList?>
 
-    suspend fun addItemToList(item: LibraryListItem)
+    fun getListWithItems(listId: Int): Flow<LibraryListWithItems?>
 
-    suspend fun removeItemFromList(item: LibraryListItem)
+    suspend fun insertList(list: LibraryList)
 
-    suspend fun getLibraryLists(ownerId: Int): List<LibraryList>
+    suspend fun updateList(list: LibraryList)
 
-    suspend fun getLibraryList(listId: String): LibraryList?
+    suspend fun deleteList(list: LibraryList)
 
-    suspend fun getListItem(id: Long): LibraryListItem?
+    suspend fun deleteListById(listId: Int)
 
-    suspend fun getListItems(listId: String): List<LibraryListItem>
+    // List Item operations
+    fun getItem(itemId: String): Flow<LibraryListItem?>
 
-    fun getLibraryListsAsFlow(ownerId: Int): Flow<List<LibraryList>>
+    fun getItemWithLists(itemId: String): Flow<LibraryListItemWithLists?>
 
-    fun getLibraryListAsFlow(listId: String): Flow<LibraryList?>
+    suspend fun insertItem(item: LibraryListItem)
 
-    fun getListItemAsFlow(id: Long): Flow<LibraryListItem?>
+    suspend fun updateItem(item: LibraryListItem)
 
-    fun getListItemsAsFlow(listId: String): Flow<List<LibraryListItem>>
+    suspend fun deleteItem(item: LibraryListItem)
+
+    // Cross Reference operations
+    suspend fun insertCrossRef(crossRef: LibraryListAndItemCrossRef)
+
+    suspend fun deleteCrossRef(crossRef: LibraryListAndItemCrossRef)
+
+    suspend fun deleteCrossRefById(
+        listId: Int,
+        itemId: String,
+    )
+
+    fun getUserWithListsAndItems(userId: Int): Flow<UserWithLibraryListsAndItems?>
+
+    fun getItemAddedDetails(
+        listId: Int,
+        itemId: String,
+    ): Flow<LibraryListAndItemCrossRef?>
 }

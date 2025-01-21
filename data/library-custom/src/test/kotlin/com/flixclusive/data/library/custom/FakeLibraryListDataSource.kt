@@ -1,102 +1,143 @@
 package com.flixclusive.data.library.custom
 
 import com.flixclusive.data.library.custom.local.LibraryListDataSource
-import com.flixclusive.model.database.LibraryItemId
 import com.flixclusive.model.database.LibraryList
+import com.flixclusive.model.database.LibraryListAndItemCrossRef
 import com.flixclusive.model.database.LibraryListItem
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.model.database.LibraryListItemWithLists
+import com.flixclusive.model.database.LibraryListWithItems
+import com.flixclusive.model.database.User
+import com.flixclusive.model.database.UserWithLibraryListsAndItems
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 
-@OptIn(ExperimentalUuidApi::class)
 internal class FakeLibraryListDataSource : LibraryListDataSource {
-    private val lists = mutableSetOf<LibraryList>()
-    private val listItems = mutableSetOf<LibraryListItem>()
+    private val libraryLists = MutableStateFlow<List<LibraryList>>(emptyList())
+    private val libraryListItems = MutableStateFlow<List<LibraryListItem>>(emptyList())
+    private val crossRefs = MutableStateFlow<List<LibraryListAndItemCrossRef>>(emptyList())
 
-    init {
-        lists.addAll(
-            List(50) {
-                LibraryList(
-                    id = Uuid.random().toString(),
-                    ownerId = 1,
-                    name = "Catalog #$it"
-                )
+    // Library List operations
+    override fun getLists(userId: Int): Flow<List<LibraryList>> =
+        libraryLists.map { lists -> lists.filter { it.ownerId == userId } }
+
+    override fun getList(listId: Int): Flow<LibraryList?> =
+        libraryLists.map { lists ->
+            lists.find { it.id == listId }
+        }
+
+    override fun getListWithItems(listId: Int): Flow<LibraryListWithItems?> =
+        combine(
+            libraryLists,
+            crossRefs,
+            libraryListItems,
+        ) { lists, refs, items ->
+            val list = lists.find { it.id == listId }
+            val itemIds = refs.filter { it.listId == listId }.map { it.itemId }
+            val listItems = items.filter { itemIds.contains(it.id) }
+            list?.let { LibraryListWithItems(it, listItems) }
+        }
+
+    override suspend fun insertList(list: LibraryList) {
+        libraryLists.update { current ->
+            current.filterNot { it.id == list.id } + list
+        }
+    }
+
+    override suspend fun updateList(list: LibraryList) = insertList(list)
+
+    override suspend fun deleteList(list: LibraryList) {
+        libraryLists.update { current -> current.filterNot { it.id == list.id } }
+    }
+
+    override suspend fun deleteListById(listId: Int) {
+        libraryLists.update { current -> current.filterNot { it.id == listId } }
+    }
+
+    // List Item operations
+    override fun getItem(itemId: String): Flow<LibraryListItem?> =
+        libraryListItems.map { items -> items.find { it.id == itemId } }
+
+    override fun getItemWithLists(itemId: String): Flow<LibraryListItemWithLists?> =
+        combine(
+            libraryLists,
+            libraryListItems,
+            crossRefs,
+        ) { lists, items, refs ->
+            val item = items.find { it.id == itemId }
+            val listIds = refs.filter { it.itemId == itemId }.map { it.listId }
+            val itemLists = lists.filter { listIds.contains(it.id) }
+            item?.let { LibraryListItemWithLists(it, itemLists) }
+        }
+
+    override suspend fun insertItem(item: LibraryListItem) {
+        libraryListItems.update { current ->
+            current.filterNot { it.id == item.id } + item
+        }
+    }
+
+    override suspend fun updateItem(item: LibraryListItem) = insertItem(item)
+
+    override suspend fun deleteItem(item: LibraryListItem) {
+        libraryListItems.update { current -> current.filterNot { it.id == item.id } }
+    }
+
+    // Cross Reference operations
+    override suspend fun insertCrossRef(crossRef: LibraryListAndItemCrossRef) {
+        crossRefs.update { current ->
+            current.filterNot {
+                it.listId == crossRef.listId && it.itemId == crossRef.itemId
+            } + crossRef
+        }
+    }
+
+    override suspend fun deleteCrossRef(crossRef: LibraryListAndItemCrossRef) {
+        crossRefs.update { current ->
+            current.filterNot {
+                it.listId == crossRef.listId && it.itemId == crossRef.itemId
             }
-        )
+        }
+    }
 
-        lists.forEach { list ->
-            listItems.addAll(
-                List(5) {
-                    val size = listItems.size
-                    LibraryListItem(
-                        entryId = size.toLong(),
-                        listId = list.id,
-                        libraryItemId = LibraryItemId(
-                            providerId = DEFAULT_FILM_SOURCE_NAME,
-                            itemId = "item-$size",
-                        )
-                    )
+    override suspend fun deleteCrossRefById(
+        listId: Int,
+        itemId: String,
+    ) {
+        crossRefs.update { current ->
+            current.filterNot {
+                it.listId == listId && it.itemId == itemId
+            }
+        }
+    }
+
+    override fun getUserWithListsAndItems(userId: Int): Flow<UserWithLibraryListsAndItems?> =
+        combine(
+            libraryLists,
+            crossRefs,
+            libraryListItems,
+        ) { lists, refs, items ->
+            val user = User(userId, name = "Test name", image = 0)
+            val userLists = lists.filter { it.ownerId == userId }
+            val listsWithItems =
+                userLists.map { list ->
+                    val listItems =
+                        items.filter { item ->
+                            refs.any { ref ->
+                                ref.listId == list.id && ref.itemId == item.id
+                            }
+                        }
+                    LibraryListWithItems(list, listItems)
                 }
-            )
+            UserWithLibraryListsAndItems(user, listsWithItems)
         }
-    }
 
-    override suspend fun createList(list: LibraryList) {
-        lists.add(list)
-    }
-
-    override suspend fun removeList(list: LibraryList) {
-        val isListIdValid = lists.any { list.id == it.id }
-        if (isListIdValid) {
-            lists.remove(list)
+    override fun getItemAddedDetails(
+        listId: Int,
+        itemId: String,
+    ): Flow<LibraryListAndItemCrossRef?> =
+        crossRefs.map { refs ->
+            refs.find { it.listId == listId && it.itemId == itemId }
         }
-    }
-
-    override suspend fun addItemToList(item: LibraryListItem) {
-        val isListIdValid = lists.any { item.listId == it.id }
-        if (isListIdValid) {
-            listItems.add(item)
-        }
-    }
-
-    override suspend fun removeItemFromList(item: LibraryListItem) {
-        val isListIdValid = lists.any { item.listId == it.id }
-        if (isListIdValid) {
-            listItems.remove(item)
-        }
-    }
-
-    override fun getLibraryListsAsFlow(ownerId: Int): Flow<List<LibraryList>> {
-        return flow { emit(getLibraryLists(ownerId)) }
-    }
-
-    override fun getLibraryListAsFlow(listId: String): Flow<LibraryList?> {
-        return flow { emit(getLibraryList(listId)) }
-    }
-
-    override fun getListItemsAsFlow(listId: String): Flow<List<LibraryListItem>> {
-        return flow { emit(getListItems(listId)) }
-    }
-
-    override suspend fun getLibraryLists(ownerId: Int): List<LibraryList> {
-        return lists.filter { it.ownerId == ownerId }
-    }
-
-    override suspend fun getLibraryList(listId: String): LibraryList? {
-        return lists.find { it.id == listId }
-    }
-
-    override suspend fun getListItems(listId: String): List<LibraryListItem> {
-        return listItems.filter { it.listId == listId }
-    }
-
-    override suspend fun getListItem(id: Long): LibraryListItem? {
-        return listItems.find { it.entryId == id }
-    }
-
-    override fun getListItemAsFlow(id: Long): Flow<LibraryListItem?> {
-        return flow { emit(listItems.find { it.entryId == id }) }
-    }
 }

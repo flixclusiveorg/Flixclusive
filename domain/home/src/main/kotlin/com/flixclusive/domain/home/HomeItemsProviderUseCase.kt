@@ -6,7 +6,7 @@ import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withDefaultContext
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.configuration.AppConfigurationManager
-import com.flixclusive.data.watch_history.WatchHistoryRepository
+import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.domain.catalog.CatalogItemsProviderUseCase
 import com.flixclusive.domain.tmdb.GetFilmMetadataUseCase
 import com.flixclusive.model.configuration.catalog.HomeCatalog

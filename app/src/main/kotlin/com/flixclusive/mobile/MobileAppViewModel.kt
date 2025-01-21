@@ -13,8 +13,8 @@ import com.flixclusive.core.ui.mobile.KeyEventHandler
 import com.flixclusive.core.util.webview.WebViewDriverManager
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.util.InternetMonitor
-import com.flixclusive.data.watch_history.WatchHistoryRepository
-import com.flixclusive.data.watchlist.WatchlistRepository
+import com.flixclusive.data.library.recent.WatchHistoryRepository
+import com.flixclusive.data.library.watchlist.WatchlistRepository
 import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.GetFilmMetadataUseCase

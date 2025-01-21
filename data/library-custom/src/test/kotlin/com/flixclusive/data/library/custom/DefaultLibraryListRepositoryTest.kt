@@ -1,157 +1,133 @@
 package com.flixclusive.data.library.custom
 
-import com.flixclusive.core.network.retrofit.TMDBApiService
-import com.flixclusive.core.network.retrofit.TMDB_API_BASE_URL
-import com.flixclusive.core.util.log.LogRule
-import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.model.database.LibraryItemId
+import com.flixclusive.model.database.DBFilm
 import com.flixclusive.model.database.LibraryList
+import com.flixclusive.model.database.LibraryListAndItemCrossRef
 import com.flixclusive.model.database.LibraryListItem
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import okhttp3.OkHttpClient
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import retrofit2.Retrofit
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
-class DefaultLibraryListRepositoryTest {
-    @get:Rule
-    val rule = LogRule()
-
-    private val ownerId = 1
-    private lateinit var libraryListRepository: LibraryListRepository
-    private lateinit var tmdbRepository: TMDBRepository
-    private lateinit var tmdbApiService: TMDBApiService
-    private lateinit var client: OkHttpClient
+internal class DefaultLibraryListRepositoryTest {
+    private lateinit var repository: LibraryListRepository
+    private lateinit var fakeDataSource: FakeLibraryListDataSource
 
     @Before
-    fun setUp() {
-        client = OkHttpClient.Builder().build()
-        tmdbApiService = client.toTmdbApiService()
-        tmdbRepository = FakeTMDBRepository(
-            client = client,
-            tmdbApiService = tmdbApiService
-        )
-
-        libraryListRepository = DefaultLibraryListRepository(
-            tmdbRepository = tmdbRepository,
-            dataSource = FakeLibraryListDataSource()
-        )
-    }
-
-    @OptIn(ExperimentalUuidApi::class)
-    @Test
-    fun `test write and read`() = runTest {
-        val listId = Uuid.random().toString()
-        val list = LibraryList(
-            id = listId,
-            ownerId = ownerId,
-            name = "Test catalog"
-        )
-
-        libraryListRepository.createList(list)
-        val libraryList = libraryListRepository.getList(listId)
-        assert(libraryList != null)
-        assert(list == libraryList)
-    }
-
-    @OptIn(ExperimentalUuidApi::class)
-    @Test
-    fun `test write, remove then read`() = runTest {
-        val listId = Uuid.random().toString()
-        val list = LibraryList(
-            id = listId,
-            ownerId = ownerId,
-            name = "Test catalog"
-        )
-
-        libraryListRepository.createList(list)
-        libraryListRepository.removeList(list)
-        val libraryList = libraryListRepository.getList(listId)
-        assert(libraryList == null)
+    fun setup() {
+        fakeDataSource = FakeLibraryListDataSource()
+        repository = DefaultLibraryListRepository(fakeDataSource)
     }
 
     @Test
-    fun `test read lists`() = runTest {
-        val list = libraryListRepository.getLists(ownerId)
-        assert(list.isNotEmpty())
+    fun `insert and retrieve list`() =
+        runTest {
+            val testList = createTestLibraryList(1)
+            repository.insertList(testList)
 
-        val flowList = libraryListRepository.observeLists(ownerId).first()
-        assert(flowList.isNotEmpty())
-    }
+            val lists = repository.getLists(1).first()
+            assertEquals(1, lists.size)
+            assertEquals(testList, lists[0])
+        }
 
-    @OptIn(ExperimentalUuidApi::class)
     @Test
-    fun `test add item to list and read`() = runTest {
-        val listId = Uuid.random().toString()
-        val entryId = 999L
-        val imdbId = "tt20292092"
+    fun `update list`() =
+        runTest {
+            val originalList = createTestLibraryList(1)
+            repository.insertList(originalList)
 
-        val list = LibraryList(
-            id = listId,
-            ownerId = ownerId,
-            name = "Test catalog"
-        )
+            val updatedList = originalList.copy(name = "Updated Name")
+            repository.updateList(updatedList)
 
-        libraryListRepository.createList(list)
-        val listItem = LibraryListItem(
-            entryId = entryId,
-            listId = listId,
-            libraryItemId = LibraryItemId(
-                providerId = DEFAULT_FILM_SOURCE_NAME,
-                itemId = imdbId
+            val retrieved = repository.getList(1).first()
+            assertEquals("Updated Name", retrieved?.name)
+        }
+
+    @Test
+    fun `delete list`() =
+        runTest {
+            val testList = createTestLibraryList(1)
+            repository.insertList(testList)
+            repository.deleteList(testList)
+
+            val lists = repository.getLists(1).first()
+            assertTrue(lists.isEmpty())
+        }
+
+    @Test
+    fun `add item to list`() =
+        runTest {
+            val testList = createTestLibraryList(1)
+            val testItem = createTestListItem("item1")
+
+            repository.insertList(testList)
+            repository.insertItem(testItem)
+            repository.insertCrossRef(LibraryListAndItemCrossRef(1, "item1"))
+
+            val listWithItems = repository.getListWithItems(1).first()
+            assertEquals(1, listWithItems?.items?.size)
+            assertEquals("item1", listWithItems?.items?.get(0)?.id)
+        }
+
+    @Test
+    fun `remove item from list`() =
+        runTest {
+            val testList = createTestLibraryList(1)
+            val testItem = createTestListItem("item1")
+
+            repository.insertList(testList)
+            repository.insertItem(testItem)
+            repository.insertCrossRef(LibraryListAndItemCrossRef(1, "item1"))
+            repository.deleteCrossRefById(1, "item1")
+
+            val listWithItems = repository.getListWithItems(1).first()
+            assertTrue(listWithItems?.items?.isEmpty() ?: false)
+        }
+
+    @Test
+    fun `get user with lists and items`() =
+        runTest {
+            val testList = createTestLibraryList(1)
+            val testItem = createTestListItem("item1")
+
+            repository.insertList(testList)
+            repository.insertItem(testItem)
+            repository.insertCrossRef(LibraryListAndItemCrossRef(1, "item1"))
+
+            val userWithData = repository.getUserWithListsAndItems(1).first()
+            assertEquals(1, userWithData?.list?.size)
+            assertEquals(
+                1,
+                userWithData
+                    ?.list
+                    ?.get(0)
+                    ?.items
+                    ?.size,
             )
+        }
+
+    // Helper functions
+    private fun createTestLibraryList(id: Int) =
+        LibraryList(
+            id = id,
+            ownerId = 1,
+            name = "Test List",
+            description = "Test Description",
         )
 
-        libraryListRepository.addItemToList(listItem)
-
-        val item = libraryListRepository.getListItem(entryId)
-        assert(item != null)
-        val flowItem = libraryListRepository.observeListItem(entryId).first()
-        assert(flowItem != null)
-    }
-
-    @OptIn(ExperimentalUuidApi::class)
-    @Test
-    fun `test add, read and read item to list`() = runTest {
-        val listId = Uuid.random().toString()
-        val entryId = 999L
-        val imdbId = "tt20292092"
-
-        val list = LibraryList(
-            id = listId,
-            ownerId = ownerId,
-            name = "Test catalog"
+    private fun createTestListItem(id: String) =
+        LibraryListItem(
+            id = id,
+            film =
+                DBFilm(
+                    id = id,
+                    title = "Test Film",
+                    posterImage = "/test.jpg",
+                    providerId = DEFAULT_FILM_SOURCE_NAME,
+                    releaseDate = "2024-01-01",
+                ),
         )
-
-        libraryListRepository.createList(list)
-        val listItem = LibraryListItem(
-            entryId = entryId,
-            listId = listId,
-            libraryItemId = LibraryItemId(
-                providerId = DEFAULT_FILM_SOURCE_NAME,
-                itemId = imdbId
-            )
-        )
-
-        libraryListRepository.addItemToList(listItem)
-        libraryListRepository.removeItemFromList(listItem)
-
-        val item = libraryListRepository.getListItem(entryId)
-        assert(item == null)
-        val flowItem = libraryListRepository.observeListItem(entryId).first()
-        assert(flowItem == null)
-    }
-}
-
-private fun OkHttpClient.toTmdbApiService(): TMDBApiService {
-    return Retrofit.Builder()
-        .baseUrl(TMDB_API_BASE_URL)
-        .client(this)
-        .build()
-        .create(TMDBApiService::class.java)
 }

@@ -13,7 +13,7 @@ dependencies {
     implementation(projects.core.ui.common)
     implementation(projects.core.ui.player)
     implementation(projects.core.ui.tv)
-    implementation(projects.domain.database)
+    implementation(projects.domain.libraryRecent)
     implementation(projects.domain.provider)
     implementation(projects.domain.tmdb)
 

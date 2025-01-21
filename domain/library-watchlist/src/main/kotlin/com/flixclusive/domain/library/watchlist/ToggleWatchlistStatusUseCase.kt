@@ -1,6 +1,6 @@
-package com.flixclusive.domain.database
+package com.flixclusive.domain.library.watchlist
 
-import com.flixclusive.data.watchlist.WatchlistRepository
+import com.flixclusive.data.library.watchlist.WatchlistRepository
 import com.flixclusive.model.database.WatchlistItem
 import javax.inject.Inject
 
