@@ -5,6 +5,7 @@ import android.graphics.Paint
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import coil3.Canvas
 import coil3.Image
@@ -50,8 +51,10 @@ object CoilUtil {
 
     @OptIn(ExperimentalCoilApi::class)
     @Composable
-    fun ProvideAsyncImagePreviewHandler(content: @Composable () -> Unit) {
-        val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+    fun ProvideAsyncImagePreviewHandler(
+        color: Color = MaterialTheme.colorScheme.primary,
+        content: @Composable () -> Unit
+    ) {
         val previewHandler = AsyncImagePreviewHandler {
             object : Image {
                 private var lazyPaint: Paint? = null
@@ -63,7 +66,7 @@ object CoilUtil {
                 override fun draw(canvas: Canvas) {
                     val paint = lazyPaint ?: run {
                         Paint()
-                            .apply { color = primaryColor }
+                            .apply { this@apply.color = color.toArgb() }
                             .also { lazyPaint = it }
                     }
 

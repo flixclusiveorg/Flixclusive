@@ -120,7 +120,7 @@ internal sealed class Library {
     abstract val name: UiText
 
     data object Watchlist : Library() {
-        override val name: UiText = UiText.StringResource(LocaleR.string.libraryWatchlist)
+        override val name: UiText = UiText.StringResource(LocaleR.string.watchlist)
     }
 
     data object WatchHistory : Library() {

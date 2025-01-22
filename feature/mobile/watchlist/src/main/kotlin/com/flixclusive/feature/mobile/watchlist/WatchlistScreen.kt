@@ -48,7 +48,7 @@ internal fun WatchlistScreen(
                 topBar = {
                     CommonTopBar(
                         rowModifier = Modifier.align(Alignment.TopStart),
-                        title = stringResource(id = LocaleR.string.libraryWatchlist),
+                        title = stringResource(id = LocaleR.string.watchlist),
                         onNavigate = navigator::goBack,
                     )
                 },
@@ -75,7 +75,7 @@ internal fun WatchlistScreen(
         ) {
             FilmsGridScreen(
                 modifier = Modifier.fillMaxSize(),
-                screenTitle = stringResource(LocaleR.string.libraryWatchlist),
+                screenTitle = stringResource(LocaleR.string.watchlist),
                 films = watchlist,
                 isShowingFilmCardTitle = uiPreferences.shouldShowTitleOnCards,
                 onFilmClick = navigator::openFilmScreen,
