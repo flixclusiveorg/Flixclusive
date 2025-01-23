@@ -93,6 +93,7 @@
     <string name="add_providers">Add providers</string>
     <string name="add_repositories">Add repositories</string>
     <string name="add_sync_offset_message">Add if subs are delayed.</string>
+    <string name="add_to_list">Add to list</string>
     <string name="add_to_watchlist">Add to Watchlist</string>
     <string name="advanced">Advanced</string>
     <string name="allow">Allow</string>
@@ -233,6 +234,7 @@
     <string name="rating">Rating</string>
     <string name="re_test">Re-test</string>
     <string name="release">RELEASE</string>
+    <string name="release_date">Release date</string>
     <string name="release_player">Release player on memory</string>
     <string name="remove">Remove</string>
     <string name="remove_from_watchlist">Remove from Watchlist</string>
@@ -315,6 +317,8 @@
     <string name="what_to_remove">What do you want to remove?</string>
     <string name="whats_new">What\'s new</string>
     <string name="whos_watching">Who\'s watching?</string>
+    <string name="modified_at">Modified at</string>
+    <string name="added_at">Added at</string>
 
     <!--  On-boarding messages  -->
     <string name="onboarding_profile_avatar_description">The next step to personalize your journey is to pick an avatar that feels just right!</string>
@@ -330,6 +334,11 @@
     <string name="yellow">Yellow</string>
 
     <!--  Extra labels with formatting  -->
+    <plurals name="number_of_items_format">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <string name="modified_at_format">Modified at %1$s</string>
     <string name="avatar_number">Avatar %1$d</string>
     <string name="continue_watching_tv_show">Continue Watching S%1$d E%2$d</string>
     <string name="count_selection_format">%1$d selected</string>

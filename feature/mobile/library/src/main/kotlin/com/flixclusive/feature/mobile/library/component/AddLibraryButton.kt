@@ -1,4 +1,8 @@
 package com.flixclusive.feature.mobile.library.component
 
-class AddLibraryButton {
+import androidx.compose.runtime.Composable
+
+@Composable
+internal fun AddLibraryButton() {
+
 }

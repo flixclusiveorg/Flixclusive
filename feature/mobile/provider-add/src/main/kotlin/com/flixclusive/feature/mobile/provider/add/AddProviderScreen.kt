@@ -49,6 +49,7 @@ import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderAction
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
+import com.flixclusive.core.ui.mobile.component.LoadingScreen
 import com.flixclusive.core.ui.mobile.component.PlainTooltipBox
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCard
 import com.flixclusive.core.ui.mobile.component.provider.ProviderCardDefaults
@@ -59,7 +60,6 @@ import com.flixclusive.core.ui.mobile.component.topbar.DefaultNavigationIcon
 import com.flixclusive.core.ui.mobile.component.topbar.rememberEnterAlwaysScrollBehavior
 import com.flixclusive.core.ui.mobile.util.ComposeUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.feature.mobile.provider.add.component.ErrorScreen
-import com.flixclusive.feature.mobile.provider.add.component.LoadingScreen
 import com.flixclusive.feature.mobile.provider.add.filter.AddProviderFilterType
 import com.flixclusive.feature.mobile.provider.add.filter.AuthorsFilters
 import com.flixclusive.feature.mobile.provider.add.filter.CommonSortFilters

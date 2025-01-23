@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -113,9 +116,10 @@ fun Modifier.fadingEdge(brush: Brush) = this
         drawRect(brush = brush, blendMode = BlendMode.DstIn)
     }
 
+@Composable
 fun Modifier.placeholderEffect(
     shape: Shape = RoundedCornerShape(5.dp),
-    color: Color = lightGray,
+    color: Color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
 ) = graphicsLayer {
     this.shape = shape
     clip = true

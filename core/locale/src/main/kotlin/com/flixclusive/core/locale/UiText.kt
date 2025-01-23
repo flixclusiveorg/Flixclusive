@@ -49,4 +49,17 @@ sealed class UiText {
             is StringResource -> stringResource(id = stringId, *args)
         }
     }
+
+    companion object {
+        fun from(string: String): StringValue {
+            return StringValue(string)
+        }
+
+        fun from(
+            @StringRes id: Int,
+            vararg args: Any
+        ): StringResource {
+            return StringResource(id, *args)
+        }
+    }
 }

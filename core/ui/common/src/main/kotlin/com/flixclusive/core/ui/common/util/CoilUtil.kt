@@ -20,7 +20,7 @@ private const val TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/"
 object CoilUtil {
     fun Context.buildImageUrl(
         imagePath: String?,
-        imageSize: String = "w500",
+        imageSize: String = "w500", // TODO: Convert to object
     ): ImageRequest? {
         if(imagePath == null)
             return null

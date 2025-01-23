@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.provider.add.component
+package com.flixclusive.core.ui.mobile.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,9 +18,8 @@ import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.locale.R as LocaleR
 
-// TODO: Move this to ui-common module
 @Composable
-internal fun LoadingScreen(modifier: Modifier = Modifier) {
+fun LoadingScreen(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
