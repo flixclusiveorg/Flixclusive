@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.library
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import com.flixclusive.model.database.LibraryList
 import com.flixclusive.model.film.Film
@@ -17,29 +18,27 @@ internal class LibraryScreenViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     fun updateFilter(filter: LibrarySortFilter) {
-        var newFilter = filter
-
         val isUpdatingDirection = _uiState.value.selectedFilter == filter
-        if (isUpdatingDirection) {
-            newFilter = getNewDirection(filter)
-        }
 
-        _uiState.update { it.copy(selectedFilter = newFilter) }
-    }
-
-    private fun getNewDirection(filter: LibrarySortFilter): LibrarySortFilter {
-        return when (filter) {
-            is LibrarySortFilter.AddedAt -> filter.copy(direction = filter.direction.toggle())
-            is LibrarySortFilter.ModifiedAt -> filter.copy(direction = filter.direction.toggle())
-            is LibrarySortFilter.Name -> filter.copy(direction = filter.direction.toggle())
-            is LibrarySortFilter.Rating -> filter.copy(direction = filter.direction.toggle())
-            is LibrarySortFilter.ReleaseDate -> filter.copy(direction = filter.direction.toggle())
+        _uiState.update {
+            if (isUpdatingDirection) {
+                it.copy(filterDirection = it.filterDirection.toggle())
+            } else {
+                it.copy(selectedFilter = filter)
+            }
         }
     }
 }
 
-data class LibraryUiState(
-    val selectedFilter: LibrarySortFilter = LibrarySortFilter.ModifiedAt(LibrarySortFilter.Direction.DESC),
+@Immutable
+internal data class LibraryUiState(
+    val searchQuery: String = "",
+    val isLoading: Boolean = true,
+    val isShowingFilterSheet: Boolean = false,
+    val isShowingSearchBar: Boolean = false,
+    val selectedFilter: LibrarySortFilter = LibrarySortFilter.ModifiedAt,
+    val filterDirection: LibrarySortFilter.Direction = LibrarySortFilter.Direction.ASC,
+    val selectedLibraries: List<LibraryListWithPreview> = emptyList(),
 )
 
 internal data class LibraryListWithPreview(

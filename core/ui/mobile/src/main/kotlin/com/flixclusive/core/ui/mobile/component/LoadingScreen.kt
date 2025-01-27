@@ -19,11 +19,13 @@ import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
-fun LoadingScreen(modifier: Modifier = Modifier) {
+fun LoadingScreen(
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(25.dp),
+        verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.CenterVertically),
     ) {
         GradientCircularProgressIndicator(
             size = 40.dp,
@@ -34,7 +36,7 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
         )
 
         Text(
-            text = stringResource(LocaleR.string.loading_filters),
+            text = stringResource(LocaleR.string.loading),
             style =
                 getAdaptiveTextStyle(
                     style = TypographyStyle.Label,

@@ -1,20 +1,30 @@
 package com.flixclusive.feature.mobile.library
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,21 +39,28 @@ import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
+import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.ui.mobile.component.LoadingScreen
 import com.flixclusive.core.ui.mobile.component.PlainTooltipBox
 import com.flixclusive.core.ui.mobile.component.topbar.ActionButton
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarWithSearch
 import com.flixclusive.core.ui.mobile.component.topbar.DefaultNavigationIcon
 import com.flixclusive.core.ui.mobile.component.topbar.rememberEnterAlwaysScrollBehavior
+import com.flixclusive.feature.mobile.library.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.feature.mobile.library.component.DefaultLibraryCardShape
 import com.flixclusive.feature.mobile.library.component.LibraryCard
+import com.flixclusive.model.database.DBFilm
 import com.flixclusive.model.database.LibraryList
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface LibraryScreenNavigator : GoBackAction, ViewFilmAction
+interface LibraryScreenNavigator :
+    GoBackAction,
+    ViewFilmAction
 
 @Destination
 @Composable
@@ -52,7 +69,6 @@ internal fun LibraryScreen(
     viewModel: LibraryScreenViewModel = hiltViewModel(),
     previewFilm: (Film) -> Unit,
 ) {
-
 }
 
 @Composable
@@ -63,7 +79,6 @@ private fun LibraryScreen(
     libraries: () -> List<LibraryListWithPreview>,
     selectedLibraries: () -> List<LibraryListWithPreview>,
     searchQuery: () -> String,
-    onGoBack: () -> Unit,
     onRemoveSelection: () -> Unit,
     onUnselectAll: () -> Unit,
     onViewLibraryContent: (LibraryList) -> Unit,
@@ -90,12 +105,11 @@ private fun LibraryScreen(
                 searchQuery = searchQuery,
                 onToggleSearchBar = onToggleSearchBar,
                 onQueryChange = onQueryChange,
-                onNavigate = onGoBack,
                 onShowFilterSheet = { onToggleFilterSheet(true) },
                 onRemoveSelection = onRemoveSelection,
                 onUnselectAll = onUnselectAll,
             )
-        }
+        },
     ) {
         val padding by remember {
             derivedStateOf { it }
@@ -103,46 +117,59 @@ private fun LibraryScreen(
 
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding),
         ) {
-            if (isLoading) {
-                LoadingScreen()
-            } else {
-                LazyColumn(
-                    contentPadding = padding,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.align(Alignment.TopCenter),
-                ) {
-                    items(
-                        items = libraries(),
-                        key = { it.list.id }
-                    ) { library ->
-                        LibraryCard(
-                            library = library,
-                            onClick = {
-                                val isSelecting = selectedLibraries().isNotEmpty()
-                                if (isSelecting) {
-                                    onToggleSelect(library)
-                                } else {
-                                    onViewLibraryContent(library.list)
-                                }
-                            },
-                            onLongClick = { onModifyLibrary(library.list) },
-                            modifier = Modifier.animateItem()
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.align(Alignment.TopStart),
+            ) {
+                items(
+                    items = libraries(),
+                    key = { it.list.id },
+                ) { library ->
+                    LibraryCard(
+                        library = library,
+                        onClick = {
+                            val isSelecting = selectedLibraries().isNotEmpty()
+                            if (isSelecting) {
+                                onToggleSelect(library)
+                            } else {
+                                onViewLibraryContent(library.list)
+                            }
+                        },
+                        onLongClick = { onModifyLibrary(library.list) },
+                        modifier =
+                            Modifier
+                                .animateItem()
                                 .border(
                                     shape = DefaultLibraryCardShape,
-                                    border = BorderStroke(
-                                        width = Dp.Hairline,
-                                        color = if (selectedLibraries().contains(library)) {
-                                            selectedColor
-                                        } else {
-                                            Color.Transparent
-                                        },
-                                    ),
-                                )
-                        )
-                    }
+                                    border =
+                                        BorderStroke(
+                                            width = Dp.Hairline,
+                                            color =
+                                                if (selectedLibraries().contains(library)) {
+                                                    selectedColor
+                                                } else {
+                                                    Color.Transparent
+                                                },
+                                        ),
+                                ),
+                    )
                 }
+            }
+
+            AnimatedVisibility(
+                visible = isLoading,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                LoadingScreen(
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                )
             }
         }
     }
@@ -158,7 +185,6 @@ private fun LibraryTopBar(
     isLoading: Boolean,
     selectCount: () -> Int,
     searchQuery: () -> String,
-    onNavigate: () -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
     onQueryChange: (String) -> Unit,
     onRemoveSelection: () -> Unit,
@@ -173,7 +199,7 @@ private fun LibraryTopBar(
             if (selectCount() > 0) {
                 context.getString(LocaleR.string.count_selection_format, selectCount())
             } else {
-                context.getString(LocaleR.string.add_providers)
+                context.getString(LocaleR.string.my_library)
             }
         }
     }
@@ -182,7 +208,7 @@ private fun LibraryTopBar(
         modifier = modifier,
         isSearching = isSearching,
         title = title,
-        onNavigate = onNavigate,
+        onNavigate = {},
         navigationIcon = {
             if (selectCount() > 0) {
                 PlainTooltipBox(description = stringResource(LocaleR.string.cancel)) {
@@ -193,15 +219,9 @@ private fun LibraryTopBar(
                         )
                     }
                 }
-            } else {
+            } else if (isSearching) {
                 DefaultNavigationIcon(
-                    onClick = {
-                        if (isSearching) {
-                            onToggleSearchBar(false)
-                        } else {
-                            onNavigate()
-                        }
-                    },
+                    onClick = { onToggleSearchBar(false) },
                 )
             }
         },
@@ -238,9 +258,57 @@ private fun LibraryTopBar(
 @Preview
 @Composable
 private fun LibraryScreenBasePreview() {
+    var uiState by remember { mutableStateOf(LibraryUiState()) }
+    val libraries = remember { mutableStateListOf<LibraryListWithPreview>() }
+
+    LaunchedEffect(true) {
+        libraries.addAll(
+            List(10) {
+                val previews = List(3) { DBFilm(title = "Film #$it").toPreviewPoster() }
+                val description =
+                    if (Random.nextBoolean()) "Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum"
+                    else null
+                val list = LibraryList(
+                    id = it,
+                    ownerId = 1,
+                    name = "Library $it",
+                    description = description,
+                )
+
+                LibraryListWithPreview(
+                    list = list,
+                    itemsCount = Random.nextInt(1, 500),
+                    previews = previews,
+                )
+            },
+        )
+        delay(3000)
+        uiState = uiState.copy(isLoading = false)
+    }
+
     FlixclusiveTheme {
         Surface {
-            // LibraryScreen() TODO: Create test preview
+            ProvideAsyncImagePreviewHandler(
+                color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+            ) {
+                LibraryScreen(
+                    isLoading = uiState.isLoading,
+                    isSearching = uiState.isShowingSearchBar,
+                    isShowingFilterSheet = uiState.isShowingFilterSheet,
+                    libraries = { libraries },
+                    selectedLibraries = { uiState.selectedLibraries },
+                    searchQuery = { uiState.searchQuery },
+                    onUpdateFilter = {},
+                    onModifyLibrary = {},
+                    onViewLibraryContent = {},
+                    onRemoveSelection = {},
+                    onToggleSelect = {},
+                    onUnselectAll = { uiState = uiState.copy(selectedLibraries = emptyList()) },
+                    onToggleFilterSheet = { uiState = uiState.copy(isShowingFilterSheet = it) },
+                    onQueryChange = { uiState = uiState.copy(searchQuery = it) },
+                    onToggleSearchBar = { uiState = uiState.copy(isShowingSearchBar = it) },
+                )
+            }
         }
     }
 }

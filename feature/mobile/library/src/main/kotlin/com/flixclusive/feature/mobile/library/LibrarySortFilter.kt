@@ -5,37 +5,37 @@ import kotlinx.collections.immutable.persistentListOf
 import com.flixclusive.core.locale.R as LocaleR
 
 sealed interface LibrarySortFilter {
-    val direction: Direction
     val displayName: UiText
 
-    data class ModifiedAt(
-        override val direction: Direction,
-    ) : LibrarySortFilter {
+    data object ModifiedAt : LibrarySortFilter {
         override val displayName = UiText.from(LocaleR.string.modified_at)
     }
 
-    data class AddedAt(
-        override val direction: Direction,
-    ) : LibrarySortFilter {
+    data object AddedAt : LibrarySortFilter {
         override val displayName = UiText.from(LocaleR.string.added_at)
     }
 
-    data class Name(
-        override val direction: Direction,
-    ) : LibrarySortFilter {
+    data object Name : LibrarySortFilter {
         override val displayName = UiText.from(LocaleR.string.name)
     }
 
-    data class Rating(
-        override val direction: Direction,
-    ) : LibrarySortFilter {
+    data object Rating : LibrarySortFilter {
         override val displayName = UiText.from(LocaleR.string.rating)
     }
 
-    data class ReleaseDate(
-        override val direction: Direction,
-    ) : LibrarySortFilter {
+    data object ReleaseDate : LibrarySortFilter {
         override val displayName = UiText.from(LocaleR.string.release_date)
+    }
+
+    companion object {
+        val defaultFilters =
+            persistentListOf(
+                ModifiedAt,
+                AddedAt,
+                Name,
+                Rating,
+                ReleaseDate,
+            )
     }
 
     enum class Direction {
@@ -44,17 +44,5 @@ sealed interface LibrarySortFilter {
         ;
 
         fun toggle() = if (this == ASC) DESC else ASC
-    }
-
-
-    companion object {
-        val defaultFilters =
-            persistentListOf(
-                ModifiedAt(Direction.DESC),
-                AddedAt(Direction.DESC),
-                Name(Direction.DESC),
-                Rating(Direction.DESC),
-                ReleaseDate(Direction.DESC),
-            )
     }
 }

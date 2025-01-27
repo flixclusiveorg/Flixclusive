@@ -119,6 +119,7 @@
     <string name="choose_an_avatar">Choose an avatar</string>
     <string name="clear_app_cache">Clear app cache</string>
     <string name="clear_cached_links">Clear cached links</string>
+    <string name="my_library">My Library</string>
     <string name="library">Library</string>
     <string name="clear_library">Clear library</string>
     <string name="clear_search_history">Clear search history</string>
@@ -184,7 +185,7 @@
     <string name="language">Language</string>
     <string name="languages">Languages</string>
     <string name="load_url">Load URL</string>
-    <string name="loading_filters">Loading filters…</string>
+    <string name="loading">Loading…</string>
     <string name="lock">Lock</string>
     <string name="maintenance_all_caps">MAINTENANCE</string>
     <string name="manage_providers">Manage providers</string>
