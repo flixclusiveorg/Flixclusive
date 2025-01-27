@@ -20,7 +20,7 @@ import com.flixclusive.feature.mobile.provider.add.filter.RepositoriesFilters
 import com.flixclusive.feature.mobile.provider.add.filter.StatusFilters
 
 @Composable
-internal fun FilterBottomSheet(
+internal fun AddProviderFilterBottomSheet(
     filters: () -> List<AddProviderFilterType<*>>,
     onUpdateFilter: (Int, AddProviderFilterType<*>) -> Unit,
     onDismissRequest: () -> Unit,

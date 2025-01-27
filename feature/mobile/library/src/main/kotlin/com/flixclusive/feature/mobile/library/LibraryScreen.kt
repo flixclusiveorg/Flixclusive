@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -25,6 +26,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,6 +51,7 @@ import com.flixclusive.core.ui.mobile.component.topbar.rememberEnterAlwaysScroll
 import com.flixclusive.feature.mobile.library.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.feature.mobile.library.component.DefaultLibraryCardShape
 import com.flixclusive.feature.mobile.library.component.LibraryCard
+import com.flixclusive.feature.mobile.library.component.LibraryFilterBottomSheet
 import com.flixclusive.model.database.DBFilm
 import com.flixclusive.model.database.LibraryList
 import com.flixclusive.model.film.Film
@@ -76,6 +79,8 @@ private fun LibraryScreen(
     isLoading: Boolean,
     isSearching: Boolean,
     isShowingFilterSheet: Boolean,
+    currentFilter: () -> LibrarySortFilter,
+    currentDirection: () -> LibrarySortFilter.Direction,
     libraries: () -> List<LibraryListWithPreview>,
     selectedLibraries: () -> List<LibraryListWithPreview>,
     searchQuery: () -> String,
@@ -90,6 +95,8 @@ private fun LibraryScreen(
     onUpdateFilter: (LibrarySortFilter) -> Unit,
 ) {
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
+    val listState = rememberLazyListState()
+
     val selectedColor = MaterialTheme.colorScheme.tertiary
     val selectCount by remember {
         derivedStateOf { selectedLibraries().size }
@@ -123,9 +130,17 @@ private fun LibraryScreen(
                     .padding(padding),
         ) {
             LazyColumn(
+                state = listState,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.align(Alignment.TopStart),
             ) {
+                Snapshot.withoutReadObservation {
+                    listState.requestScrollToItem(
+                        index = listState.firstVisibleItemIndex,
+                        scrollOffset = listState.firstVisibleItemScrollOffset
+                    )
+                }
+
                 items(
                     items = libraries(),
                     key = { it.list.id },
@@ -175,7 +190,12 @@ private fun LibraryScreen(
     }
 
     if (isShowingFilterSheet) {
-        // TODO: Add filter sheet
+        LibraryFilterBottomSheet(
+            currentFilter = currentFilter(),
+            currentDirection = currentDirection(),
+            onDismissRequest = { onToggleFilterSheet(false) },
+            onUpdateFilter = onUpdateFilter
+        )
     }
 }
 
@@ -240,7 +260,7 @@ private fun LibraryTopBar(
                         )
                     }
                 }
-            } else if (!isLoading) {
+            } else {
                 PlainTooltipBox(description = stringResource(LocaleR.string.filter_button)) {
                     ActionButton(onClick = onShowFilterSheet) {
                         AdaptiveIcon(
@@ -260,6 +280,35 @@ private fun LibraryTopBar(
 private fun LibraryScreenBasePreview() {
     var uiState by remember { mutableStateOf(LibraryUiState()) }
     val libraries = remember { mutableStateListOf<LibraryListWithPreview>() }
+
+    val safeLibraries by remember {
+        derivedStateOf {
+            val query = uiState.searchQuery
+            val list = if (query.isNotEmpty()) {
+                libraries.filter {
+                    it.list.name.contains(query) || it.list.description?.contains(query) == true
+                }
+            } else libraries
+
+            val sortedList = list.sortedWith(
+                compareBy<LibraryListWithPreview>(
+                    selector = {
+                        when (uiState.selectedFilter) {
+                            LibrarySortFilter.Name -> it.list.name
+                            LibrarySortFilter.AddedAt -> it.list.createdAt.time
+                            LibrarySortFilter.ModifiedAt -> it.list.updatedAt.time
+                            LibrarySortFilter.ItemCount -> it.itemsCount
+                        }
+                    }
+                ).let { comparator ->
+                    if (uiState.selectedFilterDirection == LibrarySortFilter.Direction.ASC) comparator
+                    else comparator.reversed()
+                }
+            )
+
+            sortedList
+        }
+    }
 
     LaunchedEffect(true) {
         libraries.addAll(
@@ -295,10 +344,18 @@ private fun LibraryScreenBasePreview() {
                     isLoading = uiState.isLoading,
                     isSearching = uiState.isShowingSearchBar,
                     isShowingFilterSheet = uiState.isShowingFilterSheet,
-                    libraries = { libraries },
+                    currentFilter = { uiState.selectedFilter },
+                    currentDirection = { uiState.selectedFilterDirection },
+                    libraries = { safeLibraries },
                     selectedLibraries = { uiState.selectedLibraries },
                     searchQuery = { uiState.searchQuery },
-                    onUpdateFilter = {},
+                    onUpdateFilter = {
+                        if (uiState.selectedFilter == it) {
+                            uiState = uiState.copy(selectedFilterDirection = uiState.selectedFilterDirection.toggle())
+                        } else {
+                            uiState = uiState.copy(selectedFilter = it)
+                        }
+                    },
                     onModifyLibrary = {},
                     onViewLibraryContent = {},
                     onRemoveSelection = {},

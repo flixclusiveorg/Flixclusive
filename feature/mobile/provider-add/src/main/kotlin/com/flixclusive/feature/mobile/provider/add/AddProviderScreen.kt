@@ -63,7 +63,7 @@ import com.flixclusive.feature.mobile.provider.add.component.ErrorScreen
 import com.flixclusive.feature.mobile.provider.add.filter.AddProviderFilterType
 import com.flixclusive.feature.mobile.provider.add.filter.AuthorsFilters
 import com.flixclusive.feature.mobile.provider.add.filter.CommonSortFilters
-import com.flixclusive.feature.mobile.provider.add.filter.component.FilterBottomSheet
+import com.flixclusive.feature.mobile.provider.add.filter.component.AddProviderFilterBottomSheet
 import com.flixclusive.feature.mobile.provider.add.util.getErrorLog
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
@@ -306,7 +306,7 @@ internal fun AddProviderScreen(
     }
 
     if (isShowingFilterSheet) {
-        FilterBottomSheet(
+        AddProviderFilterBottomSheet(
             filters = filters,
             onDismissRequest = { onToggleFilterSheet(false) },
             onUpdateFilter = onUpdateFilter,

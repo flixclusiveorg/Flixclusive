@@ -22,7 +22,7 @@ internal class LibraryScreenViewModel @Inject constructor(
 
         _uiState.update {
             if (isUpdatingDirection) {
-                it.copy(filterDirection = it.filterDirection.toggle())
+                it.copy(selectedFilterDirection = it.selectedFilterDirection.toggle())
             } else {
                 it.copy(selectedFilter = filter)
             }
@@ -37,7 +37,7 @@ internal data class LibraryUiState(
     val isShowingFilterSheet: Boolean = false,
     val isShowingSearchBar: Boolean = false,
     val selectedFilter: LibrarySortFilter = LibrarySortFilter.ModifiedAt,
-    val filterDirection: LibrarySortFilter.Direction = LibrarySortFilter.Direction.ASC,
+    val selectedFilterDirection: LibrarySortFilter.Direction = LibrarySortFilter.Direction.ASC,
     val selectedLibraries: List<LibraryListWithPreview> = emptyList(),
 )
 

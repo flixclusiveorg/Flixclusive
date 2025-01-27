@@ -233,6 +233,7 @@
     <string name="providers_disclaimer">Providers disclaimer</string>
     <string name="randomize">Randomize</string>
     <string name="rating">Rating</string>
+    <string name="item_count">Item count</string>
     <string name="re_test">Re-test</string>
     <string name="release">RELEASE</string>
     <string name="release_date">Release date</string>

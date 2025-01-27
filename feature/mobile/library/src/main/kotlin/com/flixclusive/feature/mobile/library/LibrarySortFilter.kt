@@ -19,12 +19,8 @@ sealed interface LibrarySortFilter {
         override val displayName = UiText.from(LocaleR.string.name)
     }
 
-    data object Rating : LibrarySortFilter {
-        override val displayName = UiText.from(LocaleR.string.rating)
-    }
-
-    data object ReleaseDate : LibrarySortFilter {
-        override val displayName = UiText.from(LocaleR.string.release_date)
+    data object ItemCount : LibrarySortFilter {
+        override val displayName = UiText.from(LocaleR.string.item_count)
     }
 
     companion object {
@@ -33,8 +29,7 @@ sealed interface LibrarySortFilter {
                 ModifiedAt,
                 AddedAt,
                 Name,
-                Rating,
-                ReleaseDate,
+                ItemCount,
             )
     }
 
@@ -44,5 +39,6 @@ sealed interface LibrarySortFilter {
         ;
 
         fun toggle() = if (this == ASC) DESC else ASC
+        val isAscending get() = this == ASC
     }
 }
