@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.library
+package com.flixclusive.feature.mobile.library.manage
 
 import com.flixclusive.core.locale.UiText
 import kotlinx.collections.immutable.persistentListOf

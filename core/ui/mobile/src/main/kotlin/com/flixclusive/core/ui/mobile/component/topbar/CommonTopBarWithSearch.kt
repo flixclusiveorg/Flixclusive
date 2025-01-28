@@ -79,6 +79,7 @@ fun CommonTopBarWithSearch(
     navigationIconColor: Color = LocalContentColor.current,
     titleColor: Color = LocalContentColor.current,
     actionsColor: Color = LocalContentColor.current,
+    hideSearchButton: Boolean = false,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     title: String? = null,
     navigationIcon: @Composable () -> Unit = {
@@ -96,6 +97,7 @@ fun CommonTopBarWithSearch(
 ) {
     CommonTopBarWithSearch(
         modifier = modifier,
+        forceHideSearchButton = hideSearchButton,
         scrollBehavior = scrollBehavior,
         navigationIconColor = navigationIconColor,
         titleColor = titleColor,
@@ -121,7 +123,6 @@ fun CommonTopBarWithSearch(
                             ).copy(fontWeight = FontWeight.SemiBold),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
-                        modifier = Modifier.padding(start = 15.dp),
                     )
                 }
             } else {
@@ -141,6 +142,7 @@ fun CommonTopBarWithSearch(
     navigationIconColor: Color = LocalContentColor.current,
     titleColor: Color = LocalContentColor.current,
     actionsColor: Color = LocalContentColor.current,
+    forceHideSearchButton: Boolean = false,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     navigationIcon: @Composable () -> Unit = {
         DefaultNavigationIcon(
@@ -177,6 +179,7 @@ fun CommonTopBarWithSearch(
         actions = {
             SearchTextFieldAction(
                 isSearching = isSearching,
+                forceHideSearchButton = forceHideSearchButton,
                 searchQuery = searchQuery,
                 onQueryChange = onQueryChange,
                 onToggleSearchBar = onToggleSearchBar,
@@ -189,6 +192,7 @@ fun CommonTopBarWithSearch(
 @Composable
 private fun RowScope.SearchTextFieldAction(
     isSearching: Boolean,
+    forceHideSearchButton: Boolean,
     searchQuery: () -> String,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
@@ -202,7 +206,6 @@ private fun RowScope.SearchTextFieldAction(
         val heightModifier =
             Modifier
                 .height(getAdaptiveTopBarHeight())
-                .padding(getAdaptiveDp(8.dp))
 
         if (state) {
             Row(
@@ -215,24 +218,30 @@ private fun RowScope.SearchTextFieldAction(
                 TopBarTextField(
                     searchQuery = searchQuery,
                     onQueryChange = onQueryChange,
-                    modifier = heightModifier.weight(1F),
+                    modifier = heightModifier
+                        .padding(getAdaptiveDp(8.dp))
+                        .weight(1F),
                 )
             }
         } else {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 extraActions()
 
-                PlainTooltipBox(description = stringResource(LocaleR.string.search)) {
-                    ActionButton(
-                        onClick = { onToggleSearchBar(true) },
-                        modifier = heightModifier,
-                    ) {
-                        AdaptiveIcon(
-                            painter = painterResource(UiCommonR.drawable.search_outlined),
-                            contentDescription = stringResource(LocaleR.string.search),
-                            dp = 18.dp,
-                            increaseBy = 3.dp,
-                        )
+                AnimatedVisibility(
+                    visible = !forceHideSearchButton
+                ) {
+                    PlainTooltipBox(description = stringResource(LocaleR.string.search)) {
+                        ActionButton(
+                            onClick = { onToggleSearchBar(true) },
+                            modifier = heightModifier,
+                        ) {
+                            AdaptiveIcon(
+                                painter = painterResource(UiCommonR.drawable.search_outlined),
+                                contentDescription = stringResource(LocaleR.string.search),
+                                dp = 18.dp,
+                                increaseBy = 3.dp,
+                            )
+                        }
                     }
                 }
             }

@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.library.component
+package com.flixclusive.feature.mobile.library.manage.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
@@ -32,7 +32,7 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdapti
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.library.LibrarySortFilter
+import com.flixclusive.feature.mobile.library.manage.LibrarySortFilter
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 

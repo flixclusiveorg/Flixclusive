@@ -78,7 +78,7 @@ dependencies {
     implementation(projects.feature.mobile.providerSettings)
     implementation(projects.feature.mobile.providerTest)
     implementation(projects.feature.mobile.markdown)
-    implementation(projects.feature.mobile.library)
+    implementation(projects.feature.mobile.libraryManage)
     implementation(projects.feature.mobile.repositoryDetails)
     implementation(projects.feature.mobile.repositoryManage)
     implementation(projects.feature.mobile.search)

@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.library.component
+package com.flixclusive.feature.mobile.library.manage.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -53,8 +53,8 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdapti
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.feature.mobile.library.PreviewPoster
-import com.flixclusive.feature.mobile.library.PreviewPoster.Companion.toPreviewPoster
+import com.flixclusive.feature.mobile.library.manage.PreviewPoster
+import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.model.database.DBFilm
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR

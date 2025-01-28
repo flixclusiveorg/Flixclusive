@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.library.component
+package com.flixclusive.feature.mobile.library.manage.component
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -33,8 +33,8 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
-import com.flixclusive.feature.mobile.library.LibraryListWithPreview
-import com.flixclusive.feature.mobile.library.PreviewPoster.Companion.toPreviewPoster
+import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview
+import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.model.database.DBFilm
 import com.flixclusive.model.database.LibraryList
 import com.flixclusive.core.locale.R as LocaleR
@@ -62,7 +62,7 @@ internal fun LibraryCard(
                         hapticFeedback()
                         onLongClick()
                     },
-                    onClick = onClick
+                    onClick = onClick,
                 ),
     ) {
         Row(
@@ -91,10 +91,10 @@ internal fun LibraryCard(
                             getAdaptiveTextStyle(
                                 mode = TextStyleMode.Emphasized,
                                 style = TypographyStyle.Label,
-                                increaseBy = 2.sp
+                                increaseBy = 2.sp,
                             ),
                         overflow = TextOverflow.Ellipsis,
-                        maxLines = 5,
+                        maxLines = 3,
                     )
 
                     if (library.list.description != null) {
@@ -104,7 +104,7 @@ internal fun LibraryCard(
                                 getAdaptiveTextStyle(
                                     mode = TextStyleMode.Normal,
                                     style = TypographyStyle.Body,
-                                    increaseBy = 2.sp
+                                    increaseBy = 2.sp,
                                 ),
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 2,
@@ -122,7 +122,7 @@ internal fun LibraryCard(
                             getAdaptiveTextStyle(
                                 mode = TextStyleMode.NonEmphasized,
                                 style = TypographyStyle.Body,
-                                increaseBy = 2.sp
+                                increaseBy = 2.sp,
                             ),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 5,

@@ -143,6 +143,7 @@
     <string name="decoder_priority">Player\'s decoder priority</string>
     <string name="default_label">(default)</string>
     <string name="default_user_agent">Default user agent</string>
+    <string name="delete">Delete</string>
     <string name="delete_profile">Delete profile</string>
     <string name="delete_providers">Delete all providers</string>
     <string name="delete_repository">Delete repository</string>
@@ -260,6 +261,7 @@
     <string name="search_suggestion">Try searching \"Iron Man\"…</string>
     <string name="see_all">See all</string>
     <string name="seek_length_label">Player seek length</string>
+    <string name="multi_select">Multi-select</string>
     <string name="selected_label">Selected</string>
     <string name="servers">Servers</string>
     <string name="share_button">Share button</string>

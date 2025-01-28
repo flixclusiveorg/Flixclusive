@@ -25,7 +25,7 @@ import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.GenreScreenNavigator
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.HomeNavigator
-import com.flixclusive.feature.mobile.library.LibraryScreenNavigator
+import com.flixclusive.feature.mobile.library.manage.ManageLibraryScreenNavigator
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
 import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
@@ -84,7 +84,7 @@ internal class MobileAppNavigator(
     GenreScreenNavigator,
     GoBackAction,
     HomeNavigator,
-    LibraryScreenNavigator,
+    ManageLibraryScreenNavigator,
     OpenPinScreenAction,
     PlayerScreenNavigator,
     ProviderDetailsNavigator,

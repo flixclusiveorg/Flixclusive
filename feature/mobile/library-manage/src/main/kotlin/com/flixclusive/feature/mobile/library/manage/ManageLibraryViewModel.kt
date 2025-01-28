@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.library
+package com.flixclusive.feature.mobile.library.manage
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
-internal class LibraryScreenViewModel @Inject constructor(
+internal class ManageLibraryViewModel @Inject constructor(
 
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LibraryUiState())
@@ -36,6 +36,10 @@ internal data class LibraryUiState(
     val isLoading: Boolean = true,
     val isShowingFilterSheet: Boolean = false,
     val isShowingSearchBar: Boolean = false,
+    val isMultiSelecting: Boolean = false,
+    val isShowingOptionsSheet: Boolean = false,
+    val isEditingLibrary: Boolean = false,
+    val longClickedLibrary: LibraryListWithPreview? = null,
     val selectedFilter: LibrarySortFilter = LibrarySortFilter.ModifiedAt,
     val selectedFilterDirection: LibrarySortFilter.Direction = LibrarySortFilter.Direction.ASC,
     val selectedLibraries: List<LibraryListWithPreview> = emptyList(),
