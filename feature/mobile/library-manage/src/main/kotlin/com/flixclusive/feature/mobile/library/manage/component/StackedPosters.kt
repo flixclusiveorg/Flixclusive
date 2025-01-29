@@ -28,8 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +51,7 @@ import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHand
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.core.ui.common.util.boxShadow
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster
@@ -67,6 +68,7 @@ internal fun StackedPosters(
     previews: List<PreviewPoster>,
     modifier: Modifier = Modifier,
 ) {
+    val surface = MaterialTheme.colorScheme.surface
     val maxMainCardWidth = getAdaptiveDp(MaxMainCardWidth)
     val maxBackgroundCardWidth = maxMainCardWidth * 0.8f
     val positionX = maxBackgroundCardWidth * 0.25f
@@ -77,7 +79,11 @@ internal fun StackedPosters(
             .graphicsLayer { shadowElevation = 24f }
 
     Box(
-        modifier = modifier,
+        modifier = modifier
+            .drawWithContent {
+                drawContent()
+                drawRect(surface.copy(0.1f))
+            },
         contentAlignment = Alignment.BottomCenter,
     ) {
         // Right card
@@ -113,11 +119,14 @@ internal fun StackedPosters(
         // Main front card
         PreviewCard(
             preview = previews.getOrNull(0),
-            hasPlaceholder = true,
             modifier =
                 Modifier
                     .width(maxMainCardWidth)
-                    .graphicsLayer { shadowElevation = 16f },
+                    .boxShadow(
+                        color = MaterialTheme.colorScheme.surface.copy(0.8f),
+                        blurRadius = 6.dp,
+                        spreadRadius = 2.dp
+                    ),
         )
     }
 }
@@ -126,48 +135,46 @@ internal fun StackedPosters(
 private fun PreviewCard(
     preview: PreviewPoster?,
     modifier: Modifier = Modifier,
-    hasPlaceholder: Boolean = false,
 ) {
     val context = LocalContext.current
-    var isHidingPlaceholder by remember { mutableStateOf(false) }
+    var isHidingPlaceholder by remember { mutableStateOf(preview != null) }
 
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
-        val painter =
-            remember(preview?.posterPath) {
-                context.buildImageUrl(
-                    imagePath = preview?.posterPath,
-                    imageSize = "w300",
-                )
-            }
+        if (preview != null) {
+            val painter =
+                remember(preview.posterPath) {
+                    context.buildImageUrl(
+                        imagePath = preview.posterPath,
+                        imageSize = "w300",
+                    )
+                }
 
-        AsyncImage(
-            model = painter,
-            imageLoader = LocalContext.current.imageLoader,
-            contentScale = ContentScale.FillBounds,
-            contentDescription = stringResource(id = LocaleR.string.film_item_content_description),
-            onSuccess = { isHidingPlaceholder = true },
-            modifier =
+            AsyncImage(
+                model = painter,
+                imageLoader = LocalContext.current.imageLoader,
+                contentScale = ContentScale.FillBounds,
+                contentDescription = stringResource(id = LocaleR.string.film_item_content_description),
+                onSuccess = { isHidingPlaceholder = true },
+                modifier =
                 Modifier
                     .aspectRatio(FilmCover.Poster.ratio)
-                    .clip(MaterialTheme.shapes.extraSmall)
-                    .alpha(0.8f),
-        )
+                    .clip(MaterialTheme.shapes.extraSmall),
+            )
+        }
 
-        if (hasPlaceholder) {
-            AnimatedVisibility(
-                visible = !isHidingPlaceholder,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                label = "PlaceHolder",
-            ) {
-                PreviewPlaceholder(
-                    title = preview?.title,
-                    modifier = Modifier.aspectRatio(FilmCover.Poster.ratio),
-                )
-            }
+        AnimatedVisibility(
+            visible = !isHidingPlaceholder,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            label = "PlaceHolder",
+        ) {
+            PreviewPlaceholder(
+                title = preview?.title,
+                modifier = Modifier.aspectRatio(FilmCover.Poster.ratio),
+            )
         }
     }
 }

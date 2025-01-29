@@ -128,37 +128,39 @@ fun ActionButton(
     size: Dp = getAdaptiveDp(35.dp),
     tint: Color = LocalContentColor.current,
     backgroundColor: Color = Color.Unspecified,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .size(size)
-            .drawBehind {
-                drawCircle(
-                    color = backgroundColor,
-                    alpha = if (enabled) 1f else 0.6f
-                )
-            }
-            .clickable(
-                onClick = onClick,
-                enabled = enabled,
-                role = Role.Button,
-                interactionSource = interactionSource,
-                indication = ripple(
-                    bounded = false,
-                    radius = size / 2
-                )
-            ),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .size(size)
+                .drawBehind {
+                    drawCircle(
+                        color = backgroundColor,
+                        alpha = if (enabled) 1f else 0.6f,
+                    )
+                }.clickable(
+                    onClick = onClick,
+                    enabled = enabled,
+                    role = Role.Button,
+                    interactionSource = interactionSource,
+                    indication =
+                        ripple(
+                            bounded = false,
+                            radius = size / 2,
+                        ),
+                ),
+        contentAlignment = Alignment.Center,
     ) {
-        CompositionLocalProvider(LocalContentColor provides tint, content = content)
+        CompositionLocalProvider(
+            value = LocalContentColor provides tint.copy(if (enabled) 1f else 0.6f),
+            content = content,
+        )
     }
 }
 
 @Composable
-fun DefaultNavigationIcon(
-    onClick: () -> Unit
-) {
+fun DefaultNavigationIcon(onClick: () -> Unit) {
     PlainTooltipBox(description = stringResource(LocaleR.string.navigate_up)) {
         ActionButton(onClick = onClick) {
             AdaptiveIcon(

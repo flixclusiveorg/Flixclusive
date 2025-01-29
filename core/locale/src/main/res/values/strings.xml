@@ -9,10 +9,8 @@
     <string name="home">Home</string>
     <string name="profiles">Profiles</string>
     <string name="providers">Providers</string>
-    <string name="recently_watched">Recently Watched</string>
     <string name="search">Search</string>
     <string name="settings">Settings</string>
-    <string name="watchlist">Watchlist</string>
 
     <!--  Errors  -->
     <string name="no_changelogs">No update changelogs found</string>
@@ -323,6 +321,8 @@
     <string name="whos_watching">Who\'s watching?</string>
     <string name="modified_at">Modified at</string>
     <string name="added_at">Added at</string>
+    <string name="recently_watched">Recently Watched</string>
+    <string name="watchlist">Watchlist</string>
 
     <!--  On-boarding messages  -->
     <string name="onboarding_profile_avatar_description">The next step to personalize your journey is to pick an avatar that feels just right!</string>
@@ -425,6 +425,8 @@
     <string name="updates_out_now_provider_format">Updates for plugins are available: %1$s</string>
 
     <!--  Content descriptions  -->
+    <string name="recently_watched_description">A quick rewind of everything you’ve watched—so you can pick up where you left off or relive the best moments.</string>
+    <string name="watchlist_description">Your personal hype list! Save movies and shows you’re dying to watch, all in one place.</string>
     <string name="action_warning_format_message">Are you sure you want to do the following action: %1$s?</string>
     <string name="action_warning_default_message">This is an irreversible action, do you still wish to proceed?</string>
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>

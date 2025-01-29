@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
@@ -33,10 +34,9 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
-import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview
+import com.flixclusive.feature.mobile.library.manage.PreviewPoster
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.model.database.DBFilm
-import com.flixclusive.model.database.LibraryList
 import com.flixclusive.core.locale.R as LocaleR
 
 internal val DefaultLibraryCardShape = RoundedCornerShape(4.dp)
@@ -44,10 +44,13 @@ internal val DefaultLibraryCardShape = RoundedCornerShape(4.dp)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun LibraryCard(
-    library: LibraryListWithPreview,
+    previews: List<PreviewPoster>,
+    itemsCount: Int,
+    name: UiText,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
+    description: UiText? = null,
+    onLongClick: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val hapticFeedback = getFeedbackOnLongPress()
@@ -59,8 +62,10 @@ internal fun LibraryCard(
                 .clip(DefaultLibraryCardShape)
                 .combinedClickable(
                     onLongClick = {
-                        hapticFeedback()
-                        onLongClick()
+                        onLongClick?.let {
+                            hapticFeedback()
+                            it.invoke()
+                        }
                     },
                     onClick = onClick,
                 ),
@@ -71,7 +76,7 @@ internal fun LibraryCard(
             horizontalArrangement = Arrangement.spacedBy(25.dp),
         ) {
             StackedPosters(
-                previews = library.previews,
+                previews = previews,
                 modifier = Modifier.weight(0.25f),
             )
 
@@ -86,7 +91,7 @@ internal fun LibraryCard(
                     modifier = Modifier.align(Alignment.CenterStart),
                 ) {
                     Text(
-                        text = library.list.name,
+                        text = name.asString(),
                         style =
                             getAdaptiveTextStyle(
                                 mode = TextStyleMode.Emphasized,
@@ -97,9 +102,9 @@ internal fun LibraryCard(
                         maxLines = 3,
                     )
 
-                    if (library.list.description != null) {
+                    if (description != null) {
                         Text(
-                            text = library.list.description!!,
+                            text = description.asString(),
                             style =
                                 getAdaptiveTextStyle(
                                     mode = TextStyleMode.Normal,
@@ -115,8 +120,8 @@ internal fun LibraryCard(
                         text =
                             context.resources.getQuantityString(
                                 LocaleR.plurals.number_of_items_format,
-                                library.itemsCount,
-                                library.itemsCount,
+                                itemsCount,
+                                itemsCount,
                             ),
                         style =
                             getAdaptiveTextStyle(
@@ -159,24 +164,15 @@ private fun LibraryCardBasePreview() {
                         LibraryCard(
                             onClick = {},
                             onLongClick = {},
-                            library =
-                                LibraryListWithPreview(
-                                    list =
-                                        LibraryList(
-                                            id = 0,
-                                            name = "Test library $i",
-                                            description =
-                                                """
-                                                Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum
-                                                """.trimIndent(),
-                                            ownerId = 1,
-                                        ),
-                                    itemsCount = 1,
-                                    previews =
-                                        List(3) {
-                                            DBFilm(title = "Film #$it").toPreviewPoster()
-                                        },
+                            name = UiText.from("Test library $i"),
+                            description =
+                                UiText.from(
+                                    """
+                                    Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum
+                                    """.trimIndent(),
                                 ),
+                            itemsCount = 1,
+                            previews = List(3) { DBFilm(title = "Film #$it").toPreviewPoster() },
                         )
                     }
                 }

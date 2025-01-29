@@ -1,20 +1,16 @@
 package com.flixclusive.feature.mobile.library.manage
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -42,13 +38,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
 import com.flixclusive.core.ui.mobile.component.PlainTooltipBox
 import com.flixclusive.core.ui.mobile.component.topbar.ActionButton
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarWithSearch
@@ -60,6 +57,7 @@ import com.flixclusive.feature.mobile.library.manage.component.EditLibraryDialog
 import com.flixclusive.feature.mobile.library.manage.component.LibraryCard
 import com.flixclusive.feature.mobile.library.manage.component.LibraryFilterBottomSheet
 import com.flixclusive.feature.mobile.library.manage.component.LibraryOptionsBottomSheet
+import com.flixclusive.feature.mobile.library.manage.util.mapToListPreview
 import com.flixclusive.model.database.DBFilm
 import com.flixclusive.model.database.LibraryList
 import com.ramcosta.composedestinations.annotation.Destination
@@ -106,7 +104,7 @@ internal fun ManageLibraryScreen(
 @Composable
 private fun ManageLibraryScreen(
     uiState: () -> LibraryUiState,
-    libraries: () -> List<LibraryListWithPreview>,
+    libraries: () -> List<UiLibraryList>,
     selectedLibraries: () -> Set<LibraryListWithPreview>,
     onRemoveSelection: () -> Unit,
     onStartMultiSelecting: () -> Unit,
@@ -124,7 +122,7 @@ private fun ManageLibraryScreen(
     onUpdateFilter: (LibrarySortFilter) -> Unit,
 ) {
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
-    val listState = rememberLazyListState()
+    val listState = rememberLazyGridState()
 
     val selectedColor = MaterialTheme.colorScheme.tertiary
     val selectCount by remember {
@@ -167,18 +165,23 @@ private fun ManageLibraryScreen(
                 onUnselectAll = onUnselectAll,
             )
         },
-    ) {
-        val padding by remember {
-            derivedStateOf { it }
-        }
-
+    ) { padding ->
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize(),
         ) {
-            LazyColumn(
+            LazyVerticalGrid(
                 state = listState,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                columns =
+                    GridCells.Adaptive(
+                        getAdaptiveDp(
+                            compact = 300.dp,
+                            medium = 350.dp,
+                            expanded = 400.dp,
+                        ),
+                    ),
                 contentPadding = padding,
                 modifier = Modifier.align(Alignment.TopStart),
             ) {
@@ -191,21 +194,51 @@ private fun ManageLibraryScreen(
 
                 items(
                     items = libraries(),
-                    key = { it.list.id },
+                    key = {
+                        val preview = it.mapToListPreview()
+                        preview.list.id
+                    },
                 ) { library ->
+                    val item = library.mapToListPreview()
+                    val name =
+                        if (library is EmphasisLibraryList) {
+                            library.name
+                        } else {
+                            UiText.from((library as LibraryListWithPreview).list.name)
+                        }
+
+                    val description =
+                        if (library is EmphasisLibraryList) {
+                            library.description
+                        } else {
+                            (library as LibraryListWithPreview).list.description?.let(UiText::from)
+                        }
+
                     LibraryCard(
-                        library = library,
+                        name = name,
+                        description = description,
+                        itemsCount = item.itemsCount,
+                        previews = item.previews,
                         onClick = {
-                            if (uiState().isMultiSelecting) {
-                                onToggleSelect(library)
+                            if (library is LibraryListWithPreview) {
+                                if (uiState().isMultiSelecting) {
+                                    onToggleSelect(library)
+                                } else {
+                                    onViewLibraryContent(library.list)
+                                }
                             } else {
-                                onViewLibraryContent(library.list)
+                                // TODO: Add watchlist/recents navigation
                             }
                         },
-                        onLongClick = {
-                            onLongClickItem(library)
-                            onToggleOptionsSheet(true)
-                        },
+                        onLongClick =
+                            if (library is LibraryListWithPreview) {
+                                fun() {
+                                    onLongClickItem(library)
+                                    onToggleOptionsSheet(true)
+                                }
+                            } else {
+                                null
+                            },
                         modifier =
                             Modifier
                                 .animateItem()
@@ -224,20 +257,6 @@ private fun ManageLibraryScreen(
                                 ),
                     )
                 }
-            }
-
-            AnimatedVisibility(
-                visible = libraries().isEmpty(),
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                EmptyDataMessage(
-                    modifier =
-                        Modifier
-                            .padding(padding)
-                            .background(MaterialTheme.colorScheme.surface),
-                )
             }
         }
     }

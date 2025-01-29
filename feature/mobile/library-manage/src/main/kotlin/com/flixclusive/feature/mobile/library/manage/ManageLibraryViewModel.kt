@@ -3,12 +3,17 @@ package com.flixclusive.feature.mobile.library.manage
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.data.library.custom.LibraryListRepository
+import com.flixclusive.data.library.recent.WatchHistoryRepository
+import com.flixclusive.data.library.watchlist.WatchlistRepository
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview.Companion.toPreview
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
+import com.flixclusive.feature.mobile.library.manage.util.filter
+import com.flixclusive.feature.mobile.library.manage.util.toUiLibraryList
 import com.flixclusive.model.database.LibraryList
 import com.flixclusive.model.database.LibraryListWithItems
 import com.flixclusive.model.film.Film
@@ -24,12 +29,18 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.flixclusive.core.locale.R as LocaleR
+
+internal const val WATCHLIST_ID = -1
+internal const val RECENTLY_WATCHED_ID = -2
 
 @HiltViewModel
 internal class ManageLibraryViewModel
     @Inject
     constructor(
         private val libraryListRepository: LibraryListRepository,
+        private val watchHistoryRepository: WatchHistoryRepository,
+        private val watchlistRepository: WatchlistRepository,
         userSessionManager: UserSessionManager,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(LibraryUiState())
@@ -38,18 +49,6 @@ internal class ManageLibraryViewModel
         private var addLibJob: Job? = null
         private var removeLibJob: Job? = null
         private var removeSelectionJob: Job? = null
-
-        fun onUpdateFilter(filter: LibrarySortFilter) {
-            val isUpdatingDirection = _uiState.value.selectedFilter == filter
-
-            _uiState.update {
-                if (isUpdatingDirection) {
-                    it.copy(selectedFilterDirection = it.selectedFilterDirection.toggle())
-                } else {
-                    it.copy(selectedFilter = filter)
-                }
-            }
-        }
 
         private val currentFilterWithDirection =
             _uiState
@@ -69,12 +68,45 @@ internal class ManageLibraryViewModel
         val libraries =
             userSessionManager.currentUser
                 .filterNotNull()
-                .flatMapLatest { libraryListRepository.getUserWithListsAndItems(it.id) }
-                .filterNotNull()
-                .mapLatest { userWithLists ->
-                    userWithLists.list.map { listWithItems -> listWithItems.toPreview() }
-                }.combine(currentFilterWithDirection, ::applyListFilter)
-                .asStateFlow(viewModelScope, initialValue = emptyList())
+                .flatMapLatest {
+                    combine(
+                        libraryListRepository.getUserWithListsAndItems(it.id),
+                        watchHistoryRepository.getAllItemsInFlow(it.id),
+                        watchlistRepository.getAllItemsInFlow(it.id),
+                    ) { userWithLists, watchHistory, watchlist ->
+                        Triple(userWithLists, watchHistory, watchlist)
+                    }
+                }.mapLatest { (userWithLists, watchHistory, watchlist) ->
+                    userWithLists.list.map { listWithItems -> listWithItems.toPreview() } +
+                        watchHistory.toUiLibraryList(
+                            id = RECENTLY_WATCHED_ID,
+                            userId = userWithLists.user.id,
+                            searchableName = "recently watched",
+                            name = UiText.from(LocaleR.string.recently_watched),
+                            description = UiText.from(LocaleR.string.recently_watched_description),
+                        ) +
+                        watchlist.toUiLibraryList(
+                            id = WATCHLIST_ID,
+                            userId = userWithLists.user.id,
+                            searchableName = "watchlist",
+                            name = UiText.from(LocaleR.string.watchlist),
+                            description = UiText.from(LocaleR.string.watchlist_description),
+                        )
+                }.combine(currentFilterWithDirection) { list, filterWithDirection ->
+                    list.filter(filterWithDirection)
+                }.asStateFlow(viewModelScope, initialValue = emptyList())
+
+        fun onUpdateFilter(filter: LibrarySortFilter) {
+            val isUpdatingDirection = _uiState.value.selectedFilter == filter
+
+            _uiState.update {
+                if (isUpdatingDirection) {
+                    it.copy(selectedFilterDirection = it.selectedFilterDirection.toggle())
+                } else {
+                    it.copy(selectedFilter = filter)
+                }
+            }
+        }
 
         fun onAddLibrary(list: LibraryList) {
             if (addLibJob?.isActive == true) return
@@ -124,7 +156,6 @@ internal class ManageLibraryViewModel
         fun onStartMultiSelecting() {
             _uiState.update { it.copy(isMultiSelecting = true) }
         }
-
 
         fun onToggleSelect(item: LibraryListWithPreview) {
             _uiState.update {
@@ -185,30 +216,6 @@ internal class ManageLibraryViewModel
                 }
             }
         }
-
-        private fun applyListFilter(
-            list: List<LibraryListWithPreview>,
-            filterWithDirection: FilterWithDirection,
-        ): List<LibraryListWithPreview> {
-            return list.sortedWith(
-                compareBy<LibraryListWithPreview>(
-                    selector = {
-                        when (filterWithDirection.filter) {
-                            LibrarySortFilter.Name -> it.list.name
-                            LibrarySortFilter.AddedAt -> it.list.createdAt.time
-                            LibrarySortFilter.ModifiedAt -> it.list.updatedAt.time
-                            LibrarySortFilter.ItemCount -> it.itemsCount
-                        }
-                    },
-                ).let { comparator ->
-                    if (filterWithDirection.direction == LibrarySortFilter.Direction.ASC) {
-                        comparator
-                    } else {
-                        comparator.reversed()
-                    }
-                },
-            )
-        }
     }
 
 @Immutable
@@ -225,12 +232,14 @@ internal data class LibraryUiState(
     val selectedLibraries: Set<LibraryListWithPreview> = emptySet(),
 )
 
+internal sealed interface UiLibraryList
+
 @Immutable
 internal data class LibraryListWithPreview(
     val list: LibraryList,
     val itemsCount: Int,
     val previews: List<PreviewPoster>,
-) {
+) : UiLibraryList {
     companion object {
         fun LibraryListWithItems.toPreview(): LibraryListWithPreview {
             return LibraryListWithPreview(
@@ -259,3 +268,10 @@ internal data class PreviewPoster(
         }
     }
 }
+
+@Immutable
+internal data class EmphasisLibraryList(
+    val library: LibraryListWithPreview,
+    val name: UiText,
+    val description: UiText,
+) : UiLibraryList
