@@ -409,6 +409,8 @@
     <string name="watchlist_empty_message">Start adding now!</string>
 
     <!--  State messages with formatting  -->
+    <string name="warn_delete_library_format">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="warn_delete_selected_libraries_format">Are you sure you want to delete the selected libraries?</string>
     <string name="episode_non_existent_error_message_format">Episode %1$s doesn\'t exist on Season %2$s</string>
     <string name="extracting_from_provider_format">Extracting from %1$s…</string>
     <string name="extracting_from_web_view_provider_format">Running WebView for %1$s…</string>

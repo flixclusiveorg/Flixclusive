@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -79,7 +81,7 @@ class LibraryListItemDaoTest {
         )
 
         dao.insertItem(item)
-        dao.deleteItem(item)
+        dao.deleteItemById(item.id)
 
         val queriedItem = dao.getItem(item.id).first()
         assert(queriedItem == null)
@@ -88,20 +90,22 @@ class LibraryListItemDaoTest {
     @Test
     @Throws(Exception::class)
     fun testUpdateItemAndRead() = runTest {
-        val item = LibraryListItem(
+        var item: LibraryListItem? = LibraryListItem(
             id = defaultFilm.identifier,
             film = defaultFilm
         )
 
-        dao.insertItem(item)
+        dao.insertItem(item!!)
 
-        var list = dao.getItem(defaultFilm.identifier).first()
-        assert(list != null)
+        item = dao.getItem(defaultFilm.identifier).first()
+        assertNotNull(item)
 
         val finalName = "NEW_ID"
-        dao.updateItem(list!!.copy(id = finalName))
+        val film = item!!.copy(film = item.film.copy(id = finalName))
+        dao.updateItem(film)
 
-        list = dao.getItem(finalName).first()
-        assert(list != null)
+        item = dao.getItem(defaultFilm.identifier).first()
+        assertNotNull(item)
+        assertEquals(item!!.film.identifier, finalName)
     }
 }

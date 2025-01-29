@@ -3,6 +3,7 @@ package com.flixclusive.model.database
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Junction
 import androidx.room.PrimaryKey
 import androidx.room.Relation
@@ -18,7 +19,7 @@ data class LibraryList(
     val description: String? = null,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
-)
+) : java.io.Serializable
 
 @Entity(tableName = "library_list_items")
 data class LibraryListItem(
@@ -30,12 +31,26 @@ data class LibraryListItem(
 
 @Entity(
     tableName = "library_list_and_item_cross_ref",
-    primaryKeys = ["listId", "itemId"]
+    primaryKeys = ["listId", "itemId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = LibraryList::class,
+            parentColumns = ["listId"],
+            childColumns = ["listId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+        ForeignKey(
+            entity = LibraryListItem::class,
+            parentColumns = ["itemId"],
+            childColumns = ["itemId"],
+            onDelete = ForeignKey.RESTRICT,
+        ),
+    ],
 )
 data class LibraryListAndItemCrossRef(
     val listId: Int,
     val itemId: String,
-    val addedOn: Date = Date(),
+    val addedAt: Date = Date(),
 )
 
 data class LibraryListWithItems(

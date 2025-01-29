@@ -16,7 +16,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DefaultUserSessionManager
+internal class DefaultUserSessionManager
     @Inject
     constructor(
         private val userRepository: UserRepository,

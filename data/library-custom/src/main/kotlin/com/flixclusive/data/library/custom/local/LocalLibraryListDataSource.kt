@@ -1,6 +1,7 @@
 package com.flixclusive.data.library.custom.local
 
-import com.flixclusive.core.database.dao.LibraryListCrossRefDao
+import android.database.sqlite.SQLiteConstraintException
+import com.flixclusive.core.database.dao.LibraryListAndItemDao
 import com.flixclusive.core.database.dao.LibraryListDao
 import com.flixclusive.core.database.dao.LibraryListItemDao
 import com.flixclusive.model.database.LibraryList
@@ -17,13 +18,11 @@ internal class LocalLibraryListDataSource
     constructor(
         private val listDao: LibraryListDao,
         private val itemDao: LibraryListItemDao,
-        private val crossRefDao: LibraryListCrossRefDao,
+        private val crossRefDao: LibraryListAndItemDao,
     ) : LibraryListDataSource {
         override fun getLists(userId: Int): Flow<List<LibraryList>> = listDao.getLists(userId)
 
         override fun getList(listId: Int): Flow<LibraryList?> = listDao.getList(listId)
-
-        override fun getListWithItems(listId: Int): Flow<LibraryListWithItems?> = listDao.getListWithItems(listId)
 
         override suspend fun insertList(list: LibraryList) {
             listDao.insertList(list)
@@ -31,37 +30,51 @@ internal class LocalLibraryListDataSource
 
         override suspend fun updateList(list: LibraryList) = listDao.updateList(list)
 
-        override suspend fun deleteList(list: LibraryList) = listDao.deleteList(list)
-
         override suspend fun deleteListById(listId: Int) = listDao.deleteListById(listId)
 
         override fun getItem(itemId: String): Flow<LibraryListItem?> = itemDao.getItem(itemId)
 
-        override fun getItemWithLists(itemId: String): Flow<LibraryListItemWithLists?> =
-            itemDao.getItemWithLists(itemId)
-
-        override suspend fun insertItem(item: LibraryListItem) {
-            itemDao.insertItem(item)
-        }
-
         override suspend fun updateItem(item: LibraryListItem) = itemDao.updateItem(item)
 
-        override suspend fun deleteItem(item: LibraryListItem) = itemDao.deleteItem(item)
+        override suspend fun addItemToList(
+            listId: Int,
+            item: LibraryListItem,
+        ) {
+            itemDao.insertItem(item)
 
-        override suspend fun insertCrossRef(crossRef: LibraryListAndItemCrossRef) = crossRefDao.insertCrossRef(crossRef)
+            val crossRef =
+                LibraryListAndItemCrossRef(
+                    listId = listId,
+                    itemId = item.id,
+                )
+            crossRefDao.addItemToList(crossRef)
+        }
 
-        override suspend fun deleteCrossRef(crossRef: LibraryListAndItemCrossRef) = crossRefDao.deleteCrossRef(crossRef)
-
-        override suspend fun deleteCrossRefById(
+        override suspend fun deleteItemFromList(
             listId: Int,
             itemId: String,
-        ) = crossRefDao.deleteCrossRefById(listId, itemId)
+        ) {
+            crossRefDao.deleteItemFromList(listId = listId, itemId = itemId)
+            tryDeletingItemFromDatabase(itemId)
+        }
 
-        override fun getUserWithListsAndItems(userId: Int): Flow<UserWithLibraryListsAndItems?> =
+        override fun getItemWithLists(itemId: String): Flow<LibraryListItemWithLists?> =
+            crossRefDao.getItemWithLists(itemId)
+
+        override fun getListWithItems(listId: Int): Flow<LibraryListWithItems?> = crossRefDao.getListWithItems(listId)
+
+        override fun getUserWithListsAndItems(userId: Int): Flow<UserWithLibraryListsAndItems> =
             crossRefDao.getUserWithListsAndItems(userId)
 
-        override fun getItemAddedDetails(
+        override fun getCrossRef(
             listId: Int,
             itemId: String,
-        ): Flow<LibraryListAndItemCrossRef?> = crossRefDao.getItemAddedDetails(listId, itemId)
+        ): Flow<LibraryListAndItemCrossRef?> = crossRefDao.getCrossRef(listId, itemId)
+
+        private suspend fun tryDeletingItemFromDatabase(itemId: String) {
+            try {
+                itemDao.deleteItemById(itemId = itemId)
+            } catch (_: SQLiteConstraintException) {
+            }
+        }
     }

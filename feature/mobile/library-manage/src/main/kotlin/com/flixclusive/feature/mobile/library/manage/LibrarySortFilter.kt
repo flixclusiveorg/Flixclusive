@@ -4,7 +4,7 @@ import com.flixclusive.core.locale.UiText
 import kotlinx.collections.immutable.persistentListOf
 import com.flixclusive.core.locale.R as LocaleR
 
-sealed interface LibrarySortFilter {
+internal sealed interface LibrarySortFilter {
     val displayName: UiText
 
     data object ModifiedAt : LibrarySortFilter {
@@ -42,3 +42,8 @@ sealed interface LibrarySortFilter {
         val isAscending get() = this == ASC
     }
 }
+
+internal data class FilterWithDirection(
+    val filter: LibrarySortFilter,
+    val direction: LibrarySortFilter.Direction
+)

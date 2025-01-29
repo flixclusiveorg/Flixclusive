@@ -48,12 +48,11 @@ internal class FakeLibraryListDataSource : LibraryListDataSource {
 
     override suspend fun updateList(list: LibraryList) = insertList(list)
 
-    override suspend fun deleteList(list: LibraryList) {
-        libraryLists.update { current -> current.filterNot { it.id == list.id } }
-    }
-
     override suspend fun deleteListById(listId: Int) {
         libraryLists.update { current -> current.filterNot { it.id == listId } }
+        crossRefs.update { current ->
+            current.filterNot { it.listId == listId }
+        }
     }
 
     // List Item operations
@@ -72,39 +71,33 @@ internal class FakeLibraryListDataSource : LibraryListDataSource {
             item?.let { LibraryListItemWithLists(it, itemLists) }
         }
 
-    override suspend fun insertItem(item: LibraryListItem) {
+    override suspend fun addItemToList(
+        listId: Int,
+        item: LibraryListItem,
+    ) {
+        libraryListItems.update { current ->
+            current.filterNot { it.id == item.id } + item
+        }
+
+        val crossRef = LibraryListAndItemCrossRef(listId = listId, itemId = item.id)
+        crossRefs.update { current ->
+            current.filterNot {
+                it.listId == listId && it.itemId == item.id
+            } + crossRef
+        }
+    }
+
+    override suspend fun updateItem(item: LibraryListItem) {
         libraryListItems.update { current ->
             current.filterNot { it.id == item.id } + item
         }
     }
 
-    override suspend fun updateItem(item: LibraryListItem) = insertItem(item)
-
-    override suspend fun deleteItem(item: LibraryListItem) {
-        libraryListItems.update { current -> current.filterNot { it.id == item.id } }
-    }
-
-    // Cross Reference operations
-    override suspend fun insertCrossRef(crossRef: LibraryListAndItemCrossRef) {
-        crossRefs.update { current ->
-            current.filterNot {
-                it.listId == crossRef.listId && it.itemId == crossRef.itemId
-            } + crossRef
-        }
-    }
-
-    override suspend fun deleteCrossRef(crossRef: LibraryListAndItemCrossRef) {
-        crossRefs.update { current ->
-            current.filterNot {
-                it.listId == crossRef.listId && it.itemId == crossRef.itemId
-            }
-        }
-    }
-
-    override suspend fun deleteCrossRefById(
+    override suspend fun deleteItemFromList(
         listId: Int,
         itemId: String,
     ) {
+        libraryListItems.update { current -> current.filterNot { it.id == itemId } }
         crossRefs.update { current ->
             current.filterNot {
                 it.listId == listId && it.itemId == itemId
@@ -112,7 +105,7 @@ internal class FakeLibraryListDataSource : LibraryListDataSource {
         }
     }
 
-    override fun getUserWithListsAndItems(userId: Int): Flow<UserWithLibraryListsAndItems?> =
+    override fun getUserWithListsAndItems(userId: Int): Flow<UserWithLibraryListsAndItems> =
         combine(
             libraryLists,
             crossRefs,
@@ -133,7 +126,7 @@ internal class FakeLibraryListDataSource : LibraryListDataSource {
             UserWithLibraryListsAndItems(user, listsWithItems)
         }
 
-    override fun getItemAddedDetails(
+    override fun getCrossRef(
         listId: Int,
         itemId: String,
     ): Flow<LibraryListAndItemCrossRef?> =

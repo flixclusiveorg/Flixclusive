@@ -31,10 +31,12 @@ internal object Schema7to8 : Migration(7, 8) {
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `library_list_and_item_cross_ref` (
-                `addedOn` INTEGER NOT NULL,
+                `addedAt` INTEGER NOT NULL,
                 `listId` INTEGER NOT NULL,
                 `itemId` TEXT NOT NULL,
-                PRIMARY KEY(`listId`, `itemId`)
+                PRIMARY KEY(`listId`, `itemId`),
+                FOREIGN KEY(`itemId`) REFERENCES `library_list_items`(`itemId`) ON DELETE RESTRICT,
+                FOREIGN KEY(`listId`) REFERENCES `library_lists`(`listId`) ON DELETE CASCADE
             )
             """.trimIndent()
         )

@@ -1,6 +1,9 @@
 package com.flixclusive.core.database.di
 
 import com.flixclusive.core.database.AppDatabase
+import com.flixclusive.core.database.dao.LibraryListAndItemDao
+import com.flixclusive.core.database.dao.LibraryListDao
+import com.flixclusive.core.database.dao.LibraryListItemDao
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.database.dao.WatchHistoryDao
@@ -32,4 +35,19 @@ internal object DaoModule {
     fun providesSearchHistoryDao(
         database: AppDatabase,
     ): SearchHistoryDao = database.searchHistoryDao()
+
+    @Provides
+    fun providesLibraryListDao(
+        database: AppDatabase,
+    ): LibraryListDao = database.libraryListDao()
+
+    @Provides
+    fun providesLibraryListItemDao(
+        database: AppDatabase,
+    ): LibraryListItemDao = database.libraryListItemDao()
+
+    @Provides
+    fun providesLibraryListCrossRefDao(
+        database: AppDatabase,
+    ): LibraryListAndItemDao = database.libraryListCrossRefDao()
 }

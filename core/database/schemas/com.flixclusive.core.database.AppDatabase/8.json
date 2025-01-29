@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 8,
-    "identityHash": "59352811ba35236055cacac7a8571ee6",
+    "identityHash": "ea491f064f529e9d5ddbecbd88771ce8",
     "entities": [
       {
         "tableName": "library_lists",
@@ -82,7 +82,7 @@
       },
       {
         "tableName": "library_list_and_item_cross_ref",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`listId` INTEGER NOT NULL, `itemId` TEXT NOT NULL, `addedOn` INTEGER NOT NULL, PRIMARY KEY(`listId`, `itemId`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`listId` INTEGER NOT NULL, `itemId` TEXT NOT NULL, `addedAt` INTEGER NOT NULL, PRIMARY KEY(`listId`, `itemId`), FOREIGN KEY(`listId`) REFERENCES `library_lists`(`listId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`itemId`) REFERENCES `library_list_items`(`itemId`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
         "fields": [
           {
             "fieldPath": "listId",
@@ -97,8 +97,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "addedOn",
-            "columnName": "addedOn",
+            "fieldPath": "addedAt",
+            "columnName": "addedAt",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -111,7 +111,30 @@
           ]
         },
         "indices": [],
-        "foreignKeys": []
+        "foreignKeys": [
+          {
+            "table": "library_lists",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "listId"
+            ],
+            "referencedColumns": [
+              "listId"
+            ]
+          },
+          {
+            "table": "library_list_items",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "itemId"
+            ],
+            "referencedColumns": [
+              "itemId"
+            ]
+          }
+        ]
       },
       {
         "tableName": "search_history",
@@ -304,7 +327,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '59352811ba35236055cacac7a8571ee6')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ea491f064f529e9d5ddbecbd88771ce8')"
     ]
   }
 }

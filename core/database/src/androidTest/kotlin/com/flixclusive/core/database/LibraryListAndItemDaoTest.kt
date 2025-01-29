@@ -3,7 +3,7 @@ package com.flixclusive.core.database
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.flixclusive.core.database.dao.LibraryListCrossRefDao
+import com.flixclusive.core.database.dao.LibraryListAndItemDao
 import com.flixclusive.core.database.dao.LibraryListDao
 import com.flixclusive.core.database.dao.LibraryListItemDao
 import com.flixclusive.model.database.DBFilm
@@ -25,9 +25,9 @@ import org.junit.runner.RunWith
 import java.util.Date
 
 @RunWith(AndroidJUnit4::class)
-class LibraryListCrossRefDaoTest {
+class LibraryListAndItemDaoTest {
     private lateinit var database: AppDatabase
-    private lateinit var crossRefDao: LibraryListCrossRefDao
+    private lateinit var crossRefDao: LibraryListAndItemDao
     private lateinit var listDao: LibraryListDao
     private lateinit var itemDao: LibraryListItemDao
 
@@ -69,6 +69,7 @@ class LibraryListCrossRefDaoTest {
     }
 
     @Test
+    @Throws(Exception::class)
     fun insertAndDeleteCrossRef() =
         runTest {
             val list =
@@ -99,7 +100,7 @@ class LibraryListCrossRefDaoTest {
                     listId = list.id,
                     itemId = film.identifier,
                 )
-            crossRefDao.insertCrossRef(crossRef)
+            crossRefDao.addItemToList(crossRef)
 
             val userWithLists = crossRefDao.getUserWithListsAndItems(defaultUser.id).first()
             assertNotNull(userWithLists)
@@ -111,7 +112,10 @@ class LibraryListCrossRefDaoTest {
                     .isNotEmpty(),
             )
 
-            crossRefDao.deleteCrossRef(crossRef)
+            crossRefDao.deleteItemFromList(
+                listId = crossRef.listId,
+                itemId = crossRef.itemId,
+            )
 
             val updatedUserWithLists = crossRefDao.getUserWithListsAndItems(defaultUser.id).first()
             assertNotNull(updatedUserWithLists)
@@ -125,6 +129,7 @@ class LibraryListCrossRefDaoTest {
         }
 
     @Test
+    @Throws(Exception::class)
     fun deleteCrossRefById() =
         runTest {
             val list =
@@ -156,9 +161,9 @@ class LibraryListCrossRefDaoTest {
                     listId = list.id,
                     itemId = film.identifier,
                 )
-            crossRefDao.insertCrossRef(crossRef)
+            crossRefDao.addItemToList(crossRef)
 
-            crossRefDao.deleteCrossRefById(list.id, film.identifier)
+            crossRefDao.deleteItemFromList(list.id, film.identifier)
 
             val userWithLists = crossRefDao.getUserWithListsAndItems(defaultUser.id).first()
             assertNotNull(userWithLists)
@@ -172,6 +177,7 @@ class LibraryListCrossRefDaoTest {
         }
 
     @Test
+    @Throws(Exception::class)
     fun getUserWithListsAndItems() =
         runTest {
             val lists =
@@ -216,7 +222,7 @@ class LibraryListCrossRefDaoTest {
             lists.forEach { listDao.insertList(it) }
             items.forEach {
                 itemDao.insertItem(it)
-                crossRefDao.insertCrossRef(
+                crossRefDao.addItemToList(
                     LibraryListAndItemCrossRef(
                         listId = 2,
                         itemId = it.id,
@@ -230,4 +236,46 @@ class LibraryListCrossRefDaoTest {
             assertEquals(2, userWithLists.list[1].items.size)
             assertEquals(0, userWithLists.list[0].items.size)
         }
+
+    @Test
+    @Throws(Exception::class)
+    fun deletingItemShouldNotClearCrossRefsTable() = runTest {
+        val itemId = "1"
+        itemDao.insertItem(
+            LibraryListItem(
+                id = itemId,
+                film = defaultFilm.copy(id = itemId)
+            )
+        )
+
+        repeat(20) { listId ->
+            listDao.insertList(
+                LibraryList(
+                    id = listId + 1,
+                    ownerId = defaultUser.id,
+                    name = "Sample custom list #${listId + 1}"
+                )
+            )
+        }
+
+        repeat(1) {
+            crossRefDao.addItemToList(
+                LibraryListAndItemCrossRef(
+                    listId = it + 1,
+                    itemId = itemId
+                )
+            )
+        }
+
+
+        var userWithLists = crossRefDao.getUserWithListsAndItems(defaultUser.id).first()
+        assertNotNull(userWithLists)
+        assertTrue(userWithLists!!.list.isNotEmpty())
+
+        itemDao.deleteItemById(itemId)
+
+        userWithLists = crossRefDao.getUserWithListsAndItems(defaultUser.id).first()
+        assertNotNull(userWithLists)
+        assertTrue(userWithLists!!.list.all { it.items.isNotEmpty() })
+    }
 }

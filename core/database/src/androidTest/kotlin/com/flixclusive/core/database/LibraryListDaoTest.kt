@@ -65,7 +65,7 @@ class LibraryListDaoTest {
         )
 
         dao.insertList(list)
-        dao.deleteList(list)
+        dao.deleteListById(list.id)
         val queriedList = dao.getList(list.id).first()
 
         assert(queriedList == null)

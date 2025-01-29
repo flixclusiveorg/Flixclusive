@@ -2,7 +2,6 @@ package com.flixclusive.data.library.custom
 
 import com.flixclusive.model.database.DBFilm
 import com.flixclusive.model.database.LibraryList
-import com.flixclusive.model.database.LibraryListAndItemCrossRef
 import com.flixclusive.model.database.LibraryListItem
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import kotlinx.coroutines.flow.first
@@ -51,7 +50,7 @@ internal class DefaultLibraryListRepositoryTest {
         runTest {
             val testList = createTestLibraryList(1)
             repository.insertList(testList)
-            repository.deleteList(testList)
+            repository.deleteListById(testList.id)
 
             val lists = repository.getLists(1).first()
             assertTrue(lists.isEmpty())
@@ -64,8 +63,7 @@ internal class DefaultLibraryListRepositoryTest {
             val testItem = createTestListItem("item1")
 
             repository.insertList(testList)
-            repository.insertItem(testItem)
-            repository.insertCrossRef(LibraryListAndItemCrossRef(1, "item1"))
+            repository.addItemToList(testList.id, testItem)
 
             val listWithItems = repository.getListWithItems(1).first()
             assertEquals(1, listWithItems?.items?.size)
@@ -79,9 +77,8 @@ internal class DefaultLibraryListRepositoryTest {
             val testItem = createTestListItem("item1")
 
             repository.insertList(testList)
-            repository.insertItem(testItem)
-            repository.insertCrossRef(LibraryListAndItemCrossRef(1, "item1"))
-            repository.deleteCrossRefById(1, "item1")
+            repository.addItemToList(testList.id, testItem)
+            repository.deleteItemFromList(1, "item1")
 
             val listWithItems = repository.getListWithItems(1).first()
             assertTrue(listWithItems?.items?.isEmpty() ?: false)
@@ -94,18 +91,16 @@ internal class DefaultLibraryListRepositoryTest {
             val testItem = createTestListItem("item1")
 
             repository.insertList(testList)
-            repository.insertItem(testItem)
-            repository.insertCrossRef(LibraryListAndItemCrossRef(1, "item1"))
+            repository.addItemToList(testList.id, testItem)
 
             val userWithData = repository.getUserWithListsAndItems(1).first()
-            assertEquals(1, userWithData?.list?.size)
+            assertEquals(1, userWithData.list.size)
             assertEquals(
                 1,
                 userWithData
-                    ?.list
-                    ?.get(0)
-                    ?.items
-                    ?.size,
+                    .list[0]
+                    .items
+                    .size,
             )
         }
 

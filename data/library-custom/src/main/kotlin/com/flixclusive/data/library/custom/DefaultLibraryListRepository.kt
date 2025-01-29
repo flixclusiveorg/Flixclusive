@@ -8,8 +8,9 @@ import com.flixclusive.model.database.LibraryListItemWithLists
 import com.flixclusive.model.database.LibraryListWithItems
 import com.flixclusive.model.database.UserWithLibraryListsAndItems
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class DefaultLibraryListRepository(
+internal class DefaultLibraryListRepository @Inject constructor(
     private val dataSource: LibraryListDataSource,
 ) : LibraryListRepository {
     // Library List operations
@@ -23,36 +24,34 @@ class DefaultLibraryListRepository(
 
     override suspend fun updateList(list: LibraryList) = dataSource.updateList(list)
 
-    override suspend fun deleteList(list: LibraryList) = dataSource.deleteList(list)
-
-    override suspend fun deleteListById(listId: Int) = dataSource.deleteListById(listId)
+    override suspend fun deleteListById(listId: Int) {
+        dataSource.deleteListById(listId)
+    }
 
     // List Item operations
     override fun getItem(itemId: String): Flow<LibraryListItem?> = dataSource.getItem(itemId)
 
     override fun getItemWithLists(itemId: String): Flow<LibraryListItemWithLists?> = dataSource.getItemWithLists(itemId)
 
-    override suspend fun insertItem(item: LibraryListItem) = dataSource.insertItem(item)
+    override suspend fun addItemToList(
+        listId: Int,
+        item: LibraryListItem,
+    ) = dataSource.addItemToList(listId, item)
 
     override suspend fun updateItem(item: LibraryListItem) = dataSource.updateItem(item)
 
-    override suspend fun deleteItem(item: LibraryListItem) = dataSource.deleteItem(item)
-
-    // Cross Reference operations
-    override suspend fun insertCrossRef(crossRef: LibraryListAndItemCrossRef) = dataSource.insertCrossRef(crossRef)
-
-    override suspend fun deleteCrossRef(crossRef: LibraryListAndItemCrossRef) = dataSource.deleteCrossRef(crossRef)
-
-    override suspend fun deleteCrossRefById(
+    override suspend fun deleteItemFromList(
         listId: Int,
         itemId: String,
-    ) = dataSource.deleteCrossRefById(listId, itemId)
+    ) {
+        dataSource.deleteItemFromList(listId, itemId)
+    }
 
-    override fun getUserWithListsAndItems(userId: Int): Flow<UserWithLibraryListsAndItems?> =
+    override fun getUserWithListsAndItems(userId: Int): Flow<UserWithLibraryListsAndItems> =
         dataSource.getUserWithListsAndItems(userId)
 
-    override fun getItemAddedDetails(
+    override fun getCrossRef(
         listId: Int,
         itemId: String,
-    ): Flow<LibraryListAndItemCrossRef?> = dataSource.getItemAddedDetails(listId, itemId)
+    ): Flow<LibraryListAndItemCrossRef?> = dataSource.getCrossRef(listId, itemId)
 }

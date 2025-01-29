@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.flixclusive.core.database.dao.LibraryListCrossRefDao
+import com.flixclusive.core.database.dao.LibraryListAndItemDao
 import com.flixclusive.core.database.dao.LibraryListDao
 import com.flixclusive.core.database.dao.LibraryListItemDao
 import com.flixclusive.core.database.dao.SearchHistoryDao
@@ -64,7 +64,7 @@ internal abstract class AppDatabase : RoomDatabase() {
 
     abstract fun libraryListItemDao(): LibraryListItemDao
 
-    abstract fun libraryListCrossRefDao(): LibraryListCrossRefDao
+    abstract fun libraryListCrossRefDao(): LibraryListAndItemDao
 
     companion object {
         @Volatile

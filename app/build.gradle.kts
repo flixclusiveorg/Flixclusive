@@ -123,4 +123,5 @@ dependencies {
     implementation(libs.core.splashscreen)
     implementation(libs.hilt.navigation)
     implementation(libs.lifecycle.runtimeCompose)
+    implementation(libs.kotlinx.immutables)
 }

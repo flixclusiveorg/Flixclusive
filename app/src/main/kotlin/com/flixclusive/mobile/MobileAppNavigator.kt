@@ -58,6 +58,7 @@ import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestinati
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
+import com.flixclusive.model.database.LibraryList
 import com.flixclusive.model.database.User
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode
@@ -152,6 +153,10 @@ internal class MobileAppNavigator(
 //    override fun checkForUpdates() {
 //        navController.navigateIfResumed(UpdateDialogDestination within destination.navGraph())
 //    }
+
+    override fun openLibraryDetails(list: LibraryList) {
+        // TODO("Not yet implemented")
+    }
 
     override fun openUpdateScreen(
         newVersion: String,

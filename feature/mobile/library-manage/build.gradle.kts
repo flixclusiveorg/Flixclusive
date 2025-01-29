@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.flixclusive.feature)
     alias(libs.plugins.flixclusive.compose)
     alias(libs.plugins.flixclusive.destinations)
+    alias(libs.plugins.flixclusive.testing)
 }
 
 android {
@@ -12,6 +13,7 @@ dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.ui.mobile)
     implementation(projects.data.libraryRecent)
+    implementation(projects.data.libraryCustom)
     implementation(projects.domain.user)
 
     implementation(libs.coil.compose)
