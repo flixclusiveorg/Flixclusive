@@ -116,6 +116,7 @@ internal fun SplashScreen(
                     }
 
                     LaunchedEffect(
+                        uiState,
                         updateStatus,
                         configurationStatus,
                         areAllPermissionsGranted,
@@ -152,7 +153,7 @@ internal fun SplashScreen(
                                 }
                             } else if (noUsersFound) {
                                 navigator.openAddProfileScreen(isInitializing = true)
-                            } else if (isNavigatingToHome && !hasOldUserSession) {
+                            } else if (!hasOldUserSession) {
                                 navigator.openProfilesScreen(shouldPopBackStack = true)
                             } else if (isNavigatingToHome) {
                                 if (updateHasErrors) {
