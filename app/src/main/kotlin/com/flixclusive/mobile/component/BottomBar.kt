@@ -49,6 +49,7 @@ import com.flixclusive.AppNavigationItem
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.mobile.MobileNavGraphs
 import com.ramcosta.composedestinations.spec.NavGraphSpec
+import kotlinx.collections.immutable.persistentListOf
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -186,7 +187,7 @@ internal fun getProperInsets(): WindowInsets {
 }
 
 private val mobileNavigationItems =
-    listOf(
+    persistentListOf(
         AppNavigationItem(
             screen = MobileNavGraphs.home,
             iconSelected = UiCommonR.drawable.home,

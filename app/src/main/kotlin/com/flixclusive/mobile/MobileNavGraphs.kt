@@ -72,7 +72,7 @@ internal object MobileNavGraphs {
 
             override val destinationsByRoute =
                 listOf<DestinationSpec<*>>(
-                    // TODO: Add nested library destinations here
+                    ManageLibraryScreenDestination,
                 ).routedIn(this)
                     .associateBy { it.route }
         }
