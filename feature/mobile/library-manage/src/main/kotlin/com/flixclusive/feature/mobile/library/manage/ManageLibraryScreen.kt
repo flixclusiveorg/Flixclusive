@@ -1,21 +1,22 @@
 package com.flixclusive.feature.mobile.library.manage
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,23 +40,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.PlainTooltipBox
-import com.flixclusive.core.ui.mobile.component.topbar.ActionButton
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarWithSearch
-import com.flixclusive.core.ui.mobile.component.topbar.DefaultNavigationIcon
 import com.flixclusive.core.ui.mobile.component.topbar.rememberEnterAlwaysScrollBehavior
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
+import com.flixclusive.feature.mobile.library.manage.component.CreateLibraryDialog
 import com.flixclusive.feature.mobile.library.manage.component.DefaultLibraryCardShape
 import com.flixclusive.feature.mobile.library.manage.component.EditLibraryDialog
 import com.flixclusive.feature.mobile.library.manage.component.LibraryCard
 import com.flixclusive.feature.mobile.library.manage.component.LibraryFilterBottomSheet
 import com.flixclusive.feature.mobile.library.manage.component.LibraryOptionsBottomSheet
+import com.flixclusive.feature.mobile.library.manage.component.ManageLibraryTopBar
+import com.flixclusive.feature.mobile.library.manage.component.TopBarNavigationState
 import com.flixclusive.feature.mobile.library.manage.util.mapToListPreview
 import com.flixclusive.model.database.DBFilm
 import com.flixclusive.model.database.LibraryList
@@ -97,7 +95,9 @@ internal fun ManageLibraryScreen(
         onToggleSearchBar = viewModel::onToggleSearchBar,
         onToggleOptionsSheet = viewModel::onToggleOptionsSheet,
         onToggleEditDialog = viewModel::onToggleEditDialog,
+        onToggleCreateDialog = viewModel::onToggleCreateDialog,
         onSaveEdits = viewModel::onSaveEdits,
+        onCreate = viewModel::onAdd,
     )
 }
 
@@ -110,7 +110,9 @@ private fun ManageLibraryScreen(
     onStartMultiSelecting: () -> Unit,
     onUnselectAll: () -> Unit,
     onSaveEdits: (LibraryList) -> Unit,
+    onCreate: (String, String?) -> Unit,
     onToggleEditDialog: (Boolean) -> Unit,
+    onToggleCreateDialog: (Boolean) -> Unit,
     onRemoveLongClickedLibrary: () -> Unit,
     onViewLibraryContent: (LibraryList) -> Unit,
     onQueryChange: (String) -> Unit,
@@ -122,6 +124,13 @@ private fun ManageLibraryScreen(
     onUpdateFilter: (LibrarySortFilter) -> Unit,
 ) {
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
+    var isFabExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(scrollBehavior.state.heightOffset) {
+        delay(800)
+        isFabExpanded = scrollBehavior.state.heightOffset < 0f
+    }
+
     val listState = rememberLazyGridState()
 
     val selectedColor = MaterialTheme.colorScheme.tertiary
@@ -137,7 +146,27 @@ private fun ManageLibraryScreen(
     var showDeleteSelectionAlert by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .padding(LocalGlobalScaffoldPadding.current),
+        contentWindowInsets = WindowInsets(0.dp),
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { onToggleCreateDialog(true) },
+                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
+                shape = MaterialTheme.shapes.medium,
+                expanded = isFabExpanded,
+                text = {
+                    Text(text = stringResource(LocaleR.string.create_a_library))
+                },
+                icon = {
+                    Icon(
+                        painter = painterResource(id = UiCommonR.drawable.round_add_24),
+                        contentDescription = stringResource(LocaleR.string.plus_button_content_desc),
+                    )
+                },
+            )
+        },
         topBar = {
             val navigationState by remember {
                 derivedStateOf {
@@ -220,14 +249,17 @@ private fun ManageLibraryScreen(
                         itemsCount = item.itemsCount,
                         previews = item.previews,
                         onClick = {
-                            if (library is LibraryListWithPreview) {
-                                if (uiState().isMultiSelecting) {
-                                    onToggleSelect(library)
-                                } else {
-                                    onViewLibraryContent(library.list)
+                            when (library) {
+                                is LibraryListWithPreview -> {
+                                    if (uiState().isMultiSelecting) {
+                                        onToggleSelect(library)
+                                    } else {
+                                        onViewLibraryContent(library.list)
+                                    }
                                 }
-                            } else {
-                                // TODO: Add watchlist/recents navigation
+                                is EmphasisLibraryList -> {
+                                    // TODO: Add watchlist/recents navigation
+                                }
                             }
                         },
                         onLongClick =
@@ -273,7 +305,10 @@ private fun ManageLibraryScreen(
     if (uiState().isShowingOptionsSheet) {
         LibraryOptionsBottomSheet(
             onEdit = { onToggleEditDialog(true) },
-            onDelete = { showDeleteLibraryAlert = true },
+            onDelete = {
+                showDeleteLibraryAlert = true
+                onToggleOptionsSheet(false)
+            },
             onDismissRequest = { onToggleOptionsSheet(false) },
         )
     }
@@ -283,6 +318,13 @@ private fun ManageLibraryScreen(
             library = uiState().longClickedLibrary!!.list,
             onSave = onSaveEdits,
             onCancel = { onToggleEditDialog(false) },
+        )
+    }
+
+    if (uiState().isCreatingLibrary) {
+        CreateLibraryDialog(
+            onCreate = onCreate,
+            onCancel = { onToggleCreateDialog(false) },
         )
     }
 
@@ -302,119 +344,16 @@ private fun ManageLibraryScreen(
             onConfirm = {
                 if (showDeleteLibraryAlert) {
                     onRemoveLongClickedLibrary()
-                    showDeleteLibraryAlert = false
                 } else {
                     onRemoveSelection()
-                    showDeleteSelectionAlert = false
                 }
             },
+            onDismiss = {
+                showDeleteLibraryAlert = false
+                showDeleteSelectionAlert = false
+            }
         )
     }
-}
-
-private enum class TopBarNavigationState {
-    Default,
-    Selecting,
-    Searching,
-}
-
-@Composable
-private fun ManageLibraryTopBar(
-    navigationState: TopBarNavigationState,
-    scrollBehavior: TopAppBarScrollBehavior,
-    isListEmpty: Boolean,
-    selectCount: () -> Int,
-    searchQuery: () -> String,
-    onToggleSearchBar: (Boolean) -> Unit,
-    onQueryChange: (String) -> Unit,
-    onRemoveSelection: () -> Unit,
-    onStartMultiSelecting: () -> Unit,
-    onShowFilterSheet: () -> Unit,
-    onUnselectAll: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val context = LocalContext.current
-    val title =
-        if (navigationState == TopBarNavigationState.Selecting) {
-            context.getString(LocaleR.string.count_selection_format, selectCount())
-        } else {
-            context.getString(LocaleR.string.my_library)
-        }
-
-    CommonTopBarWithSearch(
-        modifier = modifier,
-        isSearching = navigationState == TopBarNavigationState.Searching,
-        title = title,
-        onNavigate = {},
-        navigationIcon = {
-            AnimatedContent(
-                targetState = navigationState,
-            ) { state ->
-                if (state == TopBarNavigationState.Selecting) {
-                    PlainTooltipBox(description = stringResource(LocaleR.string.cancel)) {
-                        ActionButton(onClick = onUnselectAll) {
-                            AdaptiveIcon(
-                                painter = painterResource(UiCommonR.drawable.round_close_24),
-                                contentDescription = stringResource(LocaleR.string.cancel),
-                            )
-                        }
-                    }
-                } else if (state == TopBarNavigationState.Searching) {
-                    DefaultNavigationIcon(
-                        onClick = { onToggleSearchBar(false) },
-                    )
-                }
-            }
-        },
-        searchQuery = searchQuery,
-        onToggleSearchBar = onToggleSearchBar,
-        onQueryChange = onQueryChange,
-        scrollBehavior = scrollBehavior,
-        hideSearchButton = navigationState != TopBarNavigationState.Default || isListEmpty,
-        extraActions = {
-            AnimatedContent(
-                targetState = navigationState,
-            ) { state ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (state == TopBarNavigationState.Selecting && !isListEmpty) {
-                        PlainTooltipBox(description = stringResource(LocaleR.string.remove)) {
-                            ActionButton(
-                                onClick = onRemoveSelection,
-                                enabled = selectCount() > 0,
-                            ) {
-                                AdaptiveIcon(
-                                    painter = painterResource(UiCommonR.drawable.delete),
-                                    contentDescription = stringResource(LocaleR.string.remove),
-                                    dp = 24.dp,
-                                )
-                            }
-                        }
-                    } else if (!isListEmpty) {
-                        PlainTooltipBox(description = stringResource(LocaleR.string.filter_button)) {
-                            ActionButton(onClick = onShowFilterSheet) {
-                                AdaptiveIcon(
-                                    painter = painterResource(UiCommonR.drawable.filter_list),
-                                    contentDescription = stringResource(LocaleR.string.filter_button),
-                                    dp = 24.dp,
-                                )
-                            }
-                        }
-
-                        PlainTooltipBox(description = stringResource(LocaleR.string.multi_select)) {
-                            ActionButton(onClick = onStartMultiSelecting) {
-                                AdaptiveIcon(
-                                    painter = painterResource(UiCommonR.drawable.select),
-                                    contentDescription = stringResource(LocaleR.string.multi_select),
-                                    tint = LocalContentColor.current.onMediumEmphasis(0.8F),
-                                    dp = 24.dp,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        },
-    )
 }
 
 @Preview
@@ -544,6 +483,8 @@ private fun ManageLibraryScreenBasePreview() {
                                 )
                             }
                     },
+                    onCreate = { _, _ -> },
+                    onToggleCreateDialog = {},
                     onSaveEdits = {
                         val index = libraries.indexOf(uiState.longClickedLibrary)
                         val libraryWithPreview = libraries[index]

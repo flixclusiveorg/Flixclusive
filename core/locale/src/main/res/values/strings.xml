@@ -85,10 +85,12 @@
     <string name="tv_show">TV Show</string>
 
     <!--  Extra labels  -->
+    <string name="create">Create</string>
     <string name="add_debug_prefix">Add debug prefix</string>
     <string name="add_own_subtitle">Add subs</string>
     <string name="add_profile">Add profile</string>
     <string name="add_providers">Add providers</string>
+    <string name="create_a_library">Create a library</string>
     <string name="add_repositories">Add repositories</string>
     <string name="add_sync_offset_message">Add if subs are delayed.</string>
     <string name="add_to_list">Add to list</string>
@@ -152,6 +154,7 @@
     <string name="doh">DNS over HTTPS</string>
     <string name="drop_shadow">Drop shadow</string>
     <string name="edit">Edit</string>
+    <string name="edit_library">Edit library</string>
     <string name="edit_profile">Edit profile</string>
     <string name="episodes">Episodes</string>
     <string name="exit">Exit</string>
@@ -425,6 +428,7 @@
     <string name="updates_out_now_provider_format">Updates for plugins are available: %1$s</string>
 
     <!--  Content descriptions  -->
+    <string name="plus_button_content_desc">A plus icon indicating addition of an item</string>
     <string name="recently_watched_description">A quick rewind of everything you’ve watched—so you can pick up where you left off or relive the best moments.</string>
     <string name="watchlist_description">Your personal hype list! Save movies and shows you’re dying to watch, all in one place.</string>
     <string name="action_warning_format_message">Are you sure you want to do the following action: %1$s?</string>

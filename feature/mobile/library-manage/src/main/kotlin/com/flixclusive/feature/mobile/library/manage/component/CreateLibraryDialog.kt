@@ -6,30 +6,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import com.flixclusive.model.database.LibraryList
 import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
-internal fun EditLibraryDialog(
-    library: LibraryList,
-    onSave: (LibraryList) -> Unit,
+internal fun CreateLibraryDialog(
+    onCreate: (String, String?) -> Unit,
     onCancel: () -> Unit,
 ) {
-    var name by remember { mutableStateOf(library.name) }
-    var description by remember { mutableStateOf<String?>(library.description) }
+    var name by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf<String?>(null) }
 
     BaseLibraryModificationDialog(
-        label = stringResource(LocaleR.string.edit_library),
+        label = stringResource(LocaleR.string.create_a_library),
         name = name,
         description = description,
         onNameChange = { name = it },
-        confirmLabel = stringResource(LocaleR.string.save),
         onDescriptionChange = { description = it },
-        onConfirm = {
-            val newName = if (name.isEmpty()) library.name else name
-
-            onSave(library.copy(name = newName, description = description))
-        },
+        onConfirm = { onCreate(name, description) },
+        confirmLabel = stringResource(LocaleR.string.create),
         onCancel = onCancel
     )
 }

@@ -41,7 +41,7 @@ internal class ManageLibraryViewModel
         private val libraryListRepository: LibraryListRepository,
         private val watchHistoryRepository: WatchHistoryRepository,
         private val watchlistRepository: WatchlistRepository,
-        userSessionManager: UserSessionManager,
+        private val userSessionManager: UserSessionManager,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(LibraryUiState())
         val uiState = _uiState.asStateFlow()
@@ -153,6 +153,26 @@ internal class ManageLibraryViewModel
                 }
         }
 
+        fun onAdd(name: String, description: String?) {
+            if (addLibJob?.isActive == true) return
+
+            addLibJob =
+                AppDispatchers.IO.scope.launch {
+                    val userId = userSessionManager.currentUser.value?.id ?: return@launch
+                    val list = LibraryList(
+                        id = 0,
+                        ownerId = userId,
+                        name = name,
+                        description = description
+                    )
+
+                    libraryListRepository.insertList(list)
+                    _uiState.update { state ->
+                        state.copy(isCreatingLibrary = false,)
+                    }
+                }
+        }
+
         fun onStartMultiSelecting() {
             _uiState.update { it.copy(isMultiSelecting = true) }
         }
@@ -216,6 +236,12 @@ internal class ManageLibraryViewModel
                 }
             }
         }
+
+        fun onToggleCreateDialog(isVisible: Boolean) {
+            _uiState.update {
+                it.copy(isCreatingLibrary = isVisible)
+            }
+        }
     }
 
 @Immutable
@@ -225,6 +251,7 @@ internal data class LibraryUiState(
     val isShowingSearchBar: Boolean = false,
     val isMultiSelecting: Boolean = false,
     val isShowingOptionsSheet: Boolean = false,
+    val isCreatingLibrary: Boolean = false,
     val isEditingLibrary: Boolean = false,
     val longClickedLibrary: LibraryListWithPreview? = null,
     val selectedFilter: LibrarySortFilter = LibrarySortFilter.ModifiedAt,
