@@ -46,25 +46,21 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.clearFocusOnSoftKeyboardHide
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showSoftKeyboard
 import com.flixclusive.core.ui.common.util.toTextFieldValue
 import com.flixclusive.core.ui.mobile.component.PlainTooltipBox
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getAdaptiveTopBarHeight
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -114,13 +110,7 @@ fun CommonTopBarWithSearch(
                 {
                     Text(
                         text = title,
-                        style =
-                            getAdaptiveTextStyle(
-                                style = TypographyStyle.Body,
-                                mode = TextStyleMode.Normal,
-                                size = 20.sp,
-                                increaseBy = 5.sp,
-                            ).copy(fontWeight = FontWeight.SemiBold),
+                        style = getTopBarHeadlinerTextStyle(),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                     )

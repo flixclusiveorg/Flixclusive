@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
@@ -255,7 +256,7 @@ private fun ListContentHeader(
         ) {
             Text(
                 text = stringResource(id = LocaleR.string.settings),
-                style = MaterialTheme.typography.headlineMedium,
+                style = getTopBarHeadlinerTextStyle(),
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )

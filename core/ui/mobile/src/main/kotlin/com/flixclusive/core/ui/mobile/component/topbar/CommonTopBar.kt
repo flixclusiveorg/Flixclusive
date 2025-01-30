@@ -44,6 +44,7 @@ import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.mobile.component.PlainTooltipBox
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getAdaptiveTopBarHeight
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -69,13 +70,7 @@ fun CommonTopBar(
         title = {
             Text(
                 text = title,
-                style =
-                    getAdaptiveTextStyle(
-                        style = TypographyStyle.Body,
-                        mode = TextStyleMode.Normal,
-                        size = 20.sp,
-                        increaseBy = 5.sp,
-                    ).copy(fontWeight = FontWeight.SemiBold),
+                style = getTopBarHeadlinerTextStyle(),
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
                 modifier =
@@ -183,6 +178,15 @@ object CommonTopBarDefaults {
             dp = DefaultTopBarHeight,
             increaseBy = DefaultTopBarHeightIncrementValue,
         )
+
+    @Composable
+    fun getTopBarHeadlinerTextStyle() =
+        getAdaptiveTextStyle(
+            style = TypographyStyle.Body,
+            mode = TextStyleMode.Normal,
+            size = 20.sp,
+            increaseBy = 5.sp,
+        ).copy(fontWeight = FontWeight.SemiBold)
 }
 
 @Preview

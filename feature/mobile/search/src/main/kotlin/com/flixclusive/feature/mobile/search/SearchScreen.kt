@@ -40,6 +40,7 @@ import com.flixclusive.core.ui.common.navigation.navigator.ViewGenreCatalogActio
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
 import com.flixclusive.core.ui.mobile.component.RetryButton
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.search.component.SearchItemCard
 import com.flixclusive.feature.mobile.search.component.SearchItemCardPlaceholderWithText
@@ -165,7 +166,7 @@ private fun SearchBarHeader(onSearchBarClick: () -> Unit) {
     ) {
         Text(
             text = stringResource(id = LocaleR.string.search),
-            style = MaterialTheme.typography.headlineMedium,
+            style = getTopBarHeadlinerTextStyle(),
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
             modifier =
