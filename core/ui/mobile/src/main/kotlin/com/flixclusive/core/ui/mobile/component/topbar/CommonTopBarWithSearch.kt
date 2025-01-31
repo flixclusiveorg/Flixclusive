@@ -93,7 +93,7 @@ fun CommonTopBarWithSearch(
 ) {
     CommonTopBarWithSearch(
         modifier = modifier,
-        forceHideSearchButton = hideSearchButton,
+        hideSearchButton = hideSearchButton,
         scrollBehavior = scrollBehavior,
         navigationIconColor = navigationIconColor,
         titleColor = titleColor,
@@ -132,7 +132,7 @@ fun CommonTopBarWithSearch(
     navigationIconColor: Color = LocalContentColor.current,
     titleColor: Color = LocalContentColor.current,
     actionsColor: Color = LocalContentColor.current,
-    forceHideSearchButton: Boolean = false,
+    hideSearchButton: Boolean = false,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     navigationIcon: @Composable () -> Unit = {
         DefaultNavigationIcon(
@@ -169,7 +169,7 @@ fun CommonTopBarWithSearch(
         actions = {
             SearchTextFieldAction(
                 isSearching = isSearching,
-                forceHideSearchButton = forceHideSearchButton,
+                hideSearchButton = hideSearchButton,
                 searchQuery = searchQuery,
                 onQueryChange = onQueryChange,
                 onToggleSearchBar = onToggleSearchBar,
@@ -182,7 +182,7 @@ fun CommonTopBarWithSearch(
 @Composable
 private fun RowScope.SearchTextFieldAction(
     isSearching: Boolean,
-    forceHideSearchButton: Boolean,
+    hideSearchButton: Boolean,
     searchQuery: () -> String,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
@@ -218,7 +218,7 @@ private fun RowScope.SearchTextFieldAction(
                 extraActions()
 
                 AnimatedVisibility(
-                    visible = !forceHideSearchButton
+                    visible = !hideSearchButton
                 ) {
                     PlainTooltipBox(description = stringResource(LocaleR.string.search)) {
                         ActionButton(

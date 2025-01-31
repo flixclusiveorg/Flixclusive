@@ -1,9 +1,6 @@
 package com.flixclusive.feature.mobile.library.manage
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -27,14 +24,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,17 +39,21 @@ import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.ui.mobile.component.topbar.rememberEnterAlwaysScrollBehavior
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.feature.mobile.library.common.component.CommonLibraryTopBar
+import com.flixclusive.feature.mobile.library.common.component.CommonLibraryTopBarState
+import com.flixclusive.feature.mobile.library.common.component.LibraryFilterBottomSheet
+import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
+import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
+import com.flixclusive.feature.mobile.library.common.util.selectionBorder
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.feature.mobile.library.manage.component.CreateLibraryDialog
 import com.flixclusive.feature.mobile.library.manage.component.DefaultLibraryCardShape
 import com.flixclusive.feature.mobile.library.manage.component.EditLibraryDialog
 import com.flixclusive.feature.mobile.library.manage.component.LibraryCard
-import com.flixclusive.feature.mobile.library.manage.component.LibraryFilterBottomSheet
 import com.flixclusive.feature.mobile.library.manage.component.LibraryOptionsBottomSheet
-import com.flixclusive.feature.mobile.library.manage.component.ManageLibraryTopBar
-import com.flixclusive.feature.mobile.library.manage.component.TopBarNavigationState
 import com.flixclusive.feature.mobile.library.manage.util.mapToListPreview
 import com.flixclusive.model.database.DBFilm
 import com.flixclusive.model.database.LibraryList
@@ -103,7 +102,7 @@ internal fun ManageLibraryScreen(
 
 @Composable
 private fun ManageLibraryScreen(
-    uiState: () -> LibraryUiState,
+    uiState: () -> ManageLibraryUiState,
     libraries: () -> List<UiLibraryList>,
     selectedLibraries: () -> Set<LibraryListWithPreview>,
     onRemoveSelection: () -> Unit,
@@ -133,7 +132,6 @@ private fun ManageLibraryScreen(
 
     val listState = rememberLazyGridState()
 
-    val selectedColor = MaterialTheme.colorScheme.tertiary
     val selectCount by remember {
         derivedStateOf { selectedLibraries().size }
     }
@@ -146,9 +144,10 @@ private fun ManageLibraryScreen(
     var showDeleteSelectionAlert by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier = Modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .padding(LocalGlobalScaffoldPadding.current),
+        modifier =
+            Modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -168,20 +167,20 @@ private fun ManageLibraryScreen(
             )
         },
         topBar = {
-            val navigationState by remember {
+            val topBarState by remember {
                 derivedStateOf {
                     if (uiState().isMultiSelecting) {
-                        TopBarNavigationState.Selecting
+                        CommonLibraryTopBarState.Selecting
                     } else if (uiState().isShowingSearchBar) {
-                        TopBarNavigationState.Searching
+                        CommonLibraryTopBarState.Searching
                     } else {
-                        TopBarNavigationState.Default
+                        CommonLibraryTopBarState.DefaultMainScreen
                     }
                 }
             }
 
-            ManageLibraryTopBar(
-                navigationState = navigationState,
+            CommonLibraryTopBar(
+                topBarState = topBarState,
                 isListEmpty = libraries().isEmpty(),
                 selectCount = { selectCount },
                 scrollBehavior = scrollBehavior,
@@ -192,109 +191,111 @@ private fun ManageLibraryScreen(
                 onRemoveSelection = { showDeleteSelectionAlert = true },
                 onStartMultiSelecting = onStartMultiSelecting,
                 onUnselectAll = onUnselectAll,
-            )
+            ) {
+                val title =
+                    if (topBarState == CommonLibraryTopBarState.Selecting) {
+                        stringResource(LocaleR.string.count_selection_format, selectCount)
+                    } else {
+                        stringResource(LocaleR.string.my_library)
+                    }
+
+                Text(
+                    text = title,
+                    style = getTopBarHeadlinerTextStyle(),
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
+            }
         },
     ) { padding ->
-        Box(
-            contentAlignment = Alignment.Center,
+        LazyVerticalGrid(
+            state = listState,
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            columns =
+                GridCells.Adaptive(
+                    getAdaptiveDp(
+                        compact = 300.dp,
+                        medium = 350.dp,
+                        expanded = 400.dp,
+                    ),
+                ),
+            contentPadding = padding,
             modifier = Modifier.fillMaxSize(),
         ) {
-            LazyVerticalGrid(
-                state = listState,
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                horizontalArrangement = Arrangement.spacedBy(20.dp),
-                columns =
-                    GridCells.Adaptive(
-                        getAdaptiveDp(
-                            compact = 300.dp,
-                            medium = 350.dp,
-                            expanded = 400.dp,
-                        ),
-                    ),
-                contentPadding = padding,
-                modifier = Modifier.align(Alignment.TopStart),
-            ) {
-                Snapshot.withoutReadObservation {
-                    listState.requestScrollToItem(
-                        index = listState.firstVisibleItemIndex,
-                        scrollOffset = listState.firstVisibleItemScrollOffset,
-                    )
-                }
+            Snapshot.withoutReadObservation {
+                listState.requestScrollToItem(
+                    index = listState.firstVisibleItemIndex,
+                    scrollOffset = listState.firstVisibleItemScrollOffset,
+                )
+            }
 
-                items(
-                    items = libraries(),
-                    key = {
-                        val preview = it.mapToListPreview()
-                        preview.list.id
-                    },
-                ) { library ->
-                    val item = library.mapToListPreview()
-                    val name =
-                        if (library is EmphasisLibraryList) {
-                            library.name
-                        } else {
-                            UiText.from((library as LibraryListWithPreview).list.name)
-                        }
+            items(
+                items = libraries(),
+                key = {
+                    val preview = it.mapToListPreview()
+                    preview.list.id
+                },
+            ) { library ->
+                val item = library.mapToListPreview()
+                val name =
+                    if (library is EmphasisLibraryList) {
+                        library.name
+                    } else {
+                        UiText.from((library as LibraryListWithPreview).list.name)
+                    }
 
-                    val description =
-                        if (library is EmphasisLibraryList) {
-                            library.description
-                        } else {
-                            (library as LibraryListWithPreview).list.description?.let(UiText::from)
-                        }
+                val description =
+                    if (library is EmphasisLibraryList) {
+                        library.description
+                    } else {
+                        (library as LibraryListWithPreview).list.description?.let(UiText::from)
+                    }
 
-                    LibraryCard(
-                        name = name,
-                        description = description,
-                        itemsCount = item.itemsCount,
-                        previews = item.previews,
-                        onClick = {
-                            when (library) {
-                                is LibraryListWithPreview -> {
-                                    if (uiState().isMultiSelecting) {
-                                        onToggleSelect(library)
-                                    } else {
-                                        onViewLibraryContent(library.list)
-                                    }
-                                }
-                                is EmphasisLibraryList -> {
-                                    // TODO: Add watchlist/recents navigation
+                LibraryCard(
+                    name = name,
+                    description = description,
+                    itemsCount = item.itemsCount,
+                    previews = item.previews,
+                    onClick = {
+                        when (library) {
+                            is LibraryListWithPreview -> {
+                                if (uiState().isMultiSelecting) {
+                                    onToggleSelect(library)
+                                } else {
+                                    onViewLibraryContent(library.list)
                                 }
                             }
+
+                            is EmphasisLibraryList -> {
+                                // TODO: Add watchlist/recents navigation
+                            }
+                        }
+                    },
+                    onLongClick =
+                        if (library is LibraryListWithPreview) {
+                            fun() {
+                                onLongClickItem(library)
+                                onToggleOptionsSheet(true)
+                            }
+                        } else {
+                            null
                         },
-                        onLongClick =
-                            if (library is LibraryListWithPreview) {
-                                fun() {
-                                    onLongClickItem(library)
-                                    onToggleOptionsSheet(true)
-                                }
-                            } else {
-                                null
-                            },
-                        modifier =
-                            Modifier
-                                .animateItem()
-                                .border(
-                                    shape = DefaultLibraryCardShape,
-                                    border =
-                                        BorderStroke(
-                                            width = Dp.Hairline,
-                                            color =
-                                                if (selectedLibraries().contains(library)) {
-                                                    selectedColor
-                                                } else {
-                                                    Color.Transparent
-                                                },
-                                        ),
-                                ),
-                    )
-                }
+                    modifier =
+                        Modifier
+                            .animateItem()
+                            .selectionBorder(
+                                isSelected = selectedLibraries().contains(library),
+                                shape = DefaultLibraryCardShape,
+                            ),
+                )
             }
         }
     }
 
     if (uiState().isShowingFilterSheet) {
         LibraryFilterBottomSheet(
+            filters = defaultManageLibraryFilters,
             currentFilter = uiState().selectedFilter,
             currentDirection = uiState().selectedFilterDirection,
             onDismissRequest = { onToggleFilterSheet(false) },
@@ -351,7 +352,7 @@ private fun ManageLibraryScreen(
             onDismiss = {
                 showDeleteLibraryAlert = false
                 showDeleteSelectionAlert = false
-            }
+            },
         )
     }
 }
@@ -359,7 +360,7 @@ private fun ManageLibraryScreen(
 @Preview
 @Composable
 private fun ManageLibraryScreenBasePreview() {
-    var uiState by remember { mutableStateOf(LibraryUiState()) }
+    var uiState by remember { mutableStateOf(ManageLibraryUiState()) }
     val libraries = remember { mutableStateListOf<LibraryListWithPreview>() }
 
     val safeLibraries by remember {
@@ -382,11 +383,12 @@ private fun ManageLibraryScreenBasePreview() {
                                 LibrarySortFilter.Name -> it.list.name
                                 LibrarySortFilter.AddedAt -> it.list.createdAt.time
                                 LibrarySortFilter.ModifiedAt -> it.list.updatedAt.time
-                                LibrarySortFilter.ItemCount -> it.itemsCount
+                                ItemCount -> it.itemsCount
+                                else -> throw Error()
                             }
                         },
                     ).let { comparator ->
-                        if (uiState.selectedFilterDirection == LibrarySortFilter.Direction.ASC) {
+                        if (uiState.selectedFilterDirection == LibraryFilterDirection.ASC) {
                             comparator
                         } else {
                             comparator.reversed()

@@ -1,6 +1,5 @@
 package com.flixclusive.core.ui.mobile.component.film
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -34,17 +32,17 @@ import com.flixclusive.model.film.Film
 
 @Composable
 fun FilmCard(
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier.fillMaxSize(),
     film: Film,
-    isShowingTitle: Boolean = false,
     onClick: (Film) -> Unit,
     onLongClick: (Film) -> Unit,
+    modifier: Modifier = Modifier,
+    isShowingTitle: Boolean = false,
 ) {
     var isHidingPlaceholder by remember { mutableStateOf(false) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.padding(3.dp)
+        modifier = Modifier.padding(3.dp).then(modifier)
     ) {
         Box(
             contentAlignment = Alignment.Center,

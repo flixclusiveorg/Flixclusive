@@ -10,6 +10,9 @@ import com.flixclusive.data.library.custom.LibraryListRepository
 import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.data.library.watchlist.WatchlistRepository
 import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.feature.mobile.library.common.util.FilterWithDirection
+import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
+import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview.Companion.toPreview
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.feature.mobile.library.manage.util.filter
@@ -18,6 +21,7 @@ import com.flixclusive.model.database.LibraryList
 import com.flixclusive.model.database.LibraryListWithItems
 import com.flixclusive.model.film.Film
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +47,7 @@ internal class ManageLibraryViewModel
         private val watchlistRepository: WatchlistRepository,
         private val userSessionManager: UserSessionManager,
     ) : ViewModel() {
-        private val _uiState = MutableStateFlow(LibraryUiState())
+        private val _uiState = MutableStateFlow(ManageLibraryUiState())
         val uiState = _uiState.asStateFlow()
 
         private var addLibJob: Job? = null
@@ -153,22 +157,26 @@ internal class ManageLibraryViewModel
                 }
         }
 
-        fun onAdd(name: String, description: String?) {
+        fun onAdd(
+            name: String,
+            description: String?,
+        ) {
             if (addLibJob?.isActive == true) return
 
             addLibJob =
                 AppDispatchers.IO.scope.launch {
                     val userId = userSessionManager.currentUser.value?.id ?: return@launch
-                    val list = LibraryList(
-                        id = 0,
-                        ownerId = userId,
-                        name = name,
-                        description = description
-                    )
+                    val list =
+                        LibraryList(
+                            id = 0,
+                            ownerId = userId,
+                            name = name,
+                            description = description,
+                        )
 
                     libraryListRepository.insertList(list)
                     _uiState.update { state ->
-                        state.copy(isCreatingLibrary = false,)
+                        state.copy(isCreatingLibrary = false)
                     }
                 }
         }
@@ -245,7 +253,7 @@ internal class ManageLibraryViewModel
     }
 
 @Immutable
-internal data class LibraryUiState(
+internal data class ManageLibraryUiState(
     val searchQuery: String = "",
     val isShowingFilterSheet: Boolean = false,
     val isShowingSearchBar: Boolean = false,
@@ -255,7 +263,7 @@ internal data class LibraryUiState(
     val isEditingLibrary: Boolean = false,
     val longClickedLibrary: LibraryListWithPreview? = null,
     val selectedFilter: LibrarySortFilter = LibrarySortFilter.ModifiedAt,
-    val selectedFilterDirection: LibrarySortFilter.Direction = LibrarySortFilter.Direction.ASC,
+    val selectedFilterDirection: LibraryFilterDirection = LibraryFilterDirection.ASC,
     val selectedLibraries: Set<LibraryListWithPreview> = emptySet(),
 )
 
@@ -302,3 +310,10 @@ internal data class EmphasisLibraryList(
     val name: UiText,
     val description: UiText,
 ) : UiLibraryList
+
+internal val defaultManageLibraryFilters = persistentListOf(
+    LibrarySortFilter.Name,
+    LibrarySortFilter.AddedAt,
+    LibrarySortFilter.ModifiedAt,
+    ItemCount,
+)

@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.library.manage.component
+package com.flixclusive.feature.mobile.library.common.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
@@ -32,14 +32,17 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdapti
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.library.manage.LibrarySortFilter
+import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
+import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
+import kotlinx.collections.immutable.ImmutableList
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
-internal fun LibraryFilterBottomSheet(
+fun LibraryFilterBottomSheet(
+    filters: ImmutableList<LibrarySortFilter>,
     currentFilter: LibrarySortFilter,
-    currentDirection: LibrarySortFilter.Direction,
+    currentDirection: LibraryFilterDirection,
     onUpdateFilter: (LibrarySortFilter) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
@@ -71,7 +74,7 @@ internal fun LibraryFilterBottomSheet(
             }
 
             items(
-                items = LibrarySortFilter.defaultFilters,
+                items = filters,
                 key = { it.displayName.hashCode() },
             ) {
                 LibraryFilter(
@@ -89,7 +92,7 @@ internal fun LibraryFilterBottomSheet(
 private fun LibraryFilter(
     isSelected: Boolean,
     filter: LibrarySortFilter,
-    direction: LibrarySortFilter.Direction,
+    direction: LibraryFilterDirection,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {

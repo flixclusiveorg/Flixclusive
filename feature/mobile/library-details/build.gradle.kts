@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.data.libraryRecent)
     implementation(projects.data.libraryWatchlist)
     implementation(projects.domain.user)
+    implementation(projects.feature.mobile.libraryCommon)
 
     implementation(libs.coil.compose)
     implementation(libs.compose.adaptive.layout)

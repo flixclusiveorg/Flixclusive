@@ -6,19 +6,16 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.feature.mobile.library.manage"
+    namespace = "com.flixclusive.feature.mobile.library.common"
 }
 
 dependencies {
-    implementation(projects.core.datastore)
     implementation(projects.core.ui.mobile)
     implementation(projects.data.libraryCustom)
     implementation(projects.data.libraryRecent)
     implementation(projects.data.libraryWatchlist)
     implementation(projects.domain.user)
-    implementation(projects.feature.mobile.libraryCommon)
 
-    implementation(libs.coil.compose)
     implementation(libs.compose.adaptive.layout)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
@@ -26,5 +23,4 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.kotlinx.immutables)
-    implementation(libs.lifecycle.runtimeCompose)
 }

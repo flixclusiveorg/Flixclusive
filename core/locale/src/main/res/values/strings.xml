@@ -239,6 +239,7 @@
     <string name="re_test">Re-test</string>
     <string name="release">RELEASE</string>
     <string name="release_date">Release date</string>
+    <string name="year">Year</string>
     <string name="release_player">Release player on memory</string>
     <string name="remove">Remove</string>
     <string name="remove_from_watchlist">Remove from Watchlist</string>
@@ -324,6 +325,7 @@
     <string name="whos_watching">Who\'s watching?</string>
     <string name="modified_at">Modified at</string>
     <string name="added_at">Added at</string>
+    <string name="created_at">Created at</string>
     <string name="recently_watched">Recently Watched</string>
     <string name="watchlist">Watchlist</string>
 

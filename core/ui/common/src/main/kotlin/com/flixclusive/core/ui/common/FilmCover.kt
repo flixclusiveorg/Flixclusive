@@ -20,16 +20,19 @@ import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.locale.R as LocaleR
 
-enum class FilmCover(val ratio: Float) {
+enum class FilmCover(
+    val ratio: Float,
+) {
     Backdrop(16F / 9F),
-    Poster(2F / 3F);
+    Poster(2F / 3F),
+    ;
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     operator fun invoke(
-        modifier: Modifier = Modifier,
         imagePath: String?,
         imageSize: String,
+        modifier: Modifier = Modifier,
         showPlaceholder: Boolean = true,
         contentScale: ContentScale = ContentScale.FillBounds,
         contentDescription: String? = null,
@@ -40,14 +43,15 @@ enum class FilmCover(val ratio: Float) {
         val haptic = LocalHapticFeedback.current
         val context = LocalContext.current
 
-        val painter = remember(imagePath) {
-            context.buildImageUrl(
-                imagePath = imagePath,
-                imageSize = imageSize
-            )
-        }
+        val painter =
+            remember(imagePath) {
+                context.buildImageUrl(
+                    imagePath = imagePath,
+                    imageSize = imageSize,
+                )
+            }
 
-        val imagePlaceholder = if(showPlaceholder) painterResource(id = R.drawable.movie_placeholder) else null
+        val imagePlaceholder = if (showPlaceholder) painterResource(id = R.drawable.movie_placeholder) else null
 
         AsyncImage(
             model = painter,
@@ -55,21 +59,27 @@ enum class FilmCover(val ratio: Float) {
             imageLoader = LocalContext.current.imageLoader,
             error = imagePlaceholder,
             contentScale = contentScale,
-            contentDescription = contentDescription ?: stringResource(id = LocaleR.string.film_item_content_description),
+            contentDescription =
+                contentDescription
+                    ?: stringResource(id = LocaleR.string.film_item_content_description),
             onSuccess = { onSuccess?.invoke() },
-            modifier = modifier
-                .aspectRatio(ratio)
-                .clip(MaterialTheme.shapes.extraSmall)
-                .ifElse(
-                    condition = onClick != null,
-                    ifTrueModifier = Modifier.combinedClickable(
-                        onClick = { onClick?.invoke() },
-                        onLongClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onLongClick?.invoke()
-                        }
-                    )
-                )
+            modifier =
+                modifier
+                    .aspectRatio(ratio)
+                    .clip(MaterialTheme.shapes.extraSmall)
+                    .ifElse(
+                        condition = onClick != null,
+                        ifTrueModifier =
+                            Modifier.combinedClickable(
+                                onClick = { onClick?.invoke() },
+                                onLongClick = {
+                                    onLongClick?.let {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        it.invoke()
+                                    }
+                                },
+                            ),
+                    ),
         )
     }
 }

@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.library.manage.component
+package com.flixclusive.feature.mobile.library.common.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Row
@@ -7,7 +7,6 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -20,15 +19,16 @@ import com.flixclusive.core.ui.mobile.component.topbar.DefaultNavigationIcon
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
-internal enum class TopBarNavigationState {
-    Default,
+enum class CommonLibraryTopBarState {
+    DefaultMainScreen,
+    DefaultSubScreen,
     Selecting,
     Searching,
 }
 
 @Composable
-internal fun ManageLibraryTopBar(
-    navigationState: TopBarNavigationState,
+fun CommonLibraryTopBar(
+    topBarState: CommonLibraryTopBarState,
     scrollBehavior: TopAppBarScrollBehavior,
     isListEmpty: Boolean,
     selectCount: () -> Int,
@@ -40,25 +40,26 @@ internal fun ManageLibraryTopBar(
     onShowFilterSheet: () -> Unit,
     onUnselectAll: () -> Unit,
     modifier: Modifier = Modifier,
+    onGoBack: () -> Unit = {},
+    titleContent: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
-    val title =
-        if (navigationState == TopBarNavigationState.Selecting) {
-            context.getString(LocaleR.string.count_selection_format, selectCount())
-        } else {
-            context.getString(LocaleR.string.my_library)
-        }
+    val hideSearchButton =
+        (
+            topBarState != CommonLibraryTopBarState.DefaultSubScreen &&
+                topBarState != CommonLibraryTopBarState.DefaultMainScreen
+        ) ||
+            isListEmpty
 
     CommonTopBarWithSearch(
         modifier = modifier,
-        isSearching = navigationState == TopBarNavigationState.Searching,
-        title = title,
-        onNavigate = {},
+        isSearching = topBarState == CommonLibraryTopBarState.Searching,
+        titleContent = titleContent,
+        onNavigate = onGoBack,
         navigationIcon = {
             AnimatedContent(
-                targetState = navigationState,
+                targetState = topBarState,
             ) { state ->
-                if (state == TopBarNavigationState.Selecting) {
+                if (state == CommonLibraryTopBarState.Selecting) {
                     PlainTooltipBox(description = stringResource(LocaleR.string.cancel)) {
                         ActionButton(onClick = onUnselectAll) {
                             AdaptiveIcon(
@@ -67,10 +68,10 @@ internal fun ManageLibraryTopBar(
                             )
                         }
                     }
-                } else if (state == TopBarNavigationState.Searching) {
-                    DefaultNavigationIcon(
-                        onClick = { onToggleSearchBar(false) },
-                    )
+                } else if (state == CommonLibraryTopBarState.Searching) {
+                    DefaultNavigationIcon(onClick = { onToggleSearchBar(false) })
+                } else if (state == CommonLibraryTopBarState.DefaultSubScreen) {
+                    DefaultNavigationIcon(onClick = onGoBack)
                 }
             }
         },
@@ -78,13 +79,13 @@ internal fun ManageLibraryTopBar(
         onToggleSearchBar = onToggleSearchBar,
         onQueryChange = onQueryChange,
         scrollBehavior = scrollBehavior,
-        hideSearchButton = navigationState != TopBarNavigationState.Default || isListEmpty,
+        hideSearchButton = hideSearchButton,
         extraActions = {
             AnimatedContent(
-                targetState = navigationState,
+                targetState = topBarState,
             ) { state ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (state == TopBarNavigationState.Selecting && !isListEmpty) {
+                    if (state == CommonLibraryTopBarState.Selecting && !isListEmpty) {
                         PlainTooltipBox(description = stringResource(LocaleR.string.remove)) {
                             ActionButton(
                                 onClick = onRemoveSelection,
