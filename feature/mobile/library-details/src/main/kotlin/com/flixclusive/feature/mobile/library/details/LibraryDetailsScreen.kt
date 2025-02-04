@@ -38,6 +38,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
@@ -67,6 +69,7 @@ interface LibraryDetailsScreenNavigator :
     ViewFilmAction,
     GoBackAction {
     // TODO: Add navigator to AddLibraryItemScreen
+    // fun openLibraryAddItemsScreen()
 }
 
 data class LibraryDetailsNavArgs(
@@ -77,7 +80,34 @@ data class LibraryDetailsNavArgs(
     navArgsDelegate = LibraryDetailsNavArgs::class,
 )
 @Composable
-internal fun LibraryDetailsScreen(navigator: LibraryDetailsScreenNavigator) {
+internal fun LibraryDetailsScreen(
+    navigator: LibraryDetailsScreenNavigator,
+    viewModel: LibraryDetailsViewModel = hiltViewModel()
+) {
+    val library by viewModel.library.collectAsStateWithLifecycle()
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+    val items = viewModel.items.collectAsStateWithLifecycle()
+    val selectedItems = viewModel.selectedItems.collectAsStateWithLifecycle()
+
+    LibraryDetailsScreen(
+        library = library,
+        uiState = { uiState.value },
+        items = { items.value },
+        selectedItems = { selectedItems.value },
+        onGoBack = navigator::goBack,
+        onViewFilm = navigator::openFilmScreen,
+        onAddItems = { /*TODO()*/ },
+        onRemoveLongClickedItem = viewModel::onRemoveLongClickedItem,
+        onLongClickItem = viewModel::onLongClickItem,
+        onStartMultiSelecting = viewModel::onStartMultiSelecting,
+        onToggleSelect = viewModel::onToggleSelect,
+        onUpdateFilter = viewModel::onUpdateFilter,
+        onRemoveSelection = viewModel::onRemoveSelection,
+        onQueryChange = viewModel::onQueryChange,
+        onUnselectAll = viewModel::onUnselectAll,
+        onToggleFilterSheet = viewModel::onToggleFilterSheet,
+        onToggleSearchBar = viewModel::onToggleSearchBar,
+    )
 }
 
 @Composable
