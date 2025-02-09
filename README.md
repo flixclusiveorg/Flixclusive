@@ -12,7 +12,7 @@
     </tr>
     <tr>
       <td>Pre-release</td>
-      <td><a href="https://github.com/flixclusiveorg/Flixclusive/releases/pre-release"><img src="https://img.shields.io/github/downloads/flixclusiveorg/Flixclusive/pre-release/total?style=for-the-badge" alt="pre-release build"></a></td>
+      <td><a href="https://github.com/flixclusiveorg/Flixclusive/releases/PR-ea580b1"><img src="https://img.shields.io/github/downloads/flixclusiveorg/Flixclusive/PR-ea580b1/total?style=for-the-badge" alt="pre-release build"></a></td>
     </tr>
     <tr>
       <td>Stable</td>
