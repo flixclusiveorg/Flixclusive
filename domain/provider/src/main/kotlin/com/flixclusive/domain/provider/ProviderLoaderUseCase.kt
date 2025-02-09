@@ -64,12 +64,14 @@ class ProviderLoaderUseCase
 
         private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
 
-        private val providerPreferences: ProviderPreferences get() =
-            dataStoreManager
-                .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
-                .awaitFirst()
+        private val providerPreferences: ProviderPreferences
+            get() =
+                dataStoreManager
+                    .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
+                    .awaitFirst()
 
-        suspend fun load( // TODO: Implement a custom throwable here
+        suspend fun load(
+            // TODO: Implement a custom throwable here
             provider: ProviderMetadata,
             needsDownload: Boolean = false,
             filePath: String? = null,
@@ -112,8 +114,11 @@ class ProviderLoaderUseCase
                     return@forEach
                 }
 
-                val repository =
+                val updaterJson =
                     fromJson<List<ProviderMetadata>>(updaterFile.reader())
+
+                val repository =
+                    updaterJson
                         .firstOrNull()
                         ?.repositoryUrl
                         ?.toValidRepositoryLink()
@@ -126,11 +131,19 @@ class ProviderLoaderUseCase
                 }
 
                 subDirectory.listFiles()?.forEach subDirectory@{ providerFile ->
-                    if (!providerFile.name.equals(UPDATER_FILE, true)) {
+                    if (providerFile.name.equals(UPDATER_FILE, true)) {
                         return@subDirectory
                     }
 
-                    addProviderToPreferences(file = providerFile)
+                    val metadata =
+                        updaterJson.find {
+                            it.buildUrl.endsWith(providerFile.name)
+                        } ?: return@subDirectory
+
+                    addProviderToPreferences(
+                        id = metadata.id,
+                        file = providerFile,
+                    )
                 }
             }
         }
@@ -141,16 +154,17 @@ class ProviderLoaderUseCase
 
                 if (!file.exists()) {
                     warnLog("Provider file doesn't exist for: ${itemPreference.name}")
-                    return
+                    return@forEach
                 }
 
                 val metadata =
                     getProviderMetadataFromUpdater(
                         id = itemPreference.id,
                         file = file,
-                    ) ?: return
+                    ) ?: return@forEach
 
-                val isDebugProvider = file.parent?.equals(PROVIDER_DEBUG, true) == true
+                val mainParentFolder = file.parentFile?.parent
+                val isDebugProvider = mainParentFolder.equals(PROVIDER_DEBUG, true)
 
                 when {
                     file.isProviderFile && isDebugProvider -> {
@@ -194,15 +208,19 @@ class ProviderLoaderUseCase
             }
         }
 
-        private suspend fun addProviderToPreferences(file: File) {
+        private suspend fun addProviderToPreferences(
+            id: String,
+            file: File,
+        ) {
             val isProviderNotYetLoaded =
                 providerPreferences.providers
-                    .any { it.filePath == file.absolutePath }
+                    .any { it.filePath == file.absolutePath && it.id == id }
                     .not()
 
             if (isProviderNotYetLoaded) {
                 val newProvider =
                     ProviderFromPreferences(
+                        id = id,
                         name = file.nameWithoutExtension,
                         filePath = file.absolutePath,
                         isDisabled = false,
