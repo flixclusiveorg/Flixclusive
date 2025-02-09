@@ -266,9 +266,8 @@ private fun ManageLibraryScreen(
                                     onViewLibraryContent(library.list)
                                 }
                             }
-
                             is EmphasisLibraryList -> {
-                                // TODO: Add watchlist/recents navigation
+                                onViewLibraryContent(library.library.list)
                             }
                         }
                     },

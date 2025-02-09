@@ -19,7 +19,7 @@ import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.GetFilmMetadataUseCase
 import com.flixclusive.domain.user.UserSessionManager
-import com.flixclusive.model.database.toFilmInstance
+import com.flixclusive.model.database.toDBFilm
 import com.flixclusive.model.database.toWatchlistItem
 import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.datastore.user.UserPreferences.Companion.PLAYER_PREFS_KEY
@@ -226,7 +226,7 @@ internal class MobileAppViewModel @Inject constructor(
 
             val watchHistoryItem = watchHistoryRepository.getWatchHistoryItemById(
                 itemId = filmToShow.identifier, ownerId = userId
-            )?.copy(film = filmToShow.toFilmInstance())
+            )?.copy(film = filmToShow.toDBFilm())
                 ?.also { item ->
                     viewModelScope.launch {
                         watchHistoryRepository.insert(item)

@@ -234,6 +234,7 @@ internal fun LibraryDetailsScreen(
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     ScreenHeader(
                         library = library,
+                        libraryType = uiState().libraryType,
                         modifier =
                             Modifier
                                 .padding(16.dp)

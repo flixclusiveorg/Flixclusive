@@ -35,7 +35,7 @@ data class DBFilm(
 /**
  * Converts a [Film] to a [DBFilm].
  * */
-fun Film.toFilmInstance(): DBFilm {
+fun Film.toDBFilm(): DBFilm {
     return DBFilm(
         id = id,
         imdbId = imdbId,

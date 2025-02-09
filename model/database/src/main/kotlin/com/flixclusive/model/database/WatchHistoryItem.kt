@@ -39,6 +39,6 @@ fun Film.toWatchHistoryItem(ownerId: Int): WatchHistoryItem {
         id = identifier,
         seasons = seasonCount,
         ownerId = ownerId,
-        film = this.toFilmInstance(),
+        film = this.toDBFilm(),
     )
 }

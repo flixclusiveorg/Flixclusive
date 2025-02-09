@@ -137,7 +137,7 @@ private fun PreviewCard(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    var isHidingPlaceholder by remember { mutableStateOf(preview != null) }
+    var isHidingPlaceholder by remember(preview) { mutableStateOf(preview != null) }
 
     Box(
         modifier = modifier,
@@ -159,9 +159,9 @@ private fun PreviewCard(
                 contentDescription = stringResource(id = LocaleR.string.film_item_content_description),
                 onSuccess = { isHidingPlaceholder = true },
                 modifier =
-                Modifier
-                    .aspectRatio(FilmCover.Poster.ratio)
-                    .clip(MaterialTheme.shapes.extraSmall),
+                    Modifier
+                        .aspectRatio(FilmCover.Poster.ratio)
+                        .clip(MaterialTheme.shapes.extraSmall),
             )
         }
 

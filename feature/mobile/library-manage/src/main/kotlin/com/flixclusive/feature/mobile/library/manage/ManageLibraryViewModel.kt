@@ -12,6 +12,7 @@ import com.flixclusive.data.library.watchlist.WatchlistRepository
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.feature.mobile.library.common.util.FilterWithDirection
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
+import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview.Companion.toPreview
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
@@ -34,9 +35,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.flixclusive.core.locale.R as LocaleR
-
-internal const val WATCHLIST_ID = -1
-internal const val RECENTLY_WATCHED_ID = -2
 
 @HiltViewModel
 internal class ManageLibraryViewModel
@@ -83,16 +81,16 @@ internal class ManageLibraryViewModel
                 }.mapLatest { (userWithLists, watchHistory, watchlist) ->
                     userWithLists.list.map { listWithItems -> listWithItems.toPreview() } +
                         watchHistory.toUiLibraryList(
-                            id = RECENTLY_WATCHED_ID,
+                            id = LibraryListUtil.WATCH_HISTORY_LIB_ID,
                             userId = userWithLists.user.id,
-                            searchableName = "recently watched",
+                            searchableName = LibraryListUtil.WATCH_HISTORY_SEARCHABLE_NAME,
                             name = UiText.from(LocaleR.string.recently_watched),
                             description = UiText.from(LocaleR.string.recently_watched_description),
                         ) +
                         watchlist.toUiLibraryList(
-                            id = WATCHLIST_ID,
+                            id = LibraryListUtil.WATCHLIST_LIB_ID,
                             userId = userWithLists.user.id,
-                            searchableName = "watchlist",
+                            searchableName = LibraryListUtil.WATCHLIST_SEARCHABLE_NAME,
                             name = UiText.from(LocaleR.string.watchlist),
                             description = UiText.from(LocaleR.string.watchlist_description),
                         )

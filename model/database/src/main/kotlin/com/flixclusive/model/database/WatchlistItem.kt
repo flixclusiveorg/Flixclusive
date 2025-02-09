@@ -17,6 +17,6 @@ fun Film.toWatchlistItem(ownerId: Int): WatchlistItem {
     return WatchlistItem(
         id = identifier,
         ownerId = ownerId,
-        film = this.toFilmInstance(),
+        film = this.toDBFilm(),
     )
 }

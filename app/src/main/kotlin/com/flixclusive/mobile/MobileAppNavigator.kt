@@ -25,6 +25,8 @@ import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.GenreScreenNavigator
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.HomeNavigator
+import com.flixclusive.feature.mobile.library.details.LibraryDetailsScreenNavigator
+import com.flixclusive.feature.mobile.library.details.destinations.LibraryDetailsScreenDestination
 import com.flixclusive.feature.mobile.library.manage.ManageLibraryScreenNavigator
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
@@ -85,6 +87,7 @@ internal class MobileAppNavigator(
     GenreScreenNavigator,
     GoBackAction,
     HomeNavigator,
+    LibraryDetailsScreenNavigator,
     ManageLibraryScreenNavigator,
     OpenPinScreenAction,
     PlayerScreenNavigator,
@@ -155,7 +158,9 @@ internal class MobileAppNavigator(
 //    }
 
     override fun openLibraryDetails(list: LibraryList) {
-        // TODO("Not yet implemented")
+        navController.navigateIfResumed(
+            LibraryDetailsScreenDestination(list) within destination.navGraph()
+        )
     }
 
     override fun openUpdateScreen(
