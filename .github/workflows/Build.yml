@@ -91,7 +91,7 @@ jobs:
         run: |
           name=$(git tag --sort=-creatordate | grep -E '^PR-[a-f0-9]+$' | sed -n '2p')
           if [ -z "$name" ]; then
-            name="pre-release"
+            name=$(git tag --sort=-creatordate | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p')
           fi
           echo "previousPreReleaseTag=$name" >> $GITHUB_ENV
 
@@ -102,9 +102,22 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fromTag: ${{ github.ref_name }}
           toTag: ${{ startsWith(github.ref, 'refs/tags/PR-') && env.previousPreReleaseTag || env.previousStableTag || 'HEAD' }}
-          excludeTypes: ${{ !startsWith(github.ref, 'refs/tags/PR-') && 'build,docs,other,style,refactor' || '' }}
+          excludeTypes: ${{ !startsWith(github.ref, 'refs/tags/PR-') && 'build,docs,other,style,refactor,chore' || '' }}
           writeToFile: false
 
+      - name: Prepare changelogs
+        run: |
+          cat > release-notes.md << 'EOF'
+          ${{ steps.changelog.outputs.changes }}
+
+          ---
+
+          ### Checksums
+
+          | Variant | SHA-256 |
+          | ------- | ------- |
+          | release | ${{ needs.build.outputs.release_sha }} |
+          EOF
 
       - name: Manage pre-release
         if: startsWith(github.ref, 'refs/tags/PR-')
@@ -117,29 +130,10 @@ jobs:
           git push origin :refs/tags/pre-release || echo "Remote tag 'pre-release' does not exist."
           gh release delete pre-release --yes || echo "Failed to delete last pre-release."
 
-          CLEANED_CHANGES=$(echo '${{ steps.changelog.outputs.changes }}' | sed 's/`/`/g')
-
           echo "Creating new pre-release..."
           gh release create ${{ github.ref_name }} \
             --title "${{ github.ref_name }}" \
-            --notes "$(cat << EOF
-          ##### _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
-
-          ---
-
-          ### 🐞 Known issues
-          - TV focus crashes. Compose TV is bugged af; we wait til the new update.
-
-          ${CLEANED_CHANGES}
-          ---
-
-          ### Checksums
-
-          | Variant | SHA-256 |
-          | ------- | ------- |
-          | release | ${{ needs.build.outputs.release_sha }} |
-          EOF
-          )" \
+            --notes-file release-notes.md \
             --prerelease \
             flixclusive-release.apk
 
@@ -151,28 +145,9 @@ jobs:
         run: |
           gh release delete ${{ github.ref_name }} --yes || echo "Failed to delete ${{ github.ref_name }} release."
 
-          CLEANED_CHANGES=$(echo '${{ steps.changelog.outputs.changes }}' | sed 's/`/`/g')
-
           gh release create ${{ github.ref_name }} \
             --title "${{ github.ref_name }}" \
-            --notes "$(cat << EOF
-          ##### _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
-
-          ---
-
-          ### 🐞 Known issues
-          - TV focus crashes. Compose TV is bugged af; we wait til the new update.
-
-          ${CLEANED_CHANGES}
-          ---
-
-          ### Checksums
-
-          | Variant | SHA-256 |
-          | ------- | ------- |
-          | release | ${{ needs.build.outputs.release_sha }} |
-          EOF
-          )" \
+            --notes-file release-notes.md \
             flixclusive-release.apk
 
 
