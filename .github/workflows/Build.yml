@@ -83,13 +83,13 @@ jobs:
       - name: Get previous stable tag
         id: previousStableTag
         run: |
-          name=$(git tag --sort=-creatordate | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          name=$(git tag --sort=-creatordate | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p')
           echo "previousStableTag=$name" >> $GITHUB_ENV
 
       - name: Get previous pre-release tag
         id: previousPreReleaseTag
         run: |
-          name=$(git tag --sort=-creatordate | grep -E '^PR-[a-f0-9]{7}$' | head -1)
+          name=$(git tag --sort=-creatordate | grep -E '^PR-[a-f0-9]+$' | sed -n '2p')
           if [ -z "$name" ]; then
             name="pre-release"
           fi
