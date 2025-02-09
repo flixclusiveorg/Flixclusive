@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'  # Stable release tags (e.g., 1.2.3)
-      - 'PR-[a-f0-9]{7}'        # Pre-release tags with 7-char commit SHA (e.g., PR-abc1234)
+      - 'PR-[a-f0-9]+'      # Pre-release tags with 7-char commit SHA (e.g., PR-abc1234)
   workflow_dispatch:
 
 permissions:
@@ -80,12 +80,20 @@ jobs:
         with:
           name: release-apk
 
-      - name: Get previous tag
-        id: previousTag
+      - name: Get previous stable tag
+        id: previousStableTag
         run: |
-          name=$(git --no-pager tag --sort=creatordate --merged ${{ github.ref_name }} | tail -2 | head -1)
-          echo "previousTag: $name"
-          echo "previousTag=$name" >> $GITHUB_ENV
+          name=$(git tag --sort=-creatordate | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          echo "previousStableTag=$name" >> $GITHUB_ENV
+
+      - name: Get previous pre-release tag
+        id: previousPreReleaseTag
+        run: |
+          name=$(git tag --sort=-creatordate | grep -E '^PR-[a-f0-9]{7}$' | head -1)
+          if [ -z "$name" ]; then
+            name="pre-release"
+          fi
+          echo "previousPreReleaseTag=$name" >> $GITHUB_ENV
 
       - name: Generate changelogs
         id: changelog
@@ -93,25 +101,26 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fromTag: ${{ github.ref_name }}
-          toTag: ${{ env.previousTag || 'HEAD' }}
-          excludeTypes: ${{ !startsWith(github.ref, 'refs/tags/PR-') && 'build,docs,other,style' || '' }}
+          toTag: ${{ startsWith(github.ref, 'refs/tags/PR-') && env.previousPreReleaseTag || env.previousStableTag || 'HEAD' }}
+          excludeTypes: ${{ !startsWith(github.ref, 'refs/tags/PR-') && 'build,docs,other,style,refactor' || '' }}
           writeToFile: false
+
 
       - name: Manage pre-release
         if: startsWith(github.ref, 'refs/tags/PR-')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Attempting to delete pre-release tag..."
-    
+          echo "Attempting to remove the pre-release tag..."
+
           git tag -d pre-release || echo "Local tag 'pre-release' does not exist."
           git push origin :refs/tags/pre-release || echo "Remote tag 'pre-release' does not exist."
-          
-          CLEANED_CHANGES=$(echo '${{ steps.changelog.outputs.changes }}' | sed 's/`/`/g')
-    
-          echo "Creating new pre-release..."
           gh release delete pre-release --yes || echo "Failed to delete last pre-release."
-          gh release create pre-release \
+
+          CLEANED_CHANGES=$(echo '${{ steps.changelog.outputs.changes }}' | sed 's/`/`/g')
+
+          echo "Creating new pre-release..."
+          gh release create ${{ github.ref_name }} \
             --title "${{ github.ref_name }}" \
             --notes "$(cat << EOF
           ##### _NOTE: Android TV is incomplete, the providers on this port are not yet installable. Though, you could test it now._
@@ -134,15 +143,16 @@ jobs:
             --prerelease \
             flixclusive-release.apk
 
+
       - name: Manage stable release
         if: "!startsWith(github.ref, 'refs/tags/PR-')"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release delete ${{ github.ref_name }} --yes || echo "Failed to delete ${{ github.ref_name }} release."
-          
+
           CLEANED_CHANGES=$(echo '${{ steps.changelog.outputs.changes }}' | sed 's/`/`/g')
-          
+
           gh release create ${{ github.ref_name }} \
             --title "${{ github.ref_name }}" \
             --notes "$(cat << EOF
