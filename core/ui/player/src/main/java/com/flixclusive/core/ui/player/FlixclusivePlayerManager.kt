@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMapNotNull
 import androidx.media3.common.C
 import androidx.media3.common.Format
@@ -364,6 +365,8 @@ class FlixclusivePlayerManager(
                 extractAudios()
                 extractEmbeddedSubtitles()
 
+                areTracksInitialized = true
+
                 val subtitleIndex =
                     when {
                         !subtitlesPreferences.isSubtitleEnabled -> 0 // == Off subtitles
@@ -379,10 +382,11 @@ class FlixclusivePlayerManager(
                         languageExtractor = { it },
                     )
 
-                onSubtitleChange(index = subtitleIndex)
-                onAudioChange(index = audioIndex)
-
-                areTracksInitialized = true
+                onSubtitleChange(index = audioIndex)
+                onAudioChange(index = subtitleIndex)
+            } else {
+                onSubtitleChange(index = selectedSubtitleIndex)
+                onAudioChange(index = selectedAudioIndex)
             }
 
             setPlaybackSpeed(playbackSpeed)
@@ -454,7 +458,7 @@ class FlixclusivePlayerManager(
                         group.type == C.TRACK_TYPE_TEXT
                     }
 
-            subtitleTrackGroups.getFormats().forEach { format ->
+            subtitleTrackGroups.getFormats().fastForEach { format ->
                 // Filter out non subs, already used subs and subs without languages
                 if (format.id == null || format.language == null) {
                     return
