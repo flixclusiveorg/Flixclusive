@@ -14,7 +14,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastAny
-import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMapNotNull
 import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
@@ -57,6 +57,7 @@ import com.flixclusive.core.ui.player.util.getCacheFactory
 import com.flixclusive.core.ui.player.util.getLoadControl
 import com.flixclusive.core.ui.player.util.getRenderers
 import com.flixclusive.core.ui.player.util.handleError
+import com.flixclusive.core.ui.player.util.isOffSubtitle
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
@@ -72,6 +73,7 @@ import okhttp3.OkHttpClient
 import java.util.Locale
 import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
+import com.flixclusive.core.locale.R as LocaleR
 
 /** toleranceBeforeUs – The maximum time that the actual position seeked to may precede the
  * requested seek position, in microseconds. Must be non-negative. */
@@ -332,8 +334,6 @@ class FlixclusivePlayerManager(
                 initialPlaybackPosition,
             )
 
-            mediaItem
-
             prepare()
             playWhenReady = this@FlixclusivePlayerManager.playWhenReady
         }
@@ -495,10 +495,18 @@ class FlixclusivePlayerManager(
                         },
                 ).addOffSubtitle(context)
 
+        val offSubtitleLabel = context.getString(LocaleR.string.off_subtitles)
+
         // Cloudstream3 logic for unique subtitle names
         return sortedSubtitles
-            .fastMap { subtitle ->
+            .fastMapNotNull { subtitle ->
+                if (subtitle.isOffSubtitle(context)) {
+                    availableSubtitles.add(subtitle)
+                    return@fastMapNotNull null
+                }
+
                 val subtitleName = subtitle.language.toUniqueSubtitleLanguage()
+                availableSubtitles.add(subtitle.copy(language = subtitleName))
 
                 val subtitleConfiguration =
                     SubtitleConfiguration
@@ -506,8 +514,6 @@ class FlixclusivePlayerManager(
                         .setMimeType(subtitle.toMimeType())
                         .setLanguage(subtitleName)
                         .build()
-
-                availableSubtitles.add(subtitle.copy(language = subtitleName))
 
                 val format =
                     Format
@@ -532,13 +538,15 @@ class FlixclusivePlayerManager(
                             )
                     }
 
+                val subtitleDataSource = when (subtitle.type) {
+                    SubtitleSource.ONLINE -> okHttpDataSource
+                    else -> localDataSource
+                }
+
                 val factory =
                     ProgressiveMediaSource
                         .Factory(
-                            when (subtitle.type) {
-                                SubtitleSource.ONLINE -> okHttpDataSource
-                                else -> localDataSource
-                            },
+                            subtitleDataSource,
                             extractorFactory,
                         )
 
