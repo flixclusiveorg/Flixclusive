@@ -327,12 +327,12 @@ class ProviderLoaderUseCase
                             provider = provider,
                         )
                     }
-                } catch (_: Throwable) {
+                } catch (e: Throwable) {
                     isApiDisabled = true
 
                     val message = context.getApiCrashMessage(provider = metadata.name)
                     context.showToastOnProviderCrash(message)
-                    errorLog(message)
+                    errorLog(e)
                 } finally {
                     providerRepository.add(
                         classLoader = loader,
