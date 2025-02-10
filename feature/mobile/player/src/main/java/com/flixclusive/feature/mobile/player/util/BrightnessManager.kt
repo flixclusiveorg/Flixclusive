@@ -29,4 +29,10 @@ internal class BrightnessManager(private val activity: Activity) {
         layoutParams.screenBrightness = currentBrightness
         activity.window.attributes = layoutParams
     }
+
+    fun unlockBrightnessControl() {
+        val layoutParams = activity.window.attributes
+        layoutParams.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+        activity.window.attributes = layoutParams
+    }
 }

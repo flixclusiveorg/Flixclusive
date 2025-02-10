@@ -272,15 +272,12 @@ internal fun PlayerScreen(
             context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             context.toggleSystemBars(isVisible = false)
 
-            // Initialize brightness
-            val userDefaultBrightnessLevel = brightnessManager.currentBrightness
-
             onDispose {
                 // Lock the screen to landscape only if we're just changing
                 // episodes. This is really bad code bruh.
                 if (!isChangingEpisode) {
                     context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                    brightnessManager.setBrightness(userDefaultBrightnessLevel)
+                    brightnessManager.unlockBrightnessControl()
                     context.toggleSystemBars(isVisible = true)
                 }
 
