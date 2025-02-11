@@ -382,8 +382,8 @@ class FlixclusivePlayerManager(
                         languageExtractor = { it },
                     )
 
-                onSubtitleChange(index = audioIndex)
-                onAudioChange(index = subtitleIndex)
+                onSubtitleChange(index = subtitleIndex)
+                onAudioChange(index = audioIndex)
             } else {
                 onSubtitleChange(index = selectedSubtitleIndex)
                 onAudioChange(index = selectedAudioIndex)
