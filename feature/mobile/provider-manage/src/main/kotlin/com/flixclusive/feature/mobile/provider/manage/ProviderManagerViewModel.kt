@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.util.coroutines.AppDispatchers
-import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderRepository
@@ -22,9 +21,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -70,7 +71,11 @@ internal class ProviderManagerViewModel
                 .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
                 .map { it.providers.map { it.isDisabled } }
                 .distinctUntilChanged()
-                .asStateFlow(viewModelScope, initialValue = emptyList())
+                .stateIn(
+                    viewModelScope,
+                    started = SharingStarted.Lazily,
+                    initialValue = emptyList()
+                )
 
         init {
             viewModelScope.launch {
