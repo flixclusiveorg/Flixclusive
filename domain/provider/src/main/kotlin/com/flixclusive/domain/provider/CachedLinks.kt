@@ -8,6 +8,8 @@ import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
 import java.io.Serializable
 
+// TODO: Replace SnapshotStateList with flow
+
 /**
  *
  * A data model to hold all cached [MediaLink]s that was extracted from a provider.

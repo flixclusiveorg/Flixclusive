@@ -44,12 +44,10 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,7 +88,7 @@ fun MediaLinksBottomSheet(
     onSkipLoading: () -> Unit
 ) {
     val areSubtitlesShown = remember { mutableStateOf(false) }
-    val filteredLinks by rememberUpdatedState(newValue = if (areSubtitlesShown.value) subtitles else streams)
+    val filteredLinks = if (areSubtitlesShown.value) subtitles else streams
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -258,11 +256,7 @@ private fun ProgressHeader(
     streams: List<Stream>,
     onSkipLoading: () -> Unit,
 ) {
-    val canSkipLoading by remember {
-        derivedStateOf {
-            state.isLoading && streams.isNotEmpty()
-        }
-    }
+    val canSkipLoading = state.isLoading && streams.isNotEmpty()
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),

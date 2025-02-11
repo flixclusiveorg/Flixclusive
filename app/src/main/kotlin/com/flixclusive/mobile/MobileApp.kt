@@ -165,7 +165,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         }
     }
 
-    LaunchedEffect(cachedLinks?.streams?.size, uiState.mediaLinkResourceState) {
+    LaunchedEffect(uiState.mediaLinkResourceState) {
         if (
             uiState.mediaLinkResourceState == MediaLinkResourceState.Success &&
             currentSelectedScreen != PlayerScreenDestination
@@ -317,7 +317,10 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         }
 
         if (!uiState.mediaLinkResourceState.isIdle) {
-            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            LaunchedEffect(true) {
+                window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+
             MediaLinksBottomSheet(
                 state = uiState.mediaLinkResourceState,
                 streams = cachedLinks?.streams ?: emptyList(),
@@ -330,7 +333,9 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                 },
             )
         } else {
-            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            LaunchedEffect(true) {
+                window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
         }
 
         AnimatedVisibility(
