@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.player.util
+package com.flixclusive.core.ui.player.util.extensions
 
 import androidx.annotation.OptIn
 import androidx.media3.common.C

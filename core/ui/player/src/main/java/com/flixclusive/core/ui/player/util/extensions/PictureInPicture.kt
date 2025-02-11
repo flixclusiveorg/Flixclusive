@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.player.util
+package com.flixclusive.core.ui.player.util.extensions
 
 import android.annotation.TargetApi
 import android.app.Activity
@@ -14,8 +14,8 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import com.flixclusive.core.ui.player.PlayerEvents
 import com.flixclusive.core.ui.player.R
-import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 const val ACTION_PIP_CONTROL = "player_pip_control"
 const val PLAYER_PIP_EVENT = "player_pip_event"

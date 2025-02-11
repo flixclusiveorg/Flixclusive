@@ -36,7 +36,6 @@ import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
 
-
 @OptIn(UnstableApi::class)
 @Composable
 internal fun PlayerAudioAndSubtitleDialog(
@@ -49,14 +48,17 @@ internal fun PlayerAudioAndSubtitleDialog(
 
     val subtitleFileSelector =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            if (uri == null)
+            if (uri == null) {
                 return@rememberLauncherForActivityResult
+            }
 
             val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
             context.contentResolver.takePersistableUriPermission(
-                /* uri = */ uri,
-                /* modeFlags = */ flags
+                // uri =
+                uri,
+                // modeFlags =
+                flags,
             )
 
             val file = UniFile.fromUri(context, uri)
@@ -66,11 +68,12 @@ internal fun PlayerAudioAndSubtitleDialog(
             val name = fileName ?: "[LOCAL] Subtitle"
             val filePath = uri.toString()
 
-            val localSub = Subtitle(
-                url = filePath,
-                language = name,
-                type = SubtitleSource.LOCAL
-            )
+            val localSub =
+                Subtitle(
+                    url = filePath,
+                    language = name,
+                    type = SubtitleSource.LOCAL,
+                )
 
             addSubtitle(localSub)
             player.preferredSubtitleLanguage = name
@@ -78,18 +81,20 @@ internal fun PlayerAudioAndSubtitleDialog(
             showSnackbar(
                 localSub.language,
                 LocaleR.string.subtitle_snackbar_message,
-                PlayerSnackbarMessageType.Audio
+                PlayerSnackbarMessageType.Audio,
             )
         }
 
     BasePlayerDialog(onDismissSheet = onDismissSheet) {
         Row(
-            modifier = Modifier
-                .fillMaxHeight(0.85F)
+            modifier =
+                Modifier
+                    .fillMaxHeight(0.85F),
         ) {
             ListContentHolder(
-                modifier = Modifier
-                    .weight(1F),
+                modifier =
+                    Modifier
+                        .weight(1F),
                 icon = painterResource(id = PlayerR.drawable.record_voice_over_black_24dp),
                 contentDescription = stringResource(id = LocaleR.string.audio_icon_content_desc),
                 label = stringResource(id = LocaleR.string.audio),
@@ -101,24 +106,26 @@ internal fun PlayerAudioAndSubtitleDialog(
                         showSnackbar(
                             availableAudios[it],
                             LocaleR.string.audio_snackbar_message,
-                            PlayerSnackbarMessageType.Audio
+                            PlayerSnackbarMessageType.Audio,
                         )
                     }
-                }
+                },
             )
 
             Box(
-                modifier = Modifier
-                    .align(Alignment.CenterVertically)
-                    .padding(horizontal = 10.dp)
-                    .fillMaxHeight(0.9F)
-                    .width(0.5.dp)
-                    .background(LocalContentColor.current.onMediumEmphasis(emphasis = 0.4F))
+                modifier =
+                    Modifier
+                        .align(Alignment.CenterVertically)
+                        .padding(horizontal = 10.dp)
+                        .fillMaxHeight(0.9F)
+                        .width(0.5.dp)
+                        .background(LocalContentColor.current.onMediumEmphasis(emphasis = 0.4F)),
             )
 
             ListContentHolder(
-                modifier = Modifier
-                    .weight(1F),
+                modifier =
+                    Modifier
+                        .weight(1F),
                 icon = painterResource(id = UiCommonR.drawable.outline_subtitles_24),
                 contentDescription = stringResource(id = LocaleR.string.subtitle_icon_content_desc),
                 label = stringResource(id = LocaleR.string.subtitle),
@@ -130,23 +137,25 @@ internal fun PlayerAudioAndSubtitleDialog(
                         showSnackbar(
                             availableSubtitles[it].language,
                             LocaleR.string.subtitle_snackbar_message,
-                            PlayerSnackbarMessageType.Audio
+                            PlayerSnackbarMessageType.Audio,
                         )
                     }
-                }
+                },
             )
         }
 
         Row(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd),
         ) {
             PlayerDialogButton(
                 label = stringResource(id = LocaleR.string.add_own_subtitle),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White.copy(0.3F),
-                    contentColor = Color.White
-                ),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = Color.White.copy(0.3F),
+                        contentColor = Color.White,
+                    ),
                 onClick = {
                     subtitleFileSelector.launch(
                         arrayOf(
@@ -159,14 +168,14 @@ internal fun PlayerAudioAndSubtitleDialog(
                             MimeTypes.APPLICATION_TTML,
                             MimeTypes.APPLICATION_MP4VTT,
                             MimeTypes.APPLICATION_SUBRIP,
-                        )
+                        ),
                     )
-                }
+                },
             )
 
             PlayerDialogButton(
                 label = stringResource(LocaleR.string.close_label),
-                onClick = onDismissSheet
+                onClick = onDismissSheet,
             )
         }
     }

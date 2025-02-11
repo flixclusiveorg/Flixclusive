@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.compose.viewbinding)
     implementation(libs.lifecycle.viewModelKtx)
     implementation(libs.media3.ffmpeg)
+    implementation(libs.universalchardet)
     // implementation(libs.media3.cast)
 
     api(libs.media3.common)

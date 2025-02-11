@@ -41,6 +41,7 @@ import com.flixclusive.core.ui.player.FlixclusivePlayerManager
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.R
 import com.flixclusive.core.ui.player.databinding.CustomPlayerBinding
+import com.flixclusive.core.ui.player.util.extensions.updatePiPParams
 import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.model.database.util.calculateRemainingTime
 import com.flixclusive.model.database.util.isTimeInRangeOfThreshold
@@ -379,11 +380,11 @@ object PlayerUiUtil {
             }
         }
     }
-    
+
     /**
-     * 
+     *
      * Re-prepares the player if the provided [CachedLinks] has changed
-     * 
+     *
      * */
     @Composable
     fun ObserveNewLinksAndSubtitles(
@@ -457,7 +458,7 @@ object PlayerUiUtil {
         onQueueNextEpisode: () -> Unit,
     ) {
         val playerManager by rememberLocalPlayerManager()
-        
+
         LaunchedEffect(
             playerManager.currentPosition,
             playerManager.isPlaying,

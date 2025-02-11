@@ -19,7 +19,8 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.text.TextOutput
 import androidx.media3.exoplayer.text.TextRenderer
 import androidx.media3.exoplayer.video.VideoRendererEventListener
-import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
+import com.flixclusive.core.ui.player.renderer.CustomDecoder
+import com.flixclusive.core.ui.player.renderer.CustomSubtitleDecoderFactory
 import com.flixclusive.core.util.network.okhttp.SSLTrustManager
 import com.flixclusive.model.datastore.user.player.DecoderPriority
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
@@ -39,7 +40,7 @@ internal fun Context.getRenderers(
     metadataRendererOutput: MetadataOutput,
     subtitleOffset: Long,
     decoderPriority: DecoderPriority,
-    onTextRendererChange: (CustomTextRenderer) -> Unit,
+    onTextRendererChange: (TextRenderer) -> Unit,
 ): Array<Renderer> {
     return NextRenderersFactory(this)
         .setEnableDecoderFallback(true)
@@ -58,11 +59,22 @@ internal fun Context.getRenderers(
             metadataRendererOutput
         ).map {
             if (it is TextRenderer) {
-                CustomTextRenderer(
-                    offset = subtitleOffset,
-                    output = textRendererOutput,
-                    outputLooper = eventHandler.looper,
-                ).also(onTextRendererChange)
+                CustomDecoder.subtitleOffset = subtitleOffset
+                val decoder = CustomSubtitleDecoderFactory()
+
+                val currentTextRenderer = TextRenderer(
+                    textRendererOutput,
+                    eventHandler.looper,
+                    decoder
+                ).apply {
+                    // Required to make the decoder work with old subtitles
+                    // Upgrade CustomSubtitleDecoderFactory when media3 supports it
+                    @Suppress("DEPRECATION")
+                    experimentalSetLegacyDecodingEnabled(true)
+                }
+
+                onTextRendererChange(currentTextRenderer)
+                currentTextRenderer
             } else it
         }.toTypedArray()
 }

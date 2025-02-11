@@ -3,7 +3,6 @@ package com.flixclusive.core.ui.player
 import android.content.Context
 import android.graphics.Color
 import android.media.audiofx.LoudnessEnhancer
-import android.net.Uri
 import android.util.TypedValue
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
@@ -13,13 +12,10 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.util.fastAny
-import androidx.compose.ui.util.fastForEach
-import androidx.compose.ui.util.fastMapNotNull
+import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.util.fastForEachIndexed
 import androidx.media3.common.C
-import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
@@ -30,35 +26,34 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.Renderer.STATE_ENABLED
+import androidx.media3.exoplayer.Renderer.STATE_STARTED
 import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.source.MergingMediaSource
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.exoplayer.text.TextRenderer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
-import androidx.media3.extractor.ExtractorsFactory
-import androidx.media3.extractor.text.DefaultSubtitleParserFactory
-import androidx.media3.extractor.text.SubtitleExtractor
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.awaitFirst
 import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.ui.player.renderer.CustomTextRenderer
+import com.flixclusive.core.ui.player.renderer.CustomDecoder
 import com.flixclusive.core.ui.player.util.MimeTypeParser
-import com.flixclusive.core.ui.player.util.MimeTypeParser.toMimeType
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
-import com.flixclusive.core.ui.player.util.PlayerTracksHelper.addOffSubtitle
-import com.flixclusive.core.ui.player.util.PlayerTracksHelper.getIndexOfPreferredLanguage
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.availablePlaybackSpeeds
-import com.flixclusive.core.ui.player.util.UnknownSubtitlesExtractor
 import com.flixclusive.core.ui.player.util.VolumeManager
 import com.flixclusive.core.ui.player.util.disableSSLVerification
+import com.flixclusive.core.ui.player.util.extensions.getFormats
+import com.flixclusive.core.ui.player.util.extensions.getIndexOfPreferredLanguage
+import com.flixclusive.core.ui.player.util.extensions.getName
+import com.flixclusive.core.ui.player.util.extensions.getSubtitleSource
+import com.flixclusive.core.ui.player.util.extensions.handleError
+import com.flixclusive.core.ui.player.util.extensions.switchTrack
+import com.flixclusive.core.ui.player.util.extensions.toSubtitleConfigurations
 import com.flixclusive.core.ui.player.util.getCacheFactory
 import com.flixclusive.core.ui.player.util.getLoadControl
 import com.flixclusive.core.ui.player.util.getRenderers
-import com.flixclusive.core.ui.player.util.handleError
-import com.flixclusive.core.ui.player.util.isOffSubtitle
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
@@ -101,7 +96,7 @@ enum class PlayerEvents {
 /**
  *
  * A Player wrapper/manager for [Player], [ExoPlayer] and [MediaSession]
- *
+ * TODO: Improve code.
  */
 @OptIn(UnstableApi::class)
 class FlixclusivePlayerManager(
@@ -111,15 +106,17 @@ class FlixclusivePlayerManager(
     private val playerCacheManager: PlayerCacheManager,
     private val showErrorCallback: (message: UiText) -> Unit,
 ) : Player.Listener {
-    private val playerPreferences get() =
-        dataStoreManager
-            .getUserPrefs<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY)
-            .awaitFirst()
+    private val playerPreferences
+        get() =
+            dataStoreManager
+                .getUserPrefs<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY)
+                .awaitFirst()
 
-    private val subtitlesPreferences get() =
-        dataStoreManager
-            .getUserPrefs<SubtitlesPreferences>(UserPreferences.SUBTITLES_PREFS_KEY)
-            .awaitFirst()
+    private val subtitlesPreferences
+        get() =
+            dataStoreManager
+                .getUserPrefs<SubtitlesPreferences>(UserPreferences.SUBTITLES_PREFS_KEY)
+                .awaitFirst()
 
     private var mediaSession: MediaSession? = null
     private var currentStreamPlaying: Stream? = null
@@ -162,13 +159,14 @@ class FlixclusivePlayerManager(
     private lateinit var cacheFactory: DefaultMediaSourceFactory
     private val localDataSource: DefaultDataSource.Factory
     private val okHttpDataSource: OkHttpDataSource.Factory
-    private val subtitleParserFactory = DefaultSubtitleParserFactory()
-    private var currentTextRenderer: CustomTextRenderer? = null
     private val baseHttpDataSource =
         DefaultHttpDataSource
             .Factory()
             .setUserAgent(USER_AGENT)
             .setAllowCrossProtocolRedirects(true)
+
+    // private var currentSubtitleDecoder: CustomSubtitleDecoderFactory? = null
+    private var currentTextRenderer: TextRenderer? = null
 
     // == CCs/Audios/Qualities
     private val audioTrackGroups: MutableList<Tracks.Group?> = mutableListOf()
@@ -198,6 +196,7 @@ class FlixclusivePlayerManager(
     override fun onPlaybackStateChanged(playbackState: Int) {
         when (playbackState) {
             Player.STATE_READY -> onReady()
+            Player.STATE_ENDED -> onSubtitleOffsetChange(0)
             else -> Unit
         }
     }
@@ -309,35 +308,31 @@ class FlixclusivePlayerManager(
         subtitles: List<Subtitle>,
         initialPlaybackPosition: Long = 0L,
     ) {
-        player?.run {
-            infoLog("Preparing the player...")
+        if (player == null) return
 
-            if (link != currentStreamPlaying) {
-                currentStreamPlaying = link
-                areTracksInitialized = false
-            }
+        infoLog("Preparing the player...")
 
-            val mediaItem =
-                createMediaItem(
-                    url = link.url,
-                    title = title,
-                )
-
-            val customHeaders = link.customHeaders ?: emptyMap()
-
-            okHttpDataSource.setDefaultRequestProperties(customHeaders)
-            baseHttpDataSource.setDefaultRequestProperties(customHeaders)
-
-            val mediaSource = cacheFactory.createMediaSource(mediaItem)
-
-            setMediaSource(
-                MergingMediaSource(mediaSource, *createSubtitleSources(subtitles)),
-                initialPlaybackPosition,
-            )
-
-            prepare()
-            playWhenReady = this@FlixclusivePlayerManager.playWhenReady
+        if (link != currentStreamPlaying) {
+            currentStreamPlaying = link
+            areTracksInitialized = false
         }
+
+        val customHeaders = link.customHeaders ?: emptyMap()
+
+        okHttpDataSource.setDefaultRequestProperties(customHeaders)
+        baseHttpDataSource.setDefaultRequestProperties(customHeaders)
+
+
+        val mediaItem = createMediaItem(url = link.url, title = title, subtitles = subtitles)
+        val mediaSource = cacheFactory.createMediaSource(mediaItem)
+
+        player!!.setMediaSource(
+            mediaSource,
+            initialPlaybackPosition,
+        )
+
+        player!!.prepare()
+        player!!.playWhenReady = playWhenReady
     }
 
     fun release(isForceReleasing: Boolean = false) {
@@ -360,58 +355,57 @@ class FlixclusivePlayerManager(
     }
 
     private fun onReady() {
-        player?.run {
-            if (!areTracksInitialized) {
-                extractAudios()
-                extractEmbeddedSubtitles()
+        if (player == null) return
 
-                areTracksInitialized = true
+        if (!areTracksInitialized) {
+            extractAudios()
+            extractSubtitles()
 
-                val subtitleIndex =
-                    when {
-                        !subtitlesPreferences.isSubtitleEnabled -> 0 // == Off subtitles
-                        else ->
-                            availableSubtitles.getIndexOfPreferredLanguage(
-                                preferredLanguage = preferredSubtitleLanguage,
-                                languageExtractor = { it.language },
-                            )
-                    }
-                val audioIndex =
-                    availableAudios.getIndexOfPreferredLanguage(
-                        preferredLanguage = preferredAudioLanguage,
-                        languageExtractor = { it },
-                    )
+            val subtitleIndex =
+                if (!subtitlesPreferences.isSubtitleEnabled) 0
+                else availableSubtitles.getIndexOfPreferredLanguage(
+                    preferredLanguage = preferredSubtitleLanguage,
+                    languageExtractor = { it.language },
+                )
 
-                onSubtitleChange(index = subtitleIndex)
-                onAudioChange(index = audioIndex)
-            } else {
-                onSubtitleChange(index = selectedSubtitleIndex)
-                onAudioChange(index = selectedAudioIndex)
-            }
+            val audioIndex =
+                availableAudios.getIndexOfPreferredLanguage(
+                    preferredLanguage = preferredAudioLanguage,
+                    languageExtractor = { it },
+                )
 
-            setPlaybackSpeed(playbackSpeed)
-            currentTextRenderer?.setRenderOffsetMs(offset = subtitleOffset)
-
-            hasBeenInitialized = true
+            onSubtitleChange(index = subtitleIndex)
+            onAudioChange(index = audioIndex)
+        } else {
+            onSubtitleChange(index = selectedSubtitleIndex)
+            onAudioChange(index = selectedAudioIndex)
         }
+
+        player?.setPlaybackSpeed(playbackSpeed)
+
+        areTracksInitialized = true
+        hasBeenInitialized = true
     }
 
     private fun createMediaItem(
         url: String,
         title: String?,
-    ) = MediaItem
-        .Builder()
-        .setUri(url)
-        .setMediaMetadata(
-            MediaMetadata
-                .Builder()
-                .setDisplayTitle(title)
-                .build(),
-        ).apply {
-            if (MimeTypeParser.isM3U8(url)) {
-                setMimeType(MimeTypes.APPLICATION_M3U8)
-            }
-        }.build()
+        subtitles: List<Subtitle>,
+    ): MediaItem {
+        val metadata = MediaMetadata.Builder().setDisplayTitle(title).build()
+        val subtitleConfigurations = subtitles.toSubtitleConfigurations(currentList = availableSubtitles)
+
+        return MediaItem
+            .Builder()
+            .setUri(url)
+            .setMediaId(url)
+            .setSubtitleConfigurations(subtitleConfigurations)
+            .setMediaMetadata(metadata).apply {
+                if (MimeTypeParser.isM3U8(url)) {
+                    setMimeType(MimeTypes.APPLICATION_M3U8)
+                }
+            }.build()
+    }
 
     /**
      * Extracts the embedded audios by populating
@@ -419,143 +413,51 @@ class FlixclusivePlayerManager(
      *
      */
     private fun extractAudios() {
+        val trackGroups = player?.currentTracks?.groups?.fastFilter {
+            it.type == C.TRACK_TYPE_AUDIO && it.isSupported
+        } ?: emptyList()
+
         audioTrackGroups.clear()
         availableAudios.clear()
+        audioTrackGroups.addAll(trackGroups)
 
-        player?.run {
-            audioTrackGroups.addAll(
-                currentTracks.groups
-                    .filter { group ->
-                        group.type == C.TRACK_TYPE_AUDIO
-                    },
-            )
-
-            audioTrackGroups.forEach { group ->
-                group?.let {
-                    for (trackIndex in 0 until it.length) {
-                        val format = it.getTrackFormat(trackIndex)
-                        val locale = Locale(format.language ?: "Default")
-
-                        availableAudios.add(
-                            "Audio Track #${availableAudios.size + 1}: ${locale.displayLanguage}",
-                        )
-                    }
-                }
-            }
+        trackGroups.getFormats().fastForEachIndexed { i, format ->
+            val name = format.getName(C.TRACK_TYPE_AUDIO, i)
+            availableAudios.add(name)
         }
+
+        infoLog("Extracted ${availableAudios.size} audios!")
     }
 
-    /**
-     * Extracts the embedded subtitles by populating
-     * the available audios and track groups.
-     * TODO: Fix this shit, extracting embedded subs doesnt work!
-     */
-    private fun extractEmbeddedSubtitles() {
-        player?.run {
-            val subtitleTrackGroups =
-                currentTracks.groups
-                    .filter { group ->
-                        group.type == C.TRACK_TYPE_TEXT
-                    }
-
-            subtitleTrackGroups.getFormats().fastForEach { format ->
-                // Filter out non subs, already used subs and subs without languages
-                if (format.id == null || format.language == null) {
-                    return
-                }
-
-                availableSubtitles.add(
-                    element =
-                        Subtitle(
-                            url = format.id ?: "",
-                            language = format.language?.toUniqueSubtitleLanguage() ?: "Default Embedded",
-                            type = SubtitleSource.EMBEDDED,
-                        ),
-                )
+    private fun extractSubtitles() {
+        val subtitleTrackGroups =
+            player?.currentTracks?.groups?.fastFilter { group ->
+                group.type == C.TRACK_TYPE_TEXT && group.isSupported
             }
-        }
-    }
-
-    /**
-     * extracts the subtitle configurations of it.
-     *
-     */
-    private fun createSubtitleSources(subtitles: List<Subtitle>): Array<ProgressiveMediaSource> {
-        if (subtitles.isEmpty()) {
-            return arrayOf()
-        }
 
         availableSubtitles.clear()
+        availableSubtitles.add(
+            Subtitle(
+                url = "",
+                language = context.getString(LocaleR.string.off_subtitles),
+                type = SubtitleSource.EMBEDDED,
+            )
+        )
 
-        val sortedSubtitles =
-            subtitles
-                .sortedWith(
-                    compareBy<Subtitle> { it.language.lowercase() }
-                        .thenBy {
-                            it.language
-                                .first()
-                                .isLetterOrDigit()
-                                .not()
-                        },
-                ).addOffSubtitle(context)
+        subtitleTrackGroups?.getFormats()?.fastForEachIndexed { i, format ->
+            if (format.id == null) return@fastForEachIndexed
 
-        val offSubtitleLabel = context.getString(LocaleR.string.off_subtitles)
+            availableSubtitles.add(
+                element =
+                    Subtitle(
+                        url = format.id!!,
+                        language = format.getName(C.TRACK_TYPE_TEXT, i),
+                        type = getSubtitleSource(format.id!!),
+                    ),
+            )
+        }
 
-        // Cloudstream3 logic for unique subtitle names
-        return sortedSubtitles
-            .fastMapNotNull { subtitle ->
-                if (subtitle.isOffSubtitle(context)) {
-                    availableSubtitles.add(subtitle)
-                    return@fastMapNotNull null
-                }
-
-                val subtitleName = subtitle.language.toUniqueSubtitleLanguage()
-                availableSubtitles.add(subtitle.copy(language = subtitleName))
-
-                val subtitleConfiguration =
-                    SubtitleConfiguration
-                        .Builder(Uri.parse(subtitle.url))
-                        .setMimeType(subtitle.toMimeType())
-                        .setLanguage(subtitleName)
-                        .build()
-
-                val format =
-                    Format
-                        .Builder()
-                        .setSampleMimeType(subtitleConfiguration.mimeType)
-                        .setLanguage(subtitleConfiguration.language)
-                        .setSelectionFlags(subtitleConfiguration.selectionFlags)
-                        .setRoleFlags(subtitleConfiguration.roleFlags)
-                        .setLabel(subtitleConfiguration.label)
-                        .setId(subtitleConfiguration.id)
-                        .build()
-
-                val extractorFactory: ExtractorsFactory =
-                    object : ExtractorsFactory {
-                        override fun createExtractors() =
-                            arrayOf(
-                                if (subtitleParserFactory.supportsFormat(format)) {
-                                    SubtitleExtractor(subtitleParserFactory.create(format), format)
-                                } else {
-                                    UnknownSubtitlesExtractor(format)
-                                },
-                            )
-                    }
-
-                val subtitleDataSource = when (subtitle.type) {
-                    SubtitleSource.ONLINE -> okHttpDataSource
-                    else -> localDataSource
-                }
-
-                val factory =
-                    ProgressiveMediaSource
-                        .Factory(
-                            subtitleDataSource,
-                            extractorFactory,
-                        )
-
-                factory.createMediaSource(MediaItem.fromUri(subtitleConfiguration.uri))
-            }.toTypedArray()
+        infoLog("Extracted ${availableSubtitles.size - 1} subtitles!")
     }
 
     /**
@@ -564,31 +466,12 @@ class FlixclusivePlayerManager(
      * @param index The index of the selected subtitle.
      */
     fun onSubtitleChange(index: Int) {
-        selectedSubtitleIndex = index
+        player?.apply {
+            selectedSubtitleIndex = index
+            preferredSubtitleLanguage = availableSubtitles.getOrNull(selectedSubtitleIndex)?.language
+                ?: preferredSubtitleLanguage
 
-        preferredSubtitleLanguage = availableSubtitles.getOrNull(selectedSubtitleIndex)?.language ?: return
-
-        val oldTrackSelectionParameters = player?.trackSelectionParameters
-
-        oldTrackSelectionParameters?.let {
-            player?.trackSelectionParameters =
-                when (selectedSubtitleIndex) {
-                    // 0 == OFF Subtitles
-                    0 -> {
-                        it
-                            .buildUpon()
-                            .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
-                            .build()
-                    }
-
-                    else -> {
-                        it
-                            .buildUpon()
-                            .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
-                            .setPreferredTextLanguage(preferredSubtitleLanguage)
-                            .build()
-                    }
-                }
+            switchTrack(C.TRACK_TYPE_TEXT, selectedSubtitleIndex - 1)
         }
     }
 
@@ -599,23 +482,15 @@ class FlixclusivePlayerManager(
      */
     fun onAudioChange(index: Int) {
         selectedAudioIndex = index
-
         val audioTrack =
             audioTrackGroups
                 .getOrNull(selectedAudioIndex)
                 ?.getTrackFormat(0)
-                ?.language
+                ?.getName(C.TRACK_TYPE_AUDIO, index)
                 ?: return
-
         preferredAudioLanguage = audioTrack
-        player?.run {
-            trackSelectionParameters =
-                trackSelectionParameters
-                    .buildUpon()
-                    .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
-                    .setPreferredAudioLanguage(preferredAudioLanguage)
-                    .build()
-        }
+
+        player?.switchTrack(C.TRACK_TYPE_AUDIO, index)
     }
 
     /**
@@ -650,7 +525,10 @@ class FlixclusivePlayerManager(
      * */
     fun onSubtitleOffsetChange(offset: Long) {
         subtitleOffset = offset
-        currentTextRenderer?.setRenderOffsetMs(offset)
+        CustomDecoder.subtitleOffset = offset
+        if (currentTextRenderer?.state == STATE_ENABLED || currentTextRenderer?.state == STATE_STARTED) {
+            currentTextRenderer?.resetPosition(currentPosition)
+        }
     }
 
     /**
@@ -772,34 +650,5 @@ class FlixclusivePlayerManager(
                 fontSize,
             )
         }
-    }
-
-    /**
-     * Gets all supported formats in a list
-     * */
-    private fun List<Tracks.Group>.getFormats(): List<Format> =
-        this
-            .map {
-                it.getFormats()
-            }.flatten()
-
-    private fun Tracks.Group.getFormats(): List<Format> =
-        (0 until this.mediaTrackGroup.length).mapNotNull { i ->
-            if (this.isSupported) {
-                this.mediaTrackGroup.getFormat(i)
-            } else {
-                null
-            }
-        }
-
-    private fun String.toUniqueSubtitleLanguage(): String {
-        var language = this
-        var count = 0
-        while (availableSubtitles.fastAny { it.language.equals(language, true) }) {
-            count++
-            language = "$this $count"
-        }
-
-        return language
     }
 }

@@ -49,6 +49,7 @@ room = "2.6.1"
 serialization = "1.6.3"
 tvCompose = "1.0.0-alpha10" # TODO: Update TV Compose to stable
 unifile = "1.0.0"
+universalChardet = "2.5.0"
 
 [libraries]
 # Android Core
@@ -109,6 +110,9 @@ stubs-model-film = { group = "com.github.flixclusiveorg.core-stubs", name = "mod
 stubs-model-provider = { group = "com.github.flixclusiveorg.core-stubs", name = "model-provider", version.ref = "coreStubs" }
 stubs-provider = { group = "com.github.flixclusiveorg.core-stubs", name = "provider", version.ref = "coreStubs" }
 stubs-util = { group = "com.github.flixclusiveorg.core-stubs", name = "core-util", version.ref = "coreStubs" }
+
+# Universal chardet
+universalchardet = { group = "com.github.albfernandez", name = "juniversalchardet", version.ref = "universalChardet" }
 
 # Gson
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
