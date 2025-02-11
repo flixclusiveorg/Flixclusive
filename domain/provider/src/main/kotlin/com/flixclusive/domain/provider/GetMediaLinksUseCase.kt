@@ -104,7 +104,6 @@ class GetMediaLinksUseCase
                 val apis =
                     getPrioritizedProvidersList(
                         preferredProvider = preferredProvider,
-                        filmLanguage = film.language,
                     )
 
                 var episodeToUse: Episode? = episode
@@ -315,7 +314,7 @@ class GetMediaLinksUseCase
                 seasonNumber = 1
                 episodeNumber = 1
             } else {
-                val (nextSeason, nextEpisode) = getNextEpisodeToWatch(watchHistoryItem)
+                val (nextSeason, nextEpisode) = getNextEpisodeToWatch(watchHistoryItem!!)
                 seasonNumber = nextSeason ?: 1
                 episodeNumber = nextEpisode ?: 1
             }
@@ -369,29 +368,23 @@ class GetMediaLinksUseCase
          * available that prioritizes the
          * given provider and puts it on top of the list
          * */
-        private fun getPrioritizedProvidersList(
-            preferredProvider: String?,
-            filmLanguage: String?,
-        ): List<Pair<String, ProviderApi>> {
-            val apis = providerApiRepository.getAll()
-
+        private fun getPrioritizedProvidersList(preferredProvider: String?): List<ProviderApiWithId> {
+            var providers = providerRepository.getProviders()
             if (preferredProvider != null) {
-                return apis.sortedByDescending { (id, _) ->
-                    id.equals(preferredProvider, true)
+                providers = providers.sortedByDescending {
+                    it.id.equals(preferredProvider, true)
                 }
             }
 
-            if (filmLanguage != null) {
-                return apis.sortedByDescending { (id, _) ->
-                    providerRepository
-                        .getProviderMetadata(id)
-                        ?.language
-                        ?.languageCode
-                        ?.equals(filmLanguage, ignoreCase = true) == true
+            return providers
+                .mapNotNull { provider ->
+                    providerApiRepository.getApi(provider.id)?.let { api ->
+                        ProviderApiWithId(
+                            id = provider.id,
+                            api = api
+                        )
+                    }
                 }
-            }
-
-            return apis
         }
 
         private suspend fun getCorrectWatchId(
@@ -438,3 +431,8 @@ class GetMediaLinksUseCase
             }
         }
     }
+
+private data class ProviderApiWithId(
+    val id: String,
+    val api: ProviderApi,
+)
