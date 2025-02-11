@@ -2,7 +2,7 @@ package com.flixclusive.data.configuration
 
 import com.flixclusive.core.network.retrofit.GithubApiService
 import com.flixclusive.core.util.common.GithubConstant
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -18,7 +18,7 @@ class AppUpdateCheckerTest {
 
     private val baseAppBuild = AppBuild(
         build = 10000,
-        versionName = "v1.4.0-beta1",
+        versionName = "2.1.2",
         commitVersion = "abc123",
         debug = false,
         applicationId = "",
@@ -38,10 +38,16 @@ class AppUpdateCheckerTest {
     }
 
     @Test
-    fun `checkForPrereleaseUpdates should return Outdated when update is available`() = runBlocking {
+    fun `checkForPrereleaseUpdates should return Outdated when update is available`() = runTest {
+        // Arrange
+        val preReleases = githubApiService.getReleases().filter { it.isPrerelease }
+        val latestPreRelease = preReleases.last()
+        val latestCommitHash = latestPreRelease.tagName.removePrefix("PR-")
+        val currentAppBuild = baseAppBuild.copy(commitVersion = latestCommitHash)
+
         // Act
         val result = appUpdateChecker.checkForPrereleaseUpdates(
-            currentAppBuild = baseAppBuild
+            currentAppBuild = currentAppBuild
         )
 
         // Assert
@@ -49,9 +55,12 @@ class AppUpdateCheckerTest {
     }
 
     @Test
-    fun `checkForPrereleaseUpdates should return UpToDate when no update is available`() = runBlocking {
+    fun `checkForPrereleaseUpdates should return UpToDate when no update is available`() = runTest {
         // Arrange
-        val currentAppBuild = baseAppBuild.copy(commitVersion = "5fe0a77")
+        val preReleases = githubApiService.getReleases().filter { it.isPrerelease }
+        val latestPreRelease = preReleases.first()
+        val latestCommitHash = latestPreRelease.tagName.removePrefix("PR-")
+        val currentAppBuild = baseAppBuild.copy(commitVersion = latestCommitHash)
 
         // Act
         val result = appUpdateChecker.checkForPrereleaseUpdates(
@@ -63,7 +72,7 @@ class AppUpdateCheckerTest {
     }
 
     @Test
-    fun `checkForStableUpdates should return Outdated when update is available`() = runBlocking {
+    fun `checkForStableUpdates should return Outdated when update is available`() = runTest {
         // Act
         val result = appUpdateChecker.checkForStableUpdates(baseAppBuild)
 
@@ -72,9 +81,9 @@ class AppUpdateCheckerTest {
     }
 
     @Test
-    fun `checkForStableUpdates should return UpToDate when no update is available`() = runBlocking {
+    fun `checkForStableUpdates should return UpToDate when no update is available`() = runTest {
         // Arrange
-        val currentAppBuild = baseAppBuild.copy(versionName = "2.0.1")
+        val currentAppBuild = baseAppBuild.copy(versionName = "2.1.3")
 
         // Act
         val result = appUpdateChecker.checkForStableUpdates(currentAppBuild)
