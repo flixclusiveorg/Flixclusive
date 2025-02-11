@@ -120,11 +120,10 @@ internal fun ProviderManagerScreen(
             lazyListState = lazyListState,
             onMove = { from, to ->
                 if (!isSearching) {
-                    // -1 since there's a header
                     with(viewModel.providers) {
-                        add(from.index - 1, removeAt(to.index - 1))
+                        add(from.index, removeAt(to.index))
                     }
-                    viewModel.onMove(from.index - 1, to.index - 1)
+                    viewModel.onMove(from.index, to.index)
                     ViewCompat.performHapticFeedback(
                         view,
                         HapticFeedbackConstantsCompat.SEGMENT_FREQUENT_TICK,
