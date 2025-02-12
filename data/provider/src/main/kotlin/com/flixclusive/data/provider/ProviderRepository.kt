@@ -51,7 +51,11 @@ class ProviderRepository
             if (providerPositions.contains(preferenceItem)) return
 
             providerPositions.add(preferenceItem)
-            saveToPreferences()
+            saveToPreferences {
+                if (it.providers.contains(preferenceItem)) return@saveToPreferences it
+
+                it.copy(providers = it.providers + preferenceItem)
+            }
         }
 
         fun getProviderMetadata(id: String): ProviderMetadata? = providerMetadata[id]
@@ -92,7 +96,7 @@ class ProviderRepository
             toIndex: Int,
         ) {
             providerPositions.move(fromIndex, toIndex)
-            saveToPreferences()
+            saveToPreferences { it.copy(providers = providerPositions) }
         }
 
         suspend fun remove(id: String) {
@@ -111,7 +115,7 @@ class ProviderRepository
 
         suspend fun removeFromPreferences(id: String) {
             if (providerPositions.removeIf { it.id == id }) {
-                saveToPreferences()
+                saveToPreferences { it.copy(providers = providerPositions) }
             }
         }
 
@@ -127,12 +131,13 @@ class ProviderRepository
                 item = provider.copy(isDisabled = !provider.isDisabled),
             )
 
-            saveToPreferences()
+            saveToPreferences { it.copy(providers = providerPositions) }
         }
 
-        private suspend fun saveToPreferences() {
-            dataStoreManager.updateUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY) {
-                it.copy(providers = providerPositions)
-            }
+        private suspend fun saveToPreferences(transform: suspend (t: ProviderPreferences) -> ProviderPreferences) {
+            dataStoreManager.updateUserPrefs<ProviderPreferences>(
+                key = UserPreferences.PROVIDER_PREFS_KEY,
+                transform = transform,
+            )
         }
     }

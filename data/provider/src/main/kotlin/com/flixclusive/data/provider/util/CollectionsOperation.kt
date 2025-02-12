@@ -1,6 +1,9 @@
 package com.flixclusive.data.provider.util
 
+import kotlinx.serialization.Serializable
+
 sealed interface CollectionsOperation<T> {
+    @Serializable
     sealed class List<T> : CollectionsOperation<T> {
         data class Add<T>(
             val item: T,
@@ -10,7 +13,7 @@ sealed interface CollectionsOperation<T> {
             val item: T,
         ) : List<T>()
     }
-
+    @Serializable
     sealed class Map<K, V> : CollectionsOperation<V> {
         data class Add<K, V>(
             val key: K,
