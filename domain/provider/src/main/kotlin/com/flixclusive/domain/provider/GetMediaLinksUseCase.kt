@@ -369,7 +369,7 @@ class GetMediaLinksUseCase
          * given provider and puts it on top of the list
          * */
         private fun getPrioritizedProvidersList(preferredProvider: String?): List<ProviderApiWithId> {
-            var providers = providerRepository.getProviders()
+            var providers = providerRepository.getOrderedProviders()
             if (preferredProvider != null) {
                 providers = providers.sortedByDescending {
                     it.id.equals(preferredProvider, true)
