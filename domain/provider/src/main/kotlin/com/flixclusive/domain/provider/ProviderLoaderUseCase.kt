@@ -163,11 +163,11 @@ class ProviderLoaderUseCase
                         file = file,
                     ) ?: return@forEach
 
-                val mainParentFolder = file.parentFile?.parent
-                val isDebugProvider = mainParentFolder.equals(PROVIDER_DEBUG, true)
+                val rootParentFolder = file.parentFile?.parentFile?.name
+                val isDebugProvider = rootParentFolder.equals(PROVIDER_DEBUG, true)
 
                 when {
-                    file.isProviderFile && isDebugProvider -> {
+                    file.isProviderFile && isDebugProvider && providerPreferences.shouldAddDebugPrefix -> {
                         loadDebugProvider(
                             file = file,
                             metadata = metadata,

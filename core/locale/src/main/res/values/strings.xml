@@ -437,7 +437,7 @@
     <string name="action_warning_default_message">This is an irreversible action, do you still wish to proceed?</string>
     <string name="add_1000ms_content_description">Add 1000ms on subtitle delay</string>
     <string name="add_500ms_content_description">Add 500ms on subtitle delay</string>
-    <string name="add_debug_prefix_settings_description">Automatically adds a \'-debug\' prefix to providers you\'re currently debugging or developing.</string>
+    <string name="add_debug_prefix_settings_description">Automatically adds a \'-debug\' prefix to providers you\'re currently debugging or developing.\n\nChanges apply after restart.</string>
     <string name="add_to_watchlist_button">Add to watchlist button</string>
     <string name="add_user_button_content_desc">Add a new user profile</string>
     <string name="added_to_watchlist_button">Added to watchlist button</string>
