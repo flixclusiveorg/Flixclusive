@@ -22,14 +22,16 @@ class TestingConventionPlugin : Plugin<Project> {
             }
 
             dependencies {
-                add("testImplementation", libs.findLibrary("mockk").get())
                 add("testImplementation", libs.findLibrary("coroutines.test").get())
                 add("testImplementation", libs.findLibrary("junit").get())
+                add("testImplementation", libs.findLibrary("mockk").get())
+                add("testImplementation", libs.findLibrary("turbine").get())
 
-                add("androidTestImplementation", libs.findLibrary("mockk").get())
-                add("androidTestImplementation", libs.findLibrary("coroutines.test").get())
                 add("androidTestImplementation", libs.findLibrary("androidx.test.ext.junit").get())
+                add("androidTestImplementation", libs.findLibrary("coroutines.test").get())
                 add("androidTestImplementation", libs.findLibrary("espresso.core").get())
+                add("androidTestImplementation", libs.findLibrary("mockk").get())
+                add("androidTestImplementation", libs.findLibrary("turbine").get())
             }
 
         }
