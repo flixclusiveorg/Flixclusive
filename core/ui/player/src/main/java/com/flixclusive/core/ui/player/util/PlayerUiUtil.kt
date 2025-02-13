@@ -26,7 +26,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidViewBinding
@@ -42,7 +41,6 @@ import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.R
 import com.flixclusive.core.ui.player.databinding.CustomPlayerBinding
 import com.flixclusive.core.ui.player.util.extensions.updatePiPParams
-import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.model.database.util.calculateRemainingTime
 import com.flixclusive.model.database.util.isTimeInRangeOfThreshold
 import com.flixclusive.model.datastore.user.player.ResizeMode
@@ -390,8 +388,8 @@ object PlayerUiUtil {
     fun ObserveNewLinksAndSubtitles(
         selectedSourceLink: Int,
         currentPlayerTitle: String,
-        newLinks: SnapshotStateList<Stream>,
-        newSubtitles: SnapshotStateList<Subtitle>,
+        newLinks: List<Stream>,
+        newSubtitles: List<Subtitle>,
         getSavedTimeForCurrentSourceData: () -> Long
     ) {
         val playerManager by rememberLocalPlayerManager()

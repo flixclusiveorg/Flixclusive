@@ -43,7 +43,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -85,22 +84,23 @@ fun MediaLinksBottomSheet(
     subtitles: List<Subtitle>,
     onDismiss: () -> Unit,
     onLinkClick: (MediaLink) -> Unit,
-    onSkipLoading: () -> Unit
+    onSkipLoading: () -> Unit,
 ) {
-    val areSubtitlesShown = remember { mutableStateOf(false) }
-    val filteredLinks = if (areSubtitlesShown.value) subtitles else streams
+    var areSubtitlesShown by remember { mutableStateOf(false) }
+    val filteredLinks = if (areSubtitlesShown) subtitles else streams
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        shape = MaterialTheme.shapes.small.copy(
-            bottomEnd = CornerSize(0.dp),
-            bottomStart = CornerSize(0.dp)
-        ),
-        dragHandle = { DragHandle() }
+        shape =
+            MaterialTheme.shapes.small.copy(
+                bottomEnd = CornerSize(0.dp),
+                bottomStart = CornerSize(0.dp),
+            ),
+        dragHandle = { DragHandle() },
     ) {
         LazyColumn(
             contentPadding = PaddingValues(10.dp),
-            verticalArrangement = Arrangement.spacedBy(5.dp)
+            verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             if (state.isLoading) {
                 item {
@@ -108,9 +108,10 @@ fun MediaLinksBottomSheet(
                         state = state,
                         streams = streams,
                         onSkipLoading = onSkipLoading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 10.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp),
                     )
                 }
             }
@@ -119,28 +120,28 @@ fun MediaLinksBottomSheet(
                 AnimatedVisibility(
                     visible = !state.isIdle && (streams.isNotEmpty() || subtitles.isNotEmpty()),
                     enter = fadeIn(),
-                    exit = fadeOut()
+                    exit = fadeOut(),
                 ) {
                     FilterSegmentedButtons(
                         areSubtitlesShown = areSubtitlesShown,
-                        state = state,
-                        streams = streams,
-                        subtitles = subtitles
+                        subtitles = subtitles,
+                        onToggleSubtitleView = { areSubtitlesShown = it },
                     )
                 }
             }
 
             item {
                 AnimatedVisibility(
-                    visible =  filteredLinks.isEmpty() && state.isError,
+                    visible = filteredLinks.isEmpty() && state.isError,
                     enter = scaleIn() + fadeIn(),
-                    exit = fadeOut() + scaleOut()
+                    exit = fadeOut() + scaleOut(),
                 ) {
                     ErrorMessage(
                         state = state,
-                        modifier = Modifier
-                            .padding(vertical = 20.dp)
-                            .fillMaxSize()
+                        modifier =
+                            Modifier
+                                .padding(vertical = 20.dp)
+                                .fillMaxSize(),
                     )
                 }
             }
@@ -148,20 +149,21 @@ fun MediaLinksBottomSheet(
             if (filteredLinks.isNotEmpty()) {
                 item(key = 4) {
                     Spacer(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .animateItem()
+                        modifier =
+                            Modifier
+                                .size(10.dp)
+                                .animateItem(),
                     )
                 }
 
                 items(
                     filteredLinks,
-                    key = { it.hashCode() }
+                    key = { it.hashCode() },
                 ) {
                     MediaLinkItem(
                         modifier = Modifier.animateItem(),
                         link = it,
-                        onClick = { onLinkClick(it) }
+                        onClick = { onLinkClick(it) },
                     )
                 }
             }
@@ -170,31 +172,29 @@ fun MediaLinksBottomSheet(
 }
 
 @Composable
-private fun DragHandle(
-    modifier: Modifier = Modifier
-) {
+private fun DragHandle(modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier
-            .padding(top = 22.dp, bottom = 5.dp),
+        modifier =
+            modifier
+                .padding(top = 22.dp, bottom = 5.dp),
         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.2F),
-        shape = MaterialTheme.shapes.extraLarge
+        shape = MaterialTheme.shapes.extraLarge,
     ) {
         Box(
             Modifier.size(
                 width = 32.dp,
-                height = 4.dp
-            )
+                height = 4.dp,
+            ),
         )
     }
 }
 
 @Composable
 private fun FilterSegmentedButtons(
-    modifier: Modifier = Modifier,
-    areSubtitlesShown: MutableState<Boolean>,
-    state: MediaLinkResourceState,
-    streams: List<Stream>,
+    areSubtitlesShown: Boolean,
     subtitles: List<Subtitle>,
+    onToggleSubtitleView: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val noCorner = CornerSize(0)
     val hasCorner = CornerSize(4.dp)
@@ -203,47 +203,51 @@ private fun FilterSegmentedButtons(
     val streamButtonCorner = if (subtitles.isEmpty()) hasCorner else noCorner
 
     SingleChoiceSegmentedButtonRow(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
     ) {
         SegmentedButton(
-            selected = !areSubtitlesShown.value,
-            onClick = { areSubtitlesShown.value = false },
+            selected = !areSubtitlesShown,
+            onClick = { onToggleSubtitleView(false) },
             colors = colors,
-            border = SegmentedButtonDefaults.borderStroke(
-                color = colors.activeBorderColor.copy(alpha = 0.5F),
-                width = 1.2.dp
-            ),
-            shape = MaterialTheme.shapes.extraSmall.copy(
-                topEnd = streamButtonCorner,
-                bottomEnd = streamButtonCorner
-            ),
+            border =
+                SegmentedButtonDefaults.borderStroke(
+                    color = colors.activeBorderColor.copy(alpha = 0.5F),
+                    width = 1.2.dp,
+                ),
+            shape =
+                MaterialTheme.shapes.extraSmall.copy(
+                    topEnd = streamButtonCorner,
+                    bottomEnd = streamButtonCorner,
+                ),
             label = {
                 Text(
                     text = stringResource(id = LocaleR.string.stream),
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
                 )
-            }
+            },
         )
 
         if (subtitles.isNotEmpty()) {
             SegmentedButton(
-                selected = areSubtitlesShown.value,
-                onClick = { areSubtitlesShown.value = true },
-                shape = MaterialTheme.shapes.extraSmall.copy(
-                    topStart = noCorner,
-                    bottomStart = noCorner
-                ),
+                selected = areSubtitlesShown,
+                onClick = { onToggleSubtitleView(true) },
+                shape =
+                    MaterialTheme.shapes.extraSmall.copy(
+                        topStart = noCorner,
+                        bottomStart = noCorner,
+                    ),
                 colors = colors,
-                border = SegmentedButtonDefaults.borderStroke(
-                    color = colors.activeBorderColor.copy(alpha = 0.5F),
-                    width = 1.2.dp
-                ),
+                border =
+                    SegmentedButtonDefaults.borderStroke(
+                        color = colors.activeBorderColor.copy(alpha = 0.5F),
+                        width = 1.2.dp,
+                    ),
                 label = {
                     Text(
                         text = stringResource(id = LocaleR.string.subtitle),
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelMedium,
                     )
-                }
+                },
             )
         }
     }
@@ -251,17 +255,17 @@ private fun FilterSegmentedButtons(
 
 @Composable
 private fun ProgressHeader(
-    modifier: Modifier = Modifier,
     state: MediaLinkResourceState,
     streams: List<Stream>,
     onSkipLoading: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val canSkipLoading = state.isLoading && streams.isNotEmpty()
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
+        modifier = modifier,
     ) {
         AnimatedContent(
             targetState = state,
@@ -269,34 +273,36 @@ private fun ProgressHeader(
             transitionSpec = {
                 if (targetState > initialState) {
                     fadeIn() + slideInHorizontally { it } togetherWith
-                            fadeOut() + slideOutHorizontally { -it }
+                        fadeOut() + slideOutHorizontally { -it }
                 } else {
                     fadeIn() + slideInHorizontally { -it } + fadeIn() togetherWith
-                            fadeOut() + slideOutHorizontally { it }
+                        fadeOut() + slideOutHorizontally { it }
                 }.using(
-                    SizeTransform(clip = false)
+                    SizeTransform(clip = false),
                 )
             },
         ) {
             Text(
                 text = it.message.asString().trim(),
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontSize = 16.sp
-                )
+                style =
+                    MaterialTheme.typography.labelLarge.copy(
+                        fontSize = 16.sp,
+                    ),
             )
         }
 
         AnimatedVisibility(
             visible = state.isLoading,
             enter = fadeIn(),
-            exit = scaleOut() + fadeOut()
+            exit = scaleOut() + fadeOut(),
         ) {
             GradientLinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(0.7F),
-                colors = listOf(
-                    MaterialTheme.colorScheme.primary,
-                    MaterialTheme.colorScheme.tertiary,
-                )
+                colors =
+                    listOf(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.tertiary,
+                    ),
             )
         }
 
@@ -305,12 +311,13 @@ private fun ProgressHeader(
                 onClick = onSkipLoading,
                 shape = MaterialTheme.shapes.extraSmall,
                 contentPadding = PaddingValues(horizontal = 16.dp),
-                modifier = Modifier
-                    .height(30.dp)
+                modifier =
+                    Modifier
+                        .height(30.dp),
             ) {
                 Text(
                     text = stringResource(id = LocaleR.string.skip_loading_message),
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
                 )
             }
         }
@@ -319,12 +326,12 @@ private fun ProgressHeader(
 
 @Composable
 private fun ErrorMessage(
+    state: MediaLinkResourceState,
     modifier: Modifier = Modifier,
-    state: MediaLinkResourceState
 ) {
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         AnimatedContent(
             label = "",
@@ -334,32 +341,36 @@ private fun ErrorMessage(
                     targetContentEnter = scaleIn() + fadeIn(),
                     initialContentExit = scaleOut() + fadeOut(),
                 )
-            }
+            },
         ) {
-            val title = when {
-                !it.isUnavailable && !it.isIdle -> stringResource(id = LocaleR.string.something_went_wrong)
-                else -> stringResource(id = LocaleR.string.empty_data_default_label)
-            }
+            val title =
+                when {
+                    !it.isUnavailable && !it.isIdle -> stringResource(id = LocaleR.string.something_went_wrong)
+                    else -> stringResource(id = LocaleR.string.empty_data_default_label)
+                }
 
-            val description = when {
-                !it.isIdle -> it.message.asString()
-                else -> stringResource(id = LocaleR.string.empty_data_default_sub_label)
-            }
+            val description =
+                when {
+                    !it.isIdle -> it.message.asString()
+                    else -> stringResource(id = LocaleR.string.empty_data_default_sub_label)
+                }
 
             EmptyDataMessage(
                 title = title,
                 description = description,
-                icon = if (it.isUnavailable || it.isIdle) null
-                else {
-                    {
-                        Icon(
-                            painter = painterResource(id = UiCommonR.drawable.round_error_outline_24),
-                            tint = MaterialTheme.colorScheme.error.onMediumEmphasis(),
-                            contentDescription = stringResource(id = LocaleR.string.error_icon_content_desc),
-                            modifier = Modifier.size(60.dp),
-                        )
-                    }
-                }
+                icon =
+                    if (it.isUnavailable || it.isIdle) {
+                        null
+                    } else {
+                        {
+                            Icon(
+                                painter = painterResource(id = UiCommonR.drawable.round_error_outline_24),
+                                tint = MaterialTheme.colorScheme.error.onMediumEmphasis(),
+                                contentDescription = stringResource(id = LocaleR.string.error_icon_content_desc),
+                                modifier = Modifier.size(60.dp),
+                            )
+                        }
+                    },
             )
         }
     }
@@ -368,15 +379,16 @@ private fun ErrorMessage(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MediaLinkItem(
-    modifier: Modifier = Modifier,
     link: MediaLink,
-    onClick: () -> Unit
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val clipboardManager = rememberClipboardManager()
-    val trustedFlag = remember {
-        link.flags?.getOrNull(Flag.Trusted::class)
-    }
+    val trustedFlag =
+        remember {
+            link.flags?.getOrNull(Flag.Trusted::class)
+        }
     val hasTrustedFlag = trustedFlag != null
 
     val clickLink = {
@@ -387,29 +399,30 @@ private fun MediaLinkItem(
     }
 
     Box(
-        modifier = modifier
-            .background(
-                color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-                shape = MaterialTheme.shapes.extraSmall
-            )
-            .combinedClickable(
-                onClick = clickLink,
-                onLongClick = {
-                    clipboardManager.setText(
-                        """
-                        Stream name: ${link.name}
-                        Stream link: ${link.url}
-                        Stream headers: ${link.customHeaders}
-                        """.trimIndent()
-                    )
-                }
-            )
+        modifier =
+            modifier
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+                    shape = MaterialTheme.shapes.extraSmall,
+                ).combinedClickable(
+                    onClick = clickLink,
+                    onLongClick = {
+                        clipboardManager.setText(
+                            """
+                            Stream name: ${link.name}
+                            Stream link: ${link.url}
+                            Stream headers: ${link.customHeaders}
+                            """.trimIndent(),
+                        )
+                    },
+                ),
     ) {
         Row(
-            modifier = Modifier
-                .heightIn(min = 60.dp)
-                .padding(10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            modifier =
+                Modifier
+                    .heightIn(min = 60.dp)
+                    .padding(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             if (hasTrustedFlag) {
                 ImageWithSmallPlaceholder(
@@ -417,33 +430,37 @@ private fun MediaLinkItem(
                     placeholderId = UiCommonR.drawable.provider_logo,
                     contentDescId = LocaleR.string.provider_icon_content_desc,
                     shape = MaterialTheme.shapes.extraSmall,
-                    modifier = Modifier
-                        .size(50.dp)
+                    modifier =
+                        Modifier
+                            .size(50.dp),
                 )
             }
 
             Column(
-                modifier = Modifier
-                    .weight(1F),
-                verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically)
+                modifier =
+                    Modifier
+                        .weight(1F),
+                verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
             ) {
                 Text(
                     text = link.name.trim(),
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Black,
-                        fontSize = 14.sp
-                    )
+                    style =
+                        MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            fontSize = 14.sp,
+                        ),
                 )
 
                 Text(
                     text = link.description ?: link.url,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = if (link.description == null) 1 else Int.MAX_VALUE,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Normal,
-                        color = LocalContentColor.current.onMediumEmphasis(),
-                        fontSize = 12.sp,
-                    )
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Normal,
+                            color = LocalContentColor.current.onMediumEmphasis(),
+                            fontSize = 12.sp,
+                        ),
                 )
             }
         }
@@ -491,26 +508,32 @@ private fun MediaLinksBottomSheetPreview() {
         state = MediaLinkResourceState.Extracting()
         while (itemCount < 10) {
             val randomBool = Random.nextBoolean()
-            val link = if (itemCount % 2 == 0) {
-                Stream(
-                    name = "Server $itemCount",
-                    description = if (randomBool) "Lorem ipsum dolor sit amet, consectetur;" else null,
-                    url = "https://www.google.com",
-                    flags = if (randomBool) setOf(
-                        Flag.Trusted(
-                            url = "https://www.google.com",
-                            name = "Netflix",
-                            description = "Description",
-                            logo = "https://media.themoviedb.org/t/p/original/9BgaNQRMDvVlji1JBZi6tcfxpKx.jpg"
-                        )
-                    ) else null
-                )
-            } else {
-                Subtitle(
-                    language = "Sub $itemCount",
-                    url = "https://www.google.com"
-                )
-            }
+            val link =
+                if (itemCount % 2 == 0) {
+                    Stream(
+                        name = "Server $itemCount",
+                        description = if (randomBool) "Lorem ipsum dolor sit amet, consectetur;" else null,
+                        url = "https://www.google.com",
+                        flags =
+                            if (randomBool) {
+                                setOf(
+                                    Flag.Trusted(
+                                        url = "https://www.google.com",
+                                        name = "Netflix",
+                                        description = "Description",
+                                        logo = "https://media.themoviedb.org/t/p/original/9BgaNQRMDvVlji1JBZi6tcfxpKx.jpg",
+                                    ),
+                                )
+                            } else {
+                                null
+                            },
+                    )
+                } else {
+                    Subtitle(
+                        language = "Sub $itemCount",
+                        url = "https://www.google.com",
+                    )
+                }
 
             delay(delayTime)
             links.add(link)
@@ -532,7 +555,7 @@ private fun MediaLinksBottomSheetPreview() {
                 subtitles = links.filterIsInstance<Subtitle>(),
                 onDismiss = {},
                 onSkipLoading = {},
-                onLinkClick = {}
+                onLinkClick = {},
             )
         }
     }

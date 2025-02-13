@@ -70,7 +70,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.data.provider.util.isNotUsable
+import com.flixclusive.data.provider.util.extensions.isNotUsable
 import com.flixclusive.domain.provider.util.getApiCrashMessage
 import com.flixclusive.feature.mobile.provider.manage.component.InstalledProviderCard
 import com.flixclusive.feature.mobile.provider.manage.component.ProviderManagerTopBar

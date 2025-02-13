@@ -111,7 +111,7 @@ internal fun PlayerScreen(
     val playerPreferences by viewModel.playerPreferences.collectAsStateWithLifecycle()
     val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
 
-    val cachedLinks = viewModel.cachedLinks
+    val cachedLinks by viewModel.cachedLinksAsFlow.collectAsStateWithLifecycle()
     val providers = viewModel.providers
     val seasonData by viewModel.season.collectAsStateWithLifecycle()
     val currentSelectedEpisode by viewModel.currentSelectedEpisode.collectAsStateWithLifecycle()
@@ -446,7 +446,7 @@ internal fun PlayerScreen(
                 toggleVideoTimeReverse = viewModel::toggleVideoTimeReverse,
                 showControls = { showControls(it) },
                 lockControls = { viewModel.areControlsLocked = it },
-                addSubtitle = { cachedLinks.subtitles.add(index = 0, element = it) },
+                addSubtitle = viewModel::onAddSubtitle,
                 onEpisodeClick = {
                     viewModel.run {
                         updateWatchHistory(

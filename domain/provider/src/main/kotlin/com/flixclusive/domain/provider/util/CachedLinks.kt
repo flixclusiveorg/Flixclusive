@@ -1,7 +1,7 @@
 package com.flixclusive.domain.provider.util
 
 import com.flixclusive.core.locale.UiText
-import com.flixclusive.domain.provider.CachedLinks
+import com.flixclusive.data.provider.cache.CachedLinks
 import com.flixclusive.core.locale.R as LocaleR
 
 internal val EMPTY_PROVIDER_MESSAGE = UiText.StringResource(LocaleR.string.no_available_providers)

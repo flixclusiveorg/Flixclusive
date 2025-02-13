@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import com.flixclusive.core.util.exception.safeCall
 
 
 internal val LocalBrightnessManager = compositionLocalOf<BrightnessManager> {
@@ -18,21 +19,27 @@ internal val LocalBrightnessManager = compositionLocalOf<BrightnessManager> {
 internal fun rememberBrightnessManager()
     = rememberUpdatedState(LocalBrightnessManager.current).value
 
+// Some OS might not be allowed to manage screen brightness.
+// For instance, Android TVs. So, make sure to handle them carefully also.
 internal class BrightnessManager(private val activity: Activity) {
-    var currentBrightness by mutableFloatStateOf(activity.currentBrightness)
+    var currentBrightness by mutableFloatStateOf(safeCall { activity.currentBrightness } ?: -1f)
         private set
     val maxBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
 
     fun setBrightness(brightness: Float) {
-        currentBrightness = brightness.coerceIn(0F, maxBrightness)
-        val layoutParams = activity.window.attributes
-        layoutParams.screenBrightness = currentBrightness
-        activity.window.attributes = layoutParams
+        safeCall {
+            currentBrightness = brightness.coerceIn(0F, maxBrightness)
+            val layoutParams = activity.window.attributes
+            layoutParams.screenBrightness = currentBrightness
+            activity.window.attributes = layoutParams
+        }
     }
 
     fun unlockBrightnessControl() {
-        val layoutParams = activity.window.attributes
-        layoutParams.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
-        activity.window.attributes = layoutParams
+        safeCall {
+            val layoutParams = activity.window.attributes
+            layoutParams.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+            activity.window.attributes = layoutParams
+        }
     }
 }

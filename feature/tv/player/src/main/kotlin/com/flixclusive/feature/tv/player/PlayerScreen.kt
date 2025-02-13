@@ -173,7 +173,7 @@ fun PlayerScreen(
         enter = fadeIn(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY)),
         exit = fadeOut(animationSpec = tween(delayMillis = PLAYER_SCREEN_DELAY)),
     ) {
-        val sourceData = viewModel.cachedLinks
+        val sourceData by viewModel.cachedLinksAsFlow.collectAsStateWithLifecycle()
         val providers = viewModel.providers
 
         val currentPlayerTitle =

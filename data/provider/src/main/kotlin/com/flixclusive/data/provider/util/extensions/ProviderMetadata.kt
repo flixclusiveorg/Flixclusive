@@ -1,4 +1,4 @@
-package com.flixclusive.data.provider.util
+package com.flixclusive.data.provider.util.extensions
 
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Status

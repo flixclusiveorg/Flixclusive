@@ -3,7 +3,7 @@ package com.flixclusive.data.provider
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.data.provider.util.CollectionsOperation
 import com.flixclusive.data.provider.util.ReactiveList
-import com.flixclusive.data.provider.util.isNotUsable
+import com.flixclusive.data.provider.util.extensions.isNotUsable
 import com.flixclusive.model.datastore.user.ProviderFromPreferences
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences

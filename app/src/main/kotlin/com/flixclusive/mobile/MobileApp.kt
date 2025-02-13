@@ -114,11 +114,9 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     )
     val currentNavGraph by navController.currentScreenAsState(MobileNavGraphs.home)
 
-    val cachedLinks = viewModel.loadedCachedLinks
-
     val onStartPlayer = {
         viewModel.setPlayerModeState(isInPlayer = true)
-        viewModel.onConsumeSourceDataDialog()
+        viewModel.onConsumeLinkLoaderSheet()
 
         navController.navigateIfResumed(
             PlayerScreenDestination(
@@ -179,7 +177,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         val isGoingBackFromPlayerScreen = uiState.isOnPlayerScreen && !isPlayerScreen
 
         if (isGoingBackFromPlayerScreen) {
-            viewModel.onConsumeSourceDataDialog(isForceClosing = true)
+            viewModel.onConsumeLinkLoaderSheet(isForceClosing = true)
         }
 
         viewModel.setPlayerModeState(isInPlayer = isPlayerScreen)
@@ -317,6 +315,8 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         }
 
         if (!uiState.mediaLinkResourceState.isIdle) {
+            val cachedLinks by viewModel.loadedCachedLinks.collectAsStateWithLifecycle()
+
             LaunchedEffect(true) {
                 window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
@@ -325,10 +325,10 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                 state = uiState.mediaLinkResourceState,
                 streams = cachedLinks?.streams ?: emptyList(),
                 subtitles = cachedLinks?.subtitles ?: emptyList(),
-                onLinkClick = {},
+                onLinkClick = { /*TODO: Add link chooser navigation for player screen*/ },
                 onSkipLoading = onStartPlayer,
                 onDismiss = {
-                    viewModel.onConsumeSourceDataDialog(isForceClosing = true)
+                    viewModel.onConsumeLinkLoaderSheet(isForceClosing = true)
                     viewModel.onBottomSheetClose() // In case, the bottom sheet is opened
                 },
             )

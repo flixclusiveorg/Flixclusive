@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.settings.screen.providers
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.painter.Painter
@@ -141,6 +142,8 @@ internal class ProvidersTweakScreen(
         val deleteRepositoriesLabel = stringResource(LocaleR.string.delete_repositories)
         val warningLabel = stringResource(LocaleR.string.warning)
 
+        val cacheSize by viewModel.cachedLinksSize.collectAsStateWithLifecycle()
+
         val formatWarningMessage = fun(action: String): String =
             context.getString(
                 LocaleR.string.action_warning_format_message,
@@ -166,11 +169,11 @@ internal class ProvidersTweakScreen(
                     TweakUI.DialogTweak(
                         title = clearCachedLinksLabel,
                         dialogTitle = warningLabel,
-                        enabledProvider = { viewModel.cachedLinksSize > 0 },
+                        enabledProvider = { cacheSize > 0 },
                         descriptionProvider = {
                             context.getString(
                                 LocaleR.string.cached_links_description_format,
-                                viewModel.cachedLinksSize,
+                                cacheSize,
                             )
                         },
                         dialogMessage = formatWarningMessage(clearCachedLinksLabel),

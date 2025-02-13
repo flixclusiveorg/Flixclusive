@@ -1,13 +1,14 @@
 package com.flixclusive.domain.provider
 
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.data.provider.MediaLinksRepository
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderRepository
+import com.flixclusive.data.provider.cache.CacheKey
+import com.flixclusive.data.provider.cache.CachedLinks
+import com.flixclusive.data.provider.cache.CachedLinksRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.domain.provider.util.DEFAULT_ERROR_MESSAGE
 import com.flixclusive.domain.provider.util.EMPTY_PROVIDER_MESSAGE
@@ -28,55 +29,27 @@ import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.provider.link.Flag
-import com.flixclusive.model.provider.link.MediaLink.Companion.getOrNull
+import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.ProviderWebViewApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.flixclusive.core.locale.R as LocaleR
-
-/**
- *
- * Combination of filmId parameter
- * and season:episode of the film
- * (if it is a tv show).
- *
- * actual format: "$filmId-$season:$episode"
- *
- * */
-private typealias FilmKey = String
-
-/**
- *
- * Converts film and episode to [FilmKey].
- * Which is to be used for caching
- *
- * */
-private fun getFilmKey(
-    filmId: String,
-    episodeData: Episode?,
-): FilmKey = "$filmId-${episodeData?.season}:${episodeData?.number}"
 
 @Singleton
 class GetMediaLinksUseCase
     @Inject
     constructor(
-        private val mediaLinksRepository: MediaLinksRepository,
         private val tmdbRepository: TMDBRepository,
+        private val cachedLinksRepository: CachedLinksRepository,
+        private val mediaLinksRepository: MediaLinksRepository,
         private val providerApiRepository: ProviderApiRepository,
         private val providerRepository: ProviderRepository,
     ) {
-        /**
-         *
-         * For caching provider links for each films ONLY
-         * because some providers have timeouts on their links
-         *
-         * */
-        val cache = mutableStateMapOf<FilmKey, CachedLinks>()
-
         /**
          *
          * Obtains the links of the film and episode.
@@ -125,22 +98,62 @@ class GetMediaLinksUseCase
                     episodeToUse = nextEpisode.data
                 }
 
-                val cachedLinks =
-                    getCache(
-                        filmId = film.identifier,
-                        episode = episodeToUse,
-                    )
-
-                if (apis.isEmpty()) {
-                    if (film.tmdbId != null) {
-                        val response =
-                            loadOfficialWatchProvidersFromTmdb(
-                                cachedLinks = cachedLinks,
-                                film = film,
-                                episode = episode,
+                val previousCache =
+                    if (preferredProvider != null) {
+                        val preferredKey =
+                            CacheKey.create(
+                                filmId = film.identifier,
+                                providerId = preferredProvider,
+                                episode = episodeToUse,
                             )
 
+                        cachedLinksRepository.getCache(preferredKey)
+                    } else if (apis.isEmpty() || film.isFromTmdb) {
+                        val tmdbKey =
+                            CacheKey.create(
+                                filmId = film.identifier,
+                                providerId = DEFAULT_FILM_SOURCE_NAME,
+                                episode = episodeToUse,
+                            )
+
+                        cachedLinksRepository.getCache(tmdbKey)
+                    } else {
+                        null
+                    }
+
+                if (previousCache?.isCached(preferredProvider) == true) {
+                    onSuccess(episodeToUse)
+
+                    if (film.isFromTmdb && apis.isEmpty()) {
+                        finishWithTrustedProviders()
+                    } else {
+                        finish()
+                    }
+
+                    return@channelFlow
+                }
+
+                if (apis.isEmpty()) {
+                    if (film.isFromTmdb) {
+                        val response = loadOfficialWatchProvidersFromTmdb(film = film)
+
                         if (response is Resource.Success) {
+                            val tmdbKey =
+                                CacheKey.create(
+                                    filmId = film.identifier,
+                                    providerId = DEFAULT_FILM_SOURCE_NAME,
+                                    episode = episodeToUse,
+                                )
+
+                            val cache =
+                                CachedLinks(
+                                    watchId = film.identifier,
+                                    providerId = DEFAULT_FILM_SOURCE_NAME,
+                                    thumbnail = film.backdropImage ?: film.posterImage,
+                                    streams = response.data ?: emptyList(),
+                                )
+
+                            cachedLinksRepository.storeCache(tmdbKey, cache)
                             finishWithTrustedProviders()
                             return@channelFlow
                         } else {
@@ -152,14 +165,6 @@ class GetMediaLinksUseCase
 
                     onError?.invoke(EMPTY_PROVIDER_MESSAGE)
                     throwUnavailableError(EMPTY_PROVIDER_MESSAGE)
-                    return@channelFlow
-                }
-
-                clearTrustedCache(cachedLinks)
-
-                if (cachedLinks.isCached(preferredProvider)) {
-                    onSuccess(episodeToUse)
-                    finish()
                     return@channelFlow
                 }
 
@@ -177,6 +182,22 @@ class GetMediaLinksUseCase
                     val canStopLooping = i == apis.lastIndex || isChangingProvider || !film.isFromTmdb
 
                     sendFetchingFilmMessage(provider = metadata.name)
+
+                    val providerCacheKey =
+                        CacheKey.create(
+                            filmId = film.identifier,
+                            providerId = apiId,
+                            episode = episodeToUse,
+                        )
+
+                    val oldProviderCache = cachedLinksRepository.getCache(providerCacheKey)
+                    if (oldProviderCache != null) {
+                        cachedLinksRepository.removeCache(providerCacheKey)
+                        cachedLinksRepository.storeCache(providerCacheKey, oldProviderCache)
+                        onSuccess(episodeToUse)
+                        finish()
+                        return@channelFlow
+                    }
 
                     val watchIdResource =
                         getCorrectWatchId(
@@ -205,28 +226,36 @@ class GetMediaLinksUseCase
                         isOnWebView = api is ProviderWebViewApi,
                     )
 
-                    cachedLinks.streams.clear()
-                    storeCache(
-                        filmId = film.identifier,
-                        episode = episodeToUse,
-                        cachedLinks =
-                            cachedLinks.copy(
-                                watchId = watchIdToUse,
-                                providerId = apiId,
-                            ),
-                    )
-
-                    val result =
-                        mediaLinksRepository.getLinks(
-                            film = film,
+                    val defaultNewCache =
+                        CachedLinks(
                             watchId = watchIdToUse,
-                            episode = episodeToUse,
-                            api = api,
-                            onLinkFound = cachedLinks::add,
+                            providerId = apiId,
+                            thumbnail = film.backdropImage ?: film.posterImage,
                         )
 
-                    val noLinksLoaded = result is Resource.Success && cachedLinks.streams.isEmpty()
+                    val providerCache = cachedLinksRepository.observeCache(providerCacheKey, defaultNewCache)
+
+                    val result =
+                        if (providerCache.first() == null) {
+                            mediaLinksRepository.getLinks(
+                                film = film,
+                                watchId = watchIdToUse,
+                                episode = episodeToUse,
+                                api = api,
+                                onLinkFound = {
+                                    when (it) {
+                                        is Stream -> cachedLinksRepository.addStream(providerCacheKey, it)
+                                        is Subtitle -> cachedLinksRepository.addSubtitle(providerCacheKey, it)
+                                    }
+                                },
+                            )
+                        } else {
+                            Resource.Success(Unit)
+                        }
+
+                    val noLinksLoaded = result is Resource.Success && providerCache.first()!!.hasNoStreamLinks == true
                     val isNotSuccessful = result is Resource.Failure || noLinksLoaded
+
                     when {
                         isNotSuccessful && canStopLooping -> {
                             val error =
@@ -255,40 +284,6 @@ class GetMediaLinksUseCase
 
                 trySend(MediaLinkResourceState.Unavailable())
             }
-
-        /**
-         * Obtains the [CachedLinks] of the film
-         *
-         * @param filmId id of the film to fetch
-         * @param episode [Episode] of the film if it is a tv show
-         *
-         * @return [CachedLinks] of the cached film if it exists. Returns a default value if it is null
-         * */
-        fun getCache(
-            filmId: String,
-            episode: Episode?,
-        ) = cache.getOrElse(getFilmKey(filmId, episode)) {
-            CachedLinks()
-        }
-
-        /**
-         * Puts the [CachedLinks] data of the film with its matching cache key
-         *
-         * @param filmId id of the film to fetch
-         * @param episode The episode data of the film if it is a tv show
-         * @param cachedLinks The cached links of the cached film
-         * */
-        private fun storeCache(
-            filmId: String,
-            episode: Episode?,
-            cachedLinks: CachedLinks,
-        ) = cache.put(getFilmKey(filmId, episode), cachedLinks)
-
-        private fun clearTrustedCache(cachedLinks: CachedLinks) {
-            cachedLinks.streams.removeIf {
-                it.flags?.getOrNull(Flag.Trusted::class) != null
-            }
-        }
 
         /**
          *
@@ -371,9 +366,10 @@ class GetMediaLinksUseCase
         private fun getPrioritizedProvidersList(preferredProvider: String?): List<ProviderApiWithId> {
             var providers = providerRepository.getOrderedProviders()
             if (preferredProvider != null) {
-                providers = providers.sortedByDescending {
-                    it.id.equals(preferredProvider, true)
-                }
+                providers =
+                    providers.sortedByDescending {
+                        it.id.equals(preferredProvider, true)
+                    }
             }
 
             return providers
@@ -381,7 +377,7 @@ class GetMediaLinksUseCase
                     providerApiRepository.getApi(provider.id)?.let { api ->
                         ProviderApiWithId(
                             id = provider.id,
-                            api = api
+                            api = api,
                         )
                     }
                 }
@@ -402,32 +398,17 @@ class GetMediaLinksUseCase
             return watchIdResource
         }
 
-        private suspend fun loadOfficialWatchProvidersFromTmdb(
-            cachedLinks: CachedLinks,
-            film: FilmMetadata,
-            episode: Episode?,
-        ): Resource<Unit> {
+        private suspend fun loadOfficialWatchProvidersFromTmdb(film: FilmMetadata): Resource<List<Stream>> {
             val response =
                 tmdbRepository.getWatchProviders(
                     mediaType = film.filmType.type,
                     id = film.tmdbId!!,
                 )
 
-            response.data?.fastForEach(cachedLinks::add)
-            storeCache(
-                filmId = film.identifier,
-                episode = episode,
-                cachedLinks =
-                    cachedLinks.copy(
-                        watchId = film.identifier,
-                        providerId = DEFAULT_FILM_SOURCE_NAME,
-                    ),
-            )
-
             return if (response is Resource.Failure) {
                 Resource.Failure(response.error)
             } else {
-                Resource.Success(Unit)
+                Resource.Success(response.data ?: emptyList())
             }
         }
     }

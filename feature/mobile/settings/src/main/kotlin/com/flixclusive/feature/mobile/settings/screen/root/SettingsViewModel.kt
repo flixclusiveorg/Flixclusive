@@ -1,16 +1,15 @@
 package com.flixclusive.feature.mobile.settings.screen.root
 
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
+import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.data.provider.ProviderRepository
+import com.flixclusive.data.provider.cache.CachedLinksRepository
 import com.flixclusive.data.search.SearchHistoryRepository
-import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.provider.ProviderUnloaderUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.datastore.system.SystemPreferences
@@ -21,6 +20,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -31,9 +31,9 @@ internal class SettingsViewModel
         val userSessionManager: UserSessionManager,
         private val dataStoreManager: DataStoreManager,
         private val searchHistoryRepository: SearchHistoryRepository,
-        private val getMediaLinksUseCase: GetMediaLinksUseCase,
         private val providerRepository: ProviderRepository,
         private val providerUnloaderUseCase: ProviderUnloaderUseCase,
+        private val cachedLinksRepository: CachedLinksRepository,
     ) : ViewModel() {
         val searchHistoryCount =
             userSessionManager.currentUser
@@ -48,9 +48,10 @@ internal class SettingsViewModel
                     initialValue = 0,
                 )
 
-        val cachedLinksSize by derivedStateOf {
-            getMediaLinksUseCase.cache.size
-        }
+        val cachedLinksSize =
+            cachedLinksRepository.caches
+                .mapLatest { it.size }
+                .asStateFlow(viewModelScope)
 
         val systemPreferences =
             dataStoreManager.systemPreferences
@@ -85,7 +86,7 @@ internal class SettingsViewModel
         }
 
         fun clearCacheLinks() {
-            getMediaLinksUseCase.cache.clear()
+            cachedLinksRepository.clear()
         }
 
         fun deleteRepositories() {

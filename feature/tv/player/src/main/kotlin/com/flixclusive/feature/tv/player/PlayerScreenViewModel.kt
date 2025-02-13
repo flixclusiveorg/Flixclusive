@@ -14,8 +14,9 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.ui.player.BasePlayerViewModel
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
-import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.library.recent.WatchHistoryRepository
+import com.flixclusive.data.provider.ProviderRepository
+import com.flixclusive.data.provider.cache.CachedLinksRepository
 import com.flixclusive.domain.library.recent.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
@@ -55,6 +56,7 @@ internal class PlayerScreenViewModel
         watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
         providerRepository: ProviderRepository,
         userSessionManager: UserSessionManager,
+        cachedLinksRepository: CachedLinksRepository,
     ) : BasePlayerViewModel(
             dataStoreManager = dataStoreManager,
             args = args,
@@ -67,6 +69,7 @@ internal class PlayerScreenViewModel
             watchTimeUpdaterUseCase = watchTimeUpdaterUseCase,
             userSessionManager = userSessionManager,
             providerRepository = providerRepository,
+            cachedLinksRepository = cachedLinksRepository
         ) {
         @AssistedFactory
         interface Factory {

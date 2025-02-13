@@ -12,10 +12,12 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
-import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.library.recent.WatchHistoryRepository
+import com.flixclusive.data.provider.ProviderRepository
+import com.flixclusive.data.provider.cache.CacheKey
+import com.flixclusive.data.provider.cache.CachedLinks
+import com.flixclusive.data.provider.cache.CachedLinksRepository
 import com.flixclusive.domain.library.recent.WatchTimeUpdaterUseCase
-import com.flixclusive.domain.provider.CachedLinks
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
 import com.flixclusive.domain.tmdb.SeasonProviderUseCase
 import com.flixclusive.domain.user.UserSessionManager
@@ -31,6 +33,7 @@ import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.provider.link.Subtitle
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -63,6 +66,7 @@ abstract class BasePlayerViewModel(
     private val getMediaLinksUseCase: GetMediaLinksUseCase,
     private val watchTimeUpdaterUseCase: WatchTimeUpdaterUseCase,
     private val userSessionManager: UserSessionManager,
+    private val cachedLinksRepository: CachedLinksRepository
 ) : ViewModel() {
     val film = args.film
 
@@ -80,13 +84,6 @@ abstract class BasePlayerViewModel(
             },
         )
 
-    val cachedLinks: CachedLinks
-        get() =
-            getMediaLinksUseCase.getCache(
-                filmId = film.identifier,
-                episode = _currentSelectedEpisode.value,
-            )
-
     val providers by lazy { providerRepository.getEnabledProviders() }
 
     private val _dialogState = MutableStateFlow<MediaLinkResourceState>(MediaLinkResourceState.Idle)
@@ -103,6 +100,23 @@ abstract class BasePlayerViewModel(
 
     private val _currentSelectedEpisode = MutableStateFlow(args.episodeToPlay)
     open val currentSelectedEpisode = _currentSelectedEpisode.asStateFlow()
+
+    val cachedLinksAsFlow = _currentSelectedEpisode
+        .flatMapLatest { episodeToPlay ->
+            val cacheKey = CacheKey.createFilmOnlyKey(film.identifier, episodeToPlay)
+            cachedLinksRepository.observeCache(cacheKey)
+        }
+        .filterNotNull()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = CachedLinks(),
+        )
+
+    protected val cachedLinks: CachedLinks get() {
+        val key = CacheKey.createFilmOnlyKey(film.identifier, _currentSelectedEpisode.value)
+        return cachedLinksRepository.getCache(key) ?: CachedLinks()
+    }
 
     /**
      * For the next episode to
@@ -214,6 +228,17 @@ abstract class BasePlayerViewModel(
         message: UiText,
         isInternalPlayerError: Boolean = false,
     )
+
+    fun onAddSubtitle(subtitle: Subtitle) {
+        val providerId = cachedLinks.providerId
+        val key = CacheKey.create(
+            filmId = film.identifier,
+            providerId = providerId,
+            episode = _currentSelectedEpisode.value
+        )
+
+        cachedLinksRepository.addSubtitle(key, subtitle)
+    }
 
     fun onSeasonChange(seasonNumber: Int) {
         if (onSeasonChangeJob?.isActive == true) {
