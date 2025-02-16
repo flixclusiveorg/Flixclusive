@@ -8,6 +8,7 @@ import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.runOnIO
 import com.flixclusive.data.provider.ProviderApiRepository
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.user.UserRepository
+import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.provider.ProviderLoaderUseCase
 import com.flixclusive.domain.provider.ProviderUpdaterUseCase
 import com.flixclusive.domain.user.UserSessionManager
@@ -31,6 +32,7 @@ class UserProfilesViewModel
         private val providerUpdaterUseCase: ProviderUpdaterUseCase,
         private val providerRepository: ProviderRepository,
         private val providerApiRepository: ProviderApiRepository,
+        private val homeItemsProviderUseCase: HomeItemsProviderUseCase,
         userRepository: UserRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(ProfilesScreenUiState())
@@ -55,6 +57,7 @@ class UserProfilesViewModel
                 providerRepository.clearAll()
                 providerApiRepository.clearAll()
                 userSessionManager.signIn(user)
+                homeItemsProviderUseCase(user.id)
                 providerLoaderUseCase.initDebugFolderToPreferences()
                 providerLoaderUseCase.initFromLocal()
                 providerUpdaterUseCase(notify = true)

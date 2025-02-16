@@ -10,8 +10,6 @@ import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.home.PREFERRED_MINIMUM_HOME_ITEMS
-import com.flixclusive.domain.provider.ProviderLoaderUseCase
-import com.flixclusive.domain.provider.ProviderUpdaterUseCase
 import com.flixclusive.domain.updater.AppUpdateCheckerUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import com.flixclusive.model.datastore.system.SystemPreferences
@@ -44,12 +42,10 @@ internal class SplashScreenViewModel
     constructor(
         homeItemsProviderUseCase: HomeItemsProviderUseCase,
         appConfigurationManager: AppConfigurationManager,
+        userSessionManager: UserSessionManager,
         val appUpdateCheckerUseCase: AppUpdateCheckerUseCase,
-        private val userSessionManager: UserSessionManager,
         private val userRepository: UserRepository,
         private val dataStoreManager: DataStoreManager,
-        private val providerLoaderUseCase: ProviderLoaderUseCase,
-        private val providerUpdaterUseCase: ProviderUpdaterUseCase,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow<SplashScreenUiState>(SplashScreenUiState.Loading)
         val uiState = _uiState.asStateFlow()

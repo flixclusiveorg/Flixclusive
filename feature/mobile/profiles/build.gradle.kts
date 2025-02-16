@@ -11,6 +11,7 @@ android {
 dependencies {
     implementation(projects.core.ui.mobile)
     implementation(projects.data.configuration)
+    implementation(projects.domain.home)
     implementation(projects.domain.user)
     implementation(projects.domain.provider)
 

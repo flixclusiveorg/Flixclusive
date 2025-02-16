@@ -36,7 +36,7 @@ internal sealed class AddUserState {
 internal class AddUserViewModel
     @Inject
     constructor(
-        homeItemsProviderUseCase: HomeItemsProviderUseCase,
+        private val homeItemsProviderUseCase: HomeItemsProviderUseCase,
         private val userRepository: UserRepository,
         private val tmdbRepository: TMDBRepository,
         private val userSessionManager: UserSessionManager,
@@ -124,7 +124,9 @@ internal class AddUserViewModel
                     if (isSigningIn) {
                         val validatedUser = user.copy(id = userId)
                         userSessionManager.signIn(validatedUser)
+                        homeItemsProviderUseCase(userId)
                     }
+
                     _state.value = AddUserState.Added
                 }
         }
