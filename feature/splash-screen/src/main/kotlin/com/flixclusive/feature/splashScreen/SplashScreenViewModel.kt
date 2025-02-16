@@ -73,21 +73,6 @@ internal class SplashScreenViewModel
         val userLoggedIn = userSessionManager.currentUser
 
         init {
-            launchOnIO {
-                val hasOldSession = userSessionManager.hasOldSession()
-
-                if (hasOldSession) {
-                    userSessionManager.restoreSession()
-                    userLoggedIn.first { it != null }
-
-                    providerLoaderUseCase.initDebugFolderToPreferences()
-                    providerLoaderUseCase.initFromLocal()
-                    providerUpdaterUseCase(notify = true)
-                } else {
-                    userSessionManager.signOut()
-                }
-            }
-
             viewModelScope.launch {
                 launch initHomeScreen@{
                     combine(
