@@ -125,14 +125,14 @@ object PlayerUiUtil {
     @SuppressLint("OpaqueUnitKey")
     @Composable
     fun LifecycleAwarePlayer(
-        modifier: Modifier = Modifier,
         areControlsVisible: Boolean,
+        onInitialize: () -> Unit,
+        onRelease: (isForceReleasing: Boolean) -> Unit,
+        modifier: Modifier = Modifier,
         isSubtitlesVisible: Boolean = true,
         isInPipMode: Boolean = false,
         isInTv: Boolean = false,
         resizeMode: Int = AspectRatioFrameLayout.RESIZE_MODE_FIT,
-        onInitialize: () -> Unit,
-        onRelease: (isForceReleasing: Boolean) -> Unit,
     ) {
         val lifecycle by rememberUpdatedState(LocalLifecycleOwner.current.lifecycle)
         val currentOnInitialize by rememberUpdatedState(onInitialize)
@@ -196,10 +196,10 @@ object PlayerUiUtil {
 
     @Composable
     private fun CustomPlayerView(
-        modifier: Modifier = Modifier,
         areControlsVisible: Boolean,
         isSubtitlesVisible: Boolean,
         resizeMode: Int,
+        modifier: Modifier = Modifier,
         isInTv: Boolean = false,
         isInPipMode: Boolean = false,
     ) {

@@ -12,6 +12,7 @@ import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
+import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.cache.CacheKey
@@ -107,11 +108,7 @@ abstract class BasePlayerViewModel(
             cachedLinksRepository.observeCache(cacheKey)
         }
         .filterNotNull()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = CachedLinks(),
-        )
+        .asStateFlow(viewModelScope)
 
     protected val cachedLinks: CachedLinks get() {
         val key = CacheKey.createFilmOnlyKey(film.identifier, _currentSelectedEpisode.value)

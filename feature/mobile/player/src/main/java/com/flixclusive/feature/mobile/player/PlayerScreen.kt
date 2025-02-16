@@ -377,20 +377,18 @@ internal fun PlayerScreen(
                             getSavedTimeForSourceData(currentSelectedEpisode)
 
                         player.initialize()
-                        cachedLinks.run {
-                            val getPossibleSourceLink =
-                                streams
-                                    .getOrNull(uiState.selectedSourceLink)
-                                    ?: streams.getOrNull(0)
+                        val getPossibleSourceLink =
+                            cachedLinks.streams
+                                .getOrNull(uiState.selectedSourceLink)
+                                ?: cachedLinks.streams.getOrNull(0)
 
-                            getPossibleSourceLink?.let {
-                                player.prepare(
-                                    link = it,
-                                    title = currentPlayerTitle,
-                                    subtitles = subtitles,
-                                    initialPlaybackPosition = currentPosition,
-                                )
-                            }
+                        getPossibleSourceLink?.let {
+                            player.prepare(
+                                link = it,
+                                title = currentPlayerTitle,
+                                subtitles = cachedLinks.subtitles,
+                                initialPlaybackPosition = currentPosition,
+                            )
                         }
                     }
                 },
