@@ -4,7 +4,7 @@
   <table>
     <tr>
       <td>CI Build</td>
-      <td><a href="https://github.com/flixclusiveorg/Flixclusive/actions/workflows/Build.yml"><img src="https://img.shields.io/github/actions/workflow/status/flixclusiveorg/Flixclusive/Build.yml?label=CI+Build&style=for-the-badge" alt="CI"></a></td>
+      <td><a href="https://github.com/flixclusiveorg/Flixclusive/actions/workflows/Build.yml"><img src="https://img.shields.io/github/actions/workflow/status/flixclusiveorg/Flixclusive/Build.yml?branch=master&event=push&style=for-the-badge&label=CI+Build" alt="CI"></a></td>
     </tr>
     <tr>
       <td>Quality Gate</td>
@@ -12,7 +12,7 @@
     </tr>
     <tr>
       <td>Pre-release</td>
-      <td><a href="https://github.com/flixclusiveorg/Flixclusive/releases/PR-ea580b1"><img src="https://img.shields.io/github/downloads/flixclusiveorg/Flixclusive/PR-ea580b1/total?style=for-the-badge" alt="pre-release build"></a></td>
+      <td><a href="https://github.com/flixclusiveorg/Flixclusive/releases/PR-c62ada6"><img src="https://img.shields.io/github/downloads/flixclusiveorg/Flixclusive/PR-c62ada6/total?style=for-the-badge" alt="pre-release build"></a></td>
     </tr>
     <tr>
       <td>Stable</td>
