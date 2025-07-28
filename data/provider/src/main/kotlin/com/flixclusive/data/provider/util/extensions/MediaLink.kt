@@ -9,7 +9,7 @@ internal fun List<Stream>.filterOutExpiredLinks(): List<Stream> {
 
         when {
             expiryDate == null -> return@filter true
-            expiryDate.expiresOn < System.currentTimeMillis() -> return@filter false
+            expiryDate.expiresOn < (System.currentTimeMillis() / 1000) -> return@filter false
             else -> true
         }
     }.toList()
