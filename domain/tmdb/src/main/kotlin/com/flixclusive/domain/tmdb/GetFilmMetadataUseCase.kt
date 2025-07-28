@@ -23,7 +23,7 @@ class GetFilmMetadataUseCase
         suspend operator fun invoke(partiallyDetailedFilm: Film): Resource<FilmMetadata> {
             return partiallyDetailedFilm.run {
                 if (!providerId.equals(DEFAULT_FILM_SOURCE_NAME, true)) {
-                    withIOContext {
+                    return withIOContext {
                         try {
                             val api = providerApiRepository.getApi(providerId)!!
                             val filmMetadata = api.getMetadata(film = this@run)
