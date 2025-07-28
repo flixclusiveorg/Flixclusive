@@ -388,7 +388,7 @@ class GetMediaLinksUseCase
             film: FilmMetadata,
             api: ProviderApi,
         ): Resource<String?> {
-            val needsNewWatchId = watchId == null && film.isFromTmdb && api !is ProviderWebViewApi
+            val needsNewWatchId = watchId == null && film.isFromTmdb
             val watchIdResource =
                 when {
                     needsNewWatchId -> api.getWatchId(film = film)
