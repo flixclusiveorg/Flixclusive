@@ -1,11 +1,9 @@
-package com.flixclusive.domain.provider.provider
+package com.flixclusive.domain.provider
 
-import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.log.LogRule
-import com.flixclusive.domain.provider.GetRepositoryUseCase
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.Repository
@@ -25,7 +23,6 @@ class GetRepositoryUseCaseTest {
     val rule = LogRule()
 
     private lateinit var useCaseClass: GetRepositoryUseCase
-    private val dataStore = mockk<DataStore<Preferences>>()
 
     @Before
     fun setUp() {
