@@ -48,6 +48,7 @@ retrofit = "2.11.0"
 room = "2.6.1"
 serialization = "1.6.3"
 turbine = "1.2.0"
+strikt = "0.33.0"
 tvCompose = "1.0.0-alpha10" # TODO: Update TV Compose to stable
 unifile = "1.0.0"
 universalChardet = "2.5.0"
@@ -184,6 +185,7 @@ test-core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "and
 test-rules = { group = "androidx.test", name = "rules", version.ref = "androidxTestRules" }
 test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
 turbine = { group ="app.cash.turbine", name = "turbine", version.ref = "turbine" }
+strikt = { group = "io.strikt", name = "strikt-core", version.ref = "strikt" }
 
 # Dependencies for build-logic
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
