@@ -19,6 +19,8 @@ ktlint_function_naming_ignore_when_annotated_with = Composable
 ktlint_standard_discouraged-comment-location = disabled
 ktlint_standard_function-expression-body = disabled
 ktlint_compose_lambda-param-event-trailing = disabled
+ktlint_standard_multiline-expression-wrapping = disabled
+ktlint_standard_string-template-indent = disabled
 
 [*.md]
 trim_trailing_whitespace = false
