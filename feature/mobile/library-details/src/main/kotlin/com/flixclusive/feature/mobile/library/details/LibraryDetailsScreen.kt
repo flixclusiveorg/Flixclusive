@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -33,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,6 +46,7 @@ import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
 import com.flixclusive.core.ui.mobile.component.LoadingScreen
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
@@ -84,7 +85,7 @@ data class LibraryDetailsNavArgs(
 @Composable
 internal fun LibraryDetailsScreen(
     navigator: LibraryDetailsScreenNavigator,
-    viewModel: LibraryDetailsViewModel = hiltViewModel()
+    viewModel: LibraryDetailsViewModel = hiltViewModel(),
 ) {
     val library by viewModel.library.collectAsStateWithLifecycle()
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
@@ -132,7 +133,6 @@ internal fun LibraryDetailsScreen(
     onLongClickItem: (Film) -> Unit,
     onUpdateFilter: (LibrarySortFilter) -> Unit,
 ) {
-    val context = LocalContext.current
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
 
     val listState = rememberLazyGridState()
@@ -166,8 +166,7 @@ internal fun LibraryDetailsScreen(
 
     Scaffold(
         modifier = Modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .padding(LocalGlobalScaffoldPadding.current),
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             val topBarState by remember {
                 derivedStateOf {
@@ -277,6 +276,21 @@ internal fun LibraryDetailsScreen(
                                 ),
                     )
                 }
+
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Spacer(modifier = Modifier.padding(LocalGlobalScaffoldPadding.current))
+                }
+            }
+
+            AnimatedVisibility(
+                visible = items().isEmpty(),
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                EmptyDataMessage(
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                )
             }
 
             AnimatedVisibility(
@@ -448,7 +462,9 @@ private fun LibraryDetailsScreenBasePreview() {
                     onUpdateFilter = {
                         uiState = if (uiState.selectedFilter == it) {
                             uiState.copy(selectedFilterDirection = uiState.selectedFilterDirection.toggle())
-                        } else uiState.copy(selectedFilter = it)
+                        } else {
+                            uiState.copy(selectedFilter = it)
+                        }
                     },
                 )
             }

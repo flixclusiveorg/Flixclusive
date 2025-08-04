@@ -23,10 +23,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -53,11 +55,54 @@ internal class LibraryDetailsViewModel
         private val _uiState = MutableStateFlow(LibraryDetailsUiState.createFrom(libraryArgs.id))
         val uiState = _uiState.asStateFlow()
 
-        val items = getItems()
-            .asStateFlow(
-                scope = viewModelScope,
-                initialValue = emptyList()
-            )
+        private val selectedFilter = _uiState
+            .map { it.selectedFilter }
+            .distinctUntilChanged()
+
+        private val selectedFilterDirection = _uiState
+            .map { it.selectedFilterDirection }
+            .distinctUntilChanged()
+
+        val items = combine(
+            selectedFilter,
+            selectedFilterDirection,
+            getItems(),
+        ) { filter, direction, items ->
+            when (filter) {
+                LibrarySortFilter.AddedAt -> items.sortedWith(
+                    compareBy(
+                        filterDirection = direction,
+                        selector = { it.addedAt },
+                    ),
+                )
+
+                LibrarySortFilter.Name -> items.sortedWith(
+                    compareBy(
+                        filterDirection = direction,
+                        selector = { it.film.title },
+                    ),
+                )
+
+                LibraryDetailsFilters.Year -> items.sortedWith(
+                    compareBy(
+                        filterDirection = direction,
+                        selector = { it.film.year },
+                    ),
+                )
+
+                LibraryDetailsFilters.Rating -> items.sortedWith(
+                    compareBy(
+                        filterDirection = direction,
+                        selector = { it.film.rating },
+                    ),
+                )
+
+                else -> throw IllegalStateException("Unknown filter: $filter")
+            }
+        }.asStateFlow(
+            scope = viewModelScope,
+            initialValue = emptyList(),
+        )
 
         val selectedItems =
             _uiState
@@ -66,10 +111,8 @@ internal class LibraryDetailsViewModel
                 .asStateFlow(viewModelScope)
 
         fun onUpdateFilter(filter: LibrarySortFilter) {
-            val isUpdatingDirection = _uiState.value.selectedFilter == filter
-
             _uiState.update {
-                if (isUpdatingDirection) {
+                if (filter == it.selectedFilter) {
                     it.copy(selectedFilterDirection = it.selectedFilterDirection.toggle())
                 } else {
                     it.copy(selectedFilter = filter)
@@ -307,3 +350,15 @@ internal object LibraryDetailsFilters {
             Rating,
         )
 }
+
+private inline fun <T> compareBy(
+    filterDirection: LibraryFilterDirection,
+    crossinline selector: (T) -> Comparable<*>?,
+): Comparator<T> =
+    Comparator { a, b ->
+        if (filterDirection == LibraryFilterDirection.ASC) {
+            compareValuesBy(a, b, selector)
+        } else {
+            compareValuesBy(b, a, selector)
+        }
+    }
