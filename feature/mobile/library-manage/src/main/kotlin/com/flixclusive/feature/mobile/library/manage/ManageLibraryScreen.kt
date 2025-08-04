@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,6 +41,7 @@ import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.ui.mobile.component.topbar.rememberEnterAlwaysScrollBehavior
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
@@ -121,6 +123,7 @@ private fun ManageLibraryScreen(
     onLongClickItem: (LibraryListWithPreview) -> Unit,
     onUpdateFilter: (LibrarySortFilter) -> Unit,
 ) {
+    val context = LocalContext.current
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
     var isFabExpanded by remember { mutableStateOf(false) }
 
@@ -278,7 +281,11 @@ private fun ManageLibraryScreen(
                             }
 
                             is EmphasisLibraryList -> {
-                                onViewLibraryContent(library.library.list)
+                                if (!uiState().isMultiSelecting) {
+                                    onViewLibraryContent(library.library.list)
+                                } else {
+                                    context.showToast(context.getString(R.string.invalid_library_item_selection))
+                                }
                             }
                         }
                     },
