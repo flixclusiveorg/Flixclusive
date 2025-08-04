@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -130,6 +131,7 @@ internal fun LibraryDetailsScreen(
     onLongClickItem: (Film) -> Unit,
     onUpdateFilter: (LibrarySortFilter) -> Unit,
 ) {
+    val context = LocalContext.current
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
 
     val listState = rememberLazyGridState()
@@ -247,7 +249,7 @@ internal fun LibraryDetailsScreen(
 
                 items(
                     items(),
-                    key = { it.film.identifier + it.film.providerId },
+                    key = { it.key },
                 ) { (film) ->
                     FilmCard(
                         film = film,

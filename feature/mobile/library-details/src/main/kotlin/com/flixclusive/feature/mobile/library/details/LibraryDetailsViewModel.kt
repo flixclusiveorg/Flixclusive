@@ -272,6 +272,22 @@ internal data class FilmWithAddedTime(
             )
         }
     }
+
+    /**
+     * Extracts a unique key for the film based on its identifier and provider ID.
+     * If both are blank, it falls back to using the film's title and the time of addition.
+     * This key is used to uniquely identify the film in the library.
+     * */
+    val key: String
+        get() {
+            var key = film.identifier + film.providerId
+
+            if (key.isBlank()) {
+                key = film.title + addedAt.time
+            }
+
+            return key
+        }
 }
 
 internal object LibraryDetailsFilters {
