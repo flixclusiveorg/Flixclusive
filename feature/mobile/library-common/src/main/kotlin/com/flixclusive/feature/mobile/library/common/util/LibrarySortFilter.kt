@@ -32,4 +32,5 @@ enum class LibraryFilterDirection {
 data class FilterWithDirection(
     val filter: LibrarySortFilter,
     val direction: LibraryFilterDirection,
+    val searchQuery: String,
 )

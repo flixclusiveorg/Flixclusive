@@ -55,29 +55,69 @@ internal fun DBFilmItem?.getLastUpdatedDate(): Date {
 }
 
 internal fun List<UiLibraryList>.filter(filterWithDirection: FilterWithDirection): List<UiLibraryList> {
-    return sortedWith(
+    val (filter, direction, query) = filterWithDirection
+
+    val queriedList = if (query.isNotBlank()) {
+        filter { searchInLibrary(it, query) }
+    } else {
+        this
+    }
+
+    return queriedList.sortedWith(
         compareBy<UiLibraryList>(
             selector = {
                 val item = it.mapToListPreview()
 
-                when (filterWithDirection.filter) {
+                when (filter) {
                     LibrarySortFilter.Name -> item.list.name
                     LibrarySortFilter.AddedAt -> item.list.createdAt.time
                     LibrarySortFilter.ModifiedAt -> item.list.updatedAt.time
                     ItemCount -> item.itemsCount
                     else -> throw IllegalStateException(
-                        "Library filter [${filterWithDirection.filter}] is not recognized",
+                        "Library filter [${filter}] is not recognized",
                     )
                 }
             },
         ).let { comparator ->
-            if (filterWithDirection.direction == LibraryFilterDirection.ASC) {
+            if (direction == LibraryFilterDirection.ASC) {
                 comparator
             } else {
                 comparator.reversed()
             }
         },
     )
+}
+
+private fun searchInLibrary(library: UiLibraryList, query: String): Boolean {
+    return when (library) {
+        is LibraryListWithPreview -> {
+            if (library.list.name.contains(query, true)) {
+                return true
+            }
+
+            library.list.description?.let { description ->
+                if (description.contains(query, true)) {
+                    return true
+                }
+            }
+
+            false
+        }
+
+        is EmphasisLibraryList -> {
+            if (library.library.list.name.contains(query, true)) {
+                return true
+            }
+
+            library.library.list.description?.let { description ->
+                if (description.contains(query, true)) {
+                    return true
+                }
+            }
+
+            false
+        }
+    }
 }
 
 internal fun UiLibraryList.mapToListPreview(): LibraryListWithPreview {

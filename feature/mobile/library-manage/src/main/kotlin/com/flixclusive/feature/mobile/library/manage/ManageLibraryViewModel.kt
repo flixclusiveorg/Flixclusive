@@ -58,6 +58,7 @@ internal class ManageLibraryViewModel
                     FilterWithDirection(
                         filter = it.selectedFilter,
                         direction = it.selectedFilterDirection,
+                        searchQuery = it.searchQuery,
                     )
                 }.distinctUntilChanged()
 
@@ -94,7 +95,9 @@ internal class ManageLibraryViewModel
                             name = UiText.from(LocaleR.string.watchlist),
                             description = UiText.from(LocaleR.string.watchlist_description),
                         )
-                }.combine(currentFilterWithDirection) { list, filterWithDirection ->
+                }.combine(
+                    currentFilterWithDirection,
+                ) { list, filterWithDirection ->
                     list.filter(filterWithDirection)
                 }.asStateFlow(viewModelScope, initialValue = emptyList())
 
@@ -200,10 +203,6 @@ internal class ManageLibraryViewModel
 
         fun onQueryChange(query: String) {
             _uiState.update { it.copy(searchQuery = query) }
-        }
-
-        fun onToggleFilterSheet(isVisible: Boolean) {
-            _uiState.update { it.copy(isShowingFilterSheet = isVisible) }
         }
 
         fun onToggleSearchBar(isVisible: Boolean) {

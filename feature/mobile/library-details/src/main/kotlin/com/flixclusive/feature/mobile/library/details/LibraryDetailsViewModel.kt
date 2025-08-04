@@ -12,6 +12,7 @@ import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.data.library.custom.LibraryListRepository
 import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.data.library.watchlist.WatchlistRepository
+import com.flixclusive.feature.mobile.library.common.util.FilterWithDirection
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
@@ -28,11 +29,11 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 import com.flixclusive.core.locale.R as LocaleR
 
@@ -55,42 +56,52 @@ internal class LibraryDetailsViewModel
         private val _uiState = MutableStateFlow(LibraryDetailsUiState.createFrom(libraryArgs.id))
         val uiState = _uiState.asStateFlow()
 
-        private val selectedFilter = _uiState
-            .map { it.selectedFilter }
-            .distinctUntilChanged()
-
-        private val selectedFilterDirection = _uiState
-            .map { it.selectedFilterDirection }
-            .distinctUntilChanged()
+        private val currentFilterWithDirection = _uiState
+            .mapLatest {
+                FilterWithDirection(
+                    filter = it.selectedFilter,
+                    direction = it.selectedFilterDirection,
+                    searchQuery = it.searchQuery,
+                )
+            }.distinctUntilChanged()
 
         val items = combine(
-            selectedFilter,
-            selectedFilterDirection,
+            currentFilterWithDirection,
             getItems(),
-        ) { filter, direction, items ->
+        ) { (filter, direction, query), items ->
+            // First, filter items based on search query
+            val filteredItems = if (query.isBlank()) {
+                items
+            } else {
+                items.filter { item ->
+                    searchInFilm(item.film, query)
+                }
+            }
+
+            // Then, sort the filtered items
             when (filter) {
-                LibrarySortFilter.AddedAt -> items.sortedWith(
+                LibrarySortFilter.AddedAt -> filteredItems.sortedWith(
                     compareBy(
                         filterDirection = direction,
                         selector = { it.addedAt },
                     ),
                 )
 
-                LibrarySortFilter.Name -> items.sortedWith(
+                LibrarySortFilter.Name -> filteredItems.sortedWith(
                     compareBy(
                         filterDirection = direction,
                         selector = { it.film.title },
                     ),
                 )
 
-                LibraryDetailsFilters.Year -> items.sortedWith(
+                LibraryDetailsFilters.Year -> filteredItems.sortedWith(
                     compareBy(
                         filterDirection = direction,
                         selector = { it.film.year },
                     ),
                 )
 
-                LibraryDetailsFilters.Rating -> items.sortedWith(
+                LibraryDetailsFilters.Rating -> filteredItems.sortedWith(
                     compareBy(
                         filterDirection = direction,
                         selector = { it.film.rating },
@@ -252,6 +263,46 @@ internal class LibraryDetailsViewModel
                         )
                     }
                 }
+        }
+
+        private fun searchInFilm(film: Film, query: String): Boolean {
+            if (film.title.contains(query, true)) {
+                return true
+            }
+
+            film.overview?.let { overview ->
+                if (overview.contains(query, true)) {
+                    return true
+                }
+            }
+
+            film.genres.forEach { genre ->
+                if (genre.name.contains(query, true)) {
+                    return true
+                }
+            }
+
+            film.language?.let { language ->
+                if (language.contains(query, true)) {
+                    return true
+                }
+
+                if (Locale(language).displayLanguage.contains(query, true)) {
+                    return true
+                }
+            }
+
+            if (film.providerId.contains(query, true)) {
+                return true
+            }
+
+            film.year?.let { year ->
+                if (year.toString().contains(query, true)) {
+                    return true
+                }
+            }
+
+            return false
         }
     }
 
