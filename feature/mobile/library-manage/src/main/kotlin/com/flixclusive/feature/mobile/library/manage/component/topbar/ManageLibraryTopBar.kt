@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.library.manage.component.topbar
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.WindowInsets
@@ -47,6 +48,10 @@ internal fun ManageLibraryTopBar(
                 topBarState != LibraryTopBarState.DefaultMainScreen
             ) ||
             isListEmpty
+
+    BackHandler(enabled = topBarState == LibraryTopBarState.Selecting) {
+        onUnselectAll()
+    }
 
     TwoRowsTopAppBar(
         title = title,

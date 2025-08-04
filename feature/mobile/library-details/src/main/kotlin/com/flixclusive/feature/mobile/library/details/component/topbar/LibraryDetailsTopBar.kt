@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.library.details.component.topbar
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.WindowInsets
@@ -20,6 +21,7 @@ import com.flixclusive.core.ui.mobile.component.topbar.DefaultNavigationIcon
 import com.flixclusive.core.ui.mobile.component.topbar.EnterOnlyNearTopScrollBehavior
 import com.flixclusive.core.ui.mobile.component.topbar.SearchTextFieldAction
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
+import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun LibraryDetailsTopBar(
@@ -47,6 +49,10 @@ internal fun LibraryDetailsTopBar(
             topBarState != LibraryTopBarState.DefaultMainScreen
             ) || isListEmpty
 
+    BackHandler(enabled = topBarState == LibraryTopBarState.Selecting) {
+        onUnselectAll()
+    }
+
     ThreeRowsTopAppBar(
         title = title,
         titleTextStyle = MaterialTheme.typography.titleLarge,
@@ -59,7 +65,7 @@ internal fun LibraryDetailsTopBar(
                     PlainTooltipBox(description = stringResource(R.string.cancel)) {
                         ActionButton(onClick = onUnselectAll) {
                             AdaptiveIcon(
-                                painter = painterResource(com.flixclusive.core.ui.common.R.drawable.round_close_24),
+                                painter = painterResource(UiCommonR.drawable.round_close_24),
                                 contentDescription = stringResource(R.string.cancel),
                             )
                         }
