@@ -195,6 +195,10 @@ internal fun LibraryDetailsScreen(
                 val title =
                     if (topBarState == CommonLibraryTopBarState.Selecting) {
                         stringResource(LocaleR.string.count_selection_format, selectCount)
+                    } else if (uiState().libraryType == LibraryType.Watchlist) {
+                        stringResource(LocaleR.string.watchlist)
+                    } else if (uiState().libraryType == LibraryType.WatchHistory) {
+                        stringResource(LocaleR.string.recently_watched)
                     } else {
                         library.name
                     }
