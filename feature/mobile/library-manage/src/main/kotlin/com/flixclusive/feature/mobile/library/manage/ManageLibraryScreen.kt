@@ -3,6 +3,7 @@ package com.flixclusive.feature.mobile.library.manage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -42,9 +43,8 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.ui.mobile.component.topbar.rememberEnterAlwaysScrollBehavior
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.feature.mobile.library.common.component.CommonLibraryTopBar
-import com.flixclusive.feature.mobile.library.common.component.CommonLibraryTopBarState
-import com.flixclusive.feature.mobile.library.common.component.LibraryFilterBottomSheet
+import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
+import com.flixclusive.feature.mobile.library.common.component.LibraryFilterRow
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.feature.mobile.library.common.util.selectionBorder
@@ -54,6 +54,7 @@ import com.flixclusive.feature.mobile.library.manage.component.DefaultLibraryCar
 import com.flixclusive.feature.mobile.library.manage.component.EditLibraryDialog
 import com.flixclusive.feature.mobile.library.manage.component.LibraryCard
 import com.flixclusive.feature.mobile.library.manage.component.LibraryOptionsBottomSheet
+import com.flixclusive.feature.mobile.library.manage.component.topbar.ManageLibraryTopBar
 import com.flixclusive.feature.mobile.library.manage.util.mapToListPreview
 import com.flixclusive.model.database.DBFilm
 import com.flixclusive.model.database.LibraryList
@@ -90,7 +91,6 @@ internal fun ManageLibraryScreen(
         onRemoveSelection = viewModel::onRemoveSelection,
         onQueryChange = viewModel::onQueryChange,
         onUnselectAll = viewModel::onUnselectAll,
-        onToggleFilterSheet = viewModel::onToggleFilterSheet,
         onToggleSearchBar = viewModel::onToggleSearchBar,
         onToggleOptionsSheet = viewModel::onToggleOptionsSheet,
         onToggleEditDialog = viewModel::onToggleEditDialog,
@@ -116,7 +116,6 @@ private fun ManageLibraryScreen(
     onViewLibraryContent: (LibraryList) -> Unit,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
-    onToggleFilterSheet: (Boolean) -> Unit,
     onToggleSelect: (LibraryListWithPreview) -> Unit,
     onToggleOptionsSheet: (Boolean) -> Unit,
     onLongClickItem: (LibraryListWithPreview) -> Unit,
@@ -170,16 +169,16 @@ private fun ManageLibraryScreen(
             val topBarState by remember {
                 derivedStateOf {
                     if (uiState().isMultiSelecting) {
-                        CommonLibraryTopBarState.Selecting
+                        LibraryTopBarState.Selecting
                     } else if (uiState().isShowingSearchBar) {
-                        CommonLibraryTopBarState.Searching
+                        LibraryTopBarState.Searching
                     } else {
-                        CommonLibraryTopBarState.DefaultMainScreen
+                        LibraryTopBarState.DefaultMainScreen
                     }
                 }
             }
 
-            CommonLibraryTopBar(
+            ManageLibraryTopBar(
                 topBarState = topBarState,
                 isListEmpty = libraries().isEmpty(),
                 selectCount = { selectCount },
@@ -187,23 +186,34 @@ private fun ManageLibraryScreen(
                 searchQuery = { searchQuery },
                 onToggleSearchBar = onToggleSearchBar,
                 onQueryChange = onQueryChange,
-                onShowFilterSheet = { onToggleFilterSheet(true) },
                 onRemoveSelection = { showDeleteSelectionAlert = true },
-                onStartMultiSelecting = onStartMultiSelecting,
                 onUnselectAll = onUnselectAll,
-            ) {
-                val title =
-                    if (topBarState == CommonLibraryTopBarState.Selecting) {
-                        stringResource(LocaleR.string.count_selection_format, selectCount)
-                    } else {
-                        stringResource(LocaleR.string.my_library)
-                    }
+                title = {
+                    val title =
+                        if (topBarState == LibraryTopBarState.Selecting) {
+                            stringResource(LocaleR.string.count_selection_format, selectCount)
+                        } else {
+                            stringResource(LocaleR.string.my_library)
+                        }
 
-                Text(
-                    text = title,
-                    style = getTopBarHeadlinerTextStyle(),
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
+                    Text(
+                        text = title,
+                        style = getTopBarHeadlinerTextStyle(),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                    )
+                },
+            ) {
+                LibraryFilterRow(
+                    isListEditable = libraries().isNotEmpty() && !uiState().isMultiSelecting,
+                    filters = defaultManageLibraryFilters,
+                    currentFilter = uiState().selectedFilter,
+                    currentDirection = uiState().selectedFilterDirection,
+                    onUpdateFilter = onUpdateFilter,
+                    onStartSelecting = onStartMultiSelecting,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 15.dp),
                 )
             }
         },
@@ -266,6 +276,7 @@ private fun ManageLibraryScreen(
                                     onViewLibraryContent(library.list)
                                 }
                             }
+
                             is EmphasisLibraryList -> {
                                 onViewLibraryContent(library.library.list)
                             }
@@ -290,16 +301,6 @@ private fun ManageLibraryScreen(
                 )
             }
         }
-    }
-
-    if (uiState().isShowingFilterSheet) {
-        LibraryFilterBottomSheet(
-            filters = defaultManageLibraryFilters,
-            currentFilter = uiState().selectedFilter,
-            currentDirection = uiState().selectedFilterDirection,
-            onDismissRequest = { onToggleFilterSheet(false) },
-            onUpdateFilter = onUpdateFilter,
-        )
     }
 
     if (uiState().isShowingOptionsSheet) {
@@ -463,7 +464,6 @@ private fun ManageLibraryScreenBasePreview() {
                             )
                     },
                     onQueryChange = { uiState = uiState.copy(searchQuery = it) },
-                    onToggleFilterSheet = { uiState = uiState.copy(isShowingFilterSheet = it) },
                     onToggleSearchBar = { uiState = uiState.copy(isShowingSearchBar = it) },
                     onToggleOptionsSheet = { uiState = uiState.copy(isShowingOptionsSheet = it) },
                     onLongClickItem = { uiState = uiState.copy(longClickedLibrary = it) },

@@ -110,15 +110,6 @@ internal class ManageLibraryViewModel
             }
         }
 
-        fun onAddLibrary(list: LibraryList) {
-            if (addLibJob?.isActive == true) return
-
-            addLibJob =
-                AppDispatchers.IO.scope.launch {
-                    libraryListRepository.insertList(list)
-                }
-        }
-
         fun onRemoveLongClickedLibrary() {
             if (removeLibJob?.isActive == true) return
 

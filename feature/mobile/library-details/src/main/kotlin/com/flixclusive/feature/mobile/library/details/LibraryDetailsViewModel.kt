@@ -179,10 +179,6 @@ internal class LibraryDetailsViewModel
             _uiState.update { it.copy(searchQuery = query) }
         }
 
-        fun onToggleFilterSheet(isVisible: Boolean) {
-            _uiState.update { it.copy(isShowingFilterSheet = isVisible) }
-        }
-
         fun onToggleSearchBar(isVisible: Boolean) {
             _uiState.update { it.copy(isShowingSearchBar = isVisible) }
         }
@@ -282,7 +278,6 @@ internal data class LibraryDetailsUiState(
     val searchQuery: String = "",
     val errorApiMessage: String? = null,
     val isLoading: Boolean = false,
-    val isShowingFilterSheet: Boolean = false,
     val isShowingSearchBar: Boolean = false,
     val isMultiSelecting: Boolean = false,
     val longClickedFilm: Film? = null,

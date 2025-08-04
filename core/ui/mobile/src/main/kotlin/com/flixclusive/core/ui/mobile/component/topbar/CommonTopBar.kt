@@ -103,14 +103,11 @@ fun CommonTopBar(
         actions = actions,
         expandedHeight = getAdaptiveTopBarHeight(),
         scrollBehavior = scrollBehavior,
-        colors =
-            TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-                navigationIconContentColor = navigationIconColor,
-                titleContentColor = titleColor,
-                actionIconContentColor = actionsColor,
-            ),
+        colors = CommonTopBarDefaults.colors(
+            navigationIconColor = navigationIconColor,
+            titleColor = titleColor,
+            actionsColor = actionsColor,
+        ),
     )
 }
 
@@ -187,6 +184,19 @@ object CommonTopBarDefaults {
             size = 20.sp,
             increaseBy = 5.sp,
         ).copy(fontWeight = FontWeight.SemiBold)
+
+    @Composable
+    fun colors(
+        navigationIconColor: Color = LocalContentColor.current,
+        titleColor: Color = LocalContentColor.current,
+        actionsColor: Color = LocalContentColor.current,
+    ) = TopAppBarDefaults.topAppBarColors(
+        containerColor = MaterialTheme.colorScheme.surface,
+        scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+        navigationIconContentColor = navigationIconColor,
+        titleContentColor = titleColor,
+        actionIconContentColor = actionsColor,
+    )
 }
 
 @Preview

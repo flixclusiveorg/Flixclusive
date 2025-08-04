@@ -4,7 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -13,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -22,7 +25,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,19 +48,20 @@ import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
 import com.flixclusive.core.ui.mobile.component.LoadingScreen
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
-import com.flixclusive.core.ui.mobile.component.topbar.rememberEnterAlwaysScrollBehavior
+import com.flixclusive.core.ui.mobile.component.topbar.rememberEnterOnlyNearTopScrollBehavior
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.feature.mobile.library.common.component.CommonLibraryTopBar
-import com.flixclusive.feature.mobile.library.common.component.CommonLibraryTopBarState
-import com.flixclusive.feature.mobile.library.common.component.LibraryFilterBottomSheet
+import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
+import com.flixclusive.feature.mobile.library.common.component.LibraryFilterRow
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.feature.mobile.library.common.util.selectionBorder
 import com.flixclusive.feature.mobile.library.details.component.ScreenHeader
+import com.flixclusive.feature.mobile.library.details.component.topbar.LibraryDetailsTopBar
 import com.flixclusive.model.database.DBFilm
 import com.flixclusive.model.database.LibraryList
 import com.flixclusive.model.film.Film
@@ -108,7 +111,6 @@ internal fun LibraryDetailsScreen(
         onRemoveSelection = viewModel::onRemoveSelection,
         onQueryChange = viewModel::onQueryChange,
         onUnselectAll = viewModel::onUnselectAll,
-        onToggleFilterSheet = viewModel::onToggleFilterSheet,
         onToggleSearchBar = viewModel::onToggleSearchBar,
     )
 }
@@ -128,12 +130,11 @@ internal fun LibraryDetailsScreen(
     onViewFilm: (Film) -> Unit,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
-    onToggleFilterSheet: (Boolean) -> Unit,
     onToggleSelect: (Film) -> Unit,
     onLongClickItem: (Film) -> Unit,
     onUpdateFilter: (LibrarySortFilter) -> Unit,
 ) {
-    val scrollBehavior = rememberEnterAlwaysScrollBehavior()
+    val scrollBehavior = rememberEnterOnlyNearTopScrollBehavior()
 
     val listState = rememberLazyGridState()
 
@@ -148,17 +149,21 @@ internal fun LibraryDetailsScreen(
     var showDeleteItemAlert by remember { mutableStateOf(false) }
     var showDeleteSelectionAlert by remember { mutableStateOf(false) }
 
-    var headerHeightPx by remember { mutableIntStateOf(0) }
-    var topBarTitleAlpha by remember { mutableFloatStateOf(0f) }
+    var headerHeightPx = remember { mutableFloatStateOf(0f) }
+    var topBarTitleAlpha = remember { mutableFloatStateOf(0f) }
     LaunchedEffect(listState, headerHeightPx) {
         snapshotFlow {
             Triple(listState.firstVisibleItemScrollOffset, listState.firstVisibleItemIndex, headerHeightPx)
         }.collect { (offset, index, headerHeight) ->
-            val coercedOffset = offset.coerceIn(0, headerHeight).toFloat()
+            val coercedOffset = offset.toFloat().coerceIn(0f, headerHeight.floatValue)
 
-            topBarTitleAlpha =
+            topBarTitleAlpha.floatValue =
                 when {
-                    index == 0 && headerHeight > coercedOffset -> (coercedOffset / headerHeight).coerceIn(0f, 1f)
+                    index == 0 && headerHeight.floatValue > coercedOffset ->
+                        coercedOffset
+                            .div(headerHeight.floatValue)
+                            .coerceIn(0f, 1f)
+
                     else -> 1f
                 }
         }
@@ -171,16 +176,16 @@ internal fun LibraryDetailsScreen(
             val topBarState by remember {
                 derivedStateOf {
                     if (uiState().isMultiSelecting) {
-                        CommonLibraryTopBarState.Selecting
+                        LibraryTopBarState.Selecting
                     } else if (uiState().isShowingSearchBar) {
-                        CommonLibraryTopBarState.Searching
+                        LibraryTopBarState.Searching
                     } else {
-                        CommonLibraryTopBarState.DefaultSubScreen
+                        LibraryTopBarState.DefaultSubScreen
                     }
                 }
             }
 
-            CommonLibraryTopBar(
+            LibraryDetailsTopBar(
                 topBarState = topBarState,
                 scrollBehavior = scrollBehavior,
                 isListEmpty = items().isEmpty(),
@@ -189,37 +194,71 @@ internal fun LibraryDetailsScreen(
                 searchQuery = { searchQuery },
                 onToggleSearchBar = onToggleSearchBar,
                 onQueryChange = onQueryChange,
-                onShowFilterSheet = { onToggleFilterSheet(true) },
                 onRemoveSelection = { showDeleteSelectionAlert = true },
-                onStartMultiSelecting = onStartMultiSelecting,
                 onUnselectAll = onUnselectAll,
-            ) {
-                val title =
-                    if (topBarState == CommonLibraryTopBarState.Selecting) {
-                        stringResource(LocaleR.string.count_selection_format, selectCount)
-                    } else if (uiState().libraryType == LibraryType.Watchlist) {
-                        stringResource(LocaleR.string.watchlist)
-                    } else if (uiState().libraryType == LibraryType.WatchHistory) {
-                        stringResource(LocaleR.string.recently_watched)
-                    } else {
-                        library.name
-                    }
+                title = {
+                    val title =
+                        if (topBarState == LibraryTopBarState.Selecting) {
+                            stringResource(LocaleR.string.count_selection_format, selectCount)
+                        } else if (uiState().libraryType == LibraryType.Watchlist) {
+                            stringResource(LocaleR.string.watchlist)
+                        } else if (uiState().libraryType == LibraryType.WatchHistory) {
+                            stringResource(LocaleR.string.recently_watched)
+                        } else {
+                            library.name
+                        }
 
-                Text(
-                    text = title,
-                    style = getTopBarHeadlinerTextStyle(),
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                    modifier =
-                        Modifier.graphicsLayer {
-                            alpha =
-                                when (topBarState) {
-                                    CommonLibraryTopBarState.Selecting -> 1f
-                                    else -> topBarTitleAlpha
-                                }
-                        },
-                )
-            }
+                    Text(
+                        text = title,
+                        style = getTopBarHeadlinerTextStyle(),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        modifier =
+                            Modifier.graphicsLayer {
+                                alpha =
+                                    when (topBarState) {
+                                        LibraryTopBarState.Selecting -> 1f
+                                        else -> topBarTitleAlpha.floatValue
+                                    }
+                            },
+                    )
+                },
+                infoContent = {
+                    ScreenHeader(
+                        library = library,
+                        libraryType = uiState().libraryType,
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp)
+                                .onGloballyPositioned {
+                                    headerHeightPx.floatValue = it.size.height.toFloat()
+                                },
+                    )
+                },
+                filterContent = {
+                    Column(
+                        modifier = Modifier
+                            .padding(bottom = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.2f),
+                        )
+
+                        LibraryFilterRow(
+                            isListEditable = items().isNotEmpty() && !uiState().isMultiSelecting,
+                            filters = LibraryDetailsFilters.defaultFilters,
+                            currentFilter = uiState().selectedFilter,
+                            currentDirection = uiState().selectedFilterDirection,
+                            onUpdateFilter = onUpdateFilter,
+                            onStartSelecting = onStartMultiSelecting,
+                        )
+                    }
+                },
+            )
         },
     ) { paddingValues ->
         Box(
@@ -230,26 +269,13 @@ internal fun LibraryDetailsScreen(
                 state = listState,
                 columns = GridCells.Adaptive(110.dp),
                 contentPadding = paddingValues,
-                modifier = Modifier.align(Alignment.TopStart),
+                modifier = Modifier.align(Alignment.TopStart)
+                    .padding(top = 10.dp),
             ) {
                 Snapshot.withoutReadObservation {
                     listState.requestScrollToItem(
                         index = listState.firstVisibleItemIndex,
                         scrollOffset = listState.firstVisibleItemScrollOffset,
-                    )
-                }
-
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    ScreenHeader(
-                        library = library,
-                        libraryType = uiState().libraryType,
-                        modifier =
-                            Modifier
-                                .padding(16.dp)
-                                .padding(bottom = 25.dp)
-                                .onGloballyPositioned {
-                                    headerHeightPx = it.size.height
-                                },
                     )
                 }
 
@@ -304,16 +330,6 @@ internal fun LibraryDetailsScreen(
                 )
             }
         }
-    }
-
-    if (uiState().isShowingFilterSheet) {
-        LibraryFilterBottomSheet(
-            filters = LibraryDetailsFilters.defaultFilters,
-            currentFilter = uiState().selectedFilter,
-            currentDirection = uiState().selectedFilterDirection,
-            onDismissRequest = { onToggleFilterSheet(false) },
-            onUpdateFilter = onUpdateFilter,
-        )
     }
 
     if (showDeleteItemAlert || showDeleteSelectionAlert) {
@@ -443,7 +459,6 @@ private fun LibraryDetailsScreenBasePreview() {
                     onViewFilm = {},
                     onQueryChange = { uiState = uiState.copy(searchQuery = it) },
                     onToggleSearchBar = { uiState = uiState.copy(isShowingSearchBar = it) },
-                    onToggleFilterSheet = { uiState = uiState.copy(isShowingFilterSheet = it) },
                     onToggleSelect = {
                         uiState =
                             with(uiState) {

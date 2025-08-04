@@ -180,18 +180,20 @@ fun CommonTopBarWithSearch(
 }
 
 @Composable
-private fun RowScope.SearchTextFieldAction(
+fun RowScope.SearchTextFieldAction(
     isSearching: Boolean,
     hideSearchButton: Boolean,
     searchQuery: () -> String,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
     extraActions: @Composable RowScope.() -> Unit = {},
 ) {
     AnimatedContent(
         targetState = isSearching,
         label = "TopBarAction",
         transitionSpec = { getSearchTransition() },
+        modifier = modifier,
     ) { state ->
         val heightModifier =
             Modifier
