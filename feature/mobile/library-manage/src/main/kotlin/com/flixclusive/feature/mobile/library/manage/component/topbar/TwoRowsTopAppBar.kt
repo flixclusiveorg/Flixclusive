@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.isFinite
 import androidx.compose.ui.unit.isSpecified
 import com.flixclusive.core.ui.mobile.component.topbar.settleAppBar
-import com.flixclusive.feature.mobile.library.common.util.TopAppBarLayout
+import com.flixclusive.feature.mobile.library.common.component.TopAppBarLayout
 import kotlin.math.roundToInt
 
 /**

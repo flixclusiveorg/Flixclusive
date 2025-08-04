@@ -24,18 +24,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,6 +59,7 @@ import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.feature.mobile.library.common.util.selectionBorder
 import com.flixclusive.feature.mobile.library.details.component.ScreenHeader
 import com.flixclusive.feature.mobile.library.details.component.topbar.LibraryDetailsTopBar
+import com.flixclusive.feature.mobile.library.details.component.topbar.TopTitleAlphaEasing
 import com.flixclusive.model.database.DBFilm
 import com.flixclusive.model.database.LibraryList
 import com.flixclusive.model.film.Film
@@ -149,26 +147,6 @@ internal fun LibraryDetailsScreen(
     var showDeleteItemAlert by remember { mutableStateOf(false) }
     var showDeleteSelectionAlert by remember { mutableStateOf(false) }
 
-    var headerHeightPx = remember { mutableFloatStateOf(0f) }
-    var topBarTitleAlpha = remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(listState, headerHeightPx) {
-        snapshotFlow {
-            Triple(listState.firstVisibleItemScrollOffset, listState.firstVisibleItemIndex, headerHeightPx)
-        }.collect { (offset, index, headerHeight) ->
-            val coercedOffset = offset.toFloat().coerceIn(0f, headerHeight.floatValue)
-
-            topBarTitleAlpha.floatValue =
-                when {
-                    index == 0 && headerHeight.floatValue > coercedOffset ->
-                        coercedOffset
-                            .div(headerHeight.floatValue)
-                            .coerceIn(0f, 1f)
-
-                    else -> 1f
-                }
-        }
-    }
-
     Scaffold(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -218,7 +196,7 @@ internal fun LibraryDetailsScreen(
                                 alpha =
                                     when (topBarState) {
                                         LibraryTopBarState.Selecting -> 1f
-                                        else -> topBarTitleAlpha.floatValue
+                                        else -> TopTitleAlphaEasing.transform(scrollBehavior.state.collapsedFraction)
                                     }
                             },
                     )
@@ -230,10 +208,7 @@ internal fun LibraryDetailsScreen(
                         modifier =
                             Modifier
                                 .padding(horizontal = 16.dp)
-                                .padding(bottom = 16.dp)
-                                .onGloballyPositioned {
-                                    headerHeightPx.floatValue = it.size.height.toFloat()
-                                },
+                                .padding(bottom = 16.dp),
                     )
                 },
                 filterContent = {

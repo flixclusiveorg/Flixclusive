@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.library.details.component.topbar
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -219,3 +220,5 @@ internal fun ThreeRowsTopAppBar(
         }
     }
 }
+
+internal val TopTitleAlphaEasing = CubicBezierEasing(.8f, 0f, .8f, .15f)
