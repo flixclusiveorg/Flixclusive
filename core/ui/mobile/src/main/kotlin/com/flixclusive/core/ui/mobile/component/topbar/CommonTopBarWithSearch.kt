@@ -1,5 +1,6 @@
 package com.flixclusive.core.ui.mobile.component.topbar
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
@@ -189,6 +190,10 @@ fun RowScope.SearchTextFieldAction(
     modifier: Modifier = Modifier,
     extraActions: @Composable RowScope.() -> Unit = {},
 ) {
+    BackHandler(enabled = isSearching) {
+        onToggleSearchBar(false)
+    }
+
     AnimatedContent(
         targetState = isSearching,
         label = "TopBarAction",
