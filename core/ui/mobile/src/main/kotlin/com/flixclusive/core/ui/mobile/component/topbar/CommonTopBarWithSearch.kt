@@ -24,7 +24,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -59,6 +58,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showSoftKeyboard
 import com.flixclusive.core.ui.common.util.toTextFieldValue
 import com.flixclusive.core.ui.mobile.component.PlainTooltipBox
+import com.flixclusive.core.ui.mobile.component.textfield.CustomOutlinedTextField
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getAdaptiveTopBarHeight
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.locale.R as LocaleR
@@ -250,7 +250,7 @@ private fun TopBarTextField(
     val focusManager = LocalFocusManager.current
     val keyboardManager = LocalSoftwareKeyboardController.current
 
-    OutlinedTextField(
+    CustomOutlinedTextField(
         value = textFieldValue.value,
         onValueChange = {
             textFieldValue.value = it
