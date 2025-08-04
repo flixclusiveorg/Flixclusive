@@ -50,6 +50,7 @@ import com.flixclusive.core.ui.mobile.component.LoadingScreen
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.ui.mobile.component.topbar.rememberEnterAlwaysScrollBehavior
+import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.library.common.component.CommonLibraryTopBar
 import com.flixclusive.feature.mobile.library.common.component.CommonLibraryTopBarState
 import com.flixclusive.feature.mobile.library.common.component.LibraryFilterBottomSheet
@@ -164,7 +165,9 @@ internal fun LibraryDetailsScreen(
     }
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .padding(LocalGlobalScaffoldPadding.current),
         topBar = {
             val topBarState by remember {
                 derivedStateOf {
