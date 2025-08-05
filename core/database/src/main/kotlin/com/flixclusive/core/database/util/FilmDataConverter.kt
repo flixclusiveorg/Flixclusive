@@ -19,10 +19,38 @@ internal class FilmDataConverter {
     @TypeConverter
     fun toFilmData(filmDataString: String): DBFilm {
         val json = JsonParser.parseString(filmDataString)
-        try { json.migrateToSchema4() }
-        catch (_: Exception) {}
+
+        runCatching {
+            json.migrateToSchema4()
+        }
+
+        runCatching {
+            json.migrateToSchema8()
+        }
 
         return fromJson<DBFilm>(json)
+    }
+
+    private fun JsonElement.migrateToSchema8() {
+        val json = asJsonObject
+
+        if (json.has("providerName")) {
+            json.addProperty("providerId", json.get("providerName").asString)
+            json.remove("providerName")
+        }
+
+        if (json.has("recommendations")) {
+            val recommendations = json.get("recommendations").asJsonArray
+
+            recommendations.forEach { recommendation ->
+                with(recommendation.asJsonObject) {
+                    if (has("providerName")) {
+                        addProperty("providerId", get("providerName").asString)
+                        remove("providerName")
+                    }
+                }
+            }
+        }
     }
 
     private fun JsonElement.migrateToSchema4() {
