@@ -10,6 +10,7 @@ import com.flixclusive.crash.GlobalCrashHandler
 import com.flixclusive.data.configuration.AppBuild
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.domain.provider.ProviderLoaderUseCase
+import com.flixclusive.domain.provider.ProviderUpdaterUseCase
 import com.flixclusive.domain.user.UserSessionManager
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.flow.first
@@ -28,6 +29,9 @@ internal class FlixclusiveApplication :
 
     @Inject
     lateinit var providerLoaderUseCase: ProviderLoaderUseCase
+
+    @Inject
+    lateinit var providerUpdaterUseCase: ProviderUpdaterUseCase
 
     @Inject
     lateinit var client: OkHttpClient
@@ -66,6 +70,7 @@ internal class FlixclusiveApplication :
 
                 providerLoaderUseCase.initDebugFolderToPreferences()
                 providerLoaderUseCase.initFromLocal()
+                providerUpdaterUseCase(notify = true)
             } else {
                 userSessionManager.signOut()
             }
