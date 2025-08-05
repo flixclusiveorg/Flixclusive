@@ -53,7 +53,10 @@ internal fun DetailsScaffold(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
         modifier = modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .ifElse(
+                condition = isDetailsVisible,
+                ifTrueModifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            )
             .fillMaxSize(),
         containerColor = Color.Transparent,
         topBar = {
@@ -82,7 +85,7 @@ internal fun DetailsScaffold(
                             condition = isListAndDetailVisible,
                             ifTrueModifier =
                             Modifier
-                                .padding(UserScreenHorizontalPadding)
+                                .padding(UserScreenHorizontalPadding / 2)
                                 .background(brush = brush, shape = shape),
                         ),
                 content = content,
