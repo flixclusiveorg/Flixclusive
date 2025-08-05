@@ -3,6 +3,7 @@ package com.flixclusive.feature.mobile.settings.screen.root
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -59,6 +60,7 @@ internal fun DetailsScaffold(
             )
             .fillMaxSize(),
         containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             if (isDetailsVisible) {
                 CommonTopBarWithSearch(
