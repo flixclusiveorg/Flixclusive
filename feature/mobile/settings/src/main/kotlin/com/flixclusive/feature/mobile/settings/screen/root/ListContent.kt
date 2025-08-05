@@ -60,6 +60,7 @@ private val NavigationButtonHeight = 50.dp
 
 @Composable
 internal fun ListContent(
+    appBuild: AppBuildWithPrereleaseFlag,
     items: ImmutableMap<Int?, List<BaseTweakScreen<out FlixclusivePrefs>>>,
     onScroll: (Float) -> Unit,
     currentUser: () -> User,
@@ -176,10 +177,10 @@ internal fun ListContent(
 
         item {
             ListContentFooter(
-                versionName = "1.0.0",
-                commitVersion = "a1e62eq",
-                isInDebugMode = false,
-                isOnPreRelease = false,
+                versionName = appBuild.versionName,
+                commitVersion = appBuild.commitVersion,
+                isInDebugMode = appBuild.isDebug,
+                isOnPreRelease = appBuild.isPrerelease,
             )
         }
     }

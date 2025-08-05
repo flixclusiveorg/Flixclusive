@@ -78,6 +78,7 @@ internal fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val currentUser by viewModel.userSessionManager.currentUser.collectAsStateWithLifecycle()
+    val appBuild by viewModel.appBuildWithPrereleaseFlag.collectAsStateWithLifecycle()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -148,6 +149,7 @@ internal fun SettingsScreen(
                 listPane = {
                     AnimatedPane {
                         ListContent(
+                            appBuild = appBuild,
                             items = items,
                             currentUser = { currentUser!! },
                             navigator = navigator,

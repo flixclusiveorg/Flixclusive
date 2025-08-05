@@ -11,6 +11,7 @@ android {
 dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.ui.mobile)
+    implementation(projects.data.configuration)
     implementation(projects.data.search)
     implementation(projects.data.user)
     implementation(projects.domain.provider)
