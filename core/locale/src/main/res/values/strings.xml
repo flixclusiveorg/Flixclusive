@@ -427,7 +427,7 @@
     <string name="providers_updated_format">The following provider(s) have been updated: %1$s</string>
     <string name="test_providers_completed">Test results summary: %1$s</string>
     <string name="update_out_now_format">%1$s is out now</string>
-    <string name="updates_out_now_provider_format">Updates for plugins are available: %1$s</string>
+    <string name="updates_out_now_provider_format">Updates for providers are available: %1$s</string>
 
     <!--  Content descriptions  -->
     <string name="plus_button_content_desc">A plus icon indicating addition of an item</string>

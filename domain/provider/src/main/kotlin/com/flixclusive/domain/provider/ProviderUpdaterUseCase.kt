@@ -28,18 +28,6 @@ import java.util.Collections
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.collections.ArrayDeque
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
-import kotlin.collections.List
-import kotlin.collections.MutableMap
-import kotlin.collections.firstOrNull
-import kotlin.collections.get
-import kotlin.collections.indexOfFirst
-import kotlin.collections.isNotEmpty
-import kotlin.collections.joinToString
-import kotlin.collections.map
-import kotlin.collections.mapNotNull
 import kotlin.collections.set
 import com.flixclusive.core.locale.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -109,7 +97,7 @@ class ProviderUpdaterUseCase
                     is ProviderUpdateResult.Updated -> {
                         context.getString(
                             LocaleR.string.providers_updated_format,
-                            result.providers.joinToString(", "),
+                            result.providers.joinToString(", ") { it.name },
                         )
                     }
 
@@ -117,20 +105,20 @@ class ProviderUpdaterUseCase
                         if (result.success.isNotEmpty()) {
                             context.getString(
                                 LocaleR.string.providers_updated_format,
-                                result.success.joinToString(", "),
+                                result.success.joinToString(", ") { it.name },
                             )
                         }
 
                         context.getString(
                             LocaleR.string.failed_to_update_providers_format,
-                            result.failed.joinToString(", "),
+                            result.failed.joinToString(", ") { it.name },
                         )
                     }
 
                     is ProviderUpdateResult.Outdated -> {
                         context.getString(
                             LocaleR.string.updates_out_now_provider_format,
-                            result.providers.joinToString(", "),
+                            result.providers.joinToString(", ") { it.name },
                         )
                     }
 
