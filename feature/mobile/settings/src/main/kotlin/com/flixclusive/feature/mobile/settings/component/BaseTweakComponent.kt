@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.settings.component
 
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +20,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.settings.TweakPaddingHorizontal
-import com.flixclusive.feature.mobile.settings.util.betterClickable
 
 internal val TweakTouchSize = 56.dp
 internal val TweakIconSize = 25.dp
@@ -43,11 +43,13 @@ internal fun BaseTweakComponent(
     Column(
         modifier =
             modifier
-                .betterClickable(
+                .clickable(
                     interactionSource = interactionSource,
-                    onClick = onClick,
-                    enabled = enabledProvider,
-                ).graphicsLayer {
+                    indication = null,
+                    onClick = { onClick?.invoke() },
+                    enabled = enabledProvider(),
+                )
+                .graphicsLayer {
                     alpha = if (enabledProvider()) 1F else 0.6F
                 },
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -60,10 +62,12 @@ internal fun BaseTweakComponent(
                     .indication(
                         interactionSource = interactionSource,
                         indication = LocalIndication.current,
-                    ).padding(
+                    )
+                    .padding(
                         vertical = getAdaptiveDp(10.dp),
                         horizontal = defaultHorizontalPadding,
-                    ).fillMaxWidth()
+                    )
+                    .fillMaxWidth()
                     .heightIn(min = getAdaptiveDp(TweakTouchSize)),
         ) {
             if (startContent != null) {

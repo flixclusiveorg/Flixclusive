@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.settings.component
 
+import android.view.KeyEvent
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.flixclusive.core.theme.FlixclusiveTheme
@@ -32,7 +34,34 @@ internal fun SliderComponent(
     icon: Painter? = null,
 ) {
     BaseTweakComponent(
-        modifier = modifier,
+        modifier = modifier.onKeyEvent { keyEvent ->
+            if (
+                keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_UP
+                && range.contains(selectedValueProvider())
+            ) {
+                val percentIncrement = range.endInclusive * 0.01f
+
+                return@onKeyEvent when (keyEvent.nativeKeyEvent.keyCode) {
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        val newValue = (selectedValueProvider() + percentIncrement)
+                            .coerceIn(range)
+                        onValueChange(newValue)
+                        true
+                    }
+                    KeyEvent.KEYCODE_DPAD_LEFT -> {
+                        val newValue = (selectedValueProvider() - percentIncrement)
+                            .coerceIn(range)
+                        onValueChange(newValue)
+                        true
+                    }
+                    else -> {
+                        false
+                    }
+                }
+            }
+
+            false
+        },
         title = title,
         descriptionProvider = descriptionProvider,
         enabledProvider = enabledProvider,

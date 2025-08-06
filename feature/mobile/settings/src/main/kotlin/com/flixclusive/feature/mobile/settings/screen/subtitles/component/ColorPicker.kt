@@ -1,13 +1,18 @@
 package com.flixclusive.feature.mobile.settings.screen.subtitles.component
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +25,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -43,7 +47,6 @@ import com.flixclusive.core.ui.common.util.boxShadow
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.settings.TweakPaddingHorizontal
 import com.flixclusive.feature.mobile.settings.component.TitleDescriptionHeader
-import com.flixclusive.feature.mobile.settings.util.betterClickable
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.math.max
 import com.flixclusive.core.locale.R as LocaleR
@@ -100,7 +103,9 @@ internal fun ColorPicker(
         )
 
         LazyRow(
-            modifier = Modifier.padding(top = verticalPadding),
+            modifier = Modifier
+                .focusGroup()
+                .padding(top = verticalPadding),
             state = listState,
             contentPadding = PaddingValues(horizontal = horizontalPadding),
             horizontalArrangement = Arrangement.spacedBy(25.dp),
@@ -131,24 +136,23 @@ private fun ColorButton(
     val size = getAdaptiveDp(45.dp)
     val shadowColor = MaterialTheme.colorScheme.surface.onMediumEmphasis(0.3F)
     val interactionSource = remember { MutableInteractionSource() }
+    val isFocused = interactionSource.collectIsFocusedAsState()
+    val scale = animateFloatAsState(targetValue = if (isFocused.value) 1.2f else 1f)
 
     Box(
         contentAlignment = Alignment.Center,
         modifier =
             Modifier
-                .betterClickable(
+                .clickable(
                     interactionSource = interactionSource,
+                    indication = null,
                     onClick = onPick,
-                    enabled = enabled,
-                ).indication(
-                    interactionSource = interactionSource,
-                    indication =
-                        ripple(
-                            bounded = false,
-                            radius = size / 2,
-                            color = MaterialTheme.colorScheme.primary,
-                        ),
-                ),
+                    enabled = enabled(),
+                )
+                .graphicsLayer {
+                    scaleX = scale.value
+                    scaleY = scale.value
+                },
     ) {
         Box(
             modifier =
@@ -162,6 +166,10 @@ private fun ColorButton(
                         offset = DpOffset(3.dp, 4.dp),
                         inset = true,
                         shape = CircleShape,
+                    )
+                    .indication(
+                        interactionSource = interactionSource,
+                        indication = LocalIndication.current
                     ),
         )
 
@@ -181,13 +189,15 @@ private fun ColorButton(
                             0.5.dp,
                             shadowColor.copy(0.1F),
                             CircleShape,
-                        ).boxShadow(
+                        )
+                        .boxShadow(
                             color = shadowColor,
                             blurRadius = 4.dp,
                             spreadRadius = 0.05.dp,
                             offset = DpOffset(3.dp, 3.dp),
                             shape = CircleShape,
-                        ).size(size / 2)
+                        )
+                        .size(size / 2)
                         .background(color = Color.White, shape = CircleShape),
             ) {
                 AdaptiveIcon(

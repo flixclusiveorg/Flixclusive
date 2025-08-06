@@ -9,6 +9,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -79,6 +81,8 @@ internal fun SettingsScreen(
 ) {
     val currentUser by viewModel.userSessionManager.currentUser.collectAsStateWithLifecycle()
     val appBuild by viewModel.appBuildWithPrereleaseFlag.collectAsStateWithLifecycle()
+
+    val (first, second) = remember { FocusRequester.createRefs() }
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -157,8 +161,8 @@ internal fun SettingsScreen(
                             onItemClick = { item ->
                                 scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
                             },
-                            modifier =
-                                Modifier.drawBehind {
+                            modifier = Modifier
+                                .drawBehind {
                                     if (!isListAndDetailVisible) {
                                         drawRect(backgroundBrush)
                                     }
@@ -210,6 +214,7 @@ internal fun SettingsScreen(
                                         )
                                     }
                                 },
+                                modifier = Modifier.focusGroup()
                             )
                         }
                     }
