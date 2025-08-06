@@ -3,6 +3,7 @@ package com.flixclusive.feature.mobile.settings.screen.subtitles.component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LocalContentColor
@@ -59,6 +60,7 @@ internal fun SubtitlePreview(
         contentAlignment = Alignment.Center,
         modifier =
             Modifier
+                .fillMaxWidth()
                 .padding(TweakPaddingHorizontal * 2F)
                 .border(
                     width = 2.dp,
@@ -78,7 +80,8 @@ internal fun SubtitlePreview(
             contentScale = ContentScale.Crop,
             modifier =
                 Modifier
-                    .height(getAdaptiveDp(90.dp)),
+                    .height(getAdaptiveDp(90.dp))
+                    .fillMaxWidth(),
         )
 
         if (subtitlePreferencesProvider().subtitleEdgeType == CaptionEdgeTypePreference.Drop_Shadow) {
