@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,11 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.provider.details.HORIZONTAL_PADDING
 import com.flixclusive.feature.mobile.provider.details.component.Title
 import com.flixclusive.model.provider.Author
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun AuthorsList(

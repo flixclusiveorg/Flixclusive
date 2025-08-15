@@ -43,12 +43,12 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.flixclusive.R
-import com.flixclusive.core.theme.starColor
+import com.flixclusive.core.presentation.theme.starColor
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.formatRating
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.model.film.Film
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.mobile.R as UiMobileR
 

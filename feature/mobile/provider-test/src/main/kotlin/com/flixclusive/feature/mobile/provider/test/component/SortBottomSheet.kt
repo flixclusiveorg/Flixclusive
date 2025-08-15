@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.provider.test.SortOption
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

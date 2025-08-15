@@ -25,7 +25,7 @@ import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarWithSearch
 import kotlin.math.max
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable

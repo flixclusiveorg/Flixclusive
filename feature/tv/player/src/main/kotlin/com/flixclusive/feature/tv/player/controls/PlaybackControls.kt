@@ -33,7 +33,7 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
+import com.flixclusive.core.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.formatMinSec
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
@@ -68,7 +68,7 @@ internal fun PlaybackControls(
     providers: List<ProviderMetadata>,
     servers: List<Stream>,
     stateProvider: () -> PlayerUiState,
-    dialogStateProvider: () -> MediaLinkResourceState,
+    dialogStateProvider: () -> com.flixclusive.core.common.provider.MediaLinkResourceState,
     playbackTitle: String,
     isLastEpisode: Boolean,
     seekMultiplier: Long,

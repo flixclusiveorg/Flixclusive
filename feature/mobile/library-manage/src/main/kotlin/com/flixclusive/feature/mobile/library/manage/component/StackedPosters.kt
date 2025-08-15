@@ -43,7 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.database.entity.DBFilm
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
@@ -56,8 +57,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
-import com.flixclusive.model.database.DBFilm
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 private val MaxMainCardWidth = 90.dp

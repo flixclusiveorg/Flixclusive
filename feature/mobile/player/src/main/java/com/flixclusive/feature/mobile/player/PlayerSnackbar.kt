@@ -21,11 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.player.PlayerSnackbarMessage
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
-import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun PlayerSnackbar(

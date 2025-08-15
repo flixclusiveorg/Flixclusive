@@ -10,11 +10,10 @@ android {
 
 dependencies {
     api(projects.core.datastore)
-    api(projects.domain.home)
-    implementation(projects.core.ui.tv)
-    implementation(projects.data.network)
-    implementation(projects.data.libraryRecent)
-    implementation(projects.domain.user)
+//     api(projects.domain)
+    // implementation(projects.core.ui.tv)
+//    implementation(projects.data)
+//     implementation(projects.domain)
 
     implementation(libs.compose.runtime)
     implementation(libs.lifecycle.viewModelCompose)

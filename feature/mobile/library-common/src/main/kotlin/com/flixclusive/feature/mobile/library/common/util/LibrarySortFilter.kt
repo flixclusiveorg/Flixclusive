@@ -1,7 +1,7 @@
 package com.flixclusive.feature.mobile.library.common.util
 
-import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.UiText
+import com.flixclusive.core.strings.R as LocaleR
 
 interface LibrarySortFilter {
     val displayName: UiText

@@ -66,7 +66,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.ui.common.navigation.navigator.AddProfileAction
@@ -83,12 +84,11 @@ import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimat
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
 import com.flixclusive.feature.mobile.profiles.util.UxUtil.getSlidingTransition
-import com.flixclusive.model.database.User
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.OpenResultRecipient
 import kotlinx.coroutines.launch
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 interface UserProfilesScreenNavigator :

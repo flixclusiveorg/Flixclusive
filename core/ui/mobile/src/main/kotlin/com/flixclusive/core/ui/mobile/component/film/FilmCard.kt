@@ -24,7 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyFilm
 import com.flixclusive.core.ui.common.util.onMediumEmphasis

@@ -9,7 +9,10 @@ android {
 }
 
 dependencies {
-    api(projects.data.tmdb)
-    api(projects.data.provider)
-    api(projects.data.configuration)
+    implementation(projects.coreNetwork)
+    implementation(projects.coreCommon)
+    implementation(projects.dataTmdb)
+    implementation(projects.dataProvider)
+    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.util)
 }

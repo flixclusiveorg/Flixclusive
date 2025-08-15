@@ -16,7 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.isCompact
@@ -25,11 +26,10 @@ import com.flixclusive.feature.mobile.user.pin.component.DEFAULT_DELAY
 import com.flixclusive.feature.mobile.user.pin.component.HeaderLabel
 import com.flixclusive.feature.mobile.user.pin.component.PinScreenDefault
 import com.flixclusive.feature.mobile.user.pin.component.PinSetupScreenCompactLandscape
-import com.flixclusive.model.database.User
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 import kotlinx.coroutines.delay
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Destination
 @Composable

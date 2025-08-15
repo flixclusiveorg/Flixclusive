@@ -18,7 +18,7 @@ import com.flixclusive.model.datastore.user.DataPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal class DataTweakScreen(

@@ -9,8 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastForEach
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.provider.filter.Filter
 import com.flixclusive.provider.filter.FilterGroup
 

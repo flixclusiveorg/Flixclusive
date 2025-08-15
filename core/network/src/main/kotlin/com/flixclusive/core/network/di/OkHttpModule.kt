@@ -1,6 +1,7 @@
 package com.flixclusive.core.network.di
 
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.model.user.network.DoHPreference
 import com.flixclusive.core.datastore.util.awaitFirst
 import com.flixclusive.core.network.util.okhttp.UserAgentInterceptor
 import com.flixclusive.core.util.log.errorLog
@@ -17,7 +18,6 @@ import com.flixclusive.core.util.network.DoHProvider.dohQuad101
 import com.flixclusive.core.util.network.DoHProvider.dohQuad9
 import com.flixclusive.core.util.network.DoHProvider.dohSheCan
 import com.flixclusive.core.util.network.okhttp.ignoreAllSSLErrors
-import com.flixclusive.model.datastore.user.network.DoHPreference
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,18 +32,17 @@ import javax.inject.Singleton
 internal object OkHttpModule {
     @Provides
     @Singleton
-    internal fun provideClient(
-        dataStoreManager: DataStoreManager,
-    ): OkHttpClient {
+    internal fun provideClient(dataStoreManager: DataStoreManager): OkHttpClient {
         try {
             Security.insertProviderAt(Conscrypt.newProvider(), 1)
         } catch (throwable: Throwable) {
             errorLog(throwable.localizedMessage ?: "Unknown error trying to support TLS 1.3")
         }
 
-        val preferences = dataStoreManager.systemPreferences.awaitFirst()
+        val preferences = dataStoreManager.getSystemPrefs().awaitFirst()
 
-        return OkHttpClient.Builder()
+        return OkHttpClient
+            .Builder()
             .followRedirects(true)
             .followSslRedirects(true)
             .ignoreAllSSLErrors()
@@ -64,7 +63,6 @@ internal object OkHttpModule {
                     DoHPreference.Najalla -> dohNajalla()
                     DoHPreference.SheCan -> dohSheCan()
                 }
-            }
-            .build()
+            }.build()
     }
 }

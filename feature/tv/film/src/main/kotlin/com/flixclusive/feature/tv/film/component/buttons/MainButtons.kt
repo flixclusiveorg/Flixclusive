@@ -20,7 +20,7 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.hasPressedLeft
-import com.flixclusive.model.database.WatchHistoryItem
+import com.flixclusive.core.database.entity.WatchHistoryItem
 
 internal const val PLAY_BUTTON_KEY = "play_button"
 internal const val EPISODES_BUTTON_KEY = "episodes_button"

@@ -39,7 +39,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.IconResource
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable

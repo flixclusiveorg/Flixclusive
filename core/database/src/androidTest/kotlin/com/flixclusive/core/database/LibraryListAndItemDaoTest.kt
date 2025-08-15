@@ -6,11 +6,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.flixclusive.core.database.dao.LibraryListAndItemDao
 import com.flixclusive.core.database.dao.LibraryListDao
 import com.flixclusive.core.database.dao.LibraryListItemDao
-import com.flixclusive.model.database.DBFilm
-import com.flixclusive.model.database.LibraryList
-import com.flixclusive.model.database.LibraryListAndItemCrossRef
-import com.flixclusive.model.database.LibraryListItem
-import com.flixclusive.model.database.User
+import com.flixclusive.core.database.entity.DBFilm
+import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.database.entity.LibraryListAndItemCrossRef
+import com.flixclusive.core.database.entity.LibraryListItem
+import com.flixclusive.core.database.entity.User
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -104,7 +104,7 @@ class LibraryListAndItemDaoTest {
 
             val userWithLists = crossRefDao.getUserWithListsAndItems(defaultUser.id).first()
             assertNotNull(userWithLists)
-            assertTrue(userWithLists!!.list.isNotEmpty())
+            assertTrue(userWithLists.list.isNotEmpty())
             assertTrue(
                 userWithLists.list
                     .first()
@@ -120,7 +120,7 @@ class LibraryListAndItemDaoTest {
             val updatedUserWithLists = crossRefDao.getUserWithListsAndItems(defaultUser.id).first()
             assertNotNull(updatedUserWithLists)
             assertTrue(
-                updatedUserWithLists!!
+                updatedUserWithLists
                     .list
                     .first()
                     .items
@@ -167,7 +167,7 @@ class LibraryListAndItemDaoTest {
 
             val userWithLists = crossRefDao.getUserWithListsAndItems(defaultUser.id).first()
             assertNotNull(userWithLists)
-            assertTrue(userWithLists!!.list.isNotEmpty())
+            assertTrue(userWithLists.list.isNotEmpty())
             assertTrue(
                 userWithLists.list
                     .first()
@@ -232,7 +232,7 @@ class LibraryListAndItemDaoTest {
 
             val userWithLists = crossRefDao.getUserWithListsAndItems(defaultUser.id).first()
             assertNotNull(userWithLists)
-            assertEquals(2, userWithLists!!.list.size)
+            assertEquals(2, userWithLists.list.size)
             assertEquals(2, userWithLists.list[1].items.size)
             assertEquals(0, userWithLists.list[0].items.size)
         }
@@ -270,7 +270,7 @@ class LibraryListAndItemDaoTest {
 
         var userWithLists = crossRefDao.getUserWithListsAndItems(defaultUser.id).first()
         assertNotNull(userWithLists)
-        assertTrue(userWithLists!!.list.isNotEmpty())
+        assertTrue(userWithLists.list.isNotEmpty())
 
         itemDao.deleteItemById(itemId)
 

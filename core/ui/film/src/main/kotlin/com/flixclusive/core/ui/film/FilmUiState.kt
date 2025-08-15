@@ -1,6 +1,6 @@
 package com.flixclusive.core.ui.film
 
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 
 data class FilmUiState(
     val isLoading: Boolean = true,

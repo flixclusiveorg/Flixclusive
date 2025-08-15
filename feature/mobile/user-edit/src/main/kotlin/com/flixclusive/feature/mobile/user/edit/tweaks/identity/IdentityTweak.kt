@@ -2,11 +2,11 @@ package com.flixclusive.feature.mobile.user.edit.tweaks.identity
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.util.IconResource
 import com.flixclusive.feature.mobile.user.edit.tweaks.BaseProfileTweak
 import com.flixclusive.feature.mobile.user.edit.tweaks.ProfileTweakUI
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal class IdentityTweak(

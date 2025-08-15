@@ -37,8 +37,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
-import kotlin.String
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 private const val DEFAULT_TEXT_PREVIEW = "Abc"
 private const val MAX_SUBTITLE_SIZE = 80F

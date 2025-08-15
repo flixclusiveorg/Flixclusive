@@ -9,12 +9,14 @@ android {
 }
 
 dependencies {
-    api(libs.stubs.util)
-    api(projects.core.locale)
-    api(projects.core.network)
-    api(libs.stubs.model.film)
+    implementation(projects.coreCommon)
+    implementation(projects.coreNetwork)
+    implementation(projects.coreStrings)
+    implementation(libs.stubs.util)
+    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.provider)
+    implementation(libs.stubs.provider)
+    implementation(libs.jsoup)
 
-    implementation(libs.coroutines.test)
-    implementation(libs.mockk)
-    implementation(projects.data.configuration)
+    testImplementation(projects.coreTesting)
 }

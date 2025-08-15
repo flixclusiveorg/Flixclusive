@@ -13,11 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.provider.filter.BottomSheetComponent
-import com.flixclusive.provider.filter.Filter
-import com.flixclusive.provider.filter.FilterGroup
+import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.component.FilterCheckbox
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.component.FilterTriStateCheckbox
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.component.SelectDropdownMenu
@@ -25,7 +23,9 @@ import com.flixclusive.feature.mobile.searchExpanded.component.filter.component.
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.component.SortItems
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterBottomSheetStyle
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterBottomSheetStyle.FilterItemLargeLabelSize
-import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
+import com.flixclusive.provider.filter.BottomSheetComponent
+import com.flixclusive.provider.filter.Filter
+import com.flixclusive.provider.filter.FilterGroup
 
 @Composable
 internal fun FilterItem(

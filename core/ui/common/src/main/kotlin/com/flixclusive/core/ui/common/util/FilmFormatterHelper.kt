@@ -1,13 +1,13 @@
 package com.flixclusive.core.ui.common.util
 
 import android.content.Context
-import com.flixclusive.core.locale.UiText
-import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.database.util.getNextEpisodeToWatch
+import com.flixclusive.core.strings.UiText
+import com.flixclusive.core.database.entity.WatchHistoryItem
+import com.flixclusive.core.database.entity.util.getNextEpisodeToWatch
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.util.FilmType
 import java.util.Locale
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 
 fun formatMinutes(totalMinutes: Int?): UiText {

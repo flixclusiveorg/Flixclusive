@@ -1,7 +1,7 @@
 package com.flixclusive.feature.mobile.provider.test
 
 import android.content.Context
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 internal data class SortOption(
     val sort: SortType,

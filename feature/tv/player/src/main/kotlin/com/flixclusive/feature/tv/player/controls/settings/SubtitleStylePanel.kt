@@ -43,8 +43,8 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.NonInteractiveSurfaceDefaults
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
-import com.flixclusive.core.theme.getAvailableSubtitleColors
-import com.flixclusive.core.theme.subtitleBackgroundColors
+import com.flixclusive.core.presentation.theme.getAvailableSubtitleColors
+import com.flixclusive.core.presentation.theme.subtitleBackgroundColors
 import com.flixclusive.core.ui.common.util.getTextStyle
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -57,7 +57,7 @@ import com.flixclusive.model.datastore.user.player.CaptionEdgeTypePreference
 import com.flixclusive.model.datastore.user.player.CaptionSizePreference
 import com.flixclusive.model.datastore.user.player.CaptionSizePreference.Companion.getDp
 import com.flixclusive.model.datastore.user.player.CaptionStylePreference
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 
 private val styleItemSize = 20.dp
@@ -288,7 +288,7 @@ private fun SubtitleStyle(
     content: @Composable RowScope.() -> Unit,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isFocused) 1.15F else 1F,
         label = ""

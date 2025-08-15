@@ -50,7 +50,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.mobile.MobileNavGraphs
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 import kotlinx.collections.immutable.persistentListOf
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal val MaxBottomBarHeight = 60.dp

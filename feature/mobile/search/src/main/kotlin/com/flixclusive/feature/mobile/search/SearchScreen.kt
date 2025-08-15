@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -31,8 +30,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewAllFilmsAction
@@ -46,7 +45,7 @@ import com.flixclusive.feature.mobile.search.component.SearchItemCard
 import com.flixclusive.feature.mobile.search.component.SearchItemCardPlaceholderWithText
 import com.flixclusive.feature.mobile.search.component.SearchItemRow
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 interface SearchScreenNavigator : GoBackAction, ViewGenreCatalogAction, ViewAllFilmsAction {

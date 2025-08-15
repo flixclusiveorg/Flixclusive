@@ -1,0 +1,561 @@
+{
+	"all": [
+		{
+	       "name": "Trending Now",
+	       "type": "all",
+	       "required": true,
+	       "canPaginate": true,
+	       "query": "trending/all/day?language=en-US"
+	   }
+	],
+	"movie": [
+		{
+	       "name": "Top Movies Recently",
+	       "type": "movie",
+	       "required": true,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200"
+	    },
+	    {
+	       "name": "Modern Movie Classics",
+	       "type": "movie",
+	       "required": true,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=vote_average.desc&vote_count.gte=300"
+	    },
+	    {
+	       "name": "Gems from the 2000s",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&primary_release_date.gte=2000-01-01&primary_release_date.lte=2009-12-31&sort_by=vote_average.desc&vote_count.gte=200"
+	    },
+	    {
+	       "name": "The Golden 2010s",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&primary_release_date.gte=2010-01-01&primary_release_date.lte=2019-12-31&sort_by=vote_average.desc&vote_count.gte=200"
+	    },
+	    {
+	       "name": "Past Year Movies",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&primary_release_year=2023&sort_by=vote_average.desc&vote_count.gte=200"
+	    },
+	    {
+	       "name": "Superhero Flicks",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_keywords=9715|180547|312528"
+	    },
+	    {
+	       "name": "Top Korean Movies",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_original_language=ko&without_keywords=155477"
+	    },
+	    {
+	       "name": "Action Packed",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=28"
+	    },
+	    {
+	       "name": "Adventurous Escapades",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=12"
+	    },
+	    {
+	       "name": "Animated Delights",
+           "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=16"
+	    },
+	    {
+	       "name": "Laugh Out Loud!",
+           "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=35&without_genres=10763,10767"
+	    },
+	    {
+	       "name": "Lawbreakers' Lair",
+           "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=80"
+	    },
+	    {
+	       "name": "Reality Unveiled",
+           "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=99"
+	    },
+	    {
+	       "name": "Drama Unleashed",
+           "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&vote_count.gte=200&primary_release_date.gte=1990-01-01&with_genres=18"
+	    },
+	    {
+	       "name": "Family Night",
+           "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=10751"
+	    },
+	    {
+	       "name": "Fantasyland",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=14"
+	    },
+	    {
+	       "name": "Historical Hype",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=36"
+	    },
+	    {
+	       "name": "HorrorVille",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=27"
+	    },
+	    {
+	       "name": "Mysterious Enigmas",
+           "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=9648"
+	    },
+	    {
+	       "name": "Love in the Air",
+           "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=10749"
+	    },
+	    {
+	       "name": "Sci-Fi Spectacle",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=878"
+	    },
+	    {
+	       "name": "Nerve-Wracking Suspense",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=53"
+	    },
+	    {
+	       "name": "Battlefront Chronicles",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=10752"
+	    },
+        {
+           "name": "Wild Western Oasis",
+	       "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=37"
+        },
+	    {
+	       "name": "Marvel Multiverse",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=420|7505"
+	    },
+	    {
+	       "name": "Sony Pictures Classics",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=2251|34|58"
+	    },
+	    {
+	       "name": "Pixar Magic",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=3"
+	    },
+	    {
+	       "name": "Disney's Treasure",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=2"
+	    },
+	    {
+	       "name": "Warner Bros. Blockbusters",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=17|174|2785"
+	    },
+	    {
+	       "name": "Paramount Prestige",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=4"
+	    },
+	    {
+	       "name": "Dreamworks Delights",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=7|521"
+	    },
+	    {
+	       "name": "DC Entertainment",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=429|9993"
+	    },
+	    {
+	       "name": "Columbia Pictures Showcase",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=5"
+	    },
+	    {
+	       "name": "Universal Picks",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=33"
+	    },
+	    {
+	       "name": "20th Century Fox Gems",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=25"
+	    },
+	    {
+	       "name": "MGM: The Roaring Lion",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=21"
+	    },
+	    {
+	       "name": "Lionsgate Meta",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_companies=35|1632"
+	    },
+	    {
+	       "name": "Popular Movie Reboots",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_keywords=161184"
+	    },
+	    {
+	       "name": "The Demon's Catalogue",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_keywords=161261|241827"
+	    },
+	    {
+	       "name": "Gore Satisfaction",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_keywords=10292"
+	    },
+	    {
+	       "name": "High School Fantasy",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_keywords=33910"
+	    },
+	    {
+	       "name": "Disastrous Approach",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_keywords=10617"
+	    },
+	    {
+	       "name": "Found Footages",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_keywords=163053"
+	    },
+	    {
+	       "name": "ZombieVille",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_keywords=12377"
+	    },
+	    {
+	       "name": "Dystopian Flicks",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_keywords=4458"
+	    },
+	    {
+	       "name": "Slapstick Central",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_keywords=9253"
+	    },
+	    {
+	       "name": "Supernatural Selection",
+	       "type": "movie",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_keywords=6152"
+	    }
+	],
+	"tv": [
+		{
+	       "name": "Top TV Shows Recently",
+	       "type": "tv",
+	       "required": true,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&vote_count.gte=200&without_genres=10763,10767"
+	    },
+	    {
+	       "name": "Modern TV Show Classics",
+	       "type": "tv",
+	       "required": true,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=vote_average.desc&first_air_date.gte=1990-01-01&without_genres=10763,10767&vote_count.gte=300"
+	    },
+	    {
+	       "name": "Sitcoms!",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_keywords=193171"
+	    },
+	    {
+	       "name": "Top Zombie TV Shows",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_keywords=12377"
+	    },
+	    {
+	       "name": "Dystopian Future",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_keywords=4458"
+	    },
+	    {
+	       "name": "Anime",
+	       "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_keywords=210024&with_original_language=ja"
+	    },
+	    {
+	       "name": "2000s Nostalgic Shows",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?first_air_date.gte=2000-01-01&first_air_date.lte=2009-12-31&include_adult=false&include_null_first_air_dates=false&language=en-US&sort_by=vote_average.desc&vote_count.gte=200"
+	    },
+	    {
+	       "name": "K-Drama Hits",
+	       "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=vote_average.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_original_language=ko"
+	    },
+	    {
+	       "name": "Binge-Worthy Action & Adventures",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10759"
+	    },
+	    {
+	       "name": "Kids Party Pop",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10762"
+	    },
+	    {
+	       "name": "Top Sci-Fi & Fantasy Shows",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10765"
+	    },
+	    {
+	       "name": "Popular Reality Shows",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10764"
+	    },
+	    {
+	       "name": "Mysterious Enigmas",
+	       "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=9648"
+	    },
+	    {
+	       "name": "Family Funtastic",
+	       "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10751"
+	    },
+	    {
+	       "name": "Drama Unleashed",
+	       "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=18"
+	    },
+	    {
+	       "name": "TV Documentaries",
+	       "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=99"
+	    },
+	    {
+	       "name": "TV Crime Picks",
+	       "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=80"
+	    },
+	    {
+	       "name": "Laugh Out Loud!",
+	       "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=35&without_genres=10763,10767"
+	    },
+	    {
+	       "name": "Cartoon Galore",
+	       "type": "all",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=16"
+	    },
+	    {
+	       "name": "Hot on Netflix",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=213"
+	    },
+	    {
+	       "name": "Popular on HBO",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=49"
+	    },
+	    {
+	       "name": "Picks from Amazon",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=1024"
+	    },
+	    {
+	       "name": "Disney+ Picks",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=2739"
+	    },
+	    {
+	       "name": "Top Apple TV+ Picks",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=2552"
+	    },
+	    {
+	       "name": "Popular on CW Channel",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=71"
+	    },
+	    {
+	       "name": "Best of NBC",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=6&without_genres=10763,10767"
+	    },
+	    {
+	       "name": "Fox Picks",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=19"
+	    },
+	    {
+	       "name": "Popular on CBS",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=16&without_genres=10763,10767"
+	    },
+	    {
+	       "name": "ABC Classics",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=2&without_genres=10763,10767"
+	    },
+	    {
+	       "name": "Cartoon Network Overload",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=56"
+	    },
+	    {
+	       "name": "USA Network Shows",
+	       "type": "tv",
+	       "required": false,
+	       "canPaginate": true,
+	       "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=vote_average.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_networks=30"
+	    }
+	]
+}

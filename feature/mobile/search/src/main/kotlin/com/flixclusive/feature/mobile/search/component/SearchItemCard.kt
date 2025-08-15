@@ -22,8 +22,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.theme.lightGrayElevated
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.lightGrayElevated
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.common.util.onMediumEmphasis

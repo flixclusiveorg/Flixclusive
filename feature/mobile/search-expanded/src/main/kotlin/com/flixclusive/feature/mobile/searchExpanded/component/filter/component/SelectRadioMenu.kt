@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.mobile.component.SingleChoiceSegmentedButtonColumn
 import com.flixclusive.core.ui.mobile.component.VerticalSegmentedButton
 import com.flixclusive.core.ui.mobile.component.getVerticalSegmentedShape

@@ -60,7 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.imageLoader
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.StartHomeScreenAction
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -70,7 +70,7 @@ import com.flixclusive.service.update.AppUpdaterService
 import com.flixclusive.service.update.AppUpdaterService.Companion.startAppUpdater
 import com.ramcosta.composedestinations.annotation.Destination
 import dev.jeziellago.compose.markdowntext.MarkdownText
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 interface UpdateScreenNavigator :

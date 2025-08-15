@@ -1,7 +1,7 @@
 package com.flixclusive.feature.mobile.user.add
 
 import androidx.compose.runtime.Composable
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 
 internal interface OnBoardingScreen {
     val index: Int

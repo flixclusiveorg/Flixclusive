@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -20,11 +19,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.core.locale.UiText
-import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.provider.Catalog
+import com.flixclusive.model.provider.ProviderCatalog
 
 @Composable
 internal fun SearchItemRow(

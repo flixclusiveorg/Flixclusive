@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="failed_to_fetch_data_message">Failed to fetch data:\n%1$s</string>
+    <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
+    <string name="failed_to_init_app">Couldn\'t initialize the app.</string>
+    <string name="failed_to_initialize_search_items">Failed to initialize search items</string>
+    <string name="film_not_found">Film not found</string>
+</resources>

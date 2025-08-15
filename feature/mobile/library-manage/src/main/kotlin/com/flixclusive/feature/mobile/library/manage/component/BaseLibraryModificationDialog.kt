@@ -31,7 +31,7 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdapti
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun BaseLibraryModificationDialog(

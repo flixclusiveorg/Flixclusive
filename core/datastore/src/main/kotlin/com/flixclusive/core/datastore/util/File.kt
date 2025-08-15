@@ -5,10 +5,12 @@ import com.flixclusive.core.datastore.PROVIDERS_FOLDER_NAME
 import com.flixclusive.core.datastore.PROVIDERS_SETTINGS_FOLDER_NAME
 import java.io.File
 
+
 /**
+ * Deletes a file or directory recursively.
  *
- * Deletes recursively
- * */
+ * @param file The file or directory to delete.
+ */
 fun rmrf(file: File) {
     if (file.isDirectory) {
         val files = file.listFiles() ?: emptyArray()
@@ -18,14 +20,20 @@ fun rmrf(file: File) {
     file.delete()
 }
 
-fun Context.getExternalDirPath(): String? {
-    val externalDir = getExternalFilesDir(null)
-    val externalDirPath = externalDir?.absolutePath
+/**
+ * Returns the path prefix for the providers folder for a specific user.
+ *
+ * @param userId The ID of the user.
+ * @return The path prefix for the providers folder.
+ */
+fun Context.getProvidersPathPrefix(userId: Int): String =
+    getExternalFilesDir(null)?.absolutePath + "/$PROVIDERS_FOLDER_NAME/user-$userId"
 
-    return externalDirPath
-}
-
-fun Context.getProvidersPathPrefix(userId: Int): String = getExternalDirPath() + "/$PROVIDERS_FOLDER_NAME/user-$userId"
-
-fun Context.getProvidersSettingsPathPrefix(userId: Int): String =
-    getExternalDirPath() + "/$PROVIDERS_SETTINGS_FOLDER_NAME/user-$userId"
+/**
+ * Returns the path prefix for the providers settings folder for a specific user.
+ *
+ * @param userId The ID of the user.
+ * @return The path prefix for the providers settings folder.
+ */
+internal fun Context.getProvidersSettingsPathPrefix(userId: Int): String =
+    getExternalFilesDir(null)?.absolutePath + "/$PROVIDERS_SETTINGS_FOLDER_NAME/user-$userId"

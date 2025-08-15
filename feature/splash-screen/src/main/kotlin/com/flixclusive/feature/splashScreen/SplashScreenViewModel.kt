@@ -10,8 +10,8 @@ import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.data.user.UserRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
 import com.flixclusive.domain.home.PREFERRED_MINIMUM_HOME_ITEMS
-import com.flixclusive.domain.updater.AppUpdateCheckerUseCase
-import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.domain.session.UserSessionManager
+import com.flixclusive.domain.updater.usecase.AppUpdateCheckerUseCase
 import com.flixclusive.model.datastore.system.SystemPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.cancel

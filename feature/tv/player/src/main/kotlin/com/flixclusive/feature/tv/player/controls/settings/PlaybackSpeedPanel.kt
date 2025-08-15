@@ -37,7 +37,7 @@ import com.flixclusive.core.ui.tv.component.NonFocusableSpacer
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.feature.tv.player.controls.settings.common.ConfirmButton
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable

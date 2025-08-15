@@ -8,17 +8,17 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.navigation.navargs.RepositoryScreenNavArgs
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.domain.provider.GetOnlineProvidersUseCase
 import com.flixclusive.domain.provider.ProviderLoaderUseCase
 import com.flixclusive.domain.provider.ProviderUnloaderUseCase
 import com.flixclusive.domain.provider.ProviderUpdaterUseCase
+import com.flixclusive.domain.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.util.DownloadFailed
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel
 internal class RepositoryDetailsViewModel

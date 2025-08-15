@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.flixclusive.library)
-    alias(libs.plugins.flixclusive.hilt)
     alias(libs.plugins.flixclusive.testing)
+    alias(libs.plugins.flixclusive.hilt)
 }
 
 android {
@@ -9,16 +9,10 @@ android {
 }
 
 dependencies {
-    api(libs.compose.runtime)
-    api(projects.core.datastore)
-    api(projects.core.network)
-    api(projects.core.ui.common)
-    api(libs.stubs.util)
-    api(projects.model.datastore)
-    api(libs.stubs.model.provider)
-    api(libs.stubs.model.film)
-    api(libs.stubs.provider)
+    implementation(libs.stubs.util)
+    implementation(libs.stubs.provider)
+    implementation(libs.stubs.model.film)
+    implementation(projects.coreDatastore)
 
-    implementation(libs.okhttp)
-    implementation(libs.mockk)
+    testImplementation(libs.stubs.model.provider)
 }

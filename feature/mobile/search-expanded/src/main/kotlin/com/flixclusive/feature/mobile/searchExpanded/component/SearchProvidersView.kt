@@ -23,7 +23,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.searchExpanded.util.Constant
 import com.flixclusive.model.provider.ProviderMetadata
 import kotlin.math.max
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

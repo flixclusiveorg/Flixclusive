@@ -23,7 +23,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
 import com.flixclusive.core.ui.tv.util.hasPressedLeft
 import com.flixclusive.feature.tv.player.controls.settings.common.ListContentHolder
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun AudioAndSubtitlesPanel(

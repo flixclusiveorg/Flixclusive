@@ -9,22 +9,22 @@ import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.common.pagination.PagingState
+import com.flixclusive.core.database.entity.SearchHistory
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
-import com.flixclusive.core.locale.UiText
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.ui.common.util.PagingState
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.data.provider.ProviderApiRepository
-import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.data.search.SearchHistoryRepository
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
-import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.domain.database.repository.SearchHistoryRepository
+import com.flixclusive.domain.provider.repository.ProviderApiRepository
+import com.flixclusive.domain.provider.repository.ProviderRepository
+import com.flixclusive.domain.session.UserSessionManager
 import com.flixclusive.feature.mobile.searchExpanded.util.Constant.TMDB_PROVIDER_ID
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
-import com.flixclusive.model.database.SearchHistory
 import com.flixclusive.model.datastore.user.UiPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.film.FilmSearchItem
@@ -87,7 +87,7 @@ internal class SearchExpandedScreenViewModel
         private var maxPage by mutableIntStateOf(1)
         var canPaginate by mutableStateOf(false)
             private set
-        var pagingState by mutableStateOf(PagingState.IDLE)
+        var pagingState by mutableStateOf(com.flixclusive.core.common.pagination.PagingState.IDLE)
             private set
         var error by mutableStateOf<UiText?>(null)
             private set
@@ -120,7 +120,7 @@ internal class SearchExpandedScreenViewModel
                     page = 1
                     maxPage = 1
                     canPaginate = false
-                    pagingState = PagingState.IDLE
+                    pagingState = com.flixclusive.core.common.pagination.PagingState.IDLE
                     searchResults.clear()
 
                     lastQuerySearched = searchQuery
@@ -160,8 +160,8 @@ internal class SearchExpandedScreenViewModel
 
                 pagingState =
                     when (page) {
-                        1 -> PagingState.LOADING
-                        else -> PagingState.PAGINATING
+                        1 -> com.flixclusive.core.common.pagination.PagingState.LOADING
+                        else -> com.flixclusive.core.common.pagination.PagingState.PAGINATING
                     }
 
                 when (
@@ -175,8 +175,8 @@ internal class SearchExpandedScreenViewModel
                         error = result.error
                         pagingState =
                             when (page) {
-                                1 -> PagingState.ERROR
-                                else -> PagingState.PAGINATING_EXHAUST
+                                1 -> com.flixclusive.core.common.pagination.PagingState.ERROR
+                                else -> com.flixclusive.core.common.pagination.PagingState.EXHAUSTED
                             }
                     }
 
@@ -218,7 +218,7 @@ internal class SearchExpandedScreenViewModel
         }
 
         private fun isDonePaginating(): Boolean =
-            page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE) || searchQuery.isEmpty()
+            page != 1 && (page == 1 || !canPaginate || pagingState != com.flixclusive.core.common.pagination.PagingState.IDLE) || searchQuery.isEmpty()
 
         private fun filterOutUiComponentsFromFilterList(): FilterList =
             FilterList(

@@ -8,7 +8,7 @@ import com.flixclusive.model.datastore.user.DEFAULT_PLAYER_CACHE_SIZE_AMOUNT
 import com.flixclusive.model.datastore.user.player.PlayerQuality
 import kotlinx.collections.immutable.toImmutableMap
 import java.util.Locale
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 internal fun getAvailableQualities(context: Context) =
     PlayerQuality.entries

@@ -1,11 +1,12 @@
 package com.flixclusive.domain.provider.util
 
-import com.flixclusive.core.locale.R
+import com.flixclusive.core.common.provider.MediaLinkResourceState
+import com.flixclusive.core.database.entity.WatchHistory
+import com.flixclusive.core.database.entity.util.getNextEpisodeToWatch
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
-import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.database.util.getNextEpisodeToWatch
+import com.flixclusive.core.strings.R
+import com.flixclusive.data.tmdb.repository.TMDBRepository
+import com.flixclusive.domain.provider.util.cache.CachedLinksHelper
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
@@ -48,10 +49,10 @@ internal class TmdbHelper(
      * */
     suspend fun getNearestEpisodeToWatch(
         film: TvShow,
-        watchHistoryItem: WatchHistoryItem?,
+        watchHistory: WatchHistory?,
     ): Resource<Episode?> {
         val isNewlyWatchShow =
-            watchHistoryItem == null || watchHistoryItem.episodesWatched.isEmpty()
+            watchHistory == null || watchHistory.episodesWatched.isEmpty()
 
         val seasonNumber: Int
         val episodeNumber: Int
@@ -64,7 +65,7 @@ internal class TmdbHelper(
             seasonNumber = 1
             episodeNumber = 1
         } else {
-            val (nextSeason, nextEpisode) = getNextEpisodeToWatch(watchHistoryItem!!)
+            val (nextSeason, nextEpisode) = getNextEpisodeToWatch(watchHistory!!)
             seasonNumber = nextSeason ?: 1
             episodeNumber = nextEpisode ?: 1
         }

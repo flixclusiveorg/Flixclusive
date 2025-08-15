@@ -4,9 +4,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.data.provider.ProviderApiRepository
-import com.flixclusive.data.util.InternetMonitor
-import com.flixclusive.domain.tmdb.GetSearchCardsUseCase
+import com.flixclusive.core.network.util.monitor.NetworkMonitor
+import com.flixclusive.domain.provider.repository.ProviderApiRepository
+import com.flixclusive.domain.tmdb.usecase.GetSearchCardsUseCase
 import com.flixclusive.model.provider.ProviderCatalog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -20,7 +20,7 @@ internal class SearchScreenViewModel
     constructor(
         private val getSearchRecommendedCardsUseCase: GetSearchCardsUseCase,
         private val providerApiRepository: ProviderApiRepository,
-        internetMonitor: InternetMonitor,
+        networkMonitor: com.flixclusive.core.network.util.monitor.NetworkMonitor,
     ) : ViewModel() {
         val genreCards = getSearchRecommendedCardsUseCase.cards
         val tvShowNetworkCards = getSearchRecommendedCardsUseCase.tvShowNetworkCards
@@ -32,7 +32,7 @@ internal class SearchScreenViewModel
         init {
             viewModelScope.launch {
                 launch {
-                    internetMonitor.isOnline
+                    networkMonitor.isOnline
                         .combine(getSearchRecommendedCardsUseCase.cards) { isConnected, status ->
                             isConnected to status
                         }.collectLatest { (isConnected, status) ->

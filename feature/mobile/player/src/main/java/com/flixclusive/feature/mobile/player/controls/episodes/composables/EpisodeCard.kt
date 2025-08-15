@@ -37,16 +37,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.database.entity.DBFilm
+import com.flixclusive.core.database.entity.EpisodeWatched
+import com.flixclusive.core.database.entity.WatchHistoryItem
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.model.database.DBFilm
-import com.flixclusive.model.database.EpisodeWatched
-import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.film.common.tv.Episode
 import kotlin.random.Random
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable

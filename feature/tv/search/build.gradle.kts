@@ -9,10 +9,10 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.common)
-    implementation(projects.core.ui.home)
-    implementation(projects.core.ui.tv)
-    implementation(projects.data.tmdb)
+    // implementation(projects.core.ui.common)
+    // implementation(projects.core.ui.home)
+    // implementation(projects.core.ui.tv)
+//    implementation(projects.data)
 
     implementation(libs.compose.tv.foundation)
     implementation(libs.compose.tv.material)

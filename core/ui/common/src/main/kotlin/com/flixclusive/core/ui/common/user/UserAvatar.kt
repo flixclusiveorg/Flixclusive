@@ -31,14 +31,14 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATAR_PREFIX
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarShape
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.core.ui.common.util.boxShadow
-import com.flixclusive.model.database.User
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.strings.R as LocaleR
 
 object UserAvatarDefaults {
     val DefaultAvatarShape = RoundedCornerShape(8.0.dp)

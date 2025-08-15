@@ -4,10 +4,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
-import com.flixclusive.model.database.LibraryListAndItemCrossRef
-import com.flixclusive.model.database.LibraryListItemWithLists
-import com.flixclusive.model.database.LibraryListWithItems
-import com.flixclusive.model.database.UserWithLibraryListsAndItems
+import com.flixclusive.core.database.entity.LibraryListAndItemCrossRef
+import com.flixclusive.core.database.entity.LibraryListItemWithLists
+import com.flixclusive.core.database.entity.LibraryListWithItems
+import com.flixclusive.core.database.entity.UserWithLibraryListsAndItems
 import kotlinx.coroutines.flow.Flow
 
 @Dao

@@ -9,10 +9,9 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.datastore)
-    implementation(projects.core.ui.mobile)
-    implementation(projects.domain.catalog)
-    implementation(projects.model.configuration)
+    implementation(projects.coreDatastore)
+    // implementation(projects.core.ui.mobile)
+//     implementation(projects.domain)
 
     implementation(libs.compose.foundation)
     implementation(libs.compose.runtime)

@@ -1,14 +1,14 @@
 package com.flixclusive.core.network.util
 
 import androidx.annotation.StringRes
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.util.log.errorLog
 import retrofit2.HttpException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.net.ssl.SSLException
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 /**
  * A sealed class representing a resource that can be in one of three states: Success, Failure, or Loading.

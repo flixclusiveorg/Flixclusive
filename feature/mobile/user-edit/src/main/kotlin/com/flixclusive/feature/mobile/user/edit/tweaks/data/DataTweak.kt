@@ -31,9 +31,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.locale.R
-import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.strings.R
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_CORNER_SIZE
 import com.flixclusive.core.ui.common.dialog.CharSequenceText
 import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog

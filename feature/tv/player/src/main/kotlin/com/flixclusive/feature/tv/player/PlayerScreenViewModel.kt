@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.player.BasePlayerViewModel
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
@@ -19,8 +19,8 @@ import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.cache.CachedLinksRepository
 import com.flixclusive.domain.library.recent.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
-import com.flixclusive.domain.tmdb.SeasonProviderUseCase
-import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.domain.tmdb.usecase.SeasonProviderUseCase
+import com.flixclusive.domain.session.UserSessionManager
 import com.flixclusive.feature.tv.player.di.ViewModelFactoryProvider
 import com.flixclusive.model.datastore.user.UserPreferences
 import dagger.assisted.Assisted

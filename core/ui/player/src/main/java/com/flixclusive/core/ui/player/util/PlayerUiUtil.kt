@@ -35,14 +35,14 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.player.FlixclusivePlayerManager
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.R
 import com.flixclusive.core.ui.player.databinding.CustomPlayerBinding
 import com.flixclusive.core.ui.player.util.extensions.updatePiPParams
-import com.flixclusive.model.database.util.calculateRemainingTime
-import com.flixclusive.model.database.util.isTimeInRangeOfThreshold
+import com.flixclusive.core.database.entity.util.calculateRemainingTime
+import com.flixclusive.core.database.entity.util.isTimeInRangeOfThreshold
 import com.flixclusive.model.datastore.user.player.ResizeMode
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode
@@ -53,7 +53,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(UnstableApi::class)
 object PlayerUiUtil {

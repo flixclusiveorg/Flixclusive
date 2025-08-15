@@ -7,14 +7,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.domain.library.watchlist.ToggleWatchlistStatusUseCase
-import com.flixclusive.domain.tmdb.GetFilmMetadataUseCase
-import com.flixclusive.domain.tmdb.SeasonProviderUseCase
-import com.flixclusive.domain.user.UserSessionManager
-import com.flixclusive.model.database.toWatchlistItem
+import com.flixclusive.domain.tmdb.usecase.GetFilmMetadataUseCase
+import com.flixclusive.domain.tmdb.usecase.SeasonProviderUseCase
+import com.flixclusive.domain.session.UserSessionManager
+import com.flixclusive.core.database.entity.toWatchlistItem
 import com.flixclusive.model.datastore.user.UiPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.film.Film
@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 /*
 * TODO: Remove this ugly ass code

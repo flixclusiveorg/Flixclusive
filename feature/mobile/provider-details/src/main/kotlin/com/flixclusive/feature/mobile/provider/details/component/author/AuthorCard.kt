@@ -23,7 +23,7 @@ import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
 import com.flixclusive.feature.mobile.provider.details.SUB_LABEL_SIZE
 import com.flixclusive.model.provider.Author
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable

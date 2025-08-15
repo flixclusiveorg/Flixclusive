@@ -24,9 +24,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
-import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.core.ui.mobile.util.shouldPaginate
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchBarInput
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchFilmsGridView
@@ -69,7 +69,7 @@ internal fun SearchExpandedScreen(
     var filterGroupIndexToShow by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(key1 = shouldStartPaginate) {
-        if (shouldStartPaginate && viewModel.pagingState == PagingState.IDLE) {
+        if (shouldStartPaginate && viewModel.pagingState == com.flixclusive.core.common.pagination.PagingState.IDLE) {
             viewModel.paginateItems()
         }
     }

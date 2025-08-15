@@ -9,9 +9,9 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.mobile)
-    implementation(projects.core.ui.player)
-    implementation(projects.domain.tmdb)
+    // implementation(projects.core.ui.mobile)
+    // implementation(projects.core.ui.player)
+//     implementation(projects.domain)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)

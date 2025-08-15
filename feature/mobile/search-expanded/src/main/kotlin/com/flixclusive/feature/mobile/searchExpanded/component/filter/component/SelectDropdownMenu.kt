@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.util.toOptionString
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 /**
  *
@@ -62,7 +62,7 @@ internal fun <T> SelectDropdownMenu(
     onSelect: (Int) -> Unit,
 ) {
     val context = LocalContext.current
-    
+
     var expanded by remember { mutableStateOf(false) }
     val selectedOption = remember(selected) {
         if (selected == null)

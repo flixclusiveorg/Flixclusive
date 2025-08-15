@@ -1,23 +1,23 @@
 package com.flixclusive.feature.mobile.user.edit
 
 import androidx.lifecycle.ViewModel
+import com.flixclusive.core.database.entity.User
 import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
-import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.data.search.SearchHistoryRepository
-import com.flixclusive.data.user.UserRepository
 import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.data.library.watchlist.WatchlistRepository
+import com.flixclusive.domain.database.repository.SearchHistoryRepository
+import com.flixclusive.domain.database.repository.UserRepository
 import com.flixclusive.domain.provider.ProviderUnloaderUseCase
-import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.domain.provider.repository.ProviderRepository
+import com.flixclusive.domain.session.UserSessionManager
 import com.flixclusive.feature.mobile.user.edit.OnRemoveNavigationState.Companion.getStateIfUserIsLoggedIn
-import com.flixclusive.model.database.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel
 internal class UserEditViewModel

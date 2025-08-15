@@ -12,10 +12,10 @@ dependencies {
     api(projects.core.datastore)
     api(projects.core.ui.common)
     api(projects.core.ui.tv)
-    api(projects.data.libraryRecent)
-    api(projects.domain.libraryWatchlist)
-    api(projects.domain.tmdb)
-    api(projects.domain.user)
+//    api(projects.data)
+//     api(projects.domain)
+//     api(projects.domain)
+//     api(projects.domain)
 
     api(libs.lifecycle.viewModelCompose)
 }

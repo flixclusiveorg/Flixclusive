@@ -12,11 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.mobile.component.provider.ButtonWithCircularProgressIndicator
 import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun MainButtons(

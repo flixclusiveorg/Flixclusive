@@ -32,10 +32,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.locale.R
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.common.provider.MediaLinkResourceState
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.strings.R
 import com.flixclusive.core.ui.common.GradientLinearProgressIndicator
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.feature.mobile.player.controls.common.BasePopupScreen
 import com.flixclusive.feature.mobile.player.controls.common.EnlargedTouchableButton
 import com.flixclusive.model.provider.link.Stream
@@ -43,7 +43,7 @@ import com.flixclusive.model.provider.link.Stream
 @Composable
 internal fun ProviderResourceStateScreen(
     modifier: Modifier = Modifier,
-    state: MediaLinkResourceState,
+    state: com.flixclusive.core.common.provider.MediaLinkResourceState,
     servers: List<Stream>,
     onSkipLoading: () -> Unit,
     onClose: () -> Unit,
@@ -55,7 +55,7 @@ internal fun ProviderResourceStateScreen(
     }
 
     LaunchedEffect(key1 = state) {
-        if (state is MediaLinkResourceState.Success) {
+        if (state is com.flixclusive.core.common.provider.MediaLinkResourceState.Success) {
             onClose()
         }
     }
@@ -95,7 +95,7 @@ internal fun ProviderResourceStateScreen(
 @Composable
 private fun ProgressHeader(
     modifier: Modifier = Modifier,
-    state: MediaLinkResourceState,
+    state: com.flixclusive.core.common.provider.MediaLinkResourceState,
     canSkipLoading: Boolean,
     onSkipLoading: () -> Unit,
 ) {
@@ -164,7 +164,7 @@ private fun ProviderResourceStateScreenPreview() {
     FlixclusiveTheme {
         Surface {
             ProviderResourceStateScreen(
-                state = MediaLinkResourceState.Fetching(),
+                state = com.flixclusive.core.common.provider.MediaLinkResourceState.Fetching(),
                 onClose = {},
                 servers = emptyList(),
                 onSkipLoading = {}

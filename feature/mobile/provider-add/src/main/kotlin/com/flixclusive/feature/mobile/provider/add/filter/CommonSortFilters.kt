@@ -1,9 +1,9 @@
 package com.flixclusive.feature.mobile.provider.add.filter
 
 import android.content.Context
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import kotlinx.collections.immutable.toImmutableList
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 internal enum class SortableProperty(
     val uiText: UiText,

@@ -1,6 +1,6 @@
 package com.flixclusive.feature.mobile.provider.add.filter
 
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import kotlinx.collections.immutable.ImmutableList
 
 internal sealed class AddProviderFilterType<T> {

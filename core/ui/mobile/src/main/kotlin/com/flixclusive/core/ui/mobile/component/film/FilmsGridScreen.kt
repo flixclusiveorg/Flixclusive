@@ -43,8 +43,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.PagingState
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.SMALL_ERROR
@@ -57,7 +57,7 @@ import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.util.FilmType
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
@@ -70,7 +70,7 @@ fun FilmsGridScreen(
     onNavigationIconClick: () -> Unit,
     modifier: Modifier = Modifier,
     listState: LazyGridState = rememberLazyGridState(),
-    pagingState: PagingState = PagingState.IDLE,
+    pagingState: com.flixclusive.core.common.pagination.PagingState = com.flixclusive.core.common.pagination.PagingState.IDLE,
     currentFilter: FilmType? = null,
     onRetry: () -> Unit = {},
     onFilterChange: (FilmType) -> Unit = {},
@@ -168,7 +168,7 @@ fun FilmsGridScreen(
                 )
             }
 
-            if (pagingState == PagingState.LOADING || pagingState == PagingState.PAGINATING) {
+            if (pagingState == com.flixclusive.core.common.pagination.PagingState.LOADING || pagingState == com.flixclusive.core.common.pagination.PagingState.PAGINATING) {
                 items(20) {
                     FilmCardPlaceholder(
                         modifier =
@@ -185,7 +185,7 @@ fun FilmsGridScreen(
                         Modifier
                             .height(errorHeight)
                             .fillMaxWidth(),
-                    shouldShowError = pagingState == PagingState.ERROR,
+                    shouldShowError = pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR,
                     error = stringResource(id = LocaleR.string.pagination_error_message),
                     onRetry = onRetry,
                 )

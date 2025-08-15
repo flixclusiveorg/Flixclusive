@@ -40,7 +40,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.database.entity.DBFilm
+import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
@@ -60,13 +62,11 @@ import com.flixclusive.feature.mobile.library.common.util.selectionBorder
 import com.flixclusive.feature.mobile.library.details.component.ScreenHeader
 import com.flixclusive.feature.mobile.library.details.component.topbar.LibraryDetailsTopBar
 import com.flixclusive.feature.mobile.library.details.component.topbar.TopTitleAlphaEasing
-import com.flixclusive.model.database.DBFilm
-import com.flixclusive.model.database.LibraryList
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
 import java.util.Date
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 interface LibraryDetailsScreenNavigator :

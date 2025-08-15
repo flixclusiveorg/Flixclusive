@@ -3,7 +3,7 @@ package com.flixclusive.feature.mobile.provider.add.filter.util
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.feature.mobile.provider.add.filter.SortableProperty
 import com.flixclusive.provider.filter.Filter.Select.Companion.getOptionName
 

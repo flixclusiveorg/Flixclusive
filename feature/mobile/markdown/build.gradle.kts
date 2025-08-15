@@ -9,7 +9,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.mobile)
+    // implementation(projects.core.ui.mobile)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)

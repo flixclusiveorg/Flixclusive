@@ -4,18 +4,18 @@ import android.content.Context
 import androidx.datastore.core.DataMigration
 import androidx.datastore.dataStoreFile
 import androidx.datastore.preferences.core.Preferences
-import com.flixclusive.core.datastore.ProviderFromPreferencesMigration.migrateToNewPaths
+import com.flixclusive.core.datastore.migration.ProviderFromPreferencesMigration.migrateToNewPaths
 import com.flixclusive.core.datastore.migration.model.OldAppSettings
 import com.flixclusive.core.datastore.migration.model.OldAppSettingsProvider
 import com.flixclusive.core.datastore.migration.model.OldOnBoardingPreferences
-import com.flixclusive.model.datastore.user.DataPreferences
-import com.flixclusive.model.datastore.user.PlayerPreferences
-import com.flixclusive.model.datastore.user.ProviderPreferences
-import com.flixclusive.model.datastore.user.SubtitlesPreferences
-import com.flixclusive.model.datastore.user.UiPreferences
-import com.flixclusive.model.datastore.user.UserOnBoarding
-import com.flixclusive.model.datastore.user.UserPreferences
-import com.flixclusive.model.datastore.user.player.CaptionSizePreference.Companion.getDp
+import com.flixclusive.core.datastore.model.user.DataPreferences
+import com.flixclusive.core.datastore.model.user.PlayerPreferences
+import com.flixclusive.core.datastore.model.user.ProviderPreferences
+import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
+import com.flixclusive.core.datastore.model.user.UiPreferences
+import com.flixclusive.core.datastore.model.user.UserOnBoarding
+import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.datastore.model.user.player.CaptionSizePreference.Companion.getDp
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -100,7 +100,8 @@ internal class UserPreferencesMigration(
 
     private fun OldAppSettings.toDataPreferences(): DataPreferences = DataPreferences(isIncognito = isIncognito)
 
-    private fun OldAppSettings.toUiPreferences(): UiPreferences = UiPreferences(shouldShowTitleOnCards = isShowingFilmCardTitle)
+    private fun OldAppSettings.toUiPreferences(): UiPreferences =
+        UiPreferences(shouldShowTitleOnCards = isShowingFilmCardTitle)
 
     private fun OldAppSettingsProvider.toProviderPreferences(context: Context): ProviderPreferences {
         val providersWithNewFilePaths =

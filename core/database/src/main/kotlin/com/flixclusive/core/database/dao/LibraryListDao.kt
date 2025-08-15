@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
-import com.flixclusive.model.database.LibraryList
+import com.flixclusive.core.database.entity.LibraryList
 import kotlinx.coroutines.flow.Flow
 
 @Dao

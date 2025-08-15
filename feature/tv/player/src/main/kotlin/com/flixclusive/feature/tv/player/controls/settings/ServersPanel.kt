@@ -26,7 +26,7 @@ import com.flixclusive.core.ui.tv.util.hasPressedRight
 import com.flixclusive.feature.tv.player.controls.settings.common.ListContentHolder
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.link.Stream
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun ServersPanel(

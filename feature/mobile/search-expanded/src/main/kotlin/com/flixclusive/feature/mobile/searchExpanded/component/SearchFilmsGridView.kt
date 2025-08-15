@@ -9,14 +9,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.ui.common.util.PagingState
+import com.flixclusive.core.common.pagination.PagingState
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
 import com.flixclusive.core.ui.mobile.component.RetryButton
 import com.flixclusive.core.ui.mobile.component.SMALL_ERROR
@@ -25,12 +24,12 @@ import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
 import com.flixclusive.model.datastore.user.UiPreferences
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmSearchItem
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun SearchFilmsGridView(
     searchResults: List<FilmSearchItem>,
-    pagingState: PagingState,
+    pagingState: com.flixclusive.core.common.pagination.PagingState,
     error: UiText?,
     listState: LazyGridState,
     uiPreferences: UiPreferences,

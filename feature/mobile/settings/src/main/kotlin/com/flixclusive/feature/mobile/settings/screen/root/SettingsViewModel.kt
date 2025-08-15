@@ -10,11 +10,11 @@ import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.data.configuration.AppBuild
 import com.flixclusive.data.configuration.AppConfigurationManager
-import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.cache.CachedLinksRepository
-import com.flixclusive.data.search.SearchHistoryRepository
+import com.flixclusive.domain.database.repository.SearchHistoryRepository
 import com.flixclusive.domain.provider.ProviderUnloaderUseCase
-import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.domain.provider.repository.ProviderRepository
+import com.flixclusive.domain.session.UserSessionManager
 import com.flixclusive.model.datastore.system.SystemPreferences
 import com.flixclusive.model.datastore.user.ProviderPreferences
 import com.flixclusive.model.datastore.user.UserPreferences

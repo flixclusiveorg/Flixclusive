@@ -11,7 +11,6 @@ dependencies {
     api(projects.core.ui.common)
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.model.provider)
-    implementation(projects.model.database)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)

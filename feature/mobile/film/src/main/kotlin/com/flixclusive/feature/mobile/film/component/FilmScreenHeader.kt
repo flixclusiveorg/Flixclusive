@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
-import com.flixclusive.core.theme.starColor
+import com.flixclusive.core.presentation.theme.starColor
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.formatMinutes
 import com.flixclusive.core.ui.common.util.formatRating
@@ -51,7 +51,7 @@ import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Genre
 import com.flixclusive.model.film.TvShow
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

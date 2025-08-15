@@ -5,9 +5,9 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.flixclusive.core.database.dao.LibraryListItemDao
-import com.flixclusive.model.database.DBFilm
-import com.flixclusive.model.database.LibraryList
-import com.flixclusive.model.database.LibraryListItem
+import com.flixclusive.core.database.entity.DBFilm
+import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.database.entity.LibraryListItem
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking

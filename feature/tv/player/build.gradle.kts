@@ -9,13 +9,13 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.datastore)
-    implementation(projects.core.ui.common)
-    implementation(projects.core.ui.player)
-    implementation(projects.core.ui.tv)
-    implementation(projects.domain.libraryRecent)
-    implementation(projects.domain.provider)
-    implementation(projects.domain.tmdb)
+    implementation(projects.coreDatastore)
+    // implementation(projects.core.ui.common)
+    // implementation(projects.core.ui.player)
+    // implementation(projects.core.ui.tv)
+//     implementation(projects.domain)
+//     implementation(projects.domain)
+//     implementation(projects.domain)
 
     implementation(libs.compose.tv.foundation)
     implementation(libs.compose.tv.material)

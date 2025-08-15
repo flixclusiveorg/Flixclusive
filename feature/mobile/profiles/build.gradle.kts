@@ -9,11 +9,11 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.mobile)
-    implementation(projects.data.configuration)
-    implementation(projects.domain.home)
-    implementation(projects.domain.user)
-    implementation(projects.domain.provider)
+    // implementation(projects.core.ui.mobile)
+////    implementation(projects.data)
+//     implementation(projects.domain)
+//     implementation(projects.domain)
+//     implementation(projects.domain)
 
     implementation(libs.compose.adaptive)
     implementation(libs.compose.foundation)

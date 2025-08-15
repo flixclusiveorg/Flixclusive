@@ -10,10 +10,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.tooling.preview.Preview
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.mobile.component.CustomTriStateCheckbox
-import com.flixclusive.provider.filter.Filter
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterBottomSheetStyle.getCheckboxColors
+import com.flixclusive.provider.filter.Filter
 
 private fun getNextState(currentState: MutableIntState): Int {
     val newState = (currentState.intValue + 1) % 3

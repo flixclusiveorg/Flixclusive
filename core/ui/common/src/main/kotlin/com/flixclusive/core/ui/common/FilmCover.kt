@@ -18,7 +18,7 @@ import coil3.compose.AsyncImage
 import coil3.imageLoader
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 enum class FilmCover(
     val ratio: Float,

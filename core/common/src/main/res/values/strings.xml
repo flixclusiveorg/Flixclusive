@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="source_data_dialog_state_error_default">Something went wrong trying to get links</string>
+    <string name="source_data_dialog_state_extracting">Extracting video data…</string>
+    <string name="source_data_dialog_state_fetching">Fetching video data…</string>
+    <string name="source_data_dialog_state_success">Starting player…</string>
+    <string name="source_data_dialog_state_success_with_trusted_providers">Done providing links</string>
+    <string name="source_data_dialog_state_unavailable_default">No links available</string>
+</resources>

@@ -6,9 +6,9 @@ import com.flixclusive.core.ui.film.BaseFilmScreenViewModel
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
 import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.domain.library.watchlist.ToggleWatchlistStatusUseCase
-import com.flixclusive.domain.tmdb.GetFilmMetadataUseCase
-import com.flixclusive.domain.tmdb.SeasonProviderUseCase
-import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.domain.session.UserSessionManager
+import com.flixclusive.domain.tmdb.usecase.GetFilmMetadataUseCase
+import com.flixclusive.domain.tmdb.usecase.SeasonProviderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

@@ -1,7 +1,7 @@
 package com.flixclusive.core.ui.player
 
 import androidx.compose.material3.SnackbarDuration
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 
 enum class PlayerSnackbarMessageType {
     Audio,

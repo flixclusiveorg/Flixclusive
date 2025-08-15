@@ -2,7 +2,7 @@ package com.flixclusive.feature.mobile.searchExpanded.component.filter.util
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.provider.filter.Filter.Select.Companion.getOptionName
 
 @Composable

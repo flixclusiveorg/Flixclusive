@@ -35,8 +35,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.database.entity.DBFilm
+import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
@@ -58,12 +60,10 @@ import com.flixclusive.feature.mobile.library.manage.component.LibraryCard
 import com.flixclusive.feature.mobile.library.manage.component.LibraryOptionsBottomSheet
 import com.flixclusive.feature.mobile.library.manage.component.topbar.ManageLibraryTopBar
 import com.flixclusive.feature.mobile.library.manage.util.mapToListPreview
-import com.flixclusive.model.database.DBFilm
-import com.flixclusive.model.database.LibraryList
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
 import kotlin.random.Random
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 interface ManageLibraryScreenNavigator : GoBackAction {

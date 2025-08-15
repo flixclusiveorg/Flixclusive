@@ -9,8 +9,8 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.mobile)
-    implementation(projects.domain.updater)
+    // implementation(projects.core.ui.mobile)
+//     implementation(projects.domain)
     implementation(projects.service)
 
     implementation(libs.coil.compose)

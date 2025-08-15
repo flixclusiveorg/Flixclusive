@@ -2,14 +2,14 @@ package com.flixclusive.feature.mobile.user.add
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.flixclusive.core.database.entity.User
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.data.user.UserRepository
+import com.flixclusive.domain.database.repository.UserRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
-import com.flixclusive.domain.user.UserSessionManager
-import com.flixclusive.model.database.User
+import com.flixclusive.domain.session.UserSessionManager
 import com.flixclusive.model.film.Film
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException

@@ -58,9 +58,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientLinearProgressIndicator
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
+import com.flixclusive.core.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
@@ -73,13 +73,13 @@ import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
 import kotlinx.coroutines.delay
 import kotlin.random.Random
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MediaLinksBottomSheet(
-    state: MediaLinkResourceState,
+    state: com.flixclusive.core.common.provider.MediaLinkResourceState,
     streams: List<Stream>,
     subtitles: List<Subtitle>,
     onDismiss: () -> Unit,
@@ -255,7 +255,7 @@ private fun FilterSegmentedButtons(
 
 @Composable
 private fun ProgressHeader(
-    state: MediaLinkResourceState,
+    state: com.flixclusive.core.common.provider.MediaLinkResourceState,
     streams: List<Stream>,
     onSkipLoading: () -> Unit,
     modifier: Modifier = Modifier,
@@ -326,7 +326,7 @@ private fun ProgressHeader(
 
 @Composable
 private fun ErrorMessage(
-    state: MediaLinkResourceState,
+    state: com.flixclusive.core.common.provider.MediaLinkResourceState,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -496,16 +496,17 @@ private fun MediaLinksBottomSheetPreview() {
 //            )
 //        }
 //    }
-    var state by remember { mutableStateOf<MediaLinkResourceState>(MediaLinkResourceState.Idle) }
+    var state by remember { mutableStateOf<com.flixclusive.core.common.provider.MediaLinkResourceState>(
+        com.flixclusive.core.common.provider.MediaLinkResourceState.Idle) }
 
     LaunchedEffect(true) {
         var itemCount = 0
         val delayTime = 400L
 
         delay(delayTime)
-        state = MediaLinkResourceState.Fetching()
+        state = com.flixclusive.core.common.provider.MediaLinkResourceState.Fetching()
         delay(delayTime)
-        state = MediaLinkResourceState.Extracting()
+        state = com.flixclusive.core.common.provider.MediaLinkResourceState.Extracting()
         while (itemCount < 10) {
             val randomBool = Random.nextBoolean()
             val link =
@@ -540,7 +541,7 @@ private fun MediaLinksBottomSheetPreview() {
             itemCount++
         }
         delay(delayTime)
-        state = MediaLinkResourceState.Success
+        state = com.flixclusive.core.common.provider.MediaLinkResourceState.Success
 //        delay(delayTime)
 //        state = MediaLinkResourceState.Unavailable()
 //        delay(delayTime * 3L)

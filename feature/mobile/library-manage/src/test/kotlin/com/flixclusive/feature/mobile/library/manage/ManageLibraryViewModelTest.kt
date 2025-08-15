@@ -1,9 +1,9 @@
 package com.flixclusive.feature.mobile.library.manage
 
+import com.flixclusive.core.database.entity.DBFilm
+import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.database.entity.User
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
-import com.flixclusive.model.database.DBFilm
-import com.flixclusive.model.database.LibraryList
-import com.flixclusive.model.database.User
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow

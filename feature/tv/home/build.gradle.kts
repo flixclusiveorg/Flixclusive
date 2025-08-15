@@ -9,10 +9,10 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.common)
-    implementation(projects.core.ui.home)
-    implementation(projects.core.ui.tv)
-    implementation(projects.domain.home)
+    // implementation(projects.core.ui.common)
+    // implementation(projects.core.ui.home)
+    // implementation(projects.core.ui.tv)
+//     implementation(projects.domain)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)

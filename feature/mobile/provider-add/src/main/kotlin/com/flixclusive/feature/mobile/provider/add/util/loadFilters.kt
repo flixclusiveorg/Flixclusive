@@ -3,7 +3,7 @@ package com.flixclusive.feature.mobile.provider.add.util
 import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFlatMap
 import androidx.compose.ui.util.fastMap
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.feature.mobile.provider.add.filter.AddProviderFilterType
 import com.flixclusive.feature.mobile.provider.add.filter.AuthorsFilters
 import com.flixclusive.feature.mobile.provider.add.filter.CommonSortFilters
@@ -16,7 +16,7 @@ import com.flixclusive.model.provider.Repository
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import kotlinx.collections.immutable.toImmutableList
 import java.util.Locale
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 internal const val REPOSITORY_NAME_OWNER_FORMAT = "%s/%s"
 

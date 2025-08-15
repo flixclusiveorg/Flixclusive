@@ -29,16 +29,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.film.FilmCard
 import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
 import com.flixclusive.core.ui.mobile.util.shouldPaginate
-import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.domain.home.PaginationStateInfo
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.provider.Catalog
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.mobile.R as UiMobileR
-import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun HomeFilmsRow(
@@ -63,8 +63,8 @@ internal fun HomeFilmsRow(
     LaunchedEffect(shouldStartPaginate) {
         if (
             shouldStartPaginate && paginationState.canPaginate
-            && (paginationState.pagingState == PagingState.IDLE
-                    || paginationState.pagingState == PagingState.ERROR)
+            && (paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.IDLE
+                    || paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR)
         ) {
             paginate(paginationState.currentPage)
         }
@@ -127,9 +127,9 @@ internal fun HomeFilmsRow(
                 }
 
                 if(
-                    paginationState.pagingState == PagingState.LOADING ||
-                    paginationState.pagingState == PagingState.PAGINATING ||
-                    paginationState.pagingState == PagingState.ERROR ||
+                    paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.LOADING ||
+                    paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.PAGINATING ||
+                    paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR ||
                     films.isEmpty()
                 ) {
                     items(5) {

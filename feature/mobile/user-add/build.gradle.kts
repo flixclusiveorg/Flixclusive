@@ -9,11 +9,10 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.mobile)
-    implementation(projects.data.configuration)
-    implementation(projects.data.search)
-    implementation(projects.domain.home)
-    implementation(projects.domain.user)
+    // implementation(projects.core.ui.mobile)
+//    implementation(projects.data)
+//     implementation(projects.domain)
+//     implementation(projects.domain)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)

@@ -43,7 +43,7 @@ import com.flixclusive.core.ui.tv.util.glowOnFocus
 import com.flixclusive.core.ui.tv.util.useLocalDirectionalFocusRequester
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 internal val PlaybackButtonsSize = 24.dp
 

@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.flixclusive.library)
-    alias(libs.plugins.flixclusive.hilt)
     alias(libs.plugins.flixclusive.testing)
+    alias(libs.plugins.flixclusive.hilt)
 }
 
 android {
@@ -9,12 +9,15 @@ android {
 }
 
 dependencies {
-    api(projects.data.provider)
-    api(projects.data.tmdb)
-    api(projects.model.database)
-
-    implementation(projects.core.network)
-    implementation(libs.compose.ui.util)
-    implementation(libs.mockk)
+    implementation(projects.coreCommon)
+    implementation(projects.coreDatastore)
+    implementation(projects.coreDatabase)
+    implementation(projects.coreStrings)
+    implementation(projects.coreNetwork)
+    implementation(projects.dataProvider)
+    implementation(projects.dataTmdb)
     implementation(libs.pauseCoroutineDispatcher)
+    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.provider)
+    implementation(libs.stubs.util)
 }

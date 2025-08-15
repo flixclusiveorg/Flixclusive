@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Edge types -->
+    <string name="drop_shadow">Drop shadow</string>
+    <string name="outline">Outline</string>
+
+    <!-- Resize modes -->
+    <string name="resize_mode_center_crop">Center crop</string>
+    <string name="resize_mode_fit">Fit</string>
+    <string name="resize_mode_stretch">Stretch</string>
+
+    <!-- Decoder options -->
+    <string name="decoder_device_only">Device decoders</string>
+    <string name="decoder_prefer_app">FFMPEG decoders</string>
+    <string name="decoder_prefer_device">Device + FFMPEG decoders</string>
+
+    <!-- Quality options -->
+    <string name="quality_auto">Auto</string>
+    <string name="quality_8k">8K</string>
+    <string name="quality_4k">4K</string>
+    <string name="quality_2k">2K</string>
+    <string name="quality_1080p">1080p</string>
+    <string name="quality_720p">720p</string>
+    <string name="quality_480p">480p</string>
+    <string name="quality_360p">360p</string>
+    <string name="quality_240p">240p</string>
+    <string name="quality_144p">144p</string>
+</resources>

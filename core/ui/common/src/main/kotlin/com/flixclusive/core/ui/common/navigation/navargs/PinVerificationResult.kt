@@ -1,6 +1,6 @@
 package com.flixclusive.core.ui.common.navigation.navargs
 
-import com.flixclusive.model.database.User
+import com.flixclusive.core.database.entity.User
 import java.io.Serializable
 
 data class PinVerificationResult(

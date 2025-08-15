@@ -22,17 +22,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.database.entity.DBFilm
+import com.flixclusive.core.database.entity.WatchHistoryItem
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.player.controls.common.BasePopupScreen
 import com.flixclusive.feature.mobile.player.controls.common.EnlargedTouchableButton
 import com.flixclusive.feature.mobile.player.controls.episodes.composables.EpisodesRow
 import com.flixclusive.feature.mobile.player.controls.episodes.composables.SeasonsRow
-import com.flixclusive.model.database.DBFilm
-import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable

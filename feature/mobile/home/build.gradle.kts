@@ -9,10 +9,8 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.mobile)
-    implementation(projects.core.ui.home)
-    implementation(projects.model.configuration)
-    implementation(projects.model.database)
+    // implementation(projects.core.ui.mobile)
+    // implementation(projects.core.ui.home)
     implementation(libs.stubs.model.film)
 
     implementation(libs.coil.compose)

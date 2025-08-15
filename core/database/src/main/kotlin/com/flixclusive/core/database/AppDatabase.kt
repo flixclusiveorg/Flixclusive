@@ -5,6 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.flixclusive.core.database.converters.DateConverter
+import com.flixclusive.core.database.converters.FilmDataConverter
+import com.flixclusive.core.database.converters.WatchHistoryItemConverter
 import com.flixclusive.core.database.dao.LibraryListAndItemDao
 import com.flixclusive.core.database.dao.LibraryListDao
 import com.flixclusive.core.database.dao.LibraryListItemDao
@@ -12,6 +15,13 @@ import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.database.dao.WatchHistoryDao
 import com.flixclusive.core.database.dao.WatchlistDao
+import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.database.entity.LibraryListAndItemCrossRef
+import com.flixclusive.core.database.entity.LibraryListItem
+import com.flixclusive.core.database.entity.SearchHistory
+import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.database.entity.WatchHistory
+import com.flixclusive.core.database.entity.WatchlistItem
 import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
@@ -19,16 +29,6 @@ import com.flixclusive.core.database.migration.Schema4to5
 import com.flixclusive.core.database.migration.Schema5to6
 import com.flixclusive.core.database.migration.Schema6to7
 import com.flixclusive.core.database.migration.Schema7to8
-import com.flixclusive.core.database.util.DateConverter
-import com.flixclusive.core.database.util.FilmDataConverter
-import com.flixclusive.core.database.util.WatchHistoryItemConverter
-import com.flixclusive.model.database.LibraryList
-import com.flixclusive.model.database.LibraryListAndItemCrossRef
-import com.flixclusive.model.database.LibraryListItem
-import com.flixclusive.model.database.SearchHistory
-import com.flixclusive.model.database.User
-import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.database.WatchlistItem
 import java.io.File
 
 internal const val APP_DATABASE = "app_database"
@@ -40,7 +40,7 @@ internal const val APP_DATABASE = "app_database"
         LibraryListAndItemCrossRef::class,
         SearchHistory::class,
         User::class,
-        WatchHistoryItem::class,
+        WatchHistory::class,
         WatchlistItem::class,
     ],
     version = 8,
@@ -51,7 +51,7 @@ internal const val APP_DATABASE = "app_database"
     WatchHistoryItemConverter::class,
     DateConverter::class,
 )
-internal abstract class AppDatabase : RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
 
     abstract fun watchlistDao(): WatchlistDao

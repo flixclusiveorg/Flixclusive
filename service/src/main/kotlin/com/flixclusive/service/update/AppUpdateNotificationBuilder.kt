@@ -8,7 +8,7 @@ import com.flixclusive.core.util.android.installApkActivity
 import com.flixclusive.core.util.android.notificationBuilder
 import com.flixclusive.core.util.android.notify
 import com.flixclusive.service.R
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 class AppUpdateNotificationBuilder(

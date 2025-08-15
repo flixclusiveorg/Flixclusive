@@ -9,7 +9,7 @@ import androidx.compose.ui.res.stringResource
 import com.flixclusive.core.ui.common.dialog.TextAlertDialog
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable

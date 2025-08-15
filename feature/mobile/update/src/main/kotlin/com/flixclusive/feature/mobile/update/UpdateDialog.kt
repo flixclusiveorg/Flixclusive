@@ -33,7 +33,7 @@ import com.flixclusive.core.ui.common.navigation.navigator.ViewNewAppUpdatesActi
 import com.flixclusive.data.configuration.UpdateStatus
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.spec.DestinationStyle
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal object DismissibleDialog : DestinationStyle.Dialog {

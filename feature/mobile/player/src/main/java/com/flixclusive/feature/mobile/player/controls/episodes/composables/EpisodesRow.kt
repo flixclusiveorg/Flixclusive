@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,13 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.database.entity.WatchHistoryItem
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.mobile.component.RetryButton
-import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
 
 @Composable
 internal fun EpisodesRow(

@@ -8,7 +8,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.mobile)
+    // implementation(projects.core.ui.mobile)
 
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)

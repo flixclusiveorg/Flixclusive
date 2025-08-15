@@ -9,13 +9,11 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.datastore)
-    implementation(projects.core.ui.mobile)
-    implementation(projects.data.configuration)
-    implementation(projects.data.search)
-    implementation(projects.data.user)
-    implementation(projects.domain.provider)
-    implementation(projects.domain.user)
+    implementation(projects.coreDatastore)
+    // implementation(projects.core.ui.mobile)
+//    implementation(projects.data)
+//     implementation(projects.domain)
+//     implementation(projects.domain)
 
     implementation(libs.compose.adaptive)
     implementation(libs.compose.adaptive.layout)

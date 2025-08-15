@@ -9,9 +9,9 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.datastore)
-    implementation(projects.core.ui.mobile)
-    implementation(projects.domain.provider)
+    implementation(projects.coreDatastore)
+    // implementation(projects.core.ui.mobile)
+//     implementation(projects.domain)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)

@@ -1,6 +1,6 @@
 package com.flixclusive.mobile
 
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
+import com.flixclusive.core.common.provider.MediaLinkResourceState
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode
 

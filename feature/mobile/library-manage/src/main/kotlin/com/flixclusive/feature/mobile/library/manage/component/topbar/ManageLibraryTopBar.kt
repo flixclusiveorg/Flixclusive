@@ -21,7 +21,7 @@ import com.flixclusive.core.ui.mobile.component.topbar.ActionButton
 import com.flixclusive.core.ui.mobile.component.topbar.DefaultNavigationIcon
 import com.flixclusive.core.ui.mobile.component.topbar.SearchTextFieldAction
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun ManageLibraryTopBar(

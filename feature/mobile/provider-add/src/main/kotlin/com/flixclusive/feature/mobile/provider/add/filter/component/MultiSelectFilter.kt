@@ -32,7 +32,7 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.provider.add.filter.AddProviderFilterType
 import com.flixclusive.feature.mobile.provider.add.filter.util.FilterChildPadding
 import com.flixclusive.feature.mobile.provider.add.filter.util.toOptionString
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable

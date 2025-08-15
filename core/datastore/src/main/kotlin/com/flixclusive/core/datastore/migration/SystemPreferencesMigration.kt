@@ -5,7 +5,7 @@ import androidx.datastore.core.DataMigration
 import androidx.datastore.dataStoreFile
 import com.flixclusive.core.datastore.SYSTEM_PREFS_FILENAME
 import com.flixclusive.core.datastore.migration.model.OldAppSettings
-import com.flixclusive.model.datastore.system.SystemPreferences
+import com.flixclusive.core.datastore.model.system.SystemPreferences
 import kotlinx.coroutines.flow.first
 
 internal class SystemPreferencesMigration(private val context: Context) : DataMigration<SystemPreferences> {
@@ -27,7 +27,7 @@ internal class SystemPreferencesMigration(private val context: Context) : DataMi
     override suspend fun shouldMigrate(currentData: SystemPreferences): Boolean {
         return oldDataStoreFile.exists() && !newDataStoreFile.exists()
     }
-    
+
     private fun OldAppSettings.toSystemPreferences(): SystemPreferences {
         return SystemPreferences(
             isUsingAutoUpdateAppFeature = isUsingAutoUpdateAppFeature,

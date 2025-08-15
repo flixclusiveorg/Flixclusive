@@ -44,7 +44,8 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.ChooseProfileAction
 import com.flixclusive.core.ui.common.navigation.navigator.EditUserAction
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
@@ -63,12 +64,11 @@ import com.flixclusive.feature.mobile.settings.screen.subtitles.SubtitlesTweakSc
 import com.flixclusive.feature.mobile.settings.screen.system.SystemTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
-import com.flixclusive.model.database.User
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.collections.immutable.persistentMapOf
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Suppress("ktlint:compose:vm-forwarding-check")
 @SuppressLint("UnusedContentLambdaTargetStateParameter")

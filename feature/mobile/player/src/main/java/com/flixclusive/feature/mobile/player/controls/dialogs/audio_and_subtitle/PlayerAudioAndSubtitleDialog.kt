@@ -32,7 +32,7 @@ import com.flixclusive.feature.mobile.player.controls.common.PlayerDialogButton
 import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.model.provider.link.SubtitleSource
 import com.hippo.unifile.UniFile
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
 

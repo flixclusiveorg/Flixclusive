@@ -2,8 +2,8 @@ package com.flixclusive.feature.mobile.search
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.util.fastForEach
-import com.flixclusive.data.provider.util.CollectionsOperation
-import com.flixclusive.data.provider.util.CollectionsOperationHandler
+import com.flixclusive.domain.provider.util.collections.CollectionsOperation
+import com.flixclusive.domain.provider.util.collections.CollectionsOperationHandler
 import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.provider.ProviderApi
 

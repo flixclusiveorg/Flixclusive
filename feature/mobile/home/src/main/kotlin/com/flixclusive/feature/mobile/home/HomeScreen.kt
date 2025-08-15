@@ -43,7 +43,7 @@ import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 interface HomeNavigator : ViewFilmAction, ViewGenreCatalogAction, ViewAllFilmsAction, GoBackAction
 

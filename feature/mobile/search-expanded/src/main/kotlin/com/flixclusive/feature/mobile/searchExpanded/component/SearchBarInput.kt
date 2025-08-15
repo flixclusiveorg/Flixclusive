@@ -50,7 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.toTextFieldValue
@@ -62,7 +62,7 @@ import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.getFormat
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.filter.FilterList
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable

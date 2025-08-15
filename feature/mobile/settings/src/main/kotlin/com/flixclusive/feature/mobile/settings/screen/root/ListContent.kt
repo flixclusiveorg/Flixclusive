@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.database.entity.User
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
@@ -50,10 +51,9 @@ import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
 import com.flixclusive.feature.mobile.settings.util.getMediumEmphasizedLabel
-import com.flixclusive.model.database.User
 import com.flixclusive.model.datastore.FlixclusivePrefs
 import kotlinx.collections.immutable.ImmutableMap
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 internal val UserScreenHorizontalPadding = 16.dp
 private val NavigationButtonHeight = 50.dp

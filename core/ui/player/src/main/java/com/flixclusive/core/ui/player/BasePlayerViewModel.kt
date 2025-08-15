@@ -8,9 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
+import com.flixclusive.core.common.provider.MediaLinkResourceState
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
 import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.data.library.recent.WatchHistoryRepository
@@ -20,11 +20,11 @@ import com.flixclusive.data.provider.cache.CachedLinks
 import com.flixclusive.data.provider.cache.CachedLinksRepository
 import com.flixclusive.domain.library.recent.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
-import com.flixclusive.domain.tmdb.SeasonProviderUseCase
-import com.flixclusive.domain.user.UserSessionManager
-import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.database.toWatchHistoryItem
-import com.flixclusive.model.database.util.getSavedTimeForFilm
+import com.flixclusive.domain.tmdb.usecase.SeasonProviderUseCase
+import com.flixclusive.domain.session.UserSessionManager
+import com.flixclusive.core.database.entity.WatchHistoryItem
+import com.flixclusive.core.database.entity.toWatchHistoryItem
+import com.flixclusive.core.database.entity.util.getSavedTimeForFilm
 import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.datastore.user.SubtitlesPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
@@ -50,7 +50,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import kotlin.math.max
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 /**
  * TODO: Remove this bitch ass ugly ass code
@@ -87,8 +87,9 @@ abstract class BasePlayerViewModel(
 
     val providers by lazy { providerRepository.getEnabledProviders() }
 
-    private val _dialogState = MutableStateFlow<MediaLinkResourceState>(MediaLinkResourceState.Idle)
-    val dialogState: StateFlow<MediaLinkResourceState> = _dialogState.asStateFlow()
+    private val _dialogState = MutableStateFlow<com.flixclusive.core.common.provider.MediaLinkResourceState>(
+        com.flixclusive.core.common.provider.MediaLinkResourceState.Idle)
+    val dialogState: StateFlow<com.flixclusive.core.common.provider.MediaLinkResourceState> = _dialogState.asStateFlow()
 
     private val _season = MutableStateFlow<Resource<Season?>>(Resource.Loading)
     val season = _season.asStateFlow()
@@ -348,7 +349,7 @@ abstract class BasePlayerViewModel(
     }
 
     fun onConsumePlayerDialog() {
-        _dialogState.update { MediaLinkResourceState.Idle }
+        _dialogState.update { com.flixclusive.core.common.provider.MediaLinkResourceState.Idle }
     }
 
     fun onServerChange(index: Int? = null) {

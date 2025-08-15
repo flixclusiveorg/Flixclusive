@@ -18,7 +18,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.mobile.LocalIsInPipMode
 import com.flixclusive.core.ui.mobile.LocalKeyEventHandlers
 import com.flixclusive.core.ui.mobile.util.toggleSystemBars

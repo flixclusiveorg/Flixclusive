@@ -21,12 +21,6 @@ rootProject.name = "Flixclusive"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
 
-// For common ui things such as ViewModels, NavigationArgs etc.
-include(":core:ui:film")
-include(":core:ui:home")
-include(":core:ui:player")
-// ===========================================================
-
 // Common features
 include(":feature:splash-screen")
 
@@ -57,42 +51,61 @@ include(":feature:mobile:user-add")
 include(":feature:mobile:user-edit")
 
 // TV features
-include(":feature:tv:film")
-include(":feature:tv:home")
-include(":feature:tv:player")
+//include(":feature:tv:film")
+//include(":feature:tv:home")
+//include(":feature:tv:player")
 // include(":feature:tv:preferences")
-include(":feature:tv:search")
+//include(":feature:tv:search")
 
-include(":model:configuration")
-include(":model:database")
-include(":model:datastore")
+include(":domain-catalog")
+include(":domain-database")
+include(":domain-provider")
+include(":domain-tmdb")
 
-include(":domain:catalog")
-include(":domain:home")
-include(":domain:library-recent")
-include(":domain:library-watchlist")
-include(":domain:provider")
-include(":domain:tmdb")
-include(":domain:updater")
-include(":domain:user")
+include(":data-database")
+include(":data-provider")
+include(":data-tmdb")
 
-include(":data:configuration")
-include(":data:library-custom")
-include(":data:library-recent")
-include(":data:library-watchlist")
-include(":data:network")
-include(":data:provider")
-include(":data:search")
-include(":data:tmdb")
-include(":data:user")
+include(":core-common")
+include(":core-database")
+include(":core-datastore")
+include(":core-drawables")
+include(":core-navigation")
+include(":core-network")
+include(":core-presentation")
+include(":core-strings")
+include(":core-testing")
+//include(":core:ui:common")
+//include(":core:ui:mobile")
+//include(":core:ui:tv")
 
-include(":core:database")
-include(":core:datastore")
-include(":core:locale")
-include(":core:network")
-include(":core:theme")
-include(":core:ui:common")
-include(":core:ui:mobile")
-include(":core:ui:tv")
+// For common ui things such as ViewModels, NavigationArgs etc.
+//include(":core:ui:film")
+//include(":core:ui:home")
+//include(":core:ui:player")
+// ===========================================================
 
 include(":service")
+
+
+
+/**
+ * This is to flatten the modules with sub-modules
+ */
+rootProject.children.forEach { project ->
+    when {
+        project.name.startsWith("data-") -> {
+            val rawProjectName = project.name.removePrefix("data-")
+            project.projectDir = file("data/$rawProjectName")
+        }
+        project.name.startsWith("domain-") -> {
+            val rawProjectName = project.name.removePrefix("domain-")
+            project.projectDir = file("domain/$rawProjectName")
+        }
+        project.name.startsWith("core-") -> {
+            val rawProjectName = project.name.removePrefix("core-")
+            project.projectDir = file("core/$rawProjectName")
+        }
+        // TODO: Support other modules with sub-modules
+    }
+}

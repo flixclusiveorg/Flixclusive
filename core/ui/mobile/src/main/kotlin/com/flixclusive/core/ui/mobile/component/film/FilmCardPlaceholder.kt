@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 fun FilmCardPlaceholder(

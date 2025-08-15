@@ -3,6 +3,8 @@ package com.flixclusive.mobile
 import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
+import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.database.entity.User
 import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop
 import com.flixclusive.core.ui.common.navigation.navigator.AddProfileAction
 import com.flixclusive.core.ui.common.navigation.navigator.ChooseProfileAction
@@ -26,7 +28,6 @@ import com.flixclusive.feature.mobile.genre.GenreScreenNavigator
 import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.HomeNavigator
 import com.flixclusive.feature.mobile.library.details.LibraryDetailsScreenNavigator
-import com.flixclusive.feature.mobile.library.details.destinations.LibraryDetailsScreenDestination
 import com.flixclusive.feature.mobile.library.manage.ManageLibraryScreenNavigator
 import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
@@ -60,8 +61,6 @@ import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestinati
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
-import com.flixclusive.model.database.LibraryList
-import com.flixclusive.model.database.User
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.provider.Catalog

@@ -45,8 +45,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
-import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
+import com.flixclusive.core.common.provider.MediaLinkResourceState
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbar
 import com.flixclusive.core.ui.mobile.InternetMonitorSnackbarVisuals
 import com.flixclusive.core.ui.mobile.component.provider.MediaLinksBottomSheet
@@ -79,7 +79,7 @@ import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @SuppressLint("DiscouragedApi", "UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)

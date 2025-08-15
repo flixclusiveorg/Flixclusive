@@ -10,13 +10,10 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.mobile)
-    implementation(projects.data.configuration)
-    implementation(projects.data.search)
-    implementation(projects.data.libraryRecent)
-    implementation(projects.data.libraryWatchlist)
-    implementation(projects.domain.user)
-    implementation(projects.domain.provider)
+    // implementation(projects.core.ui.mobile)
+//    implementation(projects.data)
+//     implementation(projects.domain)
+//     implementation(projects.domain)
 
     implementation(libs.compose.adaptive)
     implementation(libs.compose.foundation)

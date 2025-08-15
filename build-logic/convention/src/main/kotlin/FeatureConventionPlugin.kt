@@ -23,7 +23,7 @@ class FeatureConventionPlugin : Plugin<Project> {
 
 
             dependencies {
-                add("implementation", project(":core:theme"))
+                add("implementation", project(":core-presentation"))
 
                 add("implementation", libs.findLibrary("hilt-navigation").get())
                 add("implementation", libs.findLibrary("lifecycle-runtimeCompose").get())

@@ -50,15 +50,15 @@ import androidx.compose.ui.util.fastSumBy
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.domain.provider.test.ProviderTestCaseOutput
-import com.flixclusive.domain.provider.test.ProviderTestResult
-import com.flixclusive.domain.provider.test.TestStage.Idle.Companion.isIdle
+import com.flixclusive.domain.provider.repository.testing.TestStage.Idle.Companion.isIdle
+import com.flixclusive.domain.provider.testing.ProviderTestCaseOutput
+import com.flixclusive.domain.provider.testing.ProviderTestResult
 import com.flixclusive.feature.mobile.provider.test.component.ButtonControllerDivider
 import com.flixclusive.feature.mobile.provider.test.component.FullLogDialog
 import com.flixclusive.feature.mobile.provider.test.component.ProviderTestScreenTopBar
@@ -68,7 +68,7 @@ import com.flixclusive.feature.mobile.provider.test.component.TestResultCard
 import com.flixclusive.feature.mobile.provider.test.component.TestScreenHeader
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 private fun Modifier.drawScrimOnForeground(scrimColor: Color = MaterialTheme.colorScheme.surface) =
@@ -305,8 +305,8 @@ private fun compareTestResults(
             SortOption.SortType.Name -> a.provider.name.compareTo(b.provider.name)
             SortOption.SortType.Date -> a.date.time.compareTo(b.date.time)
             SortOption.SortType.Score -> {
-                val passedCountA = a.outputs.count { it.isSuccess }
-                val passedCountB = b.outputs.count { it.isSuccess }
+                val passedCountA = a.outputs.value.count { it.isSuccess }
+                val passedCountB = b.outputs.value.count { it.isSuccess }
                 passedCountA.compareTo(passedCountB)
             }
         }

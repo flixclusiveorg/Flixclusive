@@ -38,7 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.feature.splashScreen.APP_TAG_KEY
 import com.flixclusive.feature.splashScreen.ENTER_DELAY
@@ -111,7 +111,7 @@ internal fun Tag(
                 painter = painterResource(com.flixclusive.core.ui.common.R.drawable.flixclusive_tag),
                 contentDescription =
                     stringResource(
-                        id = com.flixclusive.core.locale.R.string.flixclusive_tag_content_desc,
+                        id = com.flixclusive.core.strings.R.string.flixclusive_tag_content_desc,
                     ),
                 contentScale = ContentScale.Fit,
                 modifier =

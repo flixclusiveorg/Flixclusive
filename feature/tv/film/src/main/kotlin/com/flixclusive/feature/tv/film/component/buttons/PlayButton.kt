@@ -41,7 +41,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.tv.util.drawAnimatedBorder
 import com.flixclusive.core.ui.common.util.formatPlayButtonLabel
-import com.flixclusive.model.database.WatchHistoryItem
+import com.flixclusive.core.database.entity.WatchHistoryItem
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable

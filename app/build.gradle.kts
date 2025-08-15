@@ -1,3 +1,6 @@
+import com.flixclusive.getCommitCount
+import com.flixclusive.getCommitSha
+
 plugins {
     alias(libs.plugins.flixclusive.application)
     alias(libs.plugins.flixclusive.compose)
@@ -11,50 +14,49 @@ val versionMajor = 2
 val versionMinor = 2
 val versionPatch = 0
 val versionBuild = 0
-val applicationName: String = libs.versions.applicationName.get()
-val appIdFromLib: String = libs.versions.applicationId.get()
-val formattedVersion = "$versionMajor.$versionMinor.$versionPatch"
+val appName = "Flixclusive"
+val appId = "com.flixclusive"
+val semanticVersion = "$versionMajor.$versionMinor.$versionPatch"
 
-val gitCommitVersionProvider =
-    providers.exec {
-        commandLine = "git rev-parse --short HEAD".split(" ")
-    }
-
-fun Project.getCommitVersion(): String {
-    return gitCommitVersionProvider.standardOutput.asText
-        .get()
-        .trim()
-}
+val commitCount = getCommitCount()
+val previewVersionCode = "p$commitCount"
+val debugVersionCode = "d$commitCount"
 
 android {
-    namespace = appIdFromLib
+
+    namespace = appId
 
     defaultConfig {
-        applicationId = appIdFromLib
+        applicationId = appId
         versionCode = versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
-        versionName = formattedVersion
+        versionName = semanticVersion
         vectorDrawables {
             useSupportLibrary = true
         }
 
-        resValue("string", "build", versionCode.toString())
-        resValue("string", "app_name", applicationName)
-        resValue("string", "application_id", appIdFromLib)
-        resValue("string", "debug_mode", "false")
-        resValue("string", "version_name", formattedVersion)
-        resValue("string", "commit_version", getCommitVersion())
+        resValue("string", "app_name", appName)
+        buildConfigField("int", "BUILD_TYPE", "1") // 1 for release, 0 for debug
+        buildConfigField("String", "COMMIT_SHA", "\"${getCommitSha()}\"")
     }
 
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
-            versionNameSuffix = "-DEBUG"
 
-            resValue("string", "app_name", "$applicationName Debug")
-            resValue("string", "application_id", appIdFromLib + applicationIdSuffix)
-            resValue("string", "debug_mode", "true")
-            resValue("string", "version_name", formattedVersion + versionNameSuffix)
+            resValue("string", "app_name", "DEBUG-$appName")
+            buildConfigField("int", "BUILD_TYPE", "0") // 1 for release, 0 for debug
         }
+
+        create("preview") {
+            applicationIdSuffix = ".preview"
+
+            resValue("string", "app_name", "PRE-$appName")
+            buildConfigField("int", "BUILD_TYPE", "2") // 2 for preview
+        }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     packaging {
@@ -62,6 +64,29 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             merges += "META-INF/LICENSE.md"
             merges += "META-INF/LICENSE-notice.md"
+        }
+    }
+}
+
+/*
+* Set the version code and name manually for the debug and preview builds.
+* */
+androidComponents {
+    onVariants { variant ->
+        when (variant.buildType) {
+            "debug" -> {
+                variant.outputs.forEach { output ->
+                    output.versionCode.set(commitCount.toInt())
+                    output.versionName.set(debugVersionCode)
+                }
+            }
+
+            "preview" -> {
+                variant.outputs.forEach { output ->
+                    output.versionCode.set(commitCount.toInt())
+                    output.versionName.set(previewVersionCode)
+                }
+            }
         }
     }
 }
@@ -92,21 +117,17 @@ dependencies {
     implementation(projects.feature.mobile.userAdd)
     implementation(projects.feature.mobile.userEdit)
 
-    implementation(projects.feature.tv.home)
-    implementation(projects.feature.tv.search)
-    implementation(projects.feature.tv.film)
+//    implementation(projects.feature.tv.home)
+//    implementation(projects.feature.tv.search)
+//    implementation(projects.feature.tv.film)
 
-    implementation(projects.core.ui.mobile)
-    implementation(projects.core.ui.tv)
+    implementation(projects.coreCommon)
+    implementation(projects.coreNavigation)
+    // implementation(projects.core.ui.mobile)
+    // implementation(projects.core.ui.tv)
 
-    implementation(projects.data.configuration)
-    implementation(projects.data.network)
-    implementation(projects.data.libraryRecent)
-    implementation(projects.data.libraryWatchlist)
-    implementation(projects.data.libraryCustom)
-    implementation(projects.domain.provider)
-    implementation(projects.domain.tmdb)
-    implementation(projects.domain.user)
+//    implementation(projects.data)
+//     implementation(projects.domain)
     implementation(libs.stubs.model.provider)
 
     implementation(projects.service)

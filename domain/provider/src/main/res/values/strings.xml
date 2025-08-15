@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
+    <string name="fetching_episode_message">Fetching show episode…</string>
+    <string name="failed_to_load_provider_on_api">"%1$s\'s API has crashed. Disabling it now…"</string>
+    <string name="failed_to_fetch_media_id_message">Something went wrong fetching the media id: %1$s</string>
+
+    <!--  Provider test labels  -->
+    <string name="provider_test_stage_done">Done!</string>
+    <string name="provider_test_stage_idle">Testing has not started</string>
+    <string name="provider_test_stage_stage1">Testing API properties…</string>
+    <string name="provider_test_stage_stage2">Testing API methods…</string>
+
+    <string name="ptest_error_get_api">Failed to get provider API</string>
+    <string name="ptest_error_get_catalog_list">Failed to get catalog list</string>
+    <string name="ptest_error_get_search_filters">Failed to get search filters</string>
+    <string name="ptest_error_get_testable_film">Failed to get testable film</string>
+    <string name="ptest_error_method_get_catalog_items">Failed to load catalog item %1$s</string>
+    <string name="ptest_error_method_get_film_details">Failed to get detailed film for %1$s</string>
+    <string name="ptest_error_method_get_links">Failed to fetch links for %1$s</string>
+    <string name="ptest_error_not_implemented">This has not been implemented.</string>
+    <string name="ptest_get_api">Get provider API</string>
+    <string name="ptest_get_catalog_list">Get catalog list</string>
+    <string name="ptest_get_search_filters">Get search filters</string>
+    <string name="ptest_get_testable_film">Get testable film</string>
+    <string name="ptest_method_get_catalog_items">Load a catalog item</string>
+    <string name="ptest_method_get_film_details">Get film details</string>
+    <string name="ptest_method_get_links">Get links</string>
+    <string name="ptest_method_get_search_items">Search for items</string>
+    <string name="ptest_success_get_api">API has been loaded</string>
+    <string name="ptest_success_items_count_found">%1$d items found</string>
+    <string name="ptest_success_items_count_found_empty">Passed but no items found</string>
+</resources>

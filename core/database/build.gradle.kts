@@ -19,7 +19,6 @@ android {
 
 dependencies {
     implementation(libs.stubs.util)
-    implementation(projects.model.database)
     implementation(libs.stubs.model.film)
 
     implementation(libs.gson)

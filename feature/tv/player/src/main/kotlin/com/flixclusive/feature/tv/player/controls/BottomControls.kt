@@ -55,7 +55,7 @@ import com.flixclusive.core.ui.tv.util.getGlowRadialGradient
 import com.flixclusive.core.ui.tv.util.glowOnFocus
 import com.flixclusive.core.ui.tv.util.handleDPadKeyEvents
 import com.flixclusive.core.ui.tv.util.useLocalDirectionalFocusRequester
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
 

@@ -1,8 +1,8 @@
 package com.flixclusive.core.network.retrofit
 
+import com.flixclusive.core.network.retrofit.dto.GithubReleaseInfo
 import com.flixclusive.core.util.common.GithubConstant.GITHUB_REPOSITORY
 import com.flixclusive.core.util.common.GithubConstant.GITHUB_USERNAME
-import com.flixclusive.model.configuration.GithubReleaseInfo
 import retrofit2.http.GET
 import retrofit2.http.Path
 

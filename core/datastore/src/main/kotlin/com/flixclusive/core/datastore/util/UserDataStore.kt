@@ -16,7 +16,7 @@ import kotlinx.coroutines.cancel
 
 internal const val USER_PREFERENCE_FILENAME = "users/user-preferences"
 
-fun Context.createUserPreferences(
+internal fun Context.createUserPreferences(
     userId: Int,
     corruptionHandler: ReplaceFileCorruptionHandler<Preferences>? = null,
     produceMigrations: (Context) -> List<DataMigration<Preferences>> = { listOf() },

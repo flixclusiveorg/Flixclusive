@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.flixclusive.model.database.SearchHistory
+import com.flixclusive.core.database.entity.SearchHistory
 import kotlinx.coroutines.flow.Flow
 
 @Dao

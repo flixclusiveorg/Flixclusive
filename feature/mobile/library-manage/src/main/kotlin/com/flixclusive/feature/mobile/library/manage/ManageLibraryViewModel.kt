@@ -3,13 +3,15 @@ package com.flixclusive.feature.mobile.library.manage
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.database.entity.LibraryListWithItems
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.data.library.custom.LibraryListRepository
 import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.data.library.watchlist.WatchlistRepository
-import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.domain.session.UserSessionManager
 import com.flixclusive.feature.mobile.library.common.util.FilterWithDirection
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
@@ -18,8 +20,6 @@ import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview.Comp
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.feature.mobile.library.manage.util.filter
 import com.flixclusive.feature.mobile.library.manage.util.toUiLibraryList
-import com.flixclusive.model.database.LibraryList
-import com.flixclusive.model.database.LibraryListWithItems
 import com.flixclusive.model.film.Film
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel
 internal class ManageLibraryViewModel

@@ -1,7 +1,7 @@
 package com.flixclusive.feature.mobile.update
 
 import androidx.lifecycle.ViewModel
-import com.flixclusive.domain.updater.AppUpdateCheckerUseCase
+import com.flixclusive.domain.updater.usecase.AppUpdateCheckerUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

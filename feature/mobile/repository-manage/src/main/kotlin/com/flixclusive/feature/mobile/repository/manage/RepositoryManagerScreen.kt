@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -45,7 +44,7 @@ import com.flixclusive.feature.mobile.repository.manage.component.AddRepositoryB
 import com.flixclusive.feature.mobile.repository.manage.component.RepositoryCard
 import com.flixclusive.feature.mobile.repository.manage.component.RepositoryManagerTopBar
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 interface RepositoryManagerScreenNavigator :

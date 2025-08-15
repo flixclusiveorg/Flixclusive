@@ -54,7 +54,7 @@ import coil3.asDrawable
 import coil3.compose.AsyncImage
 import coil3.imageLoader
 import coil3.request.allowHardware
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.formatMinutes
@@ -64,10 +64,10 @@ import com.flixclusive.core.ui.tv.component.DotSeparatedText
 import com.flixclusive.core.ui.tv.component.FilmCardShape
 import com.flixclusive.core.ui.tv.component.FilmPadding
 import com.flixclusive.feature.tv.home.component.util.useLocalImmersiveBackgroundColor
-import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.database.util.getNextEpisodeToWatch
+import com.flixclusive.core.database.entity.WatchHistoryItem
+import com.flixclusive.core.database.entity.util.getNextEpisodeToWatch
 import com.flixclusive.model.film.util.FilmType
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 internal val WatchedFilmCardHeight = 250.dp
 private val WatchedFilmCardWidth = 400.dp

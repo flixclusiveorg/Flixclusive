@@ -8,9 +8,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.ui.common.util.PagingState
+import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.domain.tmdb.GetSearchCardsUseCase
+import com.flixclusive.domain.tmdb.usecase.GetSearchCardsUseCase
 import com.flixclusive.model.configuration.catalog.SearchCatalog
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData
@@ -40,7 +40,7 @@ internal class SearchScreenViewModel @Inject constructor(
         private set
     var canPaginate by mutableStateOf(false)
         private set
-    var pagingState by mutableStateOf(PagingState.IDLE)
+    var pagingState by mutableStateOf(com.flixclusive.core.common.pagination.PagingState.IDLE)
         private set
 
     var searchQuery by mutableStateOf("")
@@ -75,7 +75,7 @@ internal class SearchScreenViewModel @Inject constructor(
             page = 1
             maxPage = 1
             canPaginate = false
-            pagingState = PagingState.IDLE
+            pagingState = com.flixclusive.core.common.pagination.PagingState.IDLE
 
             paginate()
         }
@@ -117,19 +117,19 @@ internal class SearchScreenViewModel @Inject constructor(
         callResponse: Resource<SearchResponseData<FilmSearchItem>>,
         onSuccess: SearchResponseData<FilmSearchItem>.() -> Unit
     ) {
-        if (page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE))
+        if (page != 1 && (page == 1 || !canPaginate || pagingState != com.flixclusive.core.common.pagination.PagingState.IDLE))
             return
 
         pagingState = when (page) {
-            1 -> PagingState.LOADING
-            else -> PagingState.PAGINATING
+            1 -> com.flixclusive.core.common.pagination.PagingState.LOADING
+            else -> com.flixclusive.core.common.pagination.PagingState.PAGINATING
         }
 
         when (callResponse) {
             is Resource.Failure -> {
                 pagingState = when (page) {
-                    1 -> PagingState.ERROR
-                    else -> PagingState.PAGINATING_EXHAUST
+                    1 -> com.flixclusive.core.common.pagination.PagingState.ERROR
+                    else -> com.flixclusive.core.common.pagination.PagingState.EXHAUSTED
                 }
             }
             Resource.Loading -> Unit

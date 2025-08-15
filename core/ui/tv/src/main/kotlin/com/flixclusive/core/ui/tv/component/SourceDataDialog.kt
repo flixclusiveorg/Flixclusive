@@ -28,15 +28,15 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.common.provider.MediaLinkResourceState
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 fun SourceDataDialog(
-    state: MediaLinkResourceState,
+    state: com.flixclusive.core.common.provider.MediaLinkResourceState,
     canSkipExtractingPhase: Boolean = false,
     onConsumeDialog: () -> Unit,
     onSkipExtractingPhase: () -> Unit = {},
@@ -59,7 +59,7 @@ fun SourceDataDialog(
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun SourceDataDialogContent(
-    state: MediaLinkResourceState,
+    state: com.flixclusive.core.common.provider.MediaLinkResourceState,
     canSkipExtractingPhase: Boolean = false,
     onSkipExtractingPhase: () -> Unit = {},
 ) {
@@ -180,7 +180,7 @@ fun VideoPlayerDialogPreview() {
                 .fillMaxSize()
         ) {
             SourceDataDialog(
-                state = MediaLinkResourceState.Fetching(),
+                state = com.flixclusive.core.common.provider.MediaLinkResourceState.Fetching(),
                 canSkipExtractingPhase = false,
                 onSkipExtractingPhase = {},
                 onConsumeDialog = {}

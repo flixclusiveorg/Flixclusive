@@ -1,6 +1,6 @@
 package com.flixclusive.core.datastore.migration.model
 
-import com.flixclusive.model.datastore.user.ProviderFromPreferences
+import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
 import com.flixclusive.model.provider.Repository
 import kotlinx.serialization.Serializable
 

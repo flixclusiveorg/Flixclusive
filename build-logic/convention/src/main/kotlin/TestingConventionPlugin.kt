@@ -19,6 +19,16 @@ class TestingConventionPlugin : Plugin<Project> {
                     testInstrumentationRunner =
                         "androidx.test.runner.AndroidJUnitRunner"
                 }
+
+                packagingOptions {
+                    resources {
+                        excludes += "/META-INF/{AL2.0,LGPL2.1}"
+                        excludes += "META-INF/INDEX.LIST"
+                        excludes += "META-INF/DEPENDENCIES"
+                        merges += "META-INF/LICENSE.md"
+                        merges += "META-INF/LICENSE-notice.md"
+                    }
+                }
             }
 
             dependencies {
@@ -31,7 +41,7 @@ class TestingConventionPlugin : Plugin<Project> {
                 add("androidTestImplementation", libs.findLibrary("androidx.test.ext.junit").get())
                 add("androidTestImplementation", libs.findLibrary("coroutines.test").get())
                 add("androidTestImplementation", libs.findLibrary("espresso.core").get())
-                add("androidTestImplementation", libs.findLibrary("mockk").get())
+                add("androidTestImplementation", libs.findLibrary("mockk-android").get())
                 add("androidTestImplementation", libs.findLibrary("turbine").get())
                 add("androidTestImplementation", libs.findLibrary("strikt").get())
             }

@@ -45,9 +45,9 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
 import coil3.request.ImageRequest
-import com.flixclusive.core.theme.lightGray
-import com.flixclusive.core.theme.lightGrayElevated
-import com.flixclusive.core.theme.starColor
+import com.flixclusive.core.presentation.theme.lightGray
+import com.flixclusive.core.presentation.theme.lightGrayElevated
+import com.flixclusive.core.presentation.theme.starColor
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.formatRating
@@ -57,7 +57,7 @@ import com.flixclusive.core.ui.mobile.component.film.GenreButton
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Genre
 import kotlin.random.Random
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)

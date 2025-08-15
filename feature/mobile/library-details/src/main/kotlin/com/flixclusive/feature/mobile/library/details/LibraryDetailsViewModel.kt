@@ -6,7 +6,8 @@ import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.data.library.custom.LibraryListRepository
@@ -16,7 +17,6 @@ import com.flixclusive.feature.mobile.library.common.util.FilterWithDirection
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
-import com.flixclusive.model.database.LibraryList
 import com.flixclusive.model.film.Film
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel
 internal class LibraryDetailsViewModel

@@ -14,13 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.locale.R
+import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.strings.R
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.library.details.LibraryType
-import com.flixclusive.model.database.LibraryList
 import java.text.SimpleDateFormat
 import java.util.Locale
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun ScreenHeader(

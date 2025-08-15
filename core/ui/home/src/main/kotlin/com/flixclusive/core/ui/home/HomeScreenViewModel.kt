@@ -8,12 +8,12 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.data.util.InternetMonitor
+import com.flixclusive.core.network.util.monitor.NetworkMonitor
 import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.domain.home.HomeItemsProviderUseCase
-import com.flixclusive.domain.user.UserSessionManager
-import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.database.util.getNextEpisodeToWatch
+import com.flixclusive.domain.session.UserSessionManager
+import com.flixclusive.core.database.entity.WatchHistoryItem
+import com.flixclusive.core.database.entity.util.getNextEpisodeToWatch
 import com.flixclusive.model.datastore.user.UiPreferences
 import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.film.Film
@@ -54,7 +54,7 @@ class HomeScreenViewModel @Inject constructor(
     private val homeItemsProviderUseCase: HomeItemsProviderUseCase,
     private val userSessionManager: UserSessionManager,
     dataStoreManager: DataStoreManager,
-    internetMonitor: InternetMonitor,
+    networkMonitor: com.flixclusive.core.network.util.monitor.NetworkMonitor,
     watchHistoryRepository: WatchHistoryRepository,
 ) : ViewModel() {
     var itemsSize by mutableIntStateOf(0) // For TV
@@ -73,7 +73,7 @@ class HomeScreenViewModel @Inject constructor(
         .getUserPrefs<UiPreferences>(UserPreferences.UI_PREFS_KEY)
         .asStateFlow(viewModelScope)
 
-    private val connectionObserver = internetMonitor
+    private val connectionObserver = networkMonitor
         .isOnline
         .stateIn(
             scope = viewModelScope,

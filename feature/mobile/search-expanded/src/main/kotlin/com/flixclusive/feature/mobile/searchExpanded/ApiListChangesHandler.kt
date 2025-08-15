@@ -2,8 +2,8 @@ package com.flixclusive.feature.mobile.searchExpanded
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.data.provider.util.CollectionsOperation
-import com.flixclusive.data.provider.util.CollectionsOperationHandler
+import com.flixclusive.domain.provider.util.collections.CollectionsOperation
+import com.flixclusive.domain.provider.util.collections.CollectionsOperationHandler
 import com.flixclusive.provider.ProviderApi
 
 internal class ApiListChangesHandler(

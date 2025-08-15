@@ -42,7 +42,7 @@ import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.DefaultShape
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 private const val ON_NAME_CHANGE_DELAY = 800L

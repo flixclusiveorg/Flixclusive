@@ -14,7 +14,7 @@ import androidx.compose.ui.util.fastMap
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
 import com.flixclusive.model.provider.Repository
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 internal fun String.toUpdaterJsonUrl(): String {
     val buildUrlPath = substringBeforeLast("/")

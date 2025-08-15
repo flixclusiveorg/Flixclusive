@@ -10,7 +10,7 @@ android {
 dependencies {
     implementation(libs.core.ktx)
     implementation(libs.okhttp)
-    implementation(projects.core.ui.common)
+    // implementation(projects.core.ui.common)
     implementation(libs.stubs.util)
-    implementation(projects.data.configuration)
+//    implementation(projects.data)
 }

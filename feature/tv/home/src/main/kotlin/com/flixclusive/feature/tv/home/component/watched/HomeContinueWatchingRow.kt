@@ -26,10 +26,10 @@ import com.flixclusive.core.ui.tv.util.LabelStartPadding
 import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.database.WatchHistoryItem
+import com.flixclusive.core.database.entity.WatchHistoryItem
 import com.flixclusive.model.film.Film
 import kotlinx.coroutines.launch
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 internal const val HOME_WATCHED_FILMS_FOCUS_KEY_FORMAT = "watchedRow=%d, watchedColumn=%d"
 

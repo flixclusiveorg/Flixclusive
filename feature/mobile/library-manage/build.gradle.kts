@@ -10,12 +10,10 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.datastore)
-    implementation(projects.core.ui.mobile)
-    implementation(projects.data.libraryCustom)
-    implementation(projects.data.libraryRecent)
-    implementation(projects.data.libraryWatchlist)
-    implementation(projects.domain.user)
+    implementation(projects.coreDatastore)
+    // implementation(projects.core.ui.mobile)
+//    implementation(projects.data)
+//     implementation(projects.domain)
     implementation(projects.feature.mobile.libraryCommon)
 
     implementation(libs.coil.compose)

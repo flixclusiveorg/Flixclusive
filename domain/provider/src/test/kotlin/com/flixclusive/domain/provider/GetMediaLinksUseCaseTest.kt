@@ -1,16 +1,16 @@
 package com.flixclusive.domain.provider
 
 import app.cash.turbine.test
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.database.entity.EpisodeWatched
+import com.flixclusive.core.database.entity.WatchHistory
+import com.flixclusive.core.database.entity.toDBFilm
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.domain.provider.fake.FakeCachedLinksRepository
 import com.flixclusive.domain.provider.fake.FakeProviderApiRepository
 import com.flixclusive.domain.provider.fake.FakeProviderRepository
 import com.flixclusive.domain.provider.fake.FakeTMDBRepository
-import com.flixclusive.model.database.EpisodeWatched
-import com.flixclusive.model.database.WatchHistoryItem
-import com.flixclusive.model.database.toDBFilm
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Movie
@@ -417,10 +417,10 @@ class GetMediaLinksUseCaseTest {
         )
     }
 
-    private fun createMockWatchHistory(film: Film): WatchHistoryItem {
+    private fun createMockWatchHistory(film: Film): WatchHistory {
         val filmId = film.id ?: throw IllegalArgumentException("Film ID cannot be null")
 
-        return WatchHistoryItem(
+        return WatchHistory(
             id = "$filmId-watch-history",
             ownerId = 1,
             episodesWatched = listOf(

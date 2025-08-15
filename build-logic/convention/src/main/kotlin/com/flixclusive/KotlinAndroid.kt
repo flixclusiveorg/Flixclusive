@@ -36,7 +36,7 @@ internal fun Project.configureKotlinAndroid(
     }
 }
 
-private fun Project.configureKotlin() {
+fun Project.configureKotlin() {
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)

@@ -25,8 +25,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.theme.lightGray
-import com.flixclusive.core.theme.lightGrayElevated
+import com.flixclusive.core.presentation.theme.lightGray
+import com.flixclusive.core.presentation.theme.lightGrayElevated
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import kotlin.random.Random

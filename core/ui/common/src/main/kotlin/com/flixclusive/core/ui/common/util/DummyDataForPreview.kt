@@ -2,7 +2,7 @@ package com.flixclusive.core.ui.common.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.flixclusive.model.database.User
+import com.flixclusive.core.database.entity.User
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.util.FilmType
@@ -23,7 +23,7 @@ object DummyDataForPreview {
                 changelog =
                     """
                     # v1.0.0
-                    
+
                     - Added new feature
                     - Fixed a bug
                     """.trimIndent(),

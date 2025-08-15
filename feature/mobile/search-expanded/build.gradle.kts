@@ -9,13 +9,10 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.datastore)
-    implementation(projects.core.ui.mobile)
-    implementation(projects.data.tmdb)
-    implementation(projects.data.provider)
-    implementation(projects.data.search)
-    implementation(projects.domain.user)
-    implementation(projects.model.configuration)
+    implementation(projects.coreDatastore)
+    // implementation(projects.core.ui.mobile)
+//    implementation(projects.data)
+//     implementation(projects.domain)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)

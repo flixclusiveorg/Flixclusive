@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
-import com.flixclusive.core.theme.lightGray
+import com.flixclusive.core.presentation.theme.lightGray
 
 /**
  * For TextField on AppBar, this modifier will request focus

@@ -13,10 +13,10 @@ android {
 dependencies {
     api(projects.core.ui.common)
     api(projects.core.datastore)
-    api(projects.domain.tmdb)
-    api(projects.domain.libraryRecent)
-    api(projects.domain.provider)
-    api(projects.domain.user)
+//     api(projects.domain)
+//     api(projects.domain)
+//     api(projects.domain)
+//     api(projects.domain)
 
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)

@@ -5,7 +5,7 @@ import android.webkit.URLUtil
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMapNotNull
 import androidx.media3.common.MediaItem.SubtitleConfiguration
-import com.flixclusive.core.locale.Language
+import com.flixclusive.core.strings.Language
 import com.flixclusive.core.ui.player.util.MimeTypeParser.toMimeType
 import com.flixclusive.model.provider.link.Subtitle
 import com.flixclusive.model.provider.link.SubtitleSource

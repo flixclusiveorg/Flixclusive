@@ -40,7 +40,7 @@ import okhttp3.internal.http2.ErrorCode
 import okhttp3.internal.http2.StreamResetException
 import java.io.File
 import javax.inject.Inject
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 internal const val CHANNEL_UPDATER_NAME = "app updater"
 internal const val CHANNEL_UPDATER_ID = "in_app_updater_channel"
@@ -132,7 +132,7 @@ class AppUpdaterService : Service() {
         wakeLock.acquire(10*60*1000L /*10 minutes*/)
         this.wakeLock = wakeLock
     }
-    
+
     private suspend fun downloadApk(title: String, url: String) {
         // Show notification download starting.
         notifier.onDownloadStarted(title)

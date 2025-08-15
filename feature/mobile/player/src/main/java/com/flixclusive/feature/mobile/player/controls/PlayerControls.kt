@@ -17,8 +17,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.database.entity.WatchHistoryItem
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType
 import com.flixclusive.core.ui.player.PlayerUiState
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
@@ -30,14 +31,13 @@ import com.flixclusive.feature.mobile.player.controls.episodes.EpisodesScreen
 import com.flixclusive.feature.mobile.player.controls.gestures.GestureDirection
 import com.flixclusive.feature.mobile.player.controls.gestures.SeekerAndSliderGestures
 import com.flixclusive.feature.mobile.player.util.rememberBrightnessManager
-import com.flixclusive.model.database.WatchHistoryItem
 import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.player.R as PlayerR
 
 @Composable

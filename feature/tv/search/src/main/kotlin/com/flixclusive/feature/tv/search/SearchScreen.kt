@@ -40,7 +40,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
-import com.flixclusive.core.ui.common.util.PagingState
+import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.ui.common.util.ifElse
 import com.flixclusive.core.ui.tv.component.FilmCard
 import com.flixclusive.core.ui.tv.util.LabelStartPadding
@@ -87,7 +87,7 @@ internal fun SearchScreen(
     }
 
     LaunchedEffect(shouldStartPaginate) {
-        if(shouldStartPaginate && (viewModel.pagingState == PagingState.IDLE || viewModel.pagingState == PagingState.ERROR))
+        if(shouldStartPaginate && (viewModel.pagingState == com.flixclusive.core.common.pagination.PagingState.IDLE || viewModel.pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR))
             viewModel.paginate()
     }
 

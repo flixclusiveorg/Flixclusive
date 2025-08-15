@@ -14,7 +14,7 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import com.flixclusive.core.ui.player.PlayerEvents
 import com.flixclusive.core.ui.player.R
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 const val ACTION_PIP_CONTROL = "player_pip_control"

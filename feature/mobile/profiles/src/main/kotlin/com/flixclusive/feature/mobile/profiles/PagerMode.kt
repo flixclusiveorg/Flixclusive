@@ -46,7 +46,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
@@ -64,10 +65,9 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.profiles.component.EditButton
 import com.flixclusive.feature.mobile.profiles.util.ModifierUtil.getPagerBlur
 import com.flixclusive.feature.mobile.profiles.util.ModifierUtil.scaleDownOnPress
-import com.flixclusive.model.database.User
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 private val PagerAvatarSize = DefaultAvatarSize * 2

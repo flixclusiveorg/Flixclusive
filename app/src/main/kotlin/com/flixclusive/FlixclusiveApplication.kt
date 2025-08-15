@@ -11,7 +11,9 @@ import com.flixclusive.data.configuration.AppBuild
 import com.flixclusive.data.configuration.AppConfigurationManager
 import com.flixclusive.domain.provider.ProviderLoaderUseCase
 import com.flixclusive.domain.provider.ProviderUpdaterUseCase
-import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.domain.provider.usecase.ProviderLoaderUseCase
+import com.flixclusive.domain.provider.usecase.ProviderUpdaterUseCase
+import com.flixclusive.domain.session.UserSessionManager
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
@@ -52,7 +54,7 @@ internal class FlixclusiveApplication :
         appConfigurationManager.initialize(
             appBuild =
                 AppBuild(
-                    applicationName = getString(R.string.app_name),
+                    applicationName = BuildConfig.VERSION_NAME,
                     applicationId = getString(R.string.application_id),
                     debug = getString(R.string.debug_mode).toBoolean(),
                     versionName = getString(R.string.version_name),

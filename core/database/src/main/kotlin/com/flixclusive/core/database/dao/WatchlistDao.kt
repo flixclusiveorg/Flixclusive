@@ -5,7 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
-import com.flixclusive.model.database.WatchlistItem
+import com.flixclusive.core.database.entity.WatchlistItem
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -27,9 +27,9 @@ interface WatchlistDao {
 
     @Transaction
     @Query("""
-        SELECT w.* 
+        SELECT w.*
         FROM watchlist as w
-        JOIN User as u 
+        JOIN User as u
         ON w.ownerId = u.userId
         WHERE userId = :ownerId
         ORDER BY w.addedOn DESC;
@@ -38,9 +38,9 @@ interface WatchlistDao {
 
     @Transaction
     @Query("""
-        SELECT w.* 
+        SELECT w.*
         FROM watchlist as w
-        JOIN User as u 
+        JOIN User as u
         ON w.ownerId = u.userId
         WHERE userId = :ownerId
         ORDER BY w.addedOn DESC;

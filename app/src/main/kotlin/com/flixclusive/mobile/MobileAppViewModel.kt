@@ -5,10 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.common.provider.MediaLinkResourceState
+import com.flixclusive.core.database.entity.toDBFilm
+import com.flixclusive.core.database.entity.toWatchlistItem
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.awaitFirst
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.ui.common.provider.MediaLinkResourceState
+import com.flixclusive.core.network.util.monitor.NetworkMonitor
 import com.flixclusive.core.ui.mobile.KeyEventHandler
 import com.flixclusive.core.util.webview.WebViewDriverManager
 import com.flixclusive.data.configuration.AppConfigurationManager
@@ -16,12 +19,9 @@ import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.data.library.watchlist.WatchlistRepository
 import com.flixclusive.data.provider.cache.CacheKey
 import com.flixclusive.data.provider.cache.CachedLinksRepository
-import com.flixclusive.data.util.InternetMonitor
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
-import com.flixclusive.domain.tmdb.GetFilmMetadataUseCase
-import com.flixclusive.domain.user.UserSessionManager
-import com.flixclusive.model.database.toDBFilm
-import com.flixclusive.model.database.toWatchlistItem
+import com.flixclusive.domain.session.UserSessionManager
+import com.flixclusive.domain.tmdb.usecase.GetFilmMetadataUseCase
 import com.flixclusive.model.datastore.user.PlayerPreferences
 import com.flixclusive.model.datastore.user.UserPreferences.Companion.PLAYER_PREFS_KEY
 import com.flixclusive.model.film.Film
@@ -45,7 +45,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 // TODO: Clean code
 @HiltViewModel
@@ -60,7 +60,7 @@ internal class MobileAppViewModel
         private val appConfigurationManager: AppConfigurationManager,
         private val userSessionManager: UserSessionManager,
         private val cachedLinksRepository: CachedLinksRepository,
-        internetMonitor: InternetMonitor,
+        networkMonitor: com.flixclusive.core.network.util.monitor.NetworkMonitor,
     ) : ViewModel() {
         private var onFilmLongClickJob: Job? = null
         private var onWatchlistClickJob: Job? = null
@@ -79,12 +79,12 @@ internal class MobileAppViewModel
                 )
 
         val isConnectedAtNetwork =
-            internetMonitor
+            networkMonitor
                 .isOnline
                 .stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = runBlocking { internetMonitor.isOnline.first() },
+                    initialValue = runBlocking { networkMonitor.isOnline.first() },
                 )
 
         val isPiPModeEnabled: Boolean

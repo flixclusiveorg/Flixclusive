@@ -37,7 +37,7 @@ import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.awaitFirst
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.player.renderer.CustomDecoder
 import com.flixclusive.core.ui.player.util.MimeTypeParser
 import com.flixclusive.core.ui.player.util.PlayerCacheManager
@@ -69,7 +69,7 @@ import okhttp3.OkHttpClient
 import java.util.Locale
 import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 /** toleranceBeforeUs – The maximum time that the actual position seeked to may precede the
  * requested seek position, in microseconds. Must be non-negative. */

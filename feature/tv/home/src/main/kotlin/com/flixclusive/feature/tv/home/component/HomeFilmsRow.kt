@@ -29,7 +29,7 @@ import com.flixclusive.core.ui.tv.util.createInitialFocusRestorerModifiers
 import com.flixclusive.core.ui.tv.util.focusOnMount
 import com.flixclusive.core.ui.tv.util.getLocalDrawerWidth
 import com.flixclusive.core.ui.tv.util.shouldPaginate
-import com.flixclusive.core.ui.common.util.PagingState
+import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.domain.home.PaginationStateInfo
 import com.flixclusive.model.film.Film
@@ -75,8 +75,8 @@ internal fun HomeFilmsRow(
     LaunchedEffect(shouldStartPaginate) {
         if (
             shouldStartPaginate && paginationState.canPaginate
-            && (paginationState.pagingState == PagingState.IDLE
-            || paginationState.pagingState == PagingState.ERROR
+            && (paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.IDLE
+            || paginationState.pagingState == com.flixclusive.core.common.pagination.PagingState.ERROR
             || films.isEmpty())
         ) {
             paginate(paginationState.currentPage)

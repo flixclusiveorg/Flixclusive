@@ -9,10 +9,9 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.film)
-    implementation(projects.core.ui.player)
-    implementation(projects.core.ui.tv)
-    implementation(projects.model.database)
+    // implementation(projects.core.ui.film)
+    // implementation(projects.core.ui.player)
+    // implementation(projects.core.ui.tv)
     implementation(libs.stubs.model.film)
     implementation(projects.feature.tv.player)
 

@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop.Companion.toGenreWithBackdrop
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
@@ -71,7 +70,7 @@ import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.util.FilmType
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 interface FilmScreenNavigator : ViewFilmAction, ViewGenreCatalogAction, GoBackAction
 

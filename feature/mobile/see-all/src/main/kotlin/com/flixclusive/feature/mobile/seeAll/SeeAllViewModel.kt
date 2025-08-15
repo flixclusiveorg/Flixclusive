@@ -8,11 +8,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.navigation.navargs.SeeAllScreenNavArgs
-import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.domain.catalog.CatalogItemsProviderUseCase
 import com.flixclusive.model.configuration.catalog.HomeCatalog
 import com.flixclusive.model.configuration.catalog.SearchCatalog
@@ -57,7 +57,7 @@ internal class SeeAllViewModel @Inject constructor(
 
     var canPaginate by mutableStateOf(false)
         private set
-    var pagingState by mutableStateOf(PagingState.IDLE)
+    var pagingState by mutableStateOf(com.flixclusive.core.common.pagination.PagingState.IDLE)
         private set
 
     init {
@@ -65,7 +65,7 @@ internal class SeeAllViewModel @Inject constructor(
     }
 
     fun resetPagingState() {
-        pagingState = PagingState.IDLE
+        pagingState = com.flixclusive.core.common.pagination.PagingState.IDLE
     }
 
     // TODO: Add job checking here
@@ -74,8 +74,8 @@ internal class SeeAllViewModel @Inject constructor(
             if (hasNextPage) return@launch
 
             pagingState = when (page) {
-                1 -> PagingState.LOADING
-                else -> PagingState.PAGINATING
+                1 -> com.flixclusive.core.common.pagination.PagingState.LOADING
+                else -> com.flixclusive.core.common.pagination.PagingState.PAGINATING
             }
 
             val catalog = catalog.parseCorrectTmdbUrl()
@@ -88,8 +88,8 @@ internal class SeeAllViewModel @Inject constructor(
             ) {
                 is Resource.Failure -> {
                     pagingState = when (page) {
-                        1 -> PagingState.ERROR
-                        else -> PagingState.PAGINATING_EXHAUST
+                        1 -> com.flixclusive.core.common.pagination.PagingState.ERROR
+                        else -> com.flixclusive.core.common.pagination.PagingState.EXHAUSTED
                     }
                 }
 
@@ -105,7 +105,7 @@ internal class SeeAllViewModel @Inject constructor(
 
                         films.addAll(results)
 
-                        pagingState = PagingState.IDLE
+                        pagingState = com.flixclusive.core.common.pagination.PagingState.IDLE
 
                         if (canPaginate)
                             this@SeeAllViewModel.page++
@@ -132,7 +132,7 @@ internal class SeeAllViewModel @Inject constructor(
 
 
     private val hasNextPage: Boolean
-        get() = page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE)
+        get() = page != 1 && (page == 1 || !canPaginate || pagingState != com.flixclusive.core.common.pagination.PagingState.IDLE)
 
     private fun Catalog.getCorrectQuery() = url.replace("all/", "${currentFilterSelected.type}/")
 

@@ -9,8 +9,8 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.ui.mobile)
-    implementation(projects.core.ui.film)
+    // implementation(projects.core.ui.mobile)
+    // implementation(projects.core.ui.film)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)

@@ -34,9 +34,9 @@ import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_ENDED
 import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.ui.player.R as PlayerR
-import com.flixclusive.core.locale.R as LocaleR
 
 @Composable
 internal fun CenterControls(

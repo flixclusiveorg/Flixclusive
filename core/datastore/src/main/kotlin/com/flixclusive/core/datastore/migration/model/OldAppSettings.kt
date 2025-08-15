@@ -1,16 +1,16 @@
 package com.flixclusive.core.datastore.migration.model
 
 import android.graphics.Color
+import com.flixclusive.core.datastore.model.user.DEFAULT_PLAYER_BUFFER_AMOUNT
+import com.flixclusive.core.datastore.model.user.DEFAULT_PLAYER_CACHE_SIZE_AMOUNT
+import com.flixclusive.core.datastore.model.user.DEFAULT_PLAYER_SEEK_AMOUNT
+import com.flixclusive.core.datastore.model.user.network.DoHPreference
+import com.flixclusive.core.datastore.model.user.player.CaptionEdgeTypePreference
+import com.flixclusive.core.datastore.model.user.player.CaptionSizePreference
+import com.flixclusive.core.datastore.model.user.player.CaptionStylePreference
+import com.flixclusive.core.datastore.model.user.player.DecoderPriority
+import com.flixclusive.core.datastore.model.user.player.PlayerQuality
 import com.flixclusive.core.util.network.okhttp.USER_AGENT
-import com.flixclusive.model.datastore.user.DEFAULT_PLAYER_BUFFER_AMOUNT
-import com.flixclusive.model.datastore.user.DEFAULT_PLAYER_CACHE_SIZE_AMOUNT
-import com.flixclusive.model.datastore.user.DEFAULT_PLAYER_SEEK_AMOUNT
-import com.flixclusive.model.datastore.user.network.DoHPreference
-import com.flixclusive.model.datastore.user.player.CaptionEdgeTypePreference
-import com.flixclusive.model.datastore.user.player.CaptionSizePreference
-import com.flixclusive.model.datastore.user.player.CaptionStylePreference
-import com.flixclusive.model.datastore.user.player.DecoderPriority
-import com.flixclusive.model.datastore.user.player.PlayerQuality
 import kotlinx.serialization.Serializable
 
 @Serializable

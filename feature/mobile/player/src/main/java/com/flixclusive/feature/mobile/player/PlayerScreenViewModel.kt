@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.core.locale.UiText
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.player.BasePlayerViewModel
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.PlayerSnackbarMessage
@@ -18,8 +18,8 @@ import com.flixclusive.data.provider.ProviderRepository
 import com.flixclusive.data.provider.cache.CachedLinksRepository
 import com.flixclusive.domain.library.recent.WatchTimeUpdaterUseCase
 import com.flixclusive.domain.provider.GetMediaLinksUseCase
-import com.flixclusive.domain.tmdb.SeasonProviderUseCase
-import com.flixclusive.domain.user.UserSessionManager
+import com.flixclusive.domain.session.UserSessionManager
+import com.flixclusive.domain.tmdb.usecase.SeasonProviderUseCase
 import com.flixclusive.model.film.TvShow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job

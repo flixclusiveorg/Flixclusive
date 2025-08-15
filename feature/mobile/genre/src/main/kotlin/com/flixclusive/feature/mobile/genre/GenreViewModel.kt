@@ -8,10 +8,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.util.asStateFlow
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.ui.common.util.PagingState
 import com.flixclusive.data.tmdb.SortOptions
 import com.flixclusive.data.tmdb.TMDBRepository
 import com.flixclusive.model.datastore.user.UiPreferences
@@ -47,7 +47,7 @@ internal class GenreViewModel @Inject constructor(
         private set
     var canPaginate by mutableStateOf(false)
         private set
-    var pagingState by mutableStateOf(PagingState.IDLE)
+    var pagingState by mutableStateOf(com.flixclusive.core.common.pagination.PagingState.IDLE)
         private set
 
     init {
@@ -56,7 +56,7 @@ internal class GenreViewModel @Inject constructor(
 
     fun getFilms() {
         viewModelScope.launch {
-            if (page != 1 && (page == 1 || !canPaginate || pagingState != PagingState.IDLE))
+            if (page != 1 && (page == 1 || !canPaginate || pagingState != com.flixclusive.core.common.pagination.PagingState.IDLE))
                 return@launch
 
             pagingState = when (page) {
@@ -74,8 +74,8 @@ internal class GenreViewModel @Inject constructor(
             ) {
                 is Resource.Failure -> {
                     pagingState = when (page) {
-                        1 -> PagingState.ERROR
-                        else -> PagingState.PAGINATING_EXHAUST
+                        1 -> com.flixclusive.core.common.pagination.PagingState.ERROR
+                        else -> com.flixclusive.core.common.pagination.PagingState.EXHAUSTED
                     }
                 }
 
@@ -91,7 +91,7 @@ internal class GenreViewModel @Inject constructor(
 
                         films.addAll(results)
 
-                        pagingState = PagingState.IDLE
+                        pagingState = com.flixclusive.core.common.pagination.PagingState.IDLE
 
                         if (canPaginate)
                             this@GenreViewModel.page++
@@ -117,6 +117,6 @@ internal class GenreViewModel @Inject constructor(
     }
 
     fun resetPagingState() {
-        pagingState = PagingState.IDLE
+        pagingState = com.flixclusive.core.common.pagination.PagingState.IDLE
     }
 }

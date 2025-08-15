@@ -52,18 +52,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.locale.UiText
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
-import com.flixclusive.domain.provider.test.ProviderTestCaseOutput
-import com.flixclusive.domain.provider.test.ProviderTestResult
-import com.flixclusive.domain.provider.test.TestStatus
+import com.flixclusive.domain.provider.testing.ProviderTestCaseOutput
+import com.flixclusive.domain.provider.testing.ProviderTestResult
+import com.flixclusive.domain.provider.testing.TestStatus
 import kotlin.random.Random
 import kotlin.time.Duration
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 private val ButtonHeight = 40.dp
 private val CardShape = RoundedCornerShape(8.dp)

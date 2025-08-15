@@ -24,7 +24,7 @@ import androidx.tv.material3.Text
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable

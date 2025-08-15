@@ -7,7 +7,7 @@ import androidx.compose.ui.res.stringResource
 import com.flixclusive.core.util.common.GithubConstant.GITHUB_REPOSITORY_URL
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
-import com.flixclusive.core.locale.R as LocaleR
+import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal object RepositoryTweakNavigation : BaseTweakNavigation {

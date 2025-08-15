@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Surface
-import com.flixclusive.core.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
