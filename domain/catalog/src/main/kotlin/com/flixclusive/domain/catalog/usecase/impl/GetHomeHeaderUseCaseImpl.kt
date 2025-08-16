@@ -45,10 +45,12 @@ internal class GetHomeHeaderUseCaseImpl
 
                     traversedCatalogs.add(catalog.url)
 
-                    val filmSearchItems = tmdbFilmSearchItemsRepository.get(
-                        url = catalog.url,
-                        page = 1,
-                    ).data?.results ?: emptyList()
+                    val filmSearchItems = tmdbFilmSearchItemsRepository
+                        .get(
+                            url = catalog.url,
+                            page = 1,
+                        ).data
+                        ?.results ?: emptyList()
 
                     filmSearchItems.shuffled().forEach { headerItem ->
                         if (headerItem.identifier in traversedFilms) {

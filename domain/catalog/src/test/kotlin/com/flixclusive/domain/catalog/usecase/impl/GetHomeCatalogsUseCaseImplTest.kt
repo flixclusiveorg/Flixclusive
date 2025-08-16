@@ -2,10 +2,11 @@ package com.flixclusive.domain.catalog.usecase.impl
 
 import app.cash.turbine.test
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.database.entity.toDBFilm
+import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
+import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.core.testing.film.FilmTestDefaults
-import com.flixclusive.data.database.repository.WatchHistoryRepository
+import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.util.collections.CollectionsOperation
@@ -32,7 +33,7 @@ import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
 
 class GetHomeCatalogsUseCaseImplTest {
-    private lateinit var watchHistoryRepository: WatchHistoryRepository
+    private lateinit var watchProgressRepository: WatchProgressRepository
     private lateinit var tmdbHomeCatalogRepository: TMDBHomeCatalogRepository
     private lateinit var userSessionManager: UserSessionManager
     private lateinit var providerApiRepository: ProviderApiRepository
@@ -44,7 +45,7 @@ class GetHomeCatalogsUseCaseImplTest {
 
     @Before
     fun setUp() {
-        watchHistoryRepository = mockk()
+        watchProgressRepository = mockk()
         tmdbHomeCatalogRepository = mockk()
         userSessionManager = mockk()
         providerApiRepository = mockk()
@@ -52,7 +53,7 @@ class GetHomeCatalogsUseCaseImplTest {
             every { io } returns testDispatcher
         }
         getHomeCatalogsUseCase = GetHomeCatalogsUseCaseImpl(
-            watchHistoryRepository = watchHistoryRepository,
+            watchProgressRepository = watchProgressRepository,
             tmdbHomeCatalogRepository = tmdbHomeCatalogRepository,
             userSessionManager = userSessionManager,
             providerApiRepository = providerApiRepository,
@@ -77,19 +78,20 @@ class GetHomeCatalogsUseCaseImplTest {
                 canPaginate = true,
                 url = "movie/popular",
             )
-            val watchHistoryItem = DatabaseTestDefaults.getWatchHistoryItem(
+            val testFilm = FilmTestDefaults
+                .getMovie(
+                    title = "Test Movie",
+                    tmdbId = 123,
+                    recommendations = List(10) {
+                        FilmTestDefaults.getFilmSearchItem(
+                            title = "Recommended Movie $it",
+                            tmdbId = 123 + it,
+                        )
+                    },
+                ).toDBFilm()
+            val watchProgress = DatabaseTestDefaults.getMovieProgress(
                 ownerId = testUser.id,
-                film = FilmTestDefaults
-                    .getMovie(
-                        title = "Test Movie",
-                        tmdbId = 123,
-                        recommendations = List(10) {
-                            FilmTestDefaults.getFilmSearchItem(
-                                title = "Recommended Movie $it",
-                                tmdbId = 123 + it,
-                            )
-                        },
-                    ).toDBFilm(),
+                filmId = testFilm.id,
             )
             val tmdbCatalogs = mockk<TMDBHomeCatalogs> {
                 every { all } returns listOf(requiredCatalog)
@@ -99,11 +101,18 @@ class GetHomeCatalogsUseCaseImplTest {
 
             every { userSessionManager.currentUser } returns MutableStateFlow(testUser).asStateFlow()
             coEvery {
-                watchHistoryRepository.getRandomWatchHistoryItems(
+                watchProgressRepository.getRandoms(
                     ownerId = 1,
                     count = any(),
                 )
-            } returns flowOf(listOf(watchHistoryItem))
+            } returns flowOf(
+                listOf(
+                    MovieProgressWithMetadata(
+                        watchData = watchProgress,
+                        film = testFilm,
+                    ),
+                ),
+            )
             coEvery { tmdbHomeCatalogRepository.getAllCatalogs() } returns tmdbCatalogs
 
             getHomeCatalogsUseCase().test {
@@ -120,7 +129,7 @@ class GetHomeCatalogsUseCaseImplTest {
                         mediaType = "movie",
                         required = false,
                         canPaginate = true,
-                        url = "movie/${watchHistoryItem.id}/recommendations?language=en-US",
+                        url = "movie/${watchProgress.filmId}/recommendations?language=en-US",
                     ),
                 )
 
@@ -167,7 +176,7 @@ class GetHomeCatalogsUseCaseImplTest {
 
             every { userSessionManager.currentUser } returns MutableStateFlow(testUser).asStateFlow()
             coEvery {
-                watchHistoryRepository.getRandomWatchHistoryItems(
+                watchProgressRepository.getRandoms(
                     ownerId = 1,
                     count = any(),
                 )
@@ -175,7 +184,7 @@ class GetHomeCatalogsUseCaseImplTest {
             coEvery { tmdbHomeCatalogRepository.getAllCatalogs() } returns tmdbCatalogs
 
             val modifiedGetHomeCatalogsUseCase = GetHomeCatalogsUseCaseImpl(
-                watchHistoryRepository = watchHistoryRepository,
+                watchProgressRepository = watchProgressRepository,
                 tmdbHomeCatalogRepository = tmdbHomeCatalogRepository,
                 userSessionManager = userSessionManager,
                 providerApiRepository = modifiedProviderApiRepository,
@@ -204,19 +213,18 @@ class GetHomeCatalogsUseCaseImplTest {
                 canPaginate = true,
                 url = "trending/all/day",
             )
-            val watchHistoryItemWithFewRecommendations = DatabaseTestDefaults.getWatchHistoryItem(
-                film = FilmTestDefaults
-                    .getMovie(
-                        title = "Movie With Few Recommendations",
-                        tmdbId = 123,
-                        recommendations = List(2) {
-                            FilmTestDefaults.getFilmSearchItem(
-                                title = "Recommended Movie $it",
-                                tmdbId = 123 + it,
-                            )
-                        },
-                    ).toDBFilm(),
-            )
+            val testFilm = FilmTestDefaults
+                .getMovie(
+                    title = "Test Movie",
+                    tmdbId = 123,
+                    recommendations = List(2) {
+                        FilmTestDefaults.getFilmSearchItem(
+                            title = "Recommended Movie $it",
+                            tmdbId = 123 + it,
+                        )
+                    },
+                ).toDBFilm()
+            val watchProgress = DatabaseTestDefaults.getMovieProgress(filmId = testFilm.id)
             val tmdbCatalogs = mockk<TMDBHomeCatalogs> {
                 every { all } returns listOf(requiredCatalog)
                 every { tv } returns emptyList()
@@ -225,11 +233,18 @@ class GetHomeCatalogsUseCaseImplTest {
 
             every { userSessionManager.currentUser } returns MutableStateFlow(testUser).asStateFlow()
             coEvery {
-                watchHistoryRepository.getRandomWatchHistoryItems(
+                watchProgressRepository.getRandoms(
                     ownerId = 1,
                     count = any(),
                 )
-            } returns flowOf(listOf(watchHistoryItemWithFewRecommendations))
+            } returns flowOf(
+                listOf(
+                    MovieProgressWithMetadata(
+                        watchData = watchProgress,
+                        film = testFilm,
+                    ),
+                ),
+            )
             coEvery { tmdbHomeCatalogRepository.getAllCatalogs() } returns tmdbCatalogs
 
             getHomeCatalogsUseCase().test {
@@ -255,8 +270,13 @@ class GetHomeCatalogsUseCaseImplTest {
                 canPaginate = true,
                 url = "trending/all/day",
             )
-            val nonTmdbWatchHistoryItem = DatabaseTestDefaults.getWatchHistoryItem(
-                film = FilmTestDefaults.getMovie(title = "Non-TMDB Movie").toDBFilm(),
+            val testFilm = FilmTestDefaults
+                .getMovie(
+                    title = "Non-TMDB Movie",
+                    providerId = "test-provider",
+                ).toDBFilm()
+            val watchProgress = DatabaseTestDefaults.getMovieProgress(
+                filmId = testFilm.id,
             )
             val tmdbCatalogs = mockk<TMDBHomeCatalogs> {
                 every { all } returns listOf(requiredCatalog)
@@ -266,11 +286,18 @@ class GetHomeCatalogsUseCaseImplTest {
 
             every { userSessionManager.currentUser } returns MutableStateFlow(testUser).asStateFlow()
             coEvery {
-                watchHistoryRepository.getRandomWatchHistoryItems(
+                watchProgressRepository.getRandoms(
                     ownerId = 1,
                     count = any(),
                 )
-            } returns flowOf(listOf(nonTmdbWatchHistoryItem))
+            } returns flowOf(
+                listOf(
+                    MovieProgressWithMetadata(
+                        watchData = watchProgress,
+                        film = testFilm,
+                    ),
+                ),
+            )
             coEvery { tmdbHomeCatalogRepository.getAllCatalogs() } returns tmdbCatalogs
 
             getHomeCatalogsUseCase().test {
@@ -311,7 +338,7 @@ class GetHomeCatalogsUseCaseImplTest {
 
             every { userSessionManager.currentUser } returns MutableStateFlow(testUser).asStateFlow()
             coEvery {
-                watchHistoryRepository.getRandomWatchHistoryItems(
+                watchProgressRepository.getRandoms(
                     ownerId = 1,
                     count = any(),
                 )
@@ -346,7 +373,7 @@ class GetHomeCatalogsUseCaseImplTest {
 
             every { userSessionManager.currentUser } returns MutableStateFlow(testUser).asStateFlow()
             coEvery {
-                watchHistoryRepository.getRandomWatchHistoryItems(
+                watchProgressRepository.getRandoms(
                     ownerId = 1,
                     count = any(),
                 )

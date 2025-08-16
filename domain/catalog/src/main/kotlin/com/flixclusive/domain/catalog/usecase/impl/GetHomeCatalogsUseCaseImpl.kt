@@ -1,7 +1,7 @@
 package com.flixclusive.domain.catalog.usecase.impl
 
-import com.flixclusive.core.database.entity.WatchHistory
-import com.flixclusive.data.database.repository.WatchHistoryRepository
+import com.flixclusive.core.database.entity.film.DBFilm
+import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.tmdb.model.TMDBHomeCatalog
@@ -24,7 +24,7 @@ private const val PREFERRED_MAXIMUM_HOME_ITEMS = 28
 internal class GetHomeCatalogsUseCaseImpl
     @Inject
     constructor(
-        private val watchHistoryRepository: WatchHistoryRepository,
+        private val watchProgressRepository: WatchProgressRepository,
         private val tmdbHomeCatalogRepository: TMDBHomeCatalogRepository,
         private val userSessionManager: UserSessionManager,
         providerApiRepository: ProviderApiRepository,
@@ -44,7 +44,7 @@ internal class GetHomeCatalogsUseCaseImpl
             return userSessionManager.currentUser.filterNotNull().flatMapLatest { user ->
                 combine(
                     apiChangesHandler.catalogs,
-                    watchHistoryRepository.getRandomWatchHistoryItems(
+                    watchProgressRepository.getRandoms(
                         ownerId = user.id,
                         count = Random.nextInt(1, 4),
                     ),
@@ -64,7 +64,8 @@ internal class GetHomeCatalogsUseCaseImpl
                             .shuffled()
                             .take(countOfItemsToFetch)
 
-                    val userRecommendations = buildUserRecommendations(watchHistoryItems)
+                    val dbFilms = watchHistoryItems.map { it.film }
+                    val userRecommendations = buildUserRecommendations(dbFilms)
 
                     (
                         requiredCatalogs +
@@ -81,10 +82,10 @@ internal class GetHomeCatalogsUseCaseImpl
             }
         }
 
-        private fun buildUserRecommendations(watchHistories: List<WatchHistory>): List<TMDBHomeCatalog> {
+        private fun buildUserRecommendations(watchHistories: List<DBFilm>): List<TMDBHomeCatalog> {
             return watchHistories.mapNotNull { item ->
-                with(item.film) {
-                    if (recommendations.size >= 10 && isFromTmdb) {
+                with(item) {
+                    if (hasRecommendations && isFromTmdb) {
                         TMDBHomeCatalog(
                             name = "If you liked $title",
                             mediaType = filmType.type,
