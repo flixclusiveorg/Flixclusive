@@ -4,7 +4,7 @@ import androidx.compose.ui.platform.UriHandler
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import com.flixclusive.core.database.entity.LibraryList
-import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop
 import com.flixclusive.core.ui.common.navigation.navigator.AddProfileAction
 import com.flixclusive.core.ui.common.navigation.navigator.ChooseProfileAction

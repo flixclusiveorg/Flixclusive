@@ -1,6 +1,6 @@
 package com.flixclusive.data.database.session
 
-import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.database.entity.user.User
 import kotlinx.coroutines.flow.StateFlow
 
 interface UserSessionManager {

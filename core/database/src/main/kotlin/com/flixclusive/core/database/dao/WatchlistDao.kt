@@ -1,49 +1,56 @@
 package com.flixclusive.core.database.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.flixclusive.core.database.entity.WatchlistItem
+import com.flixclusive.core.database.entity.film.DBFilm
+import com.flixclusive.core.database.entity.watchlist.Watchlist
+import com.flixclusive.core.database.entity.watchlist.WatchlistWithMetadata
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WatchlistDao {
-    @Insert
-    suspend fun insert(item: WatchlistItem)
+    @Transaction
+    suspend fun insert(
+        item: Watchlist,
+        film: DBFilm? = null,
+    ): Long {
+        if (film != null) {
+            insertFilm(film)
+        }
 
-    @Delete
-    suspend fun delete(item: WatchlistItem)
+        return insertWatchlist(item)
+    }
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertWatchlist(watchlist: Watchlist): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFilm(film: DBFilm)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM watchlist WHERE filmId = :filmId AND ownerId = :ownerId)")
+    suspend fun isInWatchlist(
+        filmId: String,
+        ownerId: Int,
+    ): Boolean
 
     @Query("DELETE FROM watchlist WHERE ownerId = :ownerId")
     suspend fun deleteAll(ownerId: Int)
 
-    @Query("DELETE FROM watchlist WHERE id = :itemId AND ownerId = :ownerId")
-    suspend fun deleteById(itemId: String, ownerId: Int)
-
-    @Query("SELECT * FROM watchlist WHERE id = :itemId AND ownerId = :ownerId")
-    suspend fun getWatchlistItemById(itemId: String, ownerId: Int): WatchlistItem?
+    @Query("DELETE FROM watchlist WHERE id = :id")
+    suspend fun delete(id: Long)
 
     @Transaction
-    @Query("""
-        SELECT w.*
-        FROM watchlist as w
-        JOIN User as u
-        ON w.ownerId = u.userId
-        WHERE userId = :ownerId
-        ORDER BY w.addedOn DESC;
-    """)
-    suspend fun getAllItems(ownerId: Int): List<WatchlistItem>
+    @Query("SELECT * FROM watchlist WHERE id = :id")
+    suspend fun get(id: Long): WatchlistWithMetadata?
 
     @Transaction
-    @Query("""
-        SELECT w.*
-        FROM watchlist as w
-        JOIN User as u
-        ON w.ownerId = u.userId
-        WHERE userId = :ownerId
-        ORDER BY w.addedOn DESC;
-    """)
-    fun getAllItemsInFlow(ownerId: Int): Flow<List<WatchlistItem>>
+    @Query("SELECT * FROM watchlist WHERE ownerId = :ownerId ORDER BY addedAt DESC")
+    suspend fun getAll(ownerId: Int): List<WatchlistWithMetadata>
+
+    @Transaction
+    @Query("SELECT * FROM watchlist WHERE ownerId = :ownerId ORDER BY addedAt DESC")
+    fun getAllAsFlow(ownerId: Int): Flow<List<WatchlistWithMetadata>>
 }

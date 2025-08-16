@@ -1,12 +1,12 @@
 package com.flixclusive.data.database.repository
 
-import com.flixclusive.core.database.entity.SearchHistory
+import com.flixclusive.core.database.entity.search.SearchHistory
 import kotlinx.coroutines.flow.Flow
 
 interface SearchHistoryRepository {
-    suspend fun insert(item: SearchHistory)
+    suspend fun insert(item: SearchHistory): Int
 
-    suspend fun remove(id: Int, ownerId: Int)
+    suspend fun remove(id: Int)
 
     fun getAllItemsInFlow(ownerId: Int): Flow<List<SearchHistory>>
 

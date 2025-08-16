@@ -1,20 +1,22 @@
 package com.flixclusive.data.database.repository
 
-import com.flixclusive.core.database.entity.WatchlistItem
+import com.flixclusive.core.database.entity.watchlist.Watchlist
+import com.flixclusive.core.database.entity.watchlist.WatchlistWithMetadata
+import com.flixclusive.model.film.Film
 import kotlinx.coroutines.flow.Flow
 
 interface WatchlistRepository {
-    suspend fun insert(item: WatchlistItem)
-
-    suspend fun remove(item: WatchlistItem)
+    suspend fun insert(item: Watchlist, film: Film? = null): Long
 
     suspend fun removeAll(ownerId: Int)
 
-    suspend fun removeById(itemId: String, ownerId: Int)
+    suspend fun remove(id: Long)
 
-    suspend fun getWatchlistItemById(itemId: String, ownerId: Int): WatchlistItem?
+    suspend fun get(id: Long): WatchlistWithMetadata?
 
-    suspend fun getAllItems(ownerId: Int): List<WatchlistItem>
+    suspend fun isInWatchlist(filmId: String, ownerId: Int): Boolean
 
-    fun getAllItemsInFlow(ownerId: Int): Flow<List<WatchlistItem>>
+    suspend fun getAll(ownerId: Int): List<WatchlistWithMetadata>
+
+    fun getAllAsFlow(ownerId: Int): Flow<List<WatchlistWithMetadata>>
 }

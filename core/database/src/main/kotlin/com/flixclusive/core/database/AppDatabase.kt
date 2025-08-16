@@ -6,22 +6,24 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.flixclusive.core.database.converters.DateConverter
-import com.flixclusive.core.database.converters.FilmDataConverter
-import com.flixclusive.core.database.converters.WatchHistoryItemConverter
-import com.flixclusive.core.database.dao.LibraryListAndItemDao
+import com.flixclusive.core.database.converters.MapConverter
+import com.flixclusive.core.database.dao.DBFilmDao
+import com.flixclusive.core.database.dao.EpisodeProgressDao
 import com.flixclusive.core.database.dao.LibraryListDao
 import com.flixclusive.core.database.dao.LibraryListItemDao
+import com.flixclusive.core.database.dao.MovieProgressDao
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
-import com.flixclusive.core.database.dao.WatchHistoryDao
 import com.flixclusive.core.database.dao.WatchlistDao
-import com.flixclusive.core.database.entity.LibraryList
-import com.flixclusive.core.database.entity.LibraryListAndItemCrossRef
-import com.flixclusive.core.database.entity.LibraryListItem
-import com.flixclusive.core.database.entity.SearchHistory
-import com.flixclusive.core.database.entity.User
-import com.flixclusive.core.database.entity.WatchHistory
-import com.flixclusive.core.database.entity.WatchlistItem
+import com.flixclusive.core.database.entity.film.DBFilm
+import com.flixclusive.core.database.entity.library.LibraryList
+import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.database.entity.search.SearchHistory
+import com.flixclusive.core.database.entity.user.User
+import com.flixclusive.core.database.entity.watched.EpisodeProgress
+import com.flixclusive.core.database.entity.watched.MovieProgress
+import com.flixclusive.core.database.entity.watchlist.Watchlist
 import com.flixclusive.core.database.migration.Schema1to2
 import com.flixclusive.core.database.migration.Schema2to3
 import com.flixclusive.core.database.migration.Schema3to4
@@ -29,34 +31,34 @@ import com.flixclusive.core.database.migration.Schema4to5
 import com.flixclusive.core.database.migration.Schema5to6
 import com.flixclusive.core.database.migration.Schema6to7
 import com.flixclusive.core.database.migration.Schema7to8
+import com.flixclusive.core.database.migration.Schema8to9
 import java.io.File
 
 internal const val APP_DATABASE = "app_database"
 
 @Database(
     entities = [
+        DBFilm::class,
         LibraryList::class,
         LibraryListItem::class,
-        LibraryListAndItemCrossRef::class,
         SearchHistory::class,
         User::class,
-        WatchHistory::class,
-        WatchlistItem::class,
+        MovieProgress::class,
+        EpisodeProgress::class,
+        Watchlist::class,
     ],
-    version = 8,
+    views = [LibraryListItemWithMetadata::class],
+    version = 9,
     exportSchema = true,
 )
 @TypeConverters(
-    FilmDataConverter::class,
-    WatchHistoryItemConverter::class,
     DateConverter::class,
+    MapConverter::class,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
 
     abstract fun watchlistDao(): WatchlistDao
-
-    abstract fun watchHistoryDao(): WatchHistoryDao
 
     abstract fun searchHistoryDao(): SearchHistoryDao
 
@@ -64,7 +66,11 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun libraryListItemDao(): LibraryListItemDao
 
-    abstract fun libraryListCrossRefDao(): LibraryListAndItemDao
+    abstract fun filmsDao(): DBFilmDao
+
+    abstract fun episodeProgressDao(): EpisodeProgressDao
+
+    abstract fun movieProgressDao(): MovieProgressDao
 
     companion object {
         @Volatile
@@ -89,6 +95,7 @@ abstract class AppDatabase : RoomDatabase() {
                         Schema5to6,
                         Schema6to7,
                         Schema7to8,
+                        Schema8to9,
                     ).build()
                     .also { INSTANCE = it }
             }

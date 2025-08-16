@@ -1,6 +1,6 @@
 package com.flixclusive.feature.mobile.user.edit
 
-import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.domain.database.repository.UserRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow

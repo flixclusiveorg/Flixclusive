@@ -3,9 +3,11 @@ package com.flixclusive.data.database.repository.impl
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.AppDatabase
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
-import com.flixclusive.data.database.datasource.impl.LocalUserDataSource
+import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -21,16 +23,22 @@ import strikt.assertions.isNull
 class UserRepositoryImplTest {
     private lateinit var database: AppDatabase
     private lateinit var repository: UserRepositoryImpl
+    private lateinit var appDispatchers: AppDispatchers
 
+    private val testDispatcher = StandardTestDispatcher()
     private val testUser = DatabaseTestDefaults.getUser()
 
     @Before
     fun setUp() {
+        appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
         database = DatabaseTestDefaults.createDatabase(
             context = ApplicationProvider.getApplicationContext(),
         )
-        val dataSource = LocalUserDataSource(database.userDao())
-        repository = UserRepositoryImpl(dataSource)
+
+        repository = UserRepositoryImpl(
+            userDao = database.userDao(),
+            appDispatchers = appDispatchers,
+        )
     }
 
     @After
@@ -40,7 +48,7 @@ class UserRepositoryImplTest {
 
     @Test
     fun shouldAddAndRetrieveUser() =
-        runTest {
+        runTest(testDispatcher) {
             val userId = repository.addUser(testUser)
 
             val retrievedUser = repository.getUser(userId.toInt())
@@ -52,7 +60,7 @@ class UserRepositoryImplTest {
 
     @Test
     fun shouldObserveUsers() =
-        runTest {
+        runTest(testDispatcher) {
             val user1 = testUser.copy(id = 1, name = "User 1")
             val user2 = testUser.copy(id = 2, name = "User 2")
 
@@ -67,7 +75,7 @@ class UserRepositoryImplTest {
 
     @Test
     fun shouldObserveSpecificUser() =
-        runTest {
+        runTest(testDispatcher) {
             val userId = repository.addUser(testUser)
 
             repository.observeUser(userId.toInt()).test {
@@ -81,7 +89,7 @@ class UserRepositoryImplTest {
 
     @Test
     fun shouldUpdateUser() =
-        runTest {
+        runTest(testDispatcher) {
             val userId = repository.addUser(testUser)
 
             val updatedUser = testUser.copy(
@@ -101,7 +109,7 @@ class UserRepositoryImplTest {
 
     @Test
     fun shouldDeleteUser() =
-        runTest {
+        runTest(testDispatcher) {
             val userId = repository.addUser(testUser)
 
             repository.deleteUser(userId.toInt())
@@ -112,14 +120,14 @@ class UserRepositoryImplTest {
 
     @Test
     fun shouldReturnNullForNonExistentUser() =
-        runTest {
+        runTest(testDispatcher) {
             val retrievedUser = repository.getUser(999)
             expectThat(retrievedUser).isNull()
         }
 
     @Test
     fun shouldObserveNullForNonExistentUser() =
-        runTest {
+        runTest(testDispatcher) {
             repository.observeUser(999).test {
                 val result = awaitItem()
                 expectThat(result).isNull()

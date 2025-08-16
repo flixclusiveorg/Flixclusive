@@ -3,16 +3,17 @@ package com.flixclusive.core.testing.database
 import android.content.Context
 import androidx.room.Room
 import com.flixclusive.core.database.AppDatabase
-import com.flixclusive.core.database.entity.DBFilm
-import com.flixclusive.core.database.entity.EpisodeWatched
-import com.flixclusive.core.database.entity.LibraryList
-import com.flixclusive.core.database.entity.LibraryListItem
-import com.flixclusive.core.database.entity.SearchHistory
-import com.flixclusive.core.database.entity.User
-import com.flixclusive.core.database.entity.WatchHistory
-import com.flixclusive.core.database.entity.WatchlistItem
-import com.flixclusive.core.database.entity.toDBFilm
+import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
+import com.flixclusive.core.database.entity.library.LibraryList
+import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.search.SearchHistory
+import com.flixclusive.core.database.entity.user.User
+import com.flixclusive.core.database.entity.watched.EpisodeProgress
+import com.flixclusive.core.database.entity.watched.MovieProgress
+import com.flixclusive.core.database.entity.watched.WatchStatus
+import com.flixclusive.core.database.entity.watchlist.Watchlist
 import com.flixclusive.core.testing.film.FilmTestDefaults
+import com.flixclusive.model.film.Film
 import java.util.Date
 
 /**
@@ -21,37 +22,60 @@ import java.util.Date
 object DatabaseTestDefaults {
     const val TEST_USER_ID = 1
 
+    fun getDBFilm(film: Film = FilmTestDefaults.getMovie()) = film.toDBFilm()
+
     fun getWatchlistItem(
-        id: String = "watchlist_item_123",
+        id: Long = 0,
         ownerId: Int = TEST_USER_ID,
-        film: DBFilm = FilmTestDefaults.getMovie().toDBFilm(),
-        addedOn: Date = Date(),
-    ) = WatchlistItem(
+        filmId: String = getDBFilm().identifier,
+        addedAt: Date = Date(),
+    ) = Watchlist(
         id = id,
         ownerId = ownerId,
-        film = film,
-        addedOn = addedOn,
+        filmId = filmId,
+        addedAt = addedAt,
     )
 
-    fun getWatchHistoryItem(
-        seasons: Int = 1,
-        episodes: Map<Int, Int> = mapOf(
-            1 to 1, // Season 1 with 5 episodes
-            2 to 3, // Season 2 with 3 episodes
-        ),
-        episodesWatched: List<EpisodeWatched> = emptyList(),
-        id: String = "watch_history_item_123",
+    fun getMovieProgress(
+        id: Long = 0,
+        filmId: String = getDBFilm().identifier,
         ownerId: Int = TEST_USER_ID,
-        dateWatched: Date = Date(),
-        film: DBFilm = FilmTestDefaults.getMovie().toDBFilm(),
-    ) = WatchHistory(
+        progress: Long = 0,
+        status: WatchStatus = WatchStatus.WATCHING,
+        duration: Long = 0,
+        watchedAt: Date = Date(),
+        watchCount: Int = 1,
+    ) = MovieProgress(
         id = id,
-        seasons = seasons,
+        filmId = filmId,
         ownerId = ownerId,
-        episodesWatched = episodesWatched,
-        episodes = episodes,
-        film = film,
-        dateWatched = dateWatched,
+        progress = progress,
+        status = status,
+        duration = duration,
+        watchedAt = watchedAt,
+        watchCount = watchCount,
+    )
+
+    fun getEpisodeProgress(
+        id: Long = 0,
+        filmId: String = getDBFilm(film = FilmTestDefaults.getTvShow()).identifier,
+        ownerId: Int = TEST_USER_ID,
+        seasonNumber: Int = 1,
+        episodeNumber: Int = 1,
+        progress: Long = 0,
+        status: WatchStatus = WatchStatus.WATCHING,
+        duration: Long = 0,
+        watchedAt: Date = Date(),
+    ) = EpisodeProgress(
+        id = id,
+        filmId = filmId,
+        ownerId = ownerId,
+        seasonNumber = seasonNumber,
+        episodeNumber = episodeNumber,
+        progress = progress,
+        status = status,
+        duration = duration,
+        watchedAt = watchedAt,
     )
 
     fun getUser(
@@ -69,7 +93,7 @@ object DatabaseTestDefaults {
     )
 
     fun getSearchHistory(
-        id: Int = 1,
+        id: Int = 0,
         query: String = "Test Query",
         ownerId: Int = TEST_USER_ID,
         searchedOn: Date = Date(),
@@ -81,7 +105,7 @@ object DatabaseTestDefaults {
     )
 
     fun getLibraryList(
-        id: Int = 1,
+        id: Int = 0,
         name: String = "Test List",
         description: String = "Test Description",
         ownerId: Int = TEST_USER_ID,
@@ -97,11 +121,13 @@ object DatabaseTestDefaults {
     )
 
     fun getLibraryListItem(
-        id: String = "library_list_item_123",
-        film: DBFilm = FilmTestDefaults.getMovie().toDBFilm(),
+        id: Long = 0,
+        filmId: String = getDBFilm().identifier,
+        listId: Int = 1,
     ) = LibraryListItem(
         id = id,
-        film = film,
+        filmId = filmId,
+        listId = listId,
     )
 
     fun createDatabase(context: Context) =

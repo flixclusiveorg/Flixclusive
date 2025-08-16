@@ -3,9 +3,11 @@ package com.flixclusive.data.database.repository.impl
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.AppDatabase
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
-import com.flixclusive.data.database.datasource.impl.LocalLibraryListDataSource
+import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -14,6 +16,7 @@ import org.junit.runner.RunWith
 import strikt.api.expectThat
 import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
+import strikt.assertions.isNotEmpty
 import strikt.assertions.isNotNull
 import strikt.assertions.isNull
 
@@ -21,24 +24,30 @@ import strikt.assertions.isNull
 class LibraryListRepositoryImplTest {
     private lateinit var database: AppDatabase
     private lateinit var repository: LibraryListRepositoryImpl
+    private lateinit var appDispatchers: AppDispatchers
+
+    private val testDispatcher = StandardTestDispatcher()
 
     private val testUser = DatabaseTestDefaults.getUser()
 
     private val testLibraryList = DatabaseTestDefaults.getLibraryList()
 
-    private val testLibraryItem = DatabaseTestDefaults.getLibraryListItem()
+    private val testFilm = DatabaseTestDefaults.getDBFilm()
+
+    private val testLibraryItem = DatabaseTestDefaults.getLibraryListItem(filmId = testFilm.id)
 
     @Before
     fun setUp() {
+        appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
         database = DatabaseTestDefaults.createDatabase(
             context = ApplicationProvider.getApplicationContext(),
         )
-        val dataSource = LocalLibraryListDataSource(
+
+        repository = LibraryListRepositoryImpl(
             listDao = database.libraryListDao(),
             itemDao = database.libraryListItemDao(),
-            crossRefDao = database.libraryListCrossRefDao(),
+            appDispatchers = appDispatchers,
         )
-        repository = LibraryListRepositoryImpl(dataSource)
     }
 
     @After
@@ -48,18 +57,18 @@ class LibraryListRepositoryImplTest {
 
     @Test
     fun shouldInsertAndRetrieveLibraryList() =
-        runTest {
+        runTest(testDispatcher) {
             // Insert user first
             database.userDao().insert(testUser)
 
             // Insert library list
-            repository.insertList(testLibraryList)
+            val itemId = repository.insertList(testLibraryList)
 
             // Verify list was inserted
-            repository.getList(testLibraryList.id).test {
+            repository.getList(itemId).test {
                 val result = awaitItem()
                 expectThat(result).isNotNull().and {
-                    get { id }.isEqualTo(testLibraryList.id)
+                    get { id }.isEqualTo(itemId)
                     get { name }.isEqualTo(testLibraryList.name)
                     get { description }.isEqualTo(testLibraryList.description)
                     get { ownerId }.isEqualTo(testLibraryList.ownerId)
@@ -69,7 +78,7 @@ class LibraryListRepositoryImplTest {
 
     @Test
     fun shouldRetrieveListsByUserId() =
-        runTest {
+        runTest(testDispatcher) {
             // Insert user first
             database.userDao().insert(testUser)
 
@@ -89,19 +98,19 @@ class LibraryListRepositoryImplTest {
 
     @Test
     fun shouldUpdateLibraryList() =
-        runTest {
+        runTest(testDispatcher) {
             // Insert user first
             database.userDao().insert(testUser)
 
             // Insert original list
-            repository.insertList(testLibraryList)
+            val itemId = repository.insertList(testLibraryList)
 
             // Update list
-            val updatedList = testLibraryList.copy(name = "Updated List Name")
+            val updatedList = testLibraryList.copy(id = itemId, name = "Updated List Name")
             repository.updateList(updatedList)
 
             // Verify update
-            repository.getList(testLibraryList.id).test {
+            repository.getList(itemId).test {
                 val result = awaitItem()
                 expectThat(result).isNotNull().get { name }.isEqualTo("Updated List Name")
             }
@@ -109,7 +118,7 @@ class LibraryListRepositoryImplTest {
 
     @Test
     fun shouldDeleteLibraryListById() =
-        runTest {
+        runTest(testDispatcher) {
             // Insert user first
             database.userDao().insert(testUser)
 
@@ -127,136 +136,100 @@ class LibraryListRepositoryImplTest {
         }
 
     @Test
-    fun shouldAddItemToList() =
-        runTest {
+    fun shouldInsertItem() =
+        runTest(testDispatcher) {
             // Insert user and list
             database.userDao().insert(testUser)
             repository.insertList(testLibraryList)
 
             // Add item to list
-            repository.addItemToList(testLibraryList.id, testLibraryItem)
+            val id = repository.insertItem(testLibraryItem, testFilm)
 
             // Verify item was added
-            repository.getItem(testLibraryItem.id).test {
-                val result = awaitItem()
-                expectThat(result).isNotNull().and {
-                    get { id }.isEqualTo(testLibraryItem.id)
-                    get { film.title }.isEqualTo(testLibraryItem.film.title)
+            repository.getItemAsFlow(id).test {
+                expectThat(awaitItem()).isNotNull().and {
+                    get { itemId }.isEqualTo(id)
+                    get { filmId }.isEqualTo(testLibraryItem.filmId)
                 }
             }
         }
 
     @Test
     fun shouldRetrieveListWithItems() =
-        runTest {
+        runTest(testDispatcher) {
             // Insert user and list
             database.userDao().insert(testUser)
-            repository.insertList(testLibraryList)
+            val itemId = repository.insertList(testLibraryList)
 
             // Add item to list
-            repository.addItemToList(testLibraryList.id, testLibraryItem)
+            repository.insertItem(testLibraryItem, testFilm)
 
             // Verify list with items
-            repository.getListWithItems(testLibraryList.id).test {
+            repository.getListWithItems(itemId).test {
                 val result = awaitItem()
                 expectThat(result).isNotNull().and {
-                    get { list.id }.isEqualTo(testLibraryList.id)
+                    get { list.id }.isEqualTo(itemId)
                     get { items }.hasSize(1)
                 }
             }
         }
 
     @Test
-    fun shouldUpdateLibraryItem() =
-        runTest {
+    fun shouldDeleteItem() =
+        runTest(testDispatcher) {
             // Insert user and list
             database.userDao().insert(testUser)
             repository.insertList(testLibraryList)
-            repository.addItemToList(testLibraryList.id, testLibraryItem)
 
-            // Update item
-            val updatedItem = DatabaseTestDefaults.getLibraryListItem(
-                film = testLibraryItem.film.copy(title = "Updated Title"),
-            )
-            repository.updateItem(updatedItem)
-
-            // Verify update
-            repository.getItem(testLibraryItem.id).test {
-                val result = awaitItem()
-                expectThat(result) {
-                    isNotNull()
-                    get { this!!.film.title }.isEqualTo("Updated Title")
-                }
-            }
-        }
-
-    @Test
-    fun shouldDeleteItemFromList() =
-        runTest {
-            // Insert user and list
-            database.userDao().insert(testUser)
-            val list1 = testLibraryList.copy(id = 1, name = "List 1")
-            val list2 = testLibraryList.copy(id = 2, name = "List 2")
-            repository.insertList(list1)
-            repository.insertList(list2)
-            repository.addItemToList(list1.id, testLibraryItem)
-            repository.addItemToList(list2.id, testLibraryItem)
+            val itemId = repository.insertItem(testLibraryItem, testFilm)
 
             // Delete item from list
-            repository.deleteItemFromList(list1.id, testLibraryItem.id)
+            repository.deleteItem(itemId)
 
-            // Verify item still exists but not in list
-            repository.getItem(testLibraryItem.id).test {
-                val result = awaitItem()
-                expectThat(result).isNotNull()
-            }
-
-            // Verify cross reference was deleted
-            repository.getCrossRef(list1.id, testLibraryItem.id).test {
-                val result = awaitItem()
-                expectThat(result).isNull()
+            // Verify item deletion
+            repository.getItemAsFlow(itemId).test {
+                expectThat(awaitItem()).isNull()
             }
         }
 
     @Test
     fun shouldRetrieveItemWithLists() =
-        runTest {
+        runTest(testDispatcher) {
             // Insert user and lists
             database.userDao().insert(testUser)
-            val list1 = testLibraryList.copy(id = 1, name = "List 1")
-            val list2 = testLibraryList.copy(id = 2, name = "List 2")
-            repository.insertList(list1)
-            repository.insertList(list2)
+            val list1 = testLibraryList.copy(name = "List 1")
+            val list2 = testLibraryList.copy(name = "List 2")
+            val id1 = repository.insertList(list1)
+            val id2 = repository.insertList(list2)
 
             // Add item to both lists
-            repository.addItemToList(list1.id, testLibraryItem)
-            repository.addItemToList(list2.id, testLibraryItem)
+            repository.insertItem(testLibraryItem.copy(listId = id1), testFilm)
+            repository.insertItem(testLibraryItem.copy(listId = id2), testFilm)
 
             // Verify item with lists
-            repository.getItemWithLists(testLibraryItem.id).test {
-                val result = awaitItem()
-                expectThat(result).isNotNull().and {
-                    get { item.id }.isEqualTo(testLibraryItem.id)
-                    get { lists }.hasSize(2)
+            repository.getListsContainingFilm(testLibraryItem.filmId, testUser.id).test {
+                expectThat(awaitItem()) {
+                    isNotEmpty()
+                    hasSize(2)
                 }
             }
         }
 
     @Test
     fun shouldRetrieveUserWithListsAndItems() =
-        runTest {
+        runTest(testDispatcher) {
             // Insert user and list
             database.userDao().insert(testUser)
             repository.insertList(testLibraryList)
-            repository.addItemToList(testLibraryList.id, testLibraryItem)
+            repository.insertItem(testLibraryItem, testFilm)
 
             // Verify user with lists and items
             repository.getUserWithListsAndItems(testUser.id).test {
                 val result = awaitItem()
                 expectThat(result).and {
                     get { user.id }.isEqualTo(testUser.id)
-                    get { list }.hasSize(1)
-                    get { list.first().items }.hasSize(1)
+                    get { lists }.hasSize(1)
+                    get { lists.first().items }.hasSize(1)
                 }
             }
         }

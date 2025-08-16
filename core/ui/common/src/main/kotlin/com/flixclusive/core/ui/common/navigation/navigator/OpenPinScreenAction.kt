@@ -1,6 +1,6 @@
 package com.flixclusive.core.ui.common.navigation.navigator
 
-import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.database.entity.user.User
 import java.io.Serializable
 
 sealed class PinAction : Serializable {

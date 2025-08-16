@@ -3,7 +3,7 @@ package com.flixclusive.feature.mobile.profiles
 import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.runOnIO
 import com.flixclusive.domain.database.repository.UserRepository

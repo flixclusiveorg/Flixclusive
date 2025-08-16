@@ -2,7 +2,7 @@ package com.flixclusive.feature.mobile.library.manage
 
 import com.flixclusive.core.database.entity.DBFilm
 import com.flixclusive.core.database.entity.LibraryList
-import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import io.mockk.every
 import io.mockk.mockk

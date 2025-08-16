@@ -1,4 +1,4 @@
-package com.flixclusive.core.database.entity
+package com.flixclusive.core.database.entity.user
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

@@ -1,7 +1,7 @@
 package com.flixclusive.feature.mobile.user.edit
 
 import androidx.lifecycle.ViewModel
-import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO

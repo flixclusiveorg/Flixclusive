@@ -8,7 +8,6 @@ import com.flixclusive.core.database.AppDatabase
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
-import com.flixclusive.data.database.datasource.impl.LocalUserDataSource
 import com.flixclusive.data.database.repository.impl.UserRepositoryImpl
 import com.flixclusive.data.database.session.fake.FakeUserSessionDataStore
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -41,11 +40,14 @@ class UserSessionManagerImplTest {
         database = DatabaseTestDefaults.createDatabase(
             context = ApplicationProvider.getApplicationContext(),
         )
-        val userDataSource = LocalUserDataSource(database.userDao())
-        userRepository = UserRepositoryImpl(userDataSource)
+
+        appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
+        userRepository = UserRepositoryImpl(
+            userDao = database.userDao(),
+            appDispatchers = appDispatchers,
+        )
         fakeUserSessionDataStore = FakeUserSessionDataStore()
         userSessionDataStore = fakeUserSessionDataStore
-        appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
 
         userSessionManager = UserSessionManagerImpl(
             userRepository = userRepository,

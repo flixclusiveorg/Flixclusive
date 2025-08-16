@@ -37,7 +37,7 @@ import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarShape
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.core.ui.common.util.boxShadow
-import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.strings.R as LocaleR
 
 object UserAvatarDefaults {

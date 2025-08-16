@@ -5,22 +5,22 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.flixclusive.core.database.entity.User
+import com.flixclusive.core.database.entity.user.User
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
     @Query("SELECT * FROM user WHERE userId = :id")
-    suspend fun getUserById(id: Int): User?
+    suspend fun get(id: Int): User?
 
     @Query("SELECT * FROM user WHERE userId = :id")
-    fun getUserByIdInFlow(id: Int): Flow<User?>
+    fun getAsFlow(id: Int): Flow<User?>
 
     @Query("SELECT * FROM user")
-    suspend fun getAllItems(): List<User>
+    suspend fun getAll(): List<User>
 
     @Query("SELECT * FROM user")
-    fun getAllItemsInFlow(): Flow<List<User>>
+    fun getAllAsFlow(): Flow<List<User>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(item: User): Long
@@ -29,5 +29,5 @@ interface UserDao {
     suspend fun update(item: User)
 
     @Query("DELETE FROM user WHERE userId = :id")
-    suspend fun deleteById(id: Int)
+    suspend fun delete(id: Int)
 }

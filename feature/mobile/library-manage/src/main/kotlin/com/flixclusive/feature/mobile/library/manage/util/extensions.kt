@@ -5,7 +5,7 @@ package com.flixclusive.feature.mobile.library.manage.util
 import com.flixclusive.core.database.entity.DBFilmItem
 import com.flixclusive.core.database.entity.LibraryList
 import com.flixclusive.core.database.entity.WatchHistoryItem
-import com.flixclusive.core.database.entity.WatchlistItem
+import com.flixclusive.core.database.entity.watchlist.WatchlistItem
 import com.flixclusive.core.strings.UiText
 import com.flixclusive.feature.mobile.library.common.util.FilterWithDirection
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection

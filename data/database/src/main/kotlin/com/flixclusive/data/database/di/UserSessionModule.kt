@@ -13,7 +13,5 @@ import javax.inject.Singleton
 internal abstract class UserSessionModule {
     @Singleton
     @Binds
-    abstract fun bindsUserSessionManager(
-        userSessionManager: UserSessionManagerImpl,
-    ): UserSessionManager
+    abstract fun bindsUserSessionManager(userSessionManager: UserSessionManagerImpl): UserSessionManager
 }

@@ -13,7 +13,5 @@ import javax.inject.Singleton
 internal object DatabaseModule {
     @Provides
     @Singleton
-    fun provideAppDatabase(
-        application: Application
-    ) : AppDatabase = AppDatabase.getInstance(application)
+    fun provideAppDatabase(application: Application): AppDatabase = AppDatabase.getInstance(application)
 }

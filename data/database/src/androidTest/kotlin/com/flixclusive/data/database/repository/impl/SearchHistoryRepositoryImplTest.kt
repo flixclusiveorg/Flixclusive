@@ -3,9 +3,13 @@ package com.flixclusive.data.database.repository.impl
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.AppDatabase
-import com.flixclusive.core.database.entity.SearchHistory
+import com.flixclusive.core.database.entity.search.SearchHistory
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
+import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -20,15 +24,26 @@ import strikt.assertions.isEqualTo
 class SearchHistoryRepositoryImplTest {
     private lateinit var database: AppDatabase
     private lateinit var repository: SearchHistoryRepositoryImpl
+    private lateinit var appDispatchers: AppDispatchers
 
-    private val testSearchHistory = DatabaseTestDefaults.getSearchHistory()
+    private val testDispatcher = StandardTestDispatcher()
+    private val testUser = DatabaseTestDefaults.getUser()
+    private val testSearchHistory = DatabaseTestDefaults.getSearchHistory(ownerId = testUser.id)
 
     @Before
     fun setUp() {
         database = DatabaseTestDefaults.createDatabase(
             context = ApplicationProvider.getApplicationContext(),
         )
-        repository = SearchHistoryRepositoryImpl(database.searchHistoryDao())
+        appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
+        repository = SearchHistoryRepositoryImpl(
+            searchHistoryDao = database.searchHistoryDao(),
+            appDispatchers = appDispatchers,
+        )
+
+        runBlocking {
+            database.userDao().insert(testUser)
+        }
     }
 
     @After
@@ -38,7 +53,7 @@ class SearchHistoryRepositoryImplTest {
 
     @Test
     fun shouldInsertSearchHistory() =
-        runTest {
+        runTest(testDispatcher) {
             repository.insert(testSearchHistory)
 
             repository.getAllItemsInFlow(testSearchHistory.ownerId).test {
@@ -53,7 +68,8 @@ class SearchHistoryRepositoryImplTest {
 
     @Test
     fun shouldRetrieveSearchHistoryByOwnerId() =
-        runTest {
+        runTest(testDispatcher) {
+            database.userDao().insert(testUser.copy(id = 2))
             val searchHistory1 = testSearchHistory.copy(id = 1, query = "Avengers")
             val searchHistory2 = testSearchHistory.copy(id = 2, query = "Batman")
             val searchHistory3 = SearchHistory(id = 3, query = "Superman", ownerId = 2)
@@ -70,10 +86,10 @@ class SearchHistoryRepositoryImplTest {
 
     @Test
     fun shouldRemoveSearchHistoryById() =
-        runTest {
-            repository.insert(testSearchHistory)
+        runTest(testDispatcher) {
+            val id = repository.insert(testSearchHistory)
 
-            repository.remove(testSearchHistory.id, testSearchHistory.ownerId)
+            repository.remove(id)
 
             repository.getAllItemsInFlow(testSearchHistory.ownerId).test {
                 val result = awaitItem()
@@ -83,7 +99,8 @@ class SearchHistoryRepositoryImplTest {
 
     @Test
     fun shouldClearAllSearchHistory() =
-        runTest {
+        runTest(testDispatcher) {
+            database.userDao().insert(testUser.copy(id = 2))
             val searchHistory1 = testSearchHistory.copy(id = 1, query = "Avengers")
             val searchHistory2 = testSearchHistory.copy(id = 2, query = "Batman")
             val searchHistory3 = SearchHistory(id = 3, query = "Superman", ownerId = 2)
@@ -108,11 +125,11 @@ class SearchHistoryRepositoryImplTest {
 
     @Test
     fun shouldNotRemoveSearchHistoryWithDifferentOwnerId() =
-        runTest {
+        runTest(testDispatcher) {
             repository.insert(testSearchHistory)
 
             // Try to remove with different owner ID
-            repository.remove(testSearchHistory.id, 999)
+            repository.remove(testSearchHistory.id)
 
             repository.getAllItemsInFlow(testSearchHistory.ownerId).test {
                 val result = awaitItem()

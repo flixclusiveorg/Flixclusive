@@ -4,11 +4,11 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.toMutableStateList
 import com.flixclusive.core.database.entity.DBFilm
 import com.flixclusive.core.database.entity.LibraryList
-import com.flixclusive.core.database.entity.LibraryListAndItemCrossRef
-import com.flixclusive.core.database.entity.LibraryListItem
-import com.flixclusive.core.database.entity.LibraryListItemWithLists
 import com.flixclusive.core.database.entity.LibraryListWithItems
-import com.flixclusive.core.database.entity.UserWithLibraryListsAndItems
+import com.flixclusive.core.database.entity.library.LibraryListAndItemCrossRef
+import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.library.LibraryListItemWithLists
+import com.flixclusive.core.database.entity.user.UserWithLibraryListsAndItems
 import com.flixclusive.data.library.custom.LibraryListRepository
 import kotlinx.coroutines.flow.Flow
 import java.util.Locale
