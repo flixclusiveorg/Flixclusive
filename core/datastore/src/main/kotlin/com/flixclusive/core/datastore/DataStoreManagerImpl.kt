@@ -108,28 +108,29 @@ internal class DataStoreManagerImpl @Inject constructor(
         type: KClass<T>,
         transform: suspend (T) -> T
     ) {
-        userPreferences.edit { preferences ->
-            val oldValue = preferences[key]
-            val newValue =
-                withContext(appDispatchers.io) {
-                    val instance =
-                        if (oldValue != null) {
-                            Json.decodeFromString(type.serializer(), oldValue)
-                        } else {
-                            type.java.getDeclaredConstructor().newInstance()
-                        }
+        withContext(appDispatchers.io) {
+            userPreferences.edit { preferences ->
+                val oldValue = preferences[key]
+                val newValue =
+                    if (oldValue != null) {
+                        Json.decodeFromString(type.serializer(), oldValue)
+                    } else {
+                        type.java.getDeclaredConstructor().newInstance()
+                    }
 
-                    transform(instance)
-                }
+                transform(newValue)
 
-            preferences[key] = Json.encodeToString(type.serializer(), newValue)
+                preferences[key] = Json.encodeToString(type.serializer(), newValue)
+            }
         }
     }
 
     override suspend fun updateSystemPrefs(transform: suspend (t: SystemPreferences) -> SystemPreferences) {
-        systemPreferences.updateData {
-            val newSettings = transform(it)
-            newSettings
+        withContext(appDispatchers.io) {
+            systemPreferences.updateData {
+                val newSettings = transform(it)
+                newSettings
+            }
         }
     }
 
