@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.coreCommon)
     implementation(projects.coreDatastore)
     implementation(projects.coreDatabase)
+    implementation(projects.coreDrawables)
     implementation(projects.coreStrings)
     implementation(projects.coreNetwork)
     implementation(projects.dataProvider)
@@ -20,4 +21,6 @@ dependencies {
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.provider)
     implementation(libs.stubs.util)
+
+    testImplementation(projects.coreTesting)
 }

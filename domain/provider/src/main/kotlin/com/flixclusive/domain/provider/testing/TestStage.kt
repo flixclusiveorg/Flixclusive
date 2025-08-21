@@ -1,4 +1,4 @@
-package com.flixclusive.domain.provider.repository.testing
+package com.flixclusive.domain.provider.testing
 
 import android.content.Context
 import com.flixclusive.domain.provider.R

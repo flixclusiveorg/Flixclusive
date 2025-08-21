@@ -1,15 +1,15 @@
-package com.flixclusive.domain.provider.testing
+package com.flixclusive.domain.provider.testing.impl
 
 import android.content.Context
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.R
-import com.flixclusive.domain.provider.repository.testing.TestStage
-import com.flixclusive.domain.provider.testing.TestCases.ProviderTestCase
-import com.flixclusive.domain.provider.testing.TestCases.methodTestCases
-import com.flixclusive.domain.provider.testing.TestCases.propertyTestCases
+import com.flixclusive.domain.provider.testing.ProviderTester
+import com.flixclusive.domain.provider.testing.TestJobState
+import com.flixclusive.domain.provider.testing.TestStage
+import com.flixclusive.domain.provider.testing.impl.TestCases.ProviderTestCase
 import com.flixclusive.domain.provider.testing.model.ProviderTestCaseResult
 import com.flixclusive.domain.provider.testing.model.ProviderTestResult
 import com.flixclusive.domain.provider.testing.model.TestStatus
@@ -17,7 +17,6 @@ import com.flixclusive.domain.provider.util.extensions.add
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.ProviderApi
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -27,45 +26,38 @@ import org.koitharu.pausingcoroutinedispatcher.PausingJob
 import org.koitharu.pausingcoroutinedispatcher.launchPausing
 import org.koitharu.pausingcoroutinedispatcher.pausing
 import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
 
-private const val TEST_DELAY = 1000L
-
-enum class TestJobState {
-    PAUSED,
-    RUNNING,
-    IDLE,
-}
-
-@Singleton
-class TestProviderUseCase
+internal class ProviderTesterImpl
     @Inject
     constructor(
+        @ApplicationContext private val context: Context,
         private val providerApiRepository: ProviderApiRepository,
         private val providerRepository: ProviderRepository,
+        private val appDispatchers: AppDispatchers,
         private val client: OkHttpClient,
-        @ApplicationContext private val context: Context,
-    ) {
+    ) : ProviderTester {
+        private val testCases by lazy { TestCases(appDispatchers) }
+
         private val _testStage = MutableStateFlow<TestStage>(TestStage.Idle(providerOnTest = null))
-        val testStage = _testStage.asStateFlow()
+        override val testStage = _testStage.asStateFlow()
 
         private val _results = MutableStateFlow(emptyList<ProviderTestResult>())
-        val results = _results.asStateFlow()
+        override val results = _results.asStateFlow()
 
         private var testJob: PausingJob? = null
         private val _testJobState = MutableStateFlow(TestJobState.IDLE)
-        val testJobState = _testJobState.asStateFlow()
+        override val testJobState = _testJobState.asStateFlow()
 
         /**
          * The film backdrop/poster on test.
          * */
         private val _filmOnTest = MutableStateFlow<String?>(null)
-        val filmOnTest = _filmOnTest.asStateFlow()
+        override val filmOnTest = _filmOnTest.asStateFlow()
 
-        operator fun invoke(providers: ArrayList<ProviderMetadata>) {
+        override fun start(providers: ArrayList<ProviderMetadata>) {
             testJob =
-                AppDispatchers.IO.scope.launchPausing {
+                appDispatchers.ioScope.launchPausing {
                     _testJobState.value = TestJobState.RUNNING
 
                     for (i in providers.indices) {
@@ -100,7 +92,7 @@ class TestProviderUseCase
 
                         runTestCases(
                             api = api,
-                            testCases = propertyTestCases,
+                            testCases = testCases.propertyTestCases,
                             stage = TestStage.Stage1(providerOnTest = provider),
                             addOutput = testOutputs::add,
                             updateOutput = testOutputs::update,
@@ -108,7 +100,7 @@ class TestProviderUseCase
 
                         runTestCases(
                             api = api,
-                            testCases = methodTestCases,
+                            testCases = testCases.methodTestCases,
                             stage = TestStage.Stage2(providerOnTest = provider),
                             addOutput = testOutputs::add,
                             updateOutput = testOutputs::update,
@@ -122,17 +114,17 @@ class TestProviderUseCase
                 }
         }
 
-        fun pause() {
+        override fun pause() {
             testJob?.pause()
             _testJobState.value = TestJobState.PAUSED
         }
 
-        fun resume() {
+        override fun resume() {
             testJob?.resume()
             _testJobState.value = TestJobState.RUNNING
         }
 
-        fun stop() {
+        override fun stop() {
             testJob?.cancel()
             testJob = null
             _testJobState.value = TestJobState.IDLE
@@ -211,8 +203,9 @@ class TestProviderUseCase
                         ),
                     )
 
+                // TODO: Check if this will be paused when `pause` is called.
                 val finalOutput =
-                    withContext(AppDispatchers.IO.dispatcher.pausing()) {
+                    withContext(appDispatchers.io.pausing()) {
                         testCase.test(
                             // testName =
                             testCase.name,
@@ -220,8 +213,6 @@ class TestProviderUseCase
                             api,
                         )
                     }
-
-                delay(TEST_DELAY / 2L)
 
                 updateOutput(
                     // index =
@@ -236,8 +227,6 @@ class TestProviderUseCase
                 if (hasFailed) {
                     break
                 }
-
-                delay(TEST_DELAY)
             }
         }
 

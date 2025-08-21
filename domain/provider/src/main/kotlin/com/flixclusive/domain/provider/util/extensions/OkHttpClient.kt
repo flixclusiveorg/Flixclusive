@@ -1,32 +1,29 @@
 package com.flixclusive.domain.provider.util.extensions
 
 import com.flixclusive.core.util.android.saveTo
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.okhttp.request
-import com.flixclusive.domain.provider.manage.UPDATER_FILE
+import com.flixclusive.domain.provider.util.Constants
 import okhttp3.OkHttpClient
 import java.io.File
 
 @Throws(DownloadFailed::class)
-internal suspend fun OkHttpClient.downloadProvider(
+internal fun OkHttpClient.downloadProvider(
     saveTo: File,
     buildUrl: String,
 ) {
     val updaterJsonUrl = getUpdaterJsonUrl(buildUrl)
-    val updaterFile = File(saveTo.parent!!.plus("/$UPDATER_FILE"))
+    val updaterFile = File(saveTo.parent!!.plus("/${Constants.UPDATER_FILE}"))
 
-    withIOContext {
-        download(
-            file = saveTo,
-            downloadUrl = buildUrl,
-        )
+    download(
+        file = saveTo,
+        downloadUrl = buildUrl,
+    )
 
-        download(
-            file = updaterFile,
-            downloadUrl = updaterJsonUrl,
-        )
-    }
+    download(
+        file = updaterFile,
+        downloadUrl = updaterJsonUrl,
+    )
 }
 
 internal fun OkHttpClient.isUrlOnline(branchUrl: String): Boolean {
@@ -79,8 +76,8 @@ class DownloadFailed(
 private fun getUpdaterJsonUrl(url: String): String {
     val slashIndex = url.lastIndexOf('/')
     return if (slashIndex != -1) {
-        url.substring(0, slashIndex + 1) + UPDATER_FILE
+        url.substring(0, slashIndex + 1) + Constants.UPDATER_FILE
     } else {
-        url + UPDATER_FILE
+        url + Constants.UPDATER_FILE
     }
 }

@@ -8,7 +8,7 @@ import com.flixclusive.domain.provider.testing.model.TestStatus.RUNNING
 import com.flixclusive.domain.provider.testing.model.TestStatus.SUCCESS
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import com.flixclusive.core.ui.common.R as UiCommonR
+import com.flixclusive.core.drawables.R as UiCommonR
 
 /**
  *
@@ -29,8 +29,7 @@ data class ProviderTestCaseResult(
     val fullLog: UiText? = null,
     val shortLog: UiText? = null
 ) {
-    val isSuccess: Boolean
-        get() = status == TestStatus.SUCCESS
+    val isSuccess: Boolean get() = status == TestStatus.SUCCESS
 }
 
 /**

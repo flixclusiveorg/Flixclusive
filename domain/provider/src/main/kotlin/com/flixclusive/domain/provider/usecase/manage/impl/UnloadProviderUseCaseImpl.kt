@@ -1,54 +1,42 @@
-package com.flixclusive.domain.provider.manage
+package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
 import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.core.datastore.util.awaitFirst
+import com.flixclusive.core.datastore.model.user.ProviderPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.util.rmrf
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withDefaultContext
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
-import com.flixclusive.data.provider.ProviderApiRepository
-import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.model.datastore.user.ProviderPreferences
-import com.flixclusive.model.datastore.user.UserPreferences
+import com.flixclusive.data.provider.repository.ProviderApiRepository
+import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
+import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.first
 import java.io.File
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class ProviderUnloaderUseCase
+internal class UnloadProviderUseCaseImpl
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
         private val dataStoreManager: DataStoreManager,
         private val providerRepository: ProviderRepository,
         private val providerApiRepository: ProviderApiRepository,
-    ) {
-        private val providerPreferences: ProviderPreferences
-            get() =
-                dataStoreManager
-                    .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
-                    .awaitFirst()
+    ) : UnloadProviderUseCase {
+        private suspend fun getProviderPrefs() =
+            dataStoreManager
+                .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+                .first()
 
-        /**
-         * Unloads a provider
-         *
-         * @param metadata the [ProviderMetadata] to uninstall/unload
-         * @param unloadOnPreferences an optional toggle to also unload the provider from the settings. Default value is *true*
-         */
-        suspend fun unload(
+        override suspend operator fun invoke(
             metadata: ProviderMetadata,
-            unloadOnPreferences: Boolean = true,
-        ) {
-            val providerFromPreferences =
-                withDefaultContext {
-                    providerPreferences
-                        .providers
-                        .find { it.id == metadata.id }
-                }
+            unloadFromPrefs: Boolean,
+        ): Boolean {
+            val providers = getProviderPrefs().providers
+            val providerFromPreferences = providers.find { it.id == metadata.id }
 
             requireNotNull(providerFromPreferences) {
                 "No such provider on your preferences: ${metadata.name}"
@@ -59,7 +47,7 @@ class ProviderUnloaderUseCase
 
             if (provider == null || !file.exists()) {
                 errorLog("Provider [${metadata.name}] not found. Cannot be unloaded")
-                return
+                return false
             }
 
             infoLog("Unloading provider: ${provider.name}")
@@ -71,9 +59,11 @@ class ProviderUnloaderUseCase
             providerApiRepository.removeApi(id = metadata.id)
             deleteProviderRelatedFiles(file = file)
 
-            if (unloadOnPreferences) {
+            if (unloadFromPrefs) {
                 providerRepository.removeFromPreferences(id = metadata.id)
             }
+
+            return true
         }
 
         private fun deleteProviderRelatedFiles(file: File) {
@@ -84,7 +74,7 @@ class ProviderUnloaderUseCase
             if (parentDirectory.isDirectory && parentDirectory.listFiles()?.size == 1) {
                 val lastRemainingFile = parentDirectory.listFiles()!![0]
 
-                if (lastRemainingFile.name.equals(UPDATER_FILE, true)) {
+                if (lastRemainingFile.name.equals(Constants.UPDATER_FILE, true)) {
                     rmrf(parentDirectory)
                 }
             }

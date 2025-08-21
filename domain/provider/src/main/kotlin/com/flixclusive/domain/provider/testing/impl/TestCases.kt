@@ -1,7 +1,7 @@
-package com.flixclusive.domain.provider.testing
+package com.flixclusive.domain.provider.testing.impl
 
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.testing.model.ProviderTestCaseResult
@@ -16,6 +16,7 @@ import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.ProviderWebViewApi
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -25,7 +26,10 @@ import org.junit.Assert.assertNotNull
 import kotlin.time.measureTimedValue
 
 @Suppress("MemberVisibilityCanBePrivate")
-internal object TestCases {
+internal class TestCases(
+    private val appDispatchers: AppDispatchers
+) {
+
     private data class AssertionResult<T>(
         val status: TestStatus,
         val data: T? = null,
@@ -37,15 +41,15 @@ internal object TestCases {
             ProviderTestCase(
                 name = UiText.from(R.string.ptest_get_testable_film),
                 stopTestOnFailure = true,
-                test = TestCases::testFilmIsSafeToGet,
+                test = ::testFilmIsSafeToGet,
             ),
             ProviderTestCase(
                 name = UiText.from(R.string.ptest_get_catalog_list),
-                test = TestCases::catalogListIsSafeToGet,
+                test = ::catalogListIsSafeToGet,
             ),
             ProviderTestCase(
                 name = UiText.from(R.string.ptest_get_search_filters),
-                test = TestCases::filtersAreSafeToGet,
+                test = ::filtersAreSafeToGet,
             ),
         )
 
@@ -53,19 +57,19 @@ internal object TestCases {
         listOf(
             ProviderTestCase(
                 name = UiText.from(R.string.ptest_method_get_catalog_items),
-                test = TestCases::methodGetCatalogItemsIsSafeToCall,
+                test = ::methodGetCatalogItemsIsSafeToCall,
             ),
             ProviderTestCase(
                 name = UiText.from(R.string.ptest_method_get_search_items),
-                test = TestCases::methodSearchIsSafeToCall,
+                test = ::methodSearchIsSafeToCall,
             ),
             ProviderTestCase(
                 name = UiText.from(R.string.ptest_method_get_film_details),
-                test = TestCases::methodGetFilmMetadataIsSafeToCall,
+                test = ::methodGetFilmMetadataIsSafeToCall,
             ),
             ProviderTestCase(
                 name = UiText.from(R.string.ptest_method_get_links),
-                test = TestCases::methodGetLinksIsSafeToCall,
+                test = ::methodGetLinksIsSafeToCall,
             ),
         )
 
@@ -355,7 +359,7 @@ internal object TestCases {
                 val links = mutableSetOf<MediaLink>()
                 if (api is ProviderWebViewApi) {
                     val webView =
-                        withMainContext {
+                        withContext(appDispatchers.main) {
                             api.getWebView()
                         }
 
