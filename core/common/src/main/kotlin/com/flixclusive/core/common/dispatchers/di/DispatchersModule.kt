@@ -1,7 +1,7 @@
 package com.flixclusive.core.common.dispatchers.di
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.dispatchers.DefaultAppDispatchers
+import com.flixclusive.core.common.dispatchers.AppDispatchersImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -13,6 +13,6 @@ internal abstract class DispatchersModule {
 
     @Binds
     internal abstract fun bindAppDispatchers(
-        defaultAppDispatchers: DefaultAppDispatchers
+        appDispatchersImpl: AppDispatchersImpl
     ): AppDispatchers
 }

@@ -2,6 +2,7 @@ package com.flixclusive.core.testing.dispatcher
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.test.TestScope
 
 object DispatcherTestDefaults {
     /**
@@ -13,6 +14,10 @@ object DispatcherTestDefaults {
             override val io: CoroutineDispatcher = testDispatcher
             override val main: CoroutineDispatcher = testDispatcher
             override val unconfined: CoroutineDispatcher = testDispatcher
+
+            override val ioScope get() = TestScope(testDispatcher)
+            override val defaultScope get() = TestScope(testDispatcher)
+            override val mainScope get() = TestScope(testDispatcher)
         }
     }
 }

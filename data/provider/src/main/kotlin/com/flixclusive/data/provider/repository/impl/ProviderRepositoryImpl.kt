@@ -49,11 +49,25 @@ internal class ProviderRepositoryImpl
         }
 
         override suspend fun addToPreferences(preferenceItem: ProviderFromPreferences) {
-            if (providerPositions.contains(preferenceItem)) return
+            if (providerPositions.contains(preferenceItem)) {
+                val indexOfProvider = providerPositions.indexOfFirst { it.id == preferenceItem.id }
 
-            providerPositions.add(preferenceItem)
+                providerPositions.replaceAt(indexOfProvider, preferenceItem)
+            } else {
+                providerPositions.add(preferenceItem)
+            }
+
             saveToPreferences {
-                if (it.providers.contains(preferenceItem)) return@saveToPreferences it
+                if (it.providers.contains(preferenceItem)) {
+                    val updatedPreferences = it.providers.toMutableList()
+                    val indexOfProvider = updatedPreferences.indexOfFirst { provider ->
+                        provider.id == preferenceItem.id
+                    }
+
+                    updatedPreferences[indexOfProvider] = preferenceItem
+
+                    it.copy(providers = updatedPreferences.toList())
+                }
 
                 it.copy(providers = it.providers + preferenceItem)
             }

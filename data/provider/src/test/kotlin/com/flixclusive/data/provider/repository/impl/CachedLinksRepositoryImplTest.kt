@@ -1,6 +1,9 @@
 package com.flixclusive.data.provider.repository.impl
 
 import app.cash.turbine.test
+import app.cash.turbine.turbineScope
+import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.data.provider.repository.CacheKey
 import com.flixclusive.data.provider.repository.CachedLinks
 import com.flixclusive.model.film.common.tv.Episode
@@ -8,6 +11,7 @@ import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -18,6 +22,7 @@ import strikt.assertions.isNull
 
 class CachedLinksRepositoryImplTest {
     private lateinit var repository: CachedLinksRepositoryImpl
+    private lateinit var appDispatchers: AppDispatchers
     private val testDispatcher = StandardTestDispatcher()
 
     private val testCacheKey = CacheKey.create(
@@ -45,19 +50,33 @@ class CachedLinksRepositoryImplTest {
 
     @Before
     fun setup() {
-        repository = CachedLinksRepositoryImpl()
+        appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
+        repository = CachedLinksRepositoryImpl(appDispatchers)
     }
 
     @Test
     fun `storeCache should store cache and update state flow`() =
         runTest(testDispatcher) {
+            advanceUntilIdle()
             repository.storeCache(testCacheKey, testCachedLinks)
 
-            repository.caches.test {
-                val emission = awaitItem()
-                expectThat(emission).hasSize(2)
-                expectThat(emission[testCacheKey]).isEqualTo(testCachedLinks)
-                expectThat(emission[testCacheKey.getFilmOnlyKey()]).isEqualTo(testCachedLinks)
+            turbineScope {
+                val caches = repository.caches.testIn(this)
+                val currentCache = repository.currentCache.testIn(this)
+
+                with(caches) {
+                    val emission = awaitItem()
+                    expectThat(emission).hasSize(1)
+                    expectThat(emission[testCacheKey]).isEqualTo(testCachedLinks)
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                with(currentCache) {
+                    skipItems(1)
+                    val emission = awaitItem()
+                    expectThat(emission).isEqualTo(testCachedLinks)
+                    cancelAndIgnoreRemainingEvents()
+                }
             }
         }
 
@@ -192,8 +211,9 @@ class CachedLinksRepositoryImplTest {
     fun `observeCache should return null if cache has no valid streams`() =
         runTest(testDispatcher) {
             val defaultCache = CachedLinks(watchId = "default")
+            repository.storeCache(testCacheKey, defaultCache)
 
-            repository.observeCache(testCacheKey, defaultCache).test {
+            repository.currentCache.test {
                 val emission = awaitItem()
                 expectThat(emission).isNull()
             }
@@ -204,7 +224,8 @@ class CachedLinksRepositoryImplTest {
         runTest(testDispatcher) {
             repository.storeCache(testCacheKey, testCachedLinks)
 
-            repository.observeCache(testCacheKey).test {
+            repository.currentCache.test {
+                skipItems(1)
                 val emission = awaitItem()
                 expectThat(emission).isEqualTo(testCachedLinks)
             }
@@ -225,7 +246,7 @@ class CachedLinksRepositoryImplTest {
 
             repository.storeCache(testCacheKey, cacheWithExpiredStreams)
 
-            repository.observeCache(testCacheKey).test {
+            repository.currentCache.test {
                 val emission = awaitItem()
                 expectThat(emission).isNull()
             }
@@ -244,7 +265,7 @@ class CachedLinksRepositoryImplTest {
         }
 
     @Test
-    fun `storeCache should store for both specific and film-only keys`() =
+    fun `storeCache should store on both observable map and currentCache flow`() =
         runTest(testDispatcher) {
             val episode = Episode(season = 1, number = 1)
             val keyWithEpisode = CacheKey.create(
@@ -255,9 +276,10 @@ class CachedLinksRepositoryImplTest {
 
             repository.storeCache(keyWithEpisode, testCachedLinks)
 
-            val filmOnlyKey = keyWithEpisode.getFilmOnlyKey()
-
             expectThat(repository.getCache(keyWithEpisode)).isEqualTo(testCachedLinks)
-            expectThat(repository.getCache(filmOnlyKey)).isEqualTo(testCachedLinks)
+            repository.currentCache.test {
+                skipItems(1)
+                expectThat(awaitItem()).isEqualTo(testCachedLinks)
+            }
         }
 }

@@ -14,9 +14,7 @@
 
     <!--  Errors  -->
     <string name="no_changelogs">No update changelogs found</string>
-    <string name="already_added_repo_error">Repository has already been added!</string>
     <string name="an_error_occurred">An error occurred</string>
-    <string name="blank_media_id_error_message">Could not find media id from the provider</string>
     <string name="connection_failed">Connection failure</string>
     <string name="connection_timeout">Connection timeout</string>
     <string name="context_null_error">Specified context could not be found!</string>
@@ -43,9 +41,6 @@
     <string name="failed_to_load_providers">Failed to load providers</string>
     <string name="failed_to_update_provider">Failed to update the provider.</string>
     <string name="film_data_fetch_failed">Failed to fetch film data</string>
-    <string name="invalid_repo_link">Could not parse url link.</string>
-    <string name="invalid_repository_url">Repository URL is invalid</string>
-    <string name="invalid_repository">Repository does not have an `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
     <string name="invalid_tmdb_id">The TMDB ID shouldn\'t be null or must be an integer.</string>
     <string name="load_link_job_active_error_message">Still processing the last request…</string>
     <string name="null_repository_url_error">No repository url has been given for this provider</string>
@@ -369,7 +364,6 @@
     <string name="film_data_fetching">Fetching film details…</string>
     <string name="first_time_providers_screen_message">It seems like this is your first time using the providers system, would you like to read more about it?</string>
     <string name="loading_next_episode">Loading next episode…</string>
-    <string name="no_available_providers">No available providers!</string>
     <string name="no_installable_providers">No installable providers</string>
     <string name="this_seems_empty">This seems empty</string>
     <string name="non_configurable_provider_message">This provider has is not configurable.</string>
@@ -388,17 +382,9 @@
     <string name="warn_delete_library_format">Are you sure you want to delete \"%1$s\"?</string>
     <string name="warn_delete_selected_libraries_format">Are you sure you want to delete the selected libraries?</string>
     <string name="episode_non_existent_error_message_format">Episode %1$s doesn\'t exist on Season %2$s</string>
-    <string name="extracting_from_provider_format">Extracting from %1$s…</string>
-    <string name="extracting_from_web_view_provider_format">Running WebView for %1$s…</string>
-    <string name="failed_to_update_providers_format">Failed to update these provider(s): %1$s</string>
-    <string name="fetching_from_provider_format">Fetching from %1$s…</string>
-    <string name="invalid_provider_file_dex_json_msg_format">Found extracted provider file %s in your providers folder. DO NOT EXTRACT PROVIDER ZIPS!</string>
-    <string name="invalid_provider_file_directory_msg_format">Found directory %s in your providers folder. DO NOT EXTRACT PROVIDER ZIPS!</string>
     <string name="next_episode_on_format">Next episode on %1$d…</string>
-    <string name="providers_updated_format">The following provider(s) have been updated: %1$s</string>
     <string name="test_providers_completed">Test results summary: %1$s</string>
     <string name="update_out_now_format">%1$s is out now</string>
-    <string name="updates_out_now_provider_format">Updates for providers are available: %1$s</string>
 
     <!--  Content descriptions  -->
     <string name="plus_button_content_desc">A plus icon indicating addition of an item</string>

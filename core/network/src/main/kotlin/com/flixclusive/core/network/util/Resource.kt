@@ -1,6 +1,7 @@
 package com.flixclusive.core.network.util
 
 import androidx.annotation.StringRes
+import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.util.log.errorLog
 import retrofit2.HttpException
@@ -37,6 +38,7 @@ sealed class Resource<out T>(
         constructor(error: Throwable?) : this(
             when (error) {
                 null -> null
+                is ExceptionWithUiText -> error.uiText
                 else -> UiText.StringValue(error.stackTraceToString())
             }
         )
@@ -85,4 +87,12 @@ sealed class Resource<out T>(
      * Represents a loading state of the resource.
      */
     data object Loading : Resource<Nothing>(isLoading = true)
+
+    fun getOrThrow(): T {
+        return data ?: throw ExceptionWithUiText(
+            uiText = error,
+            cause = IllegalStateException("Resource data is null"),
+            message = "Resource data is null"
+        )
+    }
 }

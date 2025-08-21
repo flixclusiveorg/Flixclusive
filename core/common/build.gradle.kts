@@ -8,6 +8,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.stubs.model.film)
     implementation(libs.stubs.model.provider)
 
     implementation(platform(libs.compose.bom))
