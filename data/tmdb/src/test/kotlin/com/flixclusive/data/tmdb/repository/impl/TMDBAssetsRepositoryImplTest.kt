@@ -4,6 +4,8 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import com.flixclusive.core.testing.extensions.isFailure
+import com.flixclusive.core.testing.extensions.isSuccess
 import com.flixclusive.core.testing.tmdb.TMDBTestDefaults
 import com.flixclusive.core.util.log.LogRule
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -13,7 +15,6 @@ import org.junit.Rule
 import org.junit.Test
 import strikt.api.expectThat
 import strikt.assertions.contains
-import strikt.assertions.isA
 import strikt.assertions.isNotEmpty
 import strikt.assertions.isNotNull
 
@@ -46,7 +47,7 @@ class TMDBAssetsRepositoryImplTest {
 
             val result = repository.getLogo(mediaType, id)
 
-            expectThat(result).isA<Resource.Success<String>>()
+            expectThat(result).isSuccess()
             val logoUrl = (result as Resource.Success).data
             expectThat(logoUrl).isNotNull()
             expectThat(logoUrl!!) {
@@ -63,7 +64,7 @@ class TMDBAssetsRepositoryImplTest {
 
             val result = repository.getLogo(mediaType, id)
 
-            expectThat(result).isA<Resource.Success<String>>()
+            expectThat(result).isSuccess()
             val logoUrl = (result as Resource.Success).data
             expectThat(logoUrl).isNotNull()
             expectThat(logoUrl!!) {
@@ -80,7 +81,7 @@ class TMDBAssetsRepositoryImplTest {
 
             val result = repository.getPosterWithoutLogo(mediaType, id)
 
-            expectThat(result).isA<Resource.Success<String>>()
+            expectThat(result).isSuccess()
             val posterUrl = (result as Resource.Success).data
             expectThat(posterUrl).isNotNull()
             expectThat(posterUrl!!) {
@@ -97,7 +98,7 @@ class TMDBAssetsRepositoryImplTest {
 
             val result = repository.getPosterWithoutLogo(mediaType, id)
 
-            expectThat(result).isA<Resource.Success<String>>()
+            expectThat(result).isSuccess()
             val posterUrl = (result as Resource.Success).data
             expectThat(posterUrl).isNotNull()
             expectThat(posterUrl!!).isNotEmpty()
@@ -111,7 +112,7 @@ class TMDBAssetsRepositoryImplTest {
 
             val result = repository.getLogo(mediaType, id)
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test
@@ -122,7 +123,7 @@ class TMDBAssetsRepositoryImplTest {
 
             val result = repository.getPosterWithoutLogo(mediaType, id)
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test
@@ -133,7 +134,7 @@ class TMDBAssetsRepositoryImplTest {
 
             val result = repository.getLogo(mediaType, id)
 
-            expectThat(result).isA<Resource.Success<String>>()
+            expectThat(result).isSuccess()
             val logoUrl = (result as Resource.Success).data
             expectThat(logoUrl).isNotNull()
             expectThat(logoUrl!!).contains(".png") // Converted from SVG

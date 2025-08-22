@@ -15,4 +15,6 @@ dependencies {
     implementation(projects.dataProvider)
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.util)
+
+    testImplementation(projects.coreTesting)
 }

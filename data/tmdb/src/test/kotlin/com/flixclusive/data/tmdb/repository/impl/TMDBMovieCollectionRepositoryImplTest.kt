@@ -4,16 +4,16 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import com.flixclusive.core.testing.extensions.isFailure
+import com.flixclusive.core.testing.extensions.isSuccess
 import com.flixclusive.core.testing.tmdb.TMDBTestDefaults
 import com.flixclusive.core.util.log.LogRule
-import com.flixclusive.model.film.TMDBCollection
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import strikt.api.expectThat
-import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotEmpty
 import strikt.assertions.isNotNull
@@ -47,7 +47,7 @@ class TMDBMovieCollectionRepositoryImplTest {
 
             val result = repository.getCollection(collectionId)
 
-            expectThat(result).isA<Resource.Success<TMDBCollection>>()
+            expectThat(result).isSuccess()
             val collection = (result as Resource.Success).data
             expectThat(collection).isNotNull()
             expectThat(collection!!) {
@@ -65,7 +65,7 @@ class TMDBMovieCollectionRepositoryImplTest {
 
             val result = repository.getCollection(collectionId)
 
-            expectThat(result).isA<Resource.Success<TMDBCollection>>()
+            expectThat(result).isSuccess()
             val collection = (result as Resource.Success).data
             expectThat(collection).isNotNull()
             expectThat(collection!!) {
@@ -83,7 +83,7 @@ class TMDBMovieCollectionRepositoryImplTest {
 
             val result = repository.getCollection(invalidCollectionId)
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test
@@ -93,7 +93,7 @@ class TMDBMovieCollectionRepositoryImplTest {
 
             val result = repository.getCollection(collectionId)
 
-            expectThat(result).isA<Resource.Success<TMDBCollection>>()
+            expectThat(result).isSuccess()
             val collection = (result as Resource.Success).data
             expectThat(collection).isNotNull()
             expectThat(collection!!) {
@@ -109,7 +109,7 @@ class TMDBMovieCollectionRepositoryImplTest {
 
             val result = repository.getCollection(collectionId)
 
-            expectThat(result).isA<Resource.Success<TMDBCollection>>()
+            expectThat(result).isSuccess()
             val collection = (result as Resource.Success).data
             expectThat(collection).isNotNull()
             expectThat(collection!!) {

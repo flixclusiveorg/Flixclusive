@@ -5,9 +5,9 @@ import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import com.flixclusive.core.testing.extensions.isFailure
+import com.flixclusive.core.testing.extensions.isSuccess
 import com.flixclusive.core.testing.tmdb.TMDBTestDefaults
-import com.flixclusive.model.film.FilmSearchItem
-import com.flixclusive.model.film.SearchResponseData
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -45,7 +45,7 @@ class TMDBFilmSearchItemsRepositoryImplTest {
 
             val result = repository.search(query, page, filter)
 
-            expectThat(result).isA<Resource.Success<SearchResponseData<FilmSearchItem>>>()
+            expectThat(result).isSuccess()
             val response = (result as Resource.Success).data
             expectThat(response).isNotNull()
             expectThat(response!!.results).isNotEmpty()
@@ -61,7 +61,7 @@ class TMDBFilmSearchItemsRepositoryImplTest {
 
             val result = repository.search(query, page, filter)
 
-            expectThat(result).isA<Resource.Success<SearchResponseData<FilmSearchItem>>>()
+            expectThat(result).isSuccess()
             val response = (result as Resource.Success).data
             expectThat(response).isNotNull()
             expectThat(response!!.results).isNotEmpty()
@@ -76,7 +76,7 @@ class TMDBFilmSearchItemsRepositoryImplTest {
 
             val result = repository.search(query, page, filter)
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
             expectThat((result as Resource.Failure).error).isA<UiText.StringValue>()
         }
 
@@ -89,7 +89,7 @@ class TMDBFilmSearchItemsRepositoryImplTest {
 
             val result = repository.get(url, page)
 
-            expectThat(result).isA<Resource.Success<SearchResponseData<FilmSearchItem>>>()
+            expectThat(result).isSuccess()
             val response = (result as Resource.Success).data
             expectThat(response).isNotNull()
             expectThat(response!!.results).isNotEmpty()
@@ -103,7 +103,7 @@ class TMDBFilmSearchItemsRepositoryImplTest {
 
             val result = repository.get(url, page)
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
             expectThat((result as Resource.Failure).error).isA<UiText.StringValue>()
         }
 }

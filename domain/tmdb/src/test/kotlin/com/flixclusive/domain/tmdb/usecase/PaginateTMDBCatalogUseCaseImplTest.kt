@@ -1,9 +1,11 @@
 package com.flixclusive.domain.tmdb.usecase
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.network.retrofit.TMDB_API_KEY
+import com.flixclusive.core.network.BuildConfig.TMDB_API_KEY
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.network.util.getSearchItemGson
+import com.flixclusive.core.testing.extensions.isFailure
+import com.flixclusive.core.testing.extensions.isSuccess
 import com.flixclusive.domain.tmdb.usecase.impl.PaginateTMDBCatalogUseCaseImpl
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData
@@ -22,7 +24,6 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Before
 import org.junit.Test
 import strikt.api.expectThat
-import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 
 class PaginateTMDBCatalogUseCaseImplTest {
@@ -61,7 +62,7 @@ class PaginateTMDBCatalogUseCaseImplTest {
 
         useCase = PaginateTMDBCatalogUseCaseImpl(
             okHttpClient,
-            appDispatchers
+            appDispatchers,
         )
     }
 
@@ -87,7 +88,7 @@ class PaginateTMDBCatalogUseCaseImplTest {
 
             val result = useCase.invoke(url, page)
 
-            expectThat(result).isA<Resource.Success<SearchResponseData<FilmSearchItem>>>()
+            expectThat(result).isSuccess()
             expectThat((result as Resource.Success).data).isEqualTo(mockSearchResponse)
         }
 
@@ -111,7 +112,7 @@ class PaginateTMDBCatalogUseCaseImplTest {
 
             val result = useCase.invoke(url, page)
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
             expectThat((result as Resource.Failure).error.toString()).isEqualTo("HTTP 404: Not Found")
         }
 
@@ -127,7 +128,7 @@ class PaginateTMDBCatalogUseCaseImplTest {
 
             val result = useCase.invoke(url, page)
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test
@@ -150,7 +151,7 @@ class PaginateTMDBCatalogUseCaseImplTest {
 
             val result = useCase.invoke(url, page)
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
             expectThat((result as Resource.Failure).error.toString()).isEqualTo("Empty response body")
         }
 

@@ -1,15 +1,15 @@
 package com.flixclusive.domain.catalog.usecase.impl
 
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.testing.extensions.isFailure
+import com.flixclusive.core.testing.extensions.isSuccess
 import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.data.tmdb.model.TMDBDiscoverCatalog
 import com.flixclusive.data.tmdb.repository.TMDBDiscoverCatalogRepository
 import com.flixclusive.data.tmdb.repository.TMDBFilmSearchItemsRepository
 import com.flixclusive.data.tmdb.repository.TMDBMetadataRepository
 import com.flixclusive.model.film.Genre
-import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.SearchResponseData
-import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.util.FilmType
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,7 +18,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import strikt.api.expectThat
-import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 
 class GetHomeHeaderUseCaseImplTest {
@@ -77,7 +76,7 @@ class GetHomeHeaderUseCaseImplTest {
 
             val result = getHomeHeaderUseCase()
 
-            expectThat(result).isA<Resource.Success<Movie>>()
+            expectThat(result).isSuccess()
             expectThat((result as Resource.Success).data).isEqualTo(enhancedMovieMetadata)
             coVerify { tmdbMetadataRepository.getMovie(123) }
         }
@@ -118,7 +117,7 @@ class GetHomeHeaderUseCaseImplTest {
 
             val result = getHomeHeaderUseCase()
 
-            expectThat(result).isA<Resource.Success<TvShow>>()
+            expectThat(result).isSuccess()
             expectThat((result as Resource.Success).data).isEqualTo(enhancedTvShowMetadata)
             coVerify { tmdbMetadataRepository.getTvShow(456) }
         }
@@ -162,7 +161,7 @@ class GetHomeHeaderUseCaseImplTest {
 
             val result = getHomeHeaderUseCase()
 
-            expectThat(result).isA<Resource.Success<Movie>>()
+            expectThat(result).isSuccess()
             coVerify(exactly = 0) { tmdbMetadataRepository.getMovie(123) }
             coVerify { tmdbMetadataRepository.getMovie(456) }
         }
@@ -194,7 +193,7 @@ class GetHomeHeaderUseCaseImplTest {
 
             val result = getHomeHeaderUseCase()
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test
@@ -218,7 +217,7 @@ class GetHomeHeaderUseCaseImplTest {
 
             val result = getHomeHeaderUseCase()
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test
@@ -236,7 +235,7 @@ class GetHomeHeaderUseCaseImplTest {
 
             val result = getHomeHeaderUseCase()
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test
@@ -267,7 +266,7 @@ class GetHomeHeaderUseCaseImplTest {
 
             val result = getHomeHeaderUseCase()
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test
@@ -297,6 +296,6 @@ class GetHomeHeaderUseCaseImplTest {
 
             val result = getHomeHeaderUseCase()
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 }

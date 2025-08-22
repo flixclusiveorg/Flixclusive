@@ -6,10 +6,9 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import com.flixclusive.core.testing.extensions.isSuccess
 import com.flixclusive.core.testing.tmdb.TMDBTestDefaults
 import com.flixclusive.data.tmdb.model.TMDBHomeCatalogs
-import com.flixclusive.model.film.FilmSearchItem
-import com.flixclusive.model.film.SearchResponseData
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -135,7 +134,7 @@ class TMDBHomeCatalogRepositoryImplTest {
 
             val result = repository.getTrending(mediaType, timeWindow, page)
 
-            expectThat(result).isA<Resource.Success<SearchResponseData<FilmSearchItem>>>()
+            expectThat(result).isSuccess()
             val response = (result as Resource.Success).data
             expectThat(response).isNotNull()
             expectThat(response!!) {
@@ -154,7 +153,7 @@ class TMDBHomeCatalogRepositoryImplTest {
 
             val result = repository.getTrending(mediaType, timeWindow, page)
 
-            expectThat(result).isA<Resource.Success<SearchResponseData<FilmSearchItem>>>()
+            expectThat(result).isSuccess()
             val response = (result as Resource.Success).data
             expectThat(response).isNotNull()
             expectThat(response!!) {
@@ -172,7 +171,7 @@ class TMDBHomeCatalogRepositoryImplTest {
 
             val result = repository.getTrending(mediaType, timeWindow, page)
 
-            expectThat(result).isA<Resource.Success<SearchResponseData<FilmSearchItem>>>()
+            expectThat(result).isSuccess()
             val response = (result as Resource.Success).data
             expectThat(response).isNotNull()
             expectThat(response!!) {

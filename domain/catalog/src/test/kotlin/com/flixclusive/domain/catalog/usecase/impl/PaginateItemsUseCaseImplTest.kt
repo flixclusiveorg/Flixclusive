@@ -2,6 +2,8 @@ package com.flixclusive.domain.catalog.usecase.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.testing.extensions.isFailure
+import com.flixclusive.core.testing.extensions.isSuccess
 import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.data.provider.repository.ProviderApiRepository
@@ -23,7 +25,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import strikt.api.expectThat
-import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 
 class PaginateItemsUseCaseImplTest {
@@ -84,7 +85,7 @@ class PaginateItemsUseCaseImplTest {
             val result = paginateItemsUseCase(providerCatalog, 1)
             advanceUntilIdle()
 
-            expectThat(result).isA<Resource.Success<SearchResponseData<FilmSearchItem>>>()
+            expectThat(result).isSuccess()
             expectThat((result as Resource.Success).data).isEqualTo(expectedItems)
 
             coVerify { mockProviderApi.getCatalogItems(page = 1, catalog = providerCatalog) }
@@ -113,7 +114,7 @@ class PaginateItemsUseCaseImplTest {
             val result = paginateItemsUseCase(providerCatalog, 1)
             advanceUntilIdle()
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test
@@ -131,7 +132,7 @@ class PaginateItemsUseCaseImplTest {
             val result = paginateItemsUseCase(providerCatalog, 1)
             advanceUntilIdle()
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test

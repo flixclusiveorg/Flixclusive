@@ -4,6 +4,7 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import com.flixclusive.core.testing.extensions.isFailure
 import com.flixclusive.core.testing.tmdb.TMDBTestDefaults
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.model.film.Movie
@@ -124,7 +125,7 @@ class TMDBMetadataRepositoryImplTest {
 
             val result = repository.getMovie(invalidMovieId)
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test
@@ -134,7 +135,7 @@ class TMDBMetadataRepositoryImplTest {
 
             val result = repository.getTvShow(invalidTvShowId)
 
-            expectThat(result).isA<Resource.Failure>()
+            expectThat(result).isFailure()
         }
 
     @Test
