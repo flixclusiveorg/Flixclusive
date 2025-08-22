@@ -8,13 +8,13 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.util.coroutines.blockFirstNotNull
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.util.Constants
@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import java.io.File
+import java.io.FileNotFoundException
 import javax.inject.Inject
 
 private const val MANIFEST_FILE = "manifest.json"
@@ -68,6 +69,19 @@ internal class LoadProviderUseCaseImpl
                     userId = userId,
                 )
 
+                if (isProviderAlreadyLoaded(metadata)) {
+                    send(
+                        LoadProviderResult.Failure(
+                            provider = metadata,
+                            filePath = file.absolutePath,
+                            error = IllegalStateException(
+                                context.getString(R.string.provider_already_exists, metadata.name)
+                            ),
+                        ),
+                    )
+                    return@channelFlow
+                }
+
                 val success = withContext(appDispatchers.io) {
                     try {
                         client.downloadProvider(
@@ -91,7 +105,6 @@ internal class LoadProviderUseCaseImpl
                 }
 
                 if (!success) {
-                    errorLog("Failed to download provider: ${metadata.name} [${file.name}]")
                     return@channelFlow
                 }
 
@@ -108,16 +121,21 @@ internal class LoadProviderUseCaseImpl
             filePath: String,
         ): Flow<LoadProviderResult> =
             flow<LoadProviderResult> {
-                if (providerRepository.getProvider(metadata.id) != null) {
-                    val fileName = filePath.substringAfterLast("/")
-
-                    warnLog("Provider with name ${metadata.name} [$fileName] already exists")
+                if (isProviderAlreadyLoaded(metadata)) {
+                    emit(
+                        LoadProviderResult.Failure(
+                            provider = metadata,
+                            filePath = filePath,
+                            error = IllegalStateException(
+                                context.getString(R.string.provider_already_exists, metadata.name)
+                            ),
+                        ),
+                    )
                     return@flow
                 }
 
                 try {
                     val file = File(filePath)
-
                     val isFileExisting = withContext(appDispatchers.io) {
                         safeCall {
                             file.setReadOnly()
@@ -128,6 +146,18 @@ internal class LoadProviderUseCaseImpl
 
                     if (!isFileExisting) {
                         errorLog("Provider file does not exist: $filePath")
+                        emit(
+                            LoadProviderResult.Failure(
+                                provider = metadata,
+                                filePath = filePath,
+                                error = FileNotFoundException(
+                                    context.getString(
+                                        R.string.provider_file_not_found,
+                                        filePath,
+                                    ),
+                                ),
+                            ),
+                        )
                         return@flow
                     }
 
@@ -135,7 +165,7 @@ internal class LoadProviderUseCaseImpl
 
                     val loader = PathClassLoader(filePath, context.classLoader)
                     val manifest: ProviderManifest = withContext(appDispatchers.io) {
-                        loader.getFileFromPath(com.flixclusive.domain.provider.usecase.manage.impl.MANIFEST_FILE)
+                        loader.getFileFromPath(MANIFEST_FILE)
                     }
                     val settingsDirPath = createSettingsDirPath(
                         repositoryUrl = metadata.repositoryUrl,
@@ -181,8 +211,9 @@ internal class LoadProviderUseCaseImpl
                                 id = metadata.id,
                                 provider = provider,
                             )
-                            LoadProviderResult.Success(provider = metadata)
                         }
+
+                        emit(LoadProviderResult.Success(provider = metadata))
                     } catch (e: Throwable) {
                         isApiDisabled = true
 
@@ -215,11 +246,11 @@ internal class LoadProviderUseCaseImpl
                 }
             }
 
-        private fun createSettingsDirPath(
+        private suspend fun createSettingsDirPath(
             repositoryUrl: String,
             isDebugProvider: Boolean,
         ): String {
-            val userId = userSessionDataStore.currentUserId.blockFirstNotNull()!!
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
             val parentDirectoryName = if (isDebugProvider) Constants.PROVIDER_DEBUG else "user-$userId"
 
             val repository = repositoryUrl.toValidRepositoryLink()
@@ -250,5 +281,16 @@ internal class LoadProviderUseCaseImpl
             }
 
             return providerFromPreferences
+        }
+
+        private fun isProviderAlreadyLoaded(
+            metadata: ProviderMetadata,
+        ): Boolean {
+            if (providerRepository.getProvider(metadata.id) != null) {
+                warnLog("Provider with name ${metadata.name} already exists")
+                return true
+            }
+
+            return false
         }
     }

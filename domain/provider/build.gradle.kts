@@ -22,5 +22,6 @@ dependencies {
     implementation(libs.stubs.provider)
     implementation(libs.stubs.util)
 
+    androidTestImplementation(projects.coreTesting)
     testImplementation(projects.coreTesting)
 }

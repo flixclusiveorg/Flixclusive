@@ -17,6 +17,8 @@
     <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
     <string name="no_watch_id_message">No watch ID has been found</string>
     <string name="provider_api_not_found">Provider [%1$s] not found</string>
+    <string name="provider_already_exists">Provider with name %1$s already exists</string>
+    <string name="provider_file_not_found">Provider file not found for %1$s.</string>
 
     <string name="fetching_from_provider_format">Fetching from %1$s…</string>
     <string name="extracting_from_provider_format">Extracting from %1$s…</string>
