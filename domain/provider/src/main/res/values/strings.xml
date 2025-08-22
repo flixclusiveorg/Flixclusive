@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="repository_not_found_message">Repository does not exist or has been removed</string>
     <string name="provider_not_found_message">Provider is not available or has been removed</string>
     <string name="already_added_repo_error">Repository has already been added!</string>
     <string name="empty_repository_message">This repository has no providers</string>

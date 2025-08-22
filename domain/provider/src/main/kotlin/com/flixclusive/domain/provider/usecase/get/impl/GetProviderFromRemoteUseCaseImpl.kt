@@ -82,7 +82,7 @@ internal class GetProviderFromRemoteUseCaseImpl
                     }
 
                     Resource.Success(providersFromRemote)
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     return@withContext Resource.Failure(e)
                 }
             }
@@ -107,15 +107,36 @@ internal class GetProviderFromRemoteUseCaseImpl
                 if (cached != null && !cached.isExpired) {
                     cached.data
                 } else {
-                    client
-                        .request(updaterJsonUrl)
-                        .execute()
-                        .fromJson<List<ProviderMetadata>>()
-                        .also {
-                            cachedProviders[updaterJsonUrl] = CachedUpdaterJsonFile(it)
+                    val response = client.request(updaterJsonUrl).execute()
+
+                    when (response.code) {
+                        200 -> {
+                            response.fromJson<List<ProviderMetadata>>()
+                                .also {
+                                    cachedProviders[updaterJsonUrl] = CachedUpdaterJsonFile(it)
+                                }
                         }
+                        404 -> {
+                            throw ExceptionWithUiText(
+                                uiText = UiText.from(R.string.repository_not_found_message),
+                                cause = NullPointerException(),
+                                message = "Response code: ${response.code}",
+                            )
+                        }
+                        else -> {
+                            throw ExceptionWithUiText(
+                                uiText = UiText.from(R.string.failed_repository_fetch_message),
+                                cause = NullPointerException(),
+                                message = "Response code: ${response.code}",
+                            )
+                        }
+                    }
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                if (e is ExceptionWithUiText) {
+                    throw e
+                }
+
                 throw ExceptionWithUiText(
                     uiText = UiText.from(R.string.failed_repository_fetch_message),
                     cause = e,

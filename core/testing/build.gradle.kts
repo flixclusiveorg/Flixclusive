@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.stubs.util)
     implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.provider)
 
     implementation(libs.room.runtime)
     implementation(libs.room.testing)
