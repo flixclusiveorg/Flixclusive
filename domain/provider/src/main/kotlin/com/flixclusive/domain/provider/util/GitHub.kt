@@ -3,7 +3,9 @@ package com.flixclusive.domain.provider.util
 import java.util.regex.Pattern
 
 fun extractGithubInfoFromLink(url: String): Pair<String?, String?>? {
-    val pattern = Pattern.compile("https://(github\\.com|raw\\.githubusercontent\\.com)/([^/]+)/([^/]+)(.*?)(?!\\n)")
+    // Support URLs with https://, http://, or no protocol
+    val pattern =
+        Pattern.compile("(?:https?://)?(?:www\\.)?(github\\.com|raw\\.githubusercontent\\.com)/([^/]+)/([^/]+)(?:/.*)?")
     val matcher = pattern.matcher(url)
 
     if (matcher.matches()) {
