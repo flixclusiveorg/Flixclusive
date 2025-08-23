@@ -7,10 +7,11 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
-import com.flixclusive.domain.provider.usecase.manage.impl.UnloadProviderUseCaseImpl
+import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.domain.provider.usecase.updater.ProviderUpdateResult
 import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
 import com.flixclusive.domain.provider.util.extensions.createFileForProvider
@@ -25,11 +26,11 @@ import okhttp3.OkHttpClient
 import java.io.File
 import javax.inject.Inject
 
-private typealias VersionCode = Long
-
 private const val CHANNEL_UPDATER_ID = "PROVIDER_UPDATER_CHANNEL_ID"
 private const val CHANNEL_UPDATER_NAME = "PROVIDER_UPDATER_CHANNEL"
 
+// TODO: Remove the usecase dependencies from the implementation.
+//       It's a pain in the ass to test this class
 internal class UpdateProviderUseCaseImpl
     @Inject
     constructor(
@@ -38,7 +39,7 @@ internal class UpdateProviderUseCaseImpl
         private val userSessionDataStore: UserSessionDataStore,
         private val providerRepository: ProviderRepository,
         private val loadProviderUseCase: LoadProviderUseCase,
-        private val unloadProviderUseCase: UnloadProviderUseCaseImpl,
+        private val unloadProviderUseCase: UnloadProviderUseCase,
         private val getProviderFromRemoteUseCase: GetProviderFromRemoteUseCase,
         private val client: OkHttpClient,
         private val appDispatchers: AppDispatchers,
@@ -97,9 +98,8 @@ internal class UpdateProviderUseCaseImpl
                         updatedProviders.add(provider)
                     }
                 } catch (e: Throwable) {
-                    failedToUpdateProviders.add(
-                        provider to e,
-                    )
+                    errorLog(e)
+                    failedToUpdateProviders.add(provider to e)
                 }
             }
 
