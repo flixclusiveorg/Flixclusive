@@ -1,6 +1,7 @@
 package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
@@ -15,6 +16,7 @@ import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 
@@ -25,6 +27,7 @@ internal class UnloadProviderUseCaseImpl
         private val dataStoreManager: DataStoreManager,
         private val providerRepository: ProviderRepository,
         private val providerApiRepository: ProviderApiRepository,
+        private val appDispatchers: AppDispatchers,
     ) : UnloadProviderUseCase {
         private suspend fun getProviderPrefs() =
             dataStoreManager
@@ -57,7 +60,9 @@ internal class UnloadProviderUseCaseImpl
 
             providerRepository.remove(id = metadata.id)
             providerApiRepository.removeApi(id = metadata.id)
-            deleteProviderRelatedFiles(file = file)
+            withContext(appDispatchers.io) {
+                deleteProviderRelatedFiles(file = file)
+            }
 
             if (unloadFromPrefs) {
                 providerRepository.removeFromPreferences(id = metadata.id)
