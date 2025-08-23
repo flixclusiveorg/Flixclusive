@@ -9,6 +9,7 @@ import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.util.rmrf
 import com.flixclusive.core.util.log.errorLog
+import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
@@ -121,6 +122,11 @@ internal class InitializeProvidersUseCaseImpl
             channelFlow<Pair<ProviderMetadata, File>> {
                 val providers = getProviderPrefs().providers
 
+                if (providers.isEmpty()) {
+                    infoLog("No providers found in preferences!")
+                    return@channelFlow
+                }
+
                 providers.forEach { provider ->
                     val file = File(provider.filePath)
 
@@ -193,7 +199,7 @@ internal class InitializeProvidersUseCaseImpl
         }
 
         /**
-         * Retrieves the online metadata for a provider based on its ID and file.
+         * Retrieves the metadata from the `updater.json` file for the given provider ID.
          *
          * All online metadata is stored in the `updater.json` file
          *
