@@ -49,9 +49,9 @@ enum class PlayerQuality(
     );
 
     companion object {
-        fun List<Stream>.getIndexOfPreferredQuality(preferredQuality: PlayerQuality): Int {
+        fun List<Stream>.getIndexOfPreferredQuality(preference: PlayerQuality): Int {
             val preferredQualityIndex = indexOfFirst {
-                preferredQuality.regex.containsMatchIn(it)
+                preference.regex.containsMatchIn(it)
             }
 
 

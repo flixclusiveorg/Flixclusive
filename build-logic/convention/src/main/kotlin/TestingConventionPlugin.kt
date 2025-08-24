@@ -39,6 +39,11 @@ class TestingConventionPlugin : Plugin<Project> {
                 add("testImplementation", libs.findLibrary("strikt").get())
 
                 add("androidTestImplementation", libs.findLibrary("androidx.test.ext.junit").get())
+                add("androidTestImplementation", libs.findLibrary("test.rules").get())
+                add("androidTestImplementation", libs.findLibrary("test.core").get())
+                add("androidTestImplementation", libs.findLibrary("test.core.ktx").get())
+                add("androidTestImplementation", libs.findLibrary("test.rules").get())
+                add("androidTestImplementation", libs.findLibrary("test.runner").get())
                 add("androidTestImplementation", libs.findLibrary("coroutines.test").get())
                 add("androidTestImplementation", libs.findLibrary("espresso.core").get())
                 add("androidTestImplementation", libs.findLibrary("mockk-android").get())

@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.player
+package com.flixclusive.core.presentation.player
 
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.common.tv.Episode

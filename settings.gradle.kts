@@ -72,21 +72,14 @@ include(":core-datastore")
 include(":core-drawables")
 include(":core-navigation")
 include(":core-network")
-include(":core-presentation")
+include(":core-presentation-common")
+include(":core-presentation-mobile")
+include(":core-presentation-player")
+//include(":core-presentation-tv")
 include(":core-strings")
 include(":core-testing")
-//include(":core:ui:common")
-//include(":core:ui:mobile")
-//include(":core:ui:tv")
-
-// For common ui things such as ViewModels, NavigationArgs etc.
-//include(":core:ui:film")
-//include(":core:ui:home")
-//include(":core:ui:player")
-// ===========================================================
 
 include(":service")
-
 
 
 /**
@@ -104,6 +97,7 @@ rootProject.children.forEach { project ->
         }
         project.name.startsWith("core-") -> {
             val rawProjectName = project.name.removePrefix("core-")
+                .replace("-", "/") // For modules like core-presentation-mobile -> core/presentation/mobile
             project.projectDir = file("core/$rawProjectName")
         }
         // TODO: Support other modules with sub-modules

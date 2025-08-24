@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.player
+package com.flixclusive.core.presentation.player
 
 import android.content.Context
 import androidx.compose.runtime.getValue
@@ -25,9 +25,9 @@ import com.flixclusive.domain.session.UserSessionManager
 import com.flixclusive.core.database.entity.WatchHistoryItem
 import com.flixclusive.core.database.entity.toWatchHistoryItem
 import com.flixclusive.core.database.entity.util.getSavedTimeForFilm
-import com.flixclusive.model.datastore.user.PlayerPreferences
+import com.flixclusive.core.datastore.model.user.PlayerPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.model.datastore.user.SubtitlesPreferences
-import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.datastore.user.player.PlayerQuality.Companion.getIndexOfPreferredQuality
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
@@ -49,7 +49,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
-import kotlin.math.max
 import com.flixclusive.core.strings.R as LocaleR
 
 /**
@@ -88,7 +87,7 @@ abstract class BasePlayerViewModel(
     val providers by lazy { providerRepository.getEnabledProviders() }
 
     private val _dialogState = MutableStateFlow<com.flixclusive.core.common.provider.MediaLinkResourceState>(
-        com.flixclusive.core.common.provider.MediaLinkResourceState.Idle)
+        MediaLinkResourceState.Idle)
     val dialogState: StateFlow<com.flixclusive.core.common.provider.MediaLinkResourceState> = _dialogState.asStateFlow()
 
     private val _season = MutableStateFlow<Resource<Season?>>(Resource.Loading)
@@ -340,38 +339,20 @@ abstract class BasePlayerViewModel(
             }
     }
 
-    fun onResizeModeChange(resizeMode: Int) {
-        _uiState.update { it.copy(selectedResizeMode = resizeMode) }
-    }
-
     fun onPanelChange(opened: Int) {
         _uiState.update { it.copy(lastOpenedPanel = opened) }
     }
 
     fun onConsumePlayerDialog() {
-        _dialogState.update { com.flixclusive.core.common.provider.MediaLinkResourceState.Idle }
-    }
-
-    fun onServerChange(index: Int? = null) {
-        val preferredQuality = playerPreferences.value.quality
-        val indexToUse =
-            index ?: cachedLinks.streams.getIndexOfPreferredQuality(
-                preferredQuality = preferredQuality,
-            )
-
-        updateWatchHistory(
-            currentTime = player.currentPosition,
-            duration = player.duration,
-        )
-
-        _uiState.update {
-            it.copy(selectedSourceLink = max(indexToUse, 0))
-        }
+        _dialogState.update { MediaLinkResourceState.Idle }
     }
 
     fun toggleVideoTimeReverse() {
         viewModelScope.launch {
-            dataStoreManager.updateUserPrefs<PlayerPreferences>(UserPreferences.PLAYER_PREFS_KEY) {
+            dataStoreManager.updateUserPrefs(
+                key = UserPreferences.PLAYER_PREFS_KEY,
+                type = PlayerPreferences::class
+            ) {
                 it.copy(isDurationReversed = !it.isDurationReversed)
             }
         }

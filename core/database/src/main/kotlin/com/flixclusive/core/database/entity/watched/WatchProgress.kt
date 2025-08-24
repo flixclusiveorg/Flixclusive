@@ -44,16 +44,5 @@ sealed interface WatchProgress {
     // TODO: Move this to a utility class on `player` module
     companion object {
         private const val WATCH_COMPLETED_THRESHOLD = 0.95 // 95% of the total duration
-
-        fun getCompletionThreshold(duration: Long): Long {
-            val deductedAmount = (duration * WATCH_COMPLETED_THRESHOLD).toLong()
-            return duration - deductedAmount
-        }
-
-        fun isInThreshold(
-            progress: Long,
-            duration: Long,
-            threshold: Long = 10_000L,
-        ) = (duration - progress) <= threshold
     }
 }

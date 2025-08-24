@@ -2,6 +2,7 @@ package com.flixclusive.core.datastore.model.user
 
 import com.flixclusive.core.datastore.model.user.player.DecoderPriority
 import com.flixclusive.core.datastore.model.user.player.PlayerQuality
+import com.flixclusive.core.datastore.model.user.player.ResizeMode
 import kotlinx.serialization.Serializable
 
 const val DEFAULT_PLAYER_SEEK_AMOUNT = 10000L
@@ -19,7 +20,7 @@ data class PlayerPreferences(
     /** Unset = -1 = Default */
     val bufferCacheSize: Long = -1,
     /** Fit = Default */
-    val resizeMode: Int = 0,
+    val resizeMode: ResizeMode = ResizeMode.Fit,
     /** 50s = Default */
     val diskCacheSize: Long = DEFAULT_PLAYER_CACHE_SIZE_AMOUNT,
     /** 10s = Default */

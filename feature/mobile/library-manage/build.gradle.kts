@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.flixclusive.feature)
+    alias(libs.plugins.flixclusive.feature.mobile)
     alias(libs.plugins.flixclusive.compose)
     alias(libs.plugins.flixclusive.destinations)
     alias(libs.plugins.flixclusive.testing)

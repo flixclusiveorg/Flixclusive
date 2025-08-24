@@ -51,9 +51,10 @@ gradlePlugin {
             implementationClass = "RoomConventionPlugin"
         }
         register("flixclusiveFeature") {
-            id = "flixclusive.feature"
-            implementationClass = "FeatureConventionPlugin"
+            id = "flixclusive.feature.mobile"
+            implementationClass = "FeatureMobileConventionPlugin"
         }
+        // TODO: Add feature.tv for tv UI specific dependencies
         register("flixclusiveDestinations") {
             id = "flixclusive.destinations"
             implementationClass = "DestinationsConventionPlugin"

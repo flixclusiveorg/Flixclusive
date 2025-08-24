@@ -16,6 +16,7 @@ import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserOnBoarding
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.model.user.player.CaptionSizePreference.Companion.getDp
+import com.flixclusive.core.datastore.model.user.player.ResizeMode
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -79,7 +80,7 @@ internal class UserPreferencesMigration(
             isUsingVolumeBoost = isUsingVolumeBoost,
             audioLanguage = preferredAudioLanguage,
             bufferCacheSize = preferredBufferCacheSize,
-            resizeMode = preferredResizeMode,
+            resizeMode = ResizeMode.entries.getOrNull(preferredResizeMode) ?: ResizeMode.Fit,
             diskCacheSize = preferredDiskCacheSize,
             videoBufferMs = preferredVideoBufferMs,
             seekAmount = preferredSeekAmount,

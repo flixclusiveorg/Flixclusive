@@ -5,9 +5,13 @@
     <string name="outline">Outline</string>
 
     <!-- Resize modes -->
-    <string name="resize_mode_center_crop">Center crop</string>
     <string name="resize_mode_fit">Fit</string>
-    <string name="resize_mode_stretch">Stretch</string>
+    <string name="resize_mode_crop">Crop</string>
+    <string name="resize_mode_none">None</string>
+    <string name="resize_mode_inside">Inside</string>
+    <string name="resize_mode_fill">Fill</string>
+    <string name="resize_mode_fill_height">Fill height</string>
+    <string name="resize_mode_fill_width">Fill width</string>
 
     <!-- Decoder options -->
     <string name="decoder_device_only">Device decoders</string>

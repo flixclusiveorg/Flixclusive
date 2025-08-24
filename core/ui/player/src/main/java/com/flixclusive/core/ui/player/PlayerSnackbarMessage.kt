@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.player
+package com.flixclusive.core.presentation.player
 
 import androidx.compose.material3.SnackbarDuration
 import com.flixclusive.core.strings.UiText

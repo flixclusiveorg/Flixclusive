@@ -11,7 +11,7 @@ import com.flixclusive.model.film.TvShow
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 
-internal fun getSearchItemGson(): Gson {
+fun getSearchItemGson(): Gson {
     return GsonBuilder()
         .registerTypeAdapter(FilmSearchItem::class.java, FilmSearchItemDeserializer())
         .registerTypeAdapter(Movie::class.java, TMDBMovieDeserializer())
