@@ -62,7 +62,7 @@ object FilmTestDefaults {
      * */
     fun getTvShow(
         id: String = "1399",
-        tmdbId: Int = 1399,
+        tmdbId: Int? = 1399,
         imdbId: String = "tt0903747",
         title: String = "Game of Thrones",
         rating: Double = 8.5,

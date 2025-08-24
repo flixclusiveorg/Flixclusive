@@ -9,7 +9,7 @@ import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.tmdb.repository.TMDBMetadataRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.domain.provider.util.extensions.isNonDefaultProvider
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.util.FilmType
@@ -65,10 +65,5 @@ internal class GetFilmMetadataUseCaseImpl
                 FilmType.MOVIE -> tmdbMetadataRepository.getMovie(id = tmdbId)
                 FilmType.TV_SHOW ->tmdbMetadataRepository.getTvShow(id = tmdbId)
             }
-        }
-
-        companion object {
-            private val Film.isNonDefaultProvider: Boolean
-                get() = !providerId.equals(DEFAULT_FILM_SOURCE_NAME, true)
         }
     }

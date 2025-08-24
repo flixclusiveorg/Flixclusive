@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
     <string name="failed_to_init_app">Couldn\'t initialize the app.</string>
     <string name="failed_to_initialize_search_items">Failed to initialize search items</string>
 </resources>

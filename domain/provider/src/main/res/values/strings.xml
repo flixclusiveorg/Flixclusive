@@ -5,10 +5,10 @@
     <string name="failed_repository_fetch_message">Couldn\'t parse providers from the repository</string>
     <string name="failed_to_fetch_data_message">Failed to fetch data:\n%1$s</string>
     <string name="failed_to_fetch_media_id_message">Something went wrong fetching the media id: %1$s</string>
+    <string name="failed_to_fetch_season_message">Failed to fetch season %1$d</string>
     <string name="failed_to_load_provider_on_api">"%1$s\'s API has crashed. Disabling it now…"</string>
     <string name="fetching_episode_message">Fetching show episode…</string>
     <string name="film_not_found">Film not found</string>
-    <string name="no_tmdb_id_found">No TMDB ID provided for this one</string>
     <string name="invalid_provider_file_msg_format">Invalid provider file detected for %1$s</string>
     <string name="invalid_repo_link">Could not parse url link.</string>
     <string name="invalid_repository">Repository does not have an `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
@@ -16,6 +16,7 @@
     <string name="invalid_watch_id_for_non_tmdb_film">Media did not came from TMDB but has no ID.</string>
     <string name="no_available_providers">No available providers</string>
     <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
+    <string name="no_tmdb_id_found">No TMDB ID provided for this one</string>
     <string name="no_watch_id_message">No watch ID has been found</string>
     <string name="provider_already_exists">Provider with name %1$s already exists</string>
     <string name="provider_api_not_found">Provider [%1$s] not found</string>
