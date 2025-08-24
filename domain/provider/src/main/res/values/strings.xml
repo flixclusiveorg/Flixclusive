@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="repository_not_found_message">Repository does not exist or has been removed</string>
-    <string name="provider_not_found_message">Provider is not available or has been removed</string>
     <string name="already_added_repo_error">Repository has already been added!</string>
     <string name="empty_repository_message">This repository has no providers</string>
     <string name="failed_repository_fetch_message">Couldn\'t parse providers from the repository</string>
+    <string name="failed_to_fetch_data_message">Failed to fetch data:\n%1$s</string>
     <string name="failed_to_fetch_media_id_message">Something went wrong fetching the media id: %1$s</string>
     <string name="failed_to_load_provider_on_api">"%1$s\'s API has crashed. Disabling it now…"</string>
     <string name="fetching_episode_message">Fetching show episode…</string>
+    <string name="film_not_found">Film not found</string>
+    <string name="no_tmdb_id_found">No TMDB ID provided for this one</string>
     <string name="invalid_provider_file_msg_format">Invalid provider file detected for %1$s</string>
     <string name="invalid_repo_link">Could not parse url link.</string>
     <string name="invalid_repository">Repository does not have an `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
@@ -16,9 +17,11 @@
     <string name="no_available_providers">No available providers</string>
     <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
     <string name="no_watch_id_message">No watch ID has been found</string>
-    <string name="provider_api_not_found">Provider [%1$s] not found</string>
     <string name="provider_already_exists">Provider with name %1$s already exists</string>
+    <string name="provider_api_not_found">Provider [%1$s] not found</string>
     <string name="provider_file_not_found">Provider file not found for %1$s.</string>
+    <string name="provider_not_found_message">Provider is not available or has been removed</string>
+    <string name="repository_not_found_message">Repository does not exist or has been removed</string>
 
     <string name="fetching_from_provider_format">Fetching from %1$s…</string>
     <string name="extracting_from_provider_format">Extracting from %1$s…</string>
