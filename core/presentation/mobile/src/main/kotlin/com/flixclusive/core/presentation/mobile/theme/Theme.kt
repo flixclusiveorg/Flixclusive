@@ -115,7 +115,7 @@ fun FlixclusiveTheme(
 
     MaterialTheme(
         colorScheme = colors,
-        typography = Typography,
+        typography = MobileTypography,
         content = content,
     )
 }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="close_network_snackbar_content_desc">Hide internet message snackbar</string>
+    <string name="wifi_off_content_desc">Internet has been disconnected</string>
+    <string name="wifi_on_content_desc">Internet has been reconnected</string>
+    <string name="an_error_occurred">An error occurred</string>
+    <string name="expand_stack_trace">Expand stack trace</string>
+    <string name="collapse_stack_trace">Collapse stack trace</string>
+    <string name="type_filter">Types</string>
+</resources>
