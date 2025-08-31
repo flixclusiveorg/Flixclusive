@@ -14,7 +14,6 @@
 
     <!--  Errors  -->
     <string name="no_changelogs">No update changelogs found</string>
-    <string name="an_error_occurred">An error occurred</string>
     <string name="connection_failed">Connection failure</string>
     <string name="connection_timeout">Connection timeout</string>
     <string name="context_null_error">Specified context could not be found!</string>
@@ -44,7 +43,6 @@
     <string name="invalid_tmdb_id">The TMDB ID shouldn\'t be null or must be an integer.</string>
     <string name="load_link_job_active_error_message">Still processing the last request…</string>
     <string name="null_repository_url_error">No repository url has been given for this provider</string>
-    <string name="pagination_error_message">Error while fetching items</string>
     <string name="player_not_initialized">Player has not been initialized</string>
     <string name="repetitive_test_warning_description">It seems like some providers has been already tested. Skipping them is the recommended option. However, if you know what you\'re doing, you can re-test them.</string>
     <string name="repetitive_test_warning_label">Repetitive tests</string>
@@ -142,7 +140,6 @@
     <string name="export_label">Export</string>
     <string name="feature_request">Feature request</string>
     <string name="film_card_titles">Detailed film cards</string>
-    <string name="film_filter">Film type</string>
     <string name="finish">Finish</string>
     <string name="first_time_providers_screen_title">Welcome to the Providers Screen!</string>
     <string name="flixclusive_providers">Flixclusive Providers</string>
@@ -181,9 +178,7 @@
     <string name="next_episode">Next episode</string>
     <string name="no_cache_limit_label">No cache limit (plz dont)</string>
     <string name="no_full_log">No full logs provided</string>
-    <string name="no_ratings">No ratings</string>
     <string name="no_release_date">"No release date"</string>
-    <string name="no_runtime">No runtime</string>
     <string name="no_short_log">No short log provided</string>
     <string name="none_label">None</string>
     <string name="not_now_label">Not now</string>
@@ -328,7 +323,6 @@
     <string name="continue_watching_tv_show">Continue Watching S%1$d E%2$d</string>
     <string name="count_selection_format">%1$d selected</string>
     <string name="current_playback_speed_format">Current playback speed: %1$sx</string>
-    <string name="episode_runtime_formatter">%1$d Episode</string>
     <string name="full_log_provider_used_format">Provider: </string>
     <string name="full_log_short_log_used_format">Short log: </string>
     <string name="full_log_time_taken_format">Time taken: </string>
@@ -337,7 +331,6 @@
     <string name="n_seconds_format">%1$d seconds</string>
     <string name="provider_test_film_used_for_testing_format">%1$s used for testing: %2$s</string>
     <string name="season_number_formatter">Season %1$d</string>
-    <string name="season_runtime_formatter">%1$d Season</string>
     <string name="seek_seconds_format">%1$s seconds</string>
 
 
