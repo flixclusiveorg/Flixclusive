@@ -308,7 +308,7 @@ private fun SubtitleStyle(
         Surface(
             tonalElevation = 2.dp,
             colors = NonInteractiveSurfaceDefaults.colors(
-                containerColor = Color.Gray.onMediumEmphasis()
+                containerColor = Color.Gray.copy(0.6f)
             ),
             shape = MaterialTheme.shapes.extraSmall,
             modifier = Modifier

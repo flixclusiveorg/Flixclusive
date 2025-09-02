@@ -32,9 +32,9 @@ import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUN
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 import com.flixclusive.core.strings.R as LocaleR
@@ -128,7 +128,7 @@ internal fun UserAvatarSelectScreen(
                                 text = stringResource(LocaleR.string.selected_label),
                                 style =
                                     getAdaptiveTextStyle(
-                                        mode = TextStyleMode.Normal,
+                                        style = AdaptiveTextStyle.Normal,
                                         style = TypographyStyle.Title,
                                     ),
                             )

@@ -9,11 +9,11 @@ import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.pagination.PagingState
+import com.flixclusive.core.presentation.mobile.components.film.FilmsGridScreen
+import com.flixclusive.core.presentation.mobile.util.shouldPaginate
 import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
-import com.flixclusive.core.ui.mobile.component.film.FilmsGridScreen
-import com.flixclusive.core.ui.mobile.util.shouldPaginate
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
 
@@ -55,7 +55,7 @@ internal fun GenreScreen(
         films = viewModel.films,
         onFilterChange = viewModel::onFilterChange,
         onFilmLongClick = previewFilm,
-        onNavigationIconClick = navigator::goBack,
+        onNavigationClick = navigator::goBack,
         onRetry = {
             viewModel.resetPagingState()
             viewModel.getFilms()

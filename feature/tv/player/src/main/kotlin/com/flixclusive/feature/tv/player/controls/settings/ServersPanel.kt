@@ -50,8 +50,8 @@ internal fun ServersPanel(
 
     val blackBackgroundGradient = Brush.horizontalGradient(
         0F to Color.Black,
-        0.85F to Color.Black.onMediumEmphasis(),
-        1F to Color.Black.onMediumEmphasis(0.4F),
+        0.85F to Color.Black.copy(0.6f),
+        1F to Color.Black.copy(0.4F),
     )
 
     BackHandler {

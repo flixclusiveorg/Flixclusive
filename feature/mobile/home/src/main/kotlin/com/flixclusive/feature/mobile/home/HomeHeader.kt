@@ -45,15 +45,13 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
 import coil3.request.ImageRequest
+import com.flixclusive.core.presentation.mobile.components.film.GenreButton
 import com.flixclusive.core.presentation.theme.lightGray
 import com.flixclusive.core.presentation.theme.lightGrayElevated
 import com.flixclusive.core.presentation.theme.starColor
-import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.fadingEdge
 import com.flixclusive.core.ui.common.util.formatRating
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
-import com.flixclusive.core.ui.mobile.component.film.GenreButton
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Genre
 import kotlin.random.Random
@@ -86,13 +84,13 @@ internal fun HomeHeader(
             filmInfo = "${formatRating(film.rating).asString()} | ${film.parsedReleaseDate}"
 
         if(posterImage == null)
-            posterImage = context.buildImageUrl(
+            posterImage = context.buildTMDBImageUrl(
                 imagePath = film.backdropImage,
                 imageSize = "w600_and_h900_multi_faces"
             )
 
         if(logoImage == null)
-            logoImage = context.buildImageUrl(
+            logoImage = context.buildTMDBImageUrl(
                 imagePath = film.logoImage,
                 imageSize = "w500"
             )
@@ -183,7 +181,7 @@ internal fun HomeHeader(
                     Text(
                         text = filmInfo,
                         style = MaterialTheme.typography.labelMedium,
-                        color = LocalContentColor.current.onMediumEmphasis()
+                        color = LocalContentColor.current.copy(0.6f)
                     )
                 }
 

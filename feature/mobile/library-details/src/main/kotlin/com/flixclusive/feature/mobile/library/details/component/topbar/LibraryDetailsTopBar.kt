@@ -13,13 +13,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.topbar.ActionButton
+import com.flixclusive.core.presentation.mobile.components.topbar.DefaultNavigationIcon
+import com.flixclusive.core.presentation.mobile.components.topbar.EnterOnlyNearTopScrollBehavior
+import com.flixclusive.core.presentation.mobile.components.topbar.SearchTextFieldAction
 import com.flixclusive.core.strings.R
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.mobile.component.PlainTooltipBox
-import com.flixclusive.core.ui.mobile.component.topbar.ActionButton
-import com.flixclusive.core.ui.mobile.component.topbar.DefaultNavigationIcon
-import com.flixclusive.core.ui.mobile.component.topbar.EnterOnlyNearTopScrollBehavior
-import com.flixclusive.core.ui.mobile.component.topbar.SearchTextFieldAction
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
 import com.flixclusive.core.ui.common.R as UiCommonR
 

@@ -51,7 +51,7 @@ internal fun ListItem(
     onClick: () -> Unit,
 ) {
     val baseStyle = MaterialTheme.typography.labelLarge
-    val unselectedColor = LocalContentColor.current.onMediumEmphasis(0.4F)
+    val unselectedColor = LocalContentColor.current.copy(0.4F)
 
     val interactionSource = remember { MutableInteractionSource() }
 

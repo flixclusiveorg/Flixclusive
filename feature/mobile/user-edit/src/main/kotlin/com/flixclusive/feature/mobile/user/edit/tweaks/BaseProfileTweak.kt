@@ -16,7 +16,7 @@ import com.flixclusive.core.ui.common.util.IconResource
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.user.edit.tweaks.component.TweakButton
@@ -91,9 +91,9 @@ internal fun LazyListScope.renderTweakUi(
                 style = getAdaptiveTextStyle(
                     size = 16.sp,
                     style = TypographyStyle.Label,
-                    mode = TextStyleMode.Emphasized,
+                    style = AdaptiveTextStyle.Emphasized,
                 ).copy(
-                    color = LocalContentColor.current.onMediumEmphasis(0.8F)
+                    color = LocalContentColor.current.copy(0.8F)
                 )
             )
         }

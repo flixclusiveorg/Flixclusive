@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.provider.add.filter.AddProviderFilterType
 import com.flixclusive.feature.mobile.provider.add.filter.util.FilterChildPadding
@@ -102,7 +102,7 @@ private fun SelectableButton(
         shape = MaterialTheme.shapes.small,
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8F),
+            contentColor = MaterialTheme.colorScheme.onSurface.copy(0.8F),
         ),
         border = borders,
         modifier =
@@ -131,7 +131,7 @@ private fun SelectableButton(
             Text(
                 text = name,
                 style = getAdaptiveTextStyle(
-                    mode = TextStyleMode.SemiEmphasized,
+                    style = AdaptiveTextStyle.SemiEmphasized,
                     size = 15.sp,
                 ),
             )

@@ -64,7 +64,7 @@ internal fun SubtitlePreview(
                 .padding(TweakPaddingHorizontal * 2F)
                 .border(
                     width = 2.dp,
-                    color = LocalContentColor.current.onMediumEmphasis(),
+                    color = LocalContentColor.current.copy(0.6f),
                     shape = shape,
                 ).shadow(
                     elevation = 15.dp,

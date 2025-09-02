@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -58,7 +58,7 @@ internal fun NavigationButtons(
                     text = stringResource(LocaleR.string.skip),
                     style = getAdaptiveTextStyle(
                         style = TypographyStyle.Label,
-                        mode = TextStyleMode.NonEmphasized,
+                        style = AdaptiveTextStyle.NonEmphasized,
                     ).copy(
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -81,7 +81,7 @@ internal fun NavigationButtons(
                     text = if (state) stringResource(LocaleR.string.finish) else stringResource(LocaleR.string.next),
                     style = getAdaptiveTextStyle(
                         style = TypographyStyle.Label,
-                        mode = TextStyleMode.Emphasized,
+                        style = AdaptiveTextStyle.Emphasized,
                         increaseBy = 6.sp
                     )
                 )

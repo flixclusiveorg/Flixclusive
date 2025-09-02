@@ -250,7 +250,7 @@ internal fun UpdateScreen(
                             colors =
                                 ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                    contentColor = Color.White.onMediumEmphasis(),
+                                    contentColor = Color.White.copy(0.6f),
                                 ),
                             shape = MaterialTheme.shapes.medium,
                             modifier =

@@ -126,7 +126,7 @@ internal fun FilmScreen(
     )
 
     val backdropPath = remember(film) {
-        context.buildImageUrl(
+        context.buildTMDBImageUrl(
             imagePath = film?.backdropImage,
             imageSize = "w1280"
         )

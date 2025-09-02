@@ -16,7 +16,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.database.entity.LibraryList
 import com.flixclusive.core.strings.R
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.library.details.LibraryType
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -51,7 +50,7 @@ internal fun ScreenHeader(
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = LocalContentColor.current.onMediumEmphasis(),
+                color = LocalContentColor.current.copy(0.6f),
             )
         }
 
@@ -82,7 +81,7 @@ private fun MetadataItem(
         Text(
             text = "$label: $value",
             style = MaterialTheme.typography.labelMedium,
-            color = LocalContentColor.current.onMediumEmphasis(0.4f),
+            color = LocalContentColor.current.copy(0.4f),
         )
     }
 }

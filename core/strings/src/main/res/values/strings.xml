@@ -20,6 +20,7 @@
     <string name="decryption_error">Decryption of data failed, try again later</string>
     <string name="default_error">No additional error information provided.</string>
     <string name="empty_data_default_label">Crickets chirping</string>
+    <string name="end_of_list">You\'ve reached the end of the list!</string>
     <string name="empty_data_default_sub_label">Nothing came up in here</string>
     <string name="empty_query_error_msg">Search query must not be empty!</string>
     <string name="error_crash_title">Oops!</string>

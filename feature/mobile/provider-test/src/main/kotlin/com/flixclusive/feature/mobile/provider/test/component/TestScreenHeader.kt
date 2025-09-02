@@ -123,7 +123,7 @@ private fun HeaderLabels(
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Normal,
                     letterSpacing = 1.sp,
-                    color = LocalContentColor.current.onMediumEmphasis()
+                    color = LocalContentColor.current.copy(0.6f)
                 ),
             )
 
@@ -164,7 +164,7 @@ private fun HeaderLabels(
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Medium,
                     fontSize = 12.sp,
-                    color = LocalContentColor.current.onMediumEmphasis(0.8F)
+                    color = LocalContentColor.current.copy(0.8F)
                 ),
             )
 

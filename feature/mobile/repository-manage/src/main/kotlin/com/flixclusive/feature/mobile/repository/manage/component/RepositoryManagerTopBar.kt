@@ -20,10 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarWithSearch
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarWithSearch
 import kotlin.math.max
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -103,7 +103,7 @@ private fun MultiSelectTopBar(
                 style =
                     getAdaptiveTextStyle(
                         style = TypographyStyle.Body,
-                        mode = TextStyleMode.Normal,
+                        style = AdaptiveTextStyle.Normal,
                         size = 20.sp,
                         increaseBy = 5.sp,
                     ).copy(fontWeight = FontWeight.SemiBold),

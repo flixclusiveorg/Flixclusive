@@ -81,7 +81,7 @@ internal fun <T> SelectDropdownMenu(
                         text = label,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.5F)
+                        color = MaterialTheme.colorScheme.onSurface.copy(0.5F)
                     )
                 }
             },
@@ -164,7 +164,7 @@ internal fun SelectDropdownMenuItem(
 ) {
     val contentColor = when {
         selected -> MaterialTheme.colorScheme.onSurface
-        else -> MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8F)
+        else -> MaterialTheme.colorScheme.onSurface.copy(0.8F)
     }
 
     val fontWeight = when {

@@ -65,7 +65,7 @@ internal fun TopControls(
     val topFocusRequester = directionalFocusRequester.top
 
     val iconSurfaceSize = 34.dp
-    val unfocusedContentColor = LocalContentColor.current.onMediumEmphasis()
+    val unfocusedContentColor = LocalContentColor.current.copy(0.6f)
     val largeRadialGradient = getGlowRadialGradient(unfocusedContentColor)
 
     var isArrowIconFocused by remember { mutableStateOf(false) }
@@ -235,7 +235,7 @@ internal fun TopControls(
                         withStyle(
                             style = titleStyle.copy(
                                 fontWeight = FontWeight.Light,
-                                color = Color.White.onMediumEmphasis(emphasis = 0.8F),
+                                color = Color.White.copy(alpha = 0.8F),
                             ).toSpanStyle()
                         ) {
                             append(currentEpisodeSelected.title)

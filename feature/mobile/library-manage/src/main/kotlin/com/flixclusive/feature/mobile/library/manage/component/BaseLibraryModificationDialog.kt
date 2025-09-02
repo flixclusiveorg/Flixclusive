@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_CORNER_SIZE
 import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.strings.R as LocaleR
@@ -46,10 +46,10 @@ internal fun BaseLibraryModificationDialog(
 ) {
     val labelStyle =
         getAdaptiveTextStyle(
-            mode = TextStyleMode.Emphasized,
+            style = AdaptiveTextStyle.Emphasized,
             style = TypographyStyle.Label,
             increaseBy = 2.sp,
-        ).copy(color = LocalContentColor.current.onMediumEmphasis())
+        ).copy(color = LocalContentColor.current.copy())
 
     val buttonMinHeight = 50.dp
     val baseShape = MaterialTheme.shapes.medium
@@ -123,7 +123,7 @@ internal fun BaseLibraryModificationDialog(
                 Text(
                     text = label,
                     style = getAdaptiveTextStyle(
-                        mode = TextStyleMode.Emphasized,
+                        style = AdaptiveTextStyle.Emphasized,
                         style = TypographyStyle.Title,
                         increaseBy = 2.sp,
                     ),

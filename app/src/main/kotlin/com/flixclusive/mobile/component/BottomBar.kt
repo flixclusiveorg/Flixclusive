@@ -46,7 +46,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flixclusive.AppNavigationItem
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.mobile.MobileNavGraphs
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 import kotlinx.collections.immutable.persistentListOf
@@ -107,7 +106,7 @@ private fun CustomNavItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
-    val unselectedContentColor = LocalContentColor.current.onMediumEmphasis()
+    val unselectedContentColor = LocalContentColor.current.copy(0.6f)
 
     Column(
         modifier =

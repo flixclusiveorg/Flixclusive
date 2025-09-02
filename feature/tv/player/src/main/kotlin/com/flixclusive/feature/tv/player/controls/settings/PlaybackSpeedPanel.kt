@@ -81,7 +81,7 @@ internal fun PlaybackSpeedPanel(
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Black
             ),
-            color = LocalContentColor.current.onMediumEmphasis(0.5F),
+            color = LocalContentColor.current.copy(0.5F),
             modifier = Modifier
                 .padding(top = 25.dp)
         )
@@ -103,7 +103,7 @@ internal fun PlaybackSpeedPanel(
                     onClick = { player.onPlaybackSpeedChange(speed) },
                     colors = ClickableSurfaceDefaults.colors(
                         containerColor = Color.Transparent,
-                        contentColor = LocalContentColor.current.onMediumEmphasis(),
+                        contentColor = LocalContentColor.current.copy(0.6f),
                         focusedContainerColor = Color.Transparent,
                         focusedContentColor = Color.White
                     ),

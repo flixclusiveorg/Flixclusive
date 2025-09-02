@@ -40,7 +40,7 @@ internal class GetHomeCatalogsUseCaseImpl
             }
         }
 
-        override suspend operator fun invoke(): Flow<List<Catalog>> {
+        override operator fun invoke(): Flow<List<Catalog>> {
             return userSessionManager.currentUser.filterNotNull().flatMapLatest { user ->
                 combine(
                     apiChangesHandler.catalogs,

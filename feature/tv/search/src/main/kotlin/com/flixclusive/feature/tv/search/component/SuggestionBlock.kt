@@ -66,7 +66,7 @@ internal fun SuggestionBlock(
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1F),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
-            contentColor = if (isSelected) LocalContentColor.current else LocalContentColor.current.onMediumEmphasis(emphasis = 0.8F),
+            contentColor = if (isSelected) LocalContentColor.current else LocalContentColor.current.copy(alpha = 0.8F),
             focusedContainerColor = Color.Transparent,
             focusedContentColor = Color.White
         ),

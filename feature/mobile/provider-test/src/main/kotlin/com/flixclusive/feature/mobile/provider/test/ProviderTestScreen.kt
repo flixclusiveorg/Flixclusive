@@ -190,7 +190,7 @@ internal fun ProviderTestScreen(
                     ) {
                         AsyncImage(
                             model =
-                                context.buildImageUrl(
+                                context.buildTMDBImageUrl(
                                     imagePath = filmOnTest,
                                     imageSize = "w600_and_h900_multi_faces",
                                 ),
@@ -236,7 +236,7 @@ internal fun ProviderTestScreen(
                                 text = stringResource(id = LocaleR.string.clear_tests),
                                 style =
                                     LocalTextStyle.current.copy(
-                                        color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(),
+                                        color = MaterialTheme.colorScheme.onSurface.copy(0.6f),
                                     ),
                             )
                         }

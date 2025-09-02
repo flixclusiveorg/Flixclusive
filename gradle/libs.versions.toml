@@ -13,9 +13,10 @@ androidxComposeBom = "2024.12.01"
 androidxCore = "1.15.0"
 androidxCoreSplashscreen = "1.0.1"
 androidxDataStore = "1.1.1"
-androidxTestCore = "1.6.1"
+androidxTestCore = "1.7.0"
 androidxTestRules = "1.6.1"
 androidxTestRunner = "1.6.2"
+composeActivity = "1.10.1"
 coil = "3.0.4"
 compose = "1.7.6"
 composeDestinations = "1.9.53"
@@ -73,6 +74,7 @@ compose-tv-foundation = { module = "androidx.tv:tv-foundation", version.ref = "t
 compose-tv-material = { module = "androidx.tv:tv-material", version.ref = "tvCompose"}
 
 # UI (Compose)
+compose-activity = { group = "androidx.activity", name = "activity-compose", version.ref = "composeActivity" }
 compose-animation = { group = "androidx.compose.animation", name = "animation" }
 compose-animation-graphics = { group = "androidx.compose.animation", name = "animation-graphics-android" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }

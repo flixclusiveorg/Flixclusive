@@ -84,7 +84,7 @@ internal fun ProviderFilterButton(
                             .size(16.dp)
                     )
                 } else {
-                    val imageModel = remember { context.buildImageUrl(providerMetadata.iconUrl) }
+                    val imageModel = remember { context.buildTMDBImageUrl(providerMetadata.iconUrl) }
 
                     AsyncImage(
                         model = imageModel,

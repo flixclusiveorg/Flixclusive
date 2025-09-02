@@ -34,7 +34,7 @@ internal fun DescriptionBlock(
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Normal,
-                color = LocalContentColor.current.onMediumEmphasis(0.8F),
+                color = LocalContentColor.current.copy(0.8F),
                 fontSize = SUB_LABEL_SIZE,
                 lineHeight = 16.sp
             ),

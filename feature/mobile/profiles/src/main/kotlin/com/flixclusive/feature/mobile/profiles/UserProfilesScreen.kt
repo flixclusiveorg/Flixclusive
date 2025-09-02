@@ -82,7 +82,7 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
 import com.flixclusive.feature.mobile.profiles.util.UxUtil.getSlidingTransition
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.NavResult

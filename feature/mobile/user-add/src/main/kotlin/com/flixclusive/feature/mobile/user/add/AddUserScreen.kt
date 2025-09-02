@@ -58,7 +58,7 @@ import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHand
 import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.feature.mobile.user.add.component.AddUserScaffold
@@ -186,7 +186,7 @@ fun AddUserScreen(
                  * */
                 LaunchedEffect(true) {
                     val request =
-                        context.buildImageUrl(
+                        context.buildTMDBImageUrl(
                             imagePath = images.getOrNull(currentScreen + 1),
                             imageSize = "original",
                         )
@@ -331,7 +331,7 @@ private fun AddUserPortraitScreen(
                     size = 22.sp,
                     increaseBy = 16.sp,
                     style = TypographyStyle.Headline,
-                    mode = TextStyleMode.Emphasized,
+                    style = AdaptiveTextStyle.Emphasized,
                 ),
             modifier =
                 Modifier
@@ -345,7 +345,7 @@ private fun AddUserPortraitScreen(
                     size = 14.sp,
                     increaseBy = 10.sp,
                     style = TypographyStyle.Body,
-                    mode = TextStyleMode.NonEmphasized,
+                    style = AdaptiveTextStyle.NonEmphasized,
                 ),
             modifier =
                 widthModifier
@@ -378,7 +378,7 @@ private fun AddUserLandscapeScreen(
                     size = 24.sp,
                     increaseBy = 6.sp,
                     style = TypographyStyle.Display,
-                    mode = TextStyleMode.Emphasized,
+                    style = AdaptiveTextStyle.Emphasized,
                 ),
             modifier =
                 Modifier
@@ -392,7 +392,7 @@ private fun AddUserLandscapeScreen(
                     size = 16.sp,
                     increaseBy = 6.sp,
                     style = TypographyStyle.Body,
-                    mode = TextStyleMode.NonEmphasized,
+                    style = AdaptiveTextStyle.NonEmphasized,
                 ),
             modifier =
                 Modifier
@@ -446,7 +446,7 @@ private fun OnBoardingBackground(
             AsyncImage(
                 model =
                     LocalContext.current
-                        .buildImageUrl(
+                        .buildTMDBImageUrl(
                             imagePath = backgroundUrl,
                             imageSize = "original",
                         ),

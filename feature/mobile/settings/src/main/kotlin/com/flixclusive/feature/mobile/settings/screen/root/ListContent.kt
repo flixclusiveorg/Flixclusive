@@ -45,8 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.ui.common.user.UserAvatar
 import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
@@ -124,7 +123,7 @@ internal fun ListContent(
                                 horizontal = UserScreenHorizontalPadding,
                             ),
                     thickness = 1.dp,
-                    color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.2F),
+                    color = LocalContentColor.current.copy(alpha = 0.2F),
                 )
             }
 
@@ -171,7 +170,7 @@ internal fun ListContent(
                     Modifier
                         .padding(vertical = 15.dp),
                 thickness = 1.dp,
-                color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.2F),
+                color = LocalContentColor.current.copy(alpha = 0.2F),
             )
         }
 
@@ -213,7 +212,7 @@ private fun ListContentFooter(
             .copy(
                 fontWeight = FontWeight.Normal,
                 fontSize = 13.sp,
-                color = LocalContentColor.current.onMediumEmphasis(),
+                color = LocalContentColor.current.copy(0.6f),
             )
 
     Box(

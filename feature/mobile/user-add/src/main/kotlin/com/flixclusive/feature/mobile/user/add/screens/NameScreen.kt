@@ -39,7 +39,7 @@ import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.toTextFieldValue
@@ -90,9 +90,9 @@ internal object NameScreen : OnBoardingScreen {
                     text = stringResource(LocaleR.string.name),
                     style = getAdaptiveTextStyle(
                         style = TypographyStyle.Label,
-                        mode = TextStyleMode.Emphasized,
+                        style = AdaptiveTextStyle.Emphasized,
                     ).copy(
-                        color = LocalContentColor.current.onMediumEmphasis(),
+                        color = LocalContentColor.current.copy(0.6f),
                     )
                 )
             },
@@ -118,7 +118,7 @@ internal object NameScreen : OnBoardingScreen {
                 size = 16.sp,
                 increaseBy = 6.sp,
                 style = TypographyStyle.Body,
-                mode = TextStyleMode.Normal,
+                style = AdaptiveTextStyle.Normal,
             ).copy(
                 textAlign = TextAlign.Start
             ),

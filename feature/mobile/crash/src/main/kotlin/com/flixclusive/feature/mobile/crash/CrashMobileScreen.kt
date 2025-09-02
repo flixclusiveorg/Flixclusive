@@ -37,7 +37,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -81,7 +80,7 @@ fun CrashMobileScreen(
             HorizontalDivider(
                 modifier = Modifier.padding(top = 15.dp, bottom = 5.dp),
                 thickness = 0.5.dp,
-                color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.3F)
+                color = LocalContentColor.current.copy(alpha = 0.3F)
             )
 
             softwareInfo?.let {
@@ -95,7 +94,7 @@ fun CrashMobileScreen(
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 5.dp),
                     thickness = 0.5.dp,
-                    color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.3F)
+                    color = LocalContentColor.current.copy(alpha = 0.3F)
                 )
             }
 
@@ -152,7 +151,7 @@ fun CrashMobileScreen(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = Color.White.onMediumEmphasis()
+                    contentColor = Color.White.copy(0.6f)
                 ),
                 shape = MaterialTheme.shapes.medium,
                 modifier = Modifier

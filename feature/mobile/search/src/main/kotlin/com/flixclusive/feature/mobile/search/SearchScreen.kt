@@ -36,10 +36,9 @@ import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewAllFilmsAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewGenreCatalogAction
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
-import com.flixclusive.core.ui.mobile.component.RetryButton
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
+import com.flixclusive.core.presentation.mobile.components.LARGE_ERROR
+import com.flixclusive.core.presentation.mobile.components.RetryButton
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.search.component.SearchItemCard
 import com.flixclusive.feature.mobile.search.component.SearchItemCardPlaceholderWithText
@@ -201,7 +200,7 @@ private fun SearchBarHeader(onSearchBarClick: () -> Unit) {
                 Text(
                     text = stringResource(id = LocaleR.string.search_suggestion),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = LocalContentColor.current.onMediumEmphasis(),
+                    color = LocalContentColor.current.copy(0.6f),
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth(),
                 )

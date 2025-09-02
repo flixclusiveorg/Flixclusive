@@ -134,7 +134,7 @@ private fun ColorButton(
     onPick: () -> Unit,
 ) {
     val size = getAdaptiveDp(45.dp)
-    val shadowColor = MaterialTheme.colorScheme.surface.onMediumEmphasis(0.3F)
+    val shadowColor = MaterialTheme.colorScheme.surface.copy(0.3F)
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused = interactionSource.collectIsFocusedAsState()
     val scale = animateFloatAsState(targetValue = if (isFocused.value) 1.2f else 1f)

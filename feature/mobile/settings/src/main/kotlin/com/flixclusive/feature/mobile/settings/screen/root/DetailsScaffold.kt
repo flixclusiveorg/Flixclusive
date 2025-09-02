@@ -27,7 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarWithSearch
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarWithSearch
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.component.ClickableComponent
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsSearchQuery

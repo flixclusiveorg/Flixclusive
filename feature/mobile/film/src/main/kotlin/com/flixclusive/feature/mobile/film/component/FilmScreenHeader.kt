@@ -40,13 +40,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
+import com.flixclusive.core.presentation.mobile.components.film.GenreButton
 import com.flixclusive.core.presentation.theme.starColor
-import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.formatMinutes
 import com.flixclusive.core.ui.common.util.formatRating
 import com.flixclusive.core.ui.common.util.formatTvRuntime
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.film.GenreButton
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Genre
@@ -67,7 +65,7 @@ internal fun FilmScreenHeader(
 
     Box {
         AsyncImage(
-            model = context.buildImageUrl(
+            model = context.buildTMDBImageUrl(
                 imagePath = film.posterImage,
                 imageSize = "original"
             ),
@@ -102,7 +100,7 @@ internal fun FilmScreenHeader(
                 .padding(horizontal = 15.dp)
                 .padding(top = 5.dp)
                 .clip(RoundedCornerShape(25))
-                .background(color = MaterialTheme.colorScheme.surface.onMediumEmphasis())
+                .background(color = MaterialTheme.colorScheme.surface.copy())
         ) {
             Icon(
                 painter = painterResource(R.drawable.left_arrow),
@@ -176,7 +174,7 @@ internal fun FilmScreenHeader(
                         }
                     },
                     style = MaterialTheme.typography.labelMedium,
-                    color = LocalContentColor.current.onMediumEmphasis(),
+                    color = LocalContentColor.current.copy(0.6f),
                     textAlign = TextAlign.Start,
                     softWrap = true,
                     modifier = Modifier

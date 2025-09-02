@@ -130,7 +130,7 @@ internal fun BottomControls(
     val sliderTimeProgressColors = CustomSliderDefaults.colors(
         thumbColor = thumbColor,
         activeTrackColor = MaterialTheme.colorScheme.primary,
-        inactiveTrackColor = Color.White.onMediumEmphasis(emphasis = 0.3F)
+        inactiveTrackColor = Color.White.copy(alpha = 0.3F)
     )
 
     Column(
@@ -157,7 +157,7 @@ internal fun BottomControls(
                     valueRange = 0F..100F,
                     colors = CustomSliderDefaults.colors(
                         disabledThumbColor = Color.Transparent,
-                        disabledActiveTrackColor = Color.White.onMediumEmphasis()
+                        disabledActiveTrackColor = Color.White.copy(0.6f)
                     )
                 )
 
@@ -368,7 +368,7 @@ private fun PlayerSeekSlider() {
                                 valueRange = 0F..1F,
                                 colors = CustomSliderDefaults.colors(
                                     disabledThumbColor = Color.Transparent,
-                                    disabledActiveTrackColor = Color.White.onMediumEmphasis()
+                                    disabledActiveTrackColor = Color.White.copy(0.6f)
                                 )
                             )
 
@@ -386,7 +386,7 @@ private fun PlayerSeekSlider() {
                                 colors = CustomSliderDefaults.colors(
                                     thumbColor = thumbColor.value,
                                     activeTrackColor = MaterialTheme.colorScheme.tertiary,
-                                    inactiveTrackColor = Color.White.onMediumEmphasis()
+                                    inactiveTrackColor = Color.White.copy(0.6f)
                                 ),
                                 seekTextComposable = {
                                     androidx.compose.animation.AnimatedVisibility(

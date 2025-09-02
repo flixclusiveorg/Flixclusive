@@ -143,7 +143,7 @@ internal fun FullLogDialog(
                 ) {
                     Icon(
                         painter = painterResource(id = UiCommonR.drawable.round_content_copy_24),
-                        tint = LocalContentColor.current.onMediumEmphasis(),
+                        tint = LocalContentColor.current.copy(0.6f),
                         contentDescription = stringResource(id = LocaleR.string.copy_full_logs_button),
                         modifier = Modifier.size(23.dp)
                     )
@@ -155,7 +155,7 @@ internal fun FullLogDialog(
             }
 
             HorizontalDivider(
-                color = LocalContentColor.current.onMediumEmphasis(),
+                color = LocalContentColor.current.copy(0.6f),
                 modifier = Modifier
                     .padding(vertical = 5.dp),
             )
@@ -196,7 +196,7 @@ internal fun labelValueStringBuilder(
         fontSize = 13.sp,
     ).toSpanStyle()
 
-    val mediumEmphasisColor = LocalContentColor.current.onMediumEmphasis()
+    val mediumEmphasisColor = LocalContentColor.current.copy(0.6f)
 
     return buildAnnotatedString {
         withStyle(

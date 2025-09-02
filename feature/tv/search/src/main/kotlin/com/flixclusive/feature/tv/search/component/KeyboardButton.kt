@@ -24,7 +24,7 @@ internal fun KeyboardButton(
     size: ButtonSize = ButtonSize(KeyboardCellSize),
     colors: ClickableSurfaceColors = ClickableSurfaceDefaults.colors(
         containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = LocalContentColor.current.onMediumEmphasis(),
+        contentColor = LocalContentColor.current.copy(0.6f),
         focusedContainerColor = MaterialTheme.colorScheme.inverseSurface,
         focusedContentColor = MaterialTheme.colorScheme.inverseOnSurface
     ),

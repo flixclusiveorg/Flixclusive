@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallationStatus
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.core.util.coroutines.asStateFlow
 import com.flixclusive.data.provider.ProviderRepository

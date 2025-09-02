@@ -120,11 +120,11 @@ internal fun WatchedFilmCard(
                 shape = CardDefaults.shape(FilmCardShape),
                 glow = CardDefaults.glow(
                     focusedGlow = Glow(
-                        elevationColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
+                        elevationColor = MaterialTheme.colorScheme.primary.copy(0.6f),
                         elevation = 15.dp
                     ),
                     pressedGlow = Glow(
-                        elevationColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
+                        elevationColor = MaterialTheme.colorScheme.primary.copy(0.6f),
                         elevation = 40.dp
                     ),
                 ),
@@ -191,7 +191,7 @@ private fun CardImage(
             }
     ) {
         val painter = remember(backdropImage) {
-            context.buildImageUrl(
+            context.buildTMDBImageUrl(
                 imagePath = backdropImage,
                 imageSize = "w780"
             )?.newBuilder(context)
@@ -338,7 +338,7 @@ private fun CardOverview(
                 fontWeight = FontWeight.Thin,
                 fontSize = 22.sp
             ),
-            color = LocalContentColor.current.onMediumEmphasis(0.5F),
+            color = LocalContentColor.current.copy(0.5F),
             modifier = Modifier
                 .padding(bottom = 5.dp)
         )
@@ -348,7 +348,7 @@ private fun CardOverview(
             style = MaterialTheme.typography.titleSmall.copy(
                 fontWeight = FontWeight.Medium,
             ),
-            color = LocalContentColor.current.onMediumEmphasis(0.8F),
+            color = LocalContentColor.current.copy(0.8F),
             modifier = Modifier
                 .fillMaxWidth(0.85F)
         )
@@ -361,7 +361,7 @@ private fun CardOverview(
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontWeight = FontWeight.Normal,
                 ),
-                color = LocalContentColor.current.onMediumEmphasis(0.8F)
+                color = LocalContentColor.current.copy(0.8F)
             )
         }
     }

@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.database.entity.WatchHistoryItem
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.formatPlayButtonLabel
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.film.FilmReleaseStatus
 import com.flixclusive.core.strings.R as LocaleR
@@ -124,11 +123,11 @@ internal fun FilmScreenButtons(
                     onClick = {},
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        disabledContainerColor = Color.White.onMediumEmphasis(0.08F)
+                        disabledContainerColor = Color.White.copy(0.08F)
                     ),
                     border = BorderStroke(
                         width = 0.5.dp,
-                        color = Color.White.onMediumEmphasis(0.3F)
+                        color = Color.White.copy(0.3F)
                     ),
                     enabled = false
                 ) {
@@ -171,8 +170,8 @@ private fun ComingSoonButton() {
             OutlinedButton(
                 onClick = {},
                 shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(disabledContainerColor = Color.White.onMediumEmphasis(0.08F)),
-                border = BorderStroke(0.5.dp, Color.White.onMediumEmphasis(0.3F)),
+                colors = ButtonDefaults.buttonColors(disabledContainerColor = Color.White.copy(0.08F)),
+                border = BorderStroke(0.5.dp, Color.White.copy(0.3F)),
                 enabled = false
             ) {
                 Row(

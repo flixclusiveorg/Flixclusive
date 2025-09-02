@@ -76,7 +76,7 @@ internal fun FilmEmphasisBackground(
             },
         label = ""
     ) {
-        val backdropImage = LocalContext.current.buildImageUrl(
+        val backdropImage = LocalContext.current.buildTMDBImageUrl(
             imagePath = it?.backdropImage,
             imageSize = "w1920_and_h600_multi_faces"
         )

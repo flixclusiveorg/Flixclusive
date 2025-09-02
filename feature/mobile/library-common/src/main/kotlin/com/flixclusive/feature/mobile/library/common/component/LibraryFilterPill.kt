@@ -24,9 +24,8 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.core.strings.R as LocaleR
@@ -82,10 +81,10 @@ fun LibraryFilterPill(
             Text(
                 text = filter.displayName.asString(),
                 style = getAdaptiveTextStyle(
-                    mode = TextStyleMode.SemiEmphasized,
+                    style = AdaptiveTextStyle.SemiEmphasized,
                     size = 12.sp,
                 ),
-                color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8f),
+                color = MaterialTheme.colorScheme.onSurface.copy(0.8f),
             )
         }
     }

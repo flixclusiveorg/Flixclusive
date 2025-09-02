@@ -39,7 +39,7 @@ internal fun SeasonPill(
 
     val text = remember { UiText.StringResource(LocaleR.string.season_number_formatter, season).asString(context) }
     val contentColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.surface else LocalContentColor.current.onMediumEmphasis(),
+        targetValue = if (selected) MaterialTheme.colorScheme.surface else LocalContentColor.current.copy(0.6f),
         label = ""
     )
     val containerColor by animateColorAsState(

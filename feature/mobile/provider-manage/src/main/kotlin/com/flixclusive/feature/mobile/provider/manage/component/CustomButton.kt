@@ -27,7 +27,7 @@ internal fun CustomButton(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-            contentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8F)
+            contentColor = MaterialTheme.colorScheme.onSurface.copy(0.8F)
         ),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 20.dp),
         contentPadding = PaddingValues(vertical = 15.dp),

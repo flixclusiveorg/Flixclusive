@@ -61,7 +61,7 @@ internal fun FilterBlock(
             border = Border(
                 border = BorderStroke(
                     width = 0.5.dp,
-                    color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
+                    color = MaterialTheme.colorScheme.onSurface.copy(0.6f)
                 ),
                 shape = MaterialTheme.shapes.large
             ),
@@ -77,7 +77,7 @@ internal fun FilterBlock(
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1F),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
-            contentColor = if (isSelected) LocalContentColor.current else LocalContentColor.current.onMediumEmphasis(emphasis = 0.8F),
+            contentColor = if (isSelected) LocalContentColor.current else LocalContentColor.current.copy(alpha = 0.8F),
             focusedContainerColor = Color.Transparent,
             focusedContentColor = Color.White
         ),

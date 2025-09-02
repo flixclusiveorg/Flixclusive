@@ -18,8 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -42,13 +41,13 @@ internal fun EmptyScreen(
                 .border(
                     width = 1.dp,
                     shape = MaterialTheme.shapes.small,
-                    color = LocalContentColor.current.onMediumEmphasis()
+                    color = LocalContentColor.current.copy(0.6f)
                 )
         ) {
             Icon(
                 painter = painterResource(id = UiCommonR.drawable.round_add_24),
                 contentDescription = stringResource(LocaleR.string.add_providers),
-                tint = LocalContentColor.current.onMediumEmphasis(0.4F),
+                tint = LocalContentColor.current.copy(0.4F),
                 modifier = Modifier.size(35.dp)
             )
         }

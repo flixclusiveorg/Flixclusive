@@ -66,11 +66,11 @@ fun FilmCard(
                 shape = CardDefaults.shape(FilmCardShape),
                 glow = CardDefaults.glow(
                     focusedGlow = Glow(
-                        elevationColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
+                        elevationColor = MaterialTheme.colorScheme.primary.copy(0.6f),
                         elevation = 15.dp
                     ),
                     pressedGlow = Glow(
-                        elevationColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
+                        elevationColor = MaterialTheme.colorScheme.primary.copy(0.6f),
                         elevation = 40.dp
                     ),
                 ),

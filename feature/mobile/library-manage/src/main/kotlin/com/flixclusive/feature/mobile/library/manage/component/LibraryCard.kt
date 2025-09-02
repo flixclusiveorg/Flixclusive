@@ -32,7 +32,7 @@ import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster
@@ -94,7 +94,7 @@ internal fun LibraryCard(
                         text = name.asString(),
                         style =
                             getAdaptiveTextStyle(
-                                mode = TextStyleMode.Emphasized,
+                                style = AdaptiveTextStyle.Emphasized,
                                 style = TypographyStyle.Label,
                                 increaseBy = 2.sp,
                             ),
@@ -107,7 +107,7 @@ internal fun LibraryCard(
                             text = description.asString(),
                             style =
                                 getAdaptiveTextStyle(
-                                    mode = TextStyleMode.Normal,
+                                    style = AdaptiveTextStyle.Normal,
                                     style = TypographyStyle.Body,
                                     increaseBy = 2.sp,
                                 ),
@@ -125,7 +125,7 @@ internal fun LibraryCard(
                             ),
                         style =
                             getAdaptiveTextStyle(
-                                mode = TextStyleMode.NonEmphasized,
+                                style = AdaptiveTextStyle.NonEmphasized,
                                 style = TypographyStyle.Body,
                                 increaseBy = 2.sp,
                             ),

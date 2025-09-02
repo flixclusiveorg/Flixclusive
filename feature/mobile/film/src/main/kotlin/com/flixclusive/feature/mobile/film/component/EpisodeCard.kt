@@ -38,8 +38,6 @@ import coil3.compose.AsyncImage
 import coil3.imageLoader
 import com.flixclusive.core.database.entity.WatchHistoryItem
 import com.flixclusive.core.presentation.theme.lightGrayElevated
-import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.film.common.tv.Episode
@@ -100,7 +98,7 @@ internal fun EpisodeCard(
                 }
         ) {
             AsyncImage(
-                model = context.buildImageUrl(
+                model = context.buildTMDBImageUrl(
                     imagePath = episode.image,
                     imageSize = "w500"
                 ),
@@ -152,7 +150,7 @@ internal fun EpisodeCard(
                     Text(
                         text = "Episode ${episode.number}",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.onMediumEmphasis(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6f),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 3.dp)

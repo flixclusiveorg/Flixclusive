@@ -29,7 +29,7 @@ import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.user.getAvatarResource
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.add.OnBoardingScreen
 import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.LocalUserToAdd
@@ -113,7 +113,7 @@ internal class AvatarScreen(
             Text(
                 text = stringResource(LocaleR.string.avatar_number, user.image + 1),
                 style = getAdaptiveTextStyle(
-                    mode = TextStyleMode.Emphasized,
+                    style = AdaptiveTextStyle.Emphasized,
                     size = 16.sp
                 ),
                 modifier = Modifier

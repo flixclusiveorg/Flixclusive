@@ -49,14 +49,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.presentation.mobile.components.RetryButton
+import com.flixclusive.core.presentation.mobile.components.film.FilmCard
 import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop.Companion.toGenreWithBackdrop
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewGenreCatalogAction
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.film.FilmScreenNavArgs
-import com.flixclusive.core.ui.mobile.component.RetryButton
-import com.flixclusive.core.ui.mobile.component.film.FilmCard
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.film.component.EpisodeCard
 import com.flixclusive.feature.mobile.film.component.EpisodeCardPlaceholder
@@ -328,7 +327,7 @@ private fun ContentTabs(
             divider = {
                 HorizontalDivider(
                     thickness = 0.5.dp,
-                    color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.2F)
+                    color = LocalContentColor.current.copy(alpha = 0.2F)
                 )
             },
             indicator = {

@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.mobile.component
+package com.flixclusive.feature.mobile.searchExpanded.component.filter.component
 
 /*
 *
@@ -47,14 +47,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 
 @Composable
 @ReadOnlyComposable
-fun getVerticalSegmentedShape(
+internal fun getVerticalSegmentedShape(
     index: Int,
     count: Int,
-    baseShape: CornerBasedShape = MaterialTheme.shapes.small
+    baseShape: CornerBasedShape = MaterialTheme.shapes.small,
 ): Shape {
     if (count == 1) {
         return baseShape
@@ -70,30 +69,31 @@ fun getVerticalSegmentedShape(
 private fun CornerBasedShape.bottom(): CornerBasedShape {
     return copy(
         topEnd = CornerSize(0.0.dp),
-        topStart = CornerSize(0.0.dp)
+        topStart = CornerSize(0.0.dp),
     )
 }
 
 private fun CornerBasedShape.top(): CornerBasedShape {
     return copy(
         bottomEnd = CornerSize(0.0.dp),
-        bottomStart = CornerSize(0.0.dp)
+        bottomStart = CornerSize(0.0.dp),
     )
 }
 
 @Composable
-internal fun getDefaultSegmentedButtonColors() = SegmentedButtonDefaults.colors().copy(
-    activeContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05F),
-    activeContentColor = MaterialTheme.colorScheme.primary,
-    inactiveContentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(),
-    disabledActiveContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05F),
-    disabledActiveContentColor = MaterialTheme.colorScheme.primary,
-    disabledInactiveContentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
-)
+internal fun getDefaultSegmentedButtonColors() =
+    SegmentedButtonDefaults.colors().copy(
+        activeContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05F),
+        activeContentColor = MaterialTheme.colorScheme.primary,
+        inactiveContentColor = MaterialTheme.colorScheme.onSurface.copy(0.6f),
+        disabledActiveContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05F),
+        disabledActiveContentColor = MaterialTheme.colorScheme.primary,
+        disabledInactiveContentColor = MaterialTheme.colorScheme.onSurface.copy(0.6f),
+    )
 
 @Composable
 @ExperimentalMaterial3Api
-fun VerticalSegmentedButton(
+internal fun VerticalSegmentedButton(
     selected: Boolean,
     onClick: () -> Unit,
     shape: Shape,
@@ -102,7 +102,7 @@ fun VerticalSegmentedButton(
     colors: SegmentedButtonColors = getDefaultSegmentedButtonColors(),
     border: BorderStroke = SegmentedButtonDefaults.borderStroke(
         color = colors.activeBorderColor.copy(alpha = 0.5F),
-        width = 1.2.dp
+        width = 1.2.dp,
     ),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     icon: @Composable () -> Unit = { SegmentedButtonDefaults.Icon(selected) },
@@ -124,7 +124,7 @@ fun VerticalSegmentedButton(
         color = containerColor,
         contentColor = contentColor,
         border = border,
-        interactionSource = interactionSource
+        interactionSource = interactionSource,
     ) {
         SegmentedButtonContent(icon, label)
     }
@@ -135,14 +135,14 @@ fun VerticalSegmentedButton(
 fun SingleChoiceSegmentedButtonColumn(
     modifier: Modifier = Modifier,
     space: Dp = SegmentedButtonDefaults.BorderWidth,
-    content: @Composable SingleChoiceSegmentedButtonColumnScope.() -> Unit
+    content: @Composable SingleChoiceSegmentedButtonColumnScope.() -> Unit,
 ) {
     Column(
         modifier = modifier
             .selectableGroup()
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(-space),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val scope = remember { SingleChoiceSegmentedButtonScopeWrapper(this) }
         scope.content()
@@ -156,18 +156,18 @@ private fun SegmentedButtonContent(
     content: @Composable () -> Unit,
 ) {
     ProvideTextStyle(
-        value = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp)
+        value = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .padding(ButtonDefaults.TextButtonContentPadding)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             Box(
                 modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
+                contentAlignment = Alignment.CenterStart,
             ) {
                 content()
             }
@@ -184,13 +184,15 @@ private fun InteractionSource.interactionCountAsState(): State<Int> {
         this@interactionCountAsState.interactions.collect { interaction ->
             when (interaction) {
                 is PressInteraction.Press,
-                is FocusInteraction.Focus -> {
+                is FocusInteraction.Focus,
+                -> {
                     interactionCount.intValue++
                 }
 
                 is PressInteraction.Release,
                 is FocusInteraction.Unfocus,
-                is PressInteraction.Cancel -> {
+                is PressInteraction.Cancel,
+                -> {
                     interactionCount.intValue--
                 }
             }
@@ -210,7 +212,7 @@ private fun InteractionSource.interactionCountAsState(): State<Int> {
 @OptIn(ExperimentalMaterial3Api::class)
 private fun SegmentedButtonColors.contentColor(
     enabled: Boolean,
-    checked: Boolean
+    checked: Boolean,
 ): Color {
     return when {
         enabled && checked -> activeContentColor
@@ -230,7 +232,7 @@ private fun SegmentedButtonColors.contentColor(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun SegmentedButtonColors.containerColor(
     enabled: Boolean,
-    active: Boolean
+    active: Boolean,
 ): Color {
     return when {
         enabled && active -> activeContainerColor
@@ -246,17 +248,19 @@ interface SingleChoiceSegmentedButtonColumnScope : ColumnScope
 
 private fun Modifier.interactionZIndex(
     checked: Boolean,
-    interactionCount: State<Int>
+    interactionCount: State<Int>,
 ) = this.layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-        layout(placeable.width, placeable.height) {
-            val zIndex = interactionCount.value + if (checked) CheckedZIndexFactor else 0f
-            placeable.place(0, 0, zIndex)
-        }
+    val placeable = measurable.measure(constraints)
+    layout(placeable.width, placeable.height) {
+        val zIndex = interactionCount.value + if (checked) CHECKED_Z_INDEX_FACTOR else 0f
+        placeable.place(0, 0, zIndex)
     }
+}
 
-private const val CheckedZIndexFactor = 5f
+private const val CHECKED_Z_INDEX_FACTOR = 5f
 
 @OptIn(ExperimentalMaterial3Api::class)
-private class SingleChoiceSegmentedButtonScopeWrapper(scope: ColumnScope) :
-    SingleChoiceSegmentedButtonColumnScope, ColumnScope by scope
+private class SingleChoiceSegmentedButtonScopeWrapper(
+    scope: ColumnScope,
+) : SingleChoiceSegmentedButtonColumnScope,
+    ColumnScope by scope

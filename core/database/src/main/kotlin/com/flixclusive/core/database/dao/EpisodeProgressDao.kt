@@ -16,12 +16,17 @@ interface EpisodeProgressDao {
     @Transaction
     @Query(
         """
-        SELECT wh.*
-        FROM series_watch_history AS wh
-        JOIN User AS u
-        ON wh.ownerId = u.userId
-        WHERE u.userId = :ownerId
-        ORDER BY wh.watchedAt DESC;
+        SELECT * FROM series_watch_history s1
+        WHERE ownerId = :ownerId
+        AND (seasonNumber, episodeNumber) = (
+            SELECT seasonNumber, episodeNumber
+            FROM series_watch_history s2
+            WHERE s2.filmId = s1.filmId
+            AND s2.ownerId = :ownerId
+            ORDER BY seasonNumber DESC, episodeNumber DESC
+            LIMIT 1
+        )
+        ORDER BY watchedAt DESC
         """,
     )
     fun getAllAsFlow(ownerId: Int): Flow<List<EpisodeProgressWithMetadata>>
@@ -29,11 +34,8 @@ interface EpisodeProgressDao {
     @Transaction
     @Query(
         """
-        SELECT wh.*
-        FROM series_watch_history AS wh
-        JOIN User AS u
-        ON wh.ownerId = u.userId
-        WHERE userId = :ownerId
+        SELECT * FROM series_watch_history
+        WHERE ownerId = :ownerId
         ORDER BY RANDOM() LIMIT :count
         """,
     )

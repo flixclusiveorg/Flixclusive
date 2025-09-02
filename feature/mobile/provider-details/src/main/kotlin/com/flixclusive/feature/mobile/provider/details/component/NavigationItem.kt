@@ -51,7 +51,7 @@ internal fun NavigationItem(
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.right_arrow),
                     contentDescription = stringResource(id = LocaleR.string.see_all),
-                    tint = LocalContentColor.current.onMediumEmphasis(),
+                    tint = LocalContentColor.current.copy(0.6f),
                     modifier = Modifier
                         .align(Alignment.Center)
                         .size(LABEL_SIZE_IN_DP)

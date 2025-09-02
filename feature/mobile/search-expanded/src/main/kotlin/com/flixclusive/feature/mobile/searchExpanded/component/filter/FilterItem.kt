@@ -42,7 +42,7 @@ internal fun FilterItem(
                 text = filter.name,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontSize = FilterItemLargeLabelSize,
-                    color = LocalContentColor.current.onMediumEmphasis(FilterBottomSheetStyle.STRONGEST_EMPHASIS),
+                    color = LocalContentColor.current.copy(FilterBottomSheetStyle.STRONGEST_EMPHASIS),
                     fontWeight = FontWeight.Black
                 )
             )

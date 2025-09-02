@@ -81,7 +81,7 @@ internal fun FilmsRow(
         shape = RectangleShape,
         colors = NonInteractiveSurfaceDefaults.colors(
             containerColor = Color.Transparent,
-            contentColor = if(hasFocus) Color.White else LocalContentColor.current.onMediumEmphasis()
+            contentColor = if(hasFocus) Color.White else LocalContentColor.current.copy(0.6f)
         ),
     ) {
         Column(
@@ -166,7 +166,7 @@ internal fun FilmsRow(
                                     .matchParentSize()
                                     .background(
                                         color = if (!hasFocus) {
-                                            MaterialTheme.colorScheme.surface.onMediumEmphasis()
+                                            MaterialTheme.colorScheme.surface.copy(0.6f)
                                         } else Color.Transparent,
                                         shape = FilmCardShape
                                     )

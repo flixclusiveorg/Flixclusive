@@ -12,8 +12,8 @@ import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.ui.common.navigation.navargs.SeeAllScreenNavArgs
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
-import com.flixclusive.core.ui.mobile.component.film.FilmsGridScreen
-import com.flixclusive.core.ui.mobile.util.shouldPaginate
+import com.flixclusive.core.presentation.mobile.components.film.FilmsGridScreen
+import com.flixclusive.core.presentation.mobile.util.shouldPaginate
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
 
@@ -61,7 +61,7 @@ internal fun SeeAllScreen(
         },
         onFilterChange = viewModel::onFilterChange,
         onFilmLongClick = previewFilm,
-        onNavigationIconClick = navigator::goBack,
+        onNavigationClick = navigator::goBack,
         onFilmClick = navigator::openFilmScreen,
     )
 }

@@ -39,7 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.applyDropShadow
+import com.flixclusive.core.ui.common.util.dropShadow
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.toTextFieldValue
 import com.flixclusive.core.ui.player.util.PlayerUiUtil.rememberLocalPlayerManager
@@ -61,7 +61,7 @@ internal fun SubtitleSyncPanel(
         player.onSubtitleOffsetChange(by)
     }
 
-    val mediumEmphasis = LocalContentColor.current.onMediumEmphasis()
+    val mediumEmphasis = LocalContentColor.current.copy(0.6f)
 
     Column(
         modifier = modifier
@@ -75,7 +75,7 @@ internal fun SubtitleSyncPanel(
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Black,
                 fontSize = 14.sp,
-                color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.8F),
+                color = LocalContentColor.current.copy(alpha = 0.8F),
                 textAlign = TextAlign.Center
             ),
             modifier = Modifier
@@ -87,7 +87,7 @@ internal fun SubtitleSyncPanel(
                 .fillMaxWidth(0.8F),
             value = textFieldValue,
             singleLine = true,
-            textStyle = MaterialTheme.typography.labelLarge.applyDropShadow().copy(
+            textStyle = MaterialTheme.typography.labelLarge.dropShadow().copy(
                 textAlign = TextAlign.Center,
             ),
             onValueChange = {

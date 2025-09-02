@@ -14,5 +14,5 @@ interface GetHomeCatalogsUseCase {
      *
      * @return A list of [Catalog] objects representing the home catalogs.
      * */
-    suspend operator fun invoke(): Flow<List<Catalog>>
+    operator fun invoke(): Flow<List<Catalog>>
 }

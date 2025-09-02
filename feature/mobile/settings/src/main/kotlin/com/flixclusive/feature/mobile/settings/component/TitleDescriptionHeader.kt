@@ -10,7 +10,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 
 // TODO: Optimize
@@ -21,11 +21,11 @@ internal fun TitleDescriptionHeader(
     modifier: Modifier = Modifier,
     titleStyle: TextStyle = getAdaptiveTextStyle(
         style = TypographyStyle.Title,
-        mode = TextStyleMode.SemiEmphasized,
+        style = AdaptiveTextStyle.SemiEmphasized,
     ).copy(LocalContentColor.current),
     descriptionStyle: TextStyle = getAdaptiveTextStyle(
         style = TypographyStyle.Body,
-        mode = TextStyleMode.NonEmphasized,
+        style = AdaptiveTextStyle.NonEmphasized,
     ),
 ) {
     if (title.isNotBlank()) {

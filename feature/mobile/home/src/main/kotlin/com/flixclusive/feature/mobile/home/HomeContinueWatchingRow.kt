@@ -45,7 +45,6 @@ import com.flixclusive.core.database.entity.util.getNextEpisodeToWatch
 import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.formatMinutes
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.model.film.Film
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -174,7 +173,7 @@ private fun ContinueWatchingCard(
                         shape = CircleShape
                     )
                     .background(
-                        color = Color.Black.onMediumEmphasis(),
+                        color = Color.Black.copy(0.6f),
                         shape = CircleShape
                     )
             ) {
@@ -195,7 +194,7 @@ private fun ContinueWatchingCard(
                         Brush.verticalGradient(
                             0F to Color.Transparent,
                             0.6F to Color.Transparent,
-                            0.95F to MaterialTheme.colorScheme.surface.onMediumEmphasis(emphasis = 0.8F)
+                            0.95F to MaterialTheme.colorScheme.surface.copy(alpha = 0.8F)
                         )
                     )
             ) {
@@ -247,7 +246,7 @@ private fun ContinueWatchingCard(
                 ),
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,
-                color = LocalContentColor.current.onMediumEmphasis(emphasis = 0.8F),
+                color = LocalContentColor.current.copy(alpha = 0.8F),
                 maxLines = 1,
                 modifier = Modifier
                     .padding(vertical = 5.dp)

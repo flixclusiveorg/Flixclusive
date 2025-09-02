@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.mobile.component.provider.ProviderTopCardContent
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderTopCardContent
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Status
 

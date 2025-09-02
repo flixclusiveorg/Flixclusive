@@ -85,7 +85,7 @@ internal fun EpisodeCard(
     val overlayColor = Brush.verticalGradient(
         0F to Color.Transparent,
         0.6F to Color.Transparent,
-        0.95F to if (isSelected) MaterialTheme.colorScheme.primary.onMediumEmphasis(emphasis = 0.8F) else MaterialTheme.colorScheme.surface.onMediumEmphasis(emphasis = 0.8F)
+        0.95F to if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.8F) else MaterialTheme.colorScheme.surface.onMediumEmphasis(alpha = 0.8F)
     )
     val progressColor = remember {
         when (isSelected) {
@@ -135,7 +135,7 @@ internal fun EpisodeCard(
                             shape = CircleShape
                         )
                         .background(
-                            color = Color.Black.onMediumEmphasis(),
+                            color = Color.Black.copy(0.6f),
                             shape = CircleShape
                         )
                 ) {
@@ -188,7 +188,7 @@ internal fun EpisodeCard(
 
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = LocalContentColor.current.onMediumEmphasis()
+            color = LocalContentColor.current.copy(0.6f)
         )
 
         Box(
@@ -202,7 +202,7 @@ internal fun EpisodeCard(
                     fontSize = 10.sp,
                     lineHeight = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = LocalContentColor.current.onMediumEmphasis()
+                    color = LocalContentColor.current.copy(0.6f)
                 ),
                 maxLines = 4,
                 overflow = TextOverflow.Ellipsis
@@ -243,7 +243,7 @@ internal fun EpisodeCardPlaceholder(
 
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = LocalContentColor.current.onMediumEmphasis()
+            color = LocalContentColor.current.copy(0.6f)
         )
 
         for (i in 0..3) {

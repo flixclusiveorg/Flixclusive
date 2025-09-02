@@ -73,7 +73,7 @@ internal fun SubDetailsList(
             if (i < subDetails.lastIndex) {
                 VerticalDivider(
                     thickness = 1.dp,
-                    color = LocalContentColor.current.onMediumEmphasis(0.4F),
+                    color = LocalContentColor.current.copy(0.4F),
                     modifier = Modifier
                         .height(20.dp)
                         .padding(horizontal = 25.dp)

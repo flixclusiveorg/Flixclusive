@@ -32,7 +32,7 @@ import com.flixclusive.core.strings.R as LocaleR
 private fun getBorderStroke()
     = BorderStroke(
         width = 0.8.dp,
-        color = MaterialTheme.colorScheme.primary.onMediumEmphasis()
+        color = MaterialTheme.colorScheme.primary.copy(0.6f)
     )
 
 @Composable
@@ -65,7 +65,7 @@ internal fun ButtonControllerDivider(
         }
 
         HorizontalDivider(
-            color = LocalContentColor.current.onMediumEmphasis(),
+            color = LocalContentColor.current.copy(0.6f),
             thickness = 0.5.dp
         )
     }
@@ -89,7 +89,7 @@ private fun RunningStateButtons(
             Text(
                 text = stringResource(id = LocaleR.string.pause),
                 style = LocalTextStyle.current.copy(
-                    color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8F),
+                    color = MaterialTheme.colorScheme.onSurface.copy(0.8F),
                     fontWeight = FontWeight.Bold
                 )
             )
@@ -103,7 +103,7 @@ private fun RunningStateButtons(
             Text(
                 text = stringResource(id = LocaleR.string.stop),
                 style = LocalTextStyle.current.copy(
-                    color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8F),
+                    color = MaterialTheme.colorScheme.onSurface.copy(0.8F),
                     fontWeight = FontWeight.Bold
                 )
             )

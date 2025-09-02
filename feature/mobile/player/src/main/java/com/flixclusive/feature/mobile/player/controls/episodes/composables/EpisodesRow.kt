@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.database.entity.WatchHistoryItem
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.ui.common.util.fadingEdge
-import com.flixclusive.core.ui.mobile.component.RetryButton
+import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season

@@ -38,9 +38,9 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.isFinite
 import androidx.compose.ui.unit.isSpecified
-import com.flixclusive.core.ui.mobile.component.topbar.EnterOnlyNearTopScrollBehavior
-import com.flixclusive.core.ui.mobile.component.topbar.settleAppBar
-import com.flixclusive.feature.mobile.library.common.component.TopAppBarLayout
+import com.flixclusive.core.presentation.mobile.components.topbar.EnterOnlyNearTopScrollBehavior
+import com.flixclusive.core.presentation.mobile.components.topbar.TopAppBarLayout
+import com.flixclusive.core.presentation.mobile.components.topbar.settleAppBar
 import kotlin.math.abs
 import kotlin.math.roundToInt
 

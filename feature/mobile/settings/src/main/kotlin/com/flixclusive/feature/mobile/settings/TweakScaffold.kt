@@ -33,7 +33,7 @@ import androidx.compose.ui.util.fastForEachIndexed
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.util.coroutines.AppDispatchers
@@ -133,7 +133,7 @@ private fun SubScreenHeader(
             style =
                 getAdaptiveTextStyle(
                     style = TypographyStyle.Headline,
-                    mode = TextStyleMode.Emphasized,
+                    style = AdaptiveTextStyle.Emphasized,
                     size = 35.sp,
                 ),
         )
@@ -143,7 +143,7 @@ private fun SubScreenHeader(
             style =
                 getAdaptiveTextStyle(
                     style = TypographyStyle.Label,
-                    mode = TextStyleMode.SemiEmphasized,
+                    style = AdaptiveTextStyle.SemiEmphasized,
                 ),
         )
     }
@@ -170,7 +170,7 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                             getEmphasizedLabel(
                                 size = 20.sp,
                                 letterSpacing = 0.1.sp,
-                            ).copy(color = LocalContentColor.current.onMediumEmphasis(0.8F)),
+                            ).copy(color = LocalContentColor.current.copy(0.8F)),
                         modifier =
                             Modifier
                                 .animateItem()
@@ -212,7 +212,7 @@ private fun RenderTweakUi(
         is TweakUI.Divider -> {
             HorizontalDivider(
                 thickness = 1.dp,
-                color = LocalContentColor.current.onMediumEmphasis(0.3F),
+                color = LocalContentColor.current.copy(0.3F),
                 modifier =
                     modifier
                         .padding(
@@ -232,7 +232,7 @@ private fun RenderTweakUi(
                     AdaptiveIcon(
                         imageVector = Icons.Outlined.Info,
                         contentDescription = null,
-                        tint = LocalContentColor.current.onMediumEmphasis(),
+                        tint = LocalContentColor.current.copy(0.6f),
                     )
                 },
             )

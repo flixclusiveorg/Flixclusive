@@ -43,10 +43,10 @@ import com.flixclusive.core.ui.common.navigation.navigator.ViewMarkdownAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderSettingsAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewRepositoryAction
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
-import com.flixclusive.core.ui.mobile.component.PlainTooltipBox
-import com.flixclusive.core.ui.mobile.component.dialog.UnsafeInstallAlertDialog
-import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
+import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.dialog.UnsafeInstallAlertDialog
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallationStatus
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.provider.details.component.DescriptionBlock

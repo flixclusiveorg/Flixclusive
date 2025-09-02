@@ -65,9 +65,8 @@ import com.flixclusive.core.ui.common.navigation.navigator.TestProvidersAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewMarkdownAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderSettingsAction
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.data.provider.util.extensions.isNotUsable
 import com.flixclusive.domain.provider.util.getApiCrashMessage
@@ -350,7 +349,7 @@ private fun MissingProvidersLogo() {
         contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(
-            LocalContentColor provides MaterialTheme.colorScheme.primary.onMediumEmphasis(),
+            LocalContentColor provides MaterialTheme.colorScheme.primary.copy(0.6f),
         ) {
             Icon(
                 painter = painterResource(id = UiCommonR.drawable.provider_logo),

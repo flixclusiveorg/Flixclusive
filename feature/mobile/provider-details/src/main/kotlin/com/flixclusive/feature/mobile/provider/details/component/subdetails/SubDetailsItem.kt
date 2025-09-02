@@ -25,7 +25,7 @@ internal fun SubDetailsItem(
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium.copy(
-                color = LocalContentColor.current.onMediumEmphasis(0.8F),
+                color = LocalContentColor.current.copy(0.8F),
                 fontWeight = FontWeight.Bold,
                 fontSize = LABEL_SIZE_IN_SP
             )
@@ -34,7 +34,7 @@ internal fun SubDetailsItem(
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodyMedium.copy(
-                color = LocalContentColor.current.onMediumEmphasis(0.6F),
+                color = LocalContentColor.current.copy(0.6F),
                 fontWeight = FontWeight.Normal,
                 fontSize = SUB_LABEL_SIZE
             )

@@ -36,7 +36,7 @@ import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewRepositoryAction
 import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
-import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.showMessage

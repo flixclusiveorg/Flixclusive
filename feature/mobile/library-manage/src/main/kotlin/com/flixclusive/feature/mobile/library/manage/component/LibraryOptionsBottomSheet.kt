@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -90,7 +90,7 @@ private fun ItemButton(
             text = label,
             style =
             getAdaptiveTextStyle(
-                mode = TextStyleMode.Emphasized,
+                style = AdaptiveTextStyle.Emphasized,
                 style = TypographyStyle.Label,
                 increaseBy = 2.sp,
             ),

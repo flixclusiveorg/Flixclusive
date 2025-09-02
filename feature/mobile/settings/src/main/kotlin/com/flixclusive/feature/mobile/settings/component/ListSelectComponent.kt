@@ -34,7 +34,7 @@ import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdapti
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.LabeledCheckbox
+import com.flixclusive.core.presentation.mobile.components.LabeledCheckbox
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
 import kotlin.math.max
@@ -137,7 +137,7 @@ internal fun <T> ListSelectComponent(
                                             if (isSelected) {
                                                 MaterialTheme.colorScheme.primary
                                             } else {
-                                                MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
+                                                MaterialTheme.colorScheme.onSurface.copy(0.6f)
                                             },
                                     ),
                                 modifier =

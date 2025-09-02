@@ -73,10 +73,10 @@ internal object FilterHelper {
         return if (isBeingUsed) {
             ButtonDefaults.outlinedButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary,
-                containerColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(SELECTED_FILTER_BUTTON_ALPHA)
+                containerColor = MaterialTheme.colorScheme.primary.copy(SELECTED_FILTER_BUTTON_ALPHA)
             )
         } else ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.8F),
+            contentColor = MaterialTheme.colorScheme.onSurface.copy(0.8F),
         )
     }
 

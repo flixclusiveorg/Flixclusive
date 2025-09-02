@@ -114,13 +114,13 @@ internal fun BottomControls(
         }
     }
 
-    val unfocusedContentColor = LocalContentColor.current.onMediumEmphasis()
+    val unfocusedContentColor = LocalContentColor.current.copy(0.6f)
     val largeRadialGradient = getGlowRadialGradient(unfocusedContentColor)
     val sliderInteractionSource = remember { MutableInteractionSource() }
     val sliderColors = SliderDefaults.colors(
         thumbColor = MaterialTheme.colorScheme.primary,
         activeTrackColor = MaterialTheme.colorScheme.primary,
-        inactiveTrackColor = Color.White.onMediumEmphasis()
+        inactiveTrackColor = Color.White.copy(0.6f)
     )
 
     Column(
@@ -337,14 +337,14 @@ private fun OptionButton(
     onClick: () -> Unit,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    val whiteMediumEmphasis = Color.White.onMediumEmphasis()
+    val whiteMediumEmphasis = Color.White.copy(0.6f)
 
     Surface(
         onClick = onClick,
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
             contentColor = whiteMediumEmphasis,
-            focusedContainerColor = Color.White.onMediumEmphasis(0.8F),
+            focusedContainerColor = Color.White.copy(0.8F),
             focusedContentColor = Color.Black
         ),
         border = ClickableSurfaceDefaults.border(

@@ -36,8 +36,8 @@ internal fun AudioAndSubtitlesPanel(
     var isFirstItemFullyFocused by remember { mutableStateOf(true) }
 
     val blackBackgroundGradient = Brush.horizontalGradient(
-        0F to Color.Black.onMediumEmphasis(0.4F),
-        0.15F to Color.Black.onMediumEmphasis(),
+        0F to Color.Black.copy(0.4F),
+        0.15F to Color.Black.copy(0.6f),
         1F to Color.Black
     )
 

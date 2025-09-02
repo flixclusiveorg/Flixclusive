@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.feature.mobile.user.add.util.ModifierUtil.getHorizontalPadding
 import com.flixclusive.core.strings.R as LocaleR
@@ -91,7 +91,7 @@ private fun FloatingBackButton(
                 text = stringResource(LocaleR.string.navigate_up),
                 style = getAdaptiveTextStyle(
                     style = TypographyStyle.Label,
-                    mode = TextStyleMode.NonEmphasized
+                    style = AdaptiveTextStyle.NonEmphasized
                 )
             )
         }

@@ -13,8 +13,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.mobile.component.provider.ButtonWithCircularProgressIndicator
-import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
+import com.flixclusive.core.presentation.mobile.components.provider.ButtonWithProgress
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallationStatus
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -47,7 +47,7 @@ internal fun MainButtons(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        ButtonWithCircularProgressIndicator(
+        ButtonWithProgress(
             onClick = onTestProvider,
             enabled = providerInstallationStatus.isInstalled,
             iconId = UiCommonR.drawable.test,
@@ -57,7 +57,7 @@ internal fun MainButtons(
             modifier = Modifier.weight(1F)
         )
 
-        ButtonWithCircularProgressIndicator(
+        ButtonWithProgress(
             onClick = onToggleInstallationState,
             iconId = iconForInstallationStatus,
             label = stringResource(id = labelForInstallationStatus),

@@ -157,7 +157,7 @@ private fun TestResultCardHeader(
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Medium,
                     fontSize = 12.sp,
-                    color = LocalContentColor.current.onMediumEmphasis()
+                    color = LocalContentColor.current.copy(0.6f)
                 ),
             )
 
@@ -183,7 +183,7 @@ private fun TestResultCardHeader(
                 Icon(
                     imageVector = icon,
                     contentDescription = stringResource(id = LocaleR.string.expand_card_icon_content_desc),
-                    tint = LocalContentColor.current.onMediumEmphasis(0.8F)
+                    tint = LocalContentColor.current.copy(0.8F)
                 )
             }
         }
@@ -223,7 +223,7 @@ private fun TestResultCardContent(
                     if (i != 0 && testResult.outputs.isNotEmpty()) {
                         HorizontalDivider(
                             thickness = 0.5.dp,
-                            color = LocalContentColor.current.onMediumEmphasis(0.4F),
+                            color = LocalContentColor.current.copy(0.4F),
                             modifier = Modifier.padding(horizontal = horizontalPadding)
                         )
                     }
@@ -324,7 +324,7 @@ private fun TestOutputLog(
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Medium,
-                color = LocalContentColor.current.onMediumEmphasis(),
+                color = LocalContentColor.current.copy(0.6f),
                 fontSize = 11.sp,
                 textAlign = TextAlign.End
             )

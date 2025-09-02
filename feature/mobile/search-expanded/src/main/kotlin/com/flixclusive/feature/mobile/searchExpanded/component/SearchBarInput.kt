@@ -153,7 +153,7 @@ internal fun SearchBarInput(
                 Text(
                     text = stringResource(LocaleR.string.search_suggestion),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = LocalContentColor.current.onMediumEmphasis(),
+                    color = LocalContentColor.current.copy(0.6f),
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1
                 )

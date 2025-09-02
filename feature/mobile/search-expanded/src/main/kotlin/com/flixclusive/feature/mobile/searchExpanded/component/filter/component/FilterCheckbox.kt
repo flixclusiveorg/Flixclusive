@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.mobile.component.CustomCheckbox
+import com.flixclusive.core.presentation.mobile.components.CustomCheckbox
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterBottomSheetStyle
 
 @Composable

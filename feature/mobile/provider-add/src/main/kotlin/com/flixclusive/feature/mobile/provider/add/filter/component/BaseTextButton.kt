@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 
 @Composable
@@ -44,10 +44,10 @@ internal fun BaseTextButton(
                 text = label,
                 style =
                     getAdaptiveTextStyle(
-                        mode = TextStyleMode.SemiEmphasized,
+                        style = AdaptiveTextStyle.SemiEmphasized,
                         size = 15.sp,
                     ).copy(
-                        color = LocalContentColor.current.onMediumEmphasis(if (isSelected) 1F else 0.6F),
+                        color = LocalContentColor.current.copy(if (isSelected) 1F else 0.6F),
                     ),
                 modifier =
                     Modifier

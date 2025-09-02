@@ -115,11 +115,11 @@ internal fun PlayerSettingsDialog(
                     .padding(15.dp)
                     .border(
                         width = 1.dp,
-                        color = Color.White.onMediumEmphasis(emphasis = ELEVATED_VIDEO_SETTINGS_PANEL),
+                        color = Color.White.copy(alpha = ELEVATED_VIDEO_SETTINGS_PANEL),
                         shape = RoundedCornerShape(10.dp)
                     )
                     .background(
-                        color = Color.Black.onMediumEmphasis(emphasis = ELEVATED_VIDEO_SETTINGS_PANEL),
+                        color = Color.Black.copy(alpha = ELEVATED_VIDEO_SETTINGS_PANEL),
                         shape = RoundedCornerShape(10.dp)
                     )
             ) {

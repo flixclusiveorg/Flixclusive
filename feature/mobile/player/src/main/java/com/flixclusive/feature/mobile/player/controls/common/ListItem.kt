@@ -32,7 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.applyDropShadow
+import com.flixclusive.core.ui.common.util.dropShadow
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.placeholderEffect
 import com.flixclusive.core.ui.player.PlayerProviderState
@@ -50,18 +50,18 @@ internal fun ListItem(
     onLongClick: () -> Unit = {}
 ) {
     val baseStyle = MaterialTheme.typography.labelLarge
-    val unselectedColor = LocalContentColor.current.onMediumEmphasis()
+    val unselectedColor = LocalContentColor.current.copy(0.6f)
 
     val style = remember(selectedIndex) {
         if (selectedIndex == index)
             baseStyle.copy(
                 fontWeight = FontWeight.Bold,
                 color = Color.White
-            ).applyDropShadow()
+            ).dropShadow()
         else baseStyle.copy(
             fontWeight = FontWeight.Bold,
             color = unselectedColor
-        ).applyDropShadow()
+        ).dropShadow()
     }
 
     Box(

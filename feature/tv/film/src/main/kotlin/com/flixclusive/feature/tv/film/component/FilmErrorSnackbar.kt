@@ -86,7 +86,7 @@ internal fun FilmErrorSnackbar(
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Center
                         ),
-                        color = LocalContentColor.current.onMediumEmphasis(0.8F)
+                        color = LocalContentColor.current.copy(0.8F)
                     )
 
                     Text(
@@ -98,7 +98,7 @@ internal fun FilmErrorSnackbar(
                         ),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
-                        color = LocalContentColor.current.onMediumEmphasis()
+                        color = LocalContentColor.current.copy(0.6f)
                     )
                 }
             }

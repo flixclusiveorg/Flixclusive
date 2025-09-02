@@ -62,7 +62,7 @@ internal fun SeasonBlock(
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1F),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
-            contentColor = if (isSelected) Color.White else LocalContentColor.current.onMediumEmphasis(emphasis = 0.8F),
+            contentColor = if (isSelected) Color.White else LocalContentColor.current.copy(alpha = 0.8F),
             focusedContainerColor = Color.Transparent,
             focusedContentColor = Color.White
         ),

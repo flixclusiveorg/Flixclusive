@@ -67,7 +67,7 @@ internal fun SearchItemCard(
                         .background(
                             Brush.verticalGradient(
                                 0F to Color.Transparent,
-                                0.9F to Color.Black.onMediumEmphasis(emphasis = 0.8F)
+                                0.9F to Color.Black.copy(alpha = 0.8F)
                             ),
                         )
                         .matchParentSize()

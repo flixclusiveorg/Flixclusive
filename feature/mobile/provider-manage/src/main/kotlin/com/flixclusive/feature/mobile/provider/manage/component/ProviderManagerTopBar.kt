@@ -45,9 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarWithSearch
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarWithSearch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.flixclusive.core.strings.R as LocaleR
@@ -84,7 +84,7 @@ internal fun ProviderManagerTopBar(
                     text = stringResource(id = LocaleR.string.providers),
                     style =
                     getAdaptiveTextStyle(
-                        mode = TextStyleMode.Normal,
+                        style = AdaptiveTextStyle.Normal,
                         style = TypographyStyle.Body,
                     ).copy(fontWeight = FontWeight.SemiBold, fontSize = 20.sp),
                     overflow = TextOverflow.Ellipsis,

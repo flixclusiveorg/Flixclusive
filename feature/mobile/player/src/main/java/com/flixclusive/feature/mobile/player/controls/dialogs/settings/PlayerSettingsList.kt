@@ -25,7 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.common.util.applyDropShadow
+import com.flixclusive.core.ui.common.util.dropShadow
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 
 @Composable
@@ -65,12 +65,12 @@ private fun PlayerSettingsListItem(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                Color.Black.onMediumEmphasis(emphasis = ELEVATED_VIDEO_SETTINGS_PANEL * alpha),
+                Color.Black.copy(alpha = ELEVATED_VIDEO_SETTINGS_PANEL * alpha),
                 shape = shape
             )
             .border(
                 width = 1.dp,
-                color = Color.White.onMediumEmphasis(emphasis = ELEVATED_VIDEO_SETTINGS_PANEL * alpha),
+                color = Color.White.copy(alpha = ELEVATED_VIDEO_SETTINGS_PANEL * alpha),
                 shape = shape
             )
             .clickable(enabled = !isSelected) {
@@ -92,7 +92,7 @@ private fun PlayerSettingsListItem(
 
             Text(
                 text = stringResource(item.labelId),
-                style = MaterialTheme.typography.labelLarge.applyDropShadow(),
+                style = MaterialTheme.typography.labelLarge.dropShadow(),
                 fontWeight = FontWeight.Bold,
                 color = Color.White.copy(maxOf(alpha, 0.6F))
             )

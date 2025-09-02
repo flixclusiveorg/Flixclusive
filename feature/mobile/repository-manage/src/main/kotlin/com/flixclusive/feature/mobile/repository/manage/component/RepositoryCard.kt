@@ -33,10 +33,9 @@ import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
+import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -94,7 +93,7 @@ internal fun RepositoryCard(
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     style = getAdaptiveTextStyle(
-                        mode = TextStyleMode.Emphasized,
+                        style = AdaptiveTextStyle.Emphasized,
                         style = TypographyStyle.Title
                     )
                 )
@@ -105,7 +104,7 @@ internal fun RepositoryCard(
                 ) {
                     ImageWithSmallPlaceholder(
                         modifier = Modifier.size(16.dp),
-                        placeholderModifier = Modifier.size(9.dp),
+                        placeholderSize = 9.dp,
                         urlImage = image,
                         placeholderId = UiCommonR.drawable.repository,
                         contentDescId = LocaleR.string.owner_avatar_content_desc
@@ -117,7 +116,7 @@ internal fun RepositoryCard(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.fillMaxWidth(),
                         style = getAdaptiveTextStyle(
-                            mode = TextStyleMode.Light,
+                            style = AdaptiveTextStyle.Light,
                             size = 13.sp
                         )
                     )
@@ -131,7 +130,7 @@ internal fun RepositoryCard(
                 AdaptiveIcon(
                     painter = painterResource(id = UiCommonR.drawable.web_browser),
                     contentDescription = stringResource(id = LocaleR.string.open_in_web),
-                    tint = LocalContentColor.current.onMediumEmphasis()
+                    tint = LocalContentColor.current.copy(0.6f)
                 )
             }
 
@@ -142,7 +141,7 @@ internal fun RepositoryCard(
                 AdaptiveIcon(
                     painter = painterResource(id = UiCommonR.drawable.round_content_copy_24),
                     contentDescription = stringResource(id = LocaleR.string.copy_link),
-                    tint = LocalContentColor.current.onMediumEmphasis()
+                    tint = LocalContentColor.current.copy(0.6f)
                 )
             }
 
@@ -153,7 +152,7 @@ internal fun RepositoryCard(
                 AdaptiveIcon(
                     painter = painterResource(id = UiCommonR.drawable.outlined_trash),
                     contentDescription = stringResource(id = LocaleR.string.delete_repository),
-                    tint = LocalContentColor.current.onMediumEmphasis()
+                    tint = LocalContentColor.current.copy(0.6f)
                 )
             }
         }

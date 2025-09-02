@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.strings.R as LocaleR
@@ -40,7 +40,7 @@ internal fun EditButton(
     enabled: Boolean = true,
     onEdit: () -> Unit
 ) {
-    val mediumEmphasisColor = LocalContentColor.current.onMediumEmphasis()
+    val mediumEmphasisColor = LocalContentColor.current.copy(0.6f)
     OutlinedButton(
         enabled = enabled,
         onClick = onEdit,
@@ -77,7 +77,7 @@ internal fun EditButton(
                         style = getAdaptiveTextStyle(
                             size = fontSize,
                             style = TypographyStyle.Label,
-                            mode = TextStyleMode.SemiEmphasized
+                            style = AdaptiveTextStyle.SemiEmphasized
                         ).copy(color = LocalContentColor.current),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis

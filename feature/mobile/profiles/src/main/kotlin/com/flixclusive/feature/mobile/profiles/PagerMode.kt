@@ -55,7 +55,7 @@ import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
@@ -281,7 +281,7 @@ private fun UsernameTag(
                     compact = 18.sp,
                     expanded = 30.sp,
                     style = TypographyStyle.Label,
-                    mode = TextStyleMode.NonEmphasized
+                    style = AdaptiveTextStyle.NonEmphasized
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -291,7 +291,7 @@ private fun UsernameTag(
                 AdaptiveIcon(
                     painter = painterResource(UiCommonR.drawable.lock_thin),
                     contentDescription = stringResource(LocaleR.string.locked_profile_button_desc),
-                    tint = LocalContentColor.current.onMediumEmphasis(0.8F),
+                    tint = LocalContentColor.current.copy(0.8F),
                     dp = 16.dp,
                     increaseBy = 8.dp,
                 )

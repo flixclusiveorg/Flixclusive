@@ -22,7 +22,7 @@ fun CustomLinearProgressIndicator(
     modifier: Modifier = Modifier,
     progress: Float,
     color: Color,
-    trackColor: Color = color.onMediumEmphasis(),
+    trackColor: Color = color.copy(0.6f),
 ) {
     Box(
         modifier = Modifier

@@ -22,9 +22,9 @@ import com.flixclusive.core.database.entity.MAX_USER_PIN_LENGTH
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBar
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -125,7 +125,7 @@ internal fun PinSetupScreenCompactLandscape(
                                     style =
                                         getAdaptiveTextStyle(
                                             style = TypographyStyle.Title,
-                                            mode = TextStyleMode.Emphasized,
+                                            style = AdaptiveTextStyle.Emphasized,
                                         ),
                                 )
                             }

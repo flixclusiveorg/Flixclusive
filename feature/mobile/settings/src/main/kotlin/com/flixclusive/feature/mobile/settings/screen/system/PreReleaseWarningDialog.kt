@@ -70,7 +70,7 @@ internal fun PreReleaseWarningDialog(
                     onClick = onDismiss,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant.onMediumEmphasis()
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6f)
                     ),
                     shape = buttonShape.copy(
                         bottomEnd = CornerSize((buttonShapeRoundnessPercentage  *2).dp),

@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
-import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
+import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.strings.R as LocaleR
@@ -47,7 +47,7 @@ internal fun ProviderDetailsHeader(
     ) {
         ImageWithSmallPlaceholder(
             modifier = Modifier.size(65.dp),
-            placeholderModifier = Modifier.size(38.dp),
+            placeholderSize = 38.dp,
             urlImage = providerMetadata.iconUrl,
             placeholderId = UiCommonR.drawable.provider_logo,
             contentDescId = LocaleR.string.provider_icon_content_desc,

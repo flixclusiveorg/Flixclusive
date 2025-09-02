@@ -68,7 +68,7 @@ internal fun EpisodeCard(
         onClick = onEpisodeClick,
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
-            contentColor = LocalContentColor.current.onMediumEmphasis(),
+            contentColor = LocalContentColor.current.copy(0.6f),
             focusedContainerColor = Color.Transparent,
             focusedContentColor = Color.White,
         ),
@@ -99,7 +99,7 @@ internal fun EpisodeCard(
                     .border(borderFocused)
             ) {
                 AsyncImage(
-                    model = context.buildImageUrl(
+                    model = context.buildTMDBImageUrl(
                         imagePath = episode.image,
                         imageSize = "w500"
                     ),
@@ -183,7 +183,7 @@ internal fun EpisodeCard(
                                 style = MaterialTheme.typography.labelLarge.copy(
                                     fontWeight = FontWeight.Thin
                                 ),
-                                color = LocalContentColor.current.onMediumEmphasis(),
+                                color = LocalContentColor.current.copy(0.6f),
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier

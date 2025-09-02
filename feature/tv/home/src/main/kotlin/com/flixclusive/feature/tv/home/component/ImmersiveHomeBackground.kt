@@ -53,7 +53,7 @@ internal fun ImmersiveHomeBackground(
             modifier = Modifier.drawScrimOnForeground(),
             label = ""
         ) {
-            val backdropImage = context.buildImageUrl(
+            val backdropImage = context.buildTMDBImageUrl(
                 imagePath = it?.backdropImage,
                 imageSize = "w1280"
             )

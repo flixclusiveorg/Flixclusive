@@ -62,7 +62,7 @@ internal fun SubtitleSyncPanel(
     val smallOffsetButton = 80.dp
     val topFadeEdge = Brush.verticalGradient(
         0F to Color.Black,
-        0.9F to Color.Black.onMediumEmphasis(0.4F)
+        0.9F to Color.Black.copy(0.4F)
     )
 
     BackHandler {
@@ -85,7 +85,7 @@ internal fun SubtitleSyncPanel(
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Black
             ),
-            color = LocalContentColor.current.onMediumEmphasis(0.5F),
+            color = LocalContentColor.current.copy(0.5F),
             modifier = Modifier
                 .padding(top = 25.dp)
         )
@@ -102,7 +102,7 @@ internal fun SubtitleSyncPanel(
                     fontWeight = FontWeight.Black,
                     fontStyle = FontStyle.Italic
                 ),
-                color = LocalContentColor.current.onMediumEmphasis(0.7F),
+                color = LocalContentColor.current.copy(0.7F),
             )
 
             Text(
@@ -113,7 +113,7 @@ internal fun SubtitleSyncPanel(
                     fontWeight = FontWeight.Black,
                     fontStyle = FontStyle.Italic
                 ),
-                color = LocalContentColor.current.onMediumEmphasis(0.7F),
+                color = LocalContentColor.current.copy(0.7F),
             )
         }
 
@@ -222,13 +222,13 @@ private fun OffsetButton(
         onClick = changeOffset,
         colors = IconButtonDefaults.colors(
             containerColor = Color.Transparent,
-            contentColor = Color.White.onMediumEmphasis(0.4F),
+            contentColor = Color.White.copy(0.4F),
             focusedContainerColor = Color.Transparent,
             focusedContentColor = Color.White
         ),
         glow = IconButtonDefaults.glow(
             focusedGlow = Glow(
-                elevationColor = Color.White.onMediumEmphasis(0.4F),
+                elevationColor = Color.White.copy(0.4F),
                 elevation = size
             )
         ),

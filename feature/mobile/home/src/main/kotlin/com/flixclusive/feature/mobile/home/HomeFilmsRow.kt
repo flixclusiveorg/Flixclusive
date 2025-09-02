@@ -30,11 +30,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.common.pagination.PagingState
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.film.FilmCard
-import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
-import com.flixclusive.core.ui.mobile.util.shouldPaginate
-import com.flixclusive.domain.home.PaginationStateInfo
+import com.flixclusive.core.presentation.mobile.components.film.FilmCard
+import com.flixclusive.core.presentation.mobile.components.film.FilmCardPlaceholder
+import com.flixclusive.core.presentation.mobile.util.shouldPaginate
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.core.strings.R as LocaleR
@@ -44,7 +42,7 @@ import com.flixclusive.core.ui.mobile.R as UiMobileR
 internal fun HomeFilmsRow(
     modifier: Modifier = Modifier,
     catalogItem: Catalog,
-    paginationState: PaginationStateInfo,
+    paginationState: CatalogPagingState,
     showCardTitle: Boolean,
     films: List<Film>,
     onFilmClick: (Film) -> Unit,
@@ -105,7 +103,7 @@ internal fun HomeFilmsRow(
                         Icon(
                             painter = painterResource(id = UiMobileR.drawable.right_arrow),
                             contentDescription = stringResource(id = LocaleR.string.see_all),
-                            tint = LocalContentColor.current.onMediumEmphasis(),
+                            tint = LocalContentColor.current.copy(0.6f),
                             modifier = Modifier
                                 .size(14.dp)
                                 .clickable { onSeeAllClick() }

@@ -31,7 +31,7 @@ fun FilmLogo(
 
     var isImageError by remember { mutableStateOf(false) }
 
-    val logoImage = context.buildImageUrl(
+    val logoImage = context.buildTMDBImageUrl(
         imagePath = film.logoImage?.replace("svg", "png"),
         imageSize = "w500"
     )

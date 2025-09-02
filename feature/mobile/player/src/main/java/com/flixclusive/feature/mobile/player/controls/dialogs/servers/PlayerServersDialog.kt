@@ -73,7 +73,7 @@ internal fun PlayerServersDialog(
                     .padding(horizontal = 10.dp)
                     .fillMaxHeight(0.9F)
                     .width(0.5.dp)
-                    .background(LocalContentColor.current.onMediumEmphasis(emphasis = 0.4F))
+                    .background(LocalContentColor.current.copy(alpha = 0.4F))
             )
 
             ListContentHolder(

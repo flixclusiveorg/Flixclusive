@@ -50,7 +50,7 @@ internal fun PlayerVerticalSlider(
     val sliderColors = CustomSliderDefaults.colors(
         thumbColor = Color.White,
         activeTrackColor = Color.White,
-        inactiveTrackColor = Color.White.onMediumEmphasis(emphasis = 0.4F)
+        inactiveTrackColor = Color.White.copy(alpha = 0.4F)
     )
 
     AnimatedVisibility(

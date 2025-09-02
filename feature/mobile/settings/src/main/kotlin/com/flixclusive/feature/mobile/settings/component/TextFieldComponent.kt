@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.clearFocusOnSoftKeyboardHide
 import com.flixclusive.core.ui.common.util.showSoftKeyboard
@@ -107,7 +107,7 @@ internal fun TextFieldComponent(
                     getAdaptiveTextStyle(
                         size = 16.sp,
                         style = TypographyStyle.Body,
-                        mode = TextStyleMode.Normal,
+                        style = AdaptiveTextStyle.Normal,
                     ).copy(
                         textAlign = TextAlign.Start,
                     ),

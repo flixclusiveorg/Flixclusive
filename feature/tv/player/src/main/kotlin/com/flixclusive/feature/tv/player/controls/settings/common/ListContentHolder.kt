@@ -119,7 +119,7 @@ internal fun <Type> ListContentHolder(
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center
             ),
-            color = LocalContentColor.current.onMediumEmphasis(0.4F),
+            color = LocalContentColor.current.copy(0.4F),
             modifier = Modifier
                 .padding(8.dp)
                 .fillMaxWidth()

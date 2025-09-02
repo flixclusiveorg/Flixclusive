@@ -25,7 +25,7 @@ import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.navigation.navigator.PinAction
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.add.OnBoardingScreen
@@ -82,13 +82,13 @@ internal class PinScreen(
                 AdaptiveIcon(
                     painter = painterResource(UiCommonR.drawable.pin_lock),
                     contentDescription = stringResource(LocaleR.string.pin_content_desc),
-                    tint = LocalContentColor.current.onMediumEmphasis(),
+                    tint = LocalContentColor.current.copy(0.6f),
                 )
 
                 Text(
                     text = stringResource(LocaleR.string.pin_setup),
                     style = getAdaptiveTextStyle(
-                        mode = TextStyleMode.Emphasized,
+                        style = AdaptiveTextStyle.Emphasized,
                         size = 16.sp
                     )
                 )

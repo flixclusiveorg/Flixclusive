@@ -16,11 +16,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.mobile.component.LARGE_ERROR
-import com.flixclusive.core.ui.mobile.component.RetryButton
-import com.flixclusive.core.ui.mobile.component.SMALL_ERROR
-import com.flixclusive.core.ui.mobile.component.film.FilmCard
-import com.flixclusive.core.ui.mobile.component.film.FilmCardPlaceholder
+import com.flixclusive.core.presentation.mobile.components.LARGE_ERROR
+import com.flixclusive.core.presentation.mobile.components.RetryButton
+import com.flixclusive.core.presentation.mobile.components.SMALL_ERROR
+import com.flixclusive.core.presentation.mobile.components.film.FilmCard
+import com.flixclusive.core.presentation.mobile.components.film.FilmCardPlaceholder
 import com.flixclusive.model.datastore.user.UiPreferences
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmSearchItem

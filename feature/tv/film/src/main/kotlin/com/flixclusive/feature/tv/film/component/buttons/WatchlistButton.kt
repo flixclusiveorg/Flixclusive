@@ -53,7 +53,7 @@ internal fun WatchlistButton(
     val buttonBorder = Border(
         border = BorderStroke(
             width = 2.dp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.onMediumEmphasis(emphasis = 0.4F)
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4F)
         ),
         shape = shape
     )

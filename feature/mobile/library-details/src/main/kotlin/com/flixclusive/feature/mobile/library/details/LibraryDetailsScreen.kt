@@ -42,17 +42,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.database.entity.DBFilm
 import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.components.LoadingScreen
+import com.flixclusive.core.presentation.mobile.components.film.FilmCard
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
+import com.flixclusive.core.presentation.mobile.components.topbar.rememberEnterOnlyNearTopScrollBehavior
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.EmptyDataMessage
-import com.flixclusive.core.ui.mobile.component.LoadingScreen
-import com.flixclusive.core.ui.mobile.component.film.FilmCard
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
-import com.flixclusive.core.ui.mobile.component.topbar.rememberEnterOnlyNearTopScrollBehavior
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
 import com.flixclusive.feature.mobile.library.common.component.LibraryFilterRow
@@ -220,7 +219,7 @@ internal fun LibraryDetailsScreen(
                         HorizontalDivider(
                             modifier = Modifier
                                 .padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(0.2f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(0.2f),
                         )
 
                         LibraryFilterRow(

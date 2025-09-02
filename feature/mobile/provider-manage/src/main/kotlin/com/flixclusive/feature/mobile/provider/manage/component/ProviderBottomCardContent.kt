@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -34,6 +35,14 @@ import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Status
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
+
+private fun getProviderStatusColor(status: Status)
+    = when (status) {
+        Status.Down -> Color(0xFFFF3030)
+        Status.Maintenance -> Color(0xFFFFBF1B)
+        Status.Beta -> Color(0xFF00C4FF)
+        Status.Working -> Color(0xFF00FF04)
+    }
 
 @Composable
 internal fun ProviderBottomCardContent(
@@ -73,7 +82,7 @@ internal fun ProviderBottomCardContent(
                 style =
                     MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Black,
-                        color = color.onMediumEmphasis(0.4F),
+                        color = color.copy(0.4F),
                         fontSize = 11.sp,
                     ),
             )
@@ -89,7 +98,7 @@ internal fun ProviderBottomCardContent(
                 contentPadding = PaddingValues(0.dp),
                 colors =
                     ButtonDefaults.outlinedButtonColors(
-                        contentColor = LocalContentColor.current.onMediumEmphasis(0.4F),
+                        contentColor = LocalContentColor.current.copy(0.4F),
                     ),
             ) {
                 Text(
@@ -119,11 +128,11 @@ internal fun ProviderBottomCardContent(
                     SwitchDefaults.colors(
                         disabledCheckedThumbColor =
                             MaterialTheme.colorScheme.surface
-                                .onMediumEmphasis(1F)
+                                .copy(1F)
                                 .compositeOver(MaterialTheme.colorScheme.surface),
                         disabledCheckedTrackColor =
                             MaterialTheme.colorScheme.onSurface
-                                .onMediumEmphasis(0.12F)
+                                .copy(0.12F)
                                 .compositeOver(MaterialTheme.colorScheme.surface),
                     ),
                 onCheckedChange = {

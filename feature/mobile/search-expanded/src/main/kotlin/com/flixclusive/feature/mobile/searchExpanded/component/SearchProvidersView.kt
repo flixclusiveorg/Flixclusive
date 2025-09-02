@@ -62,7 +62,7 @@ internal fun SearchProvidersView(
                         MaterialTheme.typography.labelMedium.copy(
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Black,
-                            color = LocalContentColor.current.onMediumEmphasis(0.8F),
+                            color = LocalContentColor.current.copy(0.8F),
                         ),
                     modifier = Modifier.padding(horizontal = 10.dp),
                 )

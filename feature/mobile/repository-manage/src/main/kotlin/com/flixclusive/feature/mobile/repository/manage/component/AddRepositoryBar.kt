@@ -139,7 +139,7 @@ internal fun AddRepositoryBar(
                 Text(
                     text = stringResource(LocaleR.string.search_repository_url_suggestion),
                     style = MaterialTheme.typography.bodySmall,
-                    color = LocalContentColor.current.onMediumEmphasis(),
+                    color = LocalContentColor.current.copy(0.6f),
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                 )

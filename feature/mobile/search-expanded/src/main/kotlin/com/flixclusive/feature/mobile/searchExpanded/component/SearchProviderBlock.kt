@@ -29,8 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
+import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -57,7 +56,7 @@ internal fun SearchProviderBlock(
         ) {
             ImageWithSmallPlaceholder(
                 modifier = Modifier.size(60.dp),
-                placeholderModifier = Modifier.size(30.dp),
+                placeholderSize = 30.dp,
                 urlImage = providerMetadata.iconUrl,
                 placeholderId = UiCommonR.drawable.provider_logo,
                 contentDescId = LocaleR.string.provider_icon_content_desc,
@@ -85,7 +84,7 @@ internal fun SearchProviderBlock(
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Black,
-                        color = LocalContentColor.current.onMediumEmphasis(),
+                        color = LocalContentColor.current.copy(0.6f),
                         fontSize = 13.sp
                     )
                 )

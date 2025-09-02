@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 
 @Composable
@@ -24,7 +24,7 @@ internal fun BaseFilterGroup(
             text = title,
             style =
                 getAdaptiveTextStyle(
-                    mode = TextStyleMode.Emphasized,
+                    style = AdaptiveTextStyle.Emphasized,
                     style = TypographyStyle.Headline,
                 ),
         )

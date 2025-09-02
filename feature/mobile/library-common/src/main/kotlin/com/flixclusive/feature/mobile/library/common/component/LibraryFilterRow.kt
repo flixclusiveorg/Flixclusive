@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import kotlinx.collections.immutable.ImmutableList
@@ -65,7 +64,7 @@ fun LibraryFilterRow(
                 AdaptiveIcon(
                     painter = painterResource(UiCommonR.drawable.edit),
                     contentDescription = stringResource(LocaleR.string.multi_select),
-                    tint = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(0.6f),
                     dp = 16.dp,
                 )
             }
@@ -76,7 +75,7 @@ fun LibraryFilterRow(
                 modifier = Modifier
                     .height(buttonHeight)
                     .padding(5.dp),
-                color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(),
+                color = MaterialTheme.colorScheme.onSurface.copy(0.6f),
             )
         }
 

@@ -47,7 +47,7 @@ import com.flixclusive.core.ui.common.user.getUserBackgroundPalette
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
@@ -244,7 +244,7 @@ private fun ContinueButton(
             style = getAdaptiveTextStyle(
                 medium = 20.sp,
                 style = TypographyStyle.Label,
-                mode = TextStyleMode.Emphasized,
+                style = AdaptiveTextStyle.Emphasized,
             ).copy(
                 color = MaterialTheme.colorScheme.onSurface.copy(0.9F)
             )

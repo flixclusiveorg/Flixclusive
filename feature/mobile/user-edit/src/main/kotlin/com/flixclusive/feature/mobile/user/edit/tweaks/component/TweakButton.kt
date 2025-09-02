@@ -27,7 +27,7 @@ import com.flixclusive.core.ui.common.dialog.TextAlertDialog
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.user.edit.tweaks.ProfileTweakUI
@@ -85,7 +85,7 @@ internal fun TweakButton(
             Icon(
                 painter = tweak.icon.asPainterResource(),
                 contentDescription = tweak.label.asString(),
-                tint = LocalContentColor.current.onMediumEmphasis(),
+                tint = LocalContentColor.current.copy(0.6f),
                 modifier = Modifier
                     .size(
                         getAdaptiveDp(
@@ -102,7 +102,7 @@ internal fun TweakButton(
                     text = tweak.label.asString(),
                     style = getAdaptiveTextStyle(
                         style = TypographyStyle.Label,
-                        mode = TextStyleMode.Emphasized,
+                        style = AdaptiveTextStyle.Emphasized,
                     )
                 )
 
@@ -111,7 +111,7 @@ internal fun TweakButton(
                     style = getAdaptiveTextStyle(
                         size = 12.sp,
                         style = TypographyStyle.Body,
-                        mode = TextStyleMode.Normal,
+                        style = AdaptiveTextStyle.Normal,
                     )
                 )
             }

@@ -23,7 +23,7 @@ internal fun PlayerDialogButton(
     label: String,
     colors: ButtonColors = ButtonDefaults.buttonColors(
         containerColor = Color.White.copy(0.1F),
-        contentColor = LocalContentColor.current.onMediumEmphasis()
+        contentColor = LocalContentColor.current.copy(0.6f)
     ),
     onClick: () -> Unit,
 ) {

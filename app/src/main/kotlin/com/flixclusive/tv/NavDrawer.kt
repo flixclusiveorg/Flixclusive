@@ -50,7 +50,6 @@ import androidx.tv.material3.Text
 import com.flixclusive.AppNavigationItem
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.tv.util.LocalLastFocusedItemFocusedRequesterProvider
 import com.flixclusive.core.ui.tv.util.focusOnInitialVisibility
 import com.flixclusive.core.ui.tv.util.useLocalLastFocusedItemFocusedRequester
@@ -213,7 +212,7 @@ private fun NavDrawerItem(
         onClick = { onClick() },
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
-            contentColor = LocalContentColor.current.onMediumEmphasis(),
+            contentColor = LocalContentColor.current.copy(0.6f),
             focusedContainerColor = Color.Transparent,
             focusedContentColor = Color.White
         ),

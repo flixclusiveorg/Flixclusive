@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.mobile.component.CustomCheckbox
+import com.flixclusive.core.presentation.mobile.components.CustomCheckbox
 import com.flixclusive.feature.splashScreen.ENTER_DELAY
 import com.flixclusive.feature.splashScreen.EXIT_DELAY
 import com.flixclusive.feature.splashScreen.PaddingHorizontal

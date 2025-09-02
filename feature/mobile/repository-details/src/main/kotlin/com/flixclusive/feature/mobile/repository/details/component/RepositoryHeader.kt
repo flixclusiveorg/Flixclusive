@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
-import com.flixclusive.core.ui.mobile.component.provider.ButtonWithCircularProgressIndicator
+import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
+import com.flixclusive.core.presentation.mobile.components.provider.ButtonWithProgress
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -48,7 +48,7 @@ internal fun RepositoryHeader(
         ) {
             ImageWithSmallPlaceholder(
                 modifier = Modifier.size(120.dp),
-                placeholderModifier = Modifier.size(70.dp),
+                placeholderSize = 70.dp,
                 urlImage = if (repository.url.contains("github")) "https://github.com/${repository.owner}.png" else null,
                 placeholderId = UiCommonR.drawable.repository,
                 contentDescId = LocaleR.string.owner_avatar_content_desc
@@ -85,7 +85,7 @@ internal fun RepositoryHeader(
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(15.dp)
         ) {
-            ButtonWithCircularProgressIndicator(
+            ButtonWithProgress(
                 onClick = { uriHandler.openUri(repository.url) },
                 iconId = UiCommonR.drawable.web_browser,
                 label = stringResource(id = LocaleR.string.open_in_web),
@@ -93,7 +93,7 @@ internal fun RepositoryHeader(
                     .weight(1F)
             )
 
-            ButtonWithCircularProgressIndicator(
+            ButtonWithProgress(
                 onClick = {
                     clipboardManager.setText(AnnotatedString(repository.url))
                     toggleSnackbar(UiText.StringResource(LocaleR.string.copied_link))

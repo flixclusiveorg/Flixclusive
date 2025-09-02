@@ -146,7 +146,7 @@ private fun PreviewCard(
         if (preview != null) {
             val painter =
                 remember(preview.posterPath) {
-                    context.buildImageUrl(
+                    context.buildTMDBImageUrl(
                         imagePath = preview.posterPath,
                         imageSize = "w300",
                     )
@@ -184,7 +184,7 @@ private fun PreviewPlaceholder(
     title: String?,
     modifier: Modifier = Modifier,
 ) {
-    val contentColor = LocalContentColor.current.onMediumEmphasis()
+    val contentColor = LocalContentColor.current.copy(0.6f)
 
     val (iconWeight, iconAlignment) =
         remember {
@@ -256,7 +256,7 @@ private fun PreviewPlaceholder(
                 AdaptiveIcon(
                     painter = painterResource(id = UiCommonR.drawable.round_add_24),
                     contentDescription = stringResource(LocaleR.string.add_to_list),
-                    tint = LocalContentColor.current.onMediumEmphasis(),
+                    tint = LocalContentColor.current.copy(0.6f),
                     dp = 25.dp,
                     increaseBy = 3.dp
                 )

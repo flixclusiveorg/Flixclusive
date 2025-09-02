@@ -1,5 +1,6 @@
 package com.flixclusive.core.common.pagination
 
+import androidx.annotation.StringRes
 import com.flixclusive.core.common.R
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.pagination.PagingDataState.Error
@@ -26,6 +27,7 @@ sealed class PagingDataState {
     data class Error(
         val error: UiText,
     ) : PagingDataState() {
+        constructor(@StringRes errorId: Int) : this(UiText.from(errorId))
         constructor(error: String) : this(UiText.from(error))
         constructor(exception: Throwable) :
             this(

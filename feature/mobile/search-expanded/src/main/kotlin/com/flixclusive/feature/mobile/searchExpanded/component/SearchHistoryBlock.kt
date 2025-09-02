@@ -56,7 +56,7 @@ internal fun SearchHistoryBlock(
             Icon(
                 painter = painterResource(id = UiCommonR.drawable.time_circle_outlined),
                 contentDescription = stringResource(LocaleR.string.search_history_icon),
-                tint = LocalContentColor.current.onMediumEmphasis(),
+                tint = LocalContentColor.current.copy(0.6f),
                 modifier = Modifier.size(16.dp)
             )
 
@@ -79,7 +79,7 @@ internal fun SearchHistoryBlock(
                 Icon(
                     painter = painterResource(id = UiCommonR.drawable.north_west_arrow),
                     contentDescription = stringResource(LocaleR.string.search_history_icon),
-                    tint = LocalContentColor.current.onMediumEmphasis(0.8F),
+                    tint = LocalContentColor.current.copy(0.8F),
                     modifier = Modifier.size(20.dp)
                 )
             }

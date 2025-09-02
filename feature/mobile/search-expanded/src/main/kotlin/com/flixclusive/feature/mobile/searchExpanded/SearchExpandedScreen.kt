@@ -27,7 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.pagination.PagingState
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
-import com.flixclusive.core.ui.mobile.util.shouldPaginate
+import com.flixclusive.core.presentation.mobile.util.shouldPaginate
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchBarInput
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchFilmsGridView
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchProvidersView

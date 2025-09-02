@@ -119,7 +119,7 @@ internal fun EpisodesPanel(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface.onMediumEmphasis()),
+            .background(MaterialTheme.colorScheme.surface.copy()),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         Box(
@@ -196,7 +196,7 @@ internal fun EpisodesPanel(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            color = MaterialTheme.colorScheme.surface.onMediumEmphasis(emphasis = 0.2F)
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.2F)
                         ),
                     contentAlignment = Alignment.CenterStart
                 ) {

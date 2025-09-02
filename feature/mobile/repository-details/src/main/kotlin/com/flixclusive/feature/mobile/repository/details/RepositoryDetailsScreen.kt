@@ -48,14 +48,13 @@ import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navargs.RepositoryScreenNavArgs
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.RetryButton
-import com.flixclusive.core.ui.mobile.component.dialog.UnsafeInstallAlertDialog
-import com.flixclusive.core.ui.mobile.component.provider.ButtonWithCircularProgressIndicator
-import com.flixclusive.core.ui.mobile.component.provider.ProviderCard
-import com.flixclusive.core.ui.mobile.component.provider.ProviderCardPlaceholder
-import com.flixclusive.core.ui.mobile.component.provider.ProviderInstallationStatus
-import com.flixclusive.core.ui.mobile.component.topbar.CommonTopBarWithSearch
+import com.flixclusive.core.presentation.mobile.components.RetryButton
+import com.flixclusive.core.presentation.mobile.components.dialog.UnsafeInstallAlertDialog
+import com.flixclusive.core.presentation.mobile.components.provider.ButtonWithProgress
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderCard
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderCardPlaceholder
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallationStatus
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarWithSearch
 import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.repository.details.component.RepositoryHeader
@@ -200,7 +199,7 @@ private fun RepositoryDetailsScreen(
                         Modifier
                             .padding(vertical = 10.dp),
                     thickness = 1.dp,
-                    color = LocalContentColor.current.onMediumEmphasis(0.4F),
+                    color = LocalContentColor.current.copy(0.4F),
                 )
             }
 
@@ -229,14 +228,14 @@ private fun RepositoryDetailsScreen(
                         }
                     }
 
-                    ButtonWithCircularProgressIndicator(
+                    ButtonWithProgress(
                         onClick = {
                             if (warnOnInstall) {
                                 providersToInstall =
                                     onlineProviderMap.count { (_, state) ->
                                         state.isNotInstalled
                                     }
-                                return@ButtonWithCircularProgressIndicator
+                                return@ButtonWithProgress
                             }
 
                             onInstallAll()

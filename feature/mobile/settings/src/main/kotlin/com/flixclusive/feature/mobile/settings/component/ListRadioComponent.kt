@@ -123,7 +123,7 @@ internal fun <T> ListRadioComponent(
                                             if (isSelected) {
                                                 MaterialTheme.colorScheme.primary
                                             } else {
-                                                MaterialTheme.colorScheme.onSurface.onMediumEmphasis()
+                                                MaterialTheme.colorScheme.onSurface.copy(0.6f)
                                             },
                                     ),
                             )

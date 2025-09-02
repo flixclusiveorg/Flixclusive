@@ -46,7 +46,6 @@ import com.flixclusive.R
 import com.flixclusive.core.presentation.theme.starColor
 import com.flixclusive.core.ui.common.FilmCover
 import com.flixclusive.core.ui.common.util.formatRating
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.model.film.Film
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -153,7 +152,7 @@ internal fun FilmPreviewBottomSheet(
                 Text(
                     text = film.overview ?: "",
                     style = MaterialTheme.typography.labelMedium,
-                    color = LocalContentColor.current.onMediumEmphasis(),
+                    color = LocalContentColor.current.copy(0.6f),
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 2,
                     fontWeight = FontWeight.Light

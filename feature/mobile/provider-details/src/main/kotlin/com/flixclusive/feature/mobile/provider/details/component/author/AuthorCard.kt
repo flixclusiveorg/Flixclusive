@@ -20,7 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.ifElse
-import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
+import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.feature.mobile.provider.details.SUB_LABEL_SIZE
 import com.flixclusive.model.provider.Author
 import com.flixclusive.core.strings.R as LocaleR

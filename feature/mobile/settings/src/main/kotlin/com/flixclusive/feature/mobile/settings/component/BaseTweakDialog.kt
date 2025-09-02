@@ -21,7 +21,7 @@ import com.flixclusive.core.strings.R
 import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TextStyleMode
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 
 @Composable
@@ -101,7 +101,7 @@ internal fun BaseTweakDialog(
                 style =
                     getAdaptiveTextStyle(
                         style = TypographyStyle.Headline,
-                        mode = TextStyleMode.Emphasized,
+                        style = AdaptiveTextStyle.Emphasized,
                         size = 20.sp,
                     ),
                 modifier =

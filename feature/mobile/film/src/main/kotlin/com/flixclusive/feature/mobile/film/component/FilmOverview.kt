@@ -29,7 +29,6 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.feature.mobile.film.R
 import kotlin.math.roundToInt
 import com.flixclusive.core.strings.R as LocaleR
@@ -95,14 +94,14 @@ private fun Overview(
                 Text(
                     text = "\n\n", // Shows at least 3 lines
                     style = MaterialTheme.typography.bodySmall,
-                    color = LocalContentColor.current.onMediumEmphasis(),
+                    color = LocalContentColor.current.copy(0.6f),
                 )
             },
             {
                 Text(
                     text = expandedDescription,
                     style = MaterialTheme.typography.bodySmall,
-                    color = LocalContentColor.current.onMediumEmphasis(),
+                    color = LocalContentColor.current.copy(0.6f),
                 )
             },
             {
@@ -111,7 +110,7 @@ private fun Overview(
                         text = if (expanded) expandedDescription else shrunkDescription,
                         maxLines = Int.MAX_VALUE,
                         style = MaterialTheme.typography.bodySmall,
-                        color = LocalContentColor.current.onMediumEmphasis(),
+                        color = LocalContentColor.current.copy(0.6f),
                     )
                 }
             },

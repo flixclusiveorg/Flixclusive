@@ -82,7 +82,7 @@ internal fun TopControls(
                         withStyle(
                             style = titleStyle.copy(
                                 fontWeight = FontWeight.Light,
-                                color = Color.White.onMediumEmphasis(emphasis = 0.8F),
+                                color = Color.White.copy(alpha = 0.8F),
                             ).toSpanStyle()
                         ) {
                             append(currentEpisodeSelected.title)
