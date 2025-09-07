@@ -2,8 +2,8 @@ package com.flixclusive.tv
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
-import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
+import com.flixclusive.core.navigation.navigator.SplashScreenNavigator
+import com.flixclusive.core.navigation.navigator.ViewFilmAction
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.tv.film.FilmScreenTvNavigator
 import com.flixclusive.feature.tv.film.destinations.FilmScreenDestination

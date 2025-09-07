@@ -32,13 +32,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewRepositoryAction
 import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
-import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
-import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.repository.manage.component.AddRepositoryBar
 import com.flixclusive.feature.mobile.repository.manage.component.RepositoryCard

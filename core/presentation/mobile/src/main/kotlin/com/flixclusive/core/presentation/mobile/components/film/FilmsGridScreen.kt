@@ -57,7 +57,7 @@ import com.flixclusive.core.presentation.mobile.components.topbar.TwoRowsTopAppB
 import com.flixclusive.core.presentation.mobile.components.topbar.rememberEnterAlwaysScrollBehavior
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
-import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.util.FilmType

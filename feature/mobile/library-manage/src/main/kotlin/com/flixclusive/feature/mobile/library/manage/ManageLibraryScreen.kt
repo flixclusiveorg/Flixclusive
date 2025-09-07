@@ -37,6 +37,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.database.entity.DBFilm
 import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
+import com.flixclusive.core.presentation.mobile.components.topbar.rememberEnterAlwaysScrollBehavior
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
@@ -44,9 +47,6 @@ import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
-import com.flixclusive.core.presentation.mobile.components.topbar.rememberEnterAlwaysScrollBehavior
-import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
 import com.flixclusive.feature.mobile.library.common.component.LibraryFilterRow
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection

@@ -33,6 +33,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.dialog.UnsafeInstallAlertDialog
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallationStatus
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.R
 import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
@@ -43,11 +48,6 @@ import com.flixclusive.core.ui.common.navigation.navigator.ViewMarkdownAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderSettingsAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewRepositoryAction
 import com.flixclusive.core.ui.common.util.DummyDataForPreview
-import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
-import com.flixclusive.core.presentation.mobile.components.dialog.UnsafeInstallAlertDialog
-import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallationStatus
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
-import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.provider.details.component.DescriptionBlock
 import com.flixclusive.feature.mobile.provider.details.component.MainButtons

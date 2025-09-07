@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.mobile.util
+package com.flixclusive.core.presentation.mobile.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType

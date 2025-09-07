@@ -1,7 +1,5 @@
-package com.flixclusive.core.ui.common.navigation.navigator
-
-import com.flixclusive.core.database.entity.user.User
+package com.flixclusive.core.navigation.navigator
 
 interface EditUserAction {
-    fun openEditUserScreen(user: User)
+    fun openEditUserScreen(userId: Int)
 }

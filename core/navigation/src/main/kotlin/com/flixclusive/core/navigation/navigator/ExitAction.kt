@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.common.navigation.navigator
+package com.flixclusive.core.navigation.navigator
 
 interface ExitAction {
     fun onExitApplication()

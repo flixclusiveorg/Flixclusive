@@ -1,11 +1,12 @@
 package com.flixclusive.feature.mobile.home
 
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.pagination.PagingDataState
+import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
@@ -25,9 +26,16 @@ import com.flixclusive.feature.mobile.home.HomeUiState.Companion.MAX_PAGINATION_
 import com.flixclusive.feature.mobile.home.HomeUiState.Companion.addItems
 import com.flixclusive.feature.mobile.home.HomeUiState.Companion.updatePagingState
 import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.provider.Catalog
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentHashMapOf
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentHashMap
+import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,6 +57,7 @@ internal class HomeScreenViewModel
     constructor(
         getHomeCatalogs: GetHomeCatalogsUseCase,
         userSessionManager: UserSessionManager,
+        appDispatchers: AppDispatchers,
         private val getHomeHeader: GetHomeHeaderUseCase,
         private val paginateItems: PaginateItemsUseCase,
         private val getEpisode: GetEpisodeUseCase,
@@ -59,15 +68,18 @@ internal class HomeScreenViewModel
         private val _uiState = MutableStateFlow(HomeUiState())
         val uiState = _uiState.asStateFlow()
 
+        /** Cache to store if a film has metadata or not to avoid redundant API queries */
+        private val cachedFilmMetadata = HashMap<DBFilm, TvShow>()
+
         /** Displays the title of the media under the card */
-        val showFilmTitle = dataStoreManager
+        val showFilmTitles = dataStoreManager
             .getUserPrefs(UserPreferences.UI_PREFS_KEY, UiPreferences::class)
             .mapLatest { it.shouldShowTitleOnCards }
             .distinctUntilChanged()
             .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = UiPreferences(),
+                scope = appDispatchers.defaultScope,
+                started = SharingStarted.Eagerly,
+                initialValue = false,
             )
 
         /** Map of jobs for each row catalog loaded on the home screen */
@@ -80,12 +92,12 @@ internal class HomeScreenViewModel
         /** List of catalogs to display on the home screen */
         val catalogs = getHomeCatalogs()
             .onEach { list ->
-                val items = HashMap<String, List<Film>>()
+                val items = HashMap<String, PersistentSet<Film>>()
                 val pagingStates = HashMap<String, CatalogPagingState>()
                 paginationJobs.clear()
 
                 list.forEach { catalog ->
-                    items[catalog.url] = mutableStateListOf()
+                    items[catalog.url] = persistentSetOf<Film>()
                     pagingStates[catalog.url] = CatalogPagingState(
                         hasNext = catalog.canPaginate,
                         state = when {
@@ -97,9 +109,16 @@ internal class HomeScreenViewModel
 
                     paginationJobs[catalog.url] = null
                 }
+
+                _uiState.update {
+                    it.copy(
+                        items = items.toPersistentHashMap(),
+                        pagingStates = pagingStates.toPersistentHashMap(),
+                    )
+                }
             }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
+                scope = appDispatchers.defaultScope,
+                started = SharingStarted.Eagerly,
                 initialValue = emptyList(),
             )
 
@@ -111,8 +130,8 @@ internal class HomeScreenViewModel
             }.mapLatest { list ->
                 list.mapNotNull { item -> filterContinueWatching(item) }
             }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
+                scope = appDispatchers.ioScope,
+                started = SharingStarted.Eagerly,
                 initialValue = emptyList(),
             )
 
@@ -129,8 +148,17 @@ internal class HomeScreenViewModel
                         return item // Episode not finished, include in continue watching
                     }
 
-                    val tvShow = getFilmMetadata(item.film).data
-                        ?: throw NullPointerException("Film metadata not found for id: ${item.film.id}")
+                    var tvShow: FilmMetadata? = cachedFilmMetadata[item.film]
+
+                    if (tvShow == null) {
+                        tvShow = getFilmMetadata(item.film).data?.also {
+                            cachedFilmMetadata[item.film] = it as TvShow
+                        }
+                    }
+
+                    if (tvShow == null) {
+                        throw NullPointerException("Film metadata not found for id: ${item.film.id}")
+                    }
 
                     // Get next episode
                     val nextEpisode = getEpisode(
@@ -178,27 +206,39 @@ internal class HomeScreenViewModel
         /**
          * Loads the header item for the home screen.
          * */
-        private fun loadHomeHeader() {
+        fun loadHomeHeader() {
             viewModelScope.launch {
+                _uiState.update {
+                    it.copy(itemHeaderError = null)
+                }
+
                 when (val result = getHomeHeader()) {
                     is Resource.Failure -> {
                         _uiState.update {
-                            it.copy(error = result.error)
+                            it.copy(itemHeaderError = result.error)
                         }
                     }
+
                     Resource.Loading -> Unit
                     is Resource.Success<*> -> {
                         _uiState.update {
-                            it.copy(itemHeader = result.data)
+                            it.copy(
+                                itemHeader = result.data,
+                                itemHeaderError = null,
+                            )
                         }
                     }
                 }
             }
         }
 
-        fun paginate(catalog: Catalog, page: Int) {
-            if(paginationJobs[catalog.url]?.isActive == true)
+        fun paginate(
+            catalog: Catalog,
+            page: Int,
+        ) {
+            if (paginationJobs[catalog.url]?.isActive == true) {
                 return
+            }
 
             paginationJobs[catalog.url] = viewModelScope.launch {
                 _uiState.update {
@@ -207,20 +247,27 @@ internal class HomeScreenViewModel
 
                     it.updatePagingState(
                         key = catalog.url,
-                        newState = pagingState.copy(state = PagingDataState.Loading)
+                        newState = pagingState.copy(state = PagingDataState.Loading),
                     )
                 }
 
                 val response = paginateItems(catalog = catalog, page = page)
                 val data = response.data
 
-                if (data == null) {
-                    // TODO: Handle error state
-                    return@launch
-                }
+                if (data == null || response is Resource.Failure) {
+                    _uiState.update {
+                        val oldPagingState = it.pagingStates[catalog.url] ?: return@launch
 
-                if (response is Resource.Failure) {
-                    // TODO: Handle error state
+                        val errorState = when (data) {
+                            null -> PagingDataState.Error()
+                            else -> PagingDataState.Error(response.error!!)
+                        }
+
+                        it.updatePagingState(
+                            key = catalog.url,
+                            newState = oldPagingState.copy(state = errorState),
+                        )
+                    }
                     return@launch
                 }
 
@@ -229,7 +276,8 @@ internal class HomeScreenViewModel
 
                 _uiState.update {
                     val items = response.data?.results ?: emptyList()
-                    it.addItems(key = catalog.url, newItems = items)
+                    it
+                        .addItems(key = catalog.url, newItems = items)
                         .updatePagingState(
                             key = catalog.url,
                             newState = CatalogPagingState(
@@ -238,11 +286,8 @@ internal class HomeScreenViewModel
                                     hasNext -> PagingDataState.Loading
                                     else -> PagingDataState.Error(LocaleR.string.end_of_list)
                                 },
-                                page = when {
-                                    hasNext -> page + 1
-                                    else -> page
-                                },
-                            )
+                                page = page,
+                            ),
                         )
                 }
             }
@@ -252,28 +297,29 @@ internal class HomeScreenViewModel
 @Stable
 internal data class HomeUiState(
     val itemHeader: Film? = null,
-    val items: Map<String, List<Film>> = HashMap(),
-    val pagingStates: Map<String, CatalogPagingState> = HashMap(),
-    val error: UiText? = null,
+    val itemHeaderError: UiText? = null,
+    val items: PersistentMap<String, PersistentSet<Film>> = persistentHashMapOf(),
+    val pagingStates: PersistentMap<String, CatalogPagingState> = persistentHashMapOf(),
 ) {
     companion object {
         const val MAX_PAGINATION_PAGES = 5
 
-        fun HomeUiState.addItems(key: String, newItems: List<Film>): HomeUiState {
-            val updatedItems = items.toMutableMap()
-            val currentList = updatedItems[key]?.toMutableList() ?: mutableListOf()
+        fun HomeUiState.addItems(
+            key: String,
+            newItems: List<Film>,
+        ): HomeUiState {
+            if (!items.containsKey(key)) return this
 
-            currentList.addAll(newItems)
-            updatedItems[key] = currentList
-
-            return this.copy(items = updatedItems.toMap())
+            return copy(items = items.put(key, newItems.toPersistentSet()))
         }
 
-        fun HomeUiState.updatePagingState(key: String, newState: CatalogPagingState): HomeUiState {
-            val updatedStates = pagingStates.toMutableMap()
-            updatedStates[key] = newState
+        fun HomeUiState.updatePagingState(
+            key: String,
+            newState: CatalogPagingState,
+        ): HomeUiState {
+            if (!pagingStates.containsKey(key)) return this
 
-            return this.copy(pagingStates = updatedStates.toMap())
+            return copy(pagingStates = pagingStates.put(key, newState))
         }
     }
 }

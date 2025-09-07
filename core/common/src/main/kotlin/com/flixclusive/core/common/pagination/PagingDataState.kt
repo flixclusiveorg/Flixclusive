@@ -29,9 +29,9 @@ sealed class PagingDataState {
     ) : PagingDataState() {
         constructor(@StringRes errorId: Int) : this(UiText.from(errorId))
         constructor(error: String) : this(UiText.from(error))
-        constructor(exception: Throwable) :
+        constructor(exception: Throwable? = null) :
             this(
-                exception.localizedMessage?.let { UiText.from(it) }
+                exception?.localizedMessage?.let { UiText.from(it) }
                     ?: UiText.from(R.string.paging_state_default_error),
             )
     }

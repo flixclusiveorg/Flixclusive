@@ -24,7 +24,6 @@ internal fun Project.configureAndroidCompose(commonExtension: BaseExtension) {
             val composeRules = libs.findLibrary("compose.rules").get()
             add("implementation", platform(bom))
             add("androidTestImplementation", platform(bom))
-            add("androidTestImplementation", platform(bom))
             add("ktlintRuleset", composeRules)
         }
     }

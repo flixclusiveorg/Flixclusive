@@ -22,8 +22,8 @@ import androidx.navigation.NavGraph
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
 import com.flixclusive.ROOT
-import com.flixclusive.core.ui.common.navigation.navargs.PinVerificationResult
-import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
+import com.flixclusive.core.navigation.navargs.PinVerificationResult
+import com.flixclusive.core.navigation.navargs.PinWithHintResult
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreen
 import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
 import com.flixclusive.feature.mobile.user.add.AddUserScreen

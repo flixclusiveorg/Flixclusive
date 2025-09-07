@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.Genre
 import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.provider.Author
 import com.flixclusive.model.provider.Language
@@ -41,16 +42,40 @@ object DummyDataForPreview {
             )
         }
 
-    @Composable
-    fun getDummyFilm() =
-        remember {
-            FilmSearchItem(
-                id = null,
-                title = "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
-                posterImage = "https://image.tmdb.org/t/p/w500/t9XkeE7HzOsdQcDDDapDYh8Rrmt.jpg",
-                providerId = DEFAULT_FILM_SOURCE_NAME,
-                filmType = FilmType.MOVIE,
-                homePage = null,
+    fun getDummyFilm(
+        id: String? = null,
+        tmdbId: Int = 123,
+        imdbId: String = "tt1234567",
+        title: String = "Sample item",
+        providerId: String = DEFAULT_FILM_SOURCE_NAME,
+        filmType: FilmType = FilmType.MOVIE,
+        genres: List<String> = listOf("Action", "Adventure"),
+        posterImage: String? = "/t9XkeE7HzOsdQcDDDapDYh8Rrmt.jpg",
+        backdropImage: String? = posterImage,
+        logoImage: String? = "/6pObznbCoxVpY1lPQwJxETd7Phe.png",
+        rating: Double? = 7.5,
+        releaseDate: String? = "2023-10-10",
+        overview: String? = "This is a sample overview for the film.",
+        homePage: String? = null,
+    ) = FilmSearchItem(
+        id = id,
+        tmdbId = tmdbId,
+        imdbId = imdbId,
+        title = title,
+        posterImage = posterImage,
+        backdropImage = backdropImage,
+        logoImage = logoImage,
+        providerId = providerId,
+        filmType = filmType,
+        releaseDate = releaseDate,
+        rating = rating,
+        overview = overview,
+        homePage = homePage,
+        genres = genres.map {
+            Genre(
+                id = it.hashCode(),
+                name = it
             )
         }
+    )
 }

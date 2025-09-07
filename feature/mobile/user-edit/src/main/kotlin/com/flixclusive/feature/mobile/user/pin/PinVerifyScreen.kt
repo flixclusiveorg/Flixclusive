@@ -17,11 +17,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.database.entity.user.User
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.isCompact
-import com.flixclusive.core.presentation.mobile.util.ComposeConstants.DefaultScreenPaddingHorizontal
 import com.flixclusive.feature.mobile.user.pin.component.DEFAULT_DELAY
 import com.flixclusive.feature.mobile.user.pin.component.HeaderLabel
 import com.flixclusive.feature.mobile.user.pin.component.PinScreenDefault

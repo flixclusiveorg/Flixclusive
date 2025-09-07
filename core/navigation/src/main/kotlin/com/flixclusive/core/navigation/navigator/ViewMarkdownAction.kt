@@ -1,8 +1,8 @@
-package com.flixclusive.core.ui.common.navigation.navigator
+package com.flixclusive.core.navigation.navigator
 
 interface ViewMarkdownAction {
     fun openMarkdownScreen(
         title: String,
-        description: String
+        description: String,
     )
 }

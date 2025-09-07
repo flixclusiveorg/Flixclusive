@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.flixclusive.library)
+    alias(libs.plugins.flixclusive.compose)
     alias(libs.plugins.flixclusive.hilt)
 }
 
@@ -11,7 +12,6 @@ dependencies {
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.model.provider)
 
-    implementation(platform(libs.compose.bom))
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
 }

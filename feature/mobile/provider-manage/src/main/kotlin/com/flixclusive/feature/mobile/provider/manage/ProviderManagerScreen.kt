@@ -57,6 +57,8 @@ import androidx.core.view.HapticFeedbackConstantsCompat
 import androidx.core.view.ViewCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.dialog.IconAlertDialog
 import com.flixclusive.core.ui.common.dialog.TextAlertDialog
@@ -66,8 +68,6 @@ import com.flixclusive.core.ui.common.navigation.navigator.ViewMarkdownAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderAction
 import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderSettingsAction
 import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
-import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.data.provider.util.extensions.isNotUsable
 import com.flixclusive.domain.provider.util.getApiCrashMessage
 import com.flixclusive.feature.mobile.provider.manage.component.InstalledProviderCard

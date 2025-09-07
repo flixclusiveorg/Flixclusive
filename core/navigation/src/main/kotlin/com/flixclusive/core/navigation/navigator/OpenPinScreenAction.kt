@@ -1,11 +1,10 @@
-package com.flixclusive.core.ui.common.navigation.navigator
+package com.flixclusive.core.navigation.navigator
 
-import com.flixclusive.core.database.entity.user.User
 import java.io.Serializable
 
 sealed class PinAction : Serializable {
     data class Verify(
-        val user: User,
+        val userPin: String,
     ) : PinAction()
 
     object Setup : PinAction() {

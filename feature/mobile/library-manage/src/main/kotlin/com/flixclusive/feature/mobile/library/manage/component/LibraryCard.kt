@@ -27,14 +27,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.database.entity.DBFilm
+import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
+import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.core.strings.R as LocaleR

@@ -7,5 +7,6 @@ android {
 }
 
 dependencies {
-    // ...
+    implementation(libs.stubs.model.provider)
+    implementation(libs.stubs.model.film)
 }

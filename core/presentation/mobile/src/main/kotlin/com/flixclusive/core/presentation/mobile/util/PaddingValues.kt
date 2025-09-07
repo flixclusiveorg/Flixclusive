@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.mobile.util
+package com.flixclusive.core.presentation.mobile.util
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.compositionLocalOf

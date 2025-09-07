@@ -43,11 +43,6 @@ import androidx.compose.ui.util.fastFilter
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.dialog.IconAlertDialog
-import com.flixclusive.core.ui.common.navigation.navargs.RepositoryScreenNavArgs
-import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.dialog.UnsafeInstallAlertDialog
 import com.flixclusive.core.presentation.mobile.components.provider.ButtonWithProgress
@@ -55,7 +50,12 @@ import com.flixclusive.core.presentation.mobile.components.provider.ProviderCard
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCardPlaceholder
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallationStatus
 import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarWithSearch
-import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.ui.common.dialog.IconAlertDialog
+import com.flixclusive.core.ui.common.navigation.navargs.RepositoryScreenNavArgs
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
+import com.flixclusive.core.ui.common.util.DummyDataForPreview
 import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.repository.details.component.RepositoryHeader
 import com.flixclusive.model.provider.ProviderMetadata

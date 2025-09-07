@@ -1,11 +1,10 @@
-package com.flixclusive.core.ui.common.navigation.navigator
-
+package com.flixclusive.core.navigation.navigator
 
 interface ViewNewAppUpdatesAction {
     fun openUpdateScreen(
         newVersion: String,
         updateUrl: String,
         updateInfo: String?,
-        isComingFromSplashScreen: Boolean = false
+        isComingFromSplashScreen: Boolean = false,
     )
 }

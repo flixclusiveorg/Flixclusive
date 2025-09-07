@@ -45,13 +45,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
 import com.flixclusive.core.database.entity.user.User
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.ChooseProfileAction
 import com.flixclusive.core.ui.common.navigation.navigator.EditUserAction
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.navigation.navigator.TestProvidersAction
 import com.flixclusive.core.ui.common.user.getAvatarResource
-import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.appearance.AppearanceTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.data.DataTweakScreen

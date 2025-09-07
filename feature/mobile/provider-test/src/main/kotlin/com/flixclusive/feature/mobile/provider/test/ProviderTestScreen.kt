@@ -50,12 +50,10 @@ import androidx.compose.ui.util.fastSumBy
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.domain.provider.repository.testing.TestStage.Idle.Companion.isIdle
 import com.flixclusive.domain.provider.testing.ProviderTestCaseOutput
 import com.flixclusive.domain.provider.testing.ProviderTestResult

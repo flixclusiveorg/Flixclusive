@@ -12,9 +12,37 @@ import androidx.compose.runtime.setValue
 
 // TODO: Improve pagination logic
 
-fun LazyGridState.shouldPaginate(toDeduct: Int = 6) = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -9) >= (layoutInfo.totalItemsCount - toDeduct) || !canScrollForward
+/**
+ * Determines if pagination should occur based on the current scroll position.
+ *
+ * @param buffer The number of items when we should start loading more items before reaching the end.
+ *
+ * @return True if pagination should occur, false otherwise.
+ * */
+fun LazyGridState.shouldPaginate(buffer: Int = 6): Boolean {
+    // Get the total number of items in the list
+    val totalItemsCount = layoutInfo.totalItemsCount
+    // Get the index of the last visible item
+    val lastVisibleItemIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+    // Check if we have scrolled near the end of the list and more items should be loaded
+    return lastVisibleItemIndex >= (totalItemsCount - buffer)
+}
 
-fun LazyListState.shouldPaginate(toDeduct: Int = 6) = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -9) >= (layoutInfo.totalItemsCount - toDeduct) || !canScrollForward
+/**
+ * Determines if pagination should occur based on the current scroll position.
+ *
+ * @param buffer The number of items when we should start loading more items before reaching the end.
+ *
+ * @return True if pagination should occur, false otherwise.
+ * */
+fun LazyListState.shouldPaginate(buffer: Int = 6): Boolean {
+    // Get the total number of items in the list
+    val totalItemsCount = layoutInfo.totalItemsCount
+    // Get the index of the last visible item
+    val lastVisibleItemIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+    // Check if we have scrolled near the end of the list and more items should be loaded
+    return lastVisibleItemIndex >= (totalItemsCount - buffer)
+}
 
 @Composable
 fun LazyGridState.isAtTop(): State<Boolean> {

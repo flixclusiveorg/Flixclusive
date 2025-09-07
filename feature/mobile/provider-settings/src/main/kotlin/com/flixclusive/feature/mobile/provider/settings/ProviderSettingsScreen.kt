@@ -11,11 +11,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.flixclusive.core.ui.common.navigation.navargs.ProviderMetadataNavArgs
-import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.DefaultTopBarHeight
-import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.core.ui.common.navigation.navargs.ProviderMetadataNavArgs
+import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.provider.util.res.LocalResources
 import com.ramcosta.composedestinations.annotation.Destination
 

@@ -24,8 +24,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.common.util.fadingEdge
-import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.ui.player.PlayerProviderState
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.provider.ProviderMetadata

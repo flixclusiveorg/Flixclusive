@@ -52,12 +52,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.UiText
 import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.domain.provider.testing.ProviderTestCaseOutput
 import com.flixclusive.domain.provider.testing.ProviderTestResult
 import com.flixclusive.domain.provider.testing.TestStatus

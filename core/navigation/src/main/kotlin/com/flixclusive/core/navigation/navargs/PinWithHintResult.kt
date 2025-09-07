@@ -1,4 +1,4 @@
-package com.flixclusive.core.ui.common.navigation.navargs
+package com.flixclusive.core.navigation.navargs
 
 import java.io.Serializable
 

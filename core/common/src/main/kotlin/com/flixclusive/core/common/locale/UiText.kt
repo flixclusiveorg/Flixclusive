@@ -13,7 +13,9 @@ sealed class UiText {
      * Represents a string value.
      * @param str The string value.
      */
-    data class StringValue(val str: String) : UiText() {
+    data class StringValue(
+        val str: String,
+    ) : UiText() {
         constructor(e: Throwable?) : this(e?.message ?: "")
 
         override fun toString(): String {
@@ -62,7 +64,7 @@ sealed class UiText {
 
         fun from(
             @StringRes id: Int,
-            vararg args: Any
+            vararg args: Any,
         ): StringResource {
             return StringResource(id, *args)
         }
