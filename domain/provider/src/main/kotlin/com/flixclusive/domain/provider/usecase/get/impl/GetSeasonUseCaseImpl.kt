@@ -5,7 +5,7 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.tmdb.repository.TMDBMetadataRepository
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetSeasonUseCase
-import com.flixclusive.domain.provider.util.extensions.isNonDefaultProvider
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Season
 import kotlinx.coroutines.flow.Flow
@@ -24,46 +24,29 @@ internal class GetSeasonUseCaseImpl
             flow {
                 emit(Resource.Loading)
 
-                val response = when {
-                    tvShow.isNonDefaultProvider -> {
-                        getFromNonDefaultProvider(tvShow, number)
-                    }
+                // Try to get the season from the TvShow.seasons property first
+                var season = tvShow.seasons.find { it.number == number }
 
-                    tvShow.isFromTmdb && tvShow.tmdbId != null -> {
-                        tmdbMetadataRepository.getSeason(
-                            id = tvShow.tmdbId!!,
-                            seasonNumber = number,
-                        )
-                    }
+                if (season == null && tvShow.isFromTmdbSource) {
+                    val tmdbSeason = tmdbMetadataRepository.getSeason(
+                        id = tvShow.tmdbId!!,
+                        seasonNumber = number,
+                    )
 
-                    else -> {
-                        Resource.Failure(
-                            UiText.from(R.string.failed_to_fetch_season_message, number),
-                        )
-                    }
+                    return@flow emit(tmdbSeason)
+                } else if (season != null) {
+                    return@flow emit(Resource.Success(season))
                 }
 
-                emit(response)
+                emit(Resource.Failure(UiText.from(R.string.failed_to_fetch_season_message, number),))
             }
-
-        /**
-         * Fetches the season from the TvShow object for non-default providers.
-         *
-         * @param tvShow The TvShow object containing the seasons.
-         * @param number The season number to fetch.
-         *
-         * @return A [Resource] containing the [Season] if found, or with an error message
-         * */
-        private fun getFromNonDefaultProvider(
-            tvShow: TvShow,
-            number: Int,
-        ): Resource<Season> {
-            val season = tvShow.seasons.find { it.number == number }
-
-            return if (season != null) {
-                Resource.Success(season)
-            } else {
-                Resource.Failure(UiText.from(R.string.failed_to_fetch_season_message, number))
-            }
-        }
     }
+
+/**
+ * Checks if the TvShow is from TMDB source by verifying if it has a non-null tmdbId
+ * and if the providerId matches the default film source name (case-insensitive).
+ *
+ * TODO: Update core-stubs's [TvShow.isFromTmdb] so no need to redefine this here.
+ * */
+private val TvShow.isFromTmdbSource: Boolean
+    get() = tmdbId != null && providerId.equals(DEFAULT_FILM_SOURCE_NAME, ignoreCase = true)
