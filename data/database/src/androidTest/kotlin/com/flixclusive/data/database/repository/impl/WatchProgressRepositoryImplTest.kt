@@ -116,6 +116,24 @@ class WatchProgressRepositoryImplTest {
         }
 
     @Test
+    fun shouldObserveWatchHistoryItemByFilmId() =
+        runTest(testDispatcher) {
+            val itemId = repository.insert(testEpisodeProgress, testDBFilm)
+
+            repository
+                .getAsFlow(
+                    id = testDBFilm.id,
+                    ownerId = testEpisodeProgress.ownerId,
+                    type = FilmType.TV_SHOW,
+                ).test {
+                    expectThat(awaitItem()).isNotNull().and {
+                        get { id }.isEqualTo(itemId)
+                        get { film.title }.isEqualTo(testDBFilm.title)
+                    }
+                }
+        }
+
+    @Test
     fun shouldRetrieveAllItemsByOwnerId() =
         runTest(testDispatcher) {
             database.userDao().insert(testUser.copy(id = 2))

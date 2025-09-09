@@ -46,6 +46,17 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getAsFlow(
+        id: String,
+        ownerId: Int,
+        type: FilmType
+    ): Flow<WatchProgressWithMetadata?> {
+        return when (type) {
+            FilmType.MOVIE -> movieProgressDao.getAsFlow(id, ownerId)
+            FilmType.TV_SHOW -> episodeProgressDao.getAsFlow(id, ownerId)
+        }
+    }
+
     override suspend fun getRandoms(ownerId: Int, count: Int): Flow<List<WatchProgressWithMetadata>> {
         return withContext(appDispatchers.io) {
             combine(

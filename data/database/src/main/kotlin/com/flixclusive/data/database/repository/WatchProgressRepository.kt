@@ -19,6 +19,12 @@ interface WatchProgressRepository {
         type: FilmType,
     ): Flow<WatchProgressWithMetadata?>
 
+    fun getAsFlow(
+        id: String,
+        ownerId: Int,
+        type: FilmType,
+    ): Flow<WatchProgressWithMetadata?>
+
     suspend fun getRandoms(
         ownerId: Int,
         count: Int,
