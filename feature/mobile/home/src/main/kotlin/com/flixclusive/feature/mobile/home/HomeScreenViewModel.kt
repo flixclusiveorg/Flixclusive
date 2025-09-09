@@ -58,11 +58,11 @@ internal class HomeScreenViewModel
         getHomeCatalogs: GetHomeCatalogsUseCase,
         userSessionManager: UserSessionManager,
         appDispatchers: AppDispatchers,
+        dataStoreManager: DataStoreManager,
         private val getHomeHeader: GetHomeHeaderUseCase,
         private val paginateItems: PaginateItemsUseCase,
         private val getEpisode: GetEpisodeUseCase,
         private val getFilmMetadata: GetFilmMetadataUseCase,
-        private val dataStoreManager: DataStoreManager,
         private val watchProgressRepository: WatchProgressRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState())
@@ -258,9 +258,9 @@ internal class HomeScreenViewModel
                     _uiState.update {
                         val oldPagingState = it.pagingStates[catalog.url] ?: return@launch
 
-                        val errorState = when (data) {
-                            null -> PagingDataState.Error()
-                            else -> PagingDataState.Error(response.error!!)
+                        val errorState = when (response) {
+                            is Resource.Failure -> PagingDataState.Error(response.error!!)
+                            else -> PagingDataState.Error()
                         }
 
                         it.updatePagingState(
@@ -272,7 +272,7 @@ internal class HomeScreenViewModel
                 }
 
                 val maxPage = minOf(MAX_PAGINATION_PAGES, data.totalPages)
-                val hasNext = data.results.size == 20 && page < maxPage && catalog.canPaginate
+                val hasNext = page < maxPage && catalog.canPaginate
 
                 _uiState.update {
                     val items = response.data?.results ?: emptyList()

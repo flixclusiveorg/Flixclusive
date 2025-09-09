@@ -36,4 +36,6 @@ dependencies {
     implementation(libs.lifecycle.runtimeCompose)
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.model.provider)
+
+    testImplementation(projects.coreTesting)
 }
