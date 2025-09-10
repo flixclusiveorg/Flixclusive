@@ -86,29 +86,4 @@ class FilmFormatterUtilTest {
                 .isEqualTo(expected)
         }
     }
-
-    @Test
-    fun formatTvRuntime() {
-        val testCases = listOf(
-            Triple(45, 3, 24) to "45m | 3 Seasons | 24 Episodes | ",
-            Triple(null, 1, 10) to "1 Season | 10 Episodes | ",
-            Triple(30, 0, 0) to "30m | ",
-            Triple(60, 2, 0) to "1h | 2 Seasons | ",
-            Triple(null, 0, 5) to "5 Episodes | ",
-            Triple(null, 0, 1) to "1 Episode | ",
-            Triple(90, 1, 1) to "1h 30m | 1 Season | 1 Episode | "
-        )
-
-        for ((input, expected) in testCases) {
-            val (minutesPerEpisode, seasons, episodes) = input
-            val result = FilmFormatterUtil.formatTvRuntime(
-                context = context,
-                minutesPerEpisode = minutesPerEpisode,
-                seasons = seasons,
-                episodes = episodes
-            )
-            expectThat(result)
-                .isEqualTo(expected)
-        }
-    }
 }

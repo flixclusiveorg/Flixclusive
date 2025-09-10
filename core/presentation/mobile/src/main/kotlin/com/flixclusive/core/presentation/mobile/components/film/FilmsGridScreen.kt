@@ -163,7 +163,6 @@ fun FilmsGridScreen(
 
                     RetryButton(
                         error = error?.asString(),
-                        shouldShowError = pagingState.isError,
                         onRetry = onRetry,
                         modifier = Modifier.fillMaxSize(),
                     )

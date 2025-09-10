@@ -1,83 +1,62 @@
 package com.flixclusive.feature.mobile.film
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import android.annotation.SuppressLint
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.navigation.navargs.FilmScreenNavArgs
+import com.flixclusive.core.navigation.navargs.GenreWithBackdrop
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.film.FilmCard
-import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop.Companion.toGenreWithBackdrop
-import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
-import com.flixclusive.core.ui.common.navigation.navigator.ViewGenreCatalogAction
-import com.flixclusive.core.ui.film.FilmScreenNavArgs
-import com.flixclusive.core.ui.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.feature.mobile.film.component.EpisodeCard
-import com.flixclusive.feature.mobile.film.component.EpisodeCardPlaceholder
-import com.flixclusive.feature.mobile.film.component.FilmOverview
-import com.flixclusive.feature.mobile.film.component.FilmScreenButtons
-import com.flixclusive.feature.mobile.film.component.FilmScreenHeader
-import com.flixclusive.feature.mobile.film.component.TvShowSeasonDropdown
+import com.flixclusive.core.presentation.mobile.extensions.isCompact
+import com.flixclusive.core.presentation.mobile.extensions.isMedium
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
+import com.flixclusive.feature.mobile.film.component.BackdropImage
+import com.flixclusive.feature.mobile.film.component.BriefDetails
+import com.flixclusive.feature.mobile.film.component.CollapsibleDescription
+import com.flixclusive.feature.mobile.film.component.ContentTabs
+import com.flixclusive.feature.mobile.film.component.FilmScreenTopBar
+import com.flixclusive.feature.mobile.film.util.FilmScreenUtils
 import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.FilmMetadata
+import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Movie
-import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.util.FilmType
 import com.ramcosta.composedestinations.annotation.Destination
-import com.flixclusive.core.strings.R as LocaleR
-
-interface FilmScreenNavigator : ViewFilmAction, ViewGenreCatalogAction, GoBackAction
-
-internal enum class FilmTab(val stringId: Int) {
-    Episodes(LocaleR.string.episodes),
-    MoreLikeThis(LocaleR.string.more_like_this),
-    Collections(LocaleR.string.collections)
-}
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Destination(
@@ -86,325 +65,253 @@ internal enum class FilmTab(val stringId: Int) {
 @Composable
 internal fun FilmScreen(
     navigator: FilmScreenNavigator,
-    previewFilm: (Film) -> Unit,
-    play: (Film, Episode?) -> Unit,
+    navArgs: FilmScreenNavArgs,
+    viewModel: FilmScreenViewModel = hiltViewModel()
 ) {
-    val viewModel: FilmScreenViewModel = hiltViewModel()
-    val uiPreferences by viewModel.uiPreferences.collectAsStateWithLifecycle()
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val film by viewModel.film.collectAsStateWithLifecycle()
-    val currentSeasonSelected by viewModel.currentSeasonSelected.collectAsStateWithLifecycle()
-    val watchHistoryItem by viewModel.watchHistoryItem.collectAsStateWithLifecycle()
 
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+private fun FilmScreenContent(
+    navigator: FilmScreenNavigator,
+    showFilmTitles: Boolean,
+    uiState: FilmUiState,
+    metadata: Film,
+    onRetry: () -> Unit,
+) {
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val usePortraitView = windowSizeClass.windowWidthSizeClass.isCompact ||
+        windowSizeClass.windowWidthSizeClass.isMedium
+
+    val configuration = LocalConfiguration.current
+
+    val backdropAspectRatio = remember(usePortraitView) { getAspectRatio(usePortraitView) }
+
+    val scope = rememberCoroutineScope()
     val listState = rememberLazyGridState()
-    val isCollapsed by remember {
-        derivedStateOf { listState.firstVisibleItemIndex > 0 }
+
+    var appBarContainerAlpha by remember { mutableFloatStateOf(0f) }
+
+    val tabs = remember(metadata) { FilmScreenUtils.getTabs(metadata) }
+    val (currentTabSelected, onTabChange) = rememberSaveable(tabs.size) { mutableStateOf(tabs.firstOrNull()) }
+
+    // Extra cards to show based on the selected tab
+    val extraFilmCards: List<FilmSearchItem>? = remember(currentTabSelected, metadata) {
+        when (currentTabSelected) {
+            ContentTabType.MoreLikeThis -> metadata.recommendations
+            ContentTabType.Collections -> (metadata as Movie).collection?.films
+            else -> null
+        }
     }
 
-    Box(
-        modifier = Modifier
-            .padding(LocalGlobalScaffoldPadding.current)
+    val canScrollUpTop by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
+        }
+    }
+
+    BackHandler(
+        enabled = canScrollUpTop && uiState.screenState == FilmScreenState.Success
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            AnimatedVisibility(
-                visible = state.isLoading,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                FilmScreenPlaceholder(
-                    modifier = Modifier
-                        .fillMaxSize()
-                )
-            }
+        scope.launch {
+            runCatching { listState.animateScrollToItem(0) }
+        }
+    }
 
-            RetryButton(
-                shouldShowError = state.errorMessage != null,
-                error = state.errorMessage?.asString(),
-                modifier = Modifier
-                    .fillMaxSize(),
-                onRetry = viewModel::initializeData
+    LaunchedEffect(listState, configuration) {
+        snapshotFlow {
+            Triple(
+                first = listState.firstVisibleItemScrollOffset.toFloat(),
+                second = listState.firstVisibleItemIndex,
+                third = configuration.screenWidthDp.toFloat()
             )
+        }.collect { (offset, index, screenWidth) ->
+            val headerHeight = screenWidth / backdropAspectRatio
+            val coercedOffset = offset.coerceIn(0f, headerHeight)
 
-            AnimatedVisibility(
-                visible = !state.isLoading && state.errorMessage == null && film != null,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                film?.let { film ->
-                    val filmTabs = remember {
-                        val filmTabs = mutableListOf<FilmTab>()
+            appBarContainerAlpha =
+                when {
+                    index == 0 && headerHeight > coercedOffset -> coercedOffset / headerHeight
+                    else -> 1F
+                }
+        }
+    }
 
-                        if (film.filmType == FilmType.TV_SHOW) {
-                            filmTabs.add(FilmTab.Episodes)
-                        }
+    Scaffold(
+        modifier = Modifier
+            .padding(LocalGlobalScaffoldPadding.current),
+        topBar = {
+            FilmScreenTopBar(
+                title = metadata.title,
+                onNavigate = navigator::goBack,
+                containerAlpha = { appBarContainerAlpha },
+            )
+        }
+    ) {
+        AnimatedContent(
+            targetState = uiState.screenState,
+            label = "FilmScreenContent",
+            modifier = Modifier
+        ) { state ->
+            when (state) {
+                FilmScreenState.Loading -> {
+                    // TODO: Add placeholder screen
+                }
 
-                        if (film.recommendations.isNotEmpty()) {
-                            filmTabs.add(FilmTab.MoreLikeThis)
-                        }
+                FilmScreenState.Error -> {
+                    RetryButton(
+                        error = uiState.error?.asString(),
+                        modifier = Modifier.fillMaxSize(),
+                        onRetry = onRetry
+                    )
+                }
 
-                        if (film is Movie && film.collection?.films?.isNotEmpty() == true) {
-                            filmTabs.add(FilmTab.Collections)
-                        }
-
-                        filmTabs
-                    }
-                    val (currentTabSelected, onTabChange) = rememberSaveable { mutableStateOf(filmTabs.firstOrNull()) }
-
-                    val catalogueToUse = rememberSaveable(currentTabSelected) {
-                        when (currentTabSelected) {
-                            FilmTab.MoreLikeThis -> film.recommendations
-                            FilmTab.Collections -> (film as Movie).collection!!.films
-                            else -> emptyList()
-                        }
-                    }
-
+                FilmScreenState.Success -> {
                     LazyVerticalGrid(
-                        columns = GridCells.Adaptive(110.dp),
+                        columns = GridCells.Adaptive(getAdaptiveFilmCardWidth()),
                         state = listState
                     ) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            FilmScreenHeader(
-                                film = film,
-                                onGenreClick = {
-                                    if (it.id == -1)
-                                        return@FilmScreenHeader
+                            Box(contentAlignment = Alignment.TopCenter) {
+                                BackdropImage(
+                                    metadata = metadata as FilmMetadata,
+                                    modifier = Modifier
+                                        .aspectRatio(backdropAspectRatio)
+                                )
 
-                                    navigator.openGenreScreen(it.toGenreWithBackdrop())
-                                },
-                                onNavigateClick = navigator::goBack
-                            )
+                                BriefDetails(
+                                    metadata = metadata,
+                                    onGenreClick = { /*TODO*/ },
+                                    providerUsed = uiState.providerUsed,
+                                    modifier = Modifier
+                                        .aspectRatio(backdropAspectRatio * 0.95f)
+                                )
+                            }
                         }
 
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            FilmScreenButtons(
-                                modifier = Modifier
-                                    .padding(horizontal = 15.dp)
-                                    .padding(top = 20.dp),
-                                isInWatchlist = state.isFilmInWatchlist,
-                                releaseStatus = film.releaseStatus,
-                                watchHistoryItem = watchHistoryItem,
-                                onPlayClick = {
-                                    play(film, null)
-                                },
-                                onWatchlistClick = viewModel::toggleAsWatchList
-                            )
-                        }
-
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            FilmOverview(
-                                overview = film.overview,
-                                defaultExpandState = filmTabs.isEmpty(),
+                            CollapsibleDescription(
+                                metadata = metadata as FilmMetadata,
                                 modifier = Modifier
                                     .padding(horizontal = 15.dp)
                                     .padding(top = 25.dp)
                             )
                         }
 
-                        if (filmTabs.isNotEmpty()) {
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                ContentTabs(
-                                    modifier = Modifier
-                                        .padding(top = 20.dp, bottom = 10.dp),
-                                    filmTabs = filmTabs,
-                                    currentTabSelected = filmTabs.indexOf(currentTabSelected),
-                                    onTabChange = {
-                                        onTabChange(filmTabs[it])
-                                    }
-                                )
-                            }
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            ContentTabs(
+                                tabs = tabs,
+                                currentTabSelected = tabs.indexOf(currentTabSelected),
+                                onTabChange = { onTabChange(tabs[it]) },
+                                modifier = Modifier
+                                    .padding(top = 20.dp, bottom = 10.dp)
+                            )
                         }
 
-                        val isTvShowAndIsTabSelected = film.filmType == FilmType.TV_SHOW
-                                && currentTabSelected == FilmTab.Episodes
-                        if (isTvShowAndIsTabSelected) {
-                            val tvShow = film as TvShow
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                TvShowSeasonDropdown(
-                                    modifier = Modifier
-                                        .padding(vertical = 5.dp),
-                                    seasons = tvShow.seasons,
-                                    selectedSeason = viewModel.selectedSeasonNumber,
-                                    onSeasonChange = {
-                                        viewModel.onSeasonChange(it)
-                                    }
-                                )
-                            }
-
-                            when (currentSeasonSelected) {
-                                is Resource.Failure -> {
-                                    item(span = { GridItemSpan(maxLineSpan) }) {
-                                        val seasonErrorMessage =
-                                            currentSeasonSelected.error!!.asString()
-
-                                        RetryButton(
-                                            modifier = Modifier
-                                                .height(400.dp)
-                                                .fillMaxWidth(),
-                                            shouldShowError = true,
-                                            error = seasonErrorMessage,
-                                            onRetry = {
-                                                viewModel.onSeasonChange(viewModel.selectedSeasonNumber)
-                                            }
-                                        )
-                                    }
-                                }
-
-                                Resource.Loading -> {
-                                    items(
-                                        count = 3,
-                                        span = { GridItemSpan(maxLineSpan) },
-                                    ) {
-                                        EpisodeCardPlaceholder(modifier = Modifier.padding(vertical = 5.dp))
-                                    }
-                                }
-
-                                is Resource.Success -> {
-                                    items(
-                                        items = currentSeasonSelected.data!!.episodes,
-                                        span = { GridItemSpan(maxLineSpan) },
-                                        contentType = { it }
-                                    ) { episode ->
-                                        EpisodeCard(
-                                            modifier = Modifier
-                                                .padding(vertical = 5.dp),
-                                            episode = episode,
-                                            watchHistoryItem = watchHistoryItem,
-                                            onEpisodeClick = { episodeToWatch ->
-                                                play(film, episodeToWatch)
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        } else {
+                        if (currentTabSelected?.isOnFilmsSection == true && extraFilmCards != null) {
                             items(
-                                items = catalogueToUse,
+                                items = extraFilmCards,
                                 key = { film -> film.identifier }
                             ) { film ->
                                 FilmCard(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .animateItem(),
-                                    isShowingTitle = uiPreferences.shouldShowTitleOnCards,
+                                    isShowingTitle = showFilmTitles,
                                     film = film,
                                     onClick = navigator::openFilmScreen,
-                                    onLongClick = previewFilm
+                                    onLongClick = navigator::previewFilm,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .animateItem()
                                 )
                             }
-                        }
-
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            Spacer(modifier = Modifier.height(25.dp))
                         }
                     }
                 }
             }
         }
-
-        CollapsibleTopBar(
-            title = film?.title ?: "",
-            isCollapsedProvider = { isCollapsed || state.isLoading || state.errorMessage != null },
-            onNavigationIconClick = navigator::goBack,
-        )
     }
 }
 
-@Composable
-private fun ContentTabs(
-    modifier: Modifier = Modifier,
-    filmTabs: List<FilmTab>,
-    currentTabSelected: Int,
-    onTabChange: (Int) -> Unit,
-) {
-    Box(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        TabRow(
-            selectedTabIndex = currentTabSelected,
-            divider = {
-                HorizontalDivider(
-                    thickness = 0.5.dp,
-                    color = LocalContentColor.current.copy(alpha = 0.2F)
-                )
-            },
-            indicator = {
-                TabRowDefaults.Indicator(
-                    Modifier
-                        .tabIndicatorOffset(it[currentTabSelected])
-                        .padding(horizontal = 65.dp)
-                )
-            }
-        ) {
-            filmTabs.forEachIndexed { index, filmTab ->
-                val isSelected = currentTabSelected == index
+/**
+ * Obtains aspect ratio based on current width size class
+ * from compose adaptive
+ *
+ * @param usePortraitView Determines if screen width is compact or medium
+ * */
+private fun getAspectRatio(usePortraitView: Boolean) =
+    when {
+        usePortraitView -> 0.8f / 1f
+        else -> 16f / 6f
+    }
 
-                Tab(
-                    text = {
-                        Text(
-                            text = stringResource(id = filmTab.stringId),
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White
-                        )
-                    },
-                    selected = isSelected,
-                    onClick = { onTabChange(index) }
-                )
-            }
+
+@Preview
+@Composable
+private fun FilmScreenBasePreview() {
+    val navigator = object : FilmScreenNavigator {
+        override fun openFilmScreen(film: Film) {}
+        override fun openGenreScreen(genre: GenreWithBackdrop) {}
+        override fun previewFilm(film: Film) {}
+        override fun playMovie(movie: Film) {}
+        override fun playEpisode(episode: Episode, film: Film) {}
+        override fun playEpisode(season: Int, episode: Int, film: Film) {}
+        override fun goBack() {}
+
+    }
+    var uiState by remember { mutableStateOf(FilmUiState(isLoading = false, providerUsed = "Netflix")) }
+    val metadata = remember {
+        DummyDataForPreview.getMovie(
+            overview = """
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+            """.trimIndent(),
+        ).copy(adult = true)
+    }
+
+    FlixclusiveTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            FilmScreenContent(
+                uiState = uiState,
+                metadata = metadata,
+                onRetry = {},
+                navigator = navigator,
+                showFilmTitles = false,
+            )
         }
     }
 }
 
+@Preview(device = "spec:parent=pixel_5,orientation=landscape")
 @Composable
-private fun CollapsibleTopBar(
-    title: String,
-    isCollapsedProvider: () -> Boolean,
-    onNavigationIconClick: () -> Unit,
-) {
-    val surfaceColor = MaterialTheme.colorScheme.surface
+private fun FilmScreenCompactLandscapePreview() {
+    FilmScreenBasePreview()
+}
 
-    val isCollapsed by rememberUpdatedState(newValue = isCollapsedProvider())
+@Preview(device = "spec:parent=medium_tablet,orientation=portrait")
+@Composable
+private fun FilmScreenMediumPortraitPreview() {
+    FilmScreenBasePreview()
+}
 
-    AnimatedVisibility(
-        visible = isCollapsed,
-        enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut()
-    ) {
-        Box(
-            modifier = Modifier
-                .drawBehind {
-                    drawRect(surfaceColor)
-                }
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(90.dp)
-                    .statusBarsPadding()
-                    .padding(horizontal = 15.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onNavigationIconClick) {
-                    Icon(
-                        painter = painterResource(R.drawable.left_arrow),
-                        contentDescription = stringResource(LocaleR.string.navigate_up)
-                    )
-                }
+@Preview(device = "spec:parent=medium_tablet,orientation=landscape")
+@Composable
+private fun FilmScreenMediumLandscapePreview() {
+    FilmScreenBasePreview()
+}
 
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                    modifier = Modifier
-                        .weight(1F)
-                        .padding(horizontal = 15.dp)
-                )
-            }
-        }
-    }
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
+@Composable
+private fun FilmScreenExtendedPortraitPreview() {
+    FilmScreenBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
+@Composable
+private fun FilmScreenExtendedLandscapePreview() {
+    FilmScreenBasePreview()
 }

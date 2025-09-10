@@ -1,6 +1,5 @@
 package com.flixclusive.core.presentation.common.util
 
-import android.content.Context
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.common.R
 import java.util.Locale
@@ -56,58 +55,5 @@ object FilmFormatterUtil {
                 }
             )
         }
-    }
-
-    /**
-     * Formats TV show runtime information including episode duration, number of seasons, and number of episodes.
-     *
-     * Examples:
-     * - (45, 3, 24) -> "45m | 3 seasons | 24 episodes"
-     * - (null, 1, 10) -> "1 season | 10 episodes"
-     * - (30, 0, 0) -> "30m"
-     * */
-    fun formatTvRuntime(
-        context: Context,
-        minutesPerEpisode: Int?,
-        seasons: Int,
-        episodes: Int,
-        separator: String = " | "
-    ): String {
-        return StringBuilder().apply {
-            if (minutesPerEpisode != null) {
-                append(
-                    minutesPerEpisode
-                        .formatAsRuntime()
-                        .asString(context)
-                )
-
-                append(separator)
-            }
-
-            if(seasons > 0) {
-                append(
-                    context.resources.getQuantityString(
-                        R.plurals.season_runtime,
-                        seasons,
-                        seasons
-                    )
-                )
-
-                append(separator)
-            }
-
-
-            if(episodes > 0) {
-                append(
-                    context.resources.getQuantityString(
-                        R.plurals.episode_runtime,
-                        episodes,
-                        episodes
-                    )
-                )
-
-                append(separator)
-            }
-        }.toString()
     }
 }

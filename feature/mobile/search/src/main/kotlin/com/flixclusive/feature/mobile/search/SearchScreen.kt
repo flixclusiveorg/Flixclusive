@@ -122,7 +122,6 @@ internal fun SearchScreen(
                     modifier =
                         Modifier
                             .height(LARGE_ERROR),
-                    shouldShowError = true,
                     error =
                         genreCards.error?.asString()
                             ?: stringResource(id = LocaleR.string.failed_to_initialize_search_items),

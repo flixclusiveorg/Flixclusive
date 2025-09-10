@@ -257,7 +257,7 @@ private fun ContinueWatchingCard(
 private fun ContinueWatchingRowBasePreview() {
     val items = remember {
         List(20) { index ->
-            val film = DummyDataForPreview.getDummyFilm(
+            val film = DummyDataForPreview.getFilm(
                 id = "film_$index",
                 title = "Sample Film ${index + 1}",
                 filmType = if (index % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,

@@ -161,7 +161,6 @@ internal fun DisplayHeader(
 
                     RetryButton(
                         modifier = Modifier.matchParentSize(),
-                        shouldShowError = true,
                         error = errorMessage,
                         onRetry = onRetry,
                     )
@@ -171,8 +170,8 @@ internal fun DisplayHeader(
                     AsyncImage(
                         model = headerImage,
                         imageLoader = LocalContext.current.imageLoader,
-                        placeholder = SolidColorPainter(MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp)),
-                        error = SolidColorPainter(MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp)),
+                        placeholder = SolidColorPainter.from(MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp)),
+                        error = SolidColorPainter.from(MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp)),
                         contentDescription = film?.title,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
@@ -248,7 +247,7 @@ internal fun DisplayHeader(
                             ) {
                                 AdaptiveIcon(
                                     imageVector = Icons.Rounded.Star,
-                                    contentDescription = stringResource(LocaleR.string.rating_icon),
+                                    contentDescription = stringResource(LocaleR.string.rating_icon_content_desc),
                                     modifier = Modifier.scale(0.6F),
                                     tint = Colors.starColor,
                                     increaseBy = 10.dp
@@ -347,7 +346,7 @@ private fun DisplayHeaderBasePreview() {
 
     LaunchedEffect(Unit) {
         delay(2000)
-        film = DummyDataForPreview.getDummyFilm(
+        film = DummyDataForPreview.getFilm(
             genres = listOf(
                 "Action",
                 "Adventure",

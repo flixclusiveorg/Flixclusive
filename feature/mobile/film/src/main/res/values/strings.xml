@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="provider_null_error_message">This one has no provider ID set</string>
+    <string name="default_overview">No overview found</string>
+    <string name="provider_source">Source: %1$s</string>
+    <string name="provider_language">Language: %1$s</string>
+    <string name="casts">Casts: %1$s</string>
+    <string name="production">Production: %1$s</string>
+    <string name="network">Network: %1$s</string>
+    <string name="adult">Adult</string>
+    <string name="description_collapse">Collapse the description</string>
+    <string name="description_expand">Expand the description</string>
+    <string name="more_like_this">More like this</string>
+</resources>

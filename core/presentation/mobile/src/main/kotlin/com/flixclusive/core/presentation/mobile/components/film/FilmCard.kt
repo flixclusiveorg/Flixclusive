@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.drawables.R
 import com.flixclusive.core.presentation.common.components.FilmCover
-import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getDummyFilm
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getFilm
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
@@ -131,7 +131,7 @@ private fun FilmCardPreview() {
             LazyRow {
                 items(20) {
                     FilmCard(
-                        film = getDummyFilm(),
+                        film = getFilm(),
                         onClick = {},
                         onLongClick = {},
                     )

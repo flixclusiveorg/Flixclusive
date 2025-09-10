@@ -30,7 +30,6 @@ fun GenreButton(
 ) {
     Box(
         modifier = modifier
-            .padding(horizontal = 5.dp)
             .border(
                 width = 1.dp,
                 color = LocalContentColor.current.copy(0.6f),

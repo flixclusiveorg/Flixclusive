@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.flixclusive.feature.mobile)
     alias(libs.plugins.flixclusive.compose)
     alias(libs.plugins.flixclusive.destinations)
+    alias(libs.plugins.flixclusive.testing)
 }
 
 android {
@@ -11,9 +12,23 @@ android {
 dependencies {
     // implementation(projects.core.ui.mobile)
     // implementation(projects.core.ui.film)
+    implementation(projects.coreCommon)
+    implementation(projects.coreStrings)
+    implementation(projects.coreDrawables)
+    implementation(projects.coreNavigation)
+    implementation(projects.coreNetwork)
+    implementation(projects.coreDatabase)
+    implementation(projects.coreDatastore)
+    implementation(projects.corePresentationCommon)
+    implementation(projects.corePresentationMobile)
+    implementation(projects.dataDatabase)
+    implementation(projects.domainDatabase)
+    implementation(projects.dataProvider)
+    implementation(projects.domainProvider)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.compose.adaptive)
     implementation(libs.compose.animation)
     implementation(libs.compose.animation.graphics)
     implementation(libs.compose.foundation)
@@ -22,4 +37,8 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.lifecycle.runtimeCompose)
+    implementation(libs.stubs.model.film)
+    implementation(libs.stubs.model.provider)
+
+    testImplementation(projects.coreTesting)
 }

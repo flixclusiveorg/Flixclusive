@@ -246,21 +246,21 @@ private fun HomeScreenBasePreview() {
                     val dummyItems = remember {
                         persistentHashMapOf(
                             "popular_movies" to List(8) { index ->
-                                DummyDataForPreview.getDummyFilm(
+                                DummyDataForPreview.getFilm(
                                     id = "movie_$index",
                                     title = "Popular Movie ${index + 1}",
                                     filmType = FilmType.MOVIE,
                                 )
                             }.toPersistentSet(),
                             "trending_tv" to List(6) { index ->
-                                DummyDataForPreview.getDummyFilm(
+                                DummyDataForPreview.getFilm(
                                     id = "tv_$index",
                                     title = "TV Show ${index + 1}",
                                     filmType = FilmType.TV_SHOW,
                                 )
                             }.toPersistentSet(),
                             "action_movies" to List(4) { index ->
-                                DummyDataForPreview.getDummyFilm(
+                                DummyDataForPreview.getFilm(
                                     id = "action_$index",
                                     title = "Action Film ${index + 1}",
                                     filmType = FilmType.MOVIE,
@@ -290,7 +290,7 @@ private fun HomeScreenBasePreview() {
                     }
 
                     val dummyHeaderFilm = remember {
-                        DummyDataForPreview.getDummyFilm(
+                        DummyDataForPreview.getFilm(
                             id = "header_film",
                             title = "Featured Movie",
                             overview = "An amazing featured film t...",
@@ -309,7 +309,7 @@ private fun HomeScreenBasePreview() {
                                     status = WatchStatus.WATCHING,
                                 ),
                                 film = DummyDataForPreview
-                                    .getDummyFilm(
+                                    .getFilm(
                                         id = "continue_1",
                                         title = "Continue Movie",
                                         filmType = FilmType.MOVIE,
@@ -326,7 +326,7 @@ private fun HomeScreenBasePreview() {
                                     status = WatchStatus.WATCHING,
                                 ),
                                 film = DummyDataForPreview
-                                    .getDummyFilm(
+                                    .getFilm(
                                         id = "continue_2",
                                         title = "Continue TV Show",
                                         filmType = FilmType.TV_SHOW,

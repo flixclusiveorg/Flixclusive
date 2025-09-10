@@ -59,12 +59,12 @@ fun ProvideAsyncImagePreviewHandler(
 @OptIn(ExperimentalCoilApi::class)
 @Composable
 fun ProvideAsyncImagePreviewHandler(
-    drawable: Drawable,
+    drawable: Drawable?,
     content: @Composable () -> Unit,
 ) {
     val previewHandler = remember {
         AsyncImagePreviewHandler {
-            drawable.asImage()
+            drawable?.asImage()
         }
     }
 

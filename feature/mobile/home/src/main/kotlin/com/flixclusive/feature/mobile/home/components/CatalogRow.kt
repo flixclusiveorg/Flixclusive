@@ -176,7 +176,7 @@ private fun CatalogRowBasePreview() {
             var items by remember {
                 mutableStateOf(
                     List(6) { index ->
-                        DummyDataForPreview.getDummyFilm(
+                        DummyDataForPreview.getFilm(
                             id = "film_$index",
                             title = "Sample Film ${index + 1}",
                             filmType = if (index % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,
@@ -217,7 +217,7 @@ private fun CatalogRowBasePreview() {
 
                     val newItems = List(6) { index ->
                         val itemIndex = (items.size - 1) + index
-                        DummyDataForPreview.getDummyFilm(
+                        DummyDataForPreview.getFilm(
                             id = "film_$itemIndex",
                             title = "Sample Film ${itemIndex + 1}",
                             filmType = if (itemIndex % 2 == 0) FilmType.MOVIE else FilmType.TV_SHOW,

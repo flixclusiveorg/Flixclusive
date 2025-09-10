@@ -211,7 +211,6 @@ private fun RepositoryDetailsScreen(
                 item {
                     RetryButton(
                         modifier = Modifier.fillMaxSize(),
-                        shouldShowError = uiState.error != null,
                         error =
                             uiState.error?.asString()
                                 ?: stringResource(LocaleR.string.failed_to_load_online_providers),

@@ -1,11 +1,8 @@
 package com.flixclusive.core.presentation.mobile.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,120 +61,109 @@ private const val MAX_STACK_TRACE_COMPONENT_HEIGHT = 200
 @Composable
 fun RetryButton(
     modifier: Modifier = Modifier,
-    shouldShowError: Boolean = false,
     error: String? = null,
     onRetry: () -> Unit,
 ) {
-    AnimatedVisibility(
-        visible = shouldShowError,
-        enter = scaleIn(),
-        exit = scaleOut(),
+    val defaultLabel = stringResource(LocaleR.string.something_went_wrong)
+
+    var isErrorLogsShown by remember { mutableStateOf(false) }
+    val isStackTrace = remember(error) {
+        error != null && isPossibleStackTrace(error)
+    }
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val defaultLabel = stringResource(LocaleR.string.something_went_wrong)
+        EmptyDataMessage(
+            modifier = Modifier.padding(horizontal = 15.dp),
+            title = stringResource(R.string.an_error_occurred),
+            description = if (isStackTrace) defaultLabel else error ?: defaultLabel,
+            icon = {
+                Icon(
+                    painter = painterResource(UiCommonR.drawable.round_error_outline_24),
+                    contentDescription = stringResource(LocaleR.string.error_icon_content_desc),
+                    modifier = Modifier.size(60.dp),
+                    tint = MaterialTheme.colorScheme.error.copy(0.6f),
+                )
+            },
+        )
 
-        var isErrorLogsShown by remember { mutableStateOf(false) }
-        val isStackTrace = remember(error) {
-            error != null && isPossibleStackTrace(error)
-        }
+        if (isStackTrace) {
+            val contentColor = MaterialTheme.colorScheme.onSurface.copy(0.8F)
 
-        Box(
-            modifier = modifier,
-            contentAlignment = Alignment.Center,
-        ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                EmptyDataMessage(
-                    modifier = Modifier.padding(horizontal = 15.dp),
-                    title = stringResource(R.string.an_error_occurred),
-                    description = if (isStackTrace) defaultLabel else error ?: defaultLabel,
-                    icon = {
-                        Icon(
-                            painter = painterResource(UiCommonR.drawable.round_error_outline_24),
-                            contentDescription = stringResource(LocaleR.string.error_icon_content_desc),
-                            modifier = Modifier.size(60.dp),
-                            tint = MaterialTheme.colorScheme.error.copy(0.6f),
-                        )
-                    },
-                )
-
-                if (isStackTrace) {
-                    val contentColor = MaterialTheme.colorScheme.onSurface.copy(0.8F)
-
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(5.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                AnimatedContent(
+                    targetState = isErrorLogsShown,
+                    label = "",
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.extraSmall)
+                            .clickable { isErrorLogsShown = !isErrorLogsShown },
                     ) {
-                        AnimatedContent(
-                            targetState = isErrorLogsShown,
-                            label = "",
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(MaterialTheme.shapes.extraSmall)
-                                    .clickable { isErrorLogsShown = !isErrorLogsShown },
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .padding(3.dp)
-                                        .padding(horizontal = 5.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Text(
-                                        text = if (it) {
-                                            stringResource(LocaleR.string.hide_error_logs)
-                                        } else {
-                                            stringResource(LocaleR.string.show_error_logs)
-                                        },
-                                        style = LocalTextStyle.current.copy(
-                                            color = contentColor,
-                                            fontSize = 12.sp,
-                                        ),
-                                    )
-
-                                    Icon(
-                                        painter = if (it) {
-                                            painterResource(UiCommonR.drawable.up_arrow)
-                                        } else {
-                                            painterResource(UiCommonR.drawable.down_arrow)
-                                        },
-                                        contentDescription = if (isErrorLogsShown) {
-                                            stringResource(R.string.collapse_stack_trace)
-                                        } else {
-                                            stringResource(R.string.expand_stack_trace)
-                                        },
-                                        tint = contentColor,
-                                        modifier = Modifier
-                                            .size(10.dp),
-                                    )
-                                }
-                            }
-                        }
-
-                        TextFieldStackTrace(
-                            stackTrace = error!!,
+                        Row(
                             modifier = Modifier
-                                .animateContentSize(tween())
-                                .fillMaxWidth(0.95F)
-                                .height(if (isErrorLogsShown) MAX_STACK_TRACE_COMPONENT_HEIGHT.dp else 0.dp),
-                        )
+                                .padding(3.dp)
+                                .padding(horizontal = 5.dp),
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = if (it) {
+                                    stringResource(LocaleR.string.hide_error_logs)
+                                } else {
+                                    stringResource(LocaleR.string.show_error_logs)
+                                },
+                                style = LocalTextStyle.current.copy(
+                                    color = contentColor,
+                                    fontSize = 12.sp,
+                                ),
+                            )
+
+                            Icon(
+                                painter = if (it) {
+                                    painterResource(UiCommonR.drawable.up_arrow)
+                                } else {
+                                    painterResource(UiCommonR.drawable.down_arrow)
+                                },
+                                contentDescription = if (isErrorLogsShown) {
+                                    stringResource(R.string.collapse_stack_trace)
+                                } else {
+                                    stringResource(R.string.expand_stack_trace)
+                                },
+                                tint = contentColor,
+                                modifier = Modifier
+                                    .size(10.dp),
+                            )
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Button(
-                    onClick = onRetry,
-                    shape = ShapeDefaults.ExtraSmall,
-                ) {
-                    Text(
-                        text = stringResource(LocaleR.string.retry),
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                }
+                TextFieldStackTrace(
+                    stackTrace = error!!,
+                    modifier = Modifier
+                        .animateContentSize(tween())
+                        .fillMaxWidth(0.95F)
+                        .height(if (isErrorLogsShown) MAX_STACK_TRACE_COMPONENT_HEIGHT.dp else 0.dp),
+                )
             }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Button(
+            onClick = onRetry,
+            shape = ShapeDefaults.ExtraSmall,
+        ) {
+            Text(
+                text = stringResource(LocaleR.string.retry),
+                style = MaterialTheme.typography.labelLarge,
+            )
         }
     }
 }
@@ -265,7 +251,6 @@ private fun RetryButtonPreview() {
                 .fillMaxSize(),
         ) {
             RetryButton(
-                shouldShowError = true,
                 error = """
                     lang.NullPointerExceptione
                 """.trimIndent(),

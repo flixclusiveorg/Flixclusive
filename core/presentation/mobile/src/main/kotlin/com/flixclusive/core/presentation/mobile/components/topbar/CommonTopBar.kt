@@ -89,8 +89,8 @@ fun CommonTopBar(
 fun CommonTopBar(
     navigationIcon: @Composable () -> Unit,
     title: @Composable () -> Unit,
-    actions: @Composable RowScope.() -> Unit,
     modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {},
     navigationIconColor: Color = LocalContentColor.current,
     titleColor: Color = LocalContentColor.current,
     actionsColor: Color = LocalContentColor.current,

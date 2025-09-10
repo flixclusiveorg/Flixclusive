@@ -5,7 +5,9 @@ import androidx.compose.runtime.remember
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Genre
+import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.film.util.extractYear
 import com.flixclusive.model.provider.Author
 import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderMetadata
@@ -42,7 +44,7 @@ object DummyDataForPreview {
             )
         }
 
-    fun getDummyFilm(
+    fun getFilm(
         id: String? = null,
         tmdbId: Int = 123,
         imdbId: String = "tt1234567",
@@ -51,7 +53,7 @@ object DummyDataForPreview {
         filmType: FilmType = FilmType.MOVIE,
         genres: List<String> = listOf("Action", "Adventure"),
         posterImage: String? = "/t9XkeE7HzOsdQcDDDapDYh8Rrmt.jpg",
-        backdropImage: String? = posterImage,
+        backdropImage: String? = "/4kTINu9mv2YV1PqFqPGG1FZMnhi.jpg",
         logoImage: String? = "/6pObznbCoxVpY1lPQwJxETd7Phe.png",
         rating: Double? = 7.5,
         releaseDate: String? = "2023-10-10",
@@ -71,6 +73,47 @@ object DummyDataForPreview {
         rating = rating,
         overview = overview,
         homePage = homePage,
+        genres = genres.map {
+            Genre(
+                id = it.hashCode(),
+                name = it
+            )
+        }
+    )
+
+    fun getMovie(
+        id: String? = null,
+        tmdbId: Int = 123,
+        imdbId: String = "tt1234567",
+        title: String = "Sample item",
+        providerId: String = DEFAULT_FILM_SOURCE_NAME,
+        genres: List<String> = listOf("Action", "Adventure"),
+        posterImage: String? = "/t9XkeE7HzOsdQcDDDapDYh8Rrmt.jpg",
+        backdropImage: String? = "/4kTINu9mv2YV1PqFqPGG1FZMnhi.jpg",
+        logoImage: String? = "/6pObznbCoxVpY1lPQwJxETd7Phe.png",
+        rating: Double? = 7.5,
+        runtime: Int? = 100,
+        language: String? = "en",
+        releaseDate: String? = "2023-10-10",
+        overview: String? = "This is a sample overview for the film.",
+        homePage: String? = null,
+    ) = Movie(
+        id = id,
+        tmdbId = tmdbId,
+        imdbId = imdbId,
+        title = title,
+        posterImage = posterImage,
+        backdropImage = backdropImage,
+        logoImage = logoImage,
+        providerId = providerId,
+        releaseDate = releaseDate,
+        year = releaseDate?.extractYear(),
+        rating = rating,
+        overview = overview,
+        homePage = homePage,
+        runtime = runtime,
+        language = language,
+        recommendations = List(20) { getFilm(id = "$it") },
         genres = genres.map {
             Genre(
                 id = it.hashCode(),

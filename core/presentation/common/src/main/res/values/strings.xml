@@ -2,13 +2,4 @@
 <resources>
     <string name="no_ratings">No ratings</string>
     <string name="no_runtime">No runtime</string>
-
-    <plurals name="season_runtime">
-        <item quantity="one">%1$d Season</item>
-        <item quantity="other">%1$d Seasons</item>
-    </plurals>
-    <plurals name="episode_runtime">
-        <item quantity="one">%1$d Episode</item>
-        <item quantity="other">%1$d Episodes</item>
-    </plurals>
 </resources>
