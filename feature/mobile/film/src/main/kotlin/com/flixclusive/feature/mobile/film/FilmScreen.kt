@@ -34,6 +34,10 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.flixclusive.core.database.entity.watched.EpisodeProgress
+import com.flixclusive.core.database.entity.watched.MovieProgress
+import com.flixclusive.core.database.entity.watched.WatchProgress
+import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.navigation.navargs.FilmScreenNavArgs
 import com.flixclusive.core.navigation.navargs.GenreWithBackdrop
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
@@ -43,17 +47,20 @@ import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.extensions.isMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
 import com.flixclusive.feature.mobile.film.component.BackdropImage
 import com.flixclusive.feature.mobile.film.component.BriefDetails
 import com.flixclusive.feature.mobile.film.component.CollapsibleDescription
 import com.flixclusive.feature.mobile.film.component.ContentTabs
 import com.flixclusive.feature.mobile.film.component.FilmScreenTopBar
+import com.flixclusive.feature.mobile.film.component.HeaderButtons
 import com.flixclusive.feature.mobile.film.util.FilmScreenUtils
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
@@ -75,9 +82,11 @@ internal fun FilmScreen(
 @Composable
 private fun FilmScreenContent(
     navigator: FilmScreenNavigator,
+    watchProgress: WatchProgress?,
     showFilmTitles: Boolean,
     uiState: FilmUiState,
     metadata: Film,
+    onAddToLibrary: () -> Unit,
     onRetry: () -> Unit,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -186,15 +195,39 @@ private fun FilmScreenContent(
                                     providerUsed = uiState.providerUsed,
                                     modifier = Modifier
                                         .aspectRatio(backdropAspectRatio * 0.95f)
+                                        .padding(horizontal = DefaultScreenPaddingHorizontal)
                                 )
                             }
+                        }
+
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            HeaderButtons(
+                                metadata = metadata as FilmMetadata,
+                                watchProgress = watchProgress,
+                                isInLibrary = watchProgress != null,
+                                onPlay = {
+                                    if (metadata is Movie) {
+                                        navigator.playMovie(metadata)
+                                    } else if (metadata is TvShow) {
+                                        val episodeProgress = watchProgress as? EpisodeProgress
+                                        val season = episodeProgress?.seasonNumber ?: 1
+                                        val episode = episodeProgress?.episodeNumber ?: 1
+
+                                        navigator.playEpisode(season, episode, metadata)
+                                    }
+                                },
+                                onAddToLibrary = {},
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(DefaultScreenPaddingHorizontal)
+                            )
                         }
 
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             CollapsibleDescription(
                                 metadata = metadata as FilmMetadata,
                                 modifier = Modifier
-                                    .padding(horizontal = 15.dp)
+                                    .padding(horizontal = DefaultScreenPaddingHorizontal)
                                     .padding(top = 25.dp)
                             )
                         }
@@ -281,6 +314,14 @@ private fun FilmScreenBasePreview() {
                 onRetry = {},
                 navigator = navigator,
                 showFilmTitles = false,
+                onAddToLibrary = {},
+                watchProgress = MovieProgress(
+                    filmId = metadata.identifier,
+                    ownerId = 0,
+                    progress = 500L,
+                    status = WatchStatus.WATCHING,
+                    duration = 6000L,
+                ),
             )
         }
     }

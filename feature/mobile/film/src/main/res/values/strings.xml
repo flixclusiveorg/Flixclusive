@@ -11,4 +11,9 @@
     <string name="description_collapse">Collapse the description</string>
     <string name="description_expand">Expand the description</string>
     <string name="more_like_this">More like this</string>
+
+    <string name="downloaded">Downloaded</string>
+    <string name="download">Download</string>
+    <string name="in_library">In library</string>
+    <string name="add_to_library">Add</string>
 </resources>

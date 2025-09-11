@@ -66,8 +66,7 @@ internal fun BriefDetails(
 
     Column(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 15.dp),
+            .fillMaxWidth(),
         verticalArrangement = Arrangement.Bottom,
     ) {
         Text(
