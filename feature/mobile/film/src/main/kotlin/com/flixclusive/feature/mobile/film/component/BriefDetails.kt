@@ -28,13 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRating
 import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRuntime
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.TypographySize
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.film.GenreButton
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
@@ -75,7 +72,7 @@ internal fun BriefDetails(
     ) {
         Text(
             text = metadata.title,
-            style = getAdaptiveTextStyle(style = AdaptiveTextStyle.Emphasized(size = TypographySize.Headline)),
+            style = MaterialTheme.typography.headlineLarge.asAdaptiveTextStyle(),
             textAlign = TextAlign.Start,
             softWrap = true,
             modifier = Modifier.fillMaxWidth(),
@@ -119,7 +116,7 @@ internal fun BriefDetails(
                 ) {
                     Text(
                         text = item,
-                        style = getAdaptiveTextStyle(size = 12.sp),
+                        style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
                         fontWeight = FontWeight.Black,
                         color = when {
                             isRating -> MaterialTheme.colorScheme.onTertiary

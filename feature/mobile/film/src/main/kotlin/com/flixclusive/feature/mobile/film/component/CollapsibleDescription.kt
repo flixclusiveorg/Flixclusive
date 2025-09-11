@@ -31,11 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.TypographySize
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.film.FilmMetadata
@@ -67,14 +63,9 @@ internal fun CollapsibleDescription(
 
     val description = remember(metadata) { metadata.getDetailedDescription(context).trimEnd() }
 
-    val textStyle = getAdaptiveTextStyle(
-        style = AdaptiveTextStyle.Normal(size = TypographySize.Body),
-    ).copy(
-        fontSize = 14.sp,
-        letterSpacing = 0.1.sp,
-        lineHeight = 1.5.em,
-        color = LocalContentColor.current.copy(0.6f),
-    )
+    val textStyle = MaterialTheme.typography.bodySmall
+        .copy(color = LocalContentColor.current.copy(0.6f))
+        .asAdaptiveTextStyle()
 
     Layout(
         modifier = modifier

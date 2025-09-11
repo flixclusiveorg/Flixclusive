@@ -23,7 +23,8 @@ import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.presentation.mobile.components.topbar.TopAppBarLayout
-import com.flixclusive.core.strings.R
+import com.flixclusive.core.drawables.R as UiCommonR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun FilmScreenTopBar(
@@ -68,7 +69,7 @@ internal fun FilmScreenTopBar(
             titleTextStyle = getTopBarHeadlinerTextStyle(),
             hideTitleSemantics = false,
             navigationIcon = {
-                PlainTooltipBox(description = stringResource(R.string.navigate_up)) {
+                PlainTooltipBox(description = stringResource(LocaleR.string.navigate_up)) {
                     IconButton(
                         onClick = onNavigate,
                         modifier = Modifier
@@ -83,8 +84,8 @@ internal fun FilmScreenTopBar(
                             }
                     ) {
                         AdaptiveIcon(
-                            painter = painterResource(com.flixclusive.core.drawables.R.drawable.left_arrow),
-                            contentDescription = stringResource(R.string.navigate_up),
+                            painter = painterResource(UiCommonR.drawable.left_arrow),
+                            contentDescription = stringResource(LocaleR.string.navigate_up),
                             dp = 16.dp,
                             increaseBy = 3.dp,
                         )

@@ -36,9 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.TypographySize
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getAdaptiveTopBarHeight
@@ -178,11 +176,12 @@ object CommonTopBarDefaults {
 
     @Composable
     fun getTopBarHeadlinerTextStyle() =
-        getAdaptiveTextStyle(
-            style = AdaptiveTextStyle.Normal(TypographySize.Body),
-            size = 20.sp,
-            increaseBy = 5.sp,
-        ).copy(fontWeight = FontWeight.SemiBold)
+        MaterialTheme.typography.bodyLarge
+            .copy(fontWeight = FontWeight.SemiBold)
+            .asAdaptiveTextStyle(
+                size = 20.sp,
+                increaseBy = 5.sp,
+            )
 
     @Composable
     fun colors(

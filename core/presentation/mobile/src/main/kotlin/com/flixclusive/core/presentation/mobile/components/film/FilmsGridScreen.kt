@@ -45,10 +45,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.pagination.PagingDataState
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.R
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.RetryButton
@@ -257,10 +255,7 @@ private fun TypeFilter(
             ) {
                 Text(
                     text = stringResource(filter.stringId),
-                    style = getAdaptiveTextStyle(
-                        style = AdaptiveTextStyle.SemiEmphasized(),
-                        size = 12.sp,
-                    ),
+                    style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
                     color = LocalContentColor.current.copy(0.8f),
                 )
             }

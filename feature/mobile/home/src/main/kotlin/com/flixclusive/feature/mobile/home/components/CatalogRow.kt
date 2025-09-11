@@ -34,9 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.pagination.PagingDataState
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.TypographySize
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.film.FilmCard
 import com.flixclusive.core.presentation.mobile.components.film.FilmCardPlaceholder
@@ -107,8 +105,7 @@ internal fun CatalogRow(
             ) {
                 Text(
                     text = catalog.name,
-                    style = getAdaptiveTextStyle(
-                        style = AdaptiveTextStyle.Normal(size = TypographySize.Body),
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(
                         size = 16.sp,
                         increaseBy = 10.sp
                     ),

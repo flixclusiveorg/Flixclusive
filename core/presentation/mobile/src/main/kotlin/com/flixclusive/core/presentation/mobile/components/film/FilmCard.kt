@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.drawables.R
 import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getFilm
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.model.film.Film
@@ -97,7 +97,7 @@ fun FilmCard(
                     ) {
                         Text(
                             text = film.title,
-                            style = getAdaptiveTextStyle(size = 12.sp),
+                            style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(size = 12.sp),
                             textAlign = TextAlign.Center,
                             overflow = TextOverflow.Ellipsis,
                             color = LocalContentColor.current.copy(0.6f),
@@ -112,7 +112,7 @@ fun FilmCard(
         if (isShowingTitle) {
             Text(
                 text = film.title,
-                style = getAdaptiveTextStyle(size = 12.sp),
+                style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(size = 12.sp),
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,
                 color = LocalContentColor.current.copy(alpha = 0.8F),

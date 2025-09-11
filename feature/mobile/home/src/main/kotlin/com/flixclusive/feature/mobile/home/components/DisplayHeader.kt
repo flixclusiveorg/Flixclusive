@@ -48,7 +48,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -62,9 +61,7 @@ import com.flixclusive.core.presentation.common.theme.Colors
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRating
 import com.flixclusive.core.presentation.common.util.SolidColorPainter
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.TypographySize
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.extensions.isCompact
@@ -213,11 +210,7 @@ internal fun DisplayHeader(
                             if (showTextInsteadOfLogo) {
                                 Text(
                                     text = state.title,
-                                    style = getAdaptiveTextStyle(
-                                        style = AdaptiveTextStyle.Emphasized(size = TypographySize.Headline),
-                                        size = 24.sp,
-                                        increaseBy = 5.sp
-                                    ),
+                                    style = MaterialTheme.typography.headlineMedium.asAdaptiveTextStyle(increaseBy = 5.sp),
                                     textAlign = TextAlign.Center,
                                     softWrap = true,
                                     modifier = Modifier.padding(
@@ -255,8 +248,7 @@ internal fun DisplayHeader(
 
                                 Text(
                                     text = itemDescription,
-                                    style = getAdaptiveTextStyle(size = 12.sp),
-                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(increaseBy = 5.sp),
                                     color = LocalContentColor.current.copy(0.6f),
                                 )
                             }
@@ -269,8 +261,7 @@ internal fun DisplayHeader(
                                 state.genres.forEachIndexed { index, genre ->
                                     Text(
                                         text = genre.name,
-                                        style = getAdaptiveTextStyle(size = 12.sp),
-                                        fontWeight = FontWeight.Medium,
+                                        style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(increaseBy = 5.sp),
                                         color = LocalContentColor.current.copy(0.6f),
                                     )
 

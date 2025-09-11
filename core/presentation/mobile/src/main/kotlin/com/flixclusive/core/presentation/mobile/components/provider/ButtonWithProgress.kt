@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.R
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
@@ -125,7 +125,9 @@ private fun IconLabel(
 
                 Text(
                     text = label,
-                    style = getAdaptiveTextStyle().copy(fontWeight = FontWeight.Medium),
+                    style = MaterialTheme.typography.labelLarge
+                        .copy(fontWeight = FontWeight.Medium)
+                        .asAdaptiveTextStyle(),
                 )
             }
         }

@@ -10,16 +10,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 fun LoadingScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    progressSize: Dp = getAdaptiveDp(40.dp)
 ) {
     Column(
         modifier = modifier,
@@ -27,7 +29,7 @@ fun LoadingScreen(
         verticalArrangement = Arrangement.spacedBy(25.dp, Alignment.CenterVertically),
     ) {
         GradientCircularProgressIndicator(
-            size = 40.dp,
+            size = progressSize,
             colors = listOf(
                 MaterialTheme.colorScheme.primary,
                 MaterialTheme.colorScheme.tertiary,
@@ -36,10 +38,9 @@ fun LoadingScreen(
 
         Text(
             text = stringResource(LocaleR.string.loading),
-            style = getAdaptiveTextStyle(
-                style = AdaptiveTextStyle.Normal(),
-                increaseBy = 5.sp,
-            ).copy(fontWeight = FontWeight.Medium),
+            style = MaterialTheme.typography.labelLarge
+                .copy(fontWeight = FontWeight.Medium)
+                .asAdaptiveTextStyle(increaseBy = 5.sp),
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
         )

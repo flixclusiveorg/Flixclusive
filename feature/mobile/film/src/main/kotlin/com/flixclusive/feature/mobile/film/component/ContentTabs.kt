@@ -33,20 +33,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.debugInspectorInfo
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFold
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.TypographySize
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
@@ -183,10 +179,7 @@ private fun Tabs(
                 Text(
                     text = stringResource(id = filmTab.stringId),
                     overflow = TextOverflow.Ellipsis,
-                    style = getAdaptiveTextStyle(
-                        style = AdaptiveTextStyle.Emphasized(size = TypographySize.Title),
-                        size = 14.sp,
-                    ).copy(fontWeight = FontWeight.Medium),
+                    style = MaterialTheme.typography.titleSmall.asAdaptiveTextStyle(),
                     color = when {
                         isSelected -> MaterialTheme.colorScheme.primary
                         else -> MaterialTheme.colorScheme.onSurface

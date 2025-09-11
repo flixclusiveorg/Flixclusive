@@ -18,8 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.strings.R
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -60,10 +59,7 @@ internal fun <T> CommonFilterButton(
 
             Text(
                 text = filter.toReadableString(),
-                style = getAdaptiveTextStyle(
-                    style = AdaptiveTextStyle.SemiEmphasized(),
-                    size = 12.sp,
-                ),
+                style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(size = 12.sp),
                 color = MaterialTheme.colorScheme.onSurface.copy(0.8f),
             )
         }

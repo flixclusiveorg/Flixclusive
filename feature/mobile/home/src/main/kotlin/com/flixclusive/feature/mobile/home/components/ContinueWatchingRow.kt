@@ -31,7 +31,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,9 +47,7 @@ import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRuntime
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.Companion.getAdaptiveTextStyle
-import com.flixclusive.core.presentation.mobile.TypographySize
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
@@ -79,12 +76,10 @@ internal fun ContinueWatchingRow(
     ) {
         Text(
             text = stringResource(LocaleR.string.continue_watching),
-            style = getAdaptiveTextStyle(
-                style = AdaptiveTextStyle.Normal(size = TypographySize.Body),
+            style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(
                 size = 16.sp,
                 increaseBy = 10.sp
             ),
-            fontWeight = FontWeight.Medium,
             modifier = Modifier
                 .padding(start = 15.dp)
         )
@@ -210,7 +205,7 @@ private fun ContinueWatchingCard(
                 ) {
                     Text(
                         text = itemLabel.asString(),
-                        style = getAdaptiveTextStyle(size = 12.sp),
+                        style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1
                     )
@@ -241,7 +236,7 @@ private fun ContinueWatchingCard(
         if(showTitle) {
             Text(
                 text = film.title,
-                style = getAdaptiveTextStyle(size = 12.sp),
+                style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,
                 color = LocalContentColor.current.copy(alpha = 0.8F),
