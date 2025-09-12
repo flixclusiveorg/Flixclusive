@@ -2,7 +2,10 @@ package com.flixclusive.core.presentation.mobile.components
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -20,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,6 +45,29 @@ fun ImageWithSmallPlaceholder(
     placeholderSize: Dp = Dp.Unspecified,
     shape: Shape = CircleShape
 ) {
+    ImageWithSmallPlaceholder(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(urlImage)
+            .crossfade(true)
+            .build(),
+        placeholder = painterResource(id = placeholderId),
+        contentDescription = stringResource(id = contentDescId),
+        modifier = modifier,
+        placeholderSize = placeholderSize,
+        shape = shape
+    )
+}
+
+@Composable
+fun ImageWithSmallPlaceholder(
+    model: ImageRequest?,
+    placeholder: Painter,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit,
+    placeholderSize: Dp = Dp.Unspecified,
+    shape: Shape = CircleShape
+) {
     var isSuccess by remember { mutableStateOf(false) }
 
     val background by animateColorAsState(
@@ -56,10 +84,14 @@ fun ImageWithSmallPlaceholder(
         Box(
             contentAlignment = Alignment.Center
         ) {
-            if (!isSuccess) {
+            AnimatedVisibility(
+                visible = !isSuccess,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
                 Icon(
-                    painter = painterResource(id = placeholderId),
-                    contentDescription = stringResource(id = contentDescId),
+                    painter = placeholder,
+                    contentDescription = contentDescription,
                     tint = LocalContentColor.current.copy(0.8F),
                     modifier = if (placeholderSize != Dp.Unspecified) {
                         Modifier.size(placeholderSize)
@@ -67,19 +99,14 @@ fun ImageWithSmallPlaceholder(
                 )
             }
 
-            if (urlImage != null) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(urlImage)
-                        .crossfade(true)
-                        .build(),
-                    imageLoader = LocalContext.current.imageLoader,
-                    contentDescription = stringResource(id = contentDescId),
-                    onState = { isSuccess = it is AsyncImagePainter.State.Success },
-                    modifier = Modifier
-                        .fillMaxSize()
-                )
-            }
+            AsyncImage(
+                model = model,
+                imageLoader = LocalContext.current.imageLoader,
+                contentDescription = contentDescription,
+                contentScale = contentScale,
+                onState = { isSuccess = it is AsyncImagePainter.State.Success },
+                modifier = Modifier.fillMaxSize()
+            )
         }
     }
 }
