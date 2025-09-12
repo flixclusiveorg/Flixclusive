@@ -179,7 +179,7 @@ private fun Tabs(
                 Text(
                     text = stringResource(id = filmTab.stringId),
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleSmall.asAdaptiveTextStyle(),
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
                     color = when {
                         isSelected -> MaterialTheme.colorScheme.primary
                         else -> MaterialTheme.colorScheme.onSurface

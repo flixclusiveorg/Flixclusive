@@ -74,10 +74,11 @@
     <string name="add_own_subtitle">Add subs</string>
     <string name="add_profile">Add profile</string>
     <string name="add_providers">Add providers</string>
-    <string name="create_a_library">Create a library</string>
+    <string name="new_list">New list</string>
     <string name="add_repositories">Add repositories</string>
     <string name="add_sync_offset_message">Add if subs are delayed.</string>
     <string name="add_to_list">Add to list</string>
+    <string name="find_a_list">Find a list</string>
     <string name="add_to_watchlist">Add to Watchlist</string>
     <string name="advanced">Advanced</string>
     <string name="allow">Allow</string>

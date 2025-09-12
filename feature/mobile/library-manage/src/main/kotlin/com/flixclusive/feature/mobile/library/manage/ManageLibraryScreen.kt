@@ -158,7 +158,7 @@ private fun ManageLibraryScreen(
                 shape = MaterialTheme.shapes.medium,
                 expanded = isFabExpanded,
                 text = {
-                    Text(text = stringResource(LocaleR.string.create_a_library))
+                    Text(text = stringResource(LocaleR.string.new_list))
                 },
                 icon = {
                     Icon(

@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.library.manage.component
+package com.flixclusive.feature.mobile.library.common.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -19,18 +18,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_CORNER_SIZE
-import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.presentation.common.components.CustomBaseAlertDialog
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
@@ -44,47 +39,37 @@ internal fun BaseLibraryModificationDialog(
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    val labelStyle =
-        getAdaptiveTextStyle(
-            style = AdaptiveTextStyle.Emphasized,
-            style = TypographyStyle.Label,
-            increaseBy = 2.sp,
-        ).copy(color = LocalContentColor.current.copy())
+    val labelStyle = MaterialTheme.typography.labelLarge
+        .copy(color = LocalContentColor.current.copy(0.6f))
+        .asAdaptiveTextStyle(increaseBy = 2.sp)
 
-    val buttonMinHeight = 50.dp
-    val baseShape = MaterialTheme.shapes.medium
-    val cornerSize = CornerSize((ALERT_DIALOG_CORNER_SIZE * 2).dp)
-    val buttonShape =
-        baseShape.copy(
-            bottomStart = cornerSize,
-            bottomEnd = baseShape.bottomEnd,
-        )
+    val textFieldStyle = MaterialTheme.typography.bodyMedium.asAdaptiveTextStyle(increaseBy = 2.sp)
+
+    val buttonMinHeight = getAdaptiveDp(50.dp)
+    val buttonShape = MaterialTheme.shapes.medium
 
     CustomBaseAlertDialog(
         onDismiss = onCancel,
         action = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier =
-                    Modifier
-                        .padding(horizontal = 10.dp)
-                        .padding(bottom = 10.dp),
+                modifier = Modifier
+                    .padding(horizontal = 10.dp)
+                    .padding(bottom = 10.dp),
             ) {
                 TextButton(
                     onClick = onConfirm,
                     shape = buttonShape,
-                    modifier =
-                        Modifier
-                            .weight(1F)
-                            .heightIn(min = buttonMinHeight),
+                    modifier = Modifier
+                        .weight(1F)
+                        .heightIn(min = buttonMinHeight),
                 ) {
                     Text(
                         text = confirmLabel,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = labelStyle,
+                        color = LocalContentColor.current,
                         fontWeight = FontWeight.Bold,
-                        modifier =
-                            Modifier
-                                .padding(end = 2.dp),
+                        modifier = Modifier.padding(end = 2.dp),
                     )
                 }
 
@@ -93,21 +78,17 @@ internal fun BaseLibraryModificationDialog(
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = Color.Black,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
                         ),
-                    shape =
-                        buttonShape.copy(
-                            bottomStart = baseShape.bottomStart,
-                            bottomEnd = cornerSize,
-                        ),
-                    modifier =
-                        Modifier
-                            .weight(1F)
-                            .heightIn(min = buttonMinHeight),
+                    shape = buttonShape,
+                    modifier = Modifier
+                        .weight(1F)
+                        .heightIn(min = buttonMinHeight),
                 ) {
                     Text(
                         text = stringResource(LocaleR.string.cancel),
-                        style = MaterialTheme.typography.labelLarge,
+                        style = labelStyle,
+                        color = LocalContentColor.current,
                         fontWeight = FontWeight.Light,
                     )
                 }
@@ -115,18 +96,13 @@ internal fun BaseLibraryModificationDialog(
         },
         content = {
             Column(
-                modifier =
-                    Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
             ) {
                 Text(
                     text = label,
-                    style = getAdaptiveTextStyle(
-                        style = AdaptiveTextStyle.Emphasized,
-                        style = TypographyStyle.Title,
-                        increaseBy = 2.sp,
-                    ),
+                    style = MaterialTheme.typography.titleLarge.asAdaptiveTextStyle(increaseBy = 2.sp),
                     modifier = Modifier.padding(bottom = 10.dp),
                 )
 
@@ -140,7 +116,7 @@ internal fun BaseLibraryModificationDialog(
                     value = name,
                     onValueChange = onNameChange,
                     modifier = Modifier.fillMaxWidth(),
-                    textStyle = MaterialTheme.typography.bodyMedium,
+                    textStyle = textFieldStyle,
                     singleLine = true,
                     shape = MaterialTheme.shapes.medium,
                 )
@@ -156,16 +132,12 @@ internal fun BaseLibraryModificationDialog(
                 OutlinedTextField(
                     value = description ?: "",
                     onValueChange = onDescriptionChange,
-                    textStyle = MaterialTheme.typography.bodyMedium,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 100.dp),
+                    textStyle = textFieldStyle,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = getAdaptiveDp(100.dp)),
                     maxLines = 4,
-                    keyboardOptions =
-                        KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Done,
-                        ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     shape = MaterialTheme.shapes.medium,
                 )
             }

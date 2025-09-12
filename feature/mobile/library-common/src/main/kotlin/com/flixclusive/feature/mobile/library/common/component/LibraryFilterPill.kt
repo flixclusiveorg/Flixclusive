@@ -20,16 +20,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 fun LibraryFilterPill(
@@ -80,10 +78,7 @@ fun LibraryFilterPill(
 
             Text(
                 text = filter.displayName.asString(),
-                style = getAdaptiveTextStyle(
-                    style = AdaptiveTextStyle.SemiEmphasized,
-                    size = 12.sp,
-                ),
+                style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
                 color = MaterialTheme.colorScheme.onSurface.copy(0.8f),
             )
         }

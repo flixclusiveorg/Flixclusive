@@ -317,7 +317,7 @@ internal enum class LibraryType {
         fun from(id: Int): LibraryType {
             return when (id) {
                 LibraryListUtil.WATCHLIST_LIB_ID -> Watchlist
-                LibraryListUtil.WATCH_HISTORY_LIB_ID -> WatchHistory
+                LibraryListUtil.WATCH_PROGRESS_LIB_ID -> WatchHistory
                 else -> Custom
             }
         }

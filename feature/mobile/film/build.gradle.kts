@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.domainDatabase)
     implementation(projects.dataProvider)
     implementation(projects.domainProvider)
+    implementation(projects.feature.mobile.libraryCommon)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)

@@ -1,6 +1,6 @@
 package com.flixclusive.feature.mobile.library.common.util
 
-import com.flixclusive.core.strings.UiText
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.strings.R as LocaleR
 
 interface LibrarySortFilter {

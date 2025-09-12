@@ -1,7 +1,6 @@
 package com.flixclusive.feature.mobile.film.component
 
 import android.content.Context
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -14,6 +13,7 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,10 +45,13 @@ import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
+import com.flixclusive.core.presentation.common.extensions.ifElse
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.extensions.isCompact
+import com.flixclusive.core.presentation.mobile.extensions.isMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.film.FilmMetadata
@@ -66,13 +70,21 @@ internal fun HeaderButtons(
     isDownloaded: Boolean = false, // TODO: Implement download functionality
     onToggleDownload: () -> Unit = {}, // TODO: Implement download functionality
 ) {
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val isCompactOrMedium = windowSizeClass.windowWidthSizeClass.isCompact
+        || windowSizeClass.windowWidthSizeClass.isMedium
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier,
     ) {
         Box(
-            modifier = Modifier.weight(1F),
+            modifier = Modifier
+                .ifElse(
+                    isCompactOrMedium,
+                    ifTrueModifier = Modifier.weight(1f)
+                ),
             contentAlignment = Alignment.CenterStart,
         ) {
             if (metadata.releaseStatus != FilmReleaseStatus.COMING_SOON) {
@@ -87,9 +99,9 @@ internal fun HeaderButtons(
         }
 
         ExtraButton(
-            inactiveDrawable = R.drawable.add,
-            activeDrawable = R.drawable.added,
-            inactiveLabel = R.string.add_to_library,
+            inactiveDrawable = if (isCompactOrMedium) R.drawable.add else UiCommonR.drawable.round_add_24,
+            activeDrawable = if (isCompactOrMedium) R.drawable.added else UiCommonR.drawable.check,
+            inactiveLabel = R.string.add,
             activeLabel = R.string.in_library,
             state = isInLibrary,
             onClick = onAddToLibrary,
@@ -218,15 +230,15 @@ private fun PlayButton(
                     radius = width / 1.6f,
                     center = pos2,
                 )
-            }.focusable()
+            }
+            .focusable()
             .clickable { onClick() },
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             modifier = Modifier.padding(
-                vertical = 8.dp,
-                horizontal = 24.dp,
+                vertical = 10.dp, horizontal = 24.dp
             ),
         ) {
             AdaptiveIcon(
@@ -282,52 +294,75 @@ private fun ExtraButton(
     state: Boolean,
     onClick: () -> Unit,
 ) {
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val isCompactOrMedium = windowSizeClass.windowWidthSizeClass.isCompact
+        || windowSizeClass.windowWidthSizeClass.isMedium
+
     val label = if (state) {
         stringResource(activeLabel)
     } else {
         stringResource(inactiveLabel)
     }
 
+    @Composable
+    fun LabelIconContent() {
+        AdaptiveIcon(
+            painter = painterResource(
+                if (state) {
+                    activeDrawable
+                } else {
+                    inactiveDrawable
+                }
+            ),
+            contentDescription = label,
+            tint = if (state) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(0.6F)
+            },
+            dp = if (isCompactOrMedium) 18.dp else null,
+        )
+
+        if(isCompactOrMedium) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.asAdaptiveTextStyle(),
+                color = MaterialTheme.colorScheme.onSurface.copy(0.6F),
+            )
+        }
+    }
+
     PlainTooltipBox(description = label) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .sizeIn(50.dp)
-                .clip(MaterialTheme.shapes.small)
-                .focusable()
-                .clickable { onClick() }
-                .padding(3.dp),
-        ) {
-            AnimatedContent(targetState = state) {
-                val painter = if (it) {
-                    painterResource(activeDrawable)
-                } else {
-                    painterResource(inactiveDrawable)
-                }
-
-                val contentColor = if (it) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(0.6F)
-                }
-
-                AdaptiveIcon(
-                    painter = painter,
-                    contentDescription = label,
-                    tint = contentColor,
-                    dp = 32.dp,
+        // Use full OutlinedButton on larger screens, icon-only button on compact screens
+        if (!isCompactOrMedium) {
+            OutlinedButton(
+                onClick = onClick,
+                shape = MaterialTheme.shapes.small,
+                contentPadding = PaddingValues(
+                    vertical = 10.dp, horizontal = 15.dp
+                ),
+                border = BorderStroke(
+                    width = 2.dp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4F)
                 )
+            ) {
+                LabelIconContent()
             }
-
-            AnimatedContent(label) {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.labelSmall.asAdaptiveTextStyle(),
-                    color = MaterialTheme.colorScheme.onSurface.copy(0.6F),
-                )
+        } else {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .sizeIn(50.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .focusable()
+                    .clickable { onClick() }
+                    .padding(3.dp),
+            ) {
+                LabelIconContent()
             }
         }
+
     }
 }
 

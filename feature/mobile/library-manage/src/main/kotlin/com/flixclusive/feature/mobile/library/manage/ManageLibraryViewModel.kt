@@ -82,9 +82,9 @@ internal class ManageLibraryViewModel
                 }.mapLatest { (userWithLists, watchHistory, watchlist) ->
                     userWithLists.list.map { listWithItems -> listWithItems.toPreview() } +
                         watchHistory.toUiLibraryList(
-                            id = LibraryListUtil.WATCH_HISTORY_LIB_ID,
+                            id = LibraryListUtil.WATCH_PROGRESS_LIB_ID,
                             userId = userWithLists.user.id,
-                            searchableName = LibraryListUtil.WATCH_HISTORY_SEARCHABLE_NAME,
+                            searchableName = LibraryListUtil.WATCH_PROGRESS_SEARCHABLE_NAME,
                             name = UiText.from(LocaleR.string.recently_watched),
                             description = UiText.from(LocaleR.string.recently_watched_description),
                         ) +

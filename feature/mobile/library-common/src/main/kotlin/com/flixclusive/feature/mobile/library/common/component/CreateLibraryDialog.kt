@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.library.manage.component
+package com.flixclusive.feature.mobile.library.common.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -9,7 +9,7 @@ import androidx.compose.ui.res.stringResource
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
-internal fun CreateLibraryDialog(
+fun CreateLibraryDialog(
     onCreate: (String, String?) -> Unit,
     onCancel: () -> Unit,
 ) {
@@ -17,7 +17,7 @@ internal fun CreateLibraryDialog(
     var description by remember { mutableStateOf<String?>(null) }
 
     BaseLibraryModificationDialog(
-        label = stringResource(LocaleR.string.create_a_library),
+        label = stringResource(LocaleR.string.new_list),
         name = name,
         description = description,
         onNameChange = { name = it },

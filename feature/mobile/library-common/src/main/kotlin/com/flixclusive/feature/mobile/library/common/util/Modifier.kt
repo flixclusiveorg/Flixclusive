@@ -18,15 +18,15 @@ fun Modifier.selectionBorder(
     width: Dp = Dp.Hairline,
     shape: Shape = RectangleShape,
 ) = border(
-        shape = shape,
-        border =
-            BorderStroke(
-                width = width,
-                color =
-                    if (isSelected) {
-                        selectedColor
-                    } else {
-                        unselectedColor
-                    },
-    ),
+    shape = shape,
+    border =
+        BorderStroke(
+            width = width,
+            color =
+                if (isSelected) {
+                    selectedColor
+                } else {
+                    unselectedColor
+                },
+        ),
 )

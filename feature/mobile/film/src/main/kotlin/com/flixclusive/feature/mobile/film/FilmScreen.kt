@@ -31,15 +31,22 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
+import com.flixclusive.core.database.entity.library.LibraryList
+import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.navigation.navargs.FilmScreenNavArgs
 import com.flixclusive.core.navigation.navargs.GenreWithBackdrop
+import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.film.FilmCard
@@ -55,6 +62,7 @@ import com.flixclusive.feature.mobile.film.component.CollapsibleDescription
 import com.flixclusive.feature.mobile.film.component.ContentTabs
 import com.flixclusive.feature.mobile.film.component.FilmScreenTopBar
 import com.flixclusive.feature.mobile.film.component.HeaderButtons
+import com.flixclusive.feature.mobile.film.component.LibraryListSheet
 import com.flixclusive.feature.mobile.film.util.FilmScreenUtils
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
@@ -64,6 +72,8 @@ import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
+import kotlin.random.Random
+import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalFoundationApi::class)
 @Destination(
@@ -86,9 +96,14 @@ private fun FilmScreenContent(
     showFilmTitles: Boolean,
     uiState: FilmUiState,
     metadata: Film,
-    onAddToLibrary: () -> Unit,
+    query: () -> String,
+    libraryListStates: () -> List<LibraryListAndState>,
+    onQueryChange: (String) -> Unit,
+    toggleOnLibrary: (Int) -> Unit,
+    createLibrary: (String, String?) -> Unit,
     onRetry: () -> Unit,
 ) {
+    val context = LocalContext.current
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val usePortraitView = windowSizeClass.windowWidthSizeClass.isCompact ||
         windowSizeClass.windowWidthSizeClass.isMedium
@@ -101,6 +116,7 @@ private fun FilmScreenContent(
     val listState = rememberLazyGridState()
 
     var appBarContainerAlpha by remember { mutableFloatStateOf(0f) }
+    var isLibrarySheetOpen by remember { mutableStateOf(false) }
 
     val tabs = remember(metadata) { FilmScreenUtils.getTabs(metadata) }
     val (currentTabSelected, onTabChange) = rememberSaveable(tabs.size) { mutableStateOf(tabs.firstOrNull()) }
@@ -120,6 +136,7 @@ private fun FilmScreenContent(
         }
     }
 
+    // Scroll to top when canScrollUpTop is true and back is pressed
     BackHandler(
         enabled = canScrollUpTop && uiState.screenState == FilmScreenState.Success
     ) {
@@ -128,6 +145,7 @@ private fun FilmScreenContent(
         }
     }
 
+    // Get the scroll offset of the first item to change the TopAppBar's background alpha
     LaunchedEffect(listState, configuration) {
         snapshotFlow {
             Triple(
@@ -159,9 +177,9 @@ private fun FilmScreenContent(
         }
     ) {
         AnimatedContent(
+            modifier = Modifier,
             targetState = uiState.screenState,
-            label = "FilmScreenContent",
-            modifier = Modifier
+            label = "FilmScreenContent"
         ) { state ->
             when (state) {
                 FilmScreenState.Loading -> {
@@ -182,7 +200,9 @@ private fun FilmScreenContent(
                         state = listState
                     ) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            Box(contentAlignment = Alignment.TopCenter) {
+                            Box(
+                                contentAlignment = Alignment.TopCenter
+                            ) {
                                 BackdropImage(
                                     metadata = metadata as FilmMetadata,
                                     modifier = Modifier
@@ -216,10 +236,15 @@ private fun FilmScreenContent(
                                         navigator.playEpisode(season, episode, metadata)
                                     }
                                 },
-                                onAddToLibrary = {},
+                                onAddToLibrary = { isLibrarySheetOpen = true },
+                                onToggleDownload = {
+                                    // TODO: Implement download
+                                    context.showToast(context.getString(LocaleR.string.coming_soon))
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(DefaultScreenPaddingHorizontal)
+                                    .padding(top = 10.dp)
                             )
                         }
 
@@ -263,6 +288,17 @@ private fun FilmScreenContent(
             }
         }
     }
+
+    if (isLibrarySheetOpen) {
+        LibraryListSheet(
+            query = query,
+            libraryListStates = libraryListStates,
+            onQueryChange = onQueryChange,
+            toggleOnLibrary = toggleOnLibrary,
+            createLibrary = createLibrary,
+            onDismissRequest = { isLibrarySheetOpen = false }
+        )
+    }
 }
 
 /**
@@ -304,6 +340,44 @@ private fun FilmScreenBasePreview() {
         ).copy(adult = true)
     }
 
+    var query by remember { mutableStateOf("") }
+
+    var lists by remember {
+        val film = if (Random.nextBoolean()) {
+            DummyDataForPreview.getMovie().toDBFilm()
+        } else {
+            null
+        }
+
+        val items = if (film != null) {
+            listOf(
+                LibraryListItemWithMetadata(
+                    item = LibraryListItem(listId = 1, filmId = film.id),
+                    metadata = film,
+                ),
+            )
+        } else {
+            emptyList()
+        }
+
+        val list = List(20) {
+            LibraryListAndState(
+                listWithItems = LibraryListWithItems(
+                    items = items,
+                    list = LibraryList(
+                        id = it,
+                        name = "List $it",
+                        ownerId = 1,
+                        description = "Description $it",
+                    ),
+                ),
+                containsFilm = Random.nextBoolean(),
+            )
+        }
+
+        mutableStateOf(list)
+    }
+
     FlixclusiveTheme {
         Surface(
             modifier = Modifier.fillMaxSize()
@@ -314,7 +388,24 @@ private fun FilmScreenBasePreview() {
                 onRetry = {},
                 navigator = navigator,
                 showFilmTitles = false,
-                onAddToLibrary = {},
+                toggleOnLibrary = {},
+                libraryListStates = { lists },
+                query = { query },
+                onQueryChange = { query = it },
+                createLibrary = { name, description ->
+                    lists = lists + LibraryListAndState(
+                        listWithItems = LibraryListWithItems(
+                            items = emptyList(),
+                            list = LibraryList(
+                                id = lists.size + 1,
+                                name = name,
+                                ownerId = 1,
+                                description = description,
+                            ),
+                        ),
+                        containsFilm = false,
+                    )
+                },
                 watchProgress = MovieProgress(
                     filmId = metadata.identifier,
                     ownerId = 0,

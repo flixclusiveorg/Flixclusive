@@ -15,6 +15,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 
@@ -28,6 +29,7 @@ fun CustomBaseAlertDialog(
     onDismiss: () -> Unit,
     action: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
+    shape: Shape = MaterialTheme.shapes.medium,
     dialogProperties: DialogProperties = DialogProperties(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -36,9 +38,7 @@ fun CustomBaseAlertDialog(
         properties = dialogProperties,
         modifier = modifier
     ) {
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-        ) {
+        Surface(shape = shape) {
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally,

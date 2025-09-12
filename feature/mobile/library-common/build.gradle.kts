@@ -10,10 +10,15 @@ android {
 }
 
 dependencies {
-    // implementation(projects.core.ui.mobile)
+    implementation(projects.coreCommon)
+    implementation(projects.corePresentationCommon)
+    implementation(projects.coreDatabase)
+    implementation(projects.coreDrawables)
+    implementation(projects.coreStrings)
 //    implementation(projects.data)
 //     implementation(projects.domain)
 
+    implementation(libs.compose.adaptive.layout)
     implementation(libs.compose.adaptive.layout)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
