@@ -30,11 +30,12 @@ interface WatchlistDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFilm(film: DBFilm)
 
-    @Query("SELECT EXISTS(SELECT 1 FROM watchlist WHERE filmId = :filmId AND ownerId = :ownerId)")
-    suspend fun isInWatchlist(
+    @Transaction
+    @Query("SELECT * FROM watchlist WHERE filmId = :filmId AND ownerId = :ownerId")
+    suspend fun get(
         filmId: String,
         ownerId: Int,
-    ): Boolean
+    ): WatchlistWithMetadata?
 
     @Query("DELETE FROM watchlist WHERE ownerId = :ownerId")
     suspend fun deleteAll(ownerId: Int)

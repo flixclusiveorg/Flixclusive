@@ -32,7 +32,7 @@ interface LibraryListRepository {
 
     fun getListsContainingFilm(filmId: String, ownerId: Int): Flow<List<LibraryList>>
 
-    suspend fun deleteItem(itemId: Long, )
+    suspend fun deleteItem(itemId: Long)
 
     fun getListWithItems(listId: Int): Flow<LibraryListWithItems?>
 

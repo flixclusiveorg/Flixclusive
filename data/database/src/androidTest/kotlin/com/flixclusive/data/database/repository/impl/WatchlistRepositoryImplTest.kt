@@ -148,14 +148,14 @@ class WatchlistRepositoryImplTest {
         }
 
     @Test
-    fun shouldReturnTrueIfFilmIsInWatchlist() =
+    fun shouldReturnTrueIfFilmGet() =
         runTest(testDispatcher) {
             repository.insert(testWatchlistItem, testFilm)
 
-            val isInWatchlist = repository.isInWatchlist(
+            val isInWatchlist = repository.get(
                 filmId = testFilm.id,
                 ownerId = testWatchlistItem.ownerId,
-            )
+            ) != null
 
             expectThat(isInWatchlist).isEqualTo(true)
         }
@@ -163,10 +163,10 @@ class WatchlistRepositoryImplTest {
     @Test
     fun shouldReturnFalseIfFilmIsNotInWatchlist() =
         runTest(testDispatcher) {
-            val isInWatchlist = repository.isInWatchlist(
+            val isInWatchlist = repository.get(
                 filmId = "non-existent-film",
                 ownerId = testWatchlistItem.ownerId,
-            )
+            ) != null
 
             expectThat(isInWatchlist).isEqualTo(false)
         }

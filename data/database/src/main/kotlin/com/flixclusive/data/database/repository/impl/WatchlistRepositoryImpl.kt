@@ -35,12 +35,12 @@ internal class WatchlistRepositoryImpl
                 watchlistDao.delete(id)
             }
 
-        override suspend fun isInWatchlist(
+        override suspend fun get(
             filmId: String,
             ownerId: Int,
-        ): Boolean {
+        ): WatchlistWithMetadata? {
             return withContext(appDispatchers.io) {
-                watchlistDao.isInWatchlist(filmId, ownerId)
+                watchlistDao.get(filmId, ownerId)
             }
         }
 

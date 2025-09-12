@@ -14,7 +14,7 @@ interface WatchlistRepository {
 
     suspend fun get(id: Long): WatchlistWithMetadata?
 
-    suspend fun isInWatchlist(filmId: String, ownerId: Int): Boolean
+    suspend fun get(filmId: String, ownerId: Int): WatchlistWithMetadata?
 
     suspend fun getAll(ownerId: Int): List<WatchlistWithMetadata>
 
