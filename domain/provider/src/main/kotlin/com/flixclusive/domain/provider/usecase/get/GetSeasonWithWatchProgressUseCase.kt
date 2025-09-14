@@ -1,6 +1,7 @@
 package com.flixclusive.domain.provider.usecase.get
 
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Season
 import kotlinx.coroutines.flow.Flow
@@ -8,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Use case for fetching a specific season of a TV show from TMDB.
  * */
-interface GetSeasonUseCase {
+interface GetSeasonWithWatchProgressUseCase {
     /**
      * Fetches a specific season of a TV show from TMDB.
      *
@@ -20,5 +21,5 @@ interface GetSeasonUseCase {
     operator fun invoke(
         tvShow: TvShow,
         number: Int,
-    ): Flow<Resource<Season>>
+    ): Flow<Resource<SeasonWithProgress>>
 }

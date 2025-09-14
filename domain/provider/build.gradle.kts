@@ -17,6 +17,7 @@ dependencies {
     implementation(projects.coreNetwork)
     implementation(projects.dataProvider)
     implementation(projects.dataTmdb)
+    implementation(projects.dataDatabase)
     implementation(libs.pauseCoroutineDispatcher)
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.provider)
