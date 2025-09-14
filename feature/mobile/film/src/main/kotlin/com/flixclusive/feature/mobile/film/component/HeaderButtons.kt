@@ -18,13 +18,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -184,72 +188,79 @@ private fun PlayButton(
         ),
     )
 
-    Surface(
-        color = Color.Transparent,
-        contentColor = MaterialTheme.colorScheme.onPrimary,
-        modifier = modifier
-            .widthIn(min = 105.dp)
-            .clip(shape)
-            .drawBehind {
-                val width = size.width
-                val height = size.height
+    CompositionLocalProvider(
+        LocalContentColor provides MaterialTheme.colorScheme.onPrimary,
+    ) {
+        Box(
+            modifier =
+                modifier.minimumInteractiveComponentSize()
+                    .widthIn(min = 125.dp)
+                    .clip(shape)
+                    .drawBehind {
+                        val width = size.width
+                        val height = size.height
 
-                // First draw the base gradient fill
-                drawRect(
-                    brush = baseGradient,
-                    size = size,
+                        // First draw the base gradient fill
+                        drawRect(
+                            brush = baseGradient,
+                            size = size,
+                        )
+
+                        // Compute blob positions
+                        val pos1 = Offset(
+                            x = (blob1X.value / 300f) * width,
+                            y = (blob1Y.value / 200f) * height,
+                        )
+                        val pos2 = Offset(
+                            x = (blob2X.value / 300f) * width,
+                            y = (blob2Y.value / 200f) * height,
+                        )
+
+                        // Draw blobs on top of gradient
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(primaryBlobColor, Color.Transparent),
+                                center = pos1,
+                                radius = width / 1.4f,
+                            ),
+                            radius = width / 1.4f,
+                            center = pos1,
+                        )
+
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(tertiaryBlobColor, Color.Transparent),
+                                center = pos2,
+                                radius = width / 1.6f,
+                            ),
+                            radius = width / 1.6f,
+                            center = pos2,
+                        )
+                    }
+                    .focusable()
+                    .clickable { onClick() },
+            propagateMinConstraints = true
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+                modifier = Modifier
+                    .padding(
+                        vertical = 10.dp,
+                        horizontal = 16.dp
+                    )
+                    .align(Alignment.Center),
+            ) {
+                AdaptiveIcon(
+                    painter = painterResource(UiCommonR.drawable.play),
+                    contentDescription = label,
                 )
 
-                // Compute blob positions
-                val pos1 = Offset(
-                    x = (blob1X.value / 300f) * width,
-                    y = (blob1Y.value / 200f) * height,
-                )
-                val pos2 = Offset(
-                    x = (blob2X.value / 300f) * width,
-                    y = (blob2Y.value / 200f) * height,
-                )
-
-                // Draw blobs on top of gradient
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(primaryBlobColor, Color.Transparent),
-                        center = pos1,
-                        radius = width / 1.4f,
-                    ),
-                    radius = width / 1.4f,
-                    center = pos1,
-                )
-
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(tertiaryBlobColor, Color.Transparent),
-                        center = pos2,
-                        radius = width / 1.6f,
-                    ),
-                    radius = width / 1.6f,
-                    center = pos2,
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
                 )
             }
-            .focusable()
-            .clickable { onClick() },
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-            modifier = Modifier.padding(
-                vertical = 10.dp, horizontal = 24.dp
-            ),
-        ) {
-            AdaptiveIcon(
-                painter = painterResource(UiCommonR.drawable.play),
-                contentDescription = stringResource(LocaleR.string.play_button),
-            )
-
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
-            )
         }
     }
 }
@@ -316,11 +327,11 @@ private fun ExtraButton(
             ),
             contentDescription = label,
             tint = if (state) {
-                MaterialTheme.colorScheme.primary
+                LocalContentColor.current
             } else {
                 MaterialTheme.colorScheme.onSurface.copy(0.6F)
             },
-            dp = if (isCompactOrMedium) 18.dp else null,
+            dp = if (isCompactOrMedium) null else 18.dp,
         )
 
         if(isCompactOrMedium) {
@@ -335,16 +346,27 @@ private fun ExtraButton(
     PlainTooltipBox(description = label) {
         // Use full OutlinedButton on larger screens, icon-only button on compact screens
         if (!isCompactOrMedium) {
-            OutlinedButton(
-                onClick = onClick,
-                shape = MaterialTheme.shapes.small,
-                contentPadding = PaddingValues(
-                    vertical = 10.dp, horizontal = 15.dp
-                ),
-                border = BorderStroke(
+            val colors = if (state) {
+                ButtonDefaults.buttonColors()
+            } else {
+                ButtonDefaults.outlinedButtonColors()
+            }
+
+            val border = if (state) {
+                null
+            } else {
+                BorderStroke(
                     width = 2.dp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4F)
                 )
+            }
+
+            Button(
+                onClick = onClick,
+                shape = MaterialTheme.shapes.small,
+                colors = colors,
+                border = border,
+                contentPadding = PaddingValues(vertical = 10.dp, horizontal = 15.dp)
             ) {
                 LabelIconContent()
             }

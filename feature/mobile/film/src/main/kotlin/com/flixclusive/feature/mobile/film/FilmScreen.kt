@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -34,6 +35,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastFlatMap
+import androidx.compose.ui.util.fastMap
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
@@ -46,6 +49,7 @@ import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.navigation.navargs.FilmScreenNavArgs
 import com.flixclusive.core.navigation.navargs.GenreWithBackdrop
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.RetryButton
@@ -63,6 +67,7 @@ import com.flixclusive.feature.mobile.film.component.ContentTabs
 import com.flixclusive.feature.mobile.film.component.FilmScreenTopBar
 import com.flixclusive.feature.mobile.film.component.HeaderButtons
 import com.flixclusive.feature.mobile.film.component.LibraryListSheet
+import com.flixclusive.feature.mobile.film.component.seriesContent
 import com.flixclusive.feature.mobile.film.util.FilmScreenUtils
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
@@ -70,6 +75,7 @@ import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -77,31 +83,33 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalFoundationApi::class)
 @Destination(
-    navArgsDelegate = FilmScreenNavArgs::class
+    navArgsDelegate = FilmScreenNavArgs::class,
 )
 @Composable
 internal fun FilmScreen(
     navigator: FilmScreenNavigator,
     navArgs: FilmScreenNavArgs,
-    viewModel: FilmScreenViewModel = hiltViewModel()
+    viewModel: FilmScreenViewModel = hiltViewModel(),
 ) {
-
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun FilmScreenContent(
     navigator: FilmScreenNavigator,
-    watchProgress: WatchProgress?,
     showFilmTitles: Boolean,
     uiState: FilmUiState,
     metadata: Film,
+    watchProgresses: List<WatchProgress>, // A list because TV shows have multiple episodes
+    seasonToDisplay: Resource<Season>?,
     query: () -> String,
     libraryListStates: () -> List<LibraryListAndState>,
     onQueryChange: (String) -> Unit,
+    onSeasonChange: (Int) -> Unit,
     toggleOnLibrary: (Int) -> Unit,
     createLibrary: (String, String?) -> Unit,
     onRetry: () -> Unit,
+    onRetryFetchSeason: () -> Unit,
 ) {
     val context = LocalContext.current
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
@@ -114,6 +122,7 @@ private fun FilmScreenContent(
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyGridState()
+    val seasonsListState = rememberLazyListState()
 
     var appBarContainerAlpha by remember { mutableFloatStateOf(0f) }
     var isLibrarySheetOpen by remember { mutableStateOf(false) }
@@ -121,7 +130,7 @@ private fun FilmScreenContent(
     val tabs = remember(metadata) { FilmScreenUtils.getTabs(metadata) }
     val (currentTabSelected, onTabChange) = rememberSaveable(tabs.size) { mutableStateOf(tabs.firstOrNull()) }
 
-    // Extra cards to show based on the selected tab
+    // Items to show based on the selected tab
     val extraFilmCards: List<FilmSearchItem>? = remember(currentTabSelected, metadata) {
         when (currentTabSelected) {
             ContentTabType.MoreLikeThis -> metadata.recommendations
@@ -138,7 +147,7 @@ private fun FilmScreenContent(
 
     // Scroll to top when canScrollUpTop is true and back is pressed
     BackHandler(
-        enabled = canScrollUpTop && uiState.screenState == FilmScreenState.Success
+        enabled = canScrollUpTop && uiState.screenState == FilmScreenState.Success,
     ) {
         scope.launch {
             runCatching { listState.animateScrollToItem(0) }
@@ -146,19 +155,21 @@ private fun FilmScreenContent(
     }
 
     // Get the scroll offset of the first item to change the TopAppBar's background alpha
-    LaunchedEffect(listState, configuration) {
+    LaunchedEffect(listState, configuration, uiState.screenState) {
         snapshotFlow {
-            Triple(
-                first = listState.firstVisibleItemScrollOffset.toFloat(),
-                second = listState.firstVisibleItemIndex,
-                third = configuration.screenWidthDp.toFloat()
+            Pair(
+                listState.firstVisibleItemScrollOffset.toFloat() to listState.firstVisibleItemIndex,
+                configuration.screenWidthDp.toFloat() to uiState.screenState
             )
-        }.collect { (offset, index, screenWidth) ->
+        }.collect {
+            val (offset, index) = it.first
+            val (screenWidth, screenState) = it.second
             val headerHeight = screenWidth / backdropAspectRatio
             val coercedOffset = offset.coerceIn(0f, headerHeight)
 
             appBarContainerAlpha =
                 when {
+                    screenState != FilmScreenState.Success -> 1F
                     index == 0 && headerHeight > coercedOffset -> coercedOffset / headerHeight
                     else -> 1F
                 }
@@ -174,12 +185,12 @@ private fun FilmScreenContent(
                 onNavigate = navigator::goBack,
                 containerAlpha = { appBarContainerAlpha },
             )
-        }
+        },
     ) {
         AnimatedContent(
             modifier = Modifier,
             targetState = uiState.screenState,
-            label = "FilmScreenContent"
+            label = "FilmScreenContent",
         ) { state ->
             when (state) {
                 FilmScreenState.Loading -> {
@@ -190,23 +201,27 @@ private fun FilmScreenContent(
                     RetryButton(
                         error = uiState.error?.asString(),
                         modifier = Modifier.fillMaxSize(),
-                        onRetry = onRetry
+                        onRetry = onRetry,
                     )
                 }
 
                 FilmScreenState.Success -> {
                     LazyVerticalGrid(
-                        columns = GridCells.Adaptive(getAdaptiveFilmCardWidth()),
-                        state = listState
+                        columns = GridCells.Adaptive(
+                            if (currentTabSelected?.isOnEpisodesSection == true) {
+                                configuration.screenWidthDp.dp
+                            } else getAdaptiveFilmCardWidth()
+                        ),
+                        state = listState,
                     ) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             Box(
-                                contentAlignment = Alignment.TopCenter
+                                contentAlignment = Alignment.TopCenter,
                             ) {
                                 BackdropImage(
                                     metadata = metadata as FilmMetadata,
                                     modifier = Modifier
-                                        .aspectRatio(backdropAspectRatio)
+                                        .aspectRatio(backdropAspectRatio),
                                 )
 
                                 BriefDetails(
@@ -215,12 +230,13 @@ private fun FilmScreenContent(
                                     providerUsed = uiState.providerUsed,
                                     modifier = Modifier
                                         .aspectRatio(backdropAspectRatio * 0.95f)
-                                        .padding(horizontal = DefaultScreenPaddingHorizontal)
+                                        .padding(horizontal = DefaultScreenPaddingHorizontal),
                                 )
                             }
                         }
 
                         item(span = { GridItemSpan(maxLineSpan) }) {
+                            val watchProgress = watchProgresses.lastOrNull()
                             HeaderButtons(
                                 metadata = metadata as FilmMetadata,
                                 watchProgress = watchProgress,
@@ -244,7 +260,7 @@ private fun FilmScreenContent(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(DefaultScreenPaddingHorizontal)
-                                    .padding(top = 10.dp)
+                                    .padding(top = 10.dp),
                             )
                         }
 
@@ -253,7 +269,7 @@ private fun FilmScreenContent(
                                 metadata = metadata as FilmMetadata,
                                 modifier = Modifier
                                     .padding(horizontal = DefaultScreenPaddingHorizontal)
-                                    .padding(top = 25.dp)
+                                    .padding(top = 25.dp),
                             )
                         }
 
@@ -263,14 +279,34 @@ private fun FilmScreenContent(
                                 currentTabSelected = tabs.indexOf(currentTabSelected),
                                 onTabChange = { onTabChange(tabs[it]) },
                                 modifier = Modifier
-                                    .padding(top = 20.dp, bottom = 10.dp)
+                                    .padding(top = 20.dp, bottom = 10.dp),
+                            )
+                        }
+
+                        // Seasons and Episodes
+                        if (metadata is TvShow &&
+                            currentTabSelected?.isOnEpisodesSection == true &&
+                            seasonToDisplay != null &&
+                            uiState.selectedSeason != null
+                        ) {
+                            seriesContent(
+                                listState = seasonsListState,
+                                selectedSeason = uiState.selectedSeason,
+                                seasons = metadata.seasons,
+                                progresses = watchProgresses as List<EpisodeProgress>,
+                                seasonToDisplay = seasonToDisplay,
+                                onSeasonChange = onSeasonChange,
+                                onRetry = onRetryFetchSeason,
+                                onClick = { episode -> navigator.playEpisode(episode, metadata) },
+                                onLongClick = { /* TODO: Implement sheet for Marked as Watched */ },
+                                onDownload = { /* TODO: Implement download */ },
                             )
                         }
 
                         if (currentTabSelected?.isOnFilmsSection == true && extraFilmCards != null) {
                             items(
                                 items = extraFilmCards,
-                                key = { film -> film.identifier }
+                                key = { film -> film.identifier },
                             ) { film ->
                                 FilmCard(
                                     isShowingTitle = showFilmTitles,
@@ -279,7 +315,7 @@ private fun FilmScreenContent(
                                     onLongClick = navigator::previewFilm,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .animateItem()
+                                        .animateItem(),
                                 )
                             }
                         }
@@ -296,7 +332,7 @@ private fun FilmScreenContent(
             onQueryChange = onQueryChange,
             toggleOnLibrary = toggleOnLibrary,
             createLibrary = createLibrary,
-            onDismissRequest = { isLibrarySheetOpen = false }
+            onDismissRequest = { isLibrarySheetOpen = false },
         )
     }
 }
@@ -313,31 +349,51 @@ private fun getAspectRatio(usePortraitView: Boolean) =
         else -> 16f / 6f
     }
 
-
 @Preview
 @Composable
 private fun FilmScreenBasePreview() {
     val navigator = object : FilmScreenNavigator {
         override fun openFilmScreen(film: Film) {}
-        override fun openGenreScreen(genre: GenreWithBackdrop) {}
-        override fun previewFilm(film: Film) {}
-        override fun playMovie(movie: Film) {}
-        override fun playEpisode(episode: Episode, film: Film) {}
-        override fun playEpisode(season: Int, episode: Int, film: Film) {}
-        override fun goBack() {}
 
+        override fun openGenreScreen(genre: GenreWithBackdrop) {}
+
+        override fun previewFilm(film: Film) {}
+
+        override fun playMovie(movie: Film) {}
+
+        override fun playEpisode(
+            episode: Episode,
+            film: Film,
+        ) {}
+
+        override fun playEpisode(
+            season: Int,
+            episode: Int,
+            film: Film,
+        ) {}
+
+        override fun goBack() {}
     }
-    var uiState by remember { mutableStateOf(FilmUiState(isLoading = false, providerUsed = "Netflix")) }
-    val metadata = remember {
-        DummyDataForPreview.getMovie(
-            overview = """
+    var uiState by remember {
+        mutableStateOf(
+            FilmUiState(
+                isLoading = false,
+                providerUsed = "Netflix",
+                selectedSeason = 2
+            )
+        )
+    }
+    val metadata: FilmMetadata = remember {
+        DummyDataForPreview
+            .getTvShow(
+                overview = """
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
 
                 Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-            """.trimIndent(),
-        ).copy(adult = true)
+                """.trimIndent(),
+            ).copy(adult = true)
     }
 
     var query by remember { mutableStateOf("") }
@@ -378,9 +434,31 @@ private fun FilmScreenBasePreview() {
         mutableStateOf(list)
     }
 
+    val watchProgresses: List<WatchProgress> = remember(metadata) {
+        if (metadata is TvShow) {
+            metadata.seasons.fastFlatMap { season ->
+                season.episodes.fastMap { episode ->
+                    val duration = 900L + Random.nextInt(1200, 6000)
+
+                    EpisodeProgress(
+                        ownerId = 0,
+                        filmId = metadata.identifier,
+                        progress = Random.nextLong(900, duration),
+                        duration = duration,
+                        seasonNumber = season.number,
+                        episodeNumber = episode.number,
+                        status = WatchStatus.WATCHING,
+                    )
+                }
+            }
+        } else {
+            emptyList<MovieProgress>()
+        }
+    }
+
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             FilmScreenContent(
                 uiState = uiState,
@@ -406,13 +484,18 @@ private fun FilmScreenBasePreview() {
                         containsFilm = false,
                     )
                 },
-                watchProgress = MovieProgress(
-                    filmId = metadata.identifier,
-                    ownerId = 0,
-                    progress = 500L,
-                    status = WatchStatus.WATCHING,
-                    duration = 6000L,
-                ),
+                seasonToDisplay = remember(uiState.selectedSeason) {
+                    if (metadata is TvShow) {
+                        Resource.Success(
+                            data = metadata.seasons.first { it.number == uiState.selectedSeason },
+                        )
+                    } else {
+                        null
+                    }
+                },
+                onSeasonChange = { uiState = uiState.copy(selectedSeason = it) },
+                watchProgresses = watchProgresses,
+                onRetryFetchSeason = {},
             )
         }
     }

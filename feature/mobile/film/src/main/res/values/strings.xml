@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="provider_null_error_message">This one has no provider ID set</string>
-    <string name="default_overview">No overview found</string>
+    <string name="default_overview">No overview provided</string>
     <string name="provider_source">Source: %1$s</string>
     <string name="provider_language">Language: %1$s</string>
     <string name="casts">Casts: %1$s</string>
@@ -16,4 +16,5 @@
     <string name="download">Download</string>
     <string name="in_library">In library</string>
     <string name="add">Add</string>
+    <string name="season_and_episode_info">S%1$d • E%2$d</string>
 </resources>

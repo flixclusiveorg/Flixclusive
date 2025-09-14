@@ -32,11 +32,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import androidx.core.graphics.withSave
 
+/**
+ * Fills the maximum width of the parent layout based on the current window size class.
+ *
+ * @param compact The fraction of the width to fill when the window size class is compact. Default is `1F`.
+ * @param medium The fraction of the width to fill when the window size class is medium. Default is `0.8F`.
+ * @param expanded The fraction of the width to fill when the window size class is expanded. Default is `0.6F`.
+ * */
 @Composable
 fun Modifier.fillMaxAdaptiveWidth(
     compact: Float = 1F,
-    medium: Float = (compact - 0.2F),
-    expanded: Float = (medium - 0.2F),
+    medium: Float = (compact - 0.2F).coerceAtLeast(compact),
+    expanded: Float = (medium - 0.2F).coerceAtLeast(compact),
 ): Modifier {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val windowWidthSizeClass = windowSizeClass.windowWidthSizeClass

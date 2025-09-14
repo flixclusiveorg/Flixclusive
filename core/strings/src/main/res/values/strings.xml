@@ -50,6 +50,7 @@
     <string name="splash_default_error_message">An error occurred while initializing the app.</string>
     <string name="splash_maintenance_message">Sorry for the inconvenience. We\'re performing a quick update. Be back soon!</string>
     <string name="unknown_season">Unknown season</string>
+    <string name="season_fetch_error">An error occurred while fetching season %1$d</string>
     <string name="warning_install_message_second_half">By proceeding with the installation, you acknowledge that you understand the risks involved, and any resulting damage will be your responsibility. Are you sure you want to continue?</string>
     <string name="warning_uninstall_message_first_half">Are you sure you want to uninstall</string>
     <string name="warning_use_prerelease_updates">Pre-release versions may be unstable and may contain bugs or other issues. Please use at your own risk.</string>
@@ -329,8 +330,9 @@
     <string name="made_by_author_label_format">Made by %1$s</string>
     <string name="n_seconds_format">%1$d seconds</string>
     <string name="provider_test_film_used_for_testing_format">%1$s used for testing: %2$s</string>
-    <string name="season_number_formatter">Season %1$d</string>
     <string name="seek_seconds_format">%1$s seconds</string>
+    <string name="untitled_season">Season %1$d</string>
+    <string name="untitled_episode">Episode %1$d</string>
 
 
     <!--  State messages  -->
@@ -344,6 +346,7 @@
     <string name="copy_stack_trace_message">You could open a github issue and paste this stack trace.</string>
     <string name="default_description_msg">No description given.</string>
     <string name="default_update_info_message">No additional update information provided.</string>
+    <string name="download">Download</string>
     <string name="download_completed">Download completed</string>
     <string name="download_in_progress">Downloading</string>
     <string name="empty_list_default_message">No items found.</string>
@@ -412,7 +415,6 @@
     <string name="delete_profile_content_desc">Deletes profile entirely from app</string>
     <string name="delete_search_history_item_message">Are you sure you want to delete this search history item?</string>
     <string name="doh_content_desc">DNS over HTTPS (DoH) can help bypass some ISP blocks by encrypting your DNS queries. However, it\'s important to note that this method is not foolproof and may not work in all cases</string>
-    <string name="down_arrow_season_dropdown_content_desc">A down arrow for dropdown menu</string>
     <string name="drag_icon_content_desc">Drag indicator for provider card</string>
     <string name="edit_profile_cancel_button_desc">Stop editing profiles</string>
     <string name="episode_image_content_desc">An image of episode %1$s: %2$s</string>
@@ -442,7 +444,6 @@
     <string name="pin_hint_sub_description">This will help you remember what your PIN is if you somehow forget it</string>
     <string name="pin_remove_content_desc">Remove the pin lock for this profile</string>
     <string name="pip_mode_desc">Picture-in-picture (PiP) lets you watch videos while using other apps.</string>
-    <string name="play_button">Play button</string>
     <string name="play_pause_button_content_description">Play or pause button</string>
     <string name="playback_speed_snackbar_message">Playback speed set to %1$s</string>
     <string name="provider_icon_content_desc">Default icon of a provider</string>

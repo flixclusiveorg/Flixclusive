@@ -34,7 +34,6 @@ import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
-import com.flixclusive.model.film.common.tv.Season
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -51,10 +50,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flattenConcat
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -89,9 +85,6 @@ internal class FilmScreenViewModel
         private val _metadata = MutableStateFlow<FilmMetadata?>(null)
         val metadata = _metadata.asStateFlow()
 
-        private val _season = MutableStateFlow<Resource<Season>?>(null)
-        val season = _season.asStateFlow()
-
         /** Displays the title of the media under the card */
         val showFilmTitles = dataStoreManager
             .getUserPrefs(UserPreferences.UI_PREFS_KEY, UiPreferences::class)
@@ -109,17 +102,24 @@ internal class FilmScreenViewModel
          * This is either the season selected by the user (based on [FilmUiState.selectedSeason]),
          * the last watched season if no season is selected. If neither of those are available,
          * it will be the latest season.
+         *
+         * The reason why this is on a separate flow to [FilmUiState] is because some series
+         * have a large number of seasons, and fetching all these seasons can take a while.
+         *
+         * By separating this into its own flow, we can avoid blocking the entire screen
+         * from being displayed while we fetch the season data.
          * */
-        val seasonToDisplay = uiState
-            .mapLatest { it.selectedSeason }
-            .filterNotNull()
-            .distinctUntilChanged()
-            .mapNotNull {
-                val tvShow = _metadata.filterNotNull().take(1).single()
-                if (tvShow !is TvShow) return@mapNotNull null
+        val seasonToDisplay = combine(
+            uiState.mapLatest { it.selectedSeason }.filterNotNull().distinctUntilChanged(),
+            _metadata.filterNotNull(),
+        ) { selectedSeason, filmMetadata ->
+            selectedSeason to filmMetadata
+        }.mapLatest { (selectedSeason, tvShow) ->
+            if (tvShow !is TvShow) return@mapLatest null
 
-                getSeason(tvShow, it)
-            }.flattenConcat()
+            getSeason(tvShow, selectedSeason)
+        }.filterNotNull()
+            .flattenConcat()
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
@@ -129,20 +129,19 @@ internal class FilmScreenViewModel
         /**
          * The watch progress entity for the current film and user, if it exists.
          * */
-        val watchProgress =
-            userSessionManager.currentUser
-                .filterNotNull()
-                .flatMapLatest { user ->
-                    watchProgressRepository.getAsFlow(
-                        ownerId = user.id,
-                        id = navArgFilm.identifier,
-                        type = navArgFilm.filmType,
-                    )
-                }.stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.Eagerly,
-                    initialValue = null,
+        val watchProgress = userSessionManager.currentUser
+            .filterNotNull()
+            .flatMapLatest { user ->
+                watchProgressRepository.getAsFlow(
+                    ownerId = user.id,
+                    id = navArgFilm.identifier,
+                    type = navArgFilm.filmType,
                 )
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = null,
+            )
 
         /**
          * This is a distinct flow that represents the current search query
@@ -353,16 +352,21 @@ internal class FilmScreenViewModel
 
                         if (tvShow == null || seasonState !is Resource.Success) return@collectLatest
 
-                        // If we got a new season, and it's not in the current film metadata, add it.
-                        // This saves us from having to re-fetch the entire film metadata just to get the new season.
+
                         val season = seasonState.data!!
                         val seasonNumber = tvShow.seasons.binarySearchBy(season.number) { it.number }
 
-                        if (seasonNumber == -1) {
+                        // If we have the season but it has no episodes, update it.
+                        // This can happen when the initial metadata has seasons without episodes.
+                        // We only do this if we don't have any episodes for the season to avoid
+                        // overwriting any existing data.
+                        val episodes = tvShow.seasons.getOrNull(seasonNumber)?.episodes
+                        if (episodes?.isEmpty() == true) {
                             _metadata.update {
-                                val newSeasons = (tvShow.seasons + season).sortedBy { it.number }
+                                val mutableSeasons = tvShow.seasons.toMutableList()
+                                mutableSeasons[seasonNumber] = season
 
-                                tvShow.copy(seasons = newSeasons)
+                                tvShow.copy(seasons = mutableSeasons.toList())
                             }
                         }
                     }

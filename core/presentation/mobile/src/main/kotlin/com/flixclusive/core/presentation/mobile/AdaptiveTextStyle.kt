@@ -1,6 +1,5 @@
 package com.flixclusive.core.presentation.mobile
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
@@ -34,25 +33,4 @@ object AdaptiveTextStyle {
             expanded = (size.value + (increaseBy.value * 2)).sp,
         )
     }
-}
-
-enum class TypographySize {
-    Body,
-    Display,
-    Headline,
-    Label,
-    Title,
-    ;
-
-    /**
-     * Returns the corresponding [TextStyle] from [MaterialTheme.typography] based on the enum value.
-     * */
-    internal val sizeStyle: TextStyle
-        @Composable get() = when (this) {
-            Body -> MaterialTheme.typography.bodyLarge
-            Display -> MaterialTheme.typography.displayLarge
-            Headline -> MaterialTheme.typography.headlineLarge
-            Label -> MaterialTheme.typography.labelLarge
-            Title -> MaterialTheme.typography.titleLarge
-        }
 }
