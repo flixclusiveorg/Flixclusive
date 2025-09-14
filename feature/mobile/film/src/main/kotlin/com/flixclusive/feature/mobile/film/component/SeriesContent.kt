@@ -14,41 +14,25 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastFirstOrNull
-import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
+import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.core.strings.R as LocaleR
-
-/**
- * Returns the [EpisodeProgress] for the given [episode], or null if not found.
- *
- * @param episode The episode to find the progress for.
- *
- * @return The [EpisodeProgress] for the given [episode], or null if not.
- * */
-private fun List<EpisodeProgress>.getEpisode(episode: Episode) =
-    fastFirstOrNull {
-        it.seasonNumber == episode.season &&
-            it.episodeNumber == episode.number
-    }
 
 internal fun LazyGridScope.seriesContent(
     listState: LazyListState,
     selectedSeason: Int,
     seasons: List<Season>,
-    progresses: List<EpisodeProgress>,
-    seasonToDisplay: Resource<Season>,
+    seasonToDisplay: Resource<SeasonWithProgress>,
     onSeasonChange: (Int) -> Unit,
     onDownload: (Episode) -> Unit,
     onClick: (Episode) -> Unit,
@@ -59,7 +43,7 @@ internal fun LazyGridScope.seriesContent(
     item(span = { GridItemSpan(maxLineSpan) }) {
         LazyRow(
             state = listState,
-            modifier = Modifier.padding(bottom = 5.dp)
+            modifier = Modifier.padding(bottom = 5.dp),
         ) {
             items(
                 items = seasons,
@@ -112,11 +96,11 @@ internal fun LazyGridScope.seriesContent(
                         modifier = Modifier.padding(
                             bottom = 10.dp,
                             start = DefaultScreenPaddingHorizontal,
-                            end = DefaultScreenPaddingHorizontal
+                            end = DefaultScreenPaddingHorizontal,
                         ),
                         style = MaterialTheme.typography.bodySmall
                             .copy(color = LocalContentColor.current.copy(0.6f))
-                            .asAdaptiveTextStyle()
+                            .asAdaptiveTextStyle(),
                     )
                 }
             }
@@ -124,16 +108,13 @@ internal fun LazyGridScope.seriesContent(
             itemsIndexed(
                 items = season.episodes,
                 key = { _, episode -> episode.number },
-            ) { i, episode ->
-                val progress = remember(progresses) { progresses.getEpisode(episode) }
-
+            ) { i, item ->
                 Column {
                     EpisodeCard(
-                        episode = episode,
-                        onClick = { onClick(episode) },
-                        onLongClick = { onLongClick(episode) },
-                        onDownload = { onDownload(episode) },
-                        progress = progress,
+                        episode = item,
+                        onClick = { onClick(item.episode) },
+                        onLongClick = { onLongClick(item.episode) },
+                        onDownload = { onDownload(item.episode) },
                         modifier = modifier
                             .fillMaxWidth()
                             .animateItem(),

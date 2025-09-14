@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
@@ -26,13 +27,12 @@ import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
 import com.flixclusive.domain.database.usecase.ToggleWatchlistStatusUseCase
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
-import com.flixclusive.domain.provider.usecase.get.GetSeasonUseCase
+import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
 import com.flixclusive.feature.mobile.film.util.LibraryListMapper.toWatchProgressLibraryList
 import com.flixclusive.feature.mobile.film.util.LibraryListMapper.toWatchlistLibraryList
 import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmMetadata
-import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
@@ -49,6 +49,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flattenConcat
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -62,9 +63,9 @@ internal class FilmScreenViewModel
     constructor(
         context: Context,
         dataStoreManager: DataStoreManager,
-        getSeason: GetSeasonUseCase,
+        getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
         savedStateHandle: SavedStateHandle,
-        userSessionManager: UserSessionManager,
+        private val userSessionManager: UserSessionManager,
         private val appDispatchers: AppDispatchers,
         private val getFilmMetadata: GetFilmMetadataUseCase,
         private val libraryListRepository: LibraryListRepository,
@@ -84,6 +85,13 @@ internal class FilmScreenViewModel
 
         private val _metadata = MutableStateFlow<FilmMetadata?>(null)
         val metadata = _metadata.asStateFlow()
+
+        /**
+         * A trigger to retry fetching the season data
+         *
+         * I know... it's not pretty, but it works for now :D
+         */
+        private val retrySeasonTrigger = MutableStateFlow(0)
 
         /** Displays the title of the media under the card */
         val showFilmTitles = dataStoreManager
@@ -112,12 +120,13 @@ internal class FilmScreenViewModel
         val seasonToDisplay = combine(
             uiState.mapLatest { it.selectedSeason }.filterNotNull().distinctUntilChanged(),
             _metadata.filterNotNull(),
-        ) { selectedSeason, filmMetadata ->
+            retrySeasonTrigger
+        ) { selectedSeason, filmMetadata, _ ->
             selectedSeason to filmMetadata
         }.mapLatest { (selectedSeason, tvShow) ->
             if (tvShow !is TvShow) return@mapLatest null
 
-            getSeason(tvShow, selectedSeason)
+            getSeasonWithWatchProgress(tvShow, selectedSeason)
         }.filterNotNull()
             .flattenConcat()
             .stateIn(
@@ -137,7 +146,8 @@ internal class FilmScreenViewModel
                     id = navArgFilm.identifier,
                     type = navArgFilm.filmType,
                 )
-            }.stateIn(
+            }.map { it?.watchData }
+            .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.Eagerly,
                 initialValue = null,
@@ -270,6 +280,10 @@ internal class FilmScreenViewModel
             }
         }
 
+        fun onRetryFetchSeason() {
+            retrySeasonTrigger.value += 1
+        }
+
         /**
          * Toggles the presence of the current film in the library list with the given [id].
          *
@@ -314,6 +328,44 @@ internal class FilmScreenViewModel
             }
         }
 
+
+        /**
+         * Creates a new library list with the given [name] and optional [description],
+         * and immediately adds the current film to it.
+         *
+         * @param name The name of the new library list.
+         * @param description An optional description for the new library list.
+         * */
+        fun createLibrary(name: String, description: String?) {
+            val film = _metadata.value
+            val user = userSessionManager.currentUser.value
+
+            requireNotNull(film) {
+                "Film metadata must be loaded before creating a library"
+            }
+
+            requireNotNull(user) {
+                "User must be logged in to create a library"
+            }
+
+            appDispatchers.ioScope.launch {
+                val newListId = libraryListRepository.insertList(
+                    list = LibraryList(
+                        name = name,
+                        description = description,
+                        ownerId = user.id,
+                    )
+                )
+
+                // Immediately add the film to the newly created list
+                libraryListRepository.insertItem(
+                    item = LibraryListItem(filmId = film.identifier, listId = newListId),
+                    film = film,
+                )
+            }
+
+        }
+
         fun onSeasonChange(seasonNumber: Int) {
             _uiState.update {
                 it.copy(selectedSeason = seasonNumber)
@@ -322,12 +374,6 @@ internal class FilmScreenViewModel
 
         fun onLibrarySheetQueryChange(query: String) {
             _librarySheetQuery.value = query
-        }
-
-        fun onConsumeError() {
-            _uiState.update {
-                it.copy(error = null)
-            }
         }
 
         init {
@@ -352,8 +398,7 @@ internal class FilmScreenViewModel
 
                         if (tvShow == null || seasonState !is Resource.Success) return@collectLatest
 
-
-                        val season = seasonState.data!!
+                        val (season) = seasonState.data!! // De-structure the season from SeasonWithProgress
                         val seasonNumber = tvShow.seasons.binarySearchBy(season.number) { it.number }
 
                         // If we have the season but it has no episodes, update it.
@@ -410,6 +455,3 @@ internal enum class FilmScreenState {
     Error,
     Success,
 }
-
-private val FilmMetadata.hasCollections
-    get() = this is Movie && collection?.films?.isNotEmpty() == true

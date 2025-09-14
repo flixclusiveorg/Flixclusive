@@ -50,6 +50,7 @@ import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
+import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -60,8 +61,7 @@ private val PreviewImageSize = 140.dp
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun EpisodeCard(
-    episode: Episode,
-    progress: EpisodeProgress?,
+    episode: EpisodeWithProgress,
     onDownload: () -> Unit,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -91,13 +91,10 @@ internal fun EpisodeCard(
             )
             .padding(vertical = 8.dp, horizontal = DefaultScreenPaddingHorizontal),
     ) {
-        EpisodePreview(
-            episode = episode,
-            episodeProgress = progress,
-        )
+        EpisodePreview(episode = episode)
 
         EpisodeDetails(
-            episode = episode,
+            episode = episode.episode,
             modifier = Modifier.weight(1f),
         )
 
@@ -124,8 +121,7 @@ internal fun EpisodeCard(
 
 @Composable
 private fun EpisodePreview(
-    episode: Episode,
-    episodeProgress: EpisodeProgress?,
+    episode: EpisodeWithProgress,
     modifier: Modifier = Modifier,
 ) {
     val imageWidthModifier = Modifier.width(getAdaptiveDp(PreviewImageSize))
@@ -164,12 +160,12 @@ private fun EpisodePreview(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .border(
-                            width = 1.dp, color = Color.White.copy(0.8f),
-                            shape = CircleShape
-                        )
-                        .background(
+                            width = 1.dp,
+                            color = Color.White.copy(0.8f),
+                            shape = CircleShape,
+                        ).background(
                             color = Color.Black.copy(0.6f),
-                            shape = CircleShape
+                            shape = CircleShape,
                         ),
                 ) {
                     AdaptiveIcon(
@@ -182,7 +178,7 @@ private fun EpisodePreview(
         }
 
         ProgressBar(
-            episodeProgress = episodeProgress,
+            episodeProgress = episode.watchProgress,
             modifier = imageWidthModifier
                 .align(Alignment.BottomStart),
         )
@@ -269,7 +265,7 @@ internal fun EpisodeCardPlaceholder() {
 
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         ) {
             Placeholder(
                 modifier = Modifier
@@ -321,15 +317,17 @@ private fun EpisodeCardBasePreview() {
         Surface {
             Column {
                 EpisodeCard(
-                    episode = episode,
-                    progress = EpisodeProgress(
-                        filmId = series.identifier,
-                        ownerId = -1,
-                        progress = 50000L,
-                        duration = 90000L,
-                        seasonNumber = episode.season,
-                        episodeNumber = episode.number,
-                        status = WatchStatus.WATCHING,
+                    episode = EpisodeWithProgress(
+                        episode = episode,
+                        watchProgress = EpisodeProgress(
+                            filmId = series.identifier,
+                            ownerId = -1,
+                            progress = 50000L,
+                            duration = 90000L,
+                            seasonNumber = episode.season,
+                            episodeNumber = episode.number,
+                            status = WatchStatus.WATCHING,
+                        ),
                     ),
                     onDownload = {},
                     onClick = {},

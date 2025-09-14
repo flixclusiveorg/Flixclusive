@@ -35,9 +35,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastFlatMap
 import androidx.compose.ui.util.fastMap
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
@@ -60,6 +60,8 @@ import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
+import com.flixclusive.domain.provider.model.EpisodeWithProgress
+import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.film.component.BackdropImage
 import com.flixclusive.feature.mobile.film.component.BriefDetails
 import com.flixclusive.feature.mobile.film.component.CollapsibleDescription
@@ -75,7 +77,6 @@ import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.common.tv.Season
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -91,6 +92,32 @@ internal fun FilmScreen(
     navArgs: FilmScreenNavArgs,
     viewModel: FilmScreenViewModel = hiltViewModel(),
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val metadata by viewModel.metadata.collectAsStateWithLifecycle()
+    val watchProgress by viewModel.watchProgress.collectAsStateWithLifecycle()
+    val seasonToDisplay by viewModel.seasonToDisplay.collectAsStateWithLifecycle()
+    val showFilmTitles by viewModel.showFilmTitles.collectAsStateWithLifecycle()
+    val librarySheetQuery by viewModel.librarySheetQuery.collectAsStateWithLifecycle()
+    val libraryListStates by viewModel.libraryLists.collectAsStateWithLifecycle()
+    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+
+    FilmScreenContent(
+        navigator = navigator,
+        showFilmTitles = showFilmTitles,
+        uiState = uiState,
+        metadata = metadata ?: navArgs.film,
+        watchProgress = watchProgress,
+        seasonToDisplay = seasonToDisplay,
+        query = { librarySheetQuery },
+        searchResults = { searchResults },
+        libraryListStates = { libraryListStates },
+        onQueryChange = viewModel::onLibrarySheetQueryChange,
+        onSeasonChange = viewModel::onSeasonChange,
+        toggleOnLibrary = viewModel::toggleOnLibrary,
+        createLibrary = viewModel::createLibrary,
+        onRetry = viewModel::onRetry,
+        onRetryFetchSeason = viewModel::onRetryFetchSeason
+    )
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -100,10 +127,11 @@ private fun FilmScreenContent(
     showFilmTitles: Boolean,
     uiState: FilmUiState,
     metadata: Film,
-    watchProgresses: List<WatchProgress>, // A list because TV shows have multiple episodes
-    seasonToDisplay: Resource<Season>?,
+    watchProgress: WatchProgress?,
+    seasonToDisplay: Resource<SeasonWithProgress>?,
     query: () -> String,
     libraryListStates: () -> List<LibraryListAndState>,
+    searchResults: () -> List<LibraryListAndState>,
     onQueryChange: (String) -> Unit,
     onSeasonChange: (Int) -> Unit,
     toggleOnLibrary: (Int) -> Unit,
@@ -159,7 +187,7 @@ private fun FilmScreenContent(
         snapshotFlow {
             Pair(
                 listState.firstVisibleItemScrollOffset.toFloat() to listState.firstVisibleItemIndex,
-                configuration.screenWidthDp.toFloat() to uiState.screenState
+                configuration.screenWidthDp.toFloat() to uiState.screenState,
             )
         }.collect {
             val (offset, index) = it.first
@@ -210,7 +238,9 @@ private fun FilmScreenContent(
                         columns = GridCells.Adaptive(
                             if (currentTabSelected?.isOnEpisodesSection == true) {
                                 configuration.screenWidthDp.dp
-                            } else getAdaptiveFilmCardWidth()
+                            } else {
+                                getAdaptiveFilmCardWidth()
+                            },
                         ),
                         state = listState,
                     ) {
@@ -236,7 +266,6 @@ private fun FilmScreenContent(
                         }
 
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            val watchProgress = watchProgresses.lastOrNull()
                             HeaderButtons(
                                 metadata = metadata as FilmMetadata,
                                 watchProgress = watchProgress,
@@ -293,7 +322,6 @@ private fun FilmScreenContent(
                                 listState = seasonsListState,
                                 selectedSeason = uiState.selectedSeason,
                                 seasons = metadata.seasons,
-                                progresses = watchProgresses as List<EpisodeProgress>,
                                 seasonToDisplay = seasonToDisplay,
                                 onSeasonChange = onSeasonChange,
                                 onRetry = onRetryFetchSeason,
@@ -328,7 +356,13 @@ private fun FilmScreenContent(
     if (isLibrarySheetOpen) {
         LibraryListSheet(
             query = query,
-            libraryListStates = libraryListStates,
+            libraryListStates = {
+                if (query().isBlank()) {
+                    libraryListStates()
+                } else {
+                    searchResults()
+                }
+            },
             onQueryChange = onQueryChange,
             toggleOnLibrary = toggleOnLibrary,
             createLibrary = createLibrary,
@@ -364,13 +398,15 @@ private fun FilmScreenBasePreview() {
         override fun playEpisode(
             episode: Episode,
             film: Film,
-        ) {}
+        ) {
+        }
 
         override fun playEpisode(
             season: Int,
             episode: Int,
             film: Film,
-        ) {}
+        ) {
+        }
 
         override fun goBack() {}
     }
@@ -379,8 +415,8 @@ private fun FilmScreenBasePreview() {
             FilmUiState(
                 isLoading = false,
                 providerUsed = "Netflix",
-                selectedSeason = 2
-            )
+                selectedSeason = 2,
+            ),
         )
     }
     val metadata: FilmMetadata = remember {
@@ -434,25 +470,27 @@ private fun FilmScreenBasePreview() {
         mutableStateOf(list)
     }
 
-    val watchProgresses: List<WatchProgress> = remember(metadata) {
+    val watchProgress: WatchProgress = remember(metadata) {
         if (metadata is TvShow) {
-            metadata.seasons.fastFlatMap { season ->
-                season.episodes.fastMap { episode ->
-                    val duration = 900L + Random.nextInt(1200, 6000)
+            val duration = 900L + Random.nextInt(1200, 6000)
 
-                    EpisodeProgress(
-                        ownerId = 0,
-                        filmId = metadata.identifier,
-                        progress = Random.nextLong(900, duration),
-                        duration = duration,
-                        seasonNumber = season.number,
-                        episodeNumber = episode.number,
-                        status = WatchStatus.WATCHING,
-                    )
-                }
-            }
+            EpisodeProgress(
+                ownerId = 0,
+                filmId = metadata.identifier,
+                progress = Random.nextLong(900, duration),
+                duration = duration,
+                seasonNumber = 2,
+                episodeNumber = 1,
+                status = WatchStatus.WATCHING,
+            )
         } else {
-            emptyList<MovieProgress>()
+            MovieProgress(
+                ownerId = 0,
+                filmId = metadata.identifier,
+                progress = 5400L,
+                duration = 7200L,
+                status = WatchStatus.WATCHING,
+            )
         }
     }
 
@@ -468,6 +506,9 @@ private fun FilmScreenBasePreview() {
                 showFilmTitles = false,
                 toggleOnLibrary = {},
                 libraryListStates = { lists },
+                searchResults = {
+                    lists.filter { it.list.name.contains(query, ignoreCase = true) }
+                },
                 query = { query },
                 onQueryChange = { query = it },
                 createLibrary = { name, description ->
@@ -486,15 +527,35 @@ private fun FilmScreenBasePreview() {
                 },
                 seasonToDisplay = remember(uiState.selectedSeason) {
                     if (metadata is TvShow) {
+                        val season = metadata.seasons.first { it.number == (uiState.selectedSeason ?: 1) }
                         Resource.Success(
-                            data = metadata.seasons.first { it.number == uiState.selectedSeason },
+                            data = SeasonWithProgress(
+                                season = season,
+                                episodes = season.episodes.fastMap { episode ->
+                                    val duration = 900L + Random.nextInt(1200, 6000)
+
+                                    EpisodeWithProgress(
+                                        episode = episode,
+                                        watchProgress = EpisodeProgress(
+                                            id = episode.number.toLong(),
+                                            ownerId = 0,
+                                            filmId = metadata.identifier,
+                                            progress = Random.nextLong(900, duration),
+                                            duration = duration,
+                                            seasonNumber = season.number,
+                                            episodeNumber = episode.number,
+                                            status = WatchStatus.WATCHING,
+                                        ),
+                                    )
+                                },
+                            ),
                         )
                     } else {
                         null
                     }
                 },
                 onSeasonChange = { uiState = uiState.copy(selectedSeason = it) },
-                watchProgresses = watchProgresses,
+                watchProgress = watchProgress,
                 onRetryFetchSeason = {},
             )
         }
