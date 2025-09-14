@@ -208,6 +208,104 @@ class WatchProgressRepositoryImplTest {
         }
 
     @Test
+    fun shouldGetSeasonProgress() =
+        runTest(testDispatcher) {
+            val tvShowFilm = testDBFilm.copy(id = "tvshow123", filmType = FilmType.TV_SHOW)
+
+            val episodes = (1..5).map { episodeNum ->
+                DatabaseTestDefaults.getEpisodeProgress(
+                    id = episodeNum.toLong(),
+                    filmId = tvShowFilm.id,
+                    ownerId = testUser.id,
+                    seasonNumber = 1,
+                    episodeNumber = episodeNum,
+                )
+            }
+
+            episodes.forEach { episode ->
+                repository.insert(episode, tvShowFilm)
+            }
+
+            val seasonProgress = repository.getSeasonProgress(
+                tvShowId = tvShowFilm.id,
+                seasonNumber = 1,
+                ownerId = testUser.id,
+            )
+
+            expectThat(seasonProgress).hasSize(5).and {
+                get { map { it.episodeNumber } }.isEqualTo(listOf(1, 2, 3, 4, 5))
+                get { all { it.filmId == tvShowFilm.id } }.isEqualTo(true)
+                get { all { it.seasonNumber == 1 } }.isEqualTo(true)
+            }
+        }
+
+    @Test
+    fun shouldGetSeasonProgressForSpecificSeason() =
+        runTest(testDispatcher) {
+            val tvShowFilm = testDBFilm.copy(id = "tvshow456", filmType = FilmType.TV_SHOW)
+
+            // Add episodes for season 1
+            val season1Episodes = (1..3).map { episodeNum ->
+                DatabaseTestDefaults.getEpisodeProgress(
+                    id = episodeNum.toLong(),
+                    filmId = tvShowFilm.id,
+                    ownerId = testUser.id,
+                    seasonNumber = 1,
+                    episodeNumber = episodeNum,
+                )
+            }
+
+            // Add episodes for season 2
+            val season2Episodes = (1..2).map { episodeNum ->
+                DatabaseTestDefaults.getEpisodeProgress(
+                    id = (episodeNum + 10).toLong(),
+                    filmId = tvShowFilm.id,
+                    ownerId = testUser.id,
+                    seasonNumber = 2,
+                    episodeNumber = episodeNum,
+                )
+            }
+
+            (season1Episodes + season2Episodes).forEach { episode ->
+                repository.insert(episode, tvShowFilm)
+            }
+
+            val season1Progress = repository.getSeasonProgress(
+                tvShowId = tvShowFilm.id,
+                seasonNumber = 1,
+                ownerId = testUser.id,
+            )
+
+            val season2Progress = repository.getSeasonProgress(
+                tvShowId = tvShowFilm.id,
+                seasonNumber = 2,
+                ownerId = testUser.id,
+            )
+
+            expectThat(season1Progress).hasSize(3).and {
+                get { all { it.seasonNumber == 1 } }.isEqualTo(true)
+            }
+
+            expectThat(season2Progress).hasSize(2).and {
+                get { all { it.seasonNumber == 2 } }.isEqualTo(true)
+            }
+        }
+
+    @Test
+    fun shouldReturnEmptyListForNonExistentSeason() =
+        runTest(testDispatcher) {
+            val tvShowFilm = testDBFilm.copy(id = "tvshow789", filmType = FilmType.TV_SHOW)
+
+            val seasonProgress = repository.getSeasonProgress(
+                tvShowId = tvShowFilm.id,
+                seasonNumber = 99,
+                ownerId = testUser.id,
+            )
+
+            expectThat(seasonProgress).isEmpty()
+        }
+
+    @Test
     fun shouldReturnNullForNonExistentItem() =
         runTest(testDispatcher) {
             val retrievedItem = repository.get(0, FilmType.TV_SHOW)

@@ -1,5 +1,6 @@
 package com.flixclusive.data.database.repository
 
+import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.model.film.Film
@@ -24,6 +25,12 @@ interface WatchProgressRepository {
         ownerId: Int,
         type: FilmType,
     ): Flow<WatchProgressWithMetadata?>
+
+    suspend fun getSeasonProgress(
+        tvShowId: String,
+        seasonNumber: Int,
+        ownerId: Int,
+    ): List<EpisodeProgress>
 
     suspend fun getRandoms(
         ownerId: Int,

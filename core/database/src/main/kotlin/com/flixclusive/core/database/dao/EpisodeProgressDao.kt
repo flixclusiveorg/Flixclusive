@@ -13,6 +13,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EpisodeProgressDao {
+    /**
+     * Gets the latest watched episode for each series.
+     *
+     * This only returns the furthest episode watched in each series, not all episodes.
+     * */
     @Transaction
     @Query(
         """
@@ -45,19 +50,6 @@ interface EpisodeProgressDao {
     ): Flow<List<EpisodeProgressWithMetadata>>
 
     @Transaction
-    @Query(
-        """
-        SELECT * FROM series_watch_history
-        WHERE filmId = :seriesId AND ownerId = :ownerId
-        ORDER BY seasonNumber, episodeNumber
-        """,
-    )
-    fun getAllForSeries(
-        seriesId: String,
-        ownerId: Int,
-    ): Flow<List<EpisodeProgressWithMetadata>>
-
-    @Transaction
     @Query("SELECT * FROM series_watch_history WHERE id = :itemId")
     suspend fun get(itemId: Long): EpisodeProgressWithMetadata?
 
@@ -65,9 +57,28 @@ interface EpisodeProgressDao {
     @Query("SELECT * FROM series_watch_history WHERE id = :itemId")
     fun getAsFlow(itemId: Long): Flow<EpisodeProgressWithMetadata?>
 
+    /**
+     * Gets only the furthest episode watched for the given series.
+     * */
     @Transaction
-    @Query("SELECT * FROM series_watch_history WHERE filmId = :itemId AND ownerId = :ownerId")
+    @Query(
+        """
+        SELECT * FROM series_watch_history
+        WHERE filmId = :itemId AND ownerId = :ownerId
+        ORDER BY seasonNumber DESC, episodeNumber DESC
+        LIMIT 1
+        """,
+    )
     fun getAsFlow(itemId: String, ownerId: Int): Flow<EpisodeProgressWithMetadata?>
+
+    @Query(
+        """
+        SELECT * FROM series_watch_history
+        WHERE filmId = :itemId AND ownerId = :ownerId AND seasonNumber = :season
+        ORDER BY episodeNumber ASC
+        """,
+    )
+    suspend fun getSeasonProgress(itemId: String, season: Int, ownerId: Int): List<EpisodeProgress>
 
     @Transaction
     suspend fun insert(
