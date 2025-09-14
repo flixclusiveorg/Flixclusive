@@ -46,7 +46,7 @@ import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
-import com.flixclusive.core.presentation.common.extensions.buildTMDBImageUrl
+import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.clearFocusOnSoftKeyboardHide
 import com.flixclusive.core.presentation.common.extensions.showSoftKeyboard
 import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
@@ -241,7 +241,7 @@ private fun ItemContent(
             ?.metadata
             ?.posterImage
 
-        context.buildTMDBImageUrl(
+        context.buildImageRequest(
             imagePath = image,
             imageSize = "w45", // Small size for list icon
         )

@@ -31,9 +31,9 @@ import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUse
 import com.flixclusive.feature.mobile.film.util.LibraryListMapper.toWatchProgressLibraryList
 import com.flixclusive.feature.mobile.film.util.LibraryListMapper.toWatchlistLibraryList
 import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -243,7 +243,7 @@ internal class FilmScreenViewModel
         private fun fetchProviderUsed() {
             val providerId = _metadata.value?.providerId
             val providerUsed = providerId?.let {
-                providerRepository.getProviderMetadata(it)?.name
+                providerRepository.getProviderMetadata(it)
             }
 
             if (providerUsed == null) {
@@ -253,7 +253,7 @@ internal class FilmScreenViewModel
                 return
             }
 
-            _uiState.update { it.copy(providerUsed = providerUsed) }
+            _uiState.update { it.copy(provider = providerUsed) }
         }
 
         private suspend fun setInitialSelectedSeason() {
@@ -423,7 +423,7 @@ internal class FilmScreenViewModel
 @Immutable
 internal data class FilmUiState(
     val selectedSeason: Int? = null,
-    val providerUsed: String = DEFAULT_FILM_SOURCE_NAME,
+    val provider: ProviderMetadata? = null,
     val error: UiText? = null,
     val isLoading: Boolean = false,
 ) {

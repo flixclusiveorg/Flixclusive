@@ -20,7 +20,7 @@ import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.domain.database.usecase.ToggleWatchlistStatusUseCase
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
-import com.flixclusive.domain.provider.usecase.get.GetSeasonUseCase
+import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Movie
@@ -61,7 +61,7 @@ class FilmScreenViewModelTest {
 
     // Mock dependencies
     private val watchProgressRepository = mockk<WatchProgressRepository>()
-    private val getSeason = mockk<GetSeasonUseCase>()
+    private val getSeason = mockk<GetSeasonWithWatchProgressUseCase>()
     private val toggleWatchlistStatus = mockk<ToggleWatchlistStatusUseCase>()
     private val dataStoreManager = mockk<DataStoreManager>()
     private val userSessionManager = mockk<UserSessionManager>()
@@ -212,7 +212,7 @@ class FilmScreenViewModelTest {
 
         return FilmScreenViewModel(
             watchProgressRepository = watchProgressRepository,
-            getSeason = getSeason,
+            getSeasonWithWatchProgress = getSeason,
             toggleWatchlistStatus = toggleWatchlistStatus,
             dataStoreManager = dataStoreManager,
             userSessionManager = userSessionManager,
@@ -229,7 +229,7 @@ class FilmScreenViewModelTest {
 
         return FilmScreenViewModel(
             watchProgressRepository = watchProgressRepository,
-            getSeason = getSeason,
+            getSeasonWithWatchProgress = getSeason,
             toggleWatchlistStatus = toggleWatchlistStatus,
             dataStoreManager = dataStoreManager,
             userSessionManager = userSessionManager,
@@ -246,7 +246,7 @@ class FilmScreenViewModelTest {
 
         return FilmScreenViewModel(
             watchProgressRepository = watchProgressRepository,
-            getSeason = getSeason,
+            getSeasonWithWatchProgress = getSeason,
             toggleWatchlistStatus = toggleWatchlistStatus,
             dataStoreManager = dataStoreManager,
             userSessionManager = userSessionManager,

@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
-import com.flixclusive.core.presentation.common.extensions.buildTMDBImageUrl
+import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.SolidColorPainter
 import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.extensions.isMedium
@@ -39,7 +39,7 @@ internal fun BackdropImage(
         val imagePath = if (usePortraitView) metadata.posterImage else metadata.backdropImage
         val imageSize = if (usePortraitView) "original" else "w1920_and_h600_multi_faces"
 
-        context.buildTMDBImageUrl(
+        context.buildImageRequest(
             imagePath = imagePath ?: metadata.posterImage,
             imageSize = imageSize,
         )

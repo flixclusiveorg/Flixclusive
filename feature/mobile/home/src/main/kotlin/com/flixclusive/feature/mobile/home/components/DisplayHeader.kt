@@ -56,7 +56,7 @@ import coil3.compose.AsyncImage
 import coil3.imageLoader
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.common.components.FilmCover
-import com.flixclusive.core.presentation.common.extensions.buildTMDBImageUrl
+import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.theme.Colors
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRating
@@ -96,7 +96,7 @@ internal fun DisplayHeader(
 
     var showTextInsteadOfLogo by rememberSaveable { mutableStateOf(false) }
     val logoImage = remember(film) {
-        context.buildTMDBImageUrl(
+        context.buildImageRequest(
             imagePath = film?.logoImage,
             imageSize = "w500",
         )
@@ -107,7 +107,7 @@ internal fun DisplayHeader(
             else -> "w1920_and_h600_multi_faces"
         }
 
-        context.buildTMDBImageUrl(
+        context.buildImageRequest(
             imagePath = film?.backdropImage,
             imageSize = size,
         )

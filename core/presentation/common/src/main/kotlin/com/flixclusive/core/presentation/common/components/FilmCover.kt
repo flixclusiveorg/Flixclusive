@@ -21,7 +21,7 @@ import coil3.compose.AsyncImage
 import coil3.imageLoader
 import com.flixclusive.core.presentation.common.components.FilmCover.Backdrop
 import com.flixclusive.core.presentation.common.components.FilmCover.Poster
-import com.flixclusive.core.presentation.common.extensions.buildTMDBImageUrl
+import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.ifElse
 
 /**
@@ -68,7 +68,7 @@ enum class FilmCover(
         val context = LocalContext.current
 
         val painter = remember(imagePath) {
-            context.buildTMDBImageUrl(
+            context.buildImageRequest(
                 imagePath = imagePath,
                 imageSize = imageSize,
             )

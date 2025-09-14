@@ -1,7 +1,5 @@
 package com.flixclusive.core.presentation.common.util
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Genre
@@ -22,31 +20,42 @@ import com.flixclusive.model.provider.Status
  * Dummy data for compose previews
  * */
 object DummyDataForPreview {
-    @Composable
-    fun getDummyProviderMetadata() =
-        remember {
-            ProviderMetadata(
-                authors = List(5) { Author("FLX $it") },
-                repositoryUrl = "https://github.com/flixclusiveorg/123Movies",
-                buildUrl = "https://raw.githubusercontent.com/flixclusiveorg/plugins-template/builds/updater.json",
-                changelog =
-                    """
-                    # v1.0.0
+    fun getDummyProviderMetadata(
+        id: String = "TEST-FLX-PROVIDER",
+        name: String = DEFAULT_FILM_SOURCE_NAME,
+        description: String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        repositoryUrl: String = "https://github.com/flixclusiveorg/123Movies",
+        buildUrl: String = "https://raw.githubusercontent.com/flixclusiveorg/plugins-template/builds/updater.json",
+        changelog: String =
+            """
+            # v1.0.0
 
-                    - Added new feature
-                    - Fixed a bug
-                    """.trimIndent(),
-                versionName = "1.0.0",
-                versionCode = 10000,
-                description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                iconUrl = null,
-                language = Language.Multiple,
-                name = "CineFlix",
-                providerType = ProviderType.All,
-                status = Status.Working,
-                id = "TEST-FLX-PROVIDER",
-            )
-        }
+            - Added new feature
+            - Fixed a bug
+            """.trimIndent(),
+        versionName: String = "1.0.0",
+        versionCode: Long = 10000,
+        iconUrl: String? = "https://i.imgur.com/qd6zqII.png", // TMDB Icon
+        providerType: ProviderType = ProviderType.All,
+        status: Status = Status.Working,
+        language: Language = Language.Multiple,
+        authors: List<Author> = List(5) { Author("FLX $it") },
+    ) =
+        ProviderMetadata(
+            id = id,
+            name = name,
+            description = description,
+            repositoryUrl = repositoryUrl,
+            buildUrl = buildUrl,
+            changelog = changelog,
+            versionName = versionName,
+            versionCode = versionCode,
+            iconUrl = iconUrl,
+            providerType = providerType,
+            status = status,
+            language = language,
+            authors = authors,
+        )
 
     fun getFilm(
         id: String? = null,

@@ -33,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastMap
@@ -53,6 +55,7 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.RetryButton
+import com.flixclusive.core.presentation.mobile.components.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.film.FilmCard
 import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.extensions.isMedium
@@ -77,9 +80,11 @@ import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import kotlin.random.Random
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -154,6 +159,7 @@ private fun FilmScreenContent(
 
     var appBarContainerAlpha by remember { mutableFloatStateOf(0f) }
     var isLibrarySheetOpen by remember { mutableStateOf(false) }
+    var showDefaultProviderDialog by remember { mutableStateOf(false) }
 
     val tabs = remember(metadata) { FilmScreenUtils.getTabs(metadata) }
     val (currentTabSelected, onTabChange) = rememberSaveable(tabs.size) { mutableStateOf(tabs.firstOrNull()) }
@@ -256,8 +262,16 @@ private fun FilmScreenContent(
 
                                 BriefDetails(
                                     metadata = metadata,
+                                    onProviderClick = {
+                                        if (uiState.provider != null) {
+                                            navigator.openProviderDetails(uiState.provider)
+                                            return@BriefDetails
+                                        }
+
+                                        showDefaultProviderDialog = true
+                                    },
                                     onGenreClick = { /*TODO*/ },
-                                    providerUsed = uiState.providerUsed,
+                                    provider = uiState.provider,
                                     modifier = Modifier
                                         .aspectRatio(backdropAspectRatio * 0.95f)
                                         .padding(horizontal = DefaultScreenPaddingHorizontal),
@@ -369,6 +383,16 @@ private fun FilmScreenContent(
             onDismissRequest = { isLibrarySheetOpen = false },
         )
     }
+
+    if (showDefaultProviderDialog) {
+        IconAlertDialog(
+            painter = painterResource(UiCommonR.drawable.warning),
+            contentDescription = stringResource(R.string.default_provider_content_desc),
+            description = stringResource(R.string.default_provider_message),
+            onConfirm = { showDefaultProviderDialog = false },
+            dismissButtonLabel = null,
+        )
+    }
 }
 
 /**
@@ -401,6 +425,8 @@ private fun FilmScreenBasePreview() {
         ) {
         }
 
+        override fun openProviderDetails(providerMetadata: ProviderMetadata) {}
+
         override fun playEpisode(
             season: Int,
             episode: Int,
@@ -414,7 +440,7 @@ private fun FilmScreenBasePreview() {
         mutableStateOf(
             FilmUiState(
                 isLoading = false,
-                providerUsed = "Netflix",
+                provider = null,
                 selectedSeason = 2,
             ),
         )

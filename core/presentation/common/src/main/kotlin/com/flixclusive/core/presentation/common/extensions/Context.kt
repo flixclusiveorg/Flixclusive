@@ -22,14 +22,14 @@ fun Context.showToast(
 private const val TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/"
 
 /**
- * Extension function to build TMDB image URL to an [ImageRequest] for coil.
+ * Extension function to build TMDB or non-TMDB image URL to an [ImageRequest] for coil.
  *
  * @param imagePath The path/file suffix of the image URL
  * @param imageSize The image size you want TMDB to fetch for the image output
  *
  * @return Returns an [ImageRequest] if [imagePath] is valid, otherwise null.
  * */
-fun Context.buildTMDBImageUrl(
+fun Context.buildImageRequest(
     imagePath: String?,
     imageSize: String = "w500", // TODO: Convert to object
 ): ImageRequest? {

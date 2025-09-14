@@ -1,13 +1,19 @@
 package com.flixclusive.feature.mobile.film.component
 
 import android.content.Context
+import android.graphics.drawable.AdaptiveIconDrawable
+import android.os.Build
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,25 +29,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toBitmap
+import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRating
 import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRuntime
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.components.film.GenreButton
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.film.R
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.Genre
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.util.extractYear
+import com.flixclusive.model.provider.ProviderMetadata
 import java.util.Locale
+import com.flixclusive.core.drawables.R as UiCommonR
+import com.flixclusive.core.presentation.mobile.R as UiMobileR
 import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -49,7 +66,8 @@ import com.flixclusive.core.strings.R as LocaleR
 internal fun BriefDetails(
     onGenreClick: (Genre) -> Unit,
     metadata: FilmMetadata,
-    providerUsed: String,
+    provider: ProviderMetadata?,
+    onProviderClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -58,17 +76,20 @@ internal fun BriefDetails(
         getBriefDetails(
             context = context,
             film = metadata,
-            providerUsed = providerUsed
         )
     }
 
     val noEmphasisContentColor = LocalContentColor.current.copy(0.6f)
 
     Column(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Bottom,
     ) {
+        ProviderUsed(
+            provider = provider,
+            onClick = onProviderClick
+        )
+
         Text(
             text = metadata.title,
             style = MaterialTheme.typography.headlineLarge.asAdaptiveTextStyle(),
@@ -84,7 +105,6 @@ internal fun BriefDetails(
         ) {
             briefDetails.asList.forEachIndexed { i, item ->
                 val isRating = item == briefDetails.rating
-                val isProvider = item == providerUsed
 
                 val boxModifier = if (isRating) {
                     Modifier
@@ -92,26 +112,19 @@ internal fun BriefDetails(
                             color = MaterialTheme.colorScheme.tertiary.copy(0.6f),
                             shape = MaterialTheme.shapes.extraSmall,
                         )
-                } else if (isProvider) {
-                    Modifier.border(
-                        width = 1.dp,
-                        color = noEmphasisContentColor,
-                        shape = MaterialTheme.shapes.extraSmall,
-                    )
                 } else {
                     Modifier
                 }
 
-                val textModifier = if (isRating || isProvider) {
-                    val horizontal = if (isProvider) 5.dp else 3.dp
-                    Modifier.padding(horizontal = horizontal, vertical = 1.dp)
+                val textModifier = if (isRating) {
+                    Modifier.padding(horizontal = 3.dp, vertical = 1.dp)
                 } else {
                     Modifier
                 }
 
                 Box(
                     modifier = boxModifier.align(Alignment.CenterVertically),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = item,
@@ -159,10 +172,84 @@ private fun DetailsDivider(modifier: Modifier = Modifier) {
     )
 }
 
+@Composable
+private fun ProviderUsed(
+    provider: ProviderMetadata?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .clickable { onClick() }
+            .padding(3.dp),
+    ) {
+        if (provider != null) {
+            ImageWithSmallPlaceholder(
+                model = context.buildImageRequest(provider.iconUrl),
+                placeholder = painterResource(UiCommonR.drawable.movie_icon),
+                contentDescription = provider.name,
+                placeholderSize = 12.dp,
+                shape = MaterialTheme.shapes.extraSmall,
+                modifier = Modifier
+                    .height(20.dp)
+                    .aspectRatio(1f),
+            )
+        } else {
+            Image(
+                painter = adaptiveIconPainterResource(UiMobileR.mipmap.ic_launcher),
+                contentDescription = stringResource(LocaleR.string.app_name),
+                modifier = Modifier
+                    .height(20.dp)
+                    .aspectRatio(1f),
+            )
+        }
+
+        Text(
+            text = provider?.name ?: stringResource(LocaleR.string.app_name),
+            style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle().let {
+                it.copy(letterSpacing = it.letterSpacing * 1.2f)
+            },
+            fontWeight = FontWeight.Medium,
+            color = LocalContentColor.current.copy(0.7f),
+            modifier = Modifier
+                .padding(start = 4.dp),
+        )
+    }
+}
+
+/**
+ * Aims to load an adaptive icon as a [Painter] if possible, otherwise falls back to [painterResource].
+ *
+ * Source code from [here](https://gist.github.com/tkuenneth/ddf598663f041dc79960cda503d14448?permalink_comment_id=4660486#gistcomment-4660486)
+ * */
+@Composable
+fun adaptiveIconPainterResource(
+    @DrawableRes id: Int,
+): Painter {
+    val res = LocalContext.current.resources
+    val theme = LocalContext.current.theme
+
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        // Android O supports adaptive icons, try loading this first (even though this is least likely to be the format).
+        val adaptiveIcon = ResourcesCompat.getDrawable(res, id, theme) as? AdaptiveIconDrawable
+        if (adaptiveIcon != null) {
+            BitmapPainter(adaptiveIcon.toBitmap().asImageBitmap())
+        } else {
+            // We couldn't load the drawable as an Adaptive Icon, just use painterResource
+            painterResource(id)
+        }
+    } else {
+        // We're not on Android O or later, just use painterResource
+        painterResource(id)
+    }
+}
+
 @Immutable
 private data class ImportantInfo(
     val rating: String,
-    val provider: String?,
     val adult: String?,
     val runtime: String?,
     val language: String?,
@@ -171,14 +258,13 @@ private data class ImportantInfo(
     val episodes: String?,
 ) {
     val asList by lazy {
-        listOfNotNull(rating, provider, adult, runtime, language, releaseDate, seasons, episodes)
+        listOfNotNull(rating, adult, runtime, language, releaseDate, seasons, episodes)
     }
 }
 
 private fun getBriefDetails(
     context: Context,
     film: FilmMetadata,
-    providerUsed: String
 ): ImportantInfo {
     val language = film.language?.let {
         val locale = Locale.Builder().setLanguage(it).build()
@@ -221,7 +307,6 @@ private fun getBriefDetails(
         releaseDate = date ?: context.getString(LocaleR.string.no_release_date),
         seasons = seasons,
         episodes = episodes,
-        provider = providerUsed.takeIf { !it.equals(DEFAULT_FILM_SOURCE_NAME, true) }
     )
 }
 
@@ -234,8 +319,9 @@ private fun BriefDetailsBasePreview() {
         ) {
             BriefDetails(
                 metadata = remember { DummyDataForPreview.getMovie() },
-                providerUsed = "Netflix",
+                provider = DummyDataForPreview.getDummyProviderMetadata(),
                 onGenreClick = {},
+                onProviderClick = {}
             )
         }
     }

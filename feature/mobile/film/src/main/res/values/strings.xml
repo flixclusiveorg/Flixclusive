@@ -17,4 +17,9 @@
     <string name="in_library">In library</string>
     <string name="add">Add</string>
     <string name="season_and_episode_info">S%1$d • E%2$d</string>
+
+    <string name="default_provider_content_desc">Default provider warning</string>
+    <string name="default_provider_message">
+        This metadata was provided by the application itself and not fetched from an external provider. Media links loaded from this metadata will depend on the current enabled external providers.
+    </string>
 </resources>
