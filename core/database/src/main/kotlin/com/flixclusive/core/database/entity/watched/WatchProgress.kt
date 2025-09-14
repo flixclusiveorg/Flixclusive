@@ -43,6 +43,6 @@ sealed interface WatchProgress {
 
     // TODO: Move this to a utility class on `player` module
     companion object {
-        private const val WATCH_COMPLETED_THRESHOLD = 0.95 // 95% of the total duration
+        private const val WATCH_COMPLETED_THRESHOLD = 95 // 95% of the total duration
     }
 }
