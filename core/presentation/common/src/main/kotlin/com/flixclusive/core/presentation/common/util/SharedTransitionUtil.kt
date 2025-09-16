@@ -29,20 +29,22 @@ object SharedTransitionUtil {
     }
 
     @Composable
-    fun ProvideSharedTransitionScope(content: @Composable () -> Unit) {
+    fun ProvideSharedTransitionScope(content: @Composable SharedTransitionScope.() -> Unit) {
         SharedTransitionLayout {
             CompositionLocalProvider(
                 LocalSharedTransitionScope provides this,
-                content = content,
+                content = { content() },
             )
         }
     }
 
     @Composable
-    fun AnimatedVisibilityScope.ProvideAnimatedVisibilityScope(content: @Composable () -> Unit) {
+    fun AnimatedVisibilityScope.ProvideAnimatedVisibilityScope(
+        content: @Composable AnimatedVisibilityScope.() -> Unit,
+    ) {
         CompositionLocalProvider(
             LocalAnimatedVisibilityScope provides this,
-            content = content,
+            content = { content() },
         )
     }
 }
