@@ -275,7 +275,7 @@ private fun FilmScreenContent(
 
                                             showDefaultProviderDialog = true
                                         },
-                                        onGenreClick = { /*TODO*/ },
+                                        onGenreClick = { /*TODO: Implement GenreCatalogs*/ },
                                         provider = uiState.provider,
                                         modifier = Modifier
                                             .aspectRatio(backdropAspectRatio * 0.95f)
@@ -377,7 +377,7 @@ private fun FilmScreenContent(
             toggleOnLibrary = toggleEpisodeOnLibrary,
             episodeWithProgress = longClickedEpisode,
             onDismissRequest = { longClickedEpisode = null },
-            onDownload = { /*TODO*/ },
+            onDownload = { /*TODO: Implement download feature*/ },
             onPlay = {
                 longClickedEpisode?.episode?.let {
                     navigator.playEpisode(it, metadata as TvShow)

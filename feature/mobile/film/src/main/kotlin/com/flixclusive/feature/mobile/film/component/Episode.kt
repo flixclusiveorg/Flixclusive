@@ -83,7 +83,6 @@ import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenP
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.feature.mobile.film.R
-import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -323,7 +322,7 @@ private fun EpisodePreview(
                 )
 
                 Duration(
-                    episode = episode.episode,
+                    episode = episode,
                     isDetailed = isDetailed,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -459,14 +458,15 @@ private fun EpisodeDetails(
 
 @Composable
 private fun Duration(
-    episode: Episode,
+    episode: EpisodeWithProgress,
     modifier: Modifier = Modifier,
     isDetailed: Boolean = false,
 ) {
     val lessEmphasisColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
 
-    val duration = episode.runtime
-        .takeIf { it != null }
+    val duration = (episode.watchProgress?.duration ?: episode.episode.runtime?.toLong())
+        .takeIf { it != null && it > 0L }
+        ?.toInt()
         ?.formatAsRuntime()
 
     if (duration != null) {
