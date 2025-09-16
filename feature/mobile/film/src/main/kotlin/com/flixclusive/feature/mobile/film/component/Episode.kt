@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -580,7 +579,7 @@ private fun RowActions(
 }
 
 @Composable
-private fun RowScope.ActionButton(
+private fun ActionButton(
     inactiveLabel: Int,
     activeLabel: Int,
     inactiveDrawable: Int,
@@ -604,7 +603,7 @@ private fun RowScope.ActionButton(
             verticalArrangement = Arrangement.spacedBy(3.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .weight(0.3f)
+                .width(getAdaptiveDp(60.dp))
                 .minimumInteractiveComponentSize()
                 .clip(MaterialTheme.shapes.small)
                 .focusable()
