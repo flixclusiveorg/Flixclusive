@@ -72,6 +72,7 @@ import com.flixclusive.feature.mobile.film.component.BriefDetails
 import com.flixclusive.feature.mobile.film.component.CollapsibleDescription
 import com.flixclusive.feature.mobile.film.component.ContentTabs
 import com.flixclusive.feature.mobile.film.component.EpisodeDetailedCard
+import com.flixclusive.feature.mobile.film.component.FilmScreenPlaceholder
 import com.flixclusive.feature.mobile.film.component.FilmScreenTopBar
 import com.flixclusive.feature.mobile.film.component.HeaderButtons
 import com.flixclusive.feature.mobile.film.component.LibraryListSheet
@@ -157,7 +158,7 @@ private fun FilmScreenContent(
 
     val configuration = LocalConfiguration.current
 
-    val backdropAspectRatio = remember(usePortraitView) { getAspectRatio(usePortraitView) }
+    val backdropAspectRatio = remember(usePortraitView) { getBackdropAspectRatio(usePortraitView) }
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyGridState()
@@ -236,7 +237,7 @@ private fun FilmScreenContent(
             ) { state ->
                 when (state) {
                     FilmScreenState.Loading -> {
-                        // TODO: Add placeholder screen
+                        FilmScreenPlaceholder()
                     }
 
                     FilmScreenState.Error -> {
@@ -420,7 +421,7 @@ private fun FilmScreenContent(
  *
  * @param usePortraitView Determines if screen width is compact or medium
  * */
-private fun getAspectRatio(usePortraitView: Boolean) =
+internal fun getBackdropAspectRatio(usePortraitView: Boolean) =
     when {
         usePortraitView -> 0.8f / 1f
         else -> 16f / 6f
