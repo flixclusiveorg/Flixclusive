@@ -3,6 +3,7 @@ package com.flixclusive.core.common.locale
 import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.res.stringResource
 
 /**
@@ -13,6 +14,7 @@ sealed class UiText {
      * Represents a string value.
      * @param str The string value.
      */
+    @Immutable
     data class StringValue(
         val str: String,
     ) : UiText() {
@@ -28,6 +30,7 @@ sealed class UiText {
      * @param stringId The string resource ID.
      * @param args Optional arguments to format the string resource.
      */
+    @Immutable
     class StringResource(
         @StringRes val stringId: Int,
         vararg val args: Any,

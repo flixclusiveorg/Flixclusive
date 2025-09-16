@@ -27,7 +27,7 @@
         android:banner="@mipmap/ic_launcher"
         tools:targetApi="31">
         <activity
-            android:name=".crash.CrashActivity"
+            android:name=".feature.mobile.crash.CrashActivity"
             android:exported="false"
             android:label="@string/title_activity_crash"
             android:theme="@style/Theme.Flixclusive" />

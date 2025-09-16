@@ -13,21 +13,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.components.topbar.ActionButton
 import com.flixclusive.core.presentation.mobile.components.topbar.DefaultNavigationIcon
 import com.flixclusive.core.presentation.mobile.components.topbar.EnterOnlyNearTopScrollBehavior
 import com.flixclusive.core.presentation.mobile.components.topbar.SearchTextFieldAction
 import com.flixclusive.core.strings.R
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
-import com.flixclusive.core.ui.common.R as UiCommonR
+import com.flixclusive.core.drawables.R as UiCommonR
 
 @Composable
 internal fun LibraryDetailsTopBar(
     topBarState: LibraryTopBarState,
     isListEmpty: Boolean,
-    selectCount: () -> Int,
+    selectCount: Int,
     searchQuery: () -> String,
     onRemoveSelection: () -> Unit,
     onUnselectAll: () -> Unit,
@@ -46,8 +46,8 @@ internal fun LibraryDetailsTopBar(
     val hideSearchButton =
         (
             topBarState != LibraryTopBarState.DefaultSubScreen &&
-            topBarState != LibraryTopBarState.DefaultMainScreen
-            ) || isListEmpty
+                topBarState != LibraryTopBarState.DefaultMainScreen
+        ) || isListEmpty
 
     BackHandler(enabled = topBarState == LibraryTopBarState.Selecting) {
         onUnselectAll()
@@ -91,10 +91,10 @@ internal fun LibraryDetailsTopBar(
                         PlainTooltipBox(description = stringResource(R.string.remove)) {
                             ActionButton(
                                 onClick = onRemoveSelection,
-                                enabled = selectCount() > 0,
+                                enabled = selectCount > 0,
                             ) {
                                 AdaptiveIcon(
-                                    painter = painterResource(com.flixclusive.core.ui.common.R.drawable.delete),
+                                    painter = painterResource(UiCommonR.drawable.delete),
                                     contentDescription = stringResource(R.string.remove),
                                     dp = 24.dp,
                                 )
@@ -114,6 +114,6 @@ internal fun LibraryDetailsTopBar(
         colors = colors,
         scrollBehavior = scrollBehavior,
         filterContent = filterContent,
-        infoContent = infoContent
+        infoContent = infoContent,
     )
 }

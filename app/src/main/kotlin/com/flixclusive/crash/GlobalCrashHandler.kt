@@ -3,22 +3,22 @@ package com.flixclusive.crash
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import com.flixclusive.R
+import com.flixclusive.BuildConfig
 import com.flixclusive.core.util.log.errorLog
+import javax.inject.Inject
 import kotlin.system.exitProcess
 
 const val ERROR_MESSAGE = "error_message"
 const val SOFTWARE_INFO = "software_info"
 
-class GlobalCrashHandler(
+class GlobalCrashHandler @Inject constructor(
     private val context: Context
 ) : Thread.UncaughtExceptionHandler {
-
     override fun uncaughtException(thread: Thread, exception: Throwable) {
         try {
             val softwareInfo = getSoftwareInfo()
             val errorMessage = exception.stackTraceToString()
-            errorLog(exception)
+            exception.printStackTrace()
             errorLog(softwareInfo)
 
             val intent = Intent(context, CrashActivity::class.java).apply {
@@ -46,15 +46,13 @@ class GlobalCrashHandler(
         softwareInfo.append("\nSDK: ")
         softwareInfo.append(Build.VERSION.SDK_INT)
         softwareInfo.append("\nApp version: ")
-        softwareInfo.append(context.getString(R.string.version_name))
+        softwareInfo.append(BuildConfig.VERSION_CODE)
 
         return softwareInfo.toString()
     }
 
     companion object {
-        fun initialize(
-            applicationContext: Context,
-        ) {
+        fun initialize(applicationContext: Context) {
             val handler = GlobalCrashHandler(applicationContext)
             Thread.setDefaultUncaughtExceptionHandler(handler)
         }

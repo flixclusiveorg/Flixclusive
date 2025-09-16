@@ -7,4 +7,6 @@
     <string name="source_data_dialog_state_success_with_trusted_providers">Done providing links</string>
     <string name="source_data_dialog_state_unavailable_default">No links available</string>
     <string name="paging_state_default_error">An error occurred while loading data</string>
+
+    <string name="failed_to_send_crash_report">Failed to send crash report</string>
 </resources>

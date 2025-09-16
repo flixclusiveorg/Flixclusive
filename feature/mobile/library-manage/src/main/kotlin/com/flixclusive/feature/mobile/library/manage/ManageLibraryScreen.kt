@@ -210,9 +210,9 @@ private fun ManageLibraryScreen(
                 LibraryFilterRow(
                     isListEditable = libraries().isNotEmpty() && !uiState().isMultiSelecting,
                     filters = defaultManageLibraryFilters,
-                    currentFilter = uiState().selectedFilter,
-                    currentDirection = uiState().selectedFilterDirection,
-                    onUpdateFilter = onUpdateFilter,
+                    selected = uiState().selectedFilter,
+                    ascending = uiState().selectedFilterDirection,
+                    onUpdate = onUpdateFilter,
                     onStartSelecting = onStartMultiSelecting,
                     modifier = Modifier
                         .fillMaxWidth()

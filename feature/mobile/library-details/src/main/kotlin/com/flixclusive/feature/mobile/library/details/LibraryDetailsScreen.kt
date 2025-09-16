@@ -1,11 +1,11 @@
 package com.flixclusive.feature.mobile.library.details
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,7 +29,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -40,22 +39,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.database.entity.DBFilm
-import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
+import com.flixclusive.core.database.entity.library.LibraryList
+import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
+import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.LoadingScreen
+import com.flixclusive.core.presentation.mobile.components.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.film.FilmCard
 import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.presentation.mobile.components.topbar.rememberEnterOnlyNearTopScrollBehavior
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.dialog.IconAlertDialog
-import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navigator.ViewFilmAction
-import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
 import com.flixclusive.feature.mobile.library.common.component.LibraryFilterRow
-import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.feature.mobile.library.common.util.selectionBorder
 import com.flixclusive.feature.mobile.library.details.component.ScreenHeader
@@ -63,40 +63,39 @@ import com.flixclusive.feature.mobile.library.details.component.topbar.LibraryDe
 import com.flixclusive.feature.mobile.library.details.component.topbar.TopTitleAlphaEasing
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
 import java.util.Date
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface LibraryDetailsScreenNavigator :
-    ViewFilmAction,
-    GoBackAction {
-    // TODO: Add navigator to AddLibraryItemScreen
-    // fun openLibraryAddItemsScreen()
-}
-
-data class LibraryDetailsNavArgs(
-    val library: LibraryList,
-)
-
-@Destination(
-    navArgsDelegate = LibraryDetailsNavArgs::class,
-)
+@Destination(navArgsDelegate = LibraryDetailsNavArgs::class)
 @Composable
 internal fun LibraryDetailsScreen(
     navigator: LibraryDetailsScreenNavigator,
     viewModel: LibraryDetailsViewModel = hiltViewModel(),
 ) {
     val library by viewModel.library.collectAsStateWithLifecycle()
-    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
-    val items = viewModel.items.collectAsStateWithLifecycle()
-    val selectedItems = viewModel.selectedItems.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val items by viewModel.items.collectAsStateWithLifecycle()
+    val searchItems by viewModel.searchItems.collectAsStateWithLifecycle()
+    val selectedItems by viewModel.selectedItems.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 
     LibraryDetailsScreen(
         library = library,
-        uiState = { uiState.value },
-        items = { items.value },
-        selectedItems = { selectedItems.value },
+        uiState = uiState,
+        items = {
+            if (searchQuery.isNotEmpty()
+                && uiState.isShowingSearchBar) {
+                searchItems
+            } else items
+        },
+        searchQuery = { searchQuery },
+        selectedItems = { selectedItems },
         onGoBack = navigator::goBack,
         onViewFilm = navigator::openFilmScreen,
         onAddItems = { /*TODO()*/ },
@@ -115,9 +114,10 @@ internal fun LibraryDetailsScreen(
 @Composable
 internal fun LibraryDetailsScreen(
     library: LibraryList,
-    uiState: () -> LibraryDetailsUiState,
-    items: () -> List<FilmWithAddedTime>,
-    selectedItems: () -> Set<Film>,
+    uiState: LibraryDetailsUiState,
+    searchQuery: () -> String,
+    items: () -> PersistentList<LibraryListItemWithMetadata>,
+    selectedItems: () -> PersistentSet<LibraryListItemWithMetadata>,
     onGoBack: () -> Unit,
     onRemoveSelection: () -> Unit,
     onStartMultiSelecting: () -> Unit,
@@ -127,8 +127,8 @@ internal fun LibraryDetailsScreen(
     onViewFilm: (Film) -> Unit,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
-    onToggleSelect: (Film) -> Unit,
-    onLongClickItem: (Film) -> Unit,
+    onToggleSelect: (LibraryListItemWithMetadata) -> Unit,
+    onLongClickItem: (LibraryListItemWithMetadata) -> Unit,
     onUpdateFilter: (LibrarySortFilter) -> Unit,
 ) {
     val scrollBehavior = rememberEnterOnlyNearTopScrollBehavior()
@@ -137,10 +137,6 @@ internal fun LibraryDetailsScreen(
 
     val selectCount by remember {
         derivedStateOf { selectedItems().size }
-    }
-
-    val searchQuery by remember {
-        derivedStateOf { uiState().searchQuery }
     }
 
     var showDeleteItemAlert by remember { mutableStateOf(false) }
@@ -152,9 +148,9 @@ internal fun LibraryDetailsScreen(
         topBar = {
             val topBarState by remember {
                 derivedStateOf {
-                    if (uiState().isMultiSelecting) {
+                    if (uiState.isMultiSelecting) {
                         LibraryTopBarState.Selecting
-                    } else if (uiState().isShowingSearchBar) {
+                    } else if (uiState.isShowingSearchBar) {
                         LibraryTopBarState.Searching
                     } else {
                         LibraryTopBarState.DefaultSubScreen
@@ -167,8 +163,8 @@ internal fun LibraryDetailsScreen(
                 scrollBehavior = scrollBehavior,
                 isListEmpty = items().isEmpty(),
                 onGoBack = onGoBack,
-                selectCount = { selectCount },
-                searchQuery = { searchQuery },
+                selectCount = selectCount,
+                searchQuery = searchQuery,
                 onToggleSearchBar = onToggleSearchBar,
                 onQueryChange = onQueryChange,
                 onRemoveSelection = { showDeleteSelectionAlert = true },
@@ -177,10 +173,6 @@ internal fun LibraryDetailsScreen(
                     val title =
                         if (topBarState == LibraryTopBarState.Selecting) {
                             stringResource(LocaleR.string.count_selection_format, selectCount)
-                        } else if (uiState().libraryType == LibraryType.Watchlist) {
-                            stringResource(LocaleR.string.watchlist)
-                        } else if (uiState().libraryType == LibraryType.WatchHistory) {
-                            stringResource(LocaleR.string.recently_watched)
                         } else {
                             library.name
                         }
@@ -203,11 +195,9 @@ internal fun LibraryDetailsScreen(
                 infoContent = {
                     ScreenHeader(
                         library = library,
-                        libraryType = uiState().libraryType,
-                        modifier =
-                            Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 16.dp),
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 16.dp),
                     )
                 },
                 filterContent = {
@@ -223,11 +213,11 @@ internal fun LibraryDetailsScreen(
                         )
 
                         LibraryFilterRow(
-                            isListEditable = items().isNotEmpty() && !uiState().isMultiSelecting,
+                            isListEditable = items().isNotEmpty() && !uiState.isMultiSelecting,
                             filters = LibraryDetailsFilters.defaultFilters,
-                            currentFilter = uiState().selectedFilter,
-                            currentDirection = uiState().selectedFilterDirection,
-                            onUpdateFilter = onUpdateFilter,
+                            selected = uiState.selectedFilter,
+                            ascending = uiState.isSortingAscending,
+                            onUpdate = onUpdateFilter,
                             onStartSelecting = onStartMultiSelecting,
                         )
                     }
@@ -235,73 +225,73 @@ internal fun LibraryDetailsScreen(
             )
         },
     ) { paddingValues ->
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            LazyVerticalGrid(
-                state = listState,
-                columns = GridCells.Adaptive(110.dp),
-                contentPadding = paddingValues,
-                modifier = Modifier.align(Alignment.TopStart)
-                    .padding(top = 10.dp),
-            ) {
-                Snapshot.withoutReadObservation {
-                    listState.requestScrollToItem(
-                        index = listState.firstVisibleItemIndex,
-                        scrollOffset = listState.firstVisibleItemScrollOffset,
+        AnimatedContent(
+            uiState.isLoading,
+            transitionSpec = { fadeIn() togetherWith fadeOut() }
+        ) { state ->
+            when (state) {
+                true -> {
+                    LoadingScreen(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                            .background(MaterialTheme.colorScheme.surface),
                     )
                 }
+                false -> {
+                    LazyVerticalGrid(
+                        state = listState,
+                        columns = GridCells.Adaptive(getAdaptiveFilmCardWidth()),
+                        contentPadding = paddingValues,
+                        modifier = Modifier.padding(top = 10.dp),
+                    ) {
+                        Snapshot.withoutReadObservation {
+                            listState.requestScrollToItem(
+                                index = listState.firstVisibleItemIndex,
+                                scrollOffset = listState.firstVisibleItemScrollOffset,
+                            )
+                        }
 
-                items(
-                    items(),
-                    key = { it.key },
-                ) { (film) ->
-                    FilmCard(
-                        film = film,
-                        onClick = {
-                            if (uiState().isMultiSelecting) {
-                                onToggleSelect(it)
-                            } else {
-                                onViewFilm(it)
+                        items(items = items(), key = { it.itemId }) { item ->
+                            val film = item.metadata
+                            val isSelected by remember {
+                                derivedStateOf { selectedItems().contains(item) }
                             }
-                        },
-                        onLongClick = onLongClickItem,
-                        modifier =
-                            Modifier
-                                .animateItem()
-                                .selectionBorder(
-                                    isSelected = selectedItems().contains(film),
-                                    shape = MaterialTheme.shapes.extraSmall,
-                                ),
-                    )
+
+                            FilmCard(
+                                film = film,
+                                onClick = {
+                                    if (uiState.isMultiSelecting) {
+                                        onToggleSelect(item)
+                                    } else {
+                                        onViewFilm(it)
+                                    }
+                                },
+                                onLongClick = { onLongClickItem(item) },
+                                modifier = Modifier
+                                    .animateItem()
+                                    .selectionBorder(
+                                        isSelected = isSelected,
+                                        shape = MaterialTheme.shapes.extraSmall,
+                                    ),
+                            )
+                        }
+
+                        if (items().isEmpty()) {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                EmptyDataMessage(
+                                    modifier = Modifier
+                                        .padding(top = 25.dp)
+                                        .background(MaterialTheme.colorScheme.surface),
+                                )
+                            }
+                        }
+
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Spacer(modifier = Modifier.padding(LocalGlobalScaffoldPadding.current))
+                        }
+                    }
                 }
-
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Spacer(modifier = Modifier.padding(LocalGlobalScaffoldPadding.current))
-                }
-            }
-
-            AnimatedVisibility(
-                visible = items().isEmpty(),
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                EmptyDataMessage(
-                    modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-                )
-            }
-
-            AnimatedVisibility(
-                visible = uiState().isLoading,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                LoadingScreen(
-                    modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-                )
             }
         }
     }
@@ -309,7 +299,7 @@ internal fun LibraryDetailsScreen(
     if (showDeleteItemAlert || showDeleteSelectionAlert) {
         val alertDescription =
             if (showDeleteItemAlert) {
-                val itemName = uiState().longClickedFilm?.title ?: ""
+                val itemName = uiState.longClickedItem?.metadata?.title ?: ""
                 stringResource(LocaleR.string.warn_delete_library_format, itemName)
             } else {
                 stringResource(LocaleR.string.warn_delete_selected_libraries_format)
@@ -350,14 +340,17 @@ private fun LibraryDetailsScreenBasePreview() {
         }
 
     var uiState by remember { mutableStateOf(LibraryDetailsUiState(isLoading = true)) }
-    val films = remember { mutableStateListOf<FilmWithAddedTime>() }
+    var searchQuery by remember { mutableStateOf("") }
+    val films = remember { mutableStateListOf<LibraryListItemWithMetadata>() }
+    var selectedItems by remember { mutableStateOf(persistentSetOf<LibraryListItemWithMetadata>()) }
+
     val safeItems by remember {
         derivedStateOf {
-            val query = uiState.searchQuery
             val list =
-                if (query.isNotEmpty()) {
+                if (searchQuery.isNotEmpty()) {
                     films.filter {
-                        it.film.title.contains(query, true) || it.film.overview?.contains(query, true) == true
+                        it.metadata.title.contains(searchQuery, true)
+                            || it.metadata.overview?.contains(searchQuery, true) == true
                     }
                 } else {
                     films
@@ -365,38 +358,45 @@ private fun LibraryDetailsScreenBasePreview() {
 
             val sortedList =
                 list.sortedWith(
-                    compareBy<FilmWithAddedTime>(
+                    compareBy<LibraryListItemWithMetadata>(
                         selector = {
                             when (uiState.selectedFilter) {
-                                LibrarySortFilter.Name -> it.film.title
-                                LibrarySortFilter.AddedAt -> it.addedAt.time
-                                LibraryDetailsFilters.Rating -> it.film.rating
-                                LibraryDetailsFilters.Year -> it.film.year
+                                LibrarySortFilter.Name -> it.metadata.title
+                                LibrarySortFilter.AddedAt -> it.item.addedAt.time
+                                LibraryDetailsFilters.Rating -> it.metadata.rating
+                                LibraryDetailsFilters.Year -> it.metadata.year
                                 else -> throw Error()
                             }
                         },
                     ).let { comparator ->
-                        if (uiState.selectedFilterDirection == LibraryFilterDirection.ASC) {
-                            comparator
-                        } else {
-                            comparator.reversed()
-                        }
+                        if (uiState.isSortingAscending) comparator else comparator.reversed()
                     },
                 )
 
-            sortedList
+            sortedList.toPersistentList()
         }
     }
 
     LaunchedEffect(true) {
         films.addAll(
             List(100) {
-                FilmWithAddedTime.from(
-                    film = DBFilm(title = "Film #$it"),
-                    addedAt = Date(),
+                val film = DummyDataForPreview.getMovie(
+                    id = "${it + 1}",
+                    title = "Film $it",
+                )
+
+                LibraryListItemWithMetadata(
+                    metadata = film.toDBFilm(),
+                    item = LibraryListItem(
+                        id = it.toLong(),
+                        filmId = film.identifier,
+                        listId = sampleList.id,
+                        addedAt = Date(System.currentTimeMillis() - it * 10000000L),
+                    )
                 )
             },
         )
+
         delay(3000)
         uiState = uiState.copy(isLoading = false)
     }
@@ -407,50 +407,41 @@ private fun LibraryDetailsScreenBasePreview() {
                 LibraryDetailsScreen(
                     library = sampleList,
                     onGoBack = {},
-                    uiState = { uiState },
+                    uiState = uiState,
                     items = { safeItems },
-                    selectedItems = { uiState.selectedItems },
+                    selectedItems = { selectedItems },
+                    searchQuery = { searchQuery },
                     onRemoveSelection = {
-                        uiState.selectedItems.forEach { film ->
-                            films.removeIf { it.film == film }
+                        selectedItems.forEach { film ->
+                            films.removeIf { it.metadata.identifier == film.metadata.identifier }
                         }
                     },
                     onStartMultiSelecting = { uiState = uiState.copy(isMultiSelecting = true) },
                     onUnselectAll = {
-                        uiState =
-                            uiState.copy(
-                                selectedItems = emptySet(),
-                                isMultiSelecting = false,
-                            )
+                        uiState = uiState.copy(isMultiSelecting = false)
+                        selectedItems = persistentSetOf()
                     },
                     onAddItems = {},
                     onRemoveLongClickedItem = {
-                        val filmToRemove = uiState.longClickedFilm
-                        films.removeIf { filmToRemove == it.film }
+                        val filmToRemove = uiState.longClickedItem
+                        films.removeIf { filmToRemove?.metadata?.identifier == it.metadata.identifier }
 
-                        uiState = uiState.copy(longClickedFilm = null)
+                        uiState = uiState.copy(longClickedItem = null)
                     },
                     onViewFilm = {},
-                    onQueryChange = { uiState = uiState.copy(searchQuery = it) },
+                    onQueryChange = { searchQuery = it },
                     onToggleSearchBar = { uiState = uiState.copy(isShowingSearchBar = it) },
                     onToggleSelect = {
-                        uiState =
-                            with(uiState) {
-                                val newSet = selectedItems.toMutableSet()
-
-                                if (newSet.contains(it)) {
-                                    newSet.remove(it)
-                                } else {
-                                    newSet.add(it)
-                                }
-
-                                copy(selectedItems = newSet.toSet())
-                            }
+                        if (selectedItems.contains(it)) {
+                            selectedItems.remove(it)
+                        } else {
+                            selectedItems.add(it)
+                        }
                     },
-                    onLongClickItem = { uiState = uiState.copy(longClickedFilm = it) },
+                    onLongClickItem = { uiState = uiState.copy(longClickedItem = it) },
                     onUpdateFilter = {
                         uiState = if (uiState.selectedFilter == it) {
-                            uiState.copy(selectedFilterDirection = uiState.selectedFilterDirection.toggle())
+                            uiState.copy(isSortingAscending = !uiState.isSortingAscending)
                         } else {
                             uiState.copy(selectedFilter = it)
                         }

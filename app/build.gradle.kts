@@ -92,9 +92,7 @@ androidComponents {
 }
 
 dependencies {
-    implementation(projects.feature.mobile.crash)
     implementation(projects.feature.mobile.film)
-    implementation(projects.feature.mobile.genre)
     implementation(projects.feature.mobile.home)
     implementation(projects.feature.mobile.player)
     implementation(projects.feature.mobile.providerAdd)

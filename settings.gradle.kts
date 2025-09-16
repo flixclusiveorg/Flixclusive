@@ -25,9 +25,7 @@ include(":app")
 include(":feature:splash-screen")
 
 // Mobile features
-include(":feature:mobile:crash")
 include(":feature:mobile:film")
-include(":feature:mobile:genre")
 include(":feature:mobile:home")
 include(":feature:mobile:library-common")
 include(":feature:mobile:library-details")

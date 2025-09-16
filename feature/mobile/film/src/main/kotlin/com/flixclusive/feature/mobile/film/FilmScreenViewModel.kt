@@ -31,9 +31,9 @@ import com.flixclusive.domain.database.usecase.ToggleWatchlistStatusUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
-import com.flixclusive.feature.mobile.film.util.LibraryListMapper.toWatchProgressLibraryList
-import com.flixclusive.feature.mobile.film.util.LibraryListMapper.toWatchlistLibraryList
 import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
+import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchProgressLibraryList
+import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchlistLibraryList
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.provider.ProviderMetadata

@@ -10,12 +10,19 @@ android {
 }
 
 dependencies {
-    // implementation(projects.core.ui.mobile)
-//    implementation(projects.data)
-//     implementation(projects.domain)
     implementation(projects.feature.mobile.libraryCommon)
+    implementation(projects.coreNetwork)
+    implementation(projects.coreCommon)
+    implementation(projects.coreDatabase)
+    implementation(projects.coreDrawables)
+    implementation(projects.coreNavigation)
+    implementation(projects.corePresentationCommon)
+    implementation(projects.coreStrings)
+    implementation(projects.dataDatabase)
 
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+    implementation(libs.stubs.model.film)
     implementation(libs.compose.adaptive.layout)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)

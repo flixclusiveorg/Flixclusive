@@ -9,8 +9,10 @@ android {
 }
 
 dependencies {
+    implementation(libs.stubs.util)
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.model.provider)
+    implementation(libs.okhttp)
 
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)

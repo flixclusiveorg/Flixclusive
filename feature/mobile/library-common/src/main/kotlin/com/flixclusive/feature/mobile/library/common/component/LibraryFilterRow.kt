@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
-import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -35,9 +34,9 @@ import com.flixclusive.core.strings.R as LocaleR
 fun LibraryFilterRow(
     isListEditable: Boolean,
     filters: ImmutableList<LibrarySortFilter>,
-    currentFilter: LibrarySortFilter,
-    currentDirection: LibraryFilterDirection,
-    onUpdateFilter: (LibrarySortFilter) -> Unit,
+    selected: LibrarySortFilter,
+    ascending: Boolean,
+    onUpdate: (LibrarySortFilter) -> Unit,
     onStartSelecting: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -57,7 +56,7 @@ fun LibraryFilterRow(
                     .width(getAdaptiveDp(32.dp)),
                 contentPadding = PaddingValues(
                     horizontal = 4.dp,
-                    vertical = 3.dp
+                    vertical = 3.dp,
                 ),
                 shape = MaterialTheme.shapes.small,
             ) {
@@ -84,10 +83,10 @@ fun LibraryFilterRow(
             key = { it.displayName.hashCode() },
         ) { filter ->
             LibraryFilterPill(
-                isSelected = currentFilter == filter,
+                isSelected = selected == filter,
                 filter = filter,
-                direction = currentDirection,
-                onToggleDirection = { onUpdateFilter(filter) },
+                ascending = ascending,
+                onToggleDirection = { onUpdate(filter) },
             )
         }
     }
@@ -97,7 +96,7 @@ fun LibraryFilterRow(
 @Composable
 private fun LibraryFilterRowPreview() {
     var currentFilter by remember { mutableStateOf<LibrarySortFilter>(LibrarySortFilter.Name) }
-    var currentDirection by remember { mutableStateOf(LibraryFilterDirection.ASC) }
+    var ascending by remember { mutableStateOf(true) }
 
     FlixclusiveTheme {
         Surface(modifier = Modifier.padding(16.dp)) {
@@ -108,17 +107,17 @@ private fun LibraryFilterRowPreview() {
                     LibrarySortFilter.AddedAt,
                     LibrarySortFilter.ModifiedAt,
                 ),
-                currentFilter = currentFilter,
-                currentDirection = currentDirection,
-                onUpdateFilter = { filter ->
+                selected = currentFilter,
+                ascending = ascending,
+                onUpdate = { filter ->
                     if (currentFilter == filter) {
-                        currentDirection = currentDirection.toggle()
+                        ascending = !ascending
                     } else {
                         currentFilter = filter
-                        currentDirection = LibraryFilterDirection.ASC
+                        ascending = true
                     }
                 },
-                onStartSelecting = {  },
+                onStartSelecting = { },
             )
         }
     }

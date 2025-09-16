@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.film.util
+package com.flixclusive.feature.mobile.library.common.util
 
 import android.content.Context
 import androidx.compose.ui.util.fastMap
@@ -8,10 +8,9 @@ import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.core.database.entity.watchlist.WatchlistWithMetadata
-import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
 import com.flixclusive.core.strings.R as LocaleR
 
-internal object LibraryListMapper {
+object LibraryMapper {
     private fun WatchProgressWithMetadata.toLibraryListItem() =
         LibraryListItemWithMetadata(
             metadata = film,

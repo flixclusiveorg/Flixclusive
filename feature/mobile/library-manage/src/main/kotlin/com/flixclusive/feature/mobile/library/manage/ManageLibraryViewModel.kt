@@ -12,7 +12,6 @@ import com.flixclusive.data.library.custom.LibraryListRepository
 import com.flixclusive.data.library.recent.WatchHistoryRepository
 import com.flixclusive.data.library.watchlist.WatchlistRepository
 import com.flixclusive.domain.session.UserSessionManager
-import com.flixclusive.feature.mobile.library.common.util.FilterWithDirection
 import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
@@ -52,13 +51,12 @@ internal class ManageLibraryViewModel
         private var removeLibJob: Job? = null
         private var removeSelectionJob: Job? = null
 
-        private val currentFilterWithDirection =
+        private val currentLibraryFilter =
             _uiState
                 .mapLatest {
-                    FilterWithDirection(
+                    LibraryFilter(
                         filter = it.selectedFilter,
                         direction = it.selectedFilterDirection,
-                        searchQuery = it.searchQuery,
                     )
                 }.distinctUntilChanged()
 
@@ -96,7 +94,7 @@ internal class ManageLibraryViewModel
                             description = UiText.from(LocaleR.string.watchlist_description),
                         )
                 }.combine(
-                    currentFilterWithDirection,
+                    currentLibraryFilter,
                 ) { list, filterWithDirection ->
                     list.filter(filterWithDirection)
                 }.asStateFlow(viewModelScope, initialValue = emptyList())

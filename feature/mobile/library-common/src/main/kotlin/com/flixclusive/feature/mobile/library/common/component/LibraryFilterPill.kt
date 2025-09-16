@@ -24,7 +24,6 @@ import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveText
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
-import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -33,7 +32,7 @@ import com.flixclusive.core.strings.R as LocaleR
 fun LibraryFilterPill(
     isSelected: Boolean,
     filter: LibrarySortFilter,
-    direction: LibraryFilterDirection,
+    ascending: Boolean,
     onToggleDirection: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -58,10 +57,10 @@ fun LibraryFilterPill(
         ) {
             AnimatedVisibility(isSelected) {
                 AnimatedContent(
-                    targetState = direction,
+                    targetState = ascending,
                     label = "FilterDirection",
-                ) { direction ->
-                    val iconId = if (direction.isAscending) {
+                ) { state ->
+                    val iconId = if (state) {
                         UiCommonR.drawable.sort_ascending
                     } else {
                         UiCommonR.drawable.sort_descending
@@ -93,7 +92,7 @@ private fun LibraryFilterPillPreview() {
             LibraryFilterPill(
                 isSelected = false,
                 filter = LibrarySortFilter.Name,
-                direction = LibraryFilterDirection.ASC,
+                ascending = true,
                 onToggleDirection = {},
             )
         }
@@ -108,7 +107,7 @@ private fun LibraryFilterPillDescendingPreview() {
             LibraryFilterPill(
                 isSelected = true,
                 filter = LibrarySortFilter.ModifiedAt,
-                direction = LibraryFilterDirection.DESC,
+                ascending = true,
                 onToggleDirection = {},
             )
         }
