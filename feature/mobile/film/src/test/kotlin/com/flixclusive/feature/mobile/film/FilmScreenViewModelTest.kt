@@ -1,42 +1,53 @@
 package com.flixclusive.feature.mobile.film
 
+import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import app.cash.turbine.turbineScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.database.entity.film.DBFilm
-import com.flixclusive.core.database.entity.user.User
+import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
+import com.flixclusive.core.database.entity.library.LibraryList
+import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.library.LibraryListWithItems
+import com.flixclusive.core.database.entity.library.UserWithLibraryListsAndItems
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
-import com.flixclusive.core.database.entity.watched.MovieProgress
-import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.UiPreferences
-import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.navigation.navargs.FilmScreenNavArgs
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.testing.database.DatabaseTestDefaults
+import com.flixclusive.core.testing.film.FilmTestDefaults
+import com.flixclusive.core.testing.provider.ProviderTestDefaults
+import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
+import com.flixclusive.data.database.repository.WatchlistRepository
 import com.flixclusive.data.database.session.UserSessionManager
+import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
 import com.flixclusive.domain.database.usecase.ToggleWatchlistStatusUseCase
+import com.flixclusive.domain.provider.model.EpisodeWithProgress
+import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
-import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
-import com.flixclusive.model.film.FilmSearchItem
-import com.flixclusive.model.film.Movie
-import com.flixclusive.model.film.TvShow
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.common.tv.Season
-import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
+import com.flixclusive.model.film.Film
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -45,159 +56,61 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import strikt.api.expectThat
-import strikt.assertions.contains
-import strikt.assertions.isA
+import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
+import strikt.assertions.isNotNull
 import strikt.assertions.isNull
 import strikt.assertions.isTrue
-import java.util.Date
-import com.flixclusive.core.strings.R as LocaleR
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class FilmScreenViewModelTest {
-    private lateinit var viewModel: FilmScreenViewModel
-    private lateinit var appDispatchers: AppDispatchers
+    private val context: Context = mockk(relaxed = true)
+    private val dataStoreManager: DataStoreManager = mockk(relaxed = true)
+    private val getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase = mockk(relaxed = true)
+    private val userSessionManager: UserSessionManager = mockk(relaxed = true)
+    private val getFilmMetadata: GetFilmMetadataUseCase = mockk(relaxed = true)
+    private val libraryListRepository: LibraryListRepository = mockk(relaxed = true)
+    private val providerRepository: ProviderRepository = mockk(relaxed = true)
+    private val toggleWatchProgressStatus: ToggleWatchProgressStatusUseCase = mockk(relaxed = true)
+    private val toggleWatchlistStatus: ToggleWatchlistStatusUseCase = mockk(relaxed = true)
+    private val watchProgressRepository: WatchProgressRepository = mockk(relaxed = true)
+    private val watchlistRepository: WatchlistRepository = mockk(relaxed = true)
+
+    private val testDispatcher = StandardTestDispatcher()
+    private val testScope = TestScope(testDispatcher)
+    private val appDispatchers = object : AppDispatchers {
+        override val default: CoroutineDispatcher = testDispatcher
+        override val io: CoroutineDispatcher = testDispatcher
+        override val main: CoroutineDispatcher = testDispatcher
+        override val unconfined: CoroutineDispatcher = testDispatcher
+        override val ioScope: CoroutineScope = testScope
+        override val defaultScope: CoroutineScope = testScope
+        override val mainScope: CoroutineScope = testScope
+    }
+
+    private val testUser = DatabaseTestDefaults.getUser()
+    private val testPartialMovie = FilmTestDefaults.getFilmSearchItem()
+    private val testMovie = FilmTestDefaults.getMovie()
+    private val testTvShow = FilmTestDefaults.getTvShow()
+    private val testProviderMetadata = ProviderTestDefaults.getProviderMetadata()
+
     private lateinit var savedStateHandle: SavedStateHandle
-
-    // Mock dependencies
-    private val watchProgressRepository = mockk<WatchProgressRepository>()
-    private val getSeason = mockk<GetSeasonWithWatchProgressUseCase>()
-    private val toggleWatchlistStatus = mockk<ToggleWatchlistStatusUseCase>()
-    private val dataStoreManager = mockk<DataStoreManager>()
-    private val userSessionManager = mockk<UserSessionManager>()
-    private val getFilmMetadata = mockk<GetFilmMetadataUseCase>()
-
-    private val testDispatcher = UnconfinedTestDispatcher()
-    private val testUser = User(id = 1, name = "Test User", image = 0)
-
-    private val testMovie = Movie(
-        id = "movie-1",
-        title = "Test Movie",
-        posterImage = "poster.jpg",
-        homePage = "https://example.com",
-        providerId = DEFAULT_FILM_SOURCE_NAME,
-        backdropImage = "backdrop.jpg",
-        rating = 8.5,
-        overview = "A test movie",
-        year = 2023,
-        runtime = 120,
-    )
-
-    private val testTvShow = TvShow(
-        id = "tv-1",
-        title = "Test TV Show",
-        posterImage = "poster.jpg",
-        homePage = "https://example.com",
-        providerId = DEFAULT_FILM_SOURCE_NAME,
-        backdropImage = "backdrop.jpg",
-        rating = 9.0,
-        overview = "A test TV show",
-        year = 2023,
-        totalSeasons = 3,
-        totalEpisodes = 30,
-        seasons = listOf(
-            Season(
-                number = 1,
-                name = "Season 1",
-                overview = "First season",
-                episodes = listOf(
-                    Episode(
-                        id = "ep-1",
-                        title = "Episode 1",
-                        number = 1,
-                        season = 1,
-                        overview = "First episode",
-                    ),
-                ),
-            ),
-        ),
-    )
-
-    private val testSeason = Season(
-        number = 2,
-        name = "Season 2",
-        overview = "Second season",
-        episodes = listOf(
-            Episode(
-                id = "ep-2-1",
-                title = "Episode 1",
-                number = 1,
-                season = 2,
-                overview = "First episode of season 2",
-            ),
-        ),
-    )
-
-    private val testMovieProgress = MovieProgressWithMetadata(
-        watchData = MovieProgress(
-            id = 1L,
-            filmId = "movie-1",
-            ownerId = 1,
-            progress = 60000L,
-            status = WatchStatus.WATCHING,
-            duration = 120000L,
-            watchedAt = Date(),
-            watchCount = 1,
-        ),
-        film = DBFilm(
-            id = "movie-1",
-            title = "Test Movie",
-            filmType = FilmType.MOVIE,
-            posterImage = "poster.jpg",
-            tmdbId = 123,
-        ),
-    )
-
-    private val testEpisodeProgress = EpisodeProgressWithMetadata(
-        watchData = EpisodeProgress(
-            id = 1L,
-            filmId = "tv-1",
-            ownerId = 1,
-            progress = 1500000L,
-            duration = 3000000L,
-            status = WatchStatus.WATCHING,
-            watchedAt = Date(),
-            seasonNumber = 1,
-            episodeNumber = 1,
-        ),
-        film = DBFilm(
-            id = "tv-1",
-            title = "Test TV Show",
-            filmType = FilmType.TV_SHOW,
-            posterImage = "poster.jpg",
-            tmdbId = 456,
-        ),
-    )
-
-    private val testFilmSearchItem = FilmSearchItem(
-        id = "search-1",
-        providerId = DEFAULT_FILM_SOURCE_NAME,
-        filmType = FilmType.MOVIE,
-        homePage = "https://example.com",
-        title = "Search Movie",
-        posterImage = "poster.jpg",
-        rating = 7.5,
-    )
+    private lateinit var viewModel: FilmScreenViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-
-        appDispatchers = object : AppDispatchers {
-            override val default = testDispatcher
-            override val io = testDispatcher
-            override val main = testDispatcher
-            override val unconfined = testDispatcher
-            override val ioScope get() = TestScope(testDispatcher)
-            override val defaultScope get() = TestScope(testDispatcher)
-            override val mainScope get() = TestScope(testDispatcher)
-        }
-
-        // Setup default mock behaviors
         every { userSessionManager.currentUser } returns MutableStateFlow(testUser)
-        every { dataStoreManager.getUserPrefs(UserPreferences.UI_PREFS_KEY, UiPreferences::class) } returns
-            flowOf(UiPreferences(shouldShowTitleOnCards = false))
+        every { dataStoreManager.getUserPrefs(any<Preferences.Key<String>>(), UiPreferences::class) } returns
+            flowOf(UiPreferences())
         every { watchProgressRepository.getAsFlow(any(), any(), any()) } returns flowOf(null)
+        every { libraryListRepository.getUserWithListsAndItems(any()) } returns
+            flowOf(UserWithLibraryListsAndItems(testUser, emptyList()))
+        every { watchProgressRepository.getAllAsFlow(any()) } returns flowOf(emptyList())
+        every { watchlistRepository.getAllAsFlow(any()) } returns flowOf(emptyList())
+        every { providerRepository.getProviderMetadata(any()) } returns testProviderMetadata
+        coEvery { getFilmMetadata(any()) } returns Resource.Success(testMovie)
     }
 
     @After
@@ -205,273 +118,421 @@ class FilmScreenViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModelWithMovie(): FilmScreenViewModel {
-        savedStateHandle = SavedStateHandle().apply {
-            set("film", FilmScreenNavArgs(testMovie))
+    private fun createViewModel(film: Film = testPartialMovie) {
+        savedStateHandle = mockk(relaxed = true) {
+            every { get<Film?>("film") } returns film
         }
 
-        return FilmScreenViewModel(
-            watchProgressRepository = watchProgressRepository,
-            getSeasonWithWatchProgress = getSeason,
-            toggleWatchlistStatus = toggleWatchlistStatus,
+        viewModel = FilmScreenViewModel(
+            context = context,
             dataStoreManager = dataStoreManager,
-            userSessionManager = userSessionManager,
+            getSeasonWithWatchProgress = getSeasonWithWatchProgress,
             savedStateHandle = savedStateHandle,
+            userSessionManager = userSessionManager,
             appDispatchers = appDispatchers,
             getFilmMetadata = getFilmMetadata,
-        )
-    }
-
-    private fun createViewModelWithTvShow(): FilmScreenViewModel {
-        savedStateHandle = SavedStateHandle().apply {
-            set("film", FilmScreenNavArgs(testTvShow))
-        }
-
-        return FilmScreenViewModel(
-            watchProgressRepository = watchProgressRepository,
-            getSeasonWithWatchProgress = getSeason,
+            libraryListRepository = libraryListRepository,
+            providerRepository = providerRepository,
+            toggleWatchProgressStatus = toggleWatchProgressStatus,
             toggleWatchlistStatus = toggleWatchlistStatus,
-            dataStoreManager = dataStoreManager,
-            userSessionManager = userSessionManager,
-            savedStateHandle = savedStateHandle,
-            appDispatchers = appDispatchers,
-            getFilmMetadata = getFilmMetadata,
-        )
-    }
-
-    private fun createViewModelWithFilmSearchItem(): FilmScreenViewModel {
-        savedStateHandle = SavedStateHandle().apply {
-            set("film", FilmScreenNavArgs(testFilmSearchItem))
-        }
-
-        return FilmScreenViewModel(
             watchProgressRepository = watchProgressRepository,
-            getSeasonWithWatchProgress = getSeason,
-            toggleWatchlistStatus = toggleWatchlistStatus,
-            dataStoreManager = dataStoreManager,
-            userSessionManager = userSessionManager,
-            savedStateHandle = savedStateHandle,
-            appDispatchers = appDispatchers,
-            getFilmMetadata = getFilmMetadata,
+            watchlistRepository = watchlistRepository,
         )
     }
 
     @Test
-    fun `initial state is correct when created with movie metadata`() =
+    fun `initialization with movie should load metadata successfully`() =
         runTest(testDispatcher) {
-            viewModel = createViewModelWithMovie()
-
-            expectThat(viewModel.uiState.value) {
-                get { isLoading }.isFalse()
-                get { error }.isNull()
-                get { selectedSeason }.isNull()
-            }
-
-            expectThat(viewModel.metadata.value).isEqualTo(testMovie)
-        }
-
-    @Test
-    fun `initial state is correct when created with tv show metadata`() =
-        runTest(testDispatcher) {
-            viewModel = createViewModelWithTvShow()
-
-            expectThat(viewModel.uiState.value) {
-                get { isLoading }.isFalse()
-                get { error }.isNull()
-                get { selectedSeason }.isEqualTo(testTvShow.totalSeasons)
-            }
-
-            expectThat(viewModel.metadata.value).isEqualTo(testTvShow)
-        }
-
-    @Test
-    fun `fetches metadata successfully when film is not metadata`() =
-        runTest(testDispatcher) {
-            coEvery { getFilmMetadata(any()) } returns Resource.Success(testMovie)
-
-            viewModel = createViewModelWithFilmSearchItem()
+            createViewModel(testMovie)
             advanceUntilIdle()
 
-            expectThat(viewModel.uiState.value) {
-                get { isLoading }.isFalse()
-                get { error }.isNull()
+            viewModel.uiState.test {
+                val state = awaitItem()
+                expectThat(state) {
+                    get { isLoading }.isFalse()
+                    get { error }.isNull()
+                    get { provider }.isEqualTo(testProviderMetadata)
+                    get { screenState }.isEqualTo(FilmScreenState.Success)
+                }
             }
 
-            expectThat(viewModel.metadata.value).isEqualTo(testMovie)
-            coVerify { getFilmMetadata(any()) }
+            viewModel.metadata.test {
+                expectThat(awaitItem()).isEqualTo(testMovie)
+            }
         }
 
     @Test
-    fun `shows error when metadata fetch fails`() =
+    fun `initialization with tv show should set initial selected season`() =
         runTest(testDispatcher) {
-            val errorMessage = UiText.from(LocaleR.string.error_film_message)
+            createViewModel(testTvShow)
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = awaitItem()
+                expectThat(state) {
+                    get { selectedSeason }.isEqualTo(10) // Should select latest season (10 from FilmTestDefaults)
+                    get { screenState }.isEqualTo(FilmScreenState.Success)
+                }
+            }
+        }
+
+    @Test
+    fun `initialization with partial film data should fetch metadata`() =
+        runTest(testDispatcher) {
+            val partialMovie = FilmTestDefaults.getFilmSearchItem(
+                tmdbId = null,
+                imdbId = null,
+                title = "Partial Movie",
+                homePage = null,
+                releaseDate = null,
+                backdropImage = null,
+                posterImage = null,
+            )
+
+            createViewModel(partialMovie)
+            advanceUntilIdle()
+
+            coVerify { getFilmMetadata(partialMovie) }
+
+            viewModel.metadata.test {
+                expectThat(awaitItem()).isEqualTo(testMovie)
+            }
+        }
+
+    @Test
+    fun `initialization should handle metadata fetch failure`() =
+        runTest(testDispatcher) {
+            val errorMessage = UiText.from("Network error")
             coEvery { getFilmMetadata(any()) } returns Resource.Failure(errorMessage)
 
-            viewModel = createViewModelWithFilmSearchItem()
+            createViewModel()
             advanceUntilIdle()
 
-            expectThat(viewModel.uiState.value) {
-                get { isLoading }.isFalse()
-                get { error }.isEqualTo(errorMessage)
-            }
-
-            expectThat(viewModel.metadata.value).isNull()
-        }
-
-    @Test
-    fun `shows loading state during metadata fetch`() =
-        runTest(testDispatcher) {
-            coEvery { getFilmMetadata(any()) } returns Resource.Loading
-
-            viewModel = createViewModelWithFilmSearchItem()
-
-            expectThat(viewModel.uiState.value) {
-                get { isLoading }.isTrue()
-                get { error }.isNull()
+            viewModel.uiState.test {
+                val state = awaitItem()
+                expectThat(state) {
+                    get { isLoading }.isFalse()
+                    get { error }.isEqualTo(errorMessage)
+                    get { screenState }.isEqualTo(FilmScreenState.Error)
+                }
             }
         }
 
     @Test
-    fun `sets initial selected season from watch progress for tv show`() =
+    fun `onRetry should refetch metadata when not loading`() =
         runTest(testDispatcher) {
-            every { watchProgressRepository.getAsFlow(any(), any(), any()) } returns
-                flowOf(testEpisodeProgress)
+            val errorMessage = UiText.from("Network error")
+            coEvery { getFilmMetadata(any()) } returns Resource.Failure(errorMessage)
 
-            viewModel = createViewModelWithTvShow()
+            createViewModel()
             advanceUntilIdle()
-
-            expectThat(viewModel.uiState.value) {
-                get { selectedSeason }.isEqualTo(testEpisodeProgress.watchData.seasonNumber)
-            }
-        }
-
-    @Test
-    fun `uses total seasons as initial selected season when no watch progress exists`() =
-        runTest(testDispatcher) {
-            every { watchProgressRepository.getAsFlow(any(), any(), any()) } returns flowOf(null)
-
-            viewModel = createViewModelWithTvShow()
-            advanceUntilIdle()
-
-            expectThat(viewModel.uiState.value) {
-                get { selectedSeason }.isEqualTo(testTvShow.totalSeasons)
-            }
-        }
-
-    @Test
-    fun `onSeasonChange updates selected season`() =
-        runTest(testDispatcher) {
-            viewModel = createViewModelWithTvShow()
-
-            viewModel.onSeasonChange(2)
-
-            expectThat(viewModel.uiState.value) {
-                get { selectedSeason }.isEqualTo(2)
-            }
-        }
-
-    @Test
-    fun `onRetry fetches metadata again after error`() =
-        runTest(testDispatcher) {
-            coEvery { getFilmMetadata(any()) } returns Resource.Failure(UiText.from("Error"))
-
-            viewModel = createViewModelWithFilmSearchItem()
-            advanceUntilIdle()
-
-            expectThat(viewModel.uiState.value.error).isA<UiText>()
 
             coEvery { getFilmMetadata(any()) } returns Resource.Success(testMovie)
 
             viewModel.onRetry()
             advanceUntilIdle()
 
-            expectThat(viewModel.uiState.value) {
-                get { error }.isNull()
-                get { isLoading }.isFalse()
+            viewModel.uiState.test {
+                val state = awaitItem()
+                expectThat(state) {
+                    get { error }.isNull()
+                    get { screenState }.isEqualTo(FilmScreenState.Success)
+                }
             }
-            expectThat(viewModel.metadata.value).isEqualTo(testMovie)
         }
 
     @Test
-    fun `onConsumeError clears error state`() =
+    fun `onSeasonChange should update selected season`() =
         runTest(testDispatcher) {
-            coEvery { getFilmMetadata(any()) } returns Resource.Failure(UiText.from("Error"))
-
-            viewModel = createViewModelWithFilmSearchItem()
+            createViewModel(testTvShow)
             advanceUntilIdle()
 
-            expectThat(viewModel.uiState.value.error).isA<UiText>()
+            viewModel.onSeasonChange(1)
 
-            viewModel.onConsumeError()
-
-            expectThat(viewModel.uiState.value.error).isNull()
-        }
-
-    @Test
-    fun `showFilmTitles reflects datastore preference`() =
-        runTest(testDispatcher) {
-            every { dataStoreManager.getUserPrefs(UserPreferences.UI_PREFS_KEY, UiPreferences::class) } returns
-                flowOf(UiPreferences(shouldShowTitleOnCards = true))
-
-            viewModel = createViewModelWithMovie()
-
-            viewModel.showFilmTitles.test {
-                expectThat(awaitItem()).isTrue()
+            viewModel.uiState.test {
+                expectThat(awaitItem()).get { selectedSeason }.isEqualTo(1)
             }
         }
 
     @Test
-    fun `watchProgress returns current user watch progress`() =
+    fun `onLibrarySheetQueryChange should update query`() =
         runTest(testDispatcher) {
-            every { watchProgressRepository.getAsFlow(any(), any(), any()) } returns
-                flowOf(testMovieProgress)
+            createViewModel()
 
-            viewModel = createViewModelWithMovie()
+            viewModel.onLibrarySheetQueryChange("test query")
+
+            viewModel.librarySheetQuery.test {
+                expectThat(awaitItem()).isEqualTo("test query")
+            }
+        }
+
+    @Test
+    fun `toggleOnLibrary with watchlist id should call toggle watchlist`() =
+        runTest(testDispatcher) {
+            coEvery { toggleWatchlistStatus(any()) } just runs
+
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.toggleOnLibrary(LibraryListUtil.WATCHLIST_LIB_ID)
+            advanceUntilIdle()
+
+            coVerify { toggleWatchlistStatus(testMovie) }
+        }
+
+    @Test
+    fun `toggleOnLibrary with watch progress id should call toggle watch progress`() =
+        runTest(testDispatcher) {
+            coEvery { toggleWatchProgressStatus(any()) } just runs
+
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.toggleOnLibrary(LibraryListUtil.WATCH_PROGRESS_LIB_ID)
+            advanceUntilIdle()
+
+            coVerify { toggleWatchProgressStatus(testMovie) }
+        }
+
+    @Test
+    fun `toggleOnLibrary with custom list should add item when not present`() =
+        runTest(testDispatcher) {
+            val customListId = 123
+            coEvery { libraryListRepository.insertItem(any(), any()) } returns 1L
+
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.toggleOnLibrary(customListId)
+            advanceUntilIdle()
+
+            coVerify {
+                libraryListRepository.insertItem(
+                    item = match<LibraryListItem> {
+                        it.listId == customListId &&
+                            it.filmId == testPartialMovie.identifier
+                    },
+                    film = testMovie
+                )
+            }
+        }
+
+    @Test
+    fun `toggleEpisodeOnLibrary should add episode progress when not present`() =
+        runTest(testDispatcher) {
+            val episode = FilmTestDefaults.getEpisode()
+            val episodeWithProgress = EpisodeWithProgress(episode, null)
+
+            coEvery { watchProgressRepository.insert(any(), any()) } returns 1L
+
+            createViewModel(testTvShow)
+            advanceUntilIdle()
+
+            viewModel.toggleEpisodeOnLibrary(episodeWithProgress)
+            advanceUntilIdle()
+
+            coVerify {
+                watchProgressRepository.insert(
+                    film = testTvShow,
+                    item = match<EpisodeProgress> {
+                        it.ownerId == testUser.id &&
+                            it.filmId == testTvShow.id &&
+                            it.seasonNumber == 1 &&
+                            it.episodeNumber == 1 &&
+                            it.status == WatchStatus.COMPLETED
+                    },
+                )
+            }
+        }
+
+    @Test
+    fun `toggleEpisodeOnLibrary should remove episode progress when present`() =
+        runTest(testDispatcher) {
+            val episode = FilmTestDefaults.getEpisode()
+            val progress = DatabaseTestDefaults.getEpisodeProgress(
+                filmId = testTvShow.identifier,
+                ownerId = testUser.id,
+            )
+            val episodeWithProgress = EpisodeWithProgress(episode, progress)
+
+            coEvery { watchProgressRepository.delete(any(), any()) } just runs
+
+            createViewModel(testTvShow)
+            advanceUntilIdle()
+
+            viewModel.toggleEpisodeOnLibrary(episodeWithProgress)
+            advanceUntilIdle()
+
+            coVerify { watchProgressRepository.delete(progress.id, testTvShow.filmType) }
+        }
+
+    @Test
+    fun `createLibrary should create new list and add film to it`() =
+        runTest(testDispatcher) {
+            val listName = "My List"
+            val listDescription = "Test Description"
+            val newListId = 456
+
+            coEvery { libraryListRepository.insertList(any()) } returns newListId
+            coEvery { libraryListRepository.insertItem(any(), any()) } returns 1L
+
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.createLibrary(listName, listDescription)
+            advanceUntilIdle()
+
+            coVerify {
+                libraryListRepository.insertList(
+                    match<LibraryList> {
+                        it.name == listName &&
+                            it.description == listDescription &&
+                            it.ownerId == testUser.id
+                    },
+                )
+            }
+
+            coVerify {
+                libraryListRepository.insertItem(
+                    item = match<LibraryListItem> {
+                        it.listId == newListId &&
+                            it.filmId == testMovie.identifier
+                    },
+                    film = testMovie,
+                )
+            }
+        }
+
+    @Test
+    fun `seasonToDisplay should emit season data for tv shows`() =
+        runTest(testDispatcher) {
+            val testSeason = FilmTestDefaults.getSeason(
+                episodes = listOf(FilmTestDefaults.getEpisode()),
+            )
+            val seasonWithProgress = SeasonWithProgress(
+                season = testSeason,
+                episodes = emptyList(),
+            )
+
+            every { getSeasonWithWatchProgress(any(), any()) } returns
+                flowOf(Resource.Success(seasonWithProgress))
+
+            createViewModel(testTvShow)
+            advanceUntilIdle()
+
+            viewModel.seasonToDisplay.test {
+                expectThat(awaitItem()).isNotNull()
+            }
+        }
+
+    @Test
+    fun `watchProgress should emit user's watch progress for film`() =
+        runTest(testDispatcher) {
+            val episodeProgress = DatabaseTestDefaults.getEpisodeProgress(
+                filmId = testTvShow.identifier,
+                ownerId = testUser.id,
+                status = WatchStatus.WATCHING,
+            )
+            val watchProgressWithMetadata = EpisodeProgressWithMetadata(episodeProgress, testTvShow.toDBFilm())
+
+            every {
+                watchProgressRepository.getAsFlow(
+                    ownerId = testUser.id,
+                    id = testTvShow.identifier,
+                    type = testTvShow.filmType,
+                )
+            } returns flowOf(watchProgressWithMetadata)
+            coEvery { getFilmMetadata(any()) } returns Resource.Success(testTvShow)
+
+            createViewModel(testTvShow)
+            advanceUntilIdle()
 
             viewModel.watchProgress.test {
-                expectThat(awaitItem()).isEqualTo(testMovieProgress)
+                expectThat(awaitItem()).isEqualTo(episodeProgress)
             }
         }
 
     @Test
-    fun `seasonToDisplay fetches season when tv show and season selected`() =
+    fun `libraryLists should combine user lists with system lists`() =
         runTest(testDispatcher) {
-            every { getSeason(any(), any()) } returns flowOf(Resource.Success(testSeason))
+            val userList = LibraryListWithItems(
+                list = DatabaseTestDefaults.getLibraryList(name = "My List"),
+                items = emptyList(),
+            )
 
-            viewModel = createViewModelWithTvShow()
+            every { libraryListRepository.getUserWithListsAndItems(testUser.id) } returns
+                flowOf(UserWithLibraryListsAndItems(testUser, listOf(userList)))
 
-            viewModel.onSeasonChange(2)
+            createViewModel()
             advanceUntilIdle()
 
-            viewModel.seasonToDisplay.test {
-                val result = awaitItem()
-                expectThat(result).isA<Resource.Success<Season>>()
-                expectThat((result as Resource.Success).data).isEqualTo(testSeason)
+            viewModel.libraryLists.test {
+                val lists = awaitItem()
+                expectThat(lists).hasSize(3) // User list + Watch Progress + Watchlist
             }
         }
 
     @Test
-    fun `seasonToDisplay returns null for movie`() =
+    fun `showFilmTitles should reflect datastore preferences`() =
         runTest(testDispatcher) {
-            viewModel = createViewModelWithMovie()
+            val uiPrefs = UiPreferences(shouldShowTitleOnCards = true)
+            every { dataStoreManager.getUserPrefs(any<Preferences.Key<String>>(), UiPreferences::class) } returns
+                flowOf(uiPrefs)
 
-            viewModel.seasonToDisplay.test {
-                expectThat(awaitItem()).isNull()
-            }
-        }
-
-    @Test
-    fun `metadata is updated when new season is fetched`() =
-        runTest(testDispatcher) {
-            every { getSeason(any(), any()) } returns flowOf(Resource.Success(testSeason))
-
-            viewModel = createViewModelWithTvShow()
-
-            viewModel.onSeasonChange(2)
+            createViewModel()
             advanceUntilIdle()
 
-            expectThat(viewModel.metadata.value).isA<TvShow>()
-            val updatedTvShow = viewModel.metadata.value as TvShow
-            expectThat(updatedTvShow.seasons).contains(testSeason)
+            viewModel.showFilmTitles.test {
+                skipItems(1) // Skip initial value
+                expectThat(awaitItem()).isTrue()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `searchResults should filter lists based on query`() =
+        runTest(testDispatcher) {
+            turbineScope {
+                val userList1 = LibraryListWithItems(
+                    list = DatabaseTestDefaults.getLibraryList(id = 1, name = "Action Movies"),
+                    items = emptyList(),
+                )
+                val userList2 = LibraryListWithItems(
+                    list = DatabaseTestDefaults.getLibraryList(id = 2, name = "Comedy Shows"),
+                    items = emptyList(),
+                )
+
+                every { libraryListRepository.getUserWithListsAndItems(testUser.id) } returns
+                    flowOf(UserWithLibraryListsAndItems(testUser, listOf(userList1, userList2)))
+
+                createViewModel()
+                advanceUntilIdle()
+
+                val librarySheetQueryTurbine = viewModel.librarySheetQuery.testIn(this)
+                val libraryListsTurbine = viewModel.libraryLists.testIn(this)
+                val searchResultsTurbine = viewModel.searchResults.testIn(this)
+
+                viewModel.onLibrarySheetQueryChange("action")
+                advanceUntilIdle()
+
+                // Check query update
+                librarySheetQueryTurbine.skipItems(1) // Skip initial state
+                val query = librarySheetQueryTurbine.awaitItem()
+                expectThat(query).isEqualTo("action")
+
+                val lists = libraryListsTurbine.awaitItem()
+
+                searchResultsTurbine.skipItems(1) // Skip initial empty query result
+                val filteredResults = searchResultsTurbine.awaitItem()
+
+                // Check lists and filtered results
+                expectThat(lists).hasSize(4) // 2 user lists + watchlist + watch progress
+                expectThat(filteredResults).hasSize(1)
+                expectThat(filteredResults.first().list.name).isEqualTo("Action Movies")
+
+                searchResultsTurbine.cancelAndIgnoreRemainingEvents()
+                libraryListsTurbine.cancelAndIgnoreRemainingEvents()
+                librarySheetQueryTurbine.cancelAndIgnoreRemainingEvents()
+            }
         }
 }

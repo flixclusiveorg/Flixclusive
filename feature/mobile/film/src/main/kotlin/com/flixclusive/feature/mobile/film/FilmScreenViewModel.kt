@@ -123,7 +123,7 @@ internal class FilmScreenViewModel
         val seasonToDisplay = combine(
             uiState.mapLatest { it.selectedSeason }.filterNotNull().distinctUntilChanged(),
             _metadata.filterNotNull(),
-            retrySeasonTrigger
+            retrySeasonTrigger,
         ) { selectedSeason, filmMetadata, _ ->
             selectedSeason to filmMetadata
         }.mapLatest { (selectedSeason, tvShow) ->
@@ -354,7 +354,7 @@ internal class FilmScreenViewModel
                             episodeNumber = episodeWithProgress.episode.number,
                             status = WatchStatus.COMPLETED,
                             progress = 1L, // Mark as fully watched (100%)
-                            duration = 1L
+                            duration = 1L,
                         ),
                     )
                 } else {
@@ -363,7 +363,6 @@ internal class FilmScreenViewModel
             }
         }
 
-
         /**
          * Creates a new library list with the given [name] and optional [description],
          * and immediately adds the current film to it.
@@ -371,7 +370,10 @@ internal class FilmScreenViewModel
          * @param name The name of the new library list.
          * @param description An optional description for the new library list.
          * */
-        fun createLibrary(name: String, description: String?) {
+        fun createLibrary(
+            name: String,
+            description: String?,
+        ) {
             val film = _metadata.value
             val user = userSessionManager.currentUser.value
 
@@ -389,7 +391,7 @@ internal class FilmScreenViewModel
                         name = name,
                         description = description,
                         ownerId = user.id,
-                    )
+                    ),
                 )
 
                 // Immediately add the film to the newly created list
@@ -398,7 +400,6 @@ internal class FilmScreenViewModel
                     film = film,
                 )
             }
-
         }
 
         fun onSeasonChange(seasonNumber: Int) {
