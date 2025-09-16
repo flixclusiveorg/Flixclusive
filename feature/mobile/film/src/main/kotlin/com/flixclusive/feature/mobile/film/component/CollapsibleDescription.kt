@@ -197,14 +197,14 @@ private fun FilmMetadata.getDetailedDescription(context: Context): String {
         producers
             .takeIf { it.isNotEmpty() }
             ?.take(3)
-            ?.joinToString(separator = ", ")
+            ?.joinToString(separator = ", ") { it.name }
             ?.also { appendLine(context.getString(R.string.production, it)) }
 
         if (this@getDetailedDescription is TvShow) {
             networks
                 .takeIf { it.isNotEmpty() }
                 ?.take(3)
-                ?.joinToString(separator = ", ")
+                ?.joinToString(separator = ", ") { it.name }
                 ?.also { appendLine(context.getString(R.string.network, it)) }
         }
     }
