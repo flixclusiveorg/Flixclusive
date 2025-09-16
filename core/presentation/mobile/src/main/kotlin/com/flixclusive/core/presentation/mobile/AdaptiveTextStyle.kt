@@ -25,7 +25,7 @@ object AdaptiveTextStyle {
     @Composable
     fun TextStyle.asAdaptiveTextStyle(
         size: TextUnit = this.fontSize,
-        increaseBy: TextUnit = 4.sp,
+        increaseBy: TextUnit = 2.sp,
     ): TextStyle {
         return asAdaptiveTextStyle(
             compact = size,
