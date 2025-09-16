@@ -3,6 +3,7 @@ package com.flixclusive.feature.mobile.film
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -54,6 +55,7 @@ import com.flixclusive.core.navigation.navargs.GenreWithBackdrop
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.film.FilmCard
@@ -69,6 +71,7 @@ import com.flixclusive.feature.mobile.film.component.BackdropImage
 import com.flixclusive.feature.mobile.film.component.BriefDetails
 import com.flixclusive.feature.mobile.film.component.CollapsibleDescription
 import com.flixclusive.feature.mobile.film.component.ContentTabs
+import com.flixclusive.feature.mobile.film.component.EpisodeDetailedCard
 import com.flixclusive.feature.mobile.film.component.FilmScreenTopBar
 import com.flixclusive.feature.mobile.film.component.HeaderButtons
 import com.flixclusive.feature.mobile.film.component.LibraryListSheet
@@ -119,12 +122,14 @@ internal fun FilmScreen(
         onQueryChange = viewModel::onLibrarySheetQueryChange,
         onSeasonChange = viewModel::onSeasonChange,
         toggleOnLibrary = viewModel::toggleOnLibrary,
+        toggleEpisodeOnLibrary = viewModel::toggleEpisodeOnLibrary,
         createLibrary = viewModel::createLibrary,
         onRetry = viewModel::onRetry,
-        onRetryFetchSeason = viewModel::onRetryFetchSeason
+        onRetryFetchSeason = viewModel::onRetryFetchSeason,
     )
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun FilmScreenContent(
@@ -140,6 +145,7 @@ private fun FilmScreenContent(
     onQueryChange: (String) -> Unit,
     onSeasonChange: (Int) -> Unit,
     toggleOnLibrary: (Int) -> Unit,
+    toggleEpisodeOnLibrary: (EpisodeWithProgress) -> Unit,
     createLibrary: (String, String?) -> Unit,
     onRetry: () -> Unit,
     onRetryFetchSeason: () -> Unit,
@@ -160,6 +166,7 @@ private fun FilmScreenContent(
     var appBarContainerAlpha by remember { mutableFloatStateOf(0f) }
     var isLibrarySheetOpen by remember { mutableStateOf(false) }
     var showDefaultProviderDialog by remember { mutableStateOf(false) }
+    var longClickedEpisode by remember { mutableStateOf<EpisodeWithProgress?>(null) }
 
     val tabs = remember(metadata) { FilmScreenUtils.getTabs(metadata) }
     val (currentTabSelected, onTabChange) = rememberSaveable(tabs.size) { mutableStateOf(tabs.firstOrNull()) }
@@ -210,161 +217,173 @@ private fun FilmScreenContent(
         }
     }
 
-    Scaffold(
-        modifier = Modifier
-            .padding(LocalGlobalScaffoldPadding.current),
-        topBar = {
-            FilmScreenTopBar(
-                title = metadata.title,
-                onNavigate = navigator::goBack,
-                containerAlpha = { appBarContainerAlpha },
-            )
-        },
-    ) {
-        AnimatedContent(
-            modifier = Modifier,
-            targetState = uiState.screenState,
-            label = "FilmScreenContent",
-        ) { state ->
-            when (state) {
-                FilmScreenState.Loading -> {
-                    // TODO: Add placeholder screen
-                }
+    ProvideSharedTransitionScope {
+        Scaffold(
+            modifier = Modifier
+                .padding(LocalGlobalScaffoldPadding.current),
+            topBar = {
+                FilmScreenTopBar(
+                    title = metadata.title,
+                    onNavigate = navigator::goBack,
+                    containerAlpha = { appBarContainerAlpha },
+                )
+            },
+        ) {
+            AnimatedContent(
+                modifier = Modifier,
+                targetState = uiState.screenState,
+                label = "FilmScreenContent",
+            ) { state ->
+                when (state) {
+                    FilmScreenState.Loading -> {
+                        // TODO: Add placeholder screen
+                    }
 
-                FilmScreenState.Error -> {
-                    RetryButton(
-                        error = uiState.error?.asString(),
-                        modifier = Modifier.fillMaxSize(),
-                        onRetry = onRetry,
-                    )
-                }
+                    FilmScreenState.Error -> {
+                        RetryButton(
+                            error = uiState.error?.asString(),
+                            modifier = Modifier.fillMaxSize(),
+                            onRetry = onRetry,
+                        )
+                    }
 
-                FilmScreenState.Success -> {
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(
-                            if (currentTabSelected?.isOnEpisodesSection == true) {
-                                configuration.screenWidthDp.dp
-                            } else {
-                                getAdaptiveFilmCardWidth()
-                            },
-                        ),
-                        state = listState,
-                    ) {
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            Box(
-                                contentAlignment = Alignment.TopCenter,
-                            ) {
-                                BackdropImage(
-                                    metadata = metadata as FilmMetadata,
-                                    modifier = Modifier
-                                        .aspectRatio(backdropAspectRatio),
-                                )
-
-                                BriefDetails(
-                                    metadata = metadata,
-                                    onProviderClick = {
-                                        if (uiState.provider != null) {
-                                            navigator.openProviderDetails(uiState.provider)
-                                            return@BriefDetails
-                                        }
-
-                                        showDefaultProviderDialog = true
-                                    },
-                                    onGenreClick = { /*TODO*/ },
-                                    provider = uiState.provider,
-                                    modifier = Modifier
-                                        .aspectRatio(backdropAspectRatio * 0.95f)
-                                        .padding(horizontal = DefaultScreenPaddingHorizontal),
-                                )
-                            }
-                        }
-
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            HeaderButtons(
-                                metadata = metadata as FilmMetadata,
-                                watchProgress = watchProgress,
-                                isInLibrary = watchProgress != null,
-                                onPlay = {
-                                    if (metadata is Movie) {
-                                        navigator.playMovie(metadata)
-                                    } else if (metadata is TvShow) {
-                                        val episodeProgress = watchProgress as? EpisodeProgress
-                                        val season = episodeProgress?.seasonNumber ?: 1
-                                        val episode = episodeProgress?.episodeNumber ?: 1
-
-                                        navigator.playEpisode(season, episode, metadata)
-                                    }
-                                },
-                                onAddToLibrary = { isLibrarySheetOpen = true },
-                                onToggleDownload = {
-                                    // TODO: Implement download
-                                    context.showToast(context.getString(LocaleR.string.coming_soon))
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(DefaultScreenPaddingHorizontal)
-                                    .padding(top = 10.dp),
-                            )
-                        }
-
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            CollapsibleDescription(
-                                metadata = metadata as FilmMetadata,
-                                modifier = Modifier
-                                    .padding(horizontal = DefaultScreenPaddingHorizontal)
-                                    .padding(top = 25.dp),
-                            )
-                        }
-
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            ContentTabs(
-                                tabs = tabs,
-                                currentTabSelected = tabs.indexOf(currentTabSelected),
-                                onTabChange = { onTabChange(tabs[it]) },
-                                modifier = Modifier
-                                    .padding(top = 20.dp, bottom = 10.dp),
-                            )
-                        }
-
-                        // Seasons and Episodes
-                        if (metadata is TvShow &&
-                            currentTabSelected?.isOnEpisodesSection == true &&
-                            seasonToDisplay != null &&
-                            uiState.selectedSeason != null
+                    FilmScreenState.Success -> {
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(
+                                getAdaptiveFilmCardWidth() *
+                                    (if (currentTabSelected?.isOnEpisodesSection == true) 1.6f else 1f),
+                            ),
+                            state = listState,
                         ) {
-                            seriesContent(
-                                listState = seasonsListState,
-                                selectedSeason = uiState.selectedSeason,
-                                seasons = metadata.seasons,
-                                seasonToDisplay = seasonToDisplay,
-                                onSeasonChange = onSeasonChange,
-                                onRetry = onRetryFetchSeason,
-                                onClick = { episode -> navigator.playEpisode(episode, metadata) },
-                                onLongClick = { /* TODO: Implement sheet for Marked as Watched */ },
-                                onDownload = { /* TODO: Implement download */ },
-                            )
-                        }
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                Box(
+                                    contentAlignment = Alignment.TopCenter,
+                                ) {
+                                    BackdropImage(
+                                        metadata = metadata as FilmMetadata,
+                                        modifier = Modifier
+                                            .aspectRatio(backdropAspectRatio),
+                                    )
 
-                        if (currentTabSelected?.isOnFilmsSection == true && extraFilmCards != null) {
-                            items(
-                                items = extraFilmCards,
-                                key = { film -> film.identifier },
-                            ) { film ->
-                                FilmCard(
-                                    isShowingTitle = showFilmTitles,
-                                    film = film,
-                                    onClick = navigator::openFilmScreen,
-                                    onLongClick = navigator::previewFilm,
+                                    BriefDetails(
+                                        metadata = metadata,
+                                        onProviderClick = {
+                                            if (uiState.provider != null) {
+                                                navigator.openProviderDetails(uiState.provider)
+                                                return@BriefDetails
+                                            }
+
+                                            showDefaultProviderDialog = true
+                                        },
+                                        onGenreClick = { /*TODO*/ },
+                                        provider = uiState.provider,
+                                        modifier = Modifier
+                                            .aspectRatio(backdropAspectRatio * 0.95f)
+                                            .padding(horizontal = DefaultScreenPaddingHorizontal),
+                                    )
+                                }
+                            }
+
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                HeaderButtons(
+                                    metadata = metadata as FilmMetadata,
+                                    watchProgress = watchProgress,
+                                    isInLibrary = watchProgress != null,
+                                    onPlay = {
+                                        if (metadata is Movie) {
+                                            navigator.playMovie(metadata)
+                                        } else if (metadata is TvShow) {
+                                            val episodeProgress = watchProgress as? EpisodeProgress
+                                            val season = episodeProgress?.seasonNumber ?: 1
+                                            val episode = episodeProgress?.episodeNumber ?: 1
+
+                                            navigator.playEpisode(season, episode, metadata)
+                                        }
+                                    },
+                                    onAddToLibrary = { isLibrarySheetOpen = true },
+                                    onToggleDownload = {
+                                        // TODO: Implement download
+                                        context.showToast(context.getString(LocaleR.string.coming_soon))
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .animateItem(),
+                                        .padding(DefaultScreenPaddingHorizontal)
+                                        .padding(top = 10.dp),
                                 )
+                            }
+
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                CollapsibleDescription(
+                                    metadata = metadata as FilmMetadata,
+                                    modifier = Modifier
+                                        .padding(horizontal = DefaultScreenPaddingHorizontal)
+                                        .padding(top = 25.dp),
+                                )
+                            }
+
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                ContentTabs(
+                                    tabs = tabs,
+                                    currentTabSelected = tabs.indexOf(currentTabSelected),
+                                    onTabChange = { onTabChange(tabs[it]) },
+                                    modifier = Modifier
+                                        .padding(top = 20.dp, bottom = 10.dp),
+                                )
+                            }
+
+                            // Seasons and Episodes
+                            if (metadata is TvShow &&
+                                currentTabSelected?.isOnEpisodesSection == true &&
+                                seasonToDisplay != null &&
+                                uiState.selectedSeason != null
+                            ) {
+                                seriesContent(
+                                    listState = seasonsListState,
+                                    selectedSeason = uiState.selectedSeason,
+                                    seasons = metadata.seasons,
+                                    seasonToDisplay = seasonToDisplay,
+                                    onSeasonChange = onSeasonChange,
+                                    onRetry = onRetryFetchSeason,
+                                    onClick = { episode -> navigator.playEpisode(episode, metadata) },
+                                    longClickedEpisode = longClickedEpisode,
+                                    onLongClick = { longClickedEpisode = it },
+                                )
+                            }
+
+                            if (currentTabSelected?.isOnFilmsSection == true && extraFilmCards != null) {
+                                items(
+                                    items = extraFilmCards,
+                                    key = { film -> film.identifier },
+                                ) { film ->
+                                    FilmCard(
+                                        isShowingTitle = showFilmTitles,
+                                        film = film,
+                                        onClick = navigator::openFilmScreen,
+                                        onLongClick = navigator::previewFilm,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .animateItem(),
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
+
+        EpisodeDetailedCard(
+            isDownloaded = false,
+            toggleOnLibrary = toggleEpisodeOnLibrary,
+            episodeWithProgress = longClickedEpisode,
+            onDismissRequest = { longClickedEpisode = null },
+            onDownload = { /*TODO*/ },
+            onPlay = {
+                longClickedEpisode?.episode?.let {
+                    navigator.playEpisode(it, metadata as TvShow)
+                }
+            },
+        )
     }
 
     if (isLibrarySheetOpen) {
@@ -582,6 +601,7 @@ private fun FilmScreenBasePreview() {
                 },
                 onSeasonChange = { uiState = uiState.copy(selectedSeason = it) },
                 watchProgress = watchProgress,
+                toggleEpisodeOnLibrary = {},
                 onRetryFetchSeason = {},
             )
         }

@@ -13,7 +13,9 @@ import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
+import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
+import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
@@ -26,6 +28,7 @@ import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
 import com.flixclusive.domain.database.usecase.ToggleWatchlistStatusUseCase
+import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUseCase
 import com.flixclusive.feature.mobile.film.util.LibraryListMapper.toWatchProgressLibraryList
@@ -292,7 +295,7 @@ internal class FilmScreenViewModel
          * @param id The ID of the library list to toggle the film in.
          * */
         fun toggleOnLibrary(id: Int) {
-            viewModelScope.launch(appDispatchers.io) {
+            appDispatchers.ioScope.launch {
                 val film = _metadata.value
                 requireNotNull(film) {
                     "Film metadata must be loaded before toggling watch progress"
@@ -324,6 +327,38 @@ internal class FilmScreenViewModel
                         ),
                         film = _metadata.value,
                     )
+                }
+            }
+        }
+
+        fun toggleEpisodeOnLibrary(episodeWithProgress: EpisodeWithProgress) {
+            appDispatchers.ioScope.launch {
+                val film = _metadata.value
+                val user = userSessionManager.currentUser.value
+                requireNotNull(film) {
+                    "Film metadata must be loaded before toggling episode progress"
+                }
+
+                requireNotNull(user) {
+                    "User must be logged in to toggle episode progress"
+                }
+
+                val watchProgress = episodeWithProgress.watchProgress
+                if (watchProgress == null) {
+                    watchProgressRepository.insert(
+                        film = film,
+                        item = EpisodeProgress(
+                            ownerId = user.id,
+                            filmId = film.identifier,
+                            seasonNumber = episodeWithProgress.episode.season,
+                            episodeNumber = episodeWithProgress.episode.number,
+                            status = WatchStatus.COMPLETED,
+                            progress = 1L, // Mark as fully watched (100%)
+                            duration = 1L
+                        ),
+                    )
+                } else {
+                    watchProgressRepository.delete(item = watchProgress.id, type = film.filmType)
                 }
             }
         }

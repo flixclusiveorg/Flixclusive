@@ -77,12 +77,12 @@ internal fun LibraryListSheet(
     var isCreateDialogOpen by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
+        modifier = modifier,
         onDismissRequest = onDismissRequest,
         shape = MaterialTheme.shapes.small.copy(
             bottomEnd = CornerSize(0.dp),
             bottomStart = CornerSize(0.dp),
         ),
-        modifier = modifier,
     ) {
         LazyColumn(
             contentPadding = PaddingValues(10.dp),

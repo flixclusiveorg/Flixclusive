@@ -113,7 +113,7 @@ internal fun HeaderButtons(
 
         if (metadata.releaseStatus != FilmReleaseStatus.COMING_SOON) {
             ExtraButton(
-                inactiveLabel = R.string.download,
+                inactiveLabel = LocaleR.string.download,
                 activeLabel = R.string.downloaded,
                 inactiveDrawable = UiCommonR.drawable.download,
                 activeDrawable = UiCommonR.drawable.download_done,
@@ -318,13 +318,11 @@ private fun ExtraButton(
     @Composable
     fun LabelIconContent() {
         AdaptiveIcon(
-            painter = painterResource(
-                if (state) {
-                    activeDrawable
-                } else {
-                    inactiveDrawable
-                }
-            ),
+            painter = if (state) {
+                painterResource(activeDrawable)
+            } else {
+                painterResource(inactiveDrawable)
+            },
             contentDescription = label,
             tint = if (state) {
                 LocalContentColor.current

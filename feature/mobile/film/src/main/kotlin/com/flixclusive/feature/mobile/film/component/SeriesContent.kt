@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.film.component
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -8,9 +7,8 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,6 +21,7 @@ import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
+import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
@@ -31,14 +30,13 @@ import com.flixclusive.core.strings.R as LocaleR
 internal fun LazyGridScope.seriesContent(
     listState: LazyListState,
     selectedSeason: Int,
+    longClickedEpisode: EpisodeWithProgress?,
     seasons: List<Season>,
     seasonToDisplay: Resource<SeasonWithProgress>,
     onSeasonChange: (Int) -> Unit,
-    onDownload: (Episode) -> Unit,
     onClick: (Episode) -> Unit,
-    onLongClick: (Episode) -> Unit,
+    onLongClick: (EpisodeWithProgress) -> Unit,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     item(span = { GridItemSpan(maxLineSpan) }) {
         LazyRow(
@@ -105,30 +103,19 @@ internal fun LazyGridScope.seriesContent(
                 }
             }
 
-            itemsIndexed(
+            items(
                 items = season.episodes,
-                key = { _, episode -> episode.number },
-            ) { i, item ->
-                Column {
-                    EpisodeCard(
-                        episode = item,
-                        onClick = { onClick(item.episode) },
-                        onLongClick = { onLongClick(item.episode) },
-                        onDownload = { onDownload(item.episode) },
-                        modifier = modifier
-                            .fillMaxWidth()
-                            .animateItem(),
-                    )
-
-                    if (i < season.episodes.lastIndex) {
-                        HorizontalDivider(
-                            thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(0.6f),
-                            modifier = Modifier
-                                .padding(vertical = 8.dp, horizontal = 10.dp),
-                        )
-                    }
-                }
+                key = { episode -> episode.number },
+            ) { item ->
+                EpisodeCard(
+                    episode = item,
+                    onClick = { onClick(item.episode) },
+                    visible = longClickedEpisode != item,
+                    onLongClick = { onLongClick(item) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateItem(),
+                )
             }
         }
     }
