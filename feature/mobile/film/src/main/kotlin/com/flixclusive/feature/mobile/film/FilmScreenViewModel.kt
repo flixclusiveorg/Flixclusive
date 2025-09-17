@@ -170,7 +170,8 @@ internal class FilmScreenViewModel
             .filterNotNull()
             .flatMapLatest { user ->
                 combine(
-                    libraryListRepository.getUserWithListsAndItems(user.id).mapLatest { it.lists },
+                    libraryListRepository.getUserWithListsAndItems(user.id)
+                        .mapLatest { it.lists }.distinctUntilChanged(),
                     watchProgressRepository.getAllAsFlow(user.id),
                     watchlistRepository.getAllAsFlow(user.id),
                 ) { lists, watchProgressList, watchlist ->
