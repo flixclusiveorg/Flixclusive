@@ -19,14 +19,12 @@ fun Modifier.selectionBorder(
     shape: Shape = RectangleShape,
 ) = border(
     shape = shape,
-    border =
-        BorderStroke(
-            width = width,
-            color =
-                if (isSelected) {
-                    selectedColor
-                } else {
-                    unselectedColor
-                },
-        ),
+    border = BorderStroke(
+        width = width,
+        color = if (isSelected) {
+            selectedColor
+        } else {
+            unselectedColor
+        },
+    ),
 )

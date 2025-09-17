@@ -24,51 +24,52 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastFilter
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.database.entity.DBFilm
-import com.flixclusive.core.database.entity.LibraryList
+import com.flixclusive.core.common.collections.SortUtils
+import com.flixclusive.core.database.entity.library.LibraryList
+import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.mobile.components.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.presentation.mobile.components.topbar.rememberEnterAlwaysScrollBehavior
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.common.dialog.IconAlertDialog
-import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
+import com.flixclusive.feature.mobile.library.common.component.CreateLibraryDialog
+import com.flixclusive.feature.mobile.library.common.component.EditLibraryDialog
 import com.flixclusive.feature.mobile.library.common.component.LibraryFilterRow
-import com.flixclusive.feature.mobile.library.common.util.LibraryFilterDirection
+import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil.isCustom
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.feature.mobile.library.common.util.selectionBorder
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
-import com.flixclusive.feature.mobile.library.manage.component.CreateLibraryDialog
 import com.flixclusive.feature.mobile.library.manage.component.DefaultLibraryCardShape
-import com.flixclusive.feature.mobile.library.manage.component.EditLibraryDialog
 import com.flixclusive.feature.mobile.library.manage.component.LibraryCard
 import com.flixclusive.feature.mobile.library.manage.component.LibraryOptionsBottomSheet
-import com.flixclusive.feature.mobile.library.manage.component.topbar.ManageLibraryTopBar
-import com.flixclusive.feature.mobile.library.manage.util.mapToListPreview
+import com.flixclusive.feature.mobile.library.manage.component.ManageLibraryTopBar
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.random.Random
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
-
-interface ManageLibraryScreenNavigator : GoBackAction {
-    fun openLibraryDetails(list: LibraryList)
-}
 
 @Destination
 @Composable
@@ -76,14 +77,23 @@ internal fun ManageLibraryScreen(
     navigator: ManageLibraryScreenNavigator,
     viewModel: ManageLibraryViewModel = hiltViewModel(),
 ) {
-    val libraries = viewModel.libraries.collectAsStateWithLifecycle()
-    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
-    val selectedLibraries = viewModel.selectedLibraries.collectAsStateWithLifecycle(emptySet())
+    val libraries by viewModel.libraries.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val selectedLibraries by viewModel.selectedLibraries.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
 
     ManageLibraryScreen(
-        uiState = { uiState.value },
-        libraries = { libraries.value },
-        selectedLibraries = { selectedLibraries.value },
+        uiState = uiState,
+        searchQuery = { searchQuery },
+        selectedLibraries = { selectedLibraries },
+        libraries = {
+            if (searchQuery.isNotEmpty() && uiState.isShowingSearchBar) {
+                searchResults
+            } else {
+                libraries
+            }
+        },
         onRemoveLongClickedLibrary = viewModel::onRemoveLongClickedLibrary,
         onViewLibraryContent = navigator::openLibraryDetails,
         onLongClickItem = viewModel::onLongClickItem,
@@ -102,11 +112,13 @@ internal fun ManageLibraryScreen(
     )
 }
 
+@OptIn(FlowPreview::class)
 @Composable
 private fun ManageLibraryScreen(
-    uiState: () -> ManageLibraryUiState,
-    libraries: () -> List<UiLibraryList>,
-    selectedLibraries: () -> Set<LibraryListWithPreview>,
+    uiState: ManageLibraryUiState,
+    libraries: () -> ImmutableList<LibraryListWithPreview>,
+    selectedLibraries: () -> ImmutableSet<LibraryListWithPreview>,
+    searchQuery: () -> String,
     onRemoveSelection: () -> Unit,
     onStartMultiSelecting: () -> Unit,
     onUnselectAll: () -> Unit,
@@ -123,13 +135,16 @@ private fun ManageLibraryScreen(
     onLongClickItem: (LibraryListWithPreview) -> Unit,
     onUpdateFilter: (LibrarySortFilter) -> Unit,
 ) {
-    val context = LocalContext.current
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
     var isFabExpanded by remember { mutableStateOf(false) }
 
-    LaunchedEffect(scrollBehavior.state.heightOffset) {
-        delay(800)
-        isFabExpanded = scrollBehavior.state.heightOffset < 0f
+    LaunchedEffect(Unit) {
+        snapshotFlow { scrollBehavior.state.heightOffset }
+            .debounce(800)
+            .distinctUntilChanged()
+            .collect {
+                isFabExpanded = it < 0f
+            }
     }
 
     val listState = rememberLazyGridState()
@@ -138,18 +153,17 @@ private fun ManageLibraryScreen(
         derivedStateOf { selectedLibraries().size }
     }
 
-    val searchQuery by remember {
-        derivedStateOf { uiState().searchQuery }
+    val isListEmpty by remember {
+        derivedStateOf { libraries().isEmpty() }
     }
 
     var showDeleteLibraryAlert by remember { mutableStateOf(false) }
     var showDeleteSelectionAlert by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier =
-            Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(LocalGlobalScaffoldPadding.current),
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -157,9 +171,7 @@ private fun ManageLibraryScreen(
                 containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp),
                 shape = MaterialTheme.shapes.medium,
                 expanded = isFabExpanded,
-                text = {
-                    Text(text = stringResource(LocaleR.string.new_list))
-                },
+                text = { Text(text = stringResource(LocaleR.string.new_list)) },
                 icon = {
                     Icon(
                         painter = painterResource(id = UiCommonR.drawable.round_add_24),
@@ -169,24 +181,25 @@ private fun ManageLibraryScreen(
             )
         },
         topBar = {
-            val topBarState by remember {
-                derivedStateOf {
-                    if (uiState().isMultiSelecting) {
-                        LibraryTopBarState.Selecting
-                    } else if (uiState().isShowingSearchBar) {
-                        LibraryTopBarState.Searching
-                    } else {
-                        LibraryTopBarState.DefaultMainScreen
-                    }
+            val topBarState = remember(
+                uiState.isMultiSelecting,
+                uiState.isShowingSearchBar,
+            ) {
+                if (uiState.isMultiSelecting) {
+                    LibraryTopBarState.Selecting
+                } else if (uiState.isShowingSearchBar) {
+                    LibraryTopBarState.Searching
+                } else {
+                    LibraryTopBarState.DefaultMainScreen
                 }
             }
 
             ManageLibraryTopBar(
                 topBarState = topBarState,
-                isListEmpty = libraries().isEmpty(),
+                isListEmpty = isListEmpty,
                 selectCount = { selectCount },
                 scrollBehavior = scrollBehavior,
-                searchQuery = { searchQuery },
+                searchQuery = searchQuery,
                 onToggleSearchBar = onToggleSearchBar,
                 onQueryChange = onQueryChange,
                 onRemoveSelection = { showDeleteSelectionAlert = true },
@@ -208,10 +221,10 @@ private fun ManageLibraryScreen(
                 },
             ) {
                 LibraryFilterRow(
-                    isListEditable = libraries().isNotEmpty() && !uiState().isMultiSelecting,
+                    isListEditable = !isListEmpty && !uiState.isMultiSelecting,
                     filters = defaultManageLibraryFilters,
-                    selected = uiState().selectedFilter,
-                    ascending = uiState().selectedFilterDirection,
+                    selected = uiState.selectedFilter,
+                    ascending = uiState.isSortingAscending,
                     onUpdate = onUpdateFilter,
                     onStartSelecting = onStartMultiSelecting,
                     modifier = Modifier
@@ -225,16 +238,15 @@ private fun ManageLibraryScreen(
             state = listState,
             verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalArrangement = Arrangement.spacedBy(20.dp),
-            columns =
-                GridCells.Adaptive(
-                    getAdaptiveDp(
-                        compact = 300.dp,
-                        medium = 350.dp,
-                        expanded = 400.dp,
-                    ),
-                ),
             contentPadding = padding,
             modifier = Modifier.fillMaxSize(),
+            columns = GridCells.Adaptive(
+                getAdaptiveDp(
+                    compact = 300.dp,
+                    medium = 350.dp,
+                    expanded = 400.dp,
+                ),
+            ),
         ) {
             Snapshot.withoutReadObservation {
                 listState.requestScrollToItem(
@@ -245,72 +257,39 @@ private fun ManageLibraryScreen(
 
             items(
                 items = libraries(),
-                key = {
-                    val preview = it.mapToListPreview()
-                    preview.list.id
-                },
+                key = { it.id },
             ) { library ->
-                val item = library.mapToListPreview()
-                val name =
-                    if (library is EmphasisLibraryList) {
-                        library.name
-                    } else {
-                        UiText.from((library as LibraryListWithPreview).list.name)
-                    }
-
-                val description =
-                    if (library is EmphasisLibraryList) {
-                        library.description
-                    } else {
-                        (library as LibraryListWithPreview).list.description?.let(UiText::from)
-                    }
+                val selected by remember {
+                    derivedStateOf { selectedLibraries().contains(library) }
+                }
 
                 LibraryCard(
-                    name = name,
-                    description = description,
-                    itemsCount = item.itemsCount,
-                    previews = item.previews,
+                    libraryListWithPreview = library,
                     onClick = {
-                        when (library) {
-                            is LibraryListWithPreview -> {
-                                if (uiState().isMultiSelecting) {
-                                    onToggleSelect(library)
-                                } else {
-                                    onViewLibraryContent(library.list)
-                                }
-                            }
-
-                            is EmphasisLibraryList -> {
-                                if (!uiState().isMultiSelecting) {
-                                    onViewLibraryContent(library.library.list)
-                                } else {
-                                    context.showToast(context.getString(R.string.invalid_library_item_selection))
-                                }
-                            }
+                        if (uiState.isMultiSelecting) {
+                            onToggleSelect(library)
+                        } else {
+                            onViewLibraryContent(library.list)
                         }
                     },
-                    onLongClick =
-                        if (library is LibraryListWithPreview) {
-                            fun() {
-                                onLongClickItem(library)
-                                onToggleOptionsSheet(true)
-                            }
-                        } else {
-                            null
-                        },
-                    modifier =
-                        Modifier
-                            .animateItem()
-                            .selectionBorder(
-                                isSelected = selectedLibraries().contains(library),
-                                shape = DefaultLibraryCardShape,
-                            ),
+                    onLongClick = {
+                        if (library.list.isCustom) {
+                            onLongClickItem(library)
+                            onToggleOptionsSheet(true)
+                        }
+                    },
+                    modifier = Modifier
+                        .animateItem()
+                        .selectionBorder(
+                            isSelected = selected,
+                            shape = DefaultLibraryCardShape,
+                        ),
                 )
             }
         }
     }
 
-    if (uiState().isShowingOptionsSheet) {
+    if (uiState.isShowingOptionsSheet) {
         LibraryOptionsBottomSheet(
             onEdit = { onToggleEditDialog(true) },
             onDelete = {
@@ -321,15 +300,15 @@ private fun ManageLibraryScreen(
         )
     }
 
-    if (uiState().isEditingLibrary && uiState().longClickedLibrary != null) {
+    if (uiState.isEditingLibrary && uiState.longClickedLibrary != null) {
         EditLibraryDialog(
-            library = uiState().longClickedLibrary!!.list,
+            library = uiState.longClickedLibrary.list,
             onSave = onSaveEdits,
             onCancel = { onToggleEditDialog(false) },
         )
     }
 
-    if (uiState().isCreatingLibrary) {
+    if (uiState.isCreatingLibrary) {
         CreateLibraryDialog(
             onCreate = onCreate,
             onCancel = { onToggleCreateDialog(false) },
@@ -339,7 +318,7 @@ private fun ManageLibraryScreen(
     if (showDeleteLibraryAlert || showDeleteSelectionAlert) {
         val alertDescription =
             if (showDeleteLibraryAlert) {
-                val libraryName = uiState().longClickedLibrary?.list?.name ?: ""
+                val libraryName = uiState.longClickedLibrary?.list?.name ?: ""
                 stringResource(LocaleR.string.warn_delete_library_format, libraryName)
             } else {
                 stringResource(LocaleR.string.warn_delete_selected_libraries_format)
@@ -367,16 +346,18 @@ private fun ManageLibraryScreen(
 @Preview
 @Composable
 private fun ManageLibraryScreenBasePreview() {
+    var searchQuery by remember { mutableStateOf("") }
     var uiState by remember { mutableStateOf(ManageLibraryUiState()) }
     val libraries = remember { mutableStateListOf<LibraryListWithPreview>() }
+    var selectedLibraries by remember { mutableStateOf(persistentSetOf<LibraryListWithPreview>()) }
 
     val safeLibraries by remember {
         derivedStateOf {
-            val query = uiState.searchQuery
             val list =
-                if (query.isNotEmpty()) {
-                    libraries.filter {
-                        it.list.name.contains(query, true) || it.list.description?.contains(query, true) == true
+                if (searchQuery.isNotEmpty()) {
+                    libraries.fastFilter {
+                        it.list.name.contains(searchQuery, true) ||
+                            it.list.description?.contains(searchQuery, true) == true
                     }
                 } else {
                     libraries
@@ -384,7 +365,8 @@ private fun ManageLibraryScreenBasePreview() {
 
             val sortedList =
                 list.sortedWith(
-                    compareBy<LibraryListWithPreview>(
+                    SortUtils.compareBy<LibraryListWithPreview>(
+                        ascending = uiState.isSortingAscending,
                         selector = {
                             when (uiState.selectedFilter) {
                                 LibrarySortFilter.Name -> it.list.name
@@ -394,29 +376,30 @@ private fun ManageLibraryScreenBasePreview() {
                                 else -> throw Error()
                             }
                         },
-                    ).let { comparator ->
-                        if (uiState.selectedFilterDirection == LibraryFilterDirection.ASC) {
-                            comparator
-                        } else {
-                            comparator.reversed()
-                        }
-                    },
+                    ),
                 )
 
-            sortedList
+            sortedList.toPersistentList()
         }
     }
 
     LaunchedEffect(true) {
         libraries.addAll(
             List(10) {
-                val previews = List(3) { DBFilm(title = "Film #$it").toPreviewPoster() }
+                val previews = List(3) {
+                    DummyDataForPreview
+                        .getMovie(
+                            title = "Film #$it",
+                            id = it.toString(),
+                        ).toPreviewPoster()
+                }
                 val description =
                     if (Random.nextBoolean()) {
                         "Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum"
                     } else {
                         null
                     }
+
                 val list =
                     LibraryList(
                         id = it,
@@ -441,36 +424,31 @@ private fun ManageLibraryScreenBasePreview() {
                 color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
             ) {
                 ManageLibraryScreen(
-                    uiState = { uiState },
+                    uiState = uiState,
                     libraries = { safeLibraries },
-                    selectedLibraries = { uiState.selectedLibraries },
+                    selectedLibraries = { selectedLibraries },
+                    searchQuery = { searchQuery },
                     onUpdateFilter = {
                         uiState =
                             if (uiState.selectedFilter == it) {
-                                uiState.copy(selectedFilterDirection = uiState.selectedFilterDirection.toggle())
+                                uiState.copy(isSortingAscending = !uiState.isSortingAscending)
                             } else {
                                 uiState.copy(selectedFilter = it)
                             }
                     },
                     onViewLibraryContent = {},
                     onStartMultiSelecting = { uiState = uiState.copy(isMultiSelecting = true) },
-                    onRemoveSelection = { libraries.removeAll(uiState.selectedLibraries) },
+                    onRemoveSelection = { libraries.removeAll(selectedLibraries) },
                     onToggleSelect = {
-                        uiState =
-                            with(uiState) {
-                                val newList = selectedLibraries.toMutableSet()
-                                newList.add(it)
-                                copy(selectedLibraries = newList.toSet())
-                            }
+                        selectedLibraries = with(selectedLibraries) {
+                            if (contains(it)) remove(it) else add(it)
+                        }
                     },
                     onUnselectAll = {
-                        uiState =
-                            uiState.copy(
-                                selectedLibraries = emptySet(),
-                                isMultiSelecting = false,
-                            )
+                        selectedLibraries = persistentSetOf()
+                        uiState = uiState.copy(isMultiSelecting = false)
                     },
-                    onQueryChange = { uiState = uiState.copy(searchQuery = it) },
+                    onQueryChange = { searchQuery = it },
                     onToggleSearchBar = { uiState = uiState.copy(isShowingSearchBar = it) },
                     onToggleOptionsSheet = { uiState = uiState.copy(isShowingOptionsSheet = it) },
                     onLongClickItem = { uiState = uiState.copy(longClickedLibrary = it) },

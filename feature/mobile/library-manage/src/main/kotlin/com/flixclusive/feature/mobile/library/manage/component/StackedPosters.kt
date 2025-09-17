@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,25 +42,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.imageLoader
-import com.flixclusive.core.database.entity.DBFilm
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.FilmCover
-import com.flixclusive.core.ui.common.R
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
-import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.boxShadow
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.common.util.placeholderEffect
+import com.flixclusive.core.database.entity.film.DBFilm
+import com.flixclusive.core.presentation.common.components.FilmCover
+import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.presentation.common.extensions.buildImageRequest
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.Placeholder
+import com.flixclusive.core.presentation.mobile.extensions.boxShadow
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 private val MaxMainCardWidth = 90.dp
-internal val StackedCardsMaxWidth = 150.dp
+private val StackedCardsMaxWidth = 150.dp
 
 @Composable
 internal fun StackedPosters(
@@ -146,7 +143,7 @@ private fun PreviewCard(
         if (preview != null) {
             val painter =
                 remember(preview.posterPath) {
-                    context.buildTMDBImageUrl(
+                    context.buildImageRequest(
                         imagePath = preview.posterPath,
                         imageSize = "w300",
                     )
@@ -156,7 +153,7 @@ private fun PreviewCard(
                 model = painter,
                 imageLoader = LocalContext.current.imageLoader,
                 contentScale = ContentScale.FillBounds,
-                contentDescription = stringResource(id = LocaleR.string.film_item_content_description),
+                contentDescription = preview.title,
                 onSuccess = { isHidingPlaceholder = true },
                 modifier =
                     Modifier
@@ -207,12 +204,7 @@ private fun PreviewPlaceholder(
                     .height(200.dp)
                     .fillMaxWidth(),
         ) {
-            Spacer(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .placeholderEffect(),
-            )
+            Placeholder(modifier = Modifier.fillMaxSize())
 
             if (title != null) {
                 Column(
@@ -224,8 +216,8 @@ private fun PreviewPlaceholder(
                         modifier = Modifier.weight(iconWeight),
                     ) {
                         AdaptiveIcon(
-                            painter = painterResource(id = R.drawable.movie_icon),
-                            contentDescription = stringResource(id = LocaleR.string.film_item_content_description),
+                            painter = painterResource(id = UiCommonR.drawable.movie_icon),
+                            contentDescription = title,
                             tint = contentColor,
                             dp = 25.dp,
                             increaseBy = 3.dp
@@ -240,10 +232,7 @@ private fun PreviewPlaceholder(
                     ) {
                         Text(
                             text = title,
-                            style = getAdaptiveTextStyle(
-                                size = 10.sp,
-                                increaseBy = 2.sp
-                            ),
+                            style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(size = 10.sp),
                             textAlign = TextAlign.Center,
                             overflow = TextOverflow.Ellipsis,
                             modifier =
@@ -286,7 +275,7 @@ private fun StackedPostersBasePreview() {
                         StackedPosters(
                             previews =
                                 List(3) {
-                                    DBFilm(title = "Film #$it").toPreviewPoster()
+                                    DBFilm(id = "$it", title = "Film #$it").toPreviewPoster()
                                 },
                         )
                     }

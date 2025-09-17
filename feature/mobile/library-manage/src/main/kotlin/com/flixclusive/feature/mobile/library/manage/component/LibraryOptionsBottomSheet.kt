@@ -2,10 +2,8 @@ package com.flixclusive.feature.mobile.library.manage.component
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CornerSize
@@ -13,26 +11,23 @@ import androidx.compose.material3.BottomSheetDefaults.DragHandle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun LibraryOptionsBottomSheet(
@@ -51,50 +46,33 @@ internal fun LibraryOptionsBottomSheet(
         dragHandle = { DragHandle() },
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             buttons.forEach {
-                ItemButton(
-                    painter = painterResource(it.drawableId),
-                    label = stringResource(it.stringId),
-                    onClick = it.action
-                )
+                TextButton(
+                    onClick = it.action,
+                    shape = MaterialTheme.shapes.small,
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    AdaptiveIcon(
+                        painter = painterResource(it.drawableId),
+                        contentDescription = stringResource(it.stringId),
+                    )
+
+                    Text(
+                        text = stringResource(it.stringId),
+                        style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
+                        fontWeight = FontWeight.Bold,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .padding(start = 16.dp)
+                            .weight(1f),
+                    )
+                }
             }
         }
-    }
-}
-
-
-@Composable
-private fun ItemButton(
-    painter: Painter,
-    label: String,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.medium)
-            .padding(horizontal = 16.dp)
-            .clickable { onClick() }
-            .minimumInteractiveComponentSize()
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AdaptiveIcon(
-            painter = painter,
-            contentDescription = null
-        )
-
-        Text(
-            text = label,
-            style =
-            getAdaptiveTextStyle(
-                style = AdaptiveTextStyle.Emphasized,
-                style = TypographyStyle.Label,
-                increaseBy = 2.sp,
-            ),
-        )
     }
 }
 
@@ -106,12 +84,12 @@ private fun getButtons(
         ModifySheetItem(
             drawableId = UiCommonR.drawable.edit,
             stringId = LocaleR.string.edit,
-            action = onEdit
+            action = onEdit,
         ),
         ModifySheetItem(
             drawableId = UiCommonR.drawable.delete_outlined,
             stringId = LocaleR.string.delete,
-            action = onDelete
+            action = onDelete,
         ),
     )
 }

@@ -426,7 +426,6 @@
     <string name="error_icon_content_desc">Error icon</string>
     <string name="expand_card_icon_content_desc">Expand test result card icon</string>
     <string name="film_card_titles_settings_description">Display the titles on under the media cards.</string>
-    <string name="film_item_content_description">A film\'s backdrop, picture or poster.</string>
     <string name="filter_button">Filter</string>
     <string name="flixclusive_icon_content_desc">Flixclusive icon</string>
     <string name="flixclusive_tag_content_desc">Flixclusive image tag</string>

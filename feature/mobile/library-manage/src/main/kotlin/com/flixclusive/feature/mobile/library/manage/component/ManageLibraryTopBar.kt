@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.library.manage.component.topbar
+package com.flixclusive.feature.mobile.library.manage.component
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -9,18 +9,20 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.components.topbar.ActionButton
 import com.flixclusive.core.presentation.mobile.components.topbar.DefaultNavigationIcon
 import com.flixclusive.core.presentation.mobile.components.topbar.SearchTextFieldAction
-import com.flixclusive.core.ui.common.R
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.topbar.TwoRowsTopAppBar
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
@@ -42,12 +44,11 @@ internal fun ManageLibraryTopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     content: @Composable () -> Unit,
 ) {
-    val hideSearchButton =
-        (
-            topBarState != LibraryTopBarState.DefaultSubScreen &&
-                topBarState != LibraryTopBarState.DefaultMainScreen
-            ) ||
-            isListEmpty
+    val hideSearchButton = remember(topBarState, isListEmpty) {
+        (topBarState != LibraryTopBarState.DefaultSubScreen &&
+            topBarState != LibraryTopBarState.DefaultMainScreen
+            ) || isListEmpty
+    }
 
     BackHandler(enabled = topBarState == LibraryTopBarState.Selecting) {
         onUnselectAll()
@@ -65,7 +66,7 @@ internal fun ManageLibraryTopBar(
                     PlainTooltipBox(description = stringResource(LocaleR.string.cancel)) {
                         ActionButton(onClick = onUnselectAll) {
                             AdaptiveIcon(
-                                painter = painterResource(R.drawable.round_close_24),
+                                painter = painterResource(UiCommonR.drawable.round_close_24),
                                 contentDescription = stringResource(LocaleR.string.cancel),
                             )
                         }
@@ -94,7 +95,7 @@ internal fun ManageLibraryTopBar(
                                 enabled = selectCount() > 0,
                             ) {
                                 AdaptiveIcon(
-                                    painter = painterResource(com.flixclusive.core.ui.common.R.drawable.delete),
+                                    painter = painterResource(UiCommonR.drawable.outlined_trash),
                                     contentDescription = stringResource(LocaleR.string.remove),
                                     dp = 24.dp,
                                 )

@@ -10,10 +10,14 @@ android {
 }
 
 dependencies {
-    implementation(projects.coreDatastore)
-    // implementation(projects.core.ui.mobile)
-//    implementation(projects.data)
-//     implementation(projects.domain)
+    implementation(projects.coreCommon)
+    implementation(projects.coreDatabase)
+    implementation(projects.coreDrawables)
+    implementation(projects.coreNavigation)
+    implementation(projects.coreNetwork)
+    implementation(projects.corePresentationCommon)
+    implementation(projects.coreStrings)
+    implementation(projects.dataDatabase)
     implementation(projects.feature.mobile.libraryCommon)
 
     implementation(libs.coil.compose)
@@ -25,4 +29,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.kotlinx.immutables)
     implementation(libs.lifecycle.runtimeCompose)
+    implementation(libs.stubs.model.film)
+
+    testImplementation(projects.coreTesting)
 }

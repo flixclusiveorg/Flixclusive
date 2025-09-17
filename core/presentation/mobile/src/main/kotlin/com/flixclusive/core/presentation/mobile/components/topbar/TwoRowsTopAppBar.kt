@@ -46,7 +46,7 @@ import kotlin.math.roundToInt
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun TwoRowsTopAppBar(
+fun TwoRowsTopAppBar(
     title: @Composable () -> Unit,
     titleTextStyle: TextStyle,
     navigationIcon: @Composable () -> Unit,
