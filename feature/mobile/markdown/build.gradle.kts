@@ -10,6 +10,7 @@ android {
 
 dependencies {
     // implementation(projects.core.ui.mobile)
+    implementation(projects.coreNavigation)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
