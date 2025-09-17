@@ -32,7 +32,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
-import com.flixclusive.core.presentation.common.components.CustomBaseAlertDialog
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
 import com.flixclusive.core.presentation.mobile.components.CustomCheckbox
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
@@ -58,7 +57,7 @@ fun UnsafeInstallAlertDialog(
         formattedName,
     ) + " " + context.getString(LocaleR.string.warning_install_message_second_half)
 
-    CustomBaseAlertDialog(
+    CommonAlertDialog(
         modifier = modifier,
         onDismiss = onDismiss,
         dialogProperties = DialogProperties(

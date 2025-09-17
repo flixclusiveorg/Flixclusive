@@ -1,4 +1,4 @@
-package com.flixclusive.core.presentation.common.components
+package com.flixclusive.core.presentation.mobile.components.dialog
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +25,7 @@ import androidx.compose.ui.window.DialogProperties
  * */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomBaseAlertDialog(
+fun CommonAlertDialog(
     onDismiss: () -> Unit,
     action: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
@@ -36,7 +36,7 @@ fun CustomBaseAlertDialog(
     BasicAlertDialog(
         onDismissRequest = onDismiss,
         properties = dialogProperties,
-        modifier = modifier
+        modifier = modifier,
     ) {
         Surface(shape = shape) {
             Column(
@@ -44,7 +44,7 @@ fun CustomBaseAlertDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 180.dp)
+                    .heightIn(min = 180.dp),
             ) {
                 Column(
                     content = content,
@@ -52,7 +52,7 @@ fun CustomBaseAlertDialog(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .padding(10.dp)
-                        .weight(1F, fill = false)
+                        .weight(1F, fill = false),
                 )
 
                 Box(content = action)

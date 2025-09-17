@@ -22,7 +22,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
-import com.flixclusive.core.presentation.common.components.CustomBaseAlertDialog
 import com.flixclusive.core.strings.R as LocaleR
 
 /**
@@ -43,7 +42,7 @@ fun TextAlertDialog(
 ) {
     val buttonMinHeight = 50.dp
 
-    CustomBaseAlertDialog(
+    CommonAlertDialog(
         modifier = modifier,
         onDismiss = onDismiss,
         dialogProperties = dialogProperties,

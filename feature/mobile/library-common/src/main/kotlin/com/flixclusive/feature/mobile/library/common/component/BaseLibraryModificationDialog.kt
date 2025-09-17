@@ -23,8 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.common.components.CustomBaseAlertDialog
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.dialog.CommonAlertDialog
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -48,7 +48,7 @@ internal fun BaseLibraryModificationDialog(
     val buttonMinHeight = getAdaptiveDp(50.dp)
     val buttonShape = MaterialTheme.shapes.medium
 
-    CustomBaseAlertDialog(
+    CommonAlertDialog(
         onDismiss = onCancel,
         action = {
             Row(
