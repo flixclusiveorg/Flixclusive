@@ -17,10 +17,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun EmptyScreen(
@@ -36,13 +36,13 @@ internal fun EmptyScreen(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .padding(bottom = 12.dp)
-                .clickable(onClick = onAdd)
                 .size(50.dp)
                 .border(
                     width = 1.dp,
                     shape = MaterialTheme.shapes.small,
                     color = LocalContentColor.current.copy(0.6f)
                 )
+                .clickable(onClick = onAdd)
         ) {
             Icon(
                 painter = painterResource(id = UiCommonR.drawable.round_add_24),
@@ -53,13 +53,6 @@ internal fun EmptyScreen(
         }
     }
 }
-
-@Preview
-@Composable
-private fun EmptyScreen2Preview() {
-
-}
-
 @Preview
 @Composable
 private fun EmptyScreenPreview() {

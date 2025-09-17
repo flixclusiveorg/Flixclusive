@@ -22,12 +22,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun EditButton(
@@ -74,11 +71,7 @@ internal fun EditButton(
 
                     Text(
                         text = stringResource(LocaleR.string.edit),
-                        style = getAdaptiveTextStyle(
-                            size = fontSize,
-                            style = TypographyStyle.Label,
-                            style = AdaptiveTextStyle.SemiEmphasized
-                        ).copy(color = LocalContentColor.current),
+                        style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(fontSize),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )

@@ -21,8 +21,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,28 +32,24 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.database.entity.user.User
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
-import com.flixclusive.core.ui.common.user.UserAvatar
-import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
-import com.flixclusive.core.ui.common.user.getUserBackgroundPalette
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
-import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
-import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalAnimatedVisibilityScope
-import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalSharedTransitionScope
-import com.flixclusive.core.ui.common.util.noIndicationClickable
-import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.seconds
+import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
+import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
+import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideAnimatedVisibilityScope
+import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
+import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.getLocalAnimatedVisibilityScope
+import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.getLocalSharedTransitionScope
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.UserAvatar
+import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.DefaultAvatarSize
+import com.flixclusive.core.presentation.mobile.components.getUserBackgroundPalette
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
@@ -69,8 +63,8 @@ private fun getAvatarSize(): Dp {
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun ClickedProfileScreen(
-    clickedProfile: User,
-    isLoading: MutableState<Boolean>,
+    user: User,
+    isLoading: Boolean,
     onConfirm: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -78,12 +72,12 @@ internal fun ClickedProfileScreen(
     val animatedVisibilityScope = getLocalAnimatedVisibilityScope()
 
     BackHandler(
-        enabled = !isLoading.value,
+        enabled = !isLoading,
         onBack = onBack
     )
 
     val surface = MaterialTheme.colorScheme.surface
-    val palette = getUserBackgroundPalette(user = clickedProfile)
+    val palette = getUserBackgroundPalette(avatar = user.image)
 
     val dominantSwatch = palette.dominantSwatch
     val lightVibrantSwatch = palette.darkVibrantSwatch
@@ -108,7 +102,7 @@ internal fun ClickedProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .noIndicationClickable {
-                    if (!isLoading.value) {
+                    if (!isLoading) {
                         onBack()
                     }
                 }
@@ -123,16 +117,16 @@ internal fun ClickedProfileScreen(
         ) {
             with(sharedTransitionScope) {
                 UserAvatar(
-                    user = clickedProfile,
+                    avatar = user.image,
                     shadowBlur = 30.dp,
                     modifier = Modifier
                         .size(getAvatarSize())
                         .sharedElement(
-                            state = rememberSharedContentState(key = "${clickedProfile.id}-pager"),
+                            state = rememberSharedContentState(key = "${user.id}-pager"),
                             animatedVisibilityScope = animatedVisibilityScope
                         )
                         .sharedElement(
-                            state = rememberSharedContentState(key = "${clickedProfile.id}-grid"),
+                            state = rememberSharedContentState(key = "${user.id}-grid"),
                             animatedVisibilityScope = animatedVisibilityScope
                         )
                         .noIndicationClickable {  }
@@ -157,27 +151,18 @@ internal fun ClickedProfileScreen(
 
             AnimatedContent(
                 label = "ContinueAndLoad",
-                targetState = isLoading.value
-            ) { isLoadingState ->
-                if (isLoadingState) {
-                    LaunchedEffect(true) {
-                        delay(2.seconds)
-                        onConfirm()
-                    }
-
+                targetState = isLoading
+            ) { state ->
+                if (state) {
                     GradientCircularProgressIndicator(
-                        size = getAdaptiveDp(
-                            40.dp, 60.dp, 60.dp
-                        ),
+                        size = getAdaptiveDp(40.dp, 60.dp, 60.dp),
                         colors = listOf(
                             MaterialTheme.colorScheme.primary,
                             MaterialTheme.colorScheme.tertiary,
                         )
                     )
                 } else {
-                    ContinueButton(
-                        onClick = { isLoading.value = true }
-                    )
+                    ContinueButton(onClick = onConfirm)
                 }
             }
         }
@@ -241,20 +226,20 @@ private fun ContinueButton(
     ) {
         Text(
             text = stringResource(LocaleR.string.continue_label),
-            style = getAdaptiveTextStyle(
-                medium = 20.sp,
-                style = TypographyStyle.Label,
-                style = AdaptiveTextStyle.Emphasized,
-            ).copy(
-                color = MaterialTheme.colorScheme.onSurface.copy(0.9F)
+            color = MaterialTheme.colorScheme.onSurface.copy(0.9F),
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(
+                compact = 14.sp,
+                medium = 20.sp
             )
         )
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
 @Composable
-private fun ClickedProfileScreenBasePreview(user: User = getDummyUser()) {
+private fun ClickedProfileScreenBasePreview(avatar: Int = 1) {
     FlixclusiveTheme {
         Surface(
             modifier = Modifier
@@ -264,8 +249,8 @@ private fun ClickedProfileScreenBasePreview(user: User = getDummyUser()) {
                 AnimatedVisibility(true) {
                     ProvideAnimatedVisibilityScope {
                         ClickedProfileScreen(
-                            clickedProfile = user,
-                            isLoading = remember { mutableStateOf(false) },
+                            user = remember { User(id = 1, name = "User", image = avatar) },
+                            isLoading = remember { mutableStateOf(false) }.value,
                             onConfirm = {},
                             onBack = {}
                         )
@@ -279,29 +264,29 @@ private fun ClickedProfileScreenBasePreview(user: User = getDummyUser()) {
 @Preview(device = "spec:parent=pixel_5,orientation=landscape")
 @Composable
 private fun ClickedProfileScreenCompactLandscapePreview() {
-    ClickedProfileScreenBasePreview(getDummyUser(image = 1))
+    ClickedProfileScreenBasePreview(avatar = 1)
 }
 
 @Preview(device = "spec:parent=medium_tablet,orientation=portrait")
 @Composable
 private fun ClickedProfileScreenMediumPortraitPreview() {
-    ClickedProfileScreenBasePreview(getDummyUser(image = 2))
+    ClickedProfileScreenBasePreview(avatar = 2)
 }
 
 @Preview(device = "spec:parent=medium_tablet,orientation=landscape")
 @Composable
 private fun ClickedProfileScreenMediumLandscapePreview() {
-    ClickedProfileScreenBasePreview(getDummyUser(image = 3))
+    ClickedProfileScreenBasePreview(avatar = 3)
 }
 
 @Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
 @Composable
 private fun ClickedProfileScreenExtendedPortraitPreview() {
-    ClickedProfileScreenBasePreview(getDummyUser(image = 4))
+    ClickedProfileScreenBasePreview(avatar = 4)
 }
 
 @Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
 @Composable
 private fun ClickedProfileScreenExtendedLandscapePreview() {
-    ClickedProfileScreenBasePreview(getDummyUser(image = 5))
+    ClickedProfileScreenBasePreview(avatar = 5)
 }

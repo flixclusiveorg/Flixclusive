@@ -4,7 +4,7 @@ import java.io.Serializable
 
 sealed class PinAction : Serializable {
     data class Verify(
-        val userPin: String,
+        val userPin: String?,
     ) : PinAction()
 
     object Setup : PinAction() {

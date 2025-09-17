@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -48,33 +49,31 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.database.entity.user.User
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.user.UserAvatar
-import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
-import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarShape
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveTextUnit
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideAnimatedVisibilityScope
-import com.flixclusive.core.ui.common.util.animation.AnimationUtil.ProvideSharedTransitionScope
-import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalAnimatedVisibilityScope
-import com.flixclusive.core.ui.common.util.animation.AnimationUtil.getLocalSharedTransitionScope
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideAnimatedVisibilityScope
+import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
+import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.getLocalAnimatedVisibilityScope
+import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.getLocalSharedTransitionScope
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.UserAvatar
+import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.AVATARS_IMAGE_COUNT
+import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.DefaultAvatarShape
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveTextUnit
 import com.flixclusive.feature.mobile.profiles.component.EditButton
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 private val DefaultAvatarGridSize = 90.dp
 
 private val CompactLabelSize = 12.sp
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun GridMode(
     listState: LazyGridState,
     profiles: List<User>,
-    onSelect: (User) -> Unit,
+    onHover: (User) -> Unit,
     onEdit: (User) -> Unit
 ) {
     val widthFraction = 0.8F
@@ -139,14 +138,15 @@ internal fun GridMode(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         UserAvatarWithEdit(
-                            modifier = Modifier.animateItem(),
+                            modifier = Modifier
+                                .animateItem(),
                             user = it,
                             isEditing = isEditing,
                             onSelect = {
                                 if (isEditing) {
                                     onEdit(it)
                                 } else {
-                                    onSelect(it)
+                                    onHover(it)
                                 }
                             },
                         )
@@ -198,8 +198,8 @@ internal fun GridMode(
 
 @Composable
 private fun UsernameTag(
-    modifier: Modifier = Modifier,
-    user: User
+    user: User,
+    modifier: Modifier = Modifier
 ) {
     val columnsSize = getAdaptiveDp(
         dp = DefaultAvatarGridSize,
@@ -207,6 +207,7 @@ private fun UsernameTag(
     )
 
     Column(
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(
             space = 3.dp,
             alignment = Alignment.CenterVertically
@@ -215,16 +216,12 @@ private fun UsernameTag(
     ) {
         Text(
             text = user.name,
-            style = getAdaptiveTextStyle(
-                compact = CompactLabelSize,
-                style = TypographyStyle.Label,
-                style = AdaptiveTextStyle.SemiEmphasized
-            ),
+            style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(compact = CompactLabelSize),
+            color = MaterialTheme.colorScheme.onSurface.copy(0.6f),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
-            modifier = modifier
-                .width(columnsSize)
+            modifier = Modifier.width(columnsSize)
         )
 
         if (user.pin != null) {
@@ -243,10 +240,10 @@ private fun UsernameTag(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun UserAvatarWithEdit(
-    modifier: Modifier = Modifier,
     user: User,
     isEditing: Boolean,
     onSelect: (User) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val sharedTransitionScope = getLocalSharedTransitionScope()
     val animatedVisibilityScope = getLocalAnimatedVisibilityScope()
@@ -259,7 +256,7 @@ private fun UserAvatarWithEdit(
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         with(sharedTransitionScope) {
             UserAvatar(
-                user = user,
+                avatar = user.image,
                 shadowBlur = 30.dp,
                 modifier = avatarModifier
                     .sharedElement(
@@ -299,6 +296,7 @@ private fun UserAvatarWithEdit(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview
 @Composable
 private fun GridModeBasePreview() {
@@ -309,7 +307,7 @@ private fun GridModeBasePreview() {
                     ProvideAnimatedVisibilityScope {
                         GridMode(
                             onEdit = {},
-                            onSelect = {},
+                            onHover = {},
                             listState = rememberLazyGridState(),
                             profiles = List(1) {
                                 User(

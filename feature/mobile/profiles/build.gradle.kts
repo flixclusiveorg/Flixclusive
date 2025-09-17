@@ -9,12 +9,18 @@ android {
 }
 
 dependencies {
-    // implementation(projects.core.ui.mobile)
-////    implementation(projects.data)
-//     implementation(projects.domain)
-//     implementation(projects.domain)
-//     implementation(projects.domain)
+    implementation(projects.coreCommon)
+    implementation(projects.coreDatabase)
+    implementation(projects.coreDrawables)
+    implementation(projects.coreNavigation)
+    implementation(projects.corePresentationCommon)
+    implementation(projects.corePresentationMobile)
+    implementation(projects.coreStrings)
+    implementation(projects.dataDatabase)
+    implementation(projects.dataProvider)
+    implementation(projects.domainProvider)
 
+    implementation(libs.stubs.model.provider)
     implementation(libs.compose.adaptive)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
@@ -22,4 +28,6 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.palette)
+
+    testImplementation(projects.coreTesting)
 }

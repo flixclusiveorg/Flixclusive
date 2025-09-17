@@ -393,7 +393,6 @@
     <string name="add_500ms_content_description">Add 500ms on subtitle delay</string>
     <string name="add_debug_prefix_settings_description">Automatically adds a \'-debug\' prefix to providers you\'re currently debugging or developing.\n\nChanges apply after restart.</string>
     <string name="add_to_watchlist_button">Add to watchlist button</string>
-    <string name="add_user_button_content_desc">Add a new user profile</string>
     <string name="added_to_watchlist_button">Added to watchlist button</string>
     <string name="animated_tag_content_desc">Animated Flixclusive tag</string>
     <string name="audio_and_subtitle_button_desc">An icon for available audio and subtitle for the player</string>
@@ -486,7 +485,6 @@
     <string name="video_buffer_size_label">The target size to always buffer. Setting this too high could cause device problems.</string>
     <string name="video_cache_size">Stream cache size</string>
     <string name="video_cache_size_label">The dedicated video cache for the player. Always limit the cache if you have limited storage space.</string>
-    <string name="view_type_button_content_desc">Change view type of list</string>
     <string name="volume_booster_desc">Adds an additional volume (dB) to the player. However, it might cause device to not play the audio properly.</string>
     <string name="warn_delete_items_format">You have %1$d item to delete.</string>
     <string name="warn_on_unsafe_install_description">Triggers an alert dialog when an unsafe Provider installation is detected. This is a recommended option, as Providers operate independently and are not monitored by the app.</string>
