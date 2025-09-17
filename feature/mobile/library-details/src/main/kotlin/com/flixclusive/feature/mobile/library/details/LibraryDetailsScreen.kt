@@ -139,6 +139,10 @@ internal fun LibraryDetailsScreen(
         derivedStateOf { selectedItems().size }
     }
 
+    val isListEmpty by remember {
+        derivedStateOf { items().isEmpty() }
+    }
+
     var showDeleteItemAlert by remember { mutableStateOf(false) }
     var showDeleteSelectionAlert by remember { mutableStateOf(false) }
 
@@ -146,22 +150,20 @@ internal fun LibraryDetailsScreen(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            val topBarState by remember {
-                derivedStateOf {
-                    if (uiState.isMultiSelecting) {
-                        LibraryTopBarState.Selecting
-                    } else if (uiState.isShowingSearchBar) {
-                        LibraryTopBarState.Searching
-                    } else {
-                        LibraryTopBarState.DefaultSubScreen
-                    }
+            val topBarState = remember(uiState.isMultiSelecting, uiState.isShowingSearchBar) {
+                if (uiState.isMultiSelecting) {
+                    LibraryTopBarState.Selecting
+                } else if (uiState.isShowingSearchBar) {
+                    LibraryTopBarState.Searching
+                } else {
+                    LibraryTopBarState.DefaultSubScreen
                 }
             }
 
             LibraryDetailsTopBar(
                 topBarState = topBarState,
                 scrollBehavior = scrollBehavior,
-                isListEmpty = items().isEmpty(),
+                isListEmpty = isListEmpty,
                 onGoBack = onGoBack,
                 selectCount = selectCount,
                 searchQuery = searchQuery,
@@ -170,26 +172,23 @@ internal fun LibraryDetailsScreen(
                 onRemoveSelection = { showDeleteSelectionAlert = true },
                 onUnselectAll = onUnselectAll,
                 title = {
-                    val title =
-                        if (topBarState == LibraryTopBarState.Selecting) {
-                            stringResource(LocaleR.string.count_selection_format, selectCount)
-                        } else {
-                            library.name
-                        }
+                    val title = if (topBarState == LibraryTopBarState.Selecting) {
+                        stringResource(LocaleR.string.count_selection_format, selectCount)
+                    } else {
+                        library.name
+                    }
 
                     Text(
                         text = title,
                         style = getTopBarHeadlinerTextStyle(),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
-                        modifier =
-                            Modifier.graphicsLayer {
-                                alpha =
-                                    when (topBarState) {
-                                        LibraryTopBarState.Selecting -> 1f
-                                        else -> TopTitleAlphaEasing.transform(scrollBehavior.state.collapsedFraction)
-                                    }
-                            },
+                        modifier = Modifier.graphicsLayer {
+                            alpha = when (topBarState) {
+                                LibraryTopBarState.Selecting -> 1f
+                                else -> TopTitleAlphaEasing.transform(scrollBehavior.state.collapsedFraction)
+                            }
+                        },
                     )
                 },
                 infoContent = {

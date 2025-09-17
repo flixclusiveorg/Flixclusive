@@ -6,6 +6,7 @@ import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.common.collections.SortUtils
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
@@ -83,23 +84,10 @@ internal class LibraryDetailsViewModel
             _uiState.map { it.isSortingAscending }.distinctUntilChanged(),
             getLibrary(),
         ) { filter, ascending, items ->
-            items.items
-                .sortedWith(
-                    compareBy<LibraryListItemWithMetadata>(
-                        ascending = ascending,
-                        selector = {
-                            when (filter) {
-                                LibrarySortFilter.Name -> it.metadata.title
-                                LibrarySortFilter.AddedAt -> it.item.addedAt.time
-                                LibraryDetailsFilters.Rating -> it.metadata.rating
-                                LibraryDetailsFilters.Year -> it.metadata.year
-                                else -> throw Error()
-                            }
-                        },
-                    ).let {
-                        if (ascending) it else it.reversed()
-                    },
-                ).toPersistentList()
+            items.sort(
+                filter = filter,
+                ascending = ascending,
+            )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
@@ -222,6 +210,25 @@ internal class LibraryDetailsViewModel
                     items.toWatchProgressLibraryList(context)
                 }
         }
+
+        private fun LibraryListWithItems.sort(
+            filter: LibrarySortFilter,
+            ascending: Boolean,
+        ) = this@sort.items
+            .sortedWith(
+                SortUtils.compareBy<LibraryListItemWithMetadata>(
+                    ascending = ascending,
+                    selector = {
+                        when (filter) {
+                            LibrarySortFilter.Name -> it.metadata.title
+                            LibrarySortFilter.AddedAt -> it.item.addedAt.time
+                            LibraryDetailsFilters.Rating -> it.metadata.rating
+                            LibraryDetailsFilters.Year -> it.metadata.year
+                            else -> throw Error()
+                        }
+                    },
+                ),
+            ).toPersistentList()
     }
 
 @Immutable
@@ -253,14 +260,3 @@ internal object LibraryDetailsFilters {
             Rating,
         )
 }
-
-private inline fun <T> compareBy(
-    ascending: Boolean,
-    crossinline selector: (T) -> Comparable<*>?,
-): Comparator<T> =
-    Comparator { a, b ->
-        when {
-            ascending -> compareValuesBy(a, b, selector)
-            else -> compareValuesBy(b, a, selector)
-        }
-    }
