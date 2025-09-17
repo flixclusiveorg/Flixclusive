@@ -14,7 +14,6 @@ import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
-import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.UiPreferences
@@ -265,8 +264,8 @@ internal class FilmScreenViewModel
 
             if (tvShow !is TvShow) return
 
-            val episodeProgress = watchProgress.first() as? EpisodeProgressWithMetadata
-            val initialSelectedSeason = episodeProgress?.watchData?.seasonNumber ?: tvShow.totalSeasons
+            val episodeProgress = watchProgress.first() as? EpisodeProgress
+            val initialSelectedSeason = episodeProgress?.seasonNumber ?: tvShow.totalSeasons
 
             _uiState.update {
                 it.copy(selectedSeason = initialSelectedSeason)
