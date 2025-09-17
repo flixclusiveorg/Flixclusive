@@ -21,8 +21,12 @@ interface UpdateProviderUseCase {
      * @param providers The list of providers to update.
      * */
     suspend operator fun invoke(providers: List<ProviderMetadata>): ProviderUpdateResult
-}
 
+    companion object {
+        const val NOTIFICATION_ID = "provider_update_notification"
+        const val NOTIFICATION_NAME = "Flixclusive Provider Updates"
+    }
+}
 
 /**
  * Represents a partial update operation where some providers were successfully updated,

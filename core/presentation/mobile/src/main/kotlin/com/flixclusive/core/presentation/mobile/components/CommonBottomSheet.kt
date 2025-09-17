@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 
 /**
  * A common bottom sheet component that can be reused across the app.
@@ -37,7 +38,7 @@ fun CommonBottomSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     sheetState: SheetState = rememberModalBottomSheetState(),
-    sheetMaxWidth: Dp = BottomSheetDefaults.SheetMaxWidth,
+    sheetMaxWidth: Dp = getAdaptiveDp(BottomSheetDefaults.SheetMaxWidth, 80.dp),
     shape: Shape = MaterialTheme.shapes.small.copy(
         bottomEnd = CornerSize(0.dp),
         bottomStart = CornerSize(0.dp),
@@ -90,7 +91,7 @@ fun CommonDragHandle(
 
 @Preview
 @Composable
-private fun CommonBottomSheetPreview() {
+private fun CommonBottomSheetBasePreview() {
     FlixclusiveTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -101,4 +102,34 @@ private fun CommonBottomSheetPreview() {
             }
         }
     }
+}
+
+@Preview(device = "spec:parent=pixel_5,orientation=landscape")
+@Composable
+private fun CommonBottomSheetCompactLandscapePreview() {
+    CommonBottomSheetBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=portrait")
+@Composable
+private fun CommonBottomSheetMediumPortraitPreview() {
+    CommonBottomSheetBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=landscape")
+@Composable
+private fun CommonBottomSheetMediumLandscapePreview() {
+    CommonBottomSheetBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
+@Composable
+private fun CommonBottomSheetExtendedPortraitPreview() {
+    CommonBottomSheetBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
+@Composable
+private fun CommonBottomSheetExtendedLandscapePreview() {
+    CommonBottomSheetBasePreview()
 }

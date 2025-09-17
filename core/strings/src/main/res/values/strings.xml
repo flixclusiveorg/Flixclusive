@@ -346,7 +346,7 @@
     <string name="coming_soon_feature">This feature is coming soon!</string>
     <string name="copied_link">Link has been copied</string>
     <string name="copied_to_clipboard">Copied to clipboard</string>
-    <string name="copy_stack_trace_message">You could open a github issue and paste this stack trace.</string>
+    <string name="copy_stack_trace_message">You can open an issue on GitHub with this stack trace.</string>
     <string name="default_description_msg">No description given.</string>
     <string name="default_update_info_message">No additional update information provided.</string>
     <string name="download">Download</string>

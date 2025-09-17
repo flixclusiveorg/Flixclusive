@@ -11,6 +11,7 @@ android {
 dependencies {
     implementation(projects.coreCommon)
     implementation(projects.coreDatabase)
+    implementation(projects.coreDatastore)
     implementation(projects.coreDrawables)
     implementation(projects.coreNavigation)
     implementation(projects.corePresentationCommon)
@@ -20,7 +21,9 @@ dependencies {
     implementation(projects.dataProvider)
     implementation(projects.domainProvider)
 
+    implementation(libs.stubs.util)
     implementation(libs.stubs.model.provider)
+    implementation(libs.coil.compose)
     implementation(libs.compose.adaptive)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
