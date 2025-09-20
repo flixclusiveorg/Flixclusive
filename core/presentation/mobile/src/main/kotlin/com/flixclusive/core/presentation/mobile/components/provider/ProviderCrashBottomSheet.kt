@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.profiles
+package com.flixclusive.core.presentation.mobile.components.provider
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -42,9 +43,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.common.provider.ProviderWithThrowable
+import com.flixclusive.core.common.provider.extensions.toOwnerAndRepository
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.R
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.CommonBottomSheet
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
@@ -54,15 +58,15 @@ import com.flixclusive.core.presentation.mobile.extensions.isExpanded
 import com.flixclusive.core.presentation.mobile.extensions.isMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
-import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
-import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.drawables.R as UiCommonR
 
 @Composable
-internal fun ProviderCrashBottomSheet(
+fun ProviderCrashBottomSheet(
     isLoading: Boolean,
-    errors: Collection<LoadProviderResult.Failure>,
+    errors: List<ProviderWithThrowable>,
     onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val windowWidthSizeClass = windowSizeClass.windowWidthSizeClass
@@ -76,16 +80,19 @@ internal fun ProviderCrashBottomSheet(
     }
 
     val onDismiss by rememberUpdatedState(onDismissRequest)
-    var detailedCrashLog by remember { mutableStateOf<LoadProviderResult.Failure?>(null) }
+    var detailedCrashLog by remember { mutableStateOf<ProviderWithThrowable?>(null) }
 
     if (detailedCrashLog != null) {
+        val (provider, error) = detailedCrashLog!!
+
         ProviderCrashDialog(
-            error = detailedCrashLog!!,
+            provider = provider,
+            error = error,
             onDismissRequest = { detailedCrashLog = null },
         )
     }
 
-    CommonBottomSheet(onDismissRequest = onDismiss) {
+    CommonBottomSheet(onDismissRequest = onDismiss, modifier = modifier) {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(maxWidth),
             horizontalArrangement = Arrangement.spacedBy(20.dp),
@@ -97,17 +104,16 @@ internal fun ProviderCrashBottomSheet(
                 )
             }
 
-            items(
-                errors.size,
-                key = { index -> errors.elementAt(index).provider.id },
-            ) { i ->
-                val error = errors.elementAt(i)
-
+            itemsIndexed(
+                errors,
+                key = { _, (provider) -> provider.id },
+            ) { i, error ->
                 Column(
                     modifier = Modifier.animateItem(),
                 ) {
                     CrashItem(
-                        error = error,
+                        provider = error.provider,
+                        error = error.throwable,
                         onClick = { detailedCrashLog = error },
                     )
 
@@ -169,7 +175,8 @@ private fun LabelHeader(modifier: Modifier = Modifier) {
 
 @Composable
 private fun CrashItem(
-    error: LoadProviderResult.Failure,
+    provider: ProviderMetadata,
+    error: Throwable,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -179,28 +186,28 @@ private fun CrashItem(
             .clip(MaterialTheme.shapes.extraSmall)
             .clickable { onClick() },
     ) {
-        CrashItemTopContent(error = error)
+        CrashItemTopContent(provider = provider)
 
-        StackTracePreview(error = remember { error.error.stackTraceToString() })
+        StackTracePreview(error = remember { error.stackTraceToString() })
     }
 }
 
 @Composable
 internal fun CrashItemTopContent(
-    error: LoadProviderResult.Failure,
+    provider: ProviderMetadata,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
 
-    val providerLogo = remember(error.provider) {
-        context.buildImageRequest(error.provider.iconUrl)
+    val providerLogo = remember(provider) {
+        context.buildImageRequest(provider.iconUrl)
     }
 
-    val repository = remember(error.provider) {
-        val pair = extractGithubInfoFromLink(error.provider.repositoryUrl)
+    val repository = remember(provider) {
+        val pair = provider.repositoryUrl.toOwnerAndRepository()
         requireNotNull(pair) {
-            "Could not extract github info from link: ${error.provider.repositoryUrl}"
+            "Could not extract github info from link: ${provider.repositoryUrl}"
         }
 
         val (username, repository) = pair
@@ -208,7 +215,7 @@ internal fun CrashItemTopContent(
         "$username/$repository"
     }
 
-    val version = "${error.provider.versionName} (${error.provider.versionCode}) - ${error.provider.id}"
+    val version = "${provider.versionName} (${provider.versionCode}) - ${provider.id}"
 
     Row(
         modifier = modifier,
@@ -218,14 +225,14 @@ internal fun CrashItemTopContent(
         ImageWithSmallPlaceholder(
             model = providerLogo,
             placeholder = painterResource(UiCommonR.drawable.provider_logo),
-            contentDescription = error.provider.name,
+            contentDescription = provider.name,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier.size(65.dp),
         )
 
         Column {
             Text(
-                text = error.provider.name,
+                text = provider.name,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -240,7 +247,7 @@ internal fun CrashItemTopContent(
                 color = LocalContentColor.current.copy(0.6f),
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.small)
-                    .clickable { uriHandler.openUri(error.provider.repositoryUrl) }
+                    .clickable { uriHandler.openUri(provider.repositoryUrl) }
                     .padding(vertical = 1.dp),
             )
 
@@ -335,13 +342,15 @@ private fun StackTracePreview(
 private fun ProviderCrashBottomSheetBasePreview() {
     val errors = remember {
         List(10) {
-            LoadProviderResult.Failure(
-                provider = DummyDataForPreview.getDummyProviderMetadata(
-                    id = it.toString(),
-                    name = "Provider $it",
-                ),
-                error = NullPointerException("This is a sample error message for provider $it."),
-                filePath = "SampleFilePath.kt:42",
+            val provider = DummyDataForPreview.getDummyProviderMetadata(
+                id = it.toString(),
+                name = "Provider $it",
+            )
+            val error = NullPointerException("This is a sample error message for provider $it.")
+
+            ProviderWithThrowable(
+                provider = provider,
+                throwable = error,
             )
         }
     }

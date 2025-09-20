@@ -253,14 +253,15 @@ class UserProfilesViewModelTest {
     fun `loadProviders should handle failed provider initialization`() =
         runTest(testDispatcher) {
             val error = RuntimeException("Provider failed to load")
-            val failureResult = LoadProviderResult.Failure(
-                provider = testProvider1,
-                filePath = "/test/path",
-                error = error,
-            )
 
             every { initializeProviders() } returns flow {
-                emit(failureResult)
+                emit(
+                    LoadProviderResult.Failure(
+                        provider = testProvider1,
+                        filePath = "/test/path",
+                        error = error,
+                    )
+                )
             }
             coEvery { updateProvider(any<List<ProviderMetadata>>()) } returns ProviderUpdateResult(
                 success = emptyList(),
@@ -279,7 +280,7 @@ class UserProfilesViewModelTest {
                     get { isLoggedIn }.isTrue()
                     get { isLoading }.isFalse()
                     get { errors }.hasSize(1)
-                    get { errors[testProvider1.id] }.isEqualTo(failureResult)
+                    get { errors[testProvider1.id]?.throwable }.isEqualTo(error)
                 }
             }
         }
@@ -361,13 +362,7 @@ class UserProfilesViewModelTest {
                 val finalState = awaitItem()
                 expectThat(finalState) {
                     get { errors }.hasSize(1)
-                    get { errors[testProvider1.id] }.isEqualTo(
-                        LoadProviderResult.Failure(
-                            provider = testProvider1,
-                            filePath = "",
-                            error = updateError,
-                        ),
-                    )
+                    get { errors[testProvider1.id]?.throwable }.isEqualTo(updateError)
                 }
             }
         }
@@ -540,7 +535,7 @@ class UserProfilesViewModelTest {
                     get { isLoggedIn }.isTrue()
                     get { isLoading }.isFalse()
                     get { errors }.hasSize(1)
-                    get { errors[testProvider2.id]?.error }.isEqualTo(error)
+                    get { errors[testProvider2.id]?.throwable }.isEqualTo(error)
                 }
             }
         }

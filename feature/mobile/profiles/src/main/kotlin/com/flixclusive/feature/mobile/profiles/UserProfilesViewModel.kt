@@ -7,6 +7,7 @@ import androidx.core.app.NotificationCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
@@ -102,7 +103,10 @@ internal class UserProfilesViewModel
                             providers += result.provider
 
                             _uiState.update { state ->
-                                val pair = result.provider.id to result
+                                val pair = result.provider.id to ProviderWithThrowable(
+                                    provider = result.provider,
+                                    throwable = result.error,
+                                )
 
                                 state.copy(errors = state.errors + pair)
                             }
@@ -146,10 +150,9 @@ internal class UserProfilesViewModel
 
                 // Add providers that failed to update to the errors list in the ui state
                 results.failed.forEach { (provider, throwable) ->
-                    val pair = provider.id to LoadProviderResult.Failure(
+                    val pair = provider.id to ProviderWithThrowable(
                         provider = provider,
-                        filePath = "",
-                        error = throwable ?: Error("Failed to update provider"),
+                        throwable = throwable ?: Error("Failed to update provider"),
                     )
 
                     _uiState.update { state ->
@@ -210,5 +213,5 @@ internal data class ProfilesScreenUiState(
     val isLoggedIn: Boolean = false,
     val isLoading: Boolean = false,
     val focusedProfile: User? = null,
-    val errors: Map<String, LoadProviderResult.Failure> = emptyMap(),
+    val errors: Map<String, ProviderWithThrowable> = emptyMap(),
 )

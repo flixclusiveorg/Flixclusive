@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.profiles
+package com.flixclusive.core.presentation.mobile.components.provider
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,20 +32,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.R
 import com.flixclusive.core.presentation.mobile.components.dialog.CommonAlertDialog
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
-import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
+import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun ProviderCrashDialog(
-    error: LoadProviderResult.Failure,
+    provider: ProviderMetadata,
+    error: Throwable,
     onDismissRequest: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
 
-    val stackTrace = remember { error.error.stackTraceToString() }
+    val stackTrace = remember { error.stackTraceToString() }
 
     CommonAlertDialog(
         onDismiss = onDismissRequest,
@@ -59,7 +61,7 @@ internal fun ProviderCrashDialog(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 CommonButton(
-                    onClick = { uriHandler.openUri(error.provider.repositoryUrl + "/issues/new") },
+                    onClick = { uriHandler.openUri(provider.repositoryUrl + "/issues/new") },
                     label = stringResource(R.string.report),
                     containerColor = MaterialTheme.colorScheme.error,
                     contentColor = MaterialTheme.colorScheme.onError,
@@ -75,7 +77,7 @@ internal fun ProviderCrashDialog(
         },
     ) {
         CrashItemTopContent(
-            error = error,
+            provider = provider,
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -143,7 +145,7 @@ private fun RowScope.CommonButton(
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -156,11 +158,8 @@ private fun ProviderCrashDialogPreview() {
             modifier = Modifier.fillMaxSize(),
         ) {
             ProviderCrashDialog(
-                error = LoadProviderResult.Failure(
-                    provider = DummyDataForPreview.getDummyProviderMetadata(),
-                    error = NullPointerException("This is a sample error message for provider."),
-                    filePath = "SampleFilePath.kt:42",
-                ),
+                provider = DummyDataForPreview.getDummyProviderMetadata(),
+                error = NullPointerException("This is a sample error message for provider."),
                 onDismissRequest = {},
             )
         }

@@ -75,6 +75,7 @@ import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.Provid
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
@@ -283,7 +284,7 @@ private fun UserProfilesScreenContent(
     if (uiState.errors.isNotEmpty()) {
         val listOfErrors by remember {
             derivedStateOf {
-                uiState.errors.values
+                uiState.errors.values.toList()
             }
         }
 

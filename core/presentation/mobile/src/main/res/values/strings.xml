@@ -7,4 +7,7 @@
     <string name="expand_stack_trace">Expand stack trace</string>
     <string name="collapse_stack_trace">Collapse stack trace</string>
     <string name="type_filter">Types</string>
+    <string name="report">Report</string>
+    <string name="provider_failure">Provider failure</string>
+    <string name="provider_failure_sub_text">The following provider(s) below have failed to load. It would be best to report these issues to their respective authors.</string>
 </resources>
