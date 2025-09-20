@@ -26,27 +26,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.common.provider.ProviderInstallationStatus
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.strings.R as LocaleR
-
-enum class ProviderInstallationStatus {
-    NotInstalled,
-    Installing,
-    Installed,
-    Outdated,
-    ;
-
-    val isNotInstalled: Boolean
-        get() = this == NotInstalled
-    val isInstalled: Boolean
-        get() = this == Installed
-    val isOutdated: Boolean
-        get() = this == Outdated
-    val isInstalling: Boolean
-        get() = this == Installing
-}
 
 object ProviderCardDefaults {
     @Suppress("ktlint:standard:property-naming")
