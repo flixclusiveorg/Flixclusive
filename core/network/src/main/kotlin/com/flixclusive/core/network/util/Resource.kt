@@ -89,10 +89,15 @@ sealed class Resource<out T>(
     data object Loading : Resource<Nothing>(isLoading = true)
 
     fun getOrThrow(): T {
+        val cause = when (error) {
+            is UiText.StringValue -> IllegalStateException(error.str)
+            else -> null
+        }
+
         return data ?: throw ExceptionWithUiText(
             uiText = error,
-            cause = IllegalStateException("Resource data is null"),
-            message = "Resource data is null"
+            cause = cause,
+            message = cause?.localizedMessage
         )
     }
 }
