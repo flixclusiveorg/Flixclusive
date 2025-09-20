@@ -46,11 +46,12 @@ class UnloadProviderUseCaseImplTest {
     private lateinit var tempDirectory: File
     private val testDispatcher = StandardTestDispatcher()
 
+    private val buildUrlPrefix = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds"
     private val testProviderMetadata = ProviderTestDefaults.getProviderMetadata(
-        buildUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/BasicDummyProvider.flx",
+        buildUrl = "$buildUrlPrefix/BasicDummyProvider.flx",
     )
     private val webViewProviderMetadata = ProviderTestDefaults.getWebViewProviderMetadata(
-        buildUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/BasicDummyWebViewProvider.flx",
+        buildUrl = "$buildUrlPrefix/BasicDummyWebViewProvider.flx",
     )
 
     @Before
@@ -106,9 +107,11 @@ class UnloadProviderUseCaseImplTest {
             setupProviderPreferences(listOf(providerFromPrefs))
             every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
 
-            val result = unloadProviderUseCase(testProviderMetadata)
+            val result = runCatching {
+                unloadProviderUseCase(testProviderMetadata)
+            }
 
-            expectThat(result).isTrue()
+            expectThat(result.isSuccess).isTrue()
             verify { mockProvider.onUnload(context) }
             coVerify { mockProviderRepository.remove(testProviderMetadata.id) }
             coVerify { mockProviderApiRepository.removeApi(testProviderMetadata.id) }
@@ -128,12 +131,14 @@ class UnloadProviderUseCaseImplTest {
             setupProviderPreferences(listOf(providerFromPrefs))
             every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
 
-            val result = unloadProviderUseCase(
-                metadata = testProviderMetadata,
-                unloadFromPrefs = false,
-            )
+            val result = runCatching {
+                unloadProviderUseCase(
+                    metadata = testProviderMetadata,
+                    unloadFromPrefs = false,
+                )
+            }
 
-            expectThat(result).isTrue()
+            expectThat(result.isSuccess).isTrue()
             verify { mockProvider.onUnload(context) }
             coVerify { mockProviderRepository.remove(testProviderMetadata.id) }
             coVerify { mockProviderApiRepository.removeApi(testProviderMetadata.id) }
@@ -150,7 +155,7 @@ class UnloadProviderUseCaseImplTest {
             }
 
             expectThat(result.isFailure).isTrue()
-            expectThat(result.exceptionOrNull()).isA<IllegalArgumentException>()
+            expectThat(result.exceptionOrNull()).isA<IllegalStateException>()
         }
 
     @Test
@@ -166,9 +171,11 @@ class UnloadProviderUseCaseImplTest {
             setupProviderPreferences(listOf(providerFromPrefs))
             every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
 
-            val result = unloadProviderUseCase(testProviderMetadata)
+            val result = runCatching {
+                unloadProviderUseCase(testProviderMetadata)
+            }
 
-            expectThat(result).isFalse()
+            expectThat(result.isFailure).isTrue()
             coVerify(exactly = 0) { mockProviderRepository.remove(any()) }
             coVerify(exactly = 0) { mockProviderApiRepository.removeApi(any()) }
         }
@@ -186,9 +193,11 @@ class UnloadProviderUseCaseImplTest {
             setupProviderPreferences(listOf(providerFromPrefs))
             every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns null
 
-            val result = unloadProviderUseCase(testProviderMetadata)
+            val result = kotlin.runCatching {
+                unloadProviderUseCase(testProviderMetadata)
+            }
 
-            expectThat(result).isFalse()
+            expectThat(result.isFailure).isTrue()
             coVerify(exactly = 0) { mockProviderRepository.remove(any()) }
             coVerify(exactly = 0) { mockProviderApiRepository.removeApi(any()) }
         }
@@ -224,11 +233,11 @@ class UnloadProviderUseCaseImplTest {
             val metadata1 = testProviderMetadata.copy(id = "provider1", name = "Provider 1")
             val metadata2 = webViewProviderMetadata.copy(id = "provider2", name = "Provider 2")
 
-            val result1 = unloadProviderUseCase(metadata1)
-            val result2 = unloadProviderUseCase(metadata2)
+            val result1 = runCatching { unloadProviderUseCase(metadata1) }
+            val result2 = runCatching { unloadProviderUseCase(metadata2) }
 
-            expectThat(result1).isTrue()
-            expectThat(result2).isTrue()
+            expectThat(result1.isSuccess).isTrue()
+            expectThat(result2.isSuccess).isTrue()
 
             verify { mockProvider1.onUnload(context) }
             verify { mockProvider2.onUnload(context) }
@@ -263,9 +272,9 @@ class UnloadProviderUseCaseImplTest {
             setupProviderPreferences(listOf(providerFromPrefs))
             every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
 
-            val result = unloadProviderUseCase(testProviderMetadata)
+            val result = runCatching { unloadProviderUseCase(testProviderMetadata) }
 
-            expectThat(result).isTrue()
+            expectThat(result.isSuccess).isTrue()
             expectThat(providerFile.exists()).isFalse()
             expectThat(updaterFile.exists()).isFalse()
             expectThat(providerDir.exists()).isFalse()
@@ -300,9 +309,9 @@ class UnloadProviderUseCaseImplTest {
             setupProviderPreferences(listOf(providerFromPrefs))
             every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
 
-            val result = unloadProviderUseCase(testProviderMetadata)
+            val result = runCatching { unloadProviderUseCase(testProviderMetadata) }
 
-            expectThat(result).isTrue()
+            expectThat(result.isSuccess).isTrue()
             expectThat(providerFile.exists()).isFalse()
             expectThat(updaterFile.exists()).isTrue()
             expectThat(otherFile.exists()).isTrue()
@@ -323,9 +332,9 @@ class UnloadProviderUseCaseImplTest {
             setupProviderPreferences(listOf(debugProviderFromPrefs))
             every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
 
-            val result = unloadProviderUseCase(testProviderMetadata)
+            val result = runCatching { unloadProviderUseCase(testProviderMetadata) }
 
-            expectThat(result).isTrue()
+            expectThat(result.isSuccess).isTrue()
             verify { mockProvider.onUnload(context) }
             coVerify { mockProviderRepository.remove(testProviderMetadata.id) }
             coVerify { mockProviderApiRepository.removeApi(testProviderMetadata.id) }
@@ -349,12 +358,11 @@ class UnloadProviderUseCaseImplTest {
             setupProviderPreferences(listOf(providerFromPrefs))
             every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProviderWithException
 
-            val result = unloadProviderUseCase(testProviderMetadata)
+            val result = runCatching { unloadProviderUseCase(testProviderMetadata) }
 
-            expectThat(result).isTrue()
+            expectThat(result.isFailure).isTrue()
+            expectThat(result.exceptionOrNull()?.cause).isA<RuntimeException>()
             verify { mockProviderWithException.onUnload(context) }
-            coVerify { mockProviderRepository.remove(testProviderMetadata.id) }
-            coVerify { mockProviderApiRepository.removeApi(testProviderMetadata.id) }
         }
 
     private fun setupProviderPreferences(providers: List<ProviderFromPreferences>) {

@@ -13,7 +13,7 @@ interface UpdateProviderUseCase {
      *
      * @return A boolean indicating whether the update was successful or not.
      * */
-    suspend operator fun invoke(provider: ProviderMetadata): Boolean
+    suspend operator fun invoke(provider: ProviderMetadata)
 
     /**
      * Updates the given list of providers to the latest version.

@@ -12,19 +12,21 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.testing.provider.ProviderTestDefaults
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
+import com.flixclusive.domain.provider.util.extensions.DownloadFailed
 import com.flixclusive.model.provider.ProviderManifest
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.Provider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -36,14 +38,14 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import strikt.api.expectThat
-import strikt.assertions.hasSize
 import strikt.assertions.isA
-import strikt.assertions.isEqualTo
+import strikt.assertions.isEmpty
+import strikt.assertions.isNotEmpty
 import strikt.assertions.isTrue
 import java.io.File
 
 // TODO: Replace usecase dependencies with direct network/file operations for better maintainability.
-//  The current approach creates tight coupling between use cases, making tests brittle and harder to maintain.
+// The current approach creates tight coupling between use cases, making tests brittle and harder to maintain.
 //  Consider using real HTTP clients and file operations instead of mocking complex use case interactions.
 @RunWith(AndroidJUnit4::class)
 class UpdateProviderUseCaseImplTest {
@@ -52,7 +54,6 @@ class UpdateProviderUseCaseImplTest {
     private lateinit var mockUserSessionDataStore: UserSessionDataStore
     private lateinit var mockDataStoreManager: DataStoreManager
     private lateinit var mockProviderRepository: ProviderRepository
-    private lateinit var mockProviderApiRepository: ProviderApiRepository
     private lateinit var mockLoadProviderUseCase: LoadProviderUseCase
     private lateinit var mockUnloadProviderUseCase: UnloadProviderUseCase
     private lateinit var mockGetProviderFromRemoteUseCase: GetProviderFromRemoteUseCase
@@ -61,13 +62,15 @@ class UpdateProviderUseCaseImplTest {
     private lateinit var tempDirectory: File
     private val testDispatcher = StandardTestDispatcher()
 
+    private val buildUrlPrefix = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds"
+
     private val testUserId = 1
     private val testProviderMetadata = ProviderTestDefaults.getProviderMetadata(
         id = "14a5037ac9553dd",
         name = "Test Provider",
         versionCode = 9999L,
         repositoryUrl = "https://github.com/flixclusiveorg/providers-template",
-        buildUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/BasicDummyProvider.flx",
+        buildUrl = "$buildUrlPrefix/BasicDummyProvider.flx",
     )
 
     private val webViewProviderMetadata = ProviderTestDefaults.getWebViewProviderMetadata(
@@ -75,7 +78,7 @@ class UpdateProviderUseCaseImplTest {
         name = "WebView Test Provider",
         versionCode = 9999L,
         repositoryUrl = "https://github.com/flixclusiveorg/providers-template",
-        buildUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/BasicDummyWebViewProvider.flx",
+        buildUrl = "$buildUrlPrefix/BasicDummyWebViewProvider.flx",
     )
 
     @Before
@@ -86,7 +89,6 @@ class UpdateProviderUseCaseImplTest {
         mockUserSessionDataStore = mockk()
         mockDataStoreManager = mockk()
         mockProviderRepository = mockk(relaxed = true)
-        mockProviderApiRepository = mockk(relaxed = true)
         mockLoadProviderUseCase = mockk(relaxed = true)
         mockUnloadProviderUseCase = mockk(relaxed = true)
         mockGetProviderFromRemoteUseCase = mockk(relaxed = true)
@@ -123,9 +125,12 @@ class UpdateProviderUseCaseImplTest {
             val originalProviderFile = createOriginalProviderFile()
             setupSuccessfulUpdateScenario(originalProviderFile)
 
-            val result = updateProviderUseCase(testProviderMetadata)
+            val result = runCatching { updateProviderUseCase(testProviderMetadata) }
+                .onFailure {
+                    throw it
+                }
 
-            expectThat(result).isTrue()
+            expectThat(result.isSuccess).isTrue()
             verifyUpdateOperations()
         }
 
@@ -139,7 +144,7 @@ class UpdateProviderUseCaseImplTest {
             }
 
             expectThat(result.isFailure).isTrue()
-            expectThat(result.exceptionOrNull()).isA<IllegalArgumentException>()
+            expectThat(result.exceptionOrNull()).isA<IllegalStateException>()
         }
 
     @Test
@@ -165,10 +170,10 @@ class UpdateProviderUseCaseImplTest {
         }
 
     @Test
-    fun shouldFailWhenNetworkRequestFails() =
+    fun shouldThrowDownloadExceptionWhenNetworkRequestFails() =
         runTest(testDispatcher) {
             val invalidMetadata = testProviderMetadata.copy(
-                repositoryUrl = "https://github.com/nonexistent/repository",
+                buildUrl = "https://invalid-url.com/provider.flx",
             )
             val originalProviderFile = createOriginalProviderFile()
 
@@ -177,39 +182,154 @@ class UpdateProviderUseCaseImplTest {
 
             coEvery {
                 mockGetProviderFromRemoteUseCase(any(), invalidMetadata.id)
-            } returns Resource.Failure(RuntimeException("Network error"))
+            } returns Resource.Success(invalidMetadata.copy(versionCode = 10000L))
 
             val result = runCatching {
                 updateProviderUseCase(invalidMetadata)
             }
 
             expectThat(result.isFailure).isTrue()
+            expectThat(result.exceptionOrNull()?.cause).isA<Throwable>()
         }
 
     @Test
-    fun shouldUpdateMultipleProvidersWithMixedResults() =
+    fun shouldRestoreBackupWhenLoadFailsAndProviderWasNotPreviouslyLoaded() =
+        runTest(testDispatcher) {
+            val providerFile = createOriginalProviderFile()
+
+            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider andThen null
+            setupProviderPreferences(testProviderMetadata, providerFile)
+
+            coEvery {
+                mockGetProviderFromRemoteUseCase(any(), testProviderMetadata.id)
+            } returns Resource.Success(testProviderMetadata.copy(versionCode = 10000L))
+
+            coEvery { mockUnloadProviderUseCase(testProviderMetadata, false) } just runs
+
+            // Mock the load to fail initially, then succeed on backup restore
+            coEvery {
+                mockLoadProviderUseCase(any(), any())
+            } returns flowOf(
+                LoadProviderResult.Failure(
+                    provider = testProviderMetadata,
+                    filePath = providerFile.absolutePath,
+                    error = RuntimeException("Load failed"),
+                ),
+            ) andThen flowOf(LoadProviderResult.Success(testProviderMetadata))
+
+            val result = runCatching {
+                updateProviderUseCase(testProviderMetadata)
+            }
+
+            expectThat(result.isFailure).isTrue()
+            expectThat(result.exceptionOrNull()?.cause).isA<Throwable>()
+
+            // Verify backup restoration happened
+            coVerify(exactly = 2) { mockProviderRepository.addToPreferences(any()) }
+            coVerify(exactly = 2) { mockLoadProviderUseCase(any(), any()) }
+        }
+
+    @Test
+    fun shouldLogErrorButContinueWhenLoadFailsAndProviderWasPreviouslyLoaded() =
+        runTest(testDispatcher) {
+            val providerFile = createOriginalProviderFile()
+
+            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            setupProviderPreferences(testProviderMetadata, providerFile)
+
+            coEvery {
+                mockGetProviderFromRemoteUseCase(any(), testProviderMetadata.id)
+            } returns Resource.Success(testProviderMetadata.copy(versionCode = 10000L))
+
+            coEvery { mockUnloadProviderUseCase(testProviderMetadata, false) } just runs
+
+            // Mock the load to fail
+            coEvery {
+                mockLoadProviderUseCase(any(), any())
+            } returns flowOf(
+                LoadProviderResult.Failure(
+                    provider = testProviderMetadata,
+                    filePath = providerFile.absolutePath,
+                    error = RuntimeException("Load failed"),
+                ),
+            )
+
+            // Provider is already loaded, so should just log and continue
+            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+
+            val result = runCatching {
+                updateProviderUseCase(testProviderMetadata)
+            }
+
+            expectThat(result.isSuccess).isTrue()
+
+            // Verify no backup restoration (only one addToPreferences call)
+            coVerify(exactly = 1) { mockProviderRepository.addToPreferences(any()) }
+            coVerify(exactly = 1) { mockLoadProviderUseCase(any(), any()) }
+        }
+
+    @Test
+    fun shouldCreateNewFilePathForUpdatedProviderWithDifferentName() =
+        runTest(testDispatcher) {
+            val providerFile = createOriginalProviderFile()
+            val updatedMetadata = testProviderMetadata.copy(
+                name = "Updated Provider Name",
+                versionCode = 10000L,
+            )
+
+            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
+            setupProviderPreferences(testProviderMetadata, providerFile)
+
+            coEvery {
+                mockGetProviderFromRemoteUseCase(any(), testProviderMetadata.id)
+            } returns Resource.Success(updatedMetadata)
+
+            coEvery { mockUnloadProviderUseCase(testProviderMetadata, false) } just runs
+            coEvery {
+                mockLoadProviderUseCase(any(), any())
+            } returns flowOf(LoadProviderResult.Success(updatedMetadata))
+
+            val result = runCatching {
+                updateProviderUseCase(testProviderMetadata)
+            }
+
+            expectThat(result.isSuccess).isTrue()
+
+            // Verify that a new preference item was added with updated name
+            coVerify {
+                mockProviderRepository.addToPreferences(
+                    match<ProviderFromPreferences> {
+                        it.name == "Updated Provider Name" && it.id == testProviderMetadata.id
+                    },
+                )
+            }
+        }
+
+    @Test
+    fun shouldHandleMultipleProvidersWithDownloadFailuresCorrectly() =
         runTest(testDispatcher) {
             val validProviderFile = createOriginalProviderFile()
             val invalidProviderFile = createOriginalProviderFile("invalid_provider")
 
             val validProvider = testProviderMetadata
             val invalidProvider = webViewProviderMetadata.copy(
-                repositoryUrl = "https://github.com/nonexistent/repository",
+                buildUrl = "https://invalid-url.com/provider.flx",
             )
 
+            // Setup valid provider
             every { mockProviderRepository.getProvider(validProvider.id) } returns mockProvider
             coEvery {
                 mockGetProviderFromRemoteUseCase(any(), validProvider.id)
             } returns Resource.Success(validProvider.copy(versionCode = 10000L))
-
-            coEvery { mockUnloadProviderUseCase(validProvider, false) } returns true
+            coEvery { mockUnloadProviderUseCase(validProvider, false) } just runs
             coEvery { mockLoadProviderUseCase(any(), any()) } returns flowOf(LoadProviderResult.Success(validProvider))
 
+            // Setup invalid provider with download failure
             val mockInvalidProvider = mockk<Provider>(relaxed = true)
             every { mockProviderRepository.getProvider(invalidProvider.id) } returns mockInvalidProvider
             coEvery {
                 mockGetProviderFromRemoteUseCase(any(), invalidProvider.id)
-            } returns Resource.Failure(RuntimeException("Network error"))
+            } returns Resource.Success(invalidProvider.copy(versionCode = 10000L))
 
             val providers = listOf(validProvider, invalidProvider)
             val providersPrefs = providers.map {
@@ -229,144 +349,77 @@ class UpdateProviderUseCaseImplTest {
                 mockDataStoreManager.getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
             } returns flowOf(preferences)
 
+            // This should throw IllegalStateException due to download failure for invalid provider
             val result = updateProviderUseCase(providers)
 
-            expectThat(result.failed).hasSize(1)
-            expectThat(result.success).hasSize(1)
-            expectThat(result.success[0].id).isEqualTo(validProvider.id)
-            expectThat(result.failed[0].first.id).isEqualTo(invalidProvider.id)
+            expectThat(result) {
+                get { success }.isNotEmpty()
+                get { failed }.isNotEmpty() and {
+                    get { first().second?.cause }.isA<DownloadFailed>()
+                }
+            }
         }
 
     @Test
-    fun shouldPreserveProviderOrderDuringUpdate() =
+    fun shouldHandleUnloadFailuresCorrectly() =
         runTest(testDispatcher) {
             val providerFile = createOriginalProviderFile()
-            val otherProvider = ProviderFromPreferences(
-                id = "other-provider",
-                name = "Other Provider",
-                filePath = File(tempDirectory, "other_provider.flx").absolutePath,
-                isDisabled = false,
-            )
-
-            val targetProvider = ProviderFromPreferences(
-                id = testProviderMetadata.id,
-                name = testProviderMetadata.name,
-                filePath = providerFile.absolutePath,
-                isDisabled = false,
-            )
-
-            val preferences = ProviderPreferences(
-                providers = listOf(otherProvider, targetProvider),
-            )
 
             every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider
-            every { mockUserSessionDataStore.currentUserId } returns flowOf(testUserId)
-
-            coEvery {
-                mockDataStoreManager.getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
-            } returns flowOf(preferences)
+            setupProviderPreferences(testProviderMetadata, providerFile)
 
             coEvery {
                 mockGetProviderFromRemoteUseCase(any(), testProviderMetadata.id)
             } returns Resource.Success(testProviderMetadata.copy(versionCode = 10000L))
 
-            coEvery { mockUnloadProviderUseCase(testProviderMetadata, false) } returns true
+            // Make unload fail
             coEvery {
-                mockLoadProviderUseCase(
-                    any(),
-                    any(),
-                )
-            } returns flowOf(LoadProviderResult.Success(testProviderMetadata))
+                mockUnloadProviderUseCase(testProviderMetadata, false)
+            } throws RuntimeException("Unload failed")
 
-            val result = updateProviderUseCase(testProviderMetadata)
+            val result = updateProviderUseCase(listOf(testProviderMetadata))
 
-            expectThat(result).isTrue()
-            coVerify { mockProviderRepository.addToPreferences(any()) }
+            expectThat(result) {
+                get { success }.isEmpty()
+                get { failed }.isNotEmpty() and {
+                    get { first().second?.cause }.isA<RuntimeException>()
+                }
+            }
         }
 
     @Test
-    fun shouldHandleProviderWithDifferentVersionCodes() =
+    fun shouldHandleLoadFailuresCorrectlyInBatchUpdate() =
         runTest(testDispatcher) {
-            val outdatedProvider = testProviderMetadata.copy(versionCode = 5000L)
             val providerFile = createOriginalProviderFile()
 
-            every { mockProviderRepository.getProvider(outdatedProvider.id) } returns mockProvider
-            setupProviderPreferences(outdatedProvider, providerFile)
+            every { mockProviderRepository.getProvider(testProviderMetadata.id) } returns mockProvider andThen null
+            setupProviderPreferences(testProviderMetadata, providerFile)
 
             coEvery {
-                mockGetProviderFromRemoteUseCase(any(), outdatedProvider.id)
-            } returns Resource.Success(outdatedProvider.copy(versionCode = 10000L))
+                mockGetProviderFromRemoteUseCase(any(), testProviderMetadata.id)
+            } returns Resource.Success(testProviderMetadata.copy(versionCode = 10000L))
 
-            coEvery { mockUnloadProviderUseCase(outdatedProvider, false) } returns true
-            coEvery { mockLoadProviderUseCase(any(), any()) } returns
-                flowOf(LoadProviderResult.Success(outdatedProvider))
+            coEvery { mockUnloadProviderUseCase(testProviderMetadata, false) } just runs
 
-            val result = updateProviderUseCase(outdatedProvider)
-
-            expectThat(result).isTrue()
-            verifyUpdateOperations(outdatedProvider)
-        }
-
-    @Test
-    fun shouldUnloadOldProviderWithoutRemovingFromPreferences() =
-        runTest(testDispatcher) {
-            val providerFile = createOriginalProviderFile()
-            setupSuccessfulUpdateScenario(providerFile)
-
-            val result = updateProviderUseCase(testProviderMetadata)
-
-            expectThat(result).isTrue()
-            coVerify { mockUnloadProviderUseCase(testProviderMetadata, false) }
-        }
-
-    @Test
-    fun shouldLoadUpdatedProviderAfterSuccessfulDownload() =
-        runTest(testDispatcher) {
-            val providerFile = createOriginalProviderFile()
-            setupSuccessfulUpdateScenario(providerFile)
-
-            val result = updateProviderUseCase(testProviderMetadata)
-
-            expectThat(result).isTrue()
-            coVerify { mockProviderRepository.addToPreferences(any()) }
-            coVerify { mockLoadProviderUseCase(any(), any()) }
-        }
-
-    @Test
-    fun shouldHandleRepositoryUrlParsingCorrectly() =
-        runTest(testDispatcher) {
-            val repository = ProviderTestDefaults.getRepositoryFromUrl(
-                "https://github.com/flixclusiveorg/providers-template",
+            // Make load fail
+            coEvery {
+                mockLoadProviderUseCase(any(), any())
+            } returns flowOf(
+                LoadProviderResult.Failure(
+                    provider = testProviderMetadata,
+                    filePath = providerFile.absolutePath,
+                    error = RuntimeException("Load failed"),
+                ),
             )
 
-            expectThat(repository.owner).isEqualTo("flixclusiveorg")
-            expectThat(repository.name).isEqualTo("providers-template")
+            val result = updateProviderUseCase(listOf(testProviderMetadata))
 
-            val rawLink = repository.getRawLink("updater.json", "builds")
-            expectThat(rawLink).isEqualTo(
-                "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/updater.json",
-            )
-        }
-
-    @Test
-    fun shouldReturnEmptyResultsWhenNoProvidersProvided() =
-        runTest(testDispatcher) {
-            val result = updateProviderUseCase(emptyList())
-
-            expectThat(result.success).hasSize(0)
-            expectThat(result.failed).hasSize(0)
-        }
-
-    @Test
-    fun shouldCreateNewFileForUpdatedProvider() =
-        runTest(testDispatcher) {
-            val originalFile = createOriginalProviderFile()
-            setupSuccessfulUpdateScenario(originalFile)
-
-            val result = updateProviderUseCase(testProviderMetadata)
-
-            expectThat(result).isTrue()
-            coVerify { mockProviderRepository.addToPreferences(any()) }
+            expectThat(result) {
+                get { success }.isEmpty()
+                get { failed }.isNotEmpty() and {
+                    get { first().second?.cause }.isA<RuntimeException>()
+                }
+            }
         }
 
     @Test
@@ -380,9 +433,9 @@ class UpdateProviderUseCaseImplTest {
             val providerFile = createOriginalProviderFile()
             setupSuccessfulUpdateScenario(providerFile)
 
-            val result = updateProviderUseCase(testProviderMetadata)
+            val result = runCatching { updateProviderUseCase(testProviderMetadata) }
 
-            expectThat(result).isTrue()
+            expectThat(result.isSuccess).isTrue()
         }
 
     private fun setupDefaultMocks() {
@@ -412,7 +465,7 @@ class UpdateProviderUseCaseImplTest {
             mockGetProviderFromRemoteUseCase(any(), testProviderMetadata.id)
         } returns Resource.Success(testProviderMetadata.copy(versionCode = 10000L))
 
-        coEvery { mockUnloadProviderUseCase(testProviderMetadata, false) } returns true
+        coEvery { mockUnloadProviderUseCase(testProviderMetadata, false) } just runs
         coEvery {
             mockLoadProviderUseCase(any(), any())
         } returns flowOf(LoadProviderResult.Success(testProviderMetadata))

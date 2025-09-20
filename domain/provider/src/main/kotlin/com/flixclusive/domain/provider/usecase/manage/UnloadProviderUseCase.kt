@@ -12,10 +12,10 @@ interface UnloadProviderUseCase {
      * @param metadata the metadata of the provider to unload.
      * @param unloadFromPrefs whether to remove the provider from preferences. Defaults to true.
      *
-     * @return true if the provider was successfully unloaded, false otherwise.
+     * @throws Throwable if the provider cannot be unloaded.
      */
     suspend operator fun invoke(
         metadata: ProviderMetadata,
         unloadFromPrefs: Boolean = true
-    ): Boolean
+    )
 }

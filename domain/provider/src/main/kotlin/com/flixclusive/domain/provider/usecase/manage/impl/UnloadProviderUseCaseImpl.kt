@@ -6,11 +6,10 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.util.rmrf
-import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.model.provider.ProviderMetadata
@@ -37,25 +36,34 @@ internal class UnloadProviderUseCaseImpl
         override suspend operator fun invoke(
             metadata: ProviderMetadata,
             unloadFromPrefs: Boolean,
-        ): Boolean {
+        ) {
             val providers = getProviderPrefs().providers
             val providerFromPreferences = providers.find { it.id == metadata.id }
 
-            requireNotNull(providerFromPreferences) {
-                "No such provider on your preferences: ${metadata.name}"
+            if (providerFromPreferences == null) {
+                error(context.getString(R.string.provider_not_found_on_prefs, metadata.name))
             }
 
             val provider = providerRepository.getProvider(metadata.id)
             val file = File(providerFromPreferences.filePath)
 
             if (provider == null || !file.exists()) {
-                errorLog("Provider [${metadata.name}] not found. Cannot be unloaded")
-                return false
+                error(context.getString(R.string.provider_not_found, metadata.name, metadata.id))
             }
 
             infoLog("Unloading provider: ${provider.name}")
-            safeCall("Exception while unloading provider with ID: ${provider.name}") {
+            try {
                 provider.onUnload(context)
+            } catch (e: Throwable) {
+                throw Throwable(
+                    cause = e,
+                    message = context.getString(
+                        R.string.unload_exception_message,
+                        provider.name,
+                        metadata.id,
+                        e.localizedMessage,
+                    ),
+                )
             }
 
             providerRepository.remove(id = metadata.id)
@@ -67,8 +75,6 @@ internal class UnloadProviderUseCaseImpl
             if (unloadFromPrefs) {
                 providerRepository.removeFromPreferences(id = metadata.id)
             }
-
-            return true
         }
 
         private fun deleteProviderRelatedFiles(file: File) {

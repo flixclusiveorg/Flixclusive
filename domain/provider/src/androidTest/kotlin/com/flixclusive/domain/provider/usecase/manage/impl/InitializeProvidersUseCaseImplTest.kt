@@ -68,7 +68,7 @@ class InitializeProvidersUseCaseImplTest {
             mockDataStoreManager.updateUserPrefs(
                 UserPreferences.PROVIDER_PREFS_KEY,
                 ProviderPreferences::class,
-                any()
+                any(),
             )
         } returns Unit
     }
@@ -106,7 +106,7 @@ class InitializeProvidersUseCaseImplTest {
             )
 
             val preferencesWithProvider = ProviderPreferences(
-                providers = listOf(providerFromPrefs)
+                providers = listOf(providerFromPrefs),
             )
 
             coEvery {
@@ -137,7 +137,7 @@ class InitializeProvidersUseCaseImplTest {
             )
 
             val preferencesWithProvider = ProviderPreferences(
-                providers = listOf(providerFromPrefs)
+                providers = listOf(providerFromPrefs),
             )
 
             coEvery {
@@ -198,7 +198,7 @@ class InitializeProvidersUseCaseImplTest {
             )
 
             val preferencesWithProviders = ProviderPreferences(
-                providers = listOf(provider1, provider2)
+                providers = listOf(provider1, provider2),
             )
 
             coEvery {
@@ -244,7 +244,7 @@ class InitializeProvidersUseCaseImplTest {
             )
 
             val preferencesWithProvider = ProviderPreferences(
-                providers = listOf(providerFromPrefs)
+                providers = listOf(providerFromPrefs),
             )
 
             coEvery {
@@ -254,7 +254,7 @@ class InitializeProvidersUseCaseImplTest {
             val failure = LoadProviderResult.Failure(
                 provider = testProviderMetadata,
                 filePath = dummyProviderFile.absolutePath,
-                error = RuntimeException("Test error")
+                error = RuntimeException("Test error"),
             )
 
             coEvery {
@@ -291,7 +291,7 @@ class InitializeProvidersUseCaseImplTest {
             // Create updater.json for debug provider using Kotlin serialization
             val debugMetadata = testProviderMetadata.copy(
                 id = testProviderMetadata.id,
-                name = testProviderMetadata.name
+                name = testProviderMetadata.name,
             )
 
             debugUpdaterFile.writeText(Json.encodeToString(listOf(debugMetadata)))
@@ -306,7 +306,7 @@ class InitializeProvidersUseCaseImplTest {
 
             val preferencesWithDebugProvider = ProviderPreferences(
                 providers = listOf(debugProvider),
-                shouldAddDebugPrefix = true
+                shouldAddDebugPrefix = true,
             )
 
             coEvery {
@@ -315,7 +315,7 @@ class InitializeProvidersUseCaseImplTest {
 
             val expectedDebugMetadata = debugMetadata.copy(
                 id = "${debugMetadata.id}-debug",
-                name = "${debugMetadata.name}-debug"
+                name = "${debugMetadata.name}-debug",
             )
 
             coEvery {
@@ -348,7 +348,7 @@ class InitializeProvidersUseCaseImplTest {
 
             val preferencesWithoutDebugPrefix = ProviderPreferences(
                 providers = listOf(debugProvider),
-                shouldAddDebugPrefix = false
+                shouldAddDebugPrefix = false,
             )
 
             coEvery {

@@ -53,4 +53,9 @@
     <string name="ptest_success_get_api">API has been loaded</string>
     <string name="ptest_success_items_count_found">%1$d items found</string>
     <string name="ptest_success_items_count_found_empty">Passed but no items found</string>
+    <string name="provider_not_found">Provider [%1$s (%2$s)] not found. Cannot be unloaded</string>
+    <string name="provider_not_found_on_prefs">No such provider on your preferences: %1$s</string>
+    <string name="unload_exception_message">An error occurred while unloading %1$s (%2$s): %3$s</string>
+    <string name="failed_to_download_provider">Failed to download provider: %1$s (%2$s)</string>
+    <string name="failed_to_load_provider">Failed to load provider %1$s (%2$s) after updating. Try reinstalling to see if it could fix the problem.</string>
 </resources>
