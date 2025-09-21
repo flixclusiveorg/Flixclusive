@@ -1,81 +1,87 @@
 package com.flixclusive.feature.mobile.provider.manage
 
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.core.datastore.util.asStateFlow
-import com.flixclusive.core.util.coroutines.AppDispatchers
-import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.data.provider.ProviderApiRepository
-import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.domain.provider.ProviderUnloaderUseCase
-import com.flixclusive.model.datastore.user.ProviderPreferences
-import com.flixclusive.model.datastore.user.UserOnBoarding
-import com.flixclusive.model.datastore.user.UserPreferences
+import com.flixclusive.core.datastore.model.user.ProviderPreferences
+import com.flixclusive.core.datastore.model.user.UserOnBoarding
+import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.data.provider.repository.ProviderApiRepository
+import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal data class ProviderError(
-    val providerId: String,
-    val error: Throwable,
-)
-
+@OptIn(FlowPreview::class)
 @HiltViewModel
 internal class ProviderManagerViewModel
     @Inject
     constructor(
-        private val providerUnloaderUseCase: ProviderUnloaderUseCase,
+        private val unloadProvider: UnloadProviderUseCase,
         private val dataStoreManager: DataStoreManager,
         private val providerRepository: ProviderRepository,
         private val providerApiRepository: ProviderApiRepository,
+        private val appDispatchers: AppDispatchers,
     ) : ViewModel() {
-        private val ioScope = AppDispatchers.IO.scope
         val providers = mutableStateListOf<ProviderMetadata>()
 
-        val providersChangesHandler =
-            ProvidersOperationsHandler(
-                repository = providerRepository,
-                providers = providers,
-            )
+        val providersChangesHandler = ProvidersOperationsHandler(
+            repository = providerRepository,
+            providers = providers,
+        )
 
         private var uninstallJob: Job? = null
         private var toggleJob: Job? = null
 
-        private val _error = MutableSharedFlow<ProviderError?>()
-        val error: SharedFlow<ProviderError?> = _error.asSharedFlow()
+        private val _uiState = MutableStateFlow(ProviderManageUiState())
+        val uiState = _uiState.asStateFlow()
 
-        var searchQuery by mutableStateOf("")
-            private set
+        private val _searchQuery = MutableStateFlow("")
+        val searchQuery = _searchQuery
+            .debounce(800)
+            .distinctUntilChanged()
+            .stateIn(
+                viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = _searchQuery.value,
+            )
 
-        val userOnBoardingPrefs =
-            dataStoreManager
-                .getUserPrefs<UserOnBoarding>(UserPreferences.USER_ON_BOARDING_PREFS_KEY)
-                .asStateFlow(viewModelScope)
+        val isFirstTimeOnProvidersScreen = dataStoreManager
+            .getUserPrefs(UserPreferences.USER_ON_BOARDING_PREFS_KEY, UserOnBoarding::class)
+            .map { it.isFirstTimeOnProvidersScreen }
+            .distinctUntilChanged()
+            .stateIn(
+                viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = false,
+            )
 
-        val providerPrefs =
-            dataStoreManager
-                .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
-                .map { it.providers.map { it.isDisabled } }
-                .distinctUntilChanged()
-                .stateIn(
-                    viewModelScope,
-                    started = SharingStarted.Lazily,
-                    initialValue = emptyList()
-                )
+        val providerToggles = dataStoreManager
+            .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+            .map { it.providers.fastMap { it.isDisabled } }
+            .distinctUntilChanged()
+            .stateIn(
+                viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptyList(),
+        )
 
         init {
             viewModelScope.launch {
@@ -87,29 +93,26 @@ internal class ProviderManagerViewModel
             }
         }
 
-        fun onSearchQueryChange(newQuery: String) {
-            searchQuery = newQuery
+        fun onQueryChange(newQuery: String) {
+        _searchQuery.value = newQuery
         }
 
-        fun onMove(
+        suspend fun onMove(
             fromIndex: Int,
             toIndex: Int,
         ) {
-            ioScope.launch {
-                providerRepository.moveProvider(fromIndex, toIndex)
-            }
+        providerRepository.moveProvider(fromIndex, toIndex)
         }
 
         fun toggleProvider(id: String) {
             if (toggleJob?.isActive == true) return
 
             toggleJob =
-                ioScope.launch {
+                appDispatchers.ioScope.launch {
                     providerRepository.toggleProvider(id = id)
-                    val isDisabled =
-                        providerRepository
-                            .getProviderFromPreferences(id = id)
-                            ?.isDisabled == true
+                    val isDisabled = providerRepository
+                        .getProviderFromPreferences(id = id)
+                        ?.isDisabled == true
 
                     if (isDisabled) {
                         providerApiRepository.removeApi(id)
@@ -118,13 +121,9 @@ internal class ProviderManagerViewModel
                             providerApiRepository.addApiFromId(id = id)
                         } catch (e: Throwable) {
                             providerRepository.toggleProvider(id = id)
-                            errorLog(e)
-                            _error.emit(
-                                ProviderError(
-                                    providerId = id,
-                                    error = e,
-                                ),
-                            )
+                            val metadata = providerRepository.getProviderMetadata(id)!!
+                            val error = ProviderWithThrowable(provider = metadata, throwable = e)
+                            _uiState.update { it.copy(error = error) }
                         }
                     }
                 }
@@ -133,17 +132,35 @@ internal class ProviderManagerViewModel
         fun uninstallProvider(metadata: ProviderMetadata) {
             if (uninstallJob?.isActive == true) return
 
-            uninstallJob =
-                ioScope.launch {
-                    providerUnloaderUseCase.unload(metadata)
-                }
-        }
-
-        suspend fun setFirstTimeOnProvidersScreen(state: Boolean) {
-            dataStoreManager.updateUserPrefs<UserOnBoarding>(UserPreferences.USER_ON_BOARDING_PREFS_KEY) {
-                it.copy(
-                    isFirstTimeOnProvidersScreen = state,
-                )
+            uninstallJob = appDispatchers.ioScope.launch {
+                unloadProvider(metadata)
             }
         }
+
+        fun setFirstTimeOnProvidersScreen(state: Boolean) {
+            appDispatchers.ioScope.launch {
+                dataStoreManager.updateUserPrefs(
+                    key = UserPreferences.USER_ON_BOARDING_PREFS_KEY,
+                    type = UserOnBoarding::class,
+                ) {
+                    it.copy(
+                        isFirstTimeOnProvidersScreen = state,
+                    )
+                }
+            }
+        }
+
+        fun onConsumeError() {
+            _uiState.update { it.copy(error = null) }
+        }
+
+        fun onToggleSearchBar(state: Boolean) {
+            _uiState.update { it.copy(isSearching = state) }
     }
+}
+
+@Immutable
+internal data class ProviderManageUiState(
+    val isSearching: Boolean = false,
+    val error: ProviderWithThrowable? = null,
+)

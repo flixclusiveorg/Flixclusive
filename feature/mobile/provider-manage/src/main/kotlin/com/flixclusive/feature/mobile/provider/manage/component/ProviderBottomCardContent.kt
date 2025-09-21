@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -18,6 +17,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -29,15 +29,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.util.getProviderStatusColor
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Status
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
-private fun getProviderStatusColor(status: Status)
-    = when (status) {
+@Stable
+private fun getProviderStatusColor(status: Status) =
+    when (status) {
         Status.Down -> Color(0xFFFF3030)
         Status.Maintenance -> Color(0xFFFFBF1B)
         Status.Beta -> Color(0xFF00C4FF)
@@ -53,9 +54,7 @@ internal fun ProviderBottomCardContent(
     toggleUsage: () -> Unit,
 ) {
     Row(
-        modifier =
-            Modifier
-                .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (providerMetadata.changelog != null) Arrangement.SpaceBetween else Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -64,27 +63,21 @@ internal fun ProviderBottomCardContent(
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier =
-                Modifier
-                    .weight(1F),
+            modifier = Modifier.weight(1F),
         ) {
             Box(
-                modifier =
-                    Modifier
-                        .background(color, CircleShape)
-                        .size(7.dp),
+                modifier = Modifier
+                    .background(color, CircleShape)
+                    .size(7.dp),
             )
 
             Text(
                 text = providerMetadata.status.toString(),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style =
-                    MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        color = color.copy(0.4F),
-                        fontSize = 11.sp,
-                    ),
+                fontWeight = FontWeight.Black,
+                color = color.copy(0.4F),
+                style = MaterialTheme.typography.labelSmall.asAdaptiveTextStyle(11.sp),
             )
         }
 
@@ -96,14 +89,13 @@ internal fun ProviderBottomCardContent(
                 onClick = unloadProvider,
                 modifier = Modifier.size(width = 80.dp, height = 25.dp),
                 contentPadding = PaddingValues(0.dp),
-                colors =
-                    ButtonDefaults.outlinedButtonColors(
-                        contentColor = LocalContentColor.current.copy(0.4F),
-                    ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = LocalContentColor.current.copy(0.4F),
+                ),
             ) {
                 Text(
                     text = stringResource(LocaleR.string.uninstall),
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
                 )
             }
 
@@ -112,36 +104,30 @@ internal fun ProviderBottomCardContent(
                 modifier = Modifier.size(width = 50.dp, height = 25.dp),
                 contentPadding = PaddingValues(0.dp),
             ) {
-                Icon(
+                AdaptiveIcon(
                     painter = painterResource(id = UiCommonR.drawable.provider_settings),
                     contentDescription = stringResource(id = LocaleR.string.provider_settings),
-                    modifier =
-                        Modifier
-                            .scale(0.8F),
+                    dp = 15.dp,
                 )
             }
 
             Switch(
                 checked = enabledProvider(),
                 enabled = providerMetadata.status != Status.Maintenance && providerMetadata.status != Status.Down,
-                colors =
-                    SwitchDefaults.colors(
-                        disabledCheckedThumbColor =
-                            MaterialTheme.colorScheme.surface
-                                .copy(1F)
-                                .compositeOver(MaterialTheme.colorScheme.surface),
-                        disabledCheckedTrackColor =
-                            MaterialTheme.colorScheme.onSurface
-                                .copy(0.12F)
-                                .compositeOver(MaterialTheme.colorScheme.surface),
-                    ),
-                onCheckedChange = {
-                    toggleUsage()
-                },
-                modifier =
-                    Modifier
-                        .scale(0.7F)
-                        .width(40.dp),
+                colors = SwitchDefaults.colors(
+                    disabledCheckedThumbColor =
+                        MaterialTheme.colorScheme.surface
+                            .copy(1F)
+                            .compositeOver(MaterialTheme.colorScheme.surface),
+                    disabledCheckedTrackColor =
+                        MaterialTheme.colorScheme.onSurface
+                            .copy(0.12F)
+                            .compositeOver(MaterialTheme.colorScheme.surface),
+                ),
+                onCheckedChange = { toggleUsage() },
+                modifier = Modifier
+                    .scale(0.7F)
+                    .width(40.dp),
             )
         }
     }

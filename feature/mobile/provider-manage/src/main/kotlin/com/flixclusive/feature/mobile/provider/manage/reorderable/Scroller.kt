@@ -52,8 +52,8 @@ internal class Scroller internal constructor(
 ) {
     companion object {
         // The maximum duration for a scroll animation in milliseconds.
-        private const val MaxScrollDuration = 100L
-        private const val ZeroScrollWaitDuration = 100L
+        private const val MAX_SCROLL_DURATION = 100L
+        private const val ZERO_SCROLL_WAIT_DURATION = 100L
     }
 
     internal enum class Direction {
@@ -126,12 +126,12 @@ internal class Scroller internal constructor(
 
             val maxScrollDistance = maxScrollDistanceProvider()
             if (maxScrollDistance <= 0f) {
-                delay(ZeroScrollWaitDuration)
+                delay(ZERO_SCROLL_WAIT_DURATION)
                 continue
             }
             val maxScrollDistanceDuration = maxScrollDistance / pixelPerMs
             val duration =
-                maxScrollDistanceDuration.toLong().coerceIn(1L, MaxScrollDuration)
+                maxScrollDistanceDuration.toLong().coerceIn(1L, MAX_SCROLL_DURATION)
             val scrollDistance =
                 maxScrollDistance * (duration / maxScrollDistanceDuration)
             val diff =

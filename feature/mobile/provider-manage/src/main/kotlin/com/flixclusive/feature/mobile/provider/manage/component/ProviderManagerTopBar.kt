@@ -38,20 +38,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarWithSearch
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,13 +79,7 @@ internal fun ProviderManagerTopBar(
             ) {
                 Text(
                     text = stringResource(id = LocaleR.string.providers),
-                    style =
-                    getAdaptiveTextStyle(
-                        style = AdaptiveTextStyle.Normal,
-                        style = TypographyStyle.Body,
-                    ).copy(fontWeight = FontWeight.SemiBold, fontSize = 20.sp),
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
+                    style = getTopBarHeadlinerTextStyle(),
                 )
 
                 TooltipBox(
@@ -98,7 +89,7 @@ internal fun ProviderManagerTopBar(
                             title = {
                                 Text(
                                     text = stringResource(id = LocaleR.string.understanding_providers),
-                                    style = LocalTextStyle.current.copy(fontSize = 18.sp),
+                                    style = LocalTextStyle.current.asAdaptiveTextStyle(18.sp),
                                 )
                             },
                             action = {
@@ -109,7 +100,10 @@ internal fun ProviderManagerTopBar(
                                         }
                                     },
                                 ) {
-                                    Text(stringResource(id = LocaleR.string.ok))
+                                    Text(
+                                        stringResource(id = LocaleR.string.ok),
+                                        style = LocalTextStyle.current.asAdaptiveTextStyle(),
+                                    )
                                 }
                             },
                         ) {
@@ -122,9 +116,9 @@ internal fun ProviderManagerTopBar(
                 ) {
                     Box(
                         modifier =
-                        Modifier.clickable {
-                            onNeedHelp()
-                        },
+                            Modifier.clickable {
+                                onNeedHelp()
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -199,7 +193,7 @@ private fun ProviderManagerTopBarPreview() {
                             text = "Item $i",
                             modifier = Modifier
                                 .minimumInteractiveComponentSize()
-                                .fillMaxWidth()
+                                .fillMaxWidth(),
                         )
                     }
                 }

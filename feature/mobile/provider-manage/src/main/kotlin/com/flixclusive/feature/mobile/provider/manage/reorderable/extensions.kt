@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package com.flixclusive.feature.mobile.provider.manage.reorderable
 
 import androidx.compose.foundation.gestures.Orientation

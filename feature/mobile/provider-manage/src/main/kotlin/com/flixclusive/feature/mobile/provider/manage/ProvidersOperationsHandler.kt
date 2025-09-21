@@ -1,10 +1,10 @@
 package com.flixclusive.feature.mobile.provider.manage
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.data.provider.util.CollectionsOperation
-import com.flixclusive.data.provider.util.CollectionsOperationHandler
-import com.flixclusive.model.datastore.user.ProviderFromPreferences
+import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
+import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.data.provider.util.collections.CollectionsOperation
+import com.flixclusive.data.provider.util.collections.CollectionsOperationHandler
 import com.flixclusive.model.provider.ProviderMetadata
 
 internal class ProvidersOperationsHandler(

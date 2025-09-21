@@ -9,12 +9,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderTopCardContent
+import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Status
 
@@ -42,26 +42,18 @@ internal fun InstalledProviderCard(
         onClick = onClick,
         shape = MaterialTheme.shapes.medium,
         interactionSource = interactionSource,
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-            ),
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(vertical = 3.dp)
-                .graphicsLayer {
-                    alpha = cardAlpha.value
-                },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(level = 2),
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 3.dp)
+            .graphicsLayer {
+                alpha = cardAlpha.value
+            },
     ) {
         Column(
-            modifier =
-                Modifier
-                    .padding(
-                        horizontal = 15.dp,
-                        vertical = 10.dp,
-                    ),
+            modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp),
         ) {
             ProviderTopCardContent(
                 isDraggable = isDraggable,

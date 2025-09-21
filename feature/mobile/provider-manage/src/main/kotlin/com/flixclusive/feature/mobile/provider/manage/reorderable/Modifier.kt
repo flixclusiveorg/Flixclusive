@@ -1,11 +1,8 @@
-@file:Suppress("ktlint:compose:modifier-composed-check")
-
 package com.flixclusive.feature.mobile.provider.manage.reorderable
 
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,12 +16,15 @@ import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.launch
 
+@Suppress("ktlint:compose:lambda-param-in-effect")
+@Composable
 internal fun Modifier.draggable(
     key1: Any?,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
-    onDragStarted: (Offset) -> Unit = { },
-    onDragStopped: () -> Unit = { },
+    dragGestureDetector: DragGestureDetector = DragGestureDetector.Press,
+    onDragStart: (Offset) -> Unit = {},
+    onDragStop: () -> Unit = {},
     onDrag: (change: PointerInputChange, dragAmount: Offset) -> Unit,
 ) = composed {
     val coroutineScope = rememberCoroutineScope()
@@ -41,7 +41,7 @@ internal fun Modifier.draggable(
                 }
 
                 if (dragStarted) {
-                    onDragStopped()
+                    onDragStop()
                 }
 
                 dragStarted = false
@@ -50,18 +50,21 @@ internal fun Modifier.draggable(
     }
 
     pointerInput(key1, enabled) {
-        if (enabled) {
-            detectDragGestures(
+        if (!enabled) {
+            return@pointerInput
+        }
+
+        with(dragGestureDetector) {
+            detect(
                 onDragStart = {
                     dragStarted = true
-                    dragInteractionStart =
-                        DragInteraction.Start().also {
-                            coroutineScope.launch {
-                                interactionSource?.emit(it)
-                            }
+                    dragInteractionStart = DragInteraction.Start().also {
+                        coroutineScope.launch {
+                            interactionSource?.emit(it)
                         }
+                    }
 
-                    onDragStarted(it)
+                    onDragStart(it)
                 },
                 onDragEnd = {
                     dragInteractionStart?.also {
@@ -71,7 +74,7 @@ internal fun Modifier.draggable(
                     }
 
                     if (dragStarted) {
-                        onDragStopped()
+                        onDragStop()
                     }
 
                     dragStarted = false
@@ -84,83 +87,7 @@ internal fun Modifier.draggable(
                     }
 
                     if (dragStarted) {
-                        onDragStopped()
-                    }
-
-                    dragStarted = false
-                },
-                onDrag = onDrag,
-            )
-        }
-    }
-}
-
-internal fun Modifier.longPressDraggable(
-    key1: Any?,
-    enabled: Boolean = true,
-    interactionSource: MutableInteractionSource? = null,
-    onDragStarted: (Offset) -> Unit = { },
-    onDragStopped: () -> Unit = { },
-    onDrag: (change: PointerInputChange, dragAmount: Offset) -> Unit,
-) = composed {
-    val coroutineScope = rememberCoroutineScope()
-    var dragInteractionStart by remember { mutableStateOf<DragInteraction.Start?>(null) }
-    var dragStarted by remember { mutableStateOf(false) }
-
-    DisposableEffect(key1) {
-        onDispose {
-            if (dragStarted) {
-                dragInteractionStart?.also {
-                    coroutineScope.launch {
-                        interactionSource?.emit(DragInteraction.Cancel(it))
-                    }
-                }
-
-                if (dragStarted) {
-                    onDragStopped()
-                }
-
-                dragStarted = false
-            }
-        }
-    }
-
-    pointerInput(key1, enabled) {
-        if (enabled) {
-            detectDragGesturesAfterLongPress(
-                onDragStart = {
-                    dragStarted = true
-                    dragInteractionStart =
-                        DragInteraction.Start().also {
-                            coroutineScope.launch {
-                                interactionSource?.emit(it)
-                            }
-                        }
-
-                    onDragStarted(it)
-                },
-                onDragEnd = {
-                    dragInteractionStart?.also {
-                        coroutineScope.launch {
-                            interactionSource?.emit(DragInteraction.Stop(it))
-                        }
-                    }
-
-                    if (dragStarted) {
-                        onDragStopped()
-                    }
-
-                    dragStarted = false
-                },
-                onDragCancel = {
-                    dragInteractionStart?.also {
-                        coroutineScope.launch {
-                            interactionSource?.emit(DragInteraction.Cancel(it))
-                        }
-                    }
-
-                    if (dragStarted) {
-                        onDragStopped()
+                        onDragStop()
                     }
 
                     dragStarted = false
