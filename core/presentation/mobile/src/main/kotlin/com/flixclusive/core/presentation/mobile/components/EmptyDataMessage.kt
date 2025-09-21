@@ -26,6 +26,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -104,7 +105,7 @@ private val defaultTitleStyle
         MaterialTheme.typography.titleMedium.copy(
             letterSpacing = 3.8.sp,
             fontWeight = FontWeight.Black,
-        )
+        ).asAdaptiveTextStyle()
 
 private val defaultDescriptionStyle
     @Composable get() =
@@ -112,11 +113,11 @@ private val defaultDescriptionStyle
             letterSpacing = 1.sp,
             fontWeight = FontWeight.Normal,
             color = LocalContentColor.current.copy(0.8F),
-        )
+        ).asAdaptiveTextStyle()
 
 @Preview
 @Composable
-private fun EmptyDataMessagePreview() {
+private fun EmptyDataMessageBasePreview() {
     FlixclusiveTheme {
         Surface(
             modifier = Modifier
@@ -132,4 +133,34 @@ private fun EmptyDataMessagePreview() {
             }
         }
     }
+}
+
+@Preview(device = "spec:parent=pixel_5,orientation=landscape")
+@Composable
+private fun EmptyDataMessageCompactLandscapePreview() {
+    EmptyDataMessageBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=portrait")
+@Composable
+private fun EmptyDataMessageMediumPortraitPreview() {
+    EmptyDataMessageBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=landscape")
+@Composable
+private fun EmptyDataMessageMediumLandscapePreview() {
+    EmptyDataMessageBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
+@Composable
+private fun EmptyDataMessageExtendedPortraitPreview() {
+    EmptyDataMessageBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
+@Composable
+private fun EmptyDataMessageExtendedLandscapePreview() {
+    EmptyDataMessageBasePreview()
 }
