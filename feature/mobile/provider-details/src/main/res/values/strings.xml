@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="browse_repository">Browse repository</string>
+    <string name="issue_a_bug">Issue a bug</string>
+</resources>

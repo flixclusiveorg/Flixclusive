@@ -107,11 +107,11 @@ fun RetryButton(
                             .clickable { isErrorLogsShown = !isErrorLogsShown },
                     ) {
                         Row(
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .padding(3.dp)
                                 .padding(horizontal = 5.dp),
-                            horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
                                 text = if (it) {

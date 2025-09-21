@@ -5,7 +5,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,17 +18,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.common.util.ifElse
+import com.flixclusive.core.presentation.common.extensions.ifElse
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
-import com.flixclusive.feature.mobile.provider.details.SUB_LABEL_SIZE
+import com.flixclusive.feature.mobile.provider.details.util.ProviderDetailsUiCommon.SUB_LABEL_SIZE
 import com.flixclusive.model.provider.Author
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun AuthorCard(
-    modifier: Modifier = Modifier,
     author: Author,
+    modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -70,7 +70,6 @@ internal fun AuthorCard(
                             }
                         )
                     ),
-                placeholderModifier = Modifier.fillMaxSize(),
                 urlImage = author.image,
                 placeholderId = UiCommonR.drawable.profile_placeholder,
                 contentDescId = LocaleR.string.author_icon_content_desc,
@@ -81,10 +80,8 @@ internal fun AuthorCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = SUB_LABEL_SIZE
-                )
+                fontWeight = FontWeight.Normal,
+                style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(SUB_LABEL_SIZE)
             )
         }
     }

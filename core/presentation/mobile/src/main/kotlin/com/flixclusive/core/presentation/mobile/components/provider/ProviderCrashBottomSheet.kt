@@ -99,6 +99,7 @@ fun ProviderCrashBottomSheet(
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 LabelHeader(
+                    errorCount = errors.size,
                     modifier = Modifier
                         .padding(bottom = 16.dp),
                 )
@@ -143,7 +144,12 @@ fun ProviderCrashBottomSheet(
 }
 
 @Composable
-private fun LabelHeader(modifier: Modifier = Modifier) {
+private fun LabelHeader(
+    errorCount: Int,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -167,7 +173,7 @@ private fun LabelHeader(modifier: Modifier = Modifier) {
         }
 
         Text(
-            text = stringResource(R.string.provider_failure_sub_text),
+            text = context.resources.getQuantityString(R.plurals.provider_failure_sub_text, errorCount),
             style = MaterialTheme.typography.bodySmall.asAdaptiveTextStyle(11.sp),
         )
     }

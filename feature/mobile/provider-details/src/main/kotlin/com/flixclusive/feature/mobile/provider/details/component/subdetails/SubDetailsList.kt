@@ -18,11 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.common.util.DummyDataForPreview
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.provider.details.HORIZONTAL_PADDING
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.feature.mobile.provider.details.util.ProviderDetailsUiCommon.HORIZONTAL_PADDING
+import com.flixclusive.feature.mobile.provider.details.util.getFlagFromLanguageCode
 import com.flixclusive.model.provider.ProviderMetadata
 import java.util.Locale
 import com.flixclusive.core.strings.R as LocaleR
@@ -36,14 +36,21 @@ private fun String.capitalize(): String {
 
 @Composable
 internal fun SubDetailsList(
-    providerMetadata: ProviderMetadata
+    provider: ProviderMetadata
 ) {
-    val subDetails = remember(providerMetadata) {
+    val subDetails = remember(provider) {
+        val locale = Locale.Builder()
+            .setLanguage(provider.language.languageCode)
+            .build()
+
+        val displayLanguage = locale.displayLanguage.capitalize()
+        val flagEmoji = getFlagFromLanguageCode(provider.language.languageCode)
+
         listOf(
-            providerMetadata.versionName to UiText.StringResource(LocaleR.string.version),
-            providerMetadata.status.toString() to UiText.StringResource(LocaleR.string.status),
-            Locale(providerMetadata.language.languageCode).displayLanguage.capitalize() to UiText.StringResource(LocaleR.string.language),
-            providerMetadata.providerType.type to UiText.StringResource(LocaleR.string.content),
+            provider.versionName to UiText.StringResource(LocaleR.string.version),
+            provider.status.toString() to UiText.StringResource(LocaleR.string.status),
+            "$displayLanguage $flagEmoji" to UiText.from(LocaleR.string.language),
+            provider.providerType.type to UiText.StringResource(LocaleR.string.content),
         )
     }
 
@@ -90,7 +97,7 @@ private fun SubDetailsListPreview() {
 
     FlixclusiveTheme {
         Surface {
-            SubDetailsList(providerMetadata = providerMetadata)
+            SubDetailsList(provider = providerMetadata)
         }
     }
 }

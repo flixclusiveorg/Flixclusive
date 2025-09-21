@@ -1,10 +1,15 @@
 package com.flixclusive.feature.mobile.provider.details
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -12,13 +17,12 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -29,127 +33,113 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.common.provider.ProviderInstallationStatus
+import com.flixclusive.core.navigation.navargs.ProviderMetadataNavArgs
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.dialog.UnsafeInstallAlertDialog
-import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallationStatus
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
+import com.flixclusive.core.presentation.mobile.extensions.isCompact
+import com.flixclusive.core.presentation.mobile.extensions.showMessage
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.R
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.navigation.navargs.ProviderMetadataNavArgs
-import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navigator.TestProvidersAction
-import com.flixclusive.core.ui.common.navigation.navigator.ViewMarkdownAction
-import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderSettingsAction
-import com.flixclusive.core.ui.common.navigation.navigator.ViewRepositoryAction
-import com.flixclusive.core.ui.common.util.DummyDataForPreview
-import com.flixclusive.core.ui.mobile.util.showMessage
 import com.flixclusive.feature.mobile.provider.details.component.DescriptionBlock
 import com.flixclusive.feature.mobile.provider.details.component.MainButtons
 import com.flixclusive.feature.mobile.provider.details.component.NavigationItem
 import com.flixclusive.feature.mobile.provider.details.component.ProviderDetailsHeader
 import com.flixclusive.feature.mobile.provider.details.component.author.AuthorsList
 import com.flixclusive.feature.mobile.provider.details.component.subdetails.SubDetailsList
-import com.flixclusive.model.datastore.user.ProviderPreferences
-import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.feature.mobile.provider.details.util.ProviderDetailsUiCommon.HORIZONTAL_PADDING
+import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-internal val HORIZONTAL_PADDING = 20.dp
-internal const val LABEL_SIZE = 15
-internal val LABEL_SIZE_IN_SP = LABEL_SIZE.sp
-internal val LABEL_SIZE_IN_DP = LABEL_SIZE.dp
-internal val SUB_LABEL_SIZE = 13.sp
-
-interface ProviderDetailsNavigator :
-    GoBackAction,
-    ViewProviderSettingsAction,
-    ViewRepositoryAction,
-    TestProvidersAction,
-    ViewMarkdownAction
-
-// TODO: Refactor code + ViewModel
-@Destination(
-    navArgsDelegate = ProviderMetadataNavArgs::class,
-)
+@Destination(navArgsDelegate = ProviderMetadataNavArgs::class)
 @Composable
 internal fun ProviderDetailsScreen(
     navigator: ProviderDetailsNavigator,
     args: ProviderMetadataNavArgs,
     viewModel: ProviderDetailsViewModel = hiltViewModel(),
 ) {
-    with(viewModel) {
-        ProviderDetailsScreen(
-            args = args,
-            providerPreferences = providerPreferences.collectAsStateWithLifecycle().value,
-            providerMetadata = providerMetadata,
-            snackbar = snackbar,
-            installationStatus = providerInstallationStatus,
-            onConsumeSnackbar = ::onConsumeSnackbar,
-            onGoBack = navigator::goBack,
-            onGoToProviderSettings = { navigator.openProviderSettings(args.providerMetadata) },
-            onGoToRepository = { repository?.let(navigator::openRepositoryDetails) },
-            onTestProviders = navigator::testProviders,
-            onToggleInstallation = ::toggleInstallation,
-            onDisableInstallationWarning = ::disableWarnOnInstall,
-            onViewMarkdown = navigator::openMarkdownScreen,
-        )
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val warnOnInstall by viewModel.warnOnInstall.collectAsStateWithLifecycle()
+
+    ProviderDetailsScreenContent(
+        uiState = uiState,
+        warnOnInstall = warnOnInstall,
+        onGoBack = navigator::goBack,
+        onToggleInstallation = viewModel::onToggleInstallation,
+        onDisableInstallationWarning = viewModel::disableWarnOnInstall,
+        onViewMarkdown = navigator::openMarkdownScreen,
+        onConsumeInstallationError = viewModel::onConsumeInstallationError,
+        onTestProviders = {
+            if (uiState.installationStatus.isOutdated) {
+                navigator.testProviders(arrayListOf(args.metadata))
+            } else if (uiState.installationStatus.isInstalled) {
+                navigator.testProviders(arrayListOf(uiState.metadata))
+            }
+        },
+        onGoToProviderSettings = {
+            if (uiState.installationStatus.isOutdated) {
+                navigator.openProviderSettings(args.metadata)
+            } else {
+                navigator.openProviderSettings(uiState.metadata)
+            }
+        },
+        onGoToRepository = {
+            val repositoryUrl = if (uiState.installationStatus.isOutdated) {
+                args.metadata.repositoryUrl
+            } else {
+                uiState.metadata.repositoryUrl
+            }
+
+            navigator.openRepositoryDetails(repositoryUrl.toValidRepositoryLink())
+        },
+    )
 }
 
 @Composable
-private fun ProviderDetailsScreen(
-    args: ProviderMetadataNavArgs,
-    providerPreferences: ProviderPreferences,
-    providerMetadata: ProviderMetadata,
-    snackbar: Resource.Failure?,
-    installationStatus: ProviderInstallationStatus,
-    onConsumeSnackbar: () -> Unit,
+private fun ProviderDetailsScreenContent(
+    uiState: ProviderDetailsUiState,
+    warnOnInstall: Boolean,
     onGoBack: () -> Unit,
     onGoToProviderSettings: () -> Unit,
     onGoToRepository: () -> Unit,
-    onTestProviders: (ArrayList<ProviderMetadata>) -> Unit,
+    onTestProviders: () -> Unit,
     onToggleInstallation: () -> Unit,
+    onConsumeInstallationError: () -> Unit,
     onDisableInstallationWarning: (Boolean) -> Unit,
     onViewMarkdown: (String, String) -> Unit,
 ) {
-    var openWarnOnInstallDialog by rememberSaveable { mutableStateOf(false) }
-
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
 
+    val windowWidthSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
+
     val listState = rememberLazyListState()
-
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
 
-    val webNavigationItems =
-        remember {
-            listOf(
-                LocaleR.string.issue_a_bug to providerMetadata.repositoryUrl.getNewIssueUrl(),
-                LocaleR.string.browse_repository to providerMetadata.repositoryUrl,
-            )
-        }
+    val metadata = uiState.metadata
 
-    val onConsumeSnackbarUpdated by rememberUpdatedState(onConsumeSnackbar)
-    LaunchedEffect(snackbar) {
-        if (snackbar?.error != null) {
-            snackbarHostState.showMessage(snackbar.error!!.asString(context))
-            onConsumeSnackbarUpdated()
-        }
+    val webNavigationItems = remember {
+        listOf(
+            R.string.issue_a_bug to metadata.repositoryUrl.getNewIssueUrl(),
+            R.string.browse_repository to metadata.repositoryUrl,
+        )
     }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var isWarnOnInstallDialogOpened by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
-        modifier = Modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
-            .padding(LocalGlobalScaffoldPadding.current),
         contentWindowInsets = WindowInsets(0.dp),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
@@ -159,120 +149,155 @@ private fun ProviderDetailsScreen(
                 scrollBehavior = scrollBehavior,
                 actions = {
                     val description = stringResource(LocaleR.string.provider_settings)
+
                     PlainTooltipBox(description) {
                         IconButton(onClick = onGoToProviderSettings) {
                             AdaptiveIcon(
-                                painter = painterResource(R.drawable.provider_settings),
+                                painter = painterResource(UiCommonR.drawable.provider_settings),
                                 contentDescription = description,
                             )
                         }
                     }
-                }
+                },
             )
         },
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .padding(LocalGlobalScaffoldPadding.current),
     ) { innerPadding ->
-        LazyColumn(
-            modifier =
-            Modifier
-                .padding(innerPadding)
-                .fillMaxSize(),
-            state = listState,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            item {
-                ProviderDetailsHeader(
-                    modifier = Modifier.padding(horizontal = HORIZONTAL_PADDING),
-                    providerMetadata = providerMetadata,
-                    openRepositoryScreen = onGoToRepository,
+        AnimatedContent(
+            uiState.initializationError,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+        ) { state ->
+            if (state != null) {
+                RetryButton(
+                    onRetry = onGoBack,
+                    error = uiState.initializationError?.asString(),
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize(),
                 )
-            }
-
-            item {
-                SubDetailsList(providerMetadata = providerMetadata)
-            }
-
-            item {
-                MainButtons(
-                    modifier =
-                    Modifier
-                        .padding(horizontal = HORIZONTAL_PADDING)
-                        .padding(bottom = 10.dp),
-                    providerInstallationStatus = installationStatus,
-                    onTestProvider = {
-                        if (installationStatus.isOutdated) {
-                            onTestProviders(arrayListOf(args.providerMetadata))
-                        } else if (installationStatus.isInstalled) {
-                            onTestProviders(arrayListOf(providerMetadata))
-                        }
-                    },
-                    onToggleInstallationState = {
-                        if (installationStatus.isNotInstalled &&
-                            providerPreferences.shouldWarnBeforeInstall
-                        ) {
-                            openWarnOnInstallDialog = true
-                            return@MainButtons
-                        }
-
-                        onToggleInstallation()
-                    },
-                )
-            }
-
-            if (providerMetadata.changelog != null) {
-                item {
-                    NavigationItem(
-                        label = stringResource(id = LocaleR.string.whats_new),
-                        onClick = {
-                            with(providerMetadata) {
-                                if (changelog != null) {
-                                    onViewMarkdown(name, changelog!!)
-                                } else {
-                                    scope.launch {
-                                        snackbarHostState.showMessage(
-                                            context.getString(com.flixclusive.core.locale.R.string.no_changelogs),
-                                        )
-                                    }
+            } else {
+                LazyColumn(
+                    state = listState,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = innerPadding,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    item {
+                        ProviderDetailsHeader(
+                            modifier = Modifier.padding(horizontal = HORIZONTAL_PADDING),
+                            provider = metadata,
+                            installationStatus = uiState.installationStatus,
+                            onToggleInstallationState = {
+                                if (uiState.installationStatus.isNotInstalled && warnOnInstall) {
+                                    isWarnOnInstallDialogOpened = true
+                                    return@ProviderDetailsHeader
                                 }
-                            }
-                        },
-                    )
+
+                                onToggleInstallation()
+                            },
+                            openRepositoryScreen = onGoToRepository,
+                        )
+                    }
+
+                    item {
+                        SubDetailsList(provider = metadata)
+                    }
+
+                    // Only show the big install/update button in portrait or compact mode
+                    if (windowWidthSizeClass.isCompact) {
+                        item {
+                            MainButtons(
+                                modifier = Modifier
+                                    .padding(horizontal = HORIZONTAL_PADDING)
+                                    .padding(bottom = 10.dp),
+                                providerInstallationStatus = uiState.installationStatus,
+                                onToggleInstallationState = {
+                                    if (uiState.installationStatus.isNotInstalled && warnOnInstall) {
+                                        isWarnOnInstallDialogOpened = true
+                                        return@MainButtons
+                                    }
+
+                                    onToggleInstallation()
+                                },
+                            )
+                        }
+                    }
+
+                    if (!uiState.installationStatus.isNotInstalled) {
+                        item {
+                            NavigationItem(
+                                label = stringResource(id = LocaleR.string.run_tests),
+                                onClick = onTestProviders,
+                            )
+                        }
+                    }
+
+                    if (metadata.changelog != null) {
+                        item {
+                            NavigationItem(
+                                label = stringResource(id = LocaleR.string.whats_new),
+                                onClick = {
+                                    with(metadata) {
+                                        if (changelog != null) {
+                                            onViewMarkdown(name, changelog!!)
+                                        } else {
+                                            scope.launch {
+                                                val message = context.getString(LocaleR.string.no_changelogs)
+                                                snackbarHostState.showMessage(message)
+                                            }
+                                        }
+                                    }
+                                },
+                            )
+                        }
+                    }
+
+                    item {
+                        DescriptionBlock(
+                            description = metadata.description,
+                            modifier =
+                                Modifier
+                                    .padding(horizontal = HORIZONTAL_PADDING),
+                        )
+                    }
+
+                    item {
+                        AuthorsList(
+                            authors = metadata.authors,
+                        )
+                    }
+
+                    items(webNavigationItems) { (label, url) ->
+                        NavigationItem(
+                            label = stringResource(id = label),
+                            onClick = { uriHandler.openUri(url) },
+                        )
+                    }
                 }
             }
+        }
 
-            item {
-                DescriptionBlock(
-                    description = providerMetadata.description,
-                    modifier =
-                    Modifier
-                        .padding(horizontal = HORIZONTAL_PADDING),
-                )
-            }
-
-            item {
-                AuthorsList(
-                    authors = providerMetadata.authors,
-                )
-            }
-
-            items(webNavigationItems) { (label, url) ->
-                NavigationItem(
-                    label = stringResource(id = label),
-                    onClick = { uriHandler.openUri(url) },
-                )
-            }
+        if (uiState.installationError != null) {
+            ProviderCrashBottomSheet(
+                errors = listOf(uiState.installationError),
+                onDismissRequest = onConsumeInstallationError,
+                isLoading = false,
+            )
         }
     }
 
-    if (openWarnOnInstallDialog) {
+    if (isWarnOnInstallDialogOpened) {
         UnsafeInstallAlertDialog(
             quantity = 1,
-            formattedName = providerMetadata.name,
-            warnOnInstall = providerPreferences.shouldWarnBeforeInstall,
+            formattedName = metadata.name,
+            warnOnInstall = warnOnInstall,
             onConfirm = { disableWarning ->
                 onDisableInstallationWarning(disableWarning)
                 onToggleInstallation()
             },
-            onDismiss = { openWarnOnInstallDialog = false },
+            onDismiss = { isWarnOnInstallDialogOpened = false },
         )
     }
 }
@@ -287,26 +312,58 @@ private fun String.getNewIssueUrl(): String {
 
 @Preview
 @Composable
-private fun ProviderDetailsScreenPreview() {
+private fun ProviderDetailsScreenBasePreview() {
     val providerMetadata = DummyDataForPreview.getDummyProviderMetadata()
 
     FlixclusiveTheme {
         Surface {
-            ProviderDetailsScreen(
-                args = ProviderMetadataNavArgs(providerMetadata),
-                providerPreferences = ProviderPreferences(),
-                providerMetadata = providerMetadata,
-                snackbar = null,
-                installationStatus = ProviderInstallationStatus.Installed,
-                onConsumeSnackbar = {},
+            ProviderDetailsScreenContent(
+                uiState = remember {
+                    ProviderDetailsUiState(
+                        metadata = providerMetadata,
+                        installationStatus = ProviderInstallationStatus.Outdated,
+                    )
+                },
+                warnOnInstall = true,
                 onGoBack = {},
                 onGoToProviderSettings = {},
                 onGoToRepository = {},
                 onTestProviders = {},
                 onToggleInstallation = {},
+                onConsumeInstallationError = {},
                 onDisableInstallationWarning = {},
                 onViewMarkdown = { _, _ -> },
             )
         }
     }
+}
+
+@Preview(device = "spec:parent=pixel_5,orientation=landscape")
+@Composable
+private fun ProviderDetailsScreenCompactLandscapePreview() {
+    ProviderDetailsScreenBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=portrait")
+@Composable
+private fun ProviderDetailsScreenMediumPortraitPreview() {
+    ProviderDetailsScreenBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=landscape")
+@Composable
+private fun ProviderDetailsScreenMediumLandscapePreview() {
+    ProviderDetailsScreenBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
+@Composable
+private fun ProviderDetailsScreenExtendedPortraitPreview() {
+    ProviderDetailsScreenBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
+@Composable
+private fun ProviderDetailsScreenExtendedLandscapePreview() {
+    ProviderDetailsScreenBasePreview()
 }

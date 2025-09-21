@@ -10,18 +10,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.provider.details.SUB_LABEL_SIZE
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.feature.mobile.provider.details.util.ProviderDetailsUiCommon.SUB_LABEL_SIZE
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun DescriptionBlock(
-    modifier: Modifier = Modifier,
-    description: String?
+    description: String?,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
@@ -32,12 +30,8 @@ internal fun DescriptionBlock(
         Text(
             text = description ?: stringResource(id = LocaleR.string.default_description_msg),
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.Normal,
-                color = LocalContentColor.current.copy(0.8F),
-                fontSize = SUB_LABEL_SIZE,
-                lineHeight = 16.sp
-            ),
+            color = LocalContentColor.current.copy(0.8F),
+            style = MaterialTheme.typography.bodyMedium.asAdaptiveTextStyle(SUB_LABEL_SIZE),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 10.dp)

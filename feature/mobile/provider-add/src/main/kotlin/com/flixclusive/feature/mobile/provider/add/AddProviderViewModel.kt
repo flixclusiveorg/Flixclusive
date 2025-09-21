@@ -18,6 +18,7 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
+import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
@@ -51,11 +52,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -262,16 +265,18 @@ internal class AddProviderViewModel
                 .onStart {
                     infoLog("Downloading and installing provider: ${provider.name}")
                     providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.Installing
-                }.onCompletion { e ->
-                    if (e != null) {
-                        _uiState.update {
-                            val error = ProviderWithThrowable(provider = provider, throwable = e)
-                            it.copy(providerExceptions = it.providerExceptions + error)
-                        }
+                }.onEach { result ->
+                    if (result is LoadProviderResult.Failure) {
+                        throw result.error
                     }
-
-                    // There is a good case that the provider was installed successfully,
-                    // but an error was thrown after the installation.
+                }.catch { e ->
+                    _uiState.update {
+                        val error = ProviderWithThrowable(provider = provider, throwable = e)
+                        it.copy(providerExceptions = it.providerExceptions + error)
+                    }
+                }.onCompletion {
+                    // There is a good case that the provider was installed successfully
+                    // even if an error was thrown after the installation.
                     // So we check if the provider is installed or not.
                     val isInstalled = providerRepository.getProviderMetadata(provider.id) != null
                     val status = when (isInstalled) {

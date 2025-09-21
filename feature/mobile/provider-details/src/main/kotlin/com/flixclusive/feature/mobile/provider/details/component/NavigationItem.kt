@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,18 +17,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.provider.details.HORIZONTAL_PADDING
-import com.flixclusive.feature.mobile.provider.details.LABEL_SIZE_IN_DP
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.feature.mobile.provider.details.util.ProviderDetailsUiCommon.HORIZONTAL_PADDING
+import com.flixclusive.feature.mobile.provider.details.util.ProviderDetailsUiCommon.LABEL_SIZE_IN_DP
+import com.flixclusive.core.presentation.mobile.R as UiMobileR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.mobile.R as UiCommonR
+
 
 @Composable
 internal fun NavigationItem(
-    modifier: Modifier = Modifier,
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
@@ -48,13 +47,14 @@ internal fun NavigationItem(
             Title(text = label)
 
             Box {
-                Icon(
-                    painter = painterResource(id = UiCommonR.drawable.right_arrow),
+                AdaptiveIcon(
+                    painter = painterResource(id = UiMobileR.drawable.right_arrow),
                     contentDescription = stringResource(id = LocaleR.string.see_all),
                     tint = LocalContentColor.current.copy(0.6f),
+                    dp = LABEL_SIZE_IN_DP,
+                    increaseBy = 2.dp,
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .size(LABEL_SIZE_IN_DP)
                         .clickable(onClick = onClick)
                 )
             }

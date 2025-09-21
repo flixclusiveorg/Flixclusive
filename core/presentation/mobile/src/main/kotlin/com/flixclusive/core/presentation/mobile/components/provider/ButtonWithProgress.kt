@@ -61,7 +61,7 @@ fun ButtonWithProgress(
             enabled = enabled,
             onClick = onClick,
             contentPadding = contentPadding,
-            shape = MaterialTheme.shapes.medium,
+            shape = MaterialTheme.shapes.small,
             modifier = modifier,
         ) {
             IconLabel(
@@ -125,9 +125,8 @@ private fun IconLabel(
 
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelLarge
-                        .copy(fontWeight = FontWeight.Medium)
-                        .asAdaptiveTextStyle(),
+                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
                 )
             }
         }

@@ -9,5 +9,8 @@
     <string name="type_filter">Types</string>
     <string name="report">Report</string>
     <string name="provider_failure">Provider failure</string>
-    <string name="provider_failure_sub_text">The following provider(s) below have failed to load. It would be best to report these issues to their respective authors.</string>
+    <plurals name="provider_failure_sub_text">
+        <item quantity="one">The following provider below has failed to load. It would be best to report this issue to its respective author.</item>
+        <item quantity="other">The following providers below have failed to load. It would be best to report these issues to their respective authors.</item>
+    </plurals>
 </resources>

@@ -7,6 +7,7 @@ package com.flixclusive.feature.mobile.provider.details.util
 import com.flixclusive.core.util.exception.safeCall
 
 private val flagEmojiRegex = Regex("[\uD83C\uDDE6-\uD83C\uDDFF]{2}")
+
 internal fun getFlagFromLanguageCode(code: String?): String? {
     if (code?.equals("multiple", true) == true)
         return "\uD83C\uDF10"

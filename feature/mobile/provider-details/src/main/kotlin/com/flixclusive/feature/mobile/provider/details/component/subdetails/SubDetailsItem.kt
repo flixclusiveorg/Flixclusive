@@ -9,10 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.feature.mobile.provider.details.LABEL_SIZE_IN_SP
-import com.flixclusive.feature.mobile.provider.details.SUB_LABEL_SIZE
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.feature.mobile.provider.details.util.ProviderDetailsUiCommon.LABEL_SIZE_IN_SP
+import com.flixclusive.feature.mobile.provider.details.util.ProviderDetailsUiCommon.SUB_LABEL_SIZE
 
 @Composable
 internal fun SubDetailsItem(
@@ -24,20 +24,15 @@ internal fun SubDetailsItem(
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium.copy(
-                color = LocalContentColor.current.copy(0.8F),
-                fontWeight = FontWeight.Bold,
-                fontSize = LABEL_SIZE_IN_SP
-            )
+            color = LocalContentColor.current.copy(0.8F),
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(LABEL_SIZE_IN_SP)
         )
 
         Text(
             text = subtitle,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = LocalContentColor.current.copy(0.6F),
-                fontWeight = FontWeight.Normal,
-                fontSize = SUB_LABEL_SIZE
-            )
+            color = LocalContentColor.current.copy(0.6F),
+            style = MaterialTheme.typography.bodyMedium.asAdaptiveTextStyle(SUB_LABEL_SIZE)
         )
     }
 }
