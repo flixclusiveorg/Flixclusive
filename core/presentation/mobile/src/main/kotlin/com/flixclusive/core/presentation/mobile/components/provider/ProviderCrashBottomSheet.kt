@@ -118,7 +118,7 @@ fun ProviderCrashBottomSheet(
                         onClick = { detailedCrashLog = error },
                     )
 
-                    if (i < errors.size && windowWidthSizeClass.isCompact) {
+                    if (i < errors.lastIndex && windowWidthSizeClass.isCompact) {
                         HorizontalDivider(
                             thickness = 0.5.dp,
                             color = LocalContentColor.current.copy(0.4f),
