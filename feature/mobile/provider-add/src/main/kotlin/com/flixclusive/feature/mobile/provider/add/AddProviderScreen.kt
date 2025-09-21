@@ -11,12 +11,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,48 +29,39 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.common.provider.ProviderInstallationStatus
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.LoadingScreen
-import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCard
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCardDefaults
-import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallationStatus
-import com.flixclusive.core.presentation.mobile.components.topbar.ActionButton
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarWithSearch
-import com.flixclusive.core.presentation.mobile.components.topbar.DefaultNavigationIcon
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.components.topbar.rememberEnterAlwaysScrollBehavior
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.dialog.IconAlertDialog
-import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navigator.ViewProviderAction
-import com.flixclusive.core.ui.common.util.DummyDataForPreview
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.feature.mobile.provider.add.component.AddProviderTopBar
 import com.flixclusive.feature.mobile.provider.add.component.ErrorScreen
+import com.flixclusive.feature.mobile.provider.add.component.RepositoryCrashBottomSheet
 import com.flixclusive.feature.mobile.provider.add.filter.AddProviderFilterType
 import com.flixclusive.feature.mobile.provider.add.filter.AuthorsFilters
 import com.flixclusive.feature.mobile.provider.add.filter.CommonSortFilters
 import com.flixclusive.feature.mobile.provider.add.filter.component.AddProviderFilterBottomSheet
-import com.flixclusive.feature.mobile.provider.add.util.getErrorLog
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentSet
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
-
-interface AddProviderScreenNavigator :
-    ViewProviderAction,
-    GoBackAction
 
 @Destination
 @Composable
@@ -80,160 +69,103 @@ internal fun AddProviderScreen(
     navigator: AddProviderScreenNavigator,
     viewModel: AddProviderViewModel = hiltViewModel(),
 ) {
-    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
-    val availableProviders = viewModel.availableProviders.collectAsStateWithLifecycle()
-    val selectedProviders = viewModel.selectedProviders.collectAsStateWithLifecycle()
-    val filters = viewModel.filters.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val availableProviders by viewModel.availableProviders.collectAsStateWithLifecycle()
+    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+    val selectedProviders by viewModel.selected.collectAsStateWithLifecycle()
+    val filters by viewModel.filters.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 
-    val searchQuery by remember {
-        derivedStateOf { uiState.value.searchQuery }
-    }
-
-    val isShowingFilterSheet by remember {
-        derivedStateOf { uiState.value.isShowingFilterSheet }
-    }
-
-    val isSearching by remember {
-        derivedStateOf { uiState.value.isShowingSearchBar }
-    }
-
-    val isLoading by remember {
-        derivedStateOf { uiState.value.isLoading }
-    }
-
-    val hasInitializationErrors by remember {
-        derivedStateOf { uiState.value.hasInitializationErrors }
-    }
-
-    var showErrorDialog by remember { mutableStateOf(false) }
-    LaunchedEffect(viewModel) {
-        viewModel.initializeError
-            .collect { state ->
-                if (!showErrorDialog && state) {
-                    showErrorDialog = true
-                }
-            }
-    }
-
-    val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
-    LaunchedEffect(viewModel) {
-        viewModel.providerLoadErrors
-            .collect { errors ->
-                if (snackbarHostState.currentSnackbarData == null && errors.isNotEmpty()) {
-                    val message =
-                        """
-                        ${context.getString(LocaleR.string.failed_to_load_providers)}: ${errors.joinToString(",")}
-                        """.trimIndent()
-
-                    snackbarHostState.showSnackbar(
-                        message = message,
-                        withDismissAction = true,
-                    )
-                }
-            }
-    }
-
-    if (showErrorDialog) {
-        IconAlertDialog(
-            painter = painterResource(UiCommonR.drawable.warning_outline),
-            contentDescription = null,
-            description = context.getErrorLog(uiState.value.failedToInitializeRepositories),
-            dismissButtonLabel = null,
-            onConfirm = { showErrorDialog = false },
-        )
-    }
-
-    AddProviderScreen(
-        isLoading = isLoading,
-        hasInitializationErrors = hasInitializationErrors,
-        isSearching = isSearching,
-        isShowingFilterSheet = isShowingFilterSheet,
-        snackbarHostState = snackbarHostState,
+    AddProviderScreenContent(
+        uiState = uiState,
         installationStatusMap = viewModel.providerInstallationStatusMap,
-        selectedProviders = { selectedProviders.value },
+        selectedProviders = { selectedProviders },
         searchQuery = { searchQuery },
         onToggleSearchBar = viewModel::onToggleSearchBar,
         onRetry = viewModel::initialize,
         onGoBack = navigator::goBack,
+        consumeProviderExceptions = viewModel::consumeProviderExceptions,
         onToggleInstallation = viewModel::onToggleInstallation,
         onViewProviderDetails = navigator::openProviderDetails,
         onQueryChange = viewModel::onSearchQueryChange,
-        onToggleFilterSheet = viewModel::onToggleFilterSheet,
         onUpdateFilter = viewModel::onUpdateFilter,
-        filters = { filters.value },
-        providers = { availableProviders.value },
+        filters = { filters },
         onToggleSelect = viewModel::onToggleSelect,
         onUnselectAll = viewModel::onUnselectAll,
         onInstallSelection = viewModel::onInstallSelection,
+        providers = {
+            if (uiState.isShowingSearchBar) {
+                searchResults
+            } else {
+                availableProviders
+            }
+        },
     )
 }
 
 @Composable
-internal fun AddProviderScreen(
-    isLoading: Boolean,
-    hasInitializationErrors: Boolean,
-    isSearching: Boolean,
-    snackbarHostState: SnackbarHostState,
-    isShowingFilterSheet: Boolean,
+internal fun AddProviderScreenContent(
+    uiState: AddProviderUiState,
     installationStatusMap: Map<String, ProviderInstallationStatus>,
-    selectedProviders: () -> List<ProviderMetadata>,
+    selectedProviders: () -> ImmutableSet<ProviderMetadata>,
     searchQuery: () -> String,
-    providers: () -> List<ProviderMetadata>,
+    providers: () -> ImmutableList<SearchableProvider>,
     filters: () -> List<AddProviderFilterType<*>>,
     onRetry: () -> Unit,
     onGoBack: () -> Unit,
     onInstallSelection: () -> Unit,
     onUnselectAll: () -> Unit,
+    consumeProviderExceptions: () -> Unit,
     onToggleInstallation: (ProviderMetadata) -> Unit,
     onViewProviderDetails: (ProviderMetadata) -> Unit,
     onQueryChange: (String) -> Unit,
     onToggleSearchBar: (Boolean) -> Unit,
-    onToggleFilterSheet: (Boolean) -> Unit,
     onToggleSelect: (ProviderMetadata) -> Unit,
     onUpdateFilter: (Int, AddProviderFilterType<*>) -> Unit,
 ) {
     val scrollBehavior = rememberEnterAlwaysScrollBehavior()
     val selectedColor = MaterialTheme.colorScheme.tertiary
 
-    val selectCount by remember {
-        derivedStateOf { selectedProviders().size }
+    var isFilterSheetOpened by remember { mutableStateOf(false) }
+    var isRepositoryCrashOpened by remember { mutableStateOf(false) }
+    val selectCount by remember { derivedStateOf { selectedProviders().size } }
+
+    LaunchedEffect(uiState.repositoryExceptions.isNotEmpty(), uiState.isLoading) {
+        if (uiState.repositoryExceptions.isNotEmpty() && uiState.isLoading) {
+            isRepositoryCrashOpened = true
+        }
     }
 
     Scaffold(
-        modifier =
-            Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(horizontal = getAdaptiveDp(DefaultScreenPaddingHorizontal, 2.dp))
-                .fillMaxSize(),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AddProviderTopBar(
-                isSearching = isSearching,
-                isLoading = isLoading,
-                selectCount = { selectCount },
+                isSearching = uiState.isShowingSearchBar,
+                isLoading = uiState.isLoading,
+                selectCount = selectCount,
                 scrollBehavior = scrollBehavior,
                 searchQuery = searchQuery,
                 onToggleSearchBar = onToggleSearchBar,
                 onQueryChange = onQueryChange,
                 onNavigate = onGoBack,
-                onShowFilterSheet = { onToggleFilterSheet(true) },
+                onShowFilterSheet = { isFilterSheetOpened = true },
                 onInstallSelection = onInstallSelection,
                 onUnselectAll = onUnselectAll,
             )
         },
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .padding(horizontal = getAdaptiveDp(DefaultScreenPaddingHorizontal, 2.dp))
+            .fillMaxSize(),
     ) {
-        val padding by remember {
-            derivedStateOf { it }
-        }
+        val padding by remember { derivedStateOf { it } }
 
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize(),
         ) {
-            if (isLoading) {
+            if (uiState.isLoading) {
                 LoadingScreen()
-            } else if (providers().isEmpty() && hasInitializationErrors) {
+            } else if (providers().isEmpty() && uiState.repositoryExceptions.isNotEmpty()) {
                 ErrorScreen(onRetry = onRetry)
             } else if (providers().isEmpty()) {
                 EmptyDataMessage(
@@ -252,8 +184,8 @@ internal fun AddProviderScreen(
                         val installationStatus = installationStatusMap[it.id] ?: ProviderInstallationStatus.NotInstalled
 
                         ProviderCard(
-                            providerMetadata = it,
-                            onClick = { onToggleInstallation(it) },
+                            providerMetadata = it.metadata,
+                            onClick = { onToggleInstallation(it.metadata) },
                             status = installationStatus,
                             modifier =
                                 Modifier
@@ -261,26 +193,28 @@ internal fun AddProviderScreen(
                                     .indication(
                                         interactionSource = interactionSource,
                                         indication = ripple(),
-                                    ).border(
+                                    )
+                                    .border(
                                         BorderStroke(
                                             width = Dp.Hairline,
                                             color =
-                                                if (selectedProviders().contains(it)) {
+                                                if (selectedProviders().contains(it.metadata)) {
                                                     selectedColor
                                                 } else {
                                                     Color.Transparent
                                                 },
                                         ),
                                         shape = ProviderCardDefaults.DefaultShape,
-                                    ).pointerInput(Unit) {
+                                    )
+                                    .pointerInput(Unit) {
                                         detectTapGestures(
-                                            onLongPress = { _ -> onToggleSelect(it) },
+                                            onLongPress = { _ -> onToggleSelect(it.metadata) },
                                             onTap = { _ ->
                                                 val isSelecting = selectedProviders().isNotEmpty()
                                                 if (isSelecting) {
-                                                    onToggleSelect(it)
+                                                    onToggleSelect(it.metadata)
                                                 } else {
-                                                    onViewProviderDetails(it)
+                                                    onViewProviderDetails(it.metadata)
                                                 }
                                             },
                                             onPress = { offset ->
@@ -304,106 +238,46 @@ internal fun AddProviderScreen(
         }
     }
 
-    if (isShowingFilterSheet) {
+    if (isFilterSheetOpened) {
         AddProviderFilterBottomSheet(
             filters = filters,
-            onDismissRequest = { onToggleFilterSheet(false) },
+            onDismissRequest = { isFilterSheetOpened = false },
             onUpdateFilter = onUpdateFilter,
         )
     }
-}
 
-@Composable
-private fun AddProviderTopBar(
-    isSearching: Boolean,
-    isLoading: Boolean,
-    selectCount: () -> Int,
-    searchQuery: () -> String,
-    onNavigate: () -> Unit,
-    onToggleSearchBar: (Boolean) -> Unit,
-    onQueryChange: (String) -> Unit,
-    onInstallSelection: () -> Unit,
-    onShowFilterSheet: () -> Unit,
-    onUnselectAll: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior,
-    modifier: Modifier = Modifier,
-) {
-    val title =
-        if (selectCount() > 0) {
-            stringResource(LocaleR.string.count_selection_format, selectCount())
-        } else {
-            stringResource(LocaleR.string.add_providers)
-        }
+    if (uiState.providerExceptions.isNotEmpty()) {
+        ProviderCrashBottomSheet(
+            isLoading = uiState.isInstallingProviders,
+            errors = uiState.providerExceptions,
+            onDismissRequest = consumeProviderExceptions,
+        )
+    }
 
-    CommonTopBarWithSearch(
-        modifier = modifier,
-        isSearching = isSearching,
-        title = title,
-        onNavigate = onNavigate,
-        navigationIcon = {
-            if (selectCount() > 0) {
-                PlainTooltipBox(description = stringResource(LocaleR.string.cancel)) {
-                    ActionButton(onClick = onUnselectAll) {
-                        AdaptiveIcon(
-                            painter = painterResource(UiCommonR.drawable.round_close_24),
-                            contentDescription = stringResource(LocaleR.string.cancel),
-                        )
-                    }
-                }
-            } else {
-                DefaultNavigationIcon(
-                    onClick = {
-                        if (isSearching) {
-                            onToggleSearchBar(false)
-                        } else {
-                            onNavigate()
-                        }
-                    },
-                )
-            }
-        },
-        searchQuery = searchQuery,
-        onToggleSearchBar = onToggleSearchBar,
-        onQueryChange = onQueryChange,
-        scrollBehavior = scrollBehavior,
-        extraActions = {
-            if (selectCount() > 0 && !isLoading) {
-                PlainTooltipBox(description = stringResource(LocaleR.string.install_all)) {
-                    ActionButton(onClick = onInstallSelection) {
-                        AdaptiveIcon(
-                            painter = painterResource(UiCommonR.drawable.download),
-                            contentDescription = stringResource(LocaleR.string.install_all),
-                            dp = 24.dp,
-                        )
-                    }
-                }
-            } else if (!isLoading) {
-                PlainTooltipBox(description = stringResource(LocaleR.string.filter_button)) {
-                    ActionButton(onClick = onShowFilterSheet) {
-                        AdaptiveIcon(
-                            painter = painterResource(UiCommonR.drawable.filter_list),
-                            contentDescription = stringResource(LocaleR.string.filter_button),
-                            dp = 24.dp,
-                        )
-                    }
-                }
-            }
-        },
-    )
+    if (isRepositoryCrashOpened) {
+        RepositoryCrashBottomSheet(
+            isLoading = uiState.isLoading,
+            errors = uiState.repositoryExceptions,
+            onDismissRequest = { isRepositoryCrashOpened = false },
+        )
+    }
 }
 
 @Preview
 @Composable
 private fun AddProviderScreenBasePreview() {
-    var state by remember { mutableStateOf(AddProviderUiState()) }
+    var state by remember { mutableStateOf(AddProviderUiState(isLoading = true)) }
     val filters = remember { mutableStateListOf<AddProviderFilterType<*>>() }
-    val providers = remember { mutableStateListOf<ProviderMetadata>() }
+    val providers = remember { mutableStateListOf<SearchableProvider>() }
 
     val sampleProvider = DummyDataForPreview.getDummyProviderMetadata()
     LaunchedEffect(true) {
         providers.addAll(
-            List(50) { sampleProvider.copy(name = "${sampleProvider.name} #$it") },
+            List(50) {
+                SearchableProvider.from(sampleProvider.copy(name = "${sampleProvider.name} #$it"))
+            },
         )
+
         filters.addAll(
             listOf<AddProviderFilterType<*>>(
                 CommonSortFilters(
@@ -417,61 +291,37 @@ private fun AddProviderScreenBasePreview() {
                 ),
             ),
         )
-    }
 
-    val isShowingFilterSheet by remember {
-        derivedStateOf { state.isShowingFilterSheet }
+        state = state.copy(isLoading = false)
     }
-
-    val isSearching by remember {
-        derivedStateOf { state.isShowingSearchBar }
-    }
-
-    val selectedProviders by remember {
-        derivedStateOf { state.selectedProviders }
-    }
-
-    val searchQuery by remember {
-        derivedStateOf { state.searchQuery }
-    }
+    val selectedProviders = remember { mutableStateListOf<ProviderMetadata>() }
+    var searchQuery by remember { mutableStateOf("") }
 
     FlixclusiveTheme {
         Surface {
-            AddProviderScreen(
-                isLoading = false,
-                hasInitializationErrors = false,
-                snackbarHostState = remember { SnackbarHostState() },
-                isShowingFilterSheet = isShowingFilterSheet,
-                isSearching = isSearching,
+            AddProviderScreenContent(
+                uiState = state,
                 installationStatusMap = mapOf(),
-                selectedProviders = { selectedProviders },
+                selectedProviders = { selectedProviders.toPersistentSet() },
                 searchQuery = { searchQuery },
-                onQueryChange = { state = state.copy(searchQuery = it) },
+                onQueryChange = { searchQuery = it },
                 onRetry = {},
                 onGoBack = {},
                 onToggleSearchBar = { state = state.copy(isShowingSearchBar = it) },
-                onToggleFilterSheet = { state = state.copy(isShowingFilterSheet = it) },
                 onUpdateFilter = { i, filter -> filters[i] = filter },
                 filters = { filters },
-                providers = { providers },
+                providers = { providers.toPersistentList() },
                 onInstallSelection = {},
                 onToggleInstallation = {},
                 onViewProviderDetails = {},
-                onUnselectAll = { state = state.copy(selectedProviders = emptyList()) },
+                onUnselectAll = { selectedProviders.clear() },
+                consumeProviderExceptions = { state = state.copy(providerExceptions = emptyList()) },
                 onToggleSelect = {
-                    state =
-                        with(state) {
-                            val newList =
-                                if (selectedProviders.contains(it)) {
-                                    val newList = selectedProviders.toMutableList()
-                                    newList.remove(it)
-                                    newList.toList()
-                                } else {
-                                    selectedProviders + it
-                                }
-
-                            copy(selectedProviders = newList)
-                        }
+                    if (selectedProviders.contains(it)) {
+                        selectedProviders.remove(it)
+                    } else {
+                        selectedProviders + it
+                    }
                 },
             )
         }

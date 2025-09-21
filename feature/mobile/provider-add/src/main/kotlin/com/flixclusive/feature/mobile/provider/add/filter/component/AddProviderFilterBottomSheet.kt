@@ -4,13 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material3.BottomSheetDefaults.DragHandle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.presentation.mobile.components.CommonBottomSheet
 import com.flixclusive.feature.mobile.provider.add.filter.AddProviderFilterType
 import com.flixclusive.feature.mobile.provider.add.filter.AuthorsFilters
 import com.flixclusive.feature.mobile.provider.add.filter.CommonSortFilters
@@ -26,15 +23,7 @@ internal fun AddProviderFilterBottomSheet(
     onDismissRequest: () -> Unit,
 ) {
     val context = LocalContext.current
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        shape =
-            MaterialTheme.shapes.small.copy(
-                bottomEnd = CornerSize(0.dp),
-                bottomStart = CornerSize(0.dp),
-            ),
-        dragHandle = { DragHandle() },
-    ) {
+    CommonBottomSheet(onDismissRequest = onDismissRequest) {
         LazyColumn(
             contentPadding = PaddingValues(10.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),

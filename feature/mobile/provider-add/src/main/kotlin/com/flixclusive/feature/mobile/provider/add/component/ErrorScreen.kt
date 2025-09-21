@@ -11,11 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.theme.warningColor
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
+import com.flixclusive.core.presentation.common.theme.Colors
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun ErrorScreen(
@@ -34,7 +34,7 @@ internal fun ErrorScreen(
             AdaptiveIcon(
                 painter = painterResource(UiCommonR.drawable.warning_outline),
                 contentDescription = null,
-                tint = warningColor, // TODO: Watch out for hardcoded values
+                tint = Colors.warningColor,
                 dp = 70.dp,
             )
 

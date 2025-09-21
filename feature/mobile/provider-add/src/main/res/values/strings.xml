@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="repository_failure">Repository failure</string>
+    <plurals name="repository_failure_description">
+        <item quantity="one">The following repository could not be loaded. Make sure the repository is still available and try again.</item>
+        <item quantity="other">The following repositories could not be loaded. Make sure the repositories are still available and try again.</item>
+    </plurals>
+</resources>

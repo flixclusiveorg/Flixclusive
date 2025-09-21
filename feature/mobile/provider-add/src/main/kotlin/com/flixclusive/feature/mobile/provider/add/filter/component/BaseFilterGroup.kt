@@ -2,13 +2,12 @@ package com.flixclusive.feature.mobile.provider.add.filter.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 
 @Composable
 internal fun BaseFilterGroup(
@@ -22,11 +21,7 @@ internal fun BaseFilterGroup(
     ) {
         Text(
             text = title,
-            style =
-                getAdaptiveTextStyle(
-                    style = AdaptiveTextStyle.Emphasized,
-                    style = TypographyStyle.Headline,
-                ),
+            style = MaterialTheme.typography.titleLarge.asAdaptiveTextStyle(),
         )
 
         content()

@@ -35,7 +35,6 @@
     <string name="failed_to_extract">Failed to extract, try again later</string>
     <string name="failed_to_get_app_updates">Failed to get app updates</string>
     <string name="failed_to_initialize_home_items">Failed to initialize home items</string>
-    <string name="failed_to_load_the_ff">Failed to load the following:</string>
     <string name="failed_to_load_online_providers">Could not parse online providers.</string>
     <string name="failed_to_load_providers">Failed to load providers</string>
     <string name="failed_to_update_provider">Failed to update the provider.</string>
@@ -54,6 +53,7 @@
     <string name="warning_install_message_second_half">By proceeding with the installation, you acknowledge that you understand the risks involved, and any resulting damage will be your responsibility. Are you sure you want to continue?</string>
     <string name="warning_uninstall_message_first_half">Are you sure you want to uninstall</string>
     <string name="warning_use_prerelease_updates">Pre-release versions may be unstable and may contain bugs or other issues. Please use at your own risk.</string>
+    <string name="no_available_providers">No available providers</string>
 
     <!--  Errors with formatting  -->
     <string name="failed_to_download_updates">Failed to download updates: %1$s</string>

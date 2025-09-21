@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -24,16 +25,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.provider.add.filter.AddProviderFilterType
 import com.flixclusive.feature.mobile.provider.add.filter.util.FilterChildPadding
 import com.flixclusive.feature.mobile.provider.add.filter.util.toOptionString
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun MultiSelectFilter(
@@ -56,7 +55,7 @@ internal fun MultiSelectFilter(
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(FilterChildPadding),
             contentPadding = PaddingValues(horizontal = FilterChildPadding),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             items(options, key = { it.toOptionString(context) }) {
                 SelectableButton(
@@ -72,7 +71,7 @@ internal fun MultiSelectFilter(
                         }
 
                         onUpdateFilter(newSet.toSet())
-                    }
+                    },
                 )
             }
         }
@@ -105,17 +104,16 @@ private fun SelectableButton(
             contentColor = MaterialTheme.colorScheme.onSurface.copy(0.8F),
         ),
         border = borders,
-        modifier =
-            modifier
-                .height(getAdaptiveDp(35.dp))
-                .widthIn(min = getAdaptiveDp(80.dp))
-                .graphicsLayer {
-                    alpha = if (selected) 1f else 0.6f
-                },
+        modifier = modifier
+            .height(getAdaptiveDp(35.dp))
+            .widthIn(min = getAdaptiveDp(80.dp))
+            .graphicsLayer {
+                alpha = if (selected) 1f else 0.6f
+            },
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             AnimatedVisibility(
                 visible = selected,
@@ -124,16 +122,14 @@ private fun SelectableButton(
                 AdaptiveIcon(
                     painter = painterResource(UiCommonR.drawable.round_close_24),
                     contentDescription = stringResource(LocaleR.string.remove),
-                    dp = 16.dp
+                    dp = 16.dp,
                 )
             }
 
             Text(
                 text = name,
-                style = getAdaptiveTextStyle(
-                    style = AdaptiveTextStyle.SemiEmphasized,
-                    size = 15.sp,
-                ),
+                style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(size = 15.sp),
+                color = LocalContentColor.current.copy(0.8f),
             )
         }
     }

@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.flixclusive.core.strings.R as LocaleR
 
 internal class GetMediaLinksUseCaseImpl
     @Inject
@@ -297,7 +298,7 @@ internal class GetMediaLinksUseCaseImpl
                     val streams = response.data
 
                     if (streams.isNullOrEmpty()) {
-                        throw ExceptionWithUiText(UiText.from(R.string.no_available_providers))
+                        throw ExceptionWithUiText(UiText.from(LocaleR.string.no_available_providers))
                     }
 
                     val tmdbKey = CacheKey.create(

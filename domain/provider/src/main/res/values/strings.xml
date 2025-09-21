@@ -14,7 +14,6 @@
     <string name="invalid_repository">Repository does not have an `updater.json` file. Make sure the repository follows the providers repository template structure.</string>
     <string name="invalid_repository_url">Repository URL is invalid</string>
     <string name="invalid_watch_id_for_non_tmdb_film">Media did not came from TMDB but has no ID.</string>
-    <string name="no_available_providers">No available providers</string>
     <string name="no_links_loaded_format_message">No links loaded from %1$s</string>
     <string name="no_tmdb_id_found">No TMDB ID provided for this one</string>
     <string name="no_watch_id_message">No watch ID has been found</string>

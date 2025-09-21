@@ -3,57 +3,61 @@ package com.flixclusive.feature.mobile.provider.add
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.util.fastFold
 import androidx.compose.ui.util.fastForEach
-import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.common.provider.ProviderInstallationStatus
+import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.model.user.ProviderPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.presentation.mobile.components.provider.ProviderInstallationStatus
-import com.flixclusive.core.util.coroutines.AppDispatchers
-import com.flixclusive.core.util.coroutines.asStateFlow
-import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.domain.provider.GetOnlineProvidersUseCase
-import com.flixclusive.domain.provider.ProviderLoaderUseCase
-import com.flixclusive.domain.provider.ProviderUnloaderUseCase
-import com.flixclusive.domain.provider.ProviderUpdaterUseCase
-import com.flixclusive.domain.provider.util.DownloadFailed
+import com.flixclusive.core.util.log.infoLog
+import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
+import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
+import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
+import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
 import com.flixclusive.domain.provider.util.extractGithubInfoFromLink
 import com.flixclusive.feature.mobile.provider.add.filter.AddProviderFilterType
 import com.flixclusive.feature.mobile.provider.add.filter.AuthorsFilters
+import com.flixclusive.feature.mobile.provider.add.filter.AuthorsFilters.Companion.filterAuthors
+import com.flixclusive.feature.mobile.provider.add.filter.AuthorsFilters.Companion.toAuthorFilters
 import com.flixclusive.feature.mobile.provider.add.filter.CommonSortFilters
+import com.flixclusive.feature.mobile.provider.add.filter.CommonSortFilters.Companion.sort
 import com.flixclusive.feature.mobile.provider.add.filter.LanguagesFilters
+import com.flixclusive.feature.mobile.provider.add.filter.LanguagesFilters.Companion.filterLanguages
+import com.flixclusive.feature.mobile.provider.add.filter.LanguagesFilters.Companion.toLanguageFilters
 import com.flixclusive.feature.mobile.provider.add.filter.ProviderTypeFilters
+import com.flixclusive.feature.mobile.provider.add.filter.ProviderTypeFilters.Companion.filterProviderType
+import com.flixclusive.feature.mobile.provider.add.filter.ProviderTypeFilters.Companion.toProviderTypeFilters
 import com.flixclusive.feature.mobile.provider.add.filter.RepositoriesFilters
+import com.flixclusive.feature.mobile.provider.add.filter.RepositoriesFilters.Companion.REPOSITORY_NAME_OWNER_FORMAT
+import com.flixclusive.feature.mobile.provider.add.filter.RepositoriesFilters.Companion.filterRepositories
+import com.flixclusive.feature.mobile.provider.add.filter.RepositoriesFilters.Companion.toRepositoryFilters
 import com.flixclusive.feature.mobile.provider.add.filter.StatusFilters
-import com.flixclusive.feature.mobile.provider.add.util.REPOSITORY_NAME_OWNER_FORMAT
-import com.flixclusive.feature.mobile.provider.add.util.filterAuthors
-import com.flixclusive.feature.mobile.provider.add.util.filterLanguages
-import com.flixclusive.feature.mobile.provider.add.util.filterProviderType
-import com.flixclusive.feature.mobile.provider.add.util.filterRepositories
-import com.flixclusive.feature.mobile.provider.add.util.filterStatus
-import com.flixclusive.feature.mobile.provider.add.util.loadAuthorFilters
-import com.flixclusive.feature.mobile.provider.add.util.loadLanguageFilters
-import com.flixclusive.feature.mobile.provider.add.util.loadProviderTypeFilters
-import com.flixclusive.feature.mobile.provider.add.util.loadRepositoryFilters
-import com.flixclusive.feature.mobile.provider.add.util.loadSortFilters
-import com.flixclusive.feature.mobile.provider.add.util.loadStatusFilters
-import com.flixclusive.feature.mobile.provider.add.util.sort
-import com.flixclusive.model.datastore.user.ProviderPreferences
-import com.flixclusive.model.datastore.user.UserPreferences
+import com.flixclusive.feature.mobile.provider.add.filter.StatusFilters.Companion.filterStatus
+import com.flixclusive.feature.mobile.provider.add.filter.StatusFilters.Companion.toStatusFilters
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -63,308 +67,310 @@ import javax.inject.Inject
 internal class AddProviderViewModel
     @Inject
     constructor(
-        dataStoreManager: DataStoreManager,
+        private val dataStoreManager: DataStoreManager,
         private val providerRepository: ProviderRepository,
-        private val getOnlineProvidersUseCase: GetOnlineProvidersUseCase,
-        private val providerUpdaterUseCase: ProviderUpdaterUseCase,
-        private val providerLoaderUseCase: ProviderLoaderUseCase,
-        private val providerUnloaderUseCase: ProviderUnloaderUseCase,
+        private val getProviderFromRemote: GetProviderFromRemoteUseCase,
+        private val _updateProvider: UpdateProviderUseCase,
+        private val loadProvider: LoadProviderUseCase,
+        private val unloadProvider: UnloadProviderUseCase,
+        private val appDispatchers: AppDispatchers,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(AddProviderUiState())
         val uiState = _uiState.asStateFlow()
 
         private var installSelectionJob: Job? = null
+        private var initJob: Job? = null
 
         private val providerJobs = HashMap<String, Job?>()
         val providerInstallationStatusMap = mutableStateMapOf<String, ProviderInstallationStatus>()
 
-        private val _initializeError = MutableSharedFlow<Boolean>()
-        val initializeError = _initializeError.asSharedFlow()
+        private val _selected = MutableStateFlow(persistentSetOf<ProviderMetadata>())
+        val selected = _selected.asStateFlow()
 
-        private val _providerLoadErrors = MutableSharedFlow<List<String>>()
-        val providerLoadErrors = _providerLoadErrors.asSharedFlow()
+        private val _searchQuery = MutableStateFlow("")
+        val searchQuery = _searchQuery.asStateFlow()
 
-        private val repositoriesAsFlow =
-            dataStoreManager
-                .getUserPrefs<ProviderPreferences>(UserPreferences.PROVIDER_PREFS_KEY)
-                .mapLatest { it.repositories }
-                .asStateFlow(viewModelScope)
+        private val _filters = MutableStateFlow(persistentListOf<AddProviderFilterType<*>>())
+        val filters = _filters.asStateFlow()
 
-        val selectedProviders =
-            uiState
-                .mapLatest { it.selectedProviders }
-                .distinctUntilChanged()
-                .asStateFlow(viewModelScope)
+        private val _availableProviders = MutableStateFlow(persistentListOf<SearchableProvider>())
+        val availableProviders = _availableProviders
+            .asStateFlow()
+            .combine(filters) { providers, currentFilters ->
+                // Apply filters first then search query
+                // This way, the every time the query changes,
+                // we don't have to re-apply the filters
+                currentFilters
+                    .fastFold(providers as List<SearchableProvider>) { currentList, filter ->
+                        when (filter) {
+                            is CommonSortFilters -> currentList.sort(filter)
+                            is AuthorsFilters -> currentList.filterAuthors(filter)
+                            is RepositoriesFilters -> currentList.filterRepositories(filter)
+                            is LanguagesFilters -> currentList.filterLanguages(filter)
+                            is ProviderTypeFilters -> currentList.filterProviderType(filter)
+                            is StatusFilters -> currentList.filterStatus(filter)
+                            else -> throw IllegalArgumentException("Invalid filter provided: $filter")
+                        }
+                    }.toPersistentList()
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = persistentListOf(),
+            )
 
-        val filters =
-            uiState
-                .mapLatest { it.filters }
-                .distinctUntilChanged()
-                .asStateFlow(viewModelScope)
-
-        val availableProviders =
-            uiState
-                .mapLatest {
-                    it.availableProviders
-                        .filter(
-                            searchQuery = it.searchQuery,
-                            filters = it.filters,
-                        )
-                }.distinctUntilChanged()
-                .asStateFlow(viewModelScope)
-
-        private var initJob: Job? = null
+        val searchResults = availableProviders
+            .combine(searchQuery) { providers, query ->
+                if (query.isBlank()) {
+                    providers
+                } else {
+                    providers
+                        .fastFilter {
+                            it.searchText.contains(query, ignoreCase = true)
+                        }.toPersistentList()
+                }
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = persistentListOf(),
+            )
 
         init {
-            observeRepositoriesToReinitialize()
+            initialize()
         }
 
         fun initialize() {
             if (initJob?.isActive == true) return
 
-            initJob =
-                viewModelScope.launch {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = true,
-                            filters = emptyList(),
-                            availableProviders = emptyList(),
-                            selectedProviders = emptyList(),
-                            failedToInitializeRepositories = emptyList(),
-                        )
-                    }
-
-                    val repositories = repositoriesAsFlow.first()
-                    loadAvailableProviders(repositories)
-                    val providers = availableProviders.first()
-
-                    val hasErrors = _uiState.value.failedToInitializeRepositories.isNotEmpty()
-
-                    if (providers.isNotEmpty()) {
-                        val sortFilters = loadSortFilters()
-                        val repositoryFilters = providers.loadRepositoryFilters(repositories)
-                        val authorFilters = providers.loadAuthorFilters()
-                        val languageFilters = providers.loadLanguageFilters()
-                        val providerTypeFilters = providers.loadProviderTypeFilters()
-                        val statusFilters = providers.loadStatusFilters()
-
-                        _uiState.update {
-                            it.copy(
-                                filters =
-                                    listOf(
-                                        sortFilters,
-                                        repositoryFilters,
-                                        authorFilters,
-                                        languageFilters,
-                                        providerTypeFilters,
-                                        statusFilters,
-                                    ),
-                            )
-                        }
-                    } else if (hasErrors) {
-                        _initializeError.emit(true)
-                    }
-
-                    _uiState.update {
-                        it.copy(isLoading = false)
-                    }
+            initJob = viewModelScope.launch {
+                _selected.value = _selected.value.clear()
+                _availableProviders.value = _availableProviders.value.clear()
+                _uiState.update {
+                    it.copy(
+                        isLoading = true,
+                        repositoryExceptions = emptyList(),
+                    )
                 }
-        }
 
-        private fun observeRepositoriesToReinitialize() {
-            viewModelScope.launch {
-                repositoriesAsFlow.collectLatest {
-                    initialize()
-                }
+                val repositories = dataStoreManager
+                    .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+                    .map { it.repositories }
+                    .first()
+
+                loadAvailableProviders(repositories) // Load providers from the given repositories
+
+                val providers = _availableProviders.value
+
+                val sortFilters = CommonSortFilters.create()
+                val repositoryFilters = providers.toRepositoryFilters(repositories)
+                val authorFilters = providers.toAuthorFilters()
+                val languageFilters = providers.toLanguageFilters()
+                val providerTypeFilters = providers.toProviderTypeFilters()
+                val statusFilters = providers.toStatusFilters()
+
+                _filters.value = persistentListOf(
+                    sortFilters,
+                    repositoryFilters,
+                    authorFilters,
+                    languageFilters,
+                    providerTypeFilters,
+                    statusFilters,
+                )
+
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
 
         fun onSearchQueryChange(query: String) {
-            _uiState.update {
-                it.copy(searchQuery = query)
-            }
-        }
-
-        fun onToggleFilterSheet(state: Boolean) {
-            _uiState.update {
-                it.copy(isShowingFilterSheet = state)
-            }
+            _searchQuery.value = query
         }
 
         fun onInstallSelection() {
             if (installSelectionJob?.isActive == true) return
 
-            installSelectionJob =
-                AppDispatchers.Default.scope.launch {
-                    val selectedProviders = _uiState.value.selectedProviders
-                    _uiState.update { it.copy(selectedProviders = emptyList()) }
+            installSelectionJob = appDispatchers.ioScope.launch {
+                _uiState.update { it.copy(isInstallingProviders = _selected.value.isNotEmpty()) }
+                _selected.value.forEach { provider ->
+                    val job = providerJobs[provider.id]
+                    val installationStatus = providerInstallationStatusMap[provider.id]!!
 
-                    val errors = mutableListOf<String>()
-                    selectedProviders.forEach { provider ->
-                        val job = providerJobs[provider.id]
-                        val installationStatus = providerInstallationStatusMap[provider.id]!!
-
-                        if (job?.isActive == true ||
-                            installationStatus.isInstalled ||
-                            installationStatus.isInstalling
-                        ) {
-                            return@forEach
-                        }
-
-                        providerJobs[provider.id] = null
-                        providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.Installing
-
-                        try {
-                            if (installationStatus.isOutdated) {
-                                providerUpdaterUseCase.update(provider.id)
-                            } else {
-                                providerLoaderUseCase.load(
-                                    provider = provider,
-                                    needsDownload = true,
-                                )
-                            }
-                        } catch (_: Exception) {
-                            errors.add(provider.name)
-                        }
-
-                        val isInstalled = providerRepository.getProviderMetadata(provider.id) != null
-                        val status =
-                            when (isInstalled) {
-                                true -> ProviderInstallationStatus.Installed
-                                false -> ProviderInstallationStatus.NotInstalled
-                            }
-
-                        providerInstallationStatusMap[provider.id] = status
+                    if (job?.isActive == true ||
+                        installationStatus.isInstalled ||
+                        installationStatus.isInstalling
+                    ) {
+                        return@forEach
                     }
 
-                    _providerLoadErrors.emit(errors)
-                }
-        }
-
-        fun onToggleInstallation(provider: ProviderMetadata) {
-            val job = providerJobs[provider.id]
-            if (job?.isActive == true || installSelectionJob?.isActive == true) return
-
-            providerJobs[provider.id] =
-                AppDispatchers.Default.scope.launch {
-                    when (providerInstallationStatusMap[provider.id]) {
+                    when (installationStatus) {
                         ProviderInstallationStatus.NotInstalled -> installProvider(provider)
                         ProviderInstallationStatus.Installed -> uninstallProvider(provider)
                         ProviderInstallationStatus.Outdated -> updateProvider(provider)
                         else -> Unit
                     }
                 }
+                _uiState.update { it.copy(isInstallingProviders = false) }
+            }
         }
 
+        /**
+         * Toggles the installation status of the given provider.
+         *
+         * @param provider The provider to toggle installation for.
+         * */
+        fun onToggleInstallation(provider: ProviderMetadata) {
+            val job = providerJobs[provider.id]
+            if (job?.isActive == true || installSelectionJob?.isActive == true) return
+
+            providerJobs[provider.id] = appDispatchers.ioScope.launch {
+                when (providerInstallationStatusMap[provider.id]) {
+                    ProviderInstallationStatus.NotInstalled -> installProvider(provider)
+                    ProviderInstallationStatus.Installed -> uninstallProvider(provider)
+                    ProviderInstallationStatus.Outdated -> updateProvider(provider)
+                    else -> Unit
+                }
+            }
+        }
+
+        /**
+         * Updates the given provider.
+         *
+         * @param provider The provider to update.
+         * */
         private suspend fun updateProvider(provider: ProviderMetadata) {
             try {
-                providerUpdaterUseCase.update(provider.id)
+                infoLog("Updating and installing provider: ${provider.name}")
+                providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.Installing
+
+                _updateProvider(provider)
                 providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.Installed
-            } catch (_: DownloadFailed) {
-                _providerLoadErrors.emit(listOf(provider.name))
-            }
-        }
-
-        private suspend fun installProvider(provider: ProviderMetadata): Boolean {
-            providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.Installing
-
-            try {
-                providerLoaderUseCase.load(
-                    provider = provider,
-                    needsDownload = true,
-                )
-            } catch (_: Exception) {
-                _providerLoadErrors.emit(listOf(provider.name))
-            }
-
-            val isInstalled = providerRepository.getProviderMetadata(provider.id) != null
-            val status =
-                when (isInstalled) {
-                    true -> ProviderInstallationStatus.Installed
-                    false -> ProviderInstallationStatus.NotInstalled
+            } catch (e: Throwable) {
+                _uiState.update {
+                    val error = ProviderWithThrowable(provider = provider, throwable = e)
+                    it.copy(providerExceptions = it.providerExceptions + error)
                 }
-
-            providerInstallationStatusMap[provider.id] = status
-            return isInstalled
+            }
         }
 
-        private suspend fun uninstallProvider(metadata: ProviderMetadata) {
-            providerUnloaderUseCase.unload(metadata)
-            providerInstallationStatusMap[metadata.id] = ProviderInstallationStatus.NotInstalled
+        /**
+         * Installs the given provider.
+         *
+         * @param provider The provider to install.
+         *
+         * @return True if the provider was installed successfully, false otherwise.
+         * */
+        private suspend fun installProvider(provider: ProviderMetadata) {
+            loadProvider(metadata = provider)
+                .onStart {
+                    infoLog("Downloading and installing provider: ${provider.name}")
+                    providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.Installing
+                }.onCompletion { e ->
+                    if (e != null) {
+                        _uiState.update {
+                            val error = ProviderWithThrowable(provider = provider, throwable = e)
+                            it.copy(providerExceptions = it.providerExceptions + error)
+                        }
+                    }
+
+                    // There is a good case that the provider was installed successfully,
+                    // but an error was thrown after the installation.
+                    // So we check if the provider is installed or not.
+                    val isInstalled = providerRepository.getProviderMetadata(provider.id) != null
+                    val status = when (isInstalled) {
+                        true -> ProviderInstallationStatus.Installed
+                        false -> ProviderInstallationStatus.NotInstalled
+                    }
+
+                    providerInstallationStatusMap[provider.id] = status
+                }.collect()
+        }
+
+        /**
+         * Uninstalls the given provider.
+         *
+         * @param provider The provider to uninstall.
+         * */
+        private suspend fun uninstallProvider(provider: ProviderMetadata) {
+            try {
+                // Simulate loading state for better UX
+                infoLog("Uninstalling provider: ${provider.name}")
+                providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.Installing
+
+                unloadProvider(provider)
+                providerInstallationStatusMap[provider.id] = ProviderInstallationStatus.NotInstalled
+            } catch (e: Throwable) {
+                _uiState.update {
+                    val error = ProviderWithThrowable(provider = provider, throwable = e)
+                    it.copy(providerExceptions = it.providerExceptions + error)
+                }
+            }
         }
 
         fun onUpdateFilter(
             index: Int,
             filter: AddProviderFilterType<*>,
         ) {
-            _uiState.update {
-                val newList = it.filters.toMutableList()
-                newList[index] = filter
-                it.copy(filters = newList.toList())
-            }
+            _filters.update { it.set(index, filter) }
         }
 
         fun onUnselectAll() {
-            _uiState.update {
-                it.copy(selectedProviders = emptyList())
-            }
+            _selected.update { it.clear() }
         }
 
         fun onToggleSelect(provider: ProviderMetadata) {
-            _uiState.update {
-                val newList =
-                    if (it.selectedProviders.contains(provider)) {
-                        val newList = it.selectedProviders.toMutableList()
-                        newList.remove(provider)
-                        newList.toList()
-                    } else {
-                        it.selectedProviders + provider
-                    }
-
-                it.copy(selectedProviders = newList)
+            _selected.update {
+                if (it.contains(provider)) {
+                    it.remove(provider)
+                } else {
+                    it.add(provider)
+                }
             }
         }
 
         fun onToggleSearchBar(state: Boolean) {
-            _uiState.update {
-                it.copy(isShowingSearchBar = state)
-            }
+            _uiState.update { it.copy(isShowingSearchBar = state) }
         }
 
+        fun consumeProviderExceptions() {
+            _uiState.update { it.copy(providerExceptions = emptyList()) }
+        }
+
+        /**
+         * Loads providers from the given list of repositories.
+         *
+         * Errors from each repository are collected and stored in the UI state.
+         * */
         private suspend fun loadAvailableProviders(repositories: List<Repository>) {
-            val failedToLoad = mutableListOf<Repository>()
-            val providers = mutableListOf<ProviderMetadata>()
-            repositories.fastForEach { repository ->
-                when (val result = getOnlineProvidersUseCase(repository)) {
+            repositories.forEach { repository ->
+                when (val result = getProviderFromRemote(repository)) {
                     Resource.Loading -> Unit
-                    is Resource.Failure -> failedToLoad.add(repository)
-                    is Resource.Success -> providers.addAll(result.data!!)
+                    is Resource.Failure -> {
+                        val pair = repository to result.error!!
+                        _uiState.update {
+                            it.copy(repositoryExceptions = it.repositoryExceptions + pair)
+                        }
+                    }
+
+                    is Resource.Success -> {
+                        val providers = result.data!!
+
+                        providers.fastForEach {
+                            val provider = SearchableProvider.from(it)
+                            var status = ProviderInstallationStatus.NotInstalled
+
+                            val metadata = providerRepository.getProviderMetadata(provider.id)
+                            val isInstalled = metadata != null
+
+                            if (isInstalled && isOutdated(old = metadata!!, new = provider.metadata)) {
+                                status = ProviderInstallationStatus.Outdated
+                            } else if (isInstalled) {
+                                status = ProviderInstallationStatus.Installed
+                            }
+
+                            providerInstallationStatusMap[provider.id] = status
+
+                            _availableProviders.value = _availableProviders.value.add(provider)
+                        }
+                    }
                 }
-            }
-
-            loadProvidersInstallationState(providers)
-            _uiState.update {
-                it.copy(
-                    failedToInitializeRepositories = failedToLoad.toList(),
-                    availableProviders = providers.map { SearchableProvider.from(it) },
-                )
-            }
-        }
-
-        private fun loadProvidersInstallationState(providers: List<ProviderMetadata>) {
-            providers.forEach { provider ->
-                var status = ProviderInstallationStatus.NotInstalled
-
-                val metadata = providerRepository.getProviderMetadata(provider.id)
-                val isInstalledAlready = metadata != null
-
-                if (isInstalledAlready && isOutdated(old = metadata!!, new = provider)) {
-                    status = ProviderInstallationStatus.Outdated
-                } else if (isInstalledAlready) {
-                    status = ProviderInstallationStatus.Installed
-                }
-
-                providerInstallationStatusMap[provider.id] = status
             }
         }
 
@@ -381,58 +387,27 @@ internal class AddProviderViewModel
 
             return manifest.versionCode < new.versionCode
         }
-
-        private fun List<SearchableProvider>.filter(
-            searchQuery: String,
-            filters: List<AddProviderFilterType<*>>,
-        ): List<ProviderMetadata> {
-            var newSearchableList = this
-
-            if (searchQuery.isNotEmpty()) {
-                newSearchableList =
-                    newSearchableList.fastFilter { provider ->
-                        provider.searchText.contains(searchQuery, true)
-                    }
-            }
-
-            var newList = newSearchableList.fastMap { it.provider }
-            filters.fastForEach { filter ->
-                newList =
-                    when (filter) {
-                        is CommonSortFilters -> newList.sort(filter)
-                        is AuthorsFilters -> newList.filterAuthors(filter)
-                        is RepositoriesFilters -> newList.filterRepositories(filter)
-                        is LanguagesFilters -> newList.filterLanguages(filter)
-                        is ProviderTypeFilters -> newList.filterProviderType(filter)
-                        is StatusFilters -> newList.filterStatus(filter)
-                        else -> throw IllegalArgumentException("Invalid filter provided: $filter")
-                    }
-            }
-
-            return newList
-        }
     }
 
 @Immutable
 internal data class AddProviderUiState(
-    val searchQuery: String = "",
-    val isLoading: Boolean = true,
-    val isShowingFilterSheet: Boolean = false,
+    val isLoading: Boolean = false,
+    val isInstallingProviders: Boolean = false,
+    val repositoryExceptions: List<RepositoryWithError> = emptyList(),
+    val providerExceptions: List<ProviderWithThrowable> = emptyList(),
     val isShowingSearchBar: Boolean = false,
-    val filters: List<AddProviderFilterType<*>> = emptyList(),
-    val availableProviders: List<SearchableProvider> = emptyList(),
-    val selectedProviders: List<ProviderMetadata> = emptyList(),
-    val failedToInitializeRepositories: List<Repository> = emptyList(),
-    val errorMessage: UiText? = null,
-) {
-    val hasInitializationErrors: Boolean get() = failedToInitializeRepositories.isNotEmpty()
-}
+)
+
+internal typealias RepositoryWithError = Pair<Repository, UiText>
 
 @Immutable
 internal data class SearchableProvider(
-    val provider: ProviderMetadata,
+    val metadata: ProviderMetadata,
     val searchText: String,
 ) {
+    val id get() = metadata.id
+    val name get() = metadata.name
+
     companion object {
         fun from(provider: ProviderMetadata): SearchableProvider {
             val searchText =

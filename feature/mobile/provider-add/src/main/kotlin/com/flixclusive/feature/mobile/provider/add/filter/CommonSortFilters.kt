@@ -1,7 +1,10 @@
 package com.flixclusive.feature.mobile.provider.add.filter
 
 import android.content.Context
-import com.flixclusive.core.strings.UiText
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.strings.R
+import com.flixclusive.feature.mobile.provider.add.SearchableProvider
+import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import kotlinx.collections.immutable.toImmutableList
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -23,4 +26,54 @@ internal data class CommonSortFilters(
     override val selectedValue: SortSelection,
 ) : AddProviderFilterType.Sort<SortableProperty>(
     options = SortableProperty.entries.toImmutableList(),
-)
+) {
+    companion object {
+        private inline fun <T : Comparable<T>> getSortComparator(
+            ascending: Boolean,
+            crossinline selector: (SearchableProvider) -> T?,
+        ): Comparator<SearchableProvider> {
+            return if (ascending) {
+                compareBy(selector)
+            } else {
+                compareByDescending(selector)
+            }
+        }
+
+        fun List<SearchableProvider>.sort(filter: CommonSortFilters): List<SearchableProvider> {
+            val option = filter.options[filter.selectedValue.index]
+
+            return when (option) {
+                SortableProperty.Name -> {
+                    sortedWith(getSortComparator(filter.selectedValue.ascending) { it.metadata.name })
+                }
+
+                SortableProperty.Repository -> {
+                    sortedWith(
+                        getSortComparator(filter.selectedValue.ascending) {
+                            it.metadata.repositoryUrl
+                                .toValidRepositoryLink()
+                                .name
+                        },
+                    )
+                }
+
+                SortableProperty.Language -> {
+                    sortedWith(
+                        getSortComparator(filter.selectedValue.ascending) { it.metadata.language.languageCode },
+                    )
+                }
+
+                SortableProperty.Status -> {
+                    sortedWith(getSortComparator(filter.selectedValue.ascending) { it.metadata.status.ordinal })
+                }
+            }
+        }
+
+        fun create(): CommonSortFilters {
+            return CommonSortFilters(
+                selectedValue = SortSelection(0),
+                title = UiText.StringResource(R.string.sort_by),
+            )
+        }
+    }
+}
