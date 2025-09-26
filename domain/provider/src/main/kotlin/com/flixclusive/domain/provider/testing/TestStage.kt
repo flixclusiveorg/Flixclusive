@@ -45,7 +45,7 @@ sealed class TestStage(
 
     fun toString(context: Context): String {
         return when (this) {
-            is Idle -> ""
+            is Idle -> context.getString(R.string.provider_test_stage_idle)
             is Stage1 -> context.getString(R.string.provider_test_stage_stage1)
             is Stage2 -> context.getString(R.string.provider_test_stage_stage2)
             is Done -> context.getString(R.string.provider_test_stage_done)

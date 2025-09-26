@@ -29,7 +29,7 @@ data class ProviderTestCaseResult(
     val fullLog: UiText? = null,
     val shortLog: UiText? = null
 ) {
-    val isSuccess: Boolean get() = status == TestStatus.SUCCESS
+    val isSuccess: Boolean get() = status == SUCCESS
 }
 
 /**
