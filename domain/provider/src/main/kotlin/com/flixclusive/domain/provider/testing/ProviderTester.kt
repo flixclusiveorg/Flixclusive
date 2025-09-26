@@ -65,4 +65,9 @@ interface ProviderTester {
      * Stops the current test job if it is running or paused.
      * */
     fun stop()
+
+    /**
+     * Clears all test results.
+     * */
+    fun clear()
 }

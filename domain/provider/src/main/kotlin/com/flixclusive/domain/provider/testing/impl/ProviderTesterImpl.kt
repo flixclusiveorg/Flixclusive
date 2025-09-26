@@ -56,62 +56,59 @@ internal class ProviderTesterImpl
         override val filmOnTest = _filmOnTest.asStateFlow()
 
         override fun start(providers: ArrayList<ProviderMetadata>) {
-            testJob =
-                appDispatchers.ioScope.launchPausing {
-                    _testJobState.value = TestJobState.RUNNING
+            testJob = appDispatchers.defaultScope.launchPausing {
+                _testJobState.value = TestJobState.RUNNING
 
-                    for (i in providers.indices) {
-                        val provider = providers[i]
+                for (i in providers.indices) {
+                    val provider = providers[i]
 
-                        val testOutputs =
-                            ProviderTestResult(
-                                provider = provider.addTestCountSuffix(),
-                            )
-
-                        _results.add(testOutputs)
-                        val apiTestCaseIndex =
-                            testOutputs.add(
-                                ProviderTestCaseResult(
-                                    status = TestStatus.RUNNING,
-                                    name = UiText.from(R.string.ptest_get_api),
-                                ),
-                            )
-
-                        val api =
-                            loadProviderApi(
-                                metadata = provider,
-                                updateOutput = {
-                                    testOutputs.update(
-                                        index = apiTestCaseIndex,
-                                        output = it,
-                                    )
-                                },
-                            ) ?: continue
-
-                        updateFilmOnTest(api)
-
-                        runTestCases(
-                            api = api,
-                            testCases = testCases.propertyTestCases,
-                            stage = TestStage.Stage1(providerOnTest = provider),
-                            addOutput = testOutputs::add,
-                            updateOutput = testOutputs::update,
+                    val testOutputs =
+                        ProviderTestResult(
+                            provider = provider.addTestCountSuffix(),
                         )
 
-                        runTestCases(
-                            api = api,
-                            testCases = testCases.methodTestCases,
-                            stage = TestStage.Stage2(providerOnTest = provider),
-                            addOutput = testOutputs::add,
-                            updateOutput = testOutputs::update,
-                        )
+                    _results.add(testOutputs)
+                    val apiTestCaseIndex = testOutputs.add(
+                        ProviderTestCaseResult(
+                            status = TestStatus.RUNNING,
+                            name = UiText.from(R.string.ptest_get_api),
+                        ),
+                    )
 
-                        _testStage.update { TestStage.Done(providerOnTest = provider) }
-                    }
+                    val api = loadProviderApi(
+                        metadata = provider,
+                        updateOutput = {
+                            testOutputs.update(
+                                index = apiTestCaseIndex,
+                                output = it,
+                            )
+                        },
+                    ) ?: continue
 
-                    _testStage.update { TestStage.Idle(providerOnTest = null) }
-                    _testJobState.value = TestJobState.IDLE
+                    updateFilmOnTest(api)
+
+                    runTestCases(
+                        api = api,
+                        testCases = testCases.propertyTestCases,
+                        stage = TestStage.Stage1(providerOnTest = provider),
+                        addOutput = testOutputs::add,
+                        updateOutput = testOutputs::update,
+                    )
+
+                    runTestCases(
+                        api = api,
+                        testCases = testCases.methodTestCases,
+                        stage = TestStage.Stage2(providerOnTest = provider),
+                        addOutput = testOutputs::add,
+                        updateOutput = testOutputs::update,
+                    )
+
+                    _testStage.update { TestStage.Done(providerOnTest = provider) }
                 }
+
+                _testStage.update { TestStage.Idle(providerOnTest = null) }
+                _testJobState.value = TestJobState.IDLE
+            }
         }
 
         override fun pause() {
@@ -129,6 +126,10 @@ internal class ProviderTesterImpl
             testJob = null
             _testJobState.value = TestJobState.IDLE
             _testStage.update { TestStage.Idle(providerOnTest = null) }
+        }
+
+        override fun clear() {
+            _results.value = emptyList()
         }
 
         private fun updateFilmOnTest(api: ProviderApi) {
@@ -203,16 +204,14 @@ internal class ProviderTesterImpl
                         ),
                     )
 
-                // TODO: Check if this will be paused when `pause` is called.
-                val finalOutput =
-                    withContext(appDispatchers.io.pausing()) {
-                        testCase.test(
-                            // testName =
-                            testCase.name,
-                            // providerApi =
-                            api,
-                        )
-                    }
+                val finalOutput = withContext(appDispatchers.io.pausing()) {
+                    testCase.test(
+                        // testName =
+                        testCase.name,
+                        // providerApi =
+                        api,
+                    )
+                }
 
                 updateOutput(
                     // index =
@@ -231,14 +230,8 @@ internal class ProviderTesterImpl
         }
 
         private fun ProviderMetadata.addTestCountSuffix(): ProviderMetadata {
-            val testCount =
-                _results.value.count {
-                    it.provider.id == id
-                }
-
-            if (testCount == 0) {
-                return this
-            }
+            val testCount = _results.value.count { it.provider.id == id }
+            if (testCount == 0) return this
 
             return copy(name = "$name ($testCount)")
         }
