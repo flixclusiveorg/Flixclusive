@@ -42,15 +42,15 @@ import androidx.core.graphics.withSave
 @Composable
 fun Modifier.fillMaxAdaptiveWidth(
     compact: Float = 1F,
-    medium: Float = (compact - 0.2F).coerceAtLeast(compact),
-    expanded: Float = (medium - 0.2F).coerceAtLeast(compact),
+    medium: Float = (compact - 0.2F).coerceAtLeast(0f),
+    expanded: Float = (medium - 0.2F).coerceAtLeast(0f),
 ): Modifier {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val windowWidthSizeClass = windowSizeClass.windowWidthSizeClass
-    val windowHeightSizeClass = windowSizeClass.windowHeightSizeClass
+
     val fraction = when {
-        windowWidthSizeClass.isCompact || windowHeightSizeClass.isCompact -> compact
-        windowWidthSizeClass.isMedium || windowHeightSizeClass.isMedium -> medium
+        windowWidthSizeClass.isCompact -> compact
+        windowWidthSizeClass.isMedium -> medium
         windowWidthSizeClass.isExpanded -> expanded
         else -> compact
     }
