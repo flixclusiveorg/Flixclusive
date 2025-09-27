@@ -2,6 +2,7 @@ package com.flixclusive.domain.provider.testing.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.testing.model.ProviderTestCaseResult
@@ -27,9 +28,8 @@ import kotlin.time.measureTimedValue
 
 @Suppress("MemberVisibilityCanBePrivate")
 internal class TestCases(
-    private val appDispatchers: AppDispatchers
+    private val appDispatchers: AppDispatchers,
 ) {
-
     private data class AssertionResult<T>(
         val status: TestStatus,
         val data: T? = null,
@@ -94,18 +94,37 @@ internal class TestCases(
             serializersModule = module
         }
 
+    /**
+     * Data class representing a test case for a provider.
+     * */
     data class ProviderTestCase(
         val name: UiText,
         val stopTestOnFailure: Boolean = false,
         val test: suspend (testName: UiText, api: ProviderApi) -> ProviderTestCaseResult,
     )
 
+    /**
+     * Asserts that a given property is not null and logs the assertion.
+     * */
     private fun <T> assertProperty(data: T) {
         infoLog("Asserting property: $data")
         assertNotNull(data)
         assert(true)
     }
 
+    /**
+     * Asserts the result of a test case while measuring the time taken to execute it.
+     *
+     * @param testName The name of the test case.
+     * @param successShortLog A lambda that generates a short log message for a successful test case.
+     * @param successFullLog A lambda that generates a full log message for a successful test case.
+     * @param failedShortLog A lambda that generates a short log message for a failed test case.
+     * @param notImplementedShortLog An optional lambda that generates a short log message for a not implemented test case.
+     * @param failedFullLog An optional lambda that generates a full log message for a failed test case.
+     * @param assert A suspend function that performs the actual test and returns a result of type T.
+     *
+     * @return A [ProviderTestCaseResult] containing the result of the test case, including status, time taken, and log messages.
+     * */
     private suspend fun <T> assertWithMeasuredTime(
         testName: UiText,
         successShortLog: (T?) -> UiText,
@@ -140,21 +159,27 @@ internal class TestCases(
         val (shortLog, fullLog) =
             when (value.status) {
                 TestStatus.SUCCESS -> successShortLog(value.data) to successFullLog(value.data)
-                TestStatus.RUNNING -> UiText.StringValue("") to UiText.StringValue("")
+                TestStatus.RUNNING -> UiText.from("") to UiText.from("")
                 TestStatus.NOT_IMPLEMENTED, TestStatus.FAILURE -> {
                     val actualNotImplementedShortLog =
-                        notImplementedShortLog?.invoke(value.error)
+                        safeCall { notImplementedShortLog?.invoke(value.error) }
                             ?: value.error?.localizedMessage?.let(UiText::from)
                             ?: UiText.from(R.string.ptest_error_not_implemented)
 
                     val actualFailedFullLog =
-                        failedFullLog?.invoke(value.error)
-                            ?: UiText.from(value.error!!.stackTraceToString())
+                        safeCall { failedFullLog?.invoke(value.error) }
+                            ?: value.error?.stackTraceToString()?.let(UiText::from)
+                            ?: UiText.from(R.string.ptest_error_default_full_log)
+
+                    val shortLog =
+                        safeCall { failedShortLog(value.error) }
+                            ?: value.error?.localizedMessage?.let(UiText::from)
+                            ?: UiText.from(R.string.ptest_error_default_short_log)
 
                     if (value.status == TestStatus.NOT_IMPLEMENTED) {
                         actualNotImplementedShortLog to actualFailedFullLog
                     } else {
-                        failedShortLog(value.error) to actualFailedFullLog
+                        shortLog to actualFailedFullLog
                     }
                 }
             }
