@@ -39,11 +39,11 @@ import com.flixclusive.core.common.provider.ProviderInstallationStatus
 import com.flixclusive.core.navigation.navargs.ProviderMetadataNavArgs
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.components.RetryButton
-import com.flixclusive.core.presentation.mobile.components.dialog.UnsafeInstallAlertDialog
+import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.UnsafeInstallAlertDialog
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.extensions.showMessage
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme

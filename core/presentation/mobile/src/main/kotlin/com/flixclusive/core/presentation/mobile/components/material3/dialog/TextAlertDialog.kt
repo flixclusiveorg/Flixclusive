@@ -1,4 +1,4 @@
-package com.flixclusive.core.presentation.mobile.components.dialog
+package com.flixclusive.core.presentation.mobile.components.material3.dialog
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -10,34 +10,30 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.flixclusive.core.strings.R as LocaleR
 
 /**
  *
- * A custom icon labeled alert dialog
+ * A custom text labeled alert dialog
  * */
 @Composable
-fun IconAlertDialog(
-    painter: Painter,
-    contentDescription: String?,
-    description: CharSequence,
+fun TextAlertDialog(
+    title: CharSequence,
+    message: CharSequence,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
-    tint: Color = MaterialTheme.colorScheme.primary,
     dialogProperties: DialogProperties = DialogProperties(),
     confirmButtonLabel: String = stringResource(id = LocaleR.string.ok),
     dismissButtonLabel: String? = stringResource(id = LocaleR.string.cancel),
@@ -104,16 +100,18 @@ fun IconAlertDialog(
             }
         }
     ) {
-        Icon(
-            painter = painter,
-            contentDescription = contentDescription,
-            tint = tint,
+        CharSequenceText(
+            text = title,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 17.sp
+            ),
             modifier = Modifier
                 .padding(10.dp)
         )
 
         CharSequenceText(
-            text = description,
+            text = message,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier
                 .fillMaxWidth()
@@ -133,13 +131,10 @@ private fun CommonNoticeDialogPreview() {
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            IconAlertDialog(
-                painter = painterResource(id = com.flixclusive.core.drawables.R.drawable.warning),
-                contentDescription = stringResource(
-                    id = LocaleR.string.warning_content_description
-                ),
+            TextAlertDialog(
+                title = "Alert!",
                 dismissButtonLabel = null,
-                description = " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus diam orci, blandit sit amet dolor nec, congue ultricies risus. Etiam porttitor bibendum elit, vitae luctus libero feugiat quis. Praesent vel finibus nisl. Ut quis libero mi. Proin molestie eros elit, in condimentum justo aliquam ut. Suspendisse gravida luctus ornare. Morbi nulla est, pretium a vestibulum nec, lobortis ac mauris. Sed viverra ipsum quis scelerisque cursus. Praesent sed libero enim. Aenean eleifend ut urna in commodo. Pellentesque pretium tempor magna, nec tempor arcu venenatis vitae. Aliquam lacinia faucibus leo, facilisis viverra sapien ullamcorper eu.\n" +
+                message = " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus diam orci, blandit sit amet dolor nec, congue ultricies risus. Etiam porttitor bibendum elit, vitae luctus libero feugiat quis. Praesent vel finibus nisl. Ut quis libero mi. Proin molestie eros elit, in condimentum justo aliquam ut. Suspendisse gravida luctus ornare. Morbi nulla est, pretium a vestibulum nec, lobortis ac mauris. Sed viverra ipsum quis scelerisque cursus. Praesent sed libero enim. Aenean eleifend ut urna in commodo. Pellentesque pretium tempor magna, nec tempor arcu venenatis vitae. Aliquam lacinia faucibus leo, facilisis viverra sapien ullamcorper eu.\n" +
                         "\n" +
                         "Integer ullamcorper libero vel efficitur vulputate. Sed aliquam mauris eu sollicitudin fringilla. Proin accumsan, sem non pulvinar tristique, lacus turpis vehicula ante, id feugiat nisl risus in ex. Aenean lacus sem, dapibus eget vestibulum sed, condimentum eu nulla. Praesent fringilla eros vel libero fermentum, non varius quam pharetra. Mauris nec ligula nibh. Pellentesque vel orci ut libero rutrum tempor. Maecenas fermentum lorem enim, quis commodo ante bibendum et. Integer aliquam mi id magna porta, ut viverra lacus ultrices. Nunc aliquet ut ante at ornare. Proin placerat egestas est, sed suscipit metus porta malesuada. Sed ligula lectus, iaculis nec lacinia in, commodo sed orci. Integer maximus, justo ut rutrum dignissim, ex eros maximus lacus, ut finibus massa neque vel velit. Proin sodales turpis ac ipsum lacinia volutpat.\n" +
                         "\n" +
@@ -159,10 +154,9 @@ private fun CommonNoticeDialogPreviewPart2() {
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            IconAlertDialog(
-                painter = painterResource(id = com.flixclusive.core.drawables.R.drawable.warning),
-                contentDescription = stringResource(id = LocaleR.string.warning_content_description),
-                description = " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus diam orci, blandit sit amet dolor nec, congue ultricies risus. Etiam porttitor bibendum",
+            TextAlertDialog(
+                title = "Alert!",
+                message = " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus diam orci, blandit sit amet dolor nec, congue ultricies risus. Etiam porttitor bibendum",
                 onConfirm = {},
                 onDismiss = {}
             )

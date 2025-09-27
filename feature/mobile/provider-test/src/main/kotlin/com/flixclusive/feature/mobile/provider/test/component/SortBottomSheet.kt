@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.drawables.R
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.CommonBottomSheet
+import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.provider.test.SortOption
 import com.flixclusive.core.strings.R as LocaleR

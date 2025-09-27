@@ -53,7 +53,7 @@ import com.flixclusive.core.presentation.common.extensions.ifElse
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.extensions.isMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
@@ -193,7 +193,8 @@ private fun PlayButton(
     ) {
         Box(
             modifier =
-                modifier.minimumInteractiveComponentSize()
+                modifier
+                    .minimumInteractiveComponentSize()
                     .widthIn(min = 125.dp)
                     .clip(shape)
                     .drawBehind {

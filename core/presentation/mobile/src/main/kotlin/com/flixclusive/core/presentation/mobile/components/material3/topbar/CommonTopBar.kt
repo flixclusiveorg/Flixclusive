@@ -1,4 +1,4 @@
-package com.flixclusive.core.presentation.mobile.components.topbar
+package com.flixclusive.core.presentation.mobile.components.material3.topbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,9 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getAdaptiveTopBarHeight
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
+import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getAdaptiveTopBarHeight
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -129,7 +129,8 @@ fun ActionButton(
                         color = backgroundColor,
                         alpha = if (enabled) 1f else 0.6f,
                     )
-                }.clickable(
+                }
+                .clickable(
                     onClick = onClick,
                     enabled = enabled,
                     role = Role.Button,

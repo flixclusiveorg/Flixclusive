@@ -61,8 +61,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
-import com.flixclusive.core.presentation.mobile.components.dialog.IconAlertDialog
-import com.flixclusive.core.presentation.mobile.components.dialog.TextAlertDialog
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp

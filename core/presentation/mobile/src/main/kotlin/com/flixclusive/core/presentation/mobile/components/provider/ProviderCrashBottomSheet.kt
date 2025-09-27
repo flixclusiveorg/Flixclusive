@@ -50,9 +50,9 @@ import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.R
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.CommonBottomSheet
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.components.Placeholder
+import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
 import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.extensions.isExpanded
 import com.flixclusive.core.presentation.mobile.extensions.isMedium
@@ -326,7 +326,8 @@ private fun StackTracePreview(
                 width = 0.5.dp,
                 color = LocalContentColor.current.copy(0.6f),
                 shape = MaterialTheme.shapes.extraSmall,
-            ).background(
+            )
+            .background(
                 color = MaterialTheme.colorScheme.surfaceColorAtElevation(1),
                 shape = MaterialTheme.shapes.extraSmall,
             ),

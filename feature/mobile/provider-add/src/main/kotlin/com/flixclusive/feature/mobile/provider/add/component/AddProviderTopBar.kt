@@ -7,10 +7,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
-import com.flixclusive.core.presentation.mobile.components.topbar.ActionButton
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarWithSearch
-import com.flixclusive.core.presentation.mobile.components.topbar.DefaultNavigationIcon
+import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.ActionButton
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarWithSearch
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.DefaultNavigationIcon
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 

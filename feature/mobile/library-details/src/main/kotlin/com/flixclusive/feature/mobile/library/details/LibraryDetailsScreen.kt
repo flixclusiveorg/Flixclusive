@@ -47,10 +47,10 @@ import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePrev
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.LoadingScreen
-import com.flixclusive.core.presentation.mobile.components.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.components.film.FilmCard
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
-import com.flixclusive.core.presentation.mobile.components.topbar.rememberEnterOnlyNearTopScrollBehavior
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.rememberEnterOnlyNearTopScrollBehavior
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth

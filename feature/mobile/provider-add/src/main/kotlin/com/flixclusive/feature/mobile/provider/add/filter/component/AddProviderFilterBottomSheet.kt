@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.mobile.components.CommonBottomSheet
+import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
 import com.flixclusive.feature.mobile.provider.add.filter.AddProviderFilterType
 import com.flixclusive.feature.mobile.provider.add.filter.AuthorsFilters
 import com.flixclusive.feature.mobile.provider.add.filter.CommonSortFilters

@@ -40,10 +40,10 @@ import com.flixclusive.core.common.provider.ProviderInstallationStatus
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.LoadingScreen
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.rememberEnterAlwaysScrollBehavior
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCard
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCardDefaults
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
-import com.flixclusive.core.presentation.mobile.components.topbar.rememberEnterAlwaysScrollBehavior
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal

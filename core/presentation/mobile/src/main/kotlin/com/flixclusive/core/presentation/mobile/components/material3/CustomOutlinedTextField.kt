@@ -1,4 +1,4 @@
-package com.flixclusive.core.presentation.mobile.components
+package com.flixclusive.core.presentation.mobile.components.material3
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -96,7 +96,8 @@ fun CustomOutlinedTextField(
                         } else {
                             Modifier
                         },
-                    ).defaultMinSize(
+                    )
+                    .defaultMinSize(
                         minWidth = OutlinedTextFieldDefaults.MinWidth,
                         minHeight = OutlinedTextFieldDefaults.MinHeight,
                     ),

@@ -50,9 +50,9 @@ import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveText
 import com.flixclusive.core.presentation.mobile.R
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.RetryButton
-import com.flixclusive.core.presentation.mobile.components.topbar.DefaultNavigationIcon
-import com.flixclusive.core.presentation.mobile.components.topbar.TwoRowsTopAppBar
-import com.flixclusive.core.presentation.mobile.components.topbar.rememberEnterAlwaysScrollBehavior
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.DefaultNavigationIcon
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.TwoRowsTopAppBar
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.rememberEnterAlwaysScrollBehavior
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding

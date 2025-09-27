@@ -1,4 +1,4 @@
-package com.flixclusive.core.presentation.mobile.components
+package com.flixclusive.core.presentation.mobile.components.material3
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloat

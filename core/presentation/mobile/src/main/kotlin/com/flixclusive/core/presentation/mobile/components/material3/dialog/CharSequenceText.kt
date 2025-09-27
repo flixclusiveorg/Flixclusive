@@ -1,4 +1,4 @@
-package com.flixclusive.core.presentation.mobile.components.dialog
+package com.flixclusive.core.presentation.mobile.components.material3.dialog
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text

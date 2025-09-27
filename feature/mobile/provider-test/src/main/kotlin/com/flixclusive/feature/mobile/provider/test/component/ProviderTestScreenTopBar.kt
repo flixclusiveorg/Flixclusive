@@ -16,7 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.DefaultTopBarHeight
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.DefaultTopBarHeight
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 

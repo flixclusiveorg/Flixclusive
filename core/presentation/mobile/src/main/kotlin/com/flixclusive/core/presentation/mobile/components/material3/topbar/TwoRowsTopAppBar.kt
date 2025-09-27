@@ -1,4 +1,4 @@
-package com.flixclusive.core.presentation.mobile.components.topbar
+package com.flixclusive.core.presentation.mobile.components.material3.topbar
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutLinearInEasing

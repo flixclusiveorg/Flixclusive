@@ -75,7 +75,7 @@ import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.getLoc
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.Placeholder
-import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
@@ -139,7 +139,8 @@ internal fun EpisodeCard(
                                     doHapticFeedback()
                                     onLongClick()
                                 },
-                            ).padding(4.dp),
+                            )
+                            .padding(4.dp),
                     ) {
                         EpisodePreview(
                             episode = episode,
@@ -307,7 +308,8 @@ private fun EpisodePreview(
                             state = rememberSharedContentState(key = "${episode.number}_image_scrim"),
                             animatedVisibilityScope = animatedVisibilityScope,
                             boundsTransform = boundsTransition,
-                        ).matchParentSize()
+                        )
+                        .matchParentSize()
                         .drawWithContent {
                             drawContent()
                             drawRect(
@@ -474,7 +476,8 @@ private fun Duration(
                 .background(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
                     shape = MaterialTheme.shapes.extraSmall,
-                ).padding(horizontal = 3.dp),
+                )
+                .padding(horizontal = 3.dp),
         ) {
             AdaptiveIcon(
                 painter = painterResource(UiCommonR.drawable.time_circle_outlined),

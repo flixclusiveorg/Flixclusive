@@ -16,11 +16,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
-import com.flixclusive.core.presentation.mobile.components.topbar.ActionButton
-import com.flixclusive.core.presentation.mobile.components.topbar.DefaultNavigationIcon
-import com.flixclusive.core.presentation.mobile.components.topbar.SearchTextFieldAction
-import com.flixclusive.core.presentation.mobile.components.topbar.TwoRowsTopAppBar
+import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.ActionButton
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.DefaultNavigationIcon
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.SearchTextFieldAction
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.TwoRowsTopAppBar
 import com.flixclusive.feature.mobile.library.common.LibraryTopBarState
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR

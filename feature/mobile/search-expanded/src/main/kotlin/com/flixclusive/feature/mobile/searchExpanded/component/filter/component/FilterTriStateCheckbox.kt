@@ -10,8 +10,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.tooling.preview.Preview
+import com.flixclusive.core.presentation.mobile.components.material3.CustomTriStateCheckbox
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.presentation.mobile.components.CustomTriStateCheckbox
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterBottomSheetStyle.getCheckboxColors
 import com.flixclusive.provider.filter.Filter
 

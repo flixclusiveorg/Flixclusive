@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.presentation.mobile.components.material3.CustomCheckbox
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.R
 import com.flixclusive.core.strings.UiText
@@ -38,7 +39,6 @@ import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_CORNER_SIZE
 import com.flixclusive.core.ui.common.dialog.CharSequenceText
 import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
 import com.flixclusive.core.ui.common.util.IconResource
-import com.flixclusive.core.presentation.mobile.components.CustomCheckbox
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.feature.mobile.user.edit.Library
 import com.flixclusive.feature.mobile.user.edit.tweaks.BaseProfileTweak

@@ -1,4 +1,4 @@
-package com.flixclusive.core.presentation.mobile.components
+package com.flixclusive.core.presentation.mobile.components.material3
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

@@ -1,4 +1,4 @@
-package com.flixclusive.core.presentation.mobile.components.topbar
+package com.flixclusive.core.presentation.mobile.components.material3.topbar
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -55,10 +55,10 @@ import com.flixclusive.core.presentation.common.extensions.clearFocusOnSoftKeybo
 import com.flixclusive.core.presentation.common.extensions.showSoftKeyboard
 import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.CustomOutlinedTextField
-import com.flixclusive.core.presentation.mobile.components.PlainTooltipBox
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getAdaptiveTopBarHeight
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
+import com.flixclusive.core.presentation.mobile.components.material3.CustomOutlinedTextField
+import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getAdaptiveTopBarHeight
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.drawables.R as UiCommonR

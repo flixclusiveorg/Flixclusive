@@ -54,7 +54,7 @@ import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
-import com.flixclusive.core.presentation.mobile.components.topbar.ActionButton
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.ActionButton
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.film.LibraryListAndState

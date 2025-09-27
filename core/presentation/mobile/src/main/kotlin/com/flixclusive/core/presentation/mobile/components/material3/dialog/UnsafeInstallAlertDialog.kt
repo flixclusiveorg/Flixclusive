@@ -1,4 +1,4 @@
-package com.flixclusive.core.presentation.mobile.components.dialog
+package com.flixclusive.core.presentation.mobile.components.material3.dialog
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
-import com.flixclusive.core.presentation.mobile.components.CustomCheckbox
+import com.flixclusive.core.presentation.mobile.components.material3.CustomCheckbox
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.R as LocaleR
 
