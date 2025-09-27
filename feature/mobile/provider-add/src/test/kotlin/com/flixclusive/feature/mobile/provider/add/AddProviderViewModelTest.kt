@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.provider.add
 
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
@@ -62,6 +63,7 @@ class AddProviderViewModelTest {
     private lateinit var loadProvider: LoadProviderUseCase
     private lateinit var unloadProvider: UnloadProviderUseCase
     private lateinit var appDispatchers: AppDispatchers
+    private lateinit var savedStateHandle: SavedStateHandle
 
     private val testDispatcher = StandardTestDispatcher(TestCoroutineScheduler())
 
@@ -106,6 +108,9 @@ class AddProviderViewModelTest {
         loadProvider = mockk(relaxed = true)
         unloadProvider = mockk(relaxed = true)
         appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
+        savedStateHandle = mockk(relaxed = true) {
+            every { get<Repository?>("initialSelectedRepositoryFilter") } returns null
+        }
 
         every {
             dataStoreManager.getUserPrefs(
@@ -141,6 +146,7 @@ class AddProviderViewModelTest {
             loadProvider = loadProvider,
             unloadProvider = unloadProvider,
             appDispatchers = appDispatchers,
+            savedStateHandle = savedStateHandle,
         )
     }
 

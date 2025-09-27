@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastFold
 import androidx.compose.ui.util.fastForEach
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
@@ -77,7 +78,10 @@ internal class AddProviderViewModel
         private val loadProvider: LoadProviderUseCase,
         private val unloadProvider: UnloadProviderUseCase,
         private val appDispatchers: AppDispatchers,
+        savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
+        private val navArgs = savedStateHandle.navArgs<AddProviderScreenNavArgs>()
+
         private val _uiState = MutableStateFlow(AddProviderUiState())
         val uiState = _uiState.asStateFlow()
 
@@ -164,7 +168,10 @@ internal class AddProviderViewModel
                 val providers = _availableProviders.value
 
                 val sortFilters = CommonSortFilters.create()
-                val repositoryFilters = providers.toRepositoryFilters(repositories)
+                val repositoryFilters = providers.toRepositoryFilters(
+                    repositories = repositories,
+                    initialSelectedRepository = navArgs.initialSelectedRepositoryFilter,
+                )
                 val authorFilters = providers.toAuthorFilters()
                 val languageFilters = providers.toLanguageFilters()
                 val providerTypeFilters = providers.toProviderTypeFilters()

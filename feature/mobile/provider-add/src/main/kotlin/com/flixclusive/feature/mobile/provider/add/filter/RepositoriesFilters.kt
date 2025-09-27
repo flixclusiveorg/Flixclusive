@@ -31,7 +31,10 @@ internal data class RepositoriesFilters(
             }
         }
 
-        fun List<SearchableProvider>.toRepositoryFilters(repositories: List<Repository>): RepositoriesFilters {
+        fun List<SearchableProvider>.toRepositoryFilters(
+            repositories: List<Repository>,
+            initialSelectedRepository: Repository? = null,
+        ): RepositoriesFilters {
             val repositoriesFromPreferences = repositories.fastMap { repository ->
                 String.format(Locale.getDefault(), REPOSITORY_NAME_OWNER_FORMAT, repository.owner, repository.name)
             }
@@ -45,9 +48,26 @@ internal data class RepositoriesFilters(
                 .fastDistinctBy { it }
                 .toImmutableList()
 
+            val initialSelectedValues = if (initialSelectedRepository != null) {
+                val formattedName = String.format(
+                    Locale.getDefault(),
+                    REPOSITORY_NAME_OWNER_FORMAT,
+                    initialSelectedRepository.owner,
+                    initialSelectedRepository.name,
+                )
+
+                if (options.contains(formattedName)) {
+                    setOf(formattedName)
+                } else {
+                    emptySet()
+                }
+            } else {
+                emptySet()
+            }
+
             return RepositoriesFilters(
                 options = options,
-                selectedValue = setOf(),
+                selectedValue = initialSelectedValues,
                 title = UiText.StringResource(R.string.repositories),
             )
         }

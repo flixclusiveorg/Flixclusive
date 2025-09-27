@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.provider.manage
 
+import com.flixclusive.core.navigation.navigator.AddProviderAction
 import com.flixclusive.core.navigation.navigator.GoBackAction
 import com.flixclusive.core.navigation.navigator.TestProvidersAction
 import com.flixclusive.core.navigation.navigator.ViewMarkdownAction
@@ -11,6 +12,5 @@ interface ProviderManagerScreenNavigator :
     TestProvidersAction,
     ViewMarkdownAction,
     ViewProviderAction,
-    ViewProviderSettingsAction {
-    fun openAddProviderScreen()
-}
+    ViewProviderSettingsAction,
+    AddProviderAction

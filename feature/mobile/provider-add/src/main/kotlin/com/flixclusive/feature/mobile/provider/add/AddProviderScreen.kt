@@ -63,7 +63,9 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 import com.flixclusive.core.strings.R as LocaleR
 
-@Destination
+@Destination(
+    navArgsDelegate = AddProviderScreenNavArgs::class,
+)
 @Composable
 internal fun AddProviderScreen(
     navigator: AddProviderScreenNavigator,

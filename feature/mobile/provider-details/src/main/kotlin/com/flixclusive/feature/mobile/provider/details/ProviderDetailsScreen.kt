@@ -100,7 +100,7 @@ internal fun ProviderDetailsScreen(
                 uiState.metadata.repositoryUrl
             }
 
-            navigator.openRepositoryDetails(repositoryUrl.toValidRepositoryLink())
+            navigator.openAddProviderScreen(repositoryUrl.toValidRepositoryLink())
         },
     )
 }
