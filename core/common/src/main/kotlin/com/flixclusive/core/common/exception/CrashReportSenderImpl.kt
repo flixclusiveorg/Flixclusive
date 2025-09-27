@@ -33,13 +33,16 @@ internal class CrashReportSenderImpl
                 val responseString = response.body.string()
 
                 val isSent = response.isSuccessful &&
-                    (responseString.contains("form_confirm", true)
-                        || responseString.contains("submit another response", true))
+                    (
+                        responseString.contains("form_confirm", true) ||
+                            responseString.contains("submit another response", true)
+                    )
 
                 if (!isSent) {
-                    val errorMessage = context.getString(R.string.failed_to_send_crash_report)
-
-                    context.showToast(errorMessage)
+                    withContext(dispatchers.main) {
+                        val errorMessage = context.getString(R.string.failed_to_send_crash_report)
+                        context.showToast(errorMessage)
+                    }
                 }
             }
         }
