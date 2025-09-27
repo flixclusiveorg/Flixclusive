@@ -14,15 +14,10 @@ sealed class TestStage(
 ) {
     protected abstract val index: Int
 
-    class Idle(
-        providerOnTest: ProviderMetadata?,
-    ) : TestStage(providerOnTest) {
-        override val index: Int get() = 0
+    val isIdle: Boolean get() = this is Idle
 
-        companion object {
-            val TestStage.isIdle: Boolean
-                get() = this is Idle
-        }
+    data object Idle : TestStage(null) {
+        override val index: Int get() = 0
     }
 
     class Stage1(
@@ -37,18 +32,11 @@ sealed class TestStage(
         override val index: Int get() = 2
     }
 
-    class Done(
-        providerOnTest: ProviderMetadata?,
-    ) : TestStage(providerOnTest) {
-        override val index: Int get() = 3
-    }
-
     fun toString(context: Context): String {
         return when (this) {
             is Idle -> context.getString(R.string.provider_test_stage_idle)
             is Stage1 -> context.getString(R.string.provider_test_stage_stage1)
             is Stage2 -> context.getString(R.string.provider_test_stage_stage2)
-            is Done -> context.getString(R.string.provider_test_stage_done)
         }
     }
 

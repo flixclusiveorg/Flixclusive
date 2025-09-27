@@ -28,7 +28,6 @@
     <string name="extracting_from_web_view_provider_format">Running WebView for %1$s…</string>
 
     <!--  Provider test labels  -->
-    <string name="provider_test_stage_done">Done!</string>
     <string name="provider_test_stage_idle">Testing has not started</string>
     <string name="provider_test_stage_stage1">Testing API properties…</string>
     <string name="provider_test_stage_stage2">Testing API methods…</string>
@@ -41,6 +40,8 @@
     <string name="ptest_error_method_get_film_details">Failed to get detailed film for %1$s</string>
     <string name="ptest_error_method_get_links">Failed to fetch links for %1$s</string>
     <string name="ptest_error_not_implemented">This has not been implemented.</string>
+    <string name="ptest_error_default_full_log">No additional information is available</string>
+    <string name="ptest_error_default_short_log">An error occurred</string>
     <string name="ptest_get_api">Get provider API</string>
     <string name="ptest_get_catalog_list">Get catalog list</string>
     <string name="ptest_get_search_filters">Get search filters</string>

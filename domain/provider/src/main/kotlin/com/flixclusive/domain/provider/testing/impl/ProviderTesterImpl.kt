@@ -39,7 +39,7 @@ internal class ProviderTesterImpl
     ) : ProviderTester {
         private val testCases by lazy { TestCases(appDispatchers) }
 
-        private val _testStage = MutableStateFlow<TestStage>(TestStage.Idle(providerOnTest = null))
+        private val _testStage = MutableStateFlow<TestStage>(TestStage.Idle)
         override val testStage = _testStage.asStateFlow()
 
         private val _results = MutableStateFlow(emptyList<ProviderTestResult>())
@@ -105,7 +105,7 @@ internal class ProviderTesterImpl
             }.also {
                 it.invokeOnCompletion {
                     _testJobState.value = TestJobState.IDLE
-                    _testStage.update { TestStage.Idle(providerOnTest = null) }
+                    _testStage.update { TestStage.Idle }
                 }
             }
         }
@@ -124,7 +124,7 @@ internal class ProviderTesterImpl
             testJob?.cancel()
             testJob = null
             _testJobState.value = TestJobState.IDLE
-            _testStage.update { TestStage.Idle(providerOnTest = null) }
+            _testStage.update { TestStage.Idle }
         }
 
         override fun clear() {
