@@ -8,7 +8,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,7 +16,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
@@ -42,20 +40,20 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.common.util.toTextFieldValue
+import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.material3.CustomOutlinedTextField
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.domain.provider.util.toGithubUrl
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 private val DefaultTextFieldHeight = 50.dp
 
 @Composable
 internal fun AddRepositoryBar(
-    urlQuery: String,
+    urlQuery: () -> String,
     isParseError: Boolean,
     focusRequester: FocusRequester,
     onUrlQueryChange: (String) -> Unit,
@@ -67,6 +65,8 @@ internal fun AddRepositoryBar(
     val keyboardController = LocalSoftwareKeyboardController.current
     val clipboardManager = LocalClipboardManager.current
 
+    var textFieldValue by remember { mutableStateOf(urlQuery().toTextFieldValue()) }
+
     val containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     val focusedContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp)
 
@@ -74,12 +74,11 @@ internal fun AddRepositoryBar(
     var textFieldError by remember { mutableStateOf(false) }
     LaunchedEffect(true) {
         if (!isClipboardParsed) {
-            val parsedClipboard =
-                clipboardManager
-                    .getText()
-                    ?.text
-                    ?.toGithubUrl()
-                    ?.toTextFieldValue()
+            val parsedClipboard = clipboardManager
+                .getText()
+                ?.text
+                ?.toGithubUrl()
+                ?.toTextFieldValue()
 
             if (parsedClipboard != null) {
                 onUrlQueryChange(parsedClipboard.text)
@@ -92,19 +91,16 @@ internal fun AddRepositoryBar(
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
     ) {
-        OutlinedTextField(
-            modifier =
-                Modifier
-                    .height(getAdaptiveDp(DefaultTextFieldHeight))
-                    .weight(1F)
-                    .focusRequester(focusRequester),
-            value = urlQuery,
+        CustomOutlinedTextField(
+            value = textFieldValue,
             onValueChange = {
                 textFieldError = false
                 onConsumeError()
-                onUrlQueryChange(it)
+
+                textFieldValue = it
+                onUrlQueryChange(it.text)
             },
             singleLine = true,
             textStyle = MaterialTheme.typography.bodySmall,
@@ -114,7 +110,7 @@ internal fun AddRepositoryBar(
                         focusManager.clearFocus()
                         keyboardController?.hide()
 
-                        if (urlQuery.isEmpty()) {
+                        if (textFieldValue.text.isEmpty()) {
                             textFieldError = true
                             return@KeyboardActions
                         }
@@ -146,7 +142,7 @@ internal fun AddRepositoryBar(
             },
             trailingIcon = {
                 this@Row.AnimatedVisibility(
-                    visible = urlQuery.isNotEmpty(),
+                    visible = textFieldValue.text.isNotEmpty(),
                     enter = scaleIn(),
                     exit = scaleOut(),
                 ) {
@@ -158,6 +154,10 @@ internal fun AddRepositoryBar(
                     }
                 }
             },
+            modifier = Modifier
+                .height(getAdaptiveDp(DefaultTextFieldHeight))
+                .weight(1F)
+                .focusRequester(focusRequester),
         )
 
         ElevatedButton(
@@ -166,7 +166,7 @@ internal fun AddRepositoryBar(
                 focusManager.clearFocus()
                 onAdd()
             },
-            enabled = urlQuery.isNotEmpty(),
+            enabled = textFieldValue.text.isNotEmpty(),
             contentPadding = PaddingValues(horizontal = 5.dp),
             shape = MaterialTheme.shapes.extraSmall,
             modifier = Modifier
@@ -185,10 +185,11 @@ internal fun AddRepositoryBar(
 private fun SearchBarPreview() {
     val isParseError = remember { mutableStateOf(false) }
     val urlQuery = remember { mutableStateOf("") }
+
     FlixclusiveTheme {
         Surface {
             AddRepositoryBar(
-                urlQuery = urlQuery.value,
+                urlQuery = { urlQuery.value },
                 isParseError = isParseError.value,
                 focusRequester = remember { FocusRequester() },
                 onUrlQueryChange = { urlQuery.value = it },

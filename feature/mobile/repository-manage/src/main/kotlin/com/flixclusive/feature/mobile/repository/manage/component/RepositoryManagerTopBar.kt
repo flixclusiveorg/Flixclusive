@@ -3,6 +3,7 @@ package com.flixclusive.feature.mobile.repository.manage.component
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
@@ -18,15 +19,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBar
-import com.flixclusive.core.presentation.mobile.components.topbar.CommonTopBarWithSearch
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.ActionButton
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
+import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarWithSearch
 import kotlin.math.max
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun RepositoryManagerTopBar(
@@ -100,13 +101,11 @@ private fun MultiSelectTopBar(
         title = {
             Text(
                 text = stringResource(LocaleR.string.count_selection_format, count),
-                style =
-                    getAdaptiveTextStyle(
-                        style = TypographyStyle.Body,
-                        style = AdaptiveTextStyle.Normal,
-                        size = 20.sp,
-                        increaseBy = 5.sp,
-                    ).copy(fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.bodyMedium.asAdaptiveTextStyle(
+                    size = 20.sp,
+                    increaseBy = 5.sp,
+                ),
+                fontWeight = FontWeight.SemiBold,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
                 modifier =
@@ -115,24 +114,22 @@ private fun MultiSelectTopBar(
             )
         },
         actions = {
-            CustomIconButton(
-                description = stringResource(LocaleR.string.copy_repository_links),
-                onClick = onCopyLinks,
-            ) {
-                AdaptiveIcon(
-                    painter = painterResource(UiCommonR.drawable.round_content_copy_24),
-                    contentDescription = stringResource(LocaleR.string.copy_button),
-                )
+            PlainTooltipBox(description = stringResource(LocaleR.string.navigate_up)) {
+                ActionButton(onClick = onCopyLinks) {
+                    AdaptiveIcon(
+                        painter = painterResource(UiCommonR.drawable.round_content_copy_24),
+                        contentDescription = stringResource(LocaleR.string.copy_button),
+                    )
+                }
             }
 
-            CustomIconButton(
-                description = stringResource(LocaleR.string.remove),
-                onClick = onRemove,
-            ) {
-                AdaptiveIcon(
-                    painter = painterResource(UiCommonR.drawable.outlined_trash),
-                    contentDescription = stringResource(LocaleR.string.remove),
-                )
+            PlainTooltipBox(description = stringResource(LocaleR.string.remove)) {
+                ActionButton(onClick = onRemove) {
+                    AdaptiveIcon(
+                        painter = painterResource(UiCommonR.drawable.outlined_trash),
+                        contentDescription = stringResource(LocaleR.string.remove),
+                    )
+                }
             }
         },
     )
