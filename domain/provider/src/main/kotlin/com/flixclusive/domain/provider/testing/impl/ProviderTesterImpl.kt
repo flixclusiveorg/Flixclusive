@@ -56,16 +56,15 @@ internal class ProviderTesterImpl
         override val filmOnTest = _filmOnTest.asStateFlow()
 
         override fun start(providers: ArrayList<ProviderMetadata>) {
+            if (testJob?.isActive == true) return // A test job is already running.
+
             testJob = appDispatchers.defaultScope.launchPausing {
                 _testJobState.value = TestJobState.RUNNING
 
                 for (i in providers.indices) {
                     val provider = providers[i]
 
-                    val testOutputs =
-                        ProviderTestResult(
-                            provider = provider.addTestCountSuffix(),
-                        )
+                    val testOutputs = ProviderTestResult(provider = provider.addTestCountSuffix())
 
                     _results.add(testOutputs)
                     val apiTestCaseIndex = testOutputs.add(
@@ -102,12 +101,12 @@ internal class ProviderTesterImpl
                         addOutput = testOutputs::add,
                         updateOutput = testOutputs::update,
                     )
-
-                    _testStage.update { TestStage.Done(providerOnTest = provider) }
                 }
-
-                _testStage.update { TestStage.Idle(providerOnTest = null) }
-                _testJobState.value = TestJobState.IDLE
+            }.also {
+                it.invokeOnCompletion {
+                    _testJobState.value = TestJobState.IDLE
+                    _testStage.update { TestStage.Idle(providerOnTest = null) }
+                }
             }
         }
 
@@ -153,12 +152,11 @@ internal class ProviderTesterImpl
                 )
 
                 val provider = providerRepository.getProvider(metadata.id)
-                val api =
-                    providerApiRepository.getApi(metadata.id)
-                        ?: provider!!.getApi(
-                            context = context,
-                            client = client,
-                        )
+                val api = providerApiRepository.getApi(metadata.id)
+                    ?: provider!!.getApi(
+                        context = context,
+                        client = client,
+                    )
 
                 updateOutput(
                     ProviderTestCaseResult(
@@ -221,7 +219,7 @@ internal class ProviderTesterImpl
                 )
 
                 val hasFailed =
-                    testCase.stopTestOnFailure && finalOutput.status != TestStatus.SUCCESS
+                    testCase.stopTestOnFailure && !finalOutput.isSuccess
 
                 if (hasFailed) {
                     break
