@@ -12,14 +12,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material3.BottomSheetDefaults.DragHandle
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -29,8 +30,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.R
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.drawables.R
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.CommonBottomSheet
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.provider.test.SortOption
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -41,14 +45,7 @@ internal fun SortBottomSheet(
     onSort: (SortOption) -> Unit,
     onDismiss: () -> Unit
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        shape = MaterialTheme.shapes.small.copy(
-            bottomEnd = CornerSize(0.dp),
-            bottomStart = CornerSize(0.dp)
-        ),
-        dragHandle = { DragHandle() }
-    ) {
+    CommonBottomSheet(onDismissRequest = onDismiss) {
         LazyColumn(
             contentPadding = PaddingValues(10.dp),
             verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -76,20 +73,19 @@ internal fun SortBottomSheet(
 
 @Composable
 private fun SortTypeTextButton(
-    modifier: Modifier = Modifier,
     selectedSortOption: SortOption,
     isSelected: Boolean,
     sortType: SortOption.SortType,
     onSort: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val labelStyle = MaterialTheme.typography.labelLarge.copy(
-        fontSize = 15.sp,
         fontWeight = FontWeight.Medium,
-        color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(
+        color = MaterialTheme.colorScheme.onSurface.copy(
             if (isSelected) 1F
             else 0.7F
-        )
-    )
+        ),
+    ).asAdaptiveTextStyle(15.sp)
 
     Box(
         modifier = modifier
@@ -115,7 +111,8 @@ private fun SortTypeTextButton(
             AnimatedContent(
                 targetState = selectedSortOption,
                 label = "",
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier
+                    .size(16.dp)
                     .align(Alignment.CenterVertically)
             ) {
                 if (isSelected) {
@@ -124,12 +121,11 @@ private fun SortTypeTextButton(
                         else -> R.drawable.sort_descending
                     }
 
-                    Icon(
+                    AdaptiveIcon(
                         painter = painterResource(id = iconId),
                         contentDescription = stringResource(id = LocaleR.string.sort_icon_content_desc),
-                        modifier = Modifier
-                            .size(16.dp)
-                            .align(Alignment.CenterVertically)
+                        dp = 16.dp,
+                        modifier = Modifier.align(Alignment.CenterVertically),
                     )
                 }
             }
@@ -140,5 +136,15 @@ private fun SortTypeTextButton(
 @Preview
 @Composable
 private fun SortBottomSheetPreview() {
+    var selected by remember { mutableStateOf(SortOption(SortOption.SortType.Name, true)) }
 
+    FlixclusiveTheme {
+        Surface {
+            SortBottomSheet(
+                selectedSortOption = selected,
+                onSort = { selected = it },
+                onDismiss = {},
+            )
+        }
+    }
 }

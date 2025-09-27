@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -38,84 +37,76 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_CORNER_SIZE
-import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
-import com.flixclusive.core.ui.common.util.CustomClipboardManager.Companion.rememberClipboardManager
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.domain.provider.testing.ProviderTestCaseOutput
-import com.flixclusive.domain.provider.testing.TestStatus
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getDummyProviderMetadata
+import com.flixclusive.core.presentation.mobile.components.dialog.CommonAlertDialog
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.domain.provider.testing.model.ProviderTestCaseResult
+import com.flixclusive.domain.provider.testing.model.TestStatus
 import com.flixclusive.model.provider.ProviderMetadata
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun FullLogDialog(
-    testCaseOutput: ProviderTestCaseOutput,
+    testCaseOutput: ProviderTestCaseResult,
     provider: ProviderMetadata,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
     val clipboardManager = rememberClipboardManager()
 
-    val bottomCornerSize = CornerSize(
-        (ALERT_DIALOG_CORNER_SIZE * 2.5).dp
-    )
     val labels = getFullLogOtherLabels(
         provider = provider,
-        testCaseOutput = testCaseOutput
+        testCaseOutput = testCaseOutput,
     )
 
-    CustomBaseAlertDialog(
+    CommonAlertDialog(
         onDismiss = onDismiss,
         action = {
             Box(
                 modifier = Modifier
                     .padding(bottom = 10.dp)
-                    .padding(horizontal = 10.dp)
+                    .padding(horizontal = 10.dp),
             ) {
                 Button(
                     onClick = onDismiss,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     ),
-                    shape = MaterialTheme.shapes.extraSmall.copy(
-                        bottomStart = bottomCornerSize,
-                        bottomEnd = bottomCornerSize,
-                    ),
+                    shape = MaterialTheme.shapes.small,
                     modifier = Modifier
                         .height(50.dp)
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
                 ) {
                     Text(
                         text = stringResource(id = LocaleR.string.close_label),
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Light
+                        fontWeight = FontWeight.Light,
                     )
                 }
             }
-        }
+        },
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(3.dp)
+            verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             Row(
                 modifier = Modifier
                     .padding(bottom = 5.dp),
                 horizontalArrangement = Arrangement.spacedBy(space = 5.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 with(testCaseOutput.status) {
                     Icon(
                         painter = painterResource(id = iconId),
                         tint = Color(color),
                         contentDescription = toString(),
-                        modifier = Modifier.size(23.dp)
+                        modifier = Modifier.size(23.dp),
                     )
                 }
 
@@ -123,9 +114,9 @@ internal fun FullLogDialog(
                     text = testCaseOutput.name.asString(),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     ),
-                    modifier = Modifier.weight(1F)
+                    modifier = Modifier.weight(1F),
                 )
 
                 IconButton(
@@ -134,18 +125,18 @@ internal fun FullLogDialog(
                             testName = testCaseOutput.name.asString(context),
                             otherLabels = labels,
                             fullLog = testCaseOutput.fullLog?.asString(context)
-                                ?: context.getString(LocaleR.string.no_full_log)
+                                ?: context.getString(LocaleR.string.no_full_log),
                         )
 
                         clipboardManager.setText(toCopy)
                     },
-                    modifier = Modifier.size(23.dp)
+                    modifier = Modifier.size(23.dp),
                 ) {
                     Icon(
                         painter = painterResource(id = UiCommonR.drawable.round_content_copy_24),
                         tint = LocalContentColor.current.copy(0.6f),
                         contentDescription = stringResource(id = LocaleR.string.copy_full_logs_button),
-                        modifier = Modifier.size(23.dp)
+                        modifier = Modifier.size(23.dp),
                     )
                 }
             }
@@ -168,8 +159,7 @@ internal fun FullLogDialog(
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Normal,
-
-                    ),
+                ),
                 shape = MaterialTheme.shapes.extraSmall,
                 readOnly = true,
                 colors = TextFieldDefaults.colors(
@@ -178,35 +168,35 @@ internal fun FullLogDialog(
                 ),
                 modifier = Modifier
                     .weight(weight = 1F, fill = false)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
             )
         }
-
     }
 }
 
 @Composable
 internal fun labelValueStringBuilder(
     @StringRes label: Int,
-    value: String
+    value: String,
 ): AnnotatedString {
     val context = LocalContext.current
 
-    val defaultStyle = MaterialTheme.typography.bodyMedium.copy(
-        fontSize = 13.sp,
-    ).toSpanStyle()
+    val defaultStyle = MaterialTheme.typography.bodyMedium
+        .copy(
+            fontSize = 13.sp,
+        ).toSpanStyle()
 
     val mediumEmphasisColor = LocalContentColor.current.copy(0.6f)
 
     return buildAnnotatedString {
         withStyle(
-            style = ParagraphStyle(lineHeight = 20.sp)
+            style = ParagraphStyle(lineHeight = 20.sp),
         ) {
             withStyle(
                 style = defaultStyle.copy(
                     fontWeight = FontWeight.Bold,
-                    color = mediumEmphasisColor
-                )
+                    color = mediumEmphasisColor,
+                ),
             ) {
                 append(context.getString(label) + " ")
             }
@@ -214,47 +204,46 @@ internal fun labelValueStringBuilder(
             withStyle(
                 style = defaultStyle.copy(
                     fontWeight = FontWeight.Normal,
-                )
+                ),
             ) {
                 append(value)
             }
         }
-
     }
 }
 
 @Composable
 internal fun getFullLogOtherLabels(
     provider: ProviderMetadata,
-    testCaseOutput: ProviderTestCaseOutput
+    testCaseOutput: ProviderTestCaseResult,
 ): List<AnnotatedString> {
     val context = LocalContext.current
 
     return listOf(
         labelValueStringBuilder(
             label = LocaleR.string.full_log_provider_used_format,
-            value = provider.name
+            value = provider.name,
         ),
         labelValueStringBuilder(
             label = LocaleR.string.full_log_version_used_format,
-            value = "${provider.versionName} (${provider.versionCode})"
+            value = "${provider.versionName} (${provider.versionCode})",
         ),
         labelValueStringBuilder(
             label = LocaleR.string.full_log_short_log_used_format,
             value = testCaseOutput.shortLog?.asString(context)
-                ?: stringResource(LocaleR.string.no_short_log)
+                ?: stringResource(LocaleR.string.no_short_log),
         ),
         labelValueStringBuilder(
             label = LocaleR.string.full_log_time_taken_format,
-            value = testCaseOutput.timeTaken.toString(unit = DurationUnit.MILLISECONDS)
-        )
+            value = testCaseOutput.timeTaken.toString(unit = DurationUnit.MILLISECONDS),
+        ),
     )
 }
 
 internal fun formatFullLog(
     testName: String,
     otherLabels: List<AnnotatedString>,
-    fullLog: String
+    fullLog: String,
 ): String {
     return """
         Test case name: $testName
@@ -264,36 +253,36 @@ internal fun formatFullLog(
 
         -- [Full log] --
         $fullLog
-    """.trimIndent()
+        """.trimIndent()
 }
 
 @Preview(device = "spec:parent=pixel_5")
 @Composable
 private fun FullLogDialogPreview() {
-    val testCaseOutput = ProviderTestCaseOutput(
+    val testCaseOutput = ProviderTestCaseResult(
         status = TestStatus.FAILURE,
         name = UiText.StringValue("Get film details"),
         timeTaken = 10.seconds,
         fullLog = UiText.StringValue(
-            "Exception in thread \"main\" java.lang.NullPointerException: Cannot invoke \"com.example.myapp.MyClass.getValue()\" because \"myObject\" is null\n" +
-                    "    at com.example.myapp.MyApplication.performAction(MyApplication.java:35)\n" +
-                    "    at com.example.myapp.MyApplication.main(MyApplication.java:15)\n" +
-                    "Caused by: java.lang.NullPointerException\n" +
-                    "    at com.example.myapp.MyClass.getValue(MyClass.java:22)\n" +
-                    "    at com.example.myapp.MyApplication.performAction(MyApplication.java:32)\n" +
-                    "    ... 1 more"
+            "Exception in thread \"main\" java.lang.NullPointerException: Cannot invoke \"" +
+                "com.example.myapp.MyClass.getValue()\" because \"myObject\" is null\n" +
+                "    at com.example.myapp.MyApplication.performAction(MyApplication.java:35)\n" +
+                "    at com.example.myapp.MyApplication.main(MyApplication.java:15)\n" +
+                "Caused by: java.lang.NullPointerException\n" +
+                "    at com.example.myapp.MyClass.getValue(MyClass.java:22)\n" +
+                "    at com.example.myapp.MyApplication.performAction(MyApplication.java:32)\n" +
+                "    ... 1 more",
         ),
-        shortLog = UiText.StringValue("Failed to fetch film details for The Godfather [tt0068646]")
+        shortLog = UiText.StringValue("Failed to fetch film details for The Godfather [tt0068646]"),
     )
 
     val provider = getDummyProviderMetadata()
 
     FlixclusiveTheme {
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             FullLogDialog(testCaseOutput = testCaseOutput, provider = provider) {
-
             }
         }
     }

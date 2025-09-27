@@ -22,90 +22,92 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.domain.provider.repository.testing.TestJobState
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.domain.provider.testing.TestJobState
 import com.flixclusive.core.strings.R as LocaleR
 
-
 @Composable
-private fun getBorderStroke()
-    = BorderStroke(
+private fun getBorderStroke() =
+    BorderStroke(
         width = 0.8.dp,
-        color = MaterialTheme.colorScheme.primary.copy(0.6f)
+        color = MaterialTheme.colorScheme.primary.copy(0.6f),
     )
 
 @Composable
 internal fun ButtonControllerDivider(
-    modifier: Modifier = Modifier,
     testJobState: TestJobState,
     onStop: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onStart: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxWidth(),
     ) {
         AnimatedContent(
             targetState = testJobState,
-            label = ""
+            label = "",
         ) { state ->
             when (state) {
                 TestJobState.PAUSED -> PausedStateButtons(onResume = onResume)
+                TestJobState.IDLE -> IdleStateButtons(onStart = onStart)
                 TestJobState.RUNNING -> RunningStateButtons(
                     onStop = onStop,
-                    onPause = onPause
+                    onPause = onPause,
+                    modifier = Modifier.fillMaxAdaptiveWidth(
+                        medium = 0.4f,
+                        expanded = 0.4f,
+                    ),
                 )
-                TestJobState.IDLE -> IdleStateButtons(onStart = onStart)
             }
         }
 
         HorizontalDivider(
             color = LocalContentColor.current.copy(0.6f),
-            thickness = 0.5.dp
+            thickness = 0.5.dp,
         )
     }
 }
 
 @Composable
 private fun RunningStateButtons(
-    modifier: Modifier = Modifier,
     onStop: () -> Unit,
     onPause: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         OutlinedButton(
             onClick = onPause,
-            shape = MaterialTheme.shapes.extraSmall,
-            modifier = Modifier.weight(1F)
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.weight(1F),
         ) {
             Text(
                 text = stringResource(id = LocaleR.string.pause),
-                style = LocalTextStyle.current.copy(
-                    color = MaterialTheme.colorScheme.onSurface.copy(0.8F),
-                    fontWeight = FontWeight.Bold
-                )
+                color = MaterialTheme.colorScheme.onSurface.copy(0.8F),
+                fontWeight = FontWeight.Bold,
+                style = LocalTextStyle.current.asAdaptiveTextStyle(),
             )
         }
 
         OutlinedButton(
             onClick = onStop,
-            shape = MaterialTheme.shapes.extraSmall,
-            modifier = Modifier.weight(1F)
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.weight(1F),
         ) {
             Text(
                 text = stringResource(id = LocaleR.string.stop),
-                style = LocalTextStyle.current.copy(
-                    color = MaterialTheme.colorScheme.onSurface.copy(0.8F),
-                    fontWeight = FontWeight.Bold
-                )
+                color = MaterialTheme.colorScheme.onSurface.copy(0.8F),
+                fontWeight = FontWeight.Bold,
+                style = LocalTextStyle.current.asAdaptiveTextStyle(),
             )
         }
     }
@@ -121,20 +123,23 @@ private fun PausedStateButtons(
     ) {
         OutlinedButton(
             onClick = onResume,
-            shape = MaterialTheme.shapes.extraSmall,
+            shape = MaterialTheme.shapes.small,
             colors = ButtonDefaults.outlinedButtonColors(
                 containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05F),
             ),
             border = getBorderStroke(),
             modifier = Modifier
                 .align(Alignment.Center)
-                .fillMaxWidth(0.5F)
+                .fillMaxAdaptiveWidth(
+                    compact = 0.5F,
+                    medium = 0.3F,
+                    expanded = 0.2F,
+                ),
         ) {
             Text(
                 text = stringResource(id = LocaleR.string.resume),
-                style = LocalTextStyle.current.copy(
-                    fontWeight = FontWeight.Bold
-                )
+                fontWeight = FontWeight.Bold,
+                style = LocalTextStyle.current.asAdaptiveTextStyle(),
             )
         }
     }
@@ -150,20 +155,23 @@ private fun IdleStateButtons(
     ) {
         OutlinedButton(
             onClick = onStart,
-            shape = MaterialTheme.shapes.extraSmall,
+            shape = MaterialTheme.shapes.small,
             colors = ButtonDefaults.outlinedButtonColors(
                 containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05F),
             ),
             border = getBorderStroke(),
             modifier = Modifier
                 .align(Alignment.Center)
-                .fillMaxWidth(0.5F)
+                .fillMaxAdaptiveWidth(
+                    compact = 0.5F,
+                    medium = 0.3F,
+                    expanded = 0.2F,
+                ),
         ) {
             Text(
                 text = stringResource(id = LocaleR.string.start),
-                style = LocalTextStyle.current.copy(
-                    fontWeight = FontWeight.Bold
-                )
+                fontWeight = FontWeight.Bold,
+                style = LocalTextStyle.current.asAdaptiveTextStyle(),
             )
         }
     }
@@ -171,16 +179,68 @@ private fun IdleStateButtons(
 
 @Preview
 @Composable
-private fun ButtonControllerDividerPreview() {
+private fun ButtonControllerDividerBasePreview() {
     FlixclusiveTheme {
         Surface {
-            ButtonControllerDivider(
-                testJobState = TestJobState.IDLE,
-                onStop = {},
-                onPause = {},
-                onResume = {},
-                onStart = {}
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                ButtonControllerDivider(
+                    testJobState = TestJobState.IDLE,
+                    onStop = {},
+                    onPause = {},
+                    onResume = {},
+                    onStart = {},
+                )
+
+                ButtonControllerDivider(
+                    testJobState = TestJobState.RUNNING,
+                    onStop = {},
+                    onPause = {},
+                    onResume = {},
+                    onStart = {},
+                )
+
+                ButtonControllerDivider(
+                    testJobState = TestJobState.PAUSED,
+                    onStop = {},
+                    onPause = {},
+                    onResume = {},
+                    onStart = {},
+                )
+            }
         }
     }
+}
+
+@Preview(device = "spec:parent=pixel_5,orientation=landscape")
+@Composable
+private fun ButtonControllerDividerCompactLandscapePreview() {
+    ButtonControllerDividerBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=portrait")
+@Composable
+private fun ButtonControllerDividerMediumPortraitPreview() {
+    ButtonControllerDividerBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=landscape")
+@Composable
+private fun ButtonControllerDividerMediumLandscapePreview() {
+    ButtonControllerDividerBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
+@Composable
+private fun ButtonControllerDividerExtendedPortraitPreview() {
+    ButtonControllerDividerBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
+@Composable
+private fun ButtonControllerDividerExtendedLandscapePreview() {
+    ButtonControllerDividerBasePreview()
 }

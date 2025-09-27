@@ -1,91 +1,100 @@
 package com.flixclusive.feature.mobile.provider.test
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import android.content.Context
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
 import androidx.lifecycle.ViewModel
-import com.flixclusive.data.provider.ProviderRepository
-import com.flixclusive.domain.provider.repository.testing.TestProviderUseCase
+import com.flixclusive.core.strings.R
+import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.provider.testing.ProviderTester
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-internal class ProviderTestScreenViewModel @Inject constructor(
-    val testProviderUseCase: TestProviderUseCase,
-    val providerRepository: ProviderRepository,
-) : ViewModel() {
-    var showRepetitiveTestWarning by mutableStateOf(false)
-        private set
+internal class ProviderTestScreenViewModel
+    @Inject
+    constructor(
+        private val providerTester: ProviderTester,
+        private val providerRepository: ProviderRepository,
+    ) : ViewModel() {
+        val results = providerTester.results
+        val testStage = providerTester.testStage
+        val testJobState = providerTester.testJobState
+        val filmOnTest = providerTester.filmOnTest
 
-    private val testResultCardsIsExpandedMap
-        = mutableStateMapOf<String, Boolean>()
+        fun stopTests() {
+            providerTester.stop()
+        }
 
-    internal var sortOption
-        by mutableStateOf(SortOption(sort = SortOption.SortType.Date))
+        fun pauseTests() {
+            providerTester.pause()
+        }
 
-    fun stopTests() {
-        testProviderUseCase.stop()
-    }
+        fun resumeTests() {
+            providerTester.resume()
+        }
 
-    fun pauseTests() {
-        testProviderUseCase.pause()
-    }
+        fun startTests(
+            providers: ArrayList<ProviderMetadata>,
+            skipTestedProviders: Boolean = false,
+            testAgainIfTested: Boolean = false,
+        ): StartTestResult {
+            // Show warning if any of the selected providers have already been tested
+            if (!testAgainIfTested && !skipTestedProviders && providers.fastAny(::isAlreadyBeenTested)) {
+                return StartTestResult.SHOW_WARNING
+            }
 
-    fun resumeTests() {
-        testProviderUseCase.resume()
-    }
+            val providersToTest = providers.let {
+                // If no providers were selected, test all providers
+                if (it.isEmpty()) {
+                    ArrayList(providerRepository.getProviders())
+                } else if (skipTestedProviders) {
+                    it
+                        .fastFilter { metadata -> !isAlreadyBeenTested(metadata) }
+                        .toCollection(ArrayList())
+                } else {
+                    it
+                }
+            }
 
-    fun isExpanded(id: String): Boolean {
-        return testResultCardsIsExpandedMap.getOrPut(id) {
-            false
+            providerTester.start(providers = providersToTest)
+
+            return StartTestResult.STARTED
+        }
+
+        fun clearTests() {
+            providerTester.clear()
+        }
+
+        private fun isAlreadyBeenTested(metadata: ProviderMetadata): Boolean {
+            return providerTester.results.value.fastAny { it.provider.id == metadata.id }
         }
     }
 
-    fun toggleCard(id: String) {
-        testResultCardsIsExpandedMap[id] = !(testResultCardsIsExpandedMap[id] ?: false)
-    }
+internal enum class StartTestResult {
+    STARTED,
+    SHOW_WARNING,
+}
 
-    fun hideRepetitiveTestWarning() {
-        showRepetitiveTestWarning = false
-    }
+@Stable
+internal data class SortOption(
+    val sort: SortType,
+    val ascending: Boolean = true,
+) {
+    enum class SortType {
+        Name,
+        Date,
+        Score,
+        ;
 
-    fun startTests(
-        providers: ArrayList<ProviderMetadata>,
-        skipTestedProviders: Boolean = false
-    ) {
-        if (
-            !showRepetitiveTestWarning
-            && providers.fastAny { it.hasAlreadyBeenTested() }
-        ) {
-            showRepetitiveTestWarning = true
-            return
-        }
-
-        val providersToTest = providers.let {
-            if (it.isEmpty()) {
-                ArrayList(providerRepository.getProviders())
-            } else if (skipTestedProviders) {
-                return@let it.fastFilter { provider ->
-                    !provider.hasAlreadyBeenTested()
-                }.toCollection(ArrayList())
-            } else it
-        }
-
-        showRepetitiveTestWarning = false
-        testProviderUseCase(providers = providersToTest)
-    }
-
-    fun clearTests() {
-        testProviderUseCase.results.clear()
-    }
-
-    private fun ProviderMetadata.hasAlreadyBeenTested(): Boolean {
-        return testProviderUseCase.results.fastAny {
-            it.provider.id!! == id
+        fun toString(context: Context): String {
+            return when (this) {
+                Name -> context.getString(R.string.sort_name)
+                Date -> context.getString(R.string.sort_date)
+                Score -> context.getString(R.string.sort_score)
+            }
         }
     }
 }

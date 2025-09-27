@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.provider.test.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -12,74 +13,64 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.domain.provider.repository.testing.TestStage
-import com.flixclusive.domain.provider.repository.testing.TestStage.Idle.Companion.isIdle
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getDummyProviderMetadata
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.domain.provider.testing.TestStage
 import com.flixclusive.core.strings.R as LocaleR
-
-private val HeaderLabelSpacing = 50.dp
 
 @Composable
 internal fun TestScreenHeader(
-    modifier: Modifier = Modifier,
     stage: TestStage,
+    modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
     Box(
         modifier = modifier
-            .heightIn(min = 295.dp)
+            .heightIn(min = getAdaptiveDp(295.dp))
             .fillMaxWidth(),
-        contentAlignment = Alignment.TopCenter
+        contentAlignment = Alignment.TopCenter,
     ) {
         AnimatedContent(
             targetState = stage.providerOnTest != null && !stage.isIdle,
             transitionSpec = {
                 fadeIn(animationSpec = tween(220, delayMillis = 90)) togetherWith
-                        fadeOut(animationSpec = tween(90))
+                    fadeOut(animationSpec = tween(90))
             },
             label = "",
         ) {
             when (it) {
                 true -> {
-                    HeaderLabels(
-                        modifier = Modifier.padding(
-                            top = 100.dp,
-                            bottom = HeaderLabelSpacing
-                        ),
-                        stage = stage
-                    )
+                    HeaderLabels(stage = stage)
                 }
 
                 false -> {
                     Box(
-                        modifier = Modifier.height(295.dp),
-                        contentAlignment = Alignment.Center
+                        modifier = Modifier.matchParentSize(),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = stringResource(LocaleR.string.provider_test_stage_idle),
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                textAlign = TextAlign.Center
-                            ),
+                            text = stage.toString(context),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.headlineMedium.asAdaptiveTextStyle(),
                         )
                     }
                 }
@@ -90,8 +81,8 @@ internal fun TestScreenHeader(
 
 @Composable
 private fun HeaderLabels(
-    modifier: Modifier = Modifier,
     stage: TestStage,
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val testingLabel = remember {
@@ -101,30 +92,30 @@ private fun HeaderLabels(
         context.getString(LocaleR.string.stage).uppercase()
     }
 
-    val stageLabelColor = when (stage) {
-        is TestStage.Done -> Color(0xFF30FF1F)
-        is TestStage.Idle -> LocalContentColor.current
-        else -> MaterialTheme.colorScheme.tertiary
-    }
+    val stageLabelColor by animateColorAsState(
+        targetValue = when (stage) {
+            is TestStage.Idle -> LocalContentColor.current
+            else -> MaterialTheme.colorScheme.tertiary
+        },
+    )
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(HeaderLabelSpacing),
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.spacedBy(getAdaptiveDp(50.dp)),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(3.dp)
+            verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             Text(
                 text = testingLabel,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Normal,
-                    letterSpacing = 1.sp,
-                    color = LocalContentColor.current.copy(0.6f)
-                ),
+                fontWeight = FontWeight.Normal,
+                letterSpacing = 1.sp,
+                color = LocalContentColor.current.copy(0.6f),
+                style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
             )
 
             if (stage.providerOnTest?.name != null) {
@@ -134,20 +125,19 @@ private fun HeaderLabels(
                     transitionSpec = {
                         if (targetState > initialState) {
                             fadeIn() + slideInHorizontally { it } togetherWith
-                                    fadeOut() + slideOutHorizontally { -it }
+                                fadeOut() + slideOutHorizontally { -it }
                         } else {
                             fadeIn() + slideInHorizontally { -it } + fadeIn() togetherWith
-                                    fadeOut() + slideOutHorizontally { it }
+                                fadeOut() + slideOutHorizontally { it }
                         }.using(
-                            SizeTransform(clip = false)
+                            SizeTransform(clip = false),
                         )
                     },
                 ) { providerName ->
                     Text(
                         text = providerName,
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            textAlign = TextAlign.Center
-                        ),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.headlineMedium.asAdaptiveTextStyle(),
                     )
                 }
             }
@@ -157,15 +147,13 @@ private fun HeaderLabels(
             modifier = Modifier
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(5.dp)
+            verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             Text(
                 text = testingStageLabel,
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp,
-                    color = LocalContentColor.current.copy(0.8F)
-                ),
+                fontWeight = FontWeight.Medium,
+                color = LocalContentColor.current.copy(0.8F),
+                style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(12.sp),
             )
 
             AnimatedContent(
@@ -174,22 +162,20 @@ private fun HeaderLabels(
                 transitionSpec = {
                     if (targetState > initialState) {
                         fadeIn() + slideInHorizontally { it } togetherWith
-                                fadeOut() + slideOutHorizontally { -it }
+                            fadeOut() + slideOutHorizontally { -it }
                     } else {
                         fadeIn() + slideInHorizontally { -it } + fadeIn() togetherWith
-                                fadeOut() + slideOutHorizontally { it }
+                            fadeOut() + slideOutHorizontally { it }
                     }.using(
-                        SizeTransform(clip = false)
+                        SizeTransform(clip = false),
                     )
                 },
             ) {
                 Text(
                     text = it.toString(context),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Medium,
-                        color = stageLabelColor,
-                        fontSize = 16.sp
-                    ),
+                    fontWeight = FontWeight.Medium,
+                    color = stageLabelColor,
+                    style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(16.sp),
                 )
             }
         }
@@ -198,24 +184,42 @@ private fun HeaderLabels(
 
 @Preview
 @Composable
-private fun ScreenHeaderPreview() {
+private fun TestScreenHeaderBasePreview(stage: TestStage = TestStage.Stage2(remember { getDummyProviderMetadata() })) {
     FlixclusiveTheme {
         Surface {
-            TestScreenHeader(
-                stage = TestStage.Stage1(getDummyProviderMetadata())
-            )
+            TestScreenHeader(stage = stage)
         }
     }
 }
 
-@Preview
+@Preview(device = "spec:parent=pixel_5,orientation=landscape")
 @Composable
-private fun ScreenHeaderPreview1() {
-    FlixclusiveTheme {
-        Surface {
-            TestScreenHeader(
-                stage = TestStage.Idle(null)
-            )
-        }
-    }
+private fun TestScreenHeaderCompactLandscapePreview() {
+    TestScreenHeaderBasePreview(stage = TestStage.Stage1(remember { getDummyProviderMetadata() }))
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=portrait")
+@Composable
+private fun TestScreenHeaderMediumPortraitPreview() {
+    TestScreenHeaderBasePreview(
+        stage = TestStage.Idle,
+    )
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=landscape")
+@Composable
+private fun TestScreenHeaderMediumLandscapePreview() {
+    TestScreenHeaderBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
+@Composable
+private fun TestScreenHeaderExtendedPortraitPreview() {
+    TestScreenHeaderBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
+@Composable
+private fun TestScreenHeaderExtendedLandscapePreview() {
+    TestScreenHeaderBasePreview()
 }
