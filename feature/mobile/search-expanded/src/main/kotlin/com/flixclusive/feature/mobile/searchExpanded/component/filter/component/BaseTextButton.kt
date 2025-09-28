@@ -12,26 +12,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterBottomSheetStyle
 
 @Composable
 internal fun BaseTextButton(
-    modifier: Modifier = Modifier,
     label: String,
     isSelected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     prefix: @Composable RowScope.() -> Unit,
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = FilterBottomSheetStyle.TextButtonMinHeight)
+            .heightIn(min = getAdaptiveDp(FilterBottomSheetStyle.TextButtonMinHeight))
             .clickable { onClick() },
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.Top,
         ) {
             prefix()
 
@@ -40,7 +41,7 @@ internal fun BaseTextButton(
                 style = FilterBottomSheetStyle.getLabelStyle(isSelected = isSelected),
                 modifier = Modifier
                     .weight(1F)
-                    .align(Alignment.CenterVertically)
+                    .align(Alignment.CenterVertically),
             )
         }
     }

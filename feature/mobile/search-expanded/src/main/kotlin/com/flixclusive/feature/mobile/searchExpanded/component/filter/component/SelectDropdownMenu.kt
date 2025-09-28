@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.searchExpanded.component.filter.component
 
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,19 +10,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,13 +32,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.lerp
 import androidx.compose.ui.window.Dialog
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.material3.CustomOutlinedTextField
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.util.toOptionString
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -55,18 +55,19 @@ import com.flixclusive.core.strings.R as LocaleR
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun <T> SelectDropdownMenu(
-    modifier: Modifier = Modifier,
     label: String?,
     options: List<T>,
     selected: Int?,
     onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
 
     var expanded by remember { mutableStateOf(false) }
     val selectedOption = remember(selected) {
-        if (selected == null)
+        if (selected == null) {
             return@remember ""
+        }
 
         val option = options[selected]!!
 
@@ -74,14 +75,16 @@ internal fun <T> SelectDropdownMenu(
     }
 
     Box(modifier = modifier.height(IntrinsicSize.Min)) {
-        OutlinedTextField(
-            label = if (label == null) null else {
+        CustomOutlinedTextField(
+            label = if (label == null) {
+                null
+            } else {
                 {
                     Text(
                         text = label,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurface.copy(0.5F)
+                        color = MaterialTheme.colorScheme.onSurface.copy(0.5F),
                     )
                 }
             },
@@ -91,25 +94,34 @@ internal fun <T> SelectDropdownMenu(
             maxLines = 1,
             modifier = Modifier.fillMaxWidth(),
             textStyle = MaterialTheme.typography.labelLarge.copy(
-                fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            ),
+                color = MaterialTheme.colorScheme.onSurface,
+            ).asAdaptiveTextStyle(16.sp),
             trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                AdaptiveIcon(
+                    imageVector = Icons.Filled.ArrowDropDown,
+                    contentDescription = null,
+                    modifier = Modifier.graphicsLayer {
+                        rotationZ = lerp(
+                            0F,
+                            180F,
+                            if (expanded) 1F else 0F,
+                        )
+                    },
+                )
             },
             onValueChange = {},
             readOnly = true,
         )
 
         Surface(
+            color = Color.Transparent,
+            onClick = { expanded = true },
+            content = {},
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 8.dp)
                 .clip(MaterialTheme.shapes.extraSmall),
-            color = Color.Transparent,
-            onClick = { expanded = true },
-            content = {}
         )
     }
 
@@ -130,7 +142,7 @@ internal fun <T> SelectDropdownMenu(
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(10.dp),
-                    state = listState
+                    state = listState,
                 ) {
                     itemsIndexed(options) { index, option ->
                         val selectedItem = index == selected
@@ -178,20 +190,20 @@ internal fun SelectDropdownMenuItem(
             .fillMaxWidth()
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(),
             color = contentColor,
             fontWeight = fontWeight,
         )
 
         if (selected) {
-            Icon(
+            AdaptiveIcon(
                 imageVector = Icons.Rounded.Check,
                 contentDescription = stringResource(LocaleR.string.check_indicator_content_desc),
-                modifier = Modifier.size(20.dp)
+                dp = 20.dp,
             )
         }
     }

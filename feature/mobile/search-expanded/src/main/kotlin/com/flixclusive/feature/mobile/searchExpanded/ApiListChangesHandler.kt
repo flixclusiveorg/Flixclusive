@@ -2,8 +2,8 @@ package com.flixclusive.feature.mobile.searchExpanded
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.domain.provider.util.collections.CollectionsOperation
-import com.flixclusive.domain.provider.util.collections.CollectionsOperationHandler
+import com.flixclusive.data.provider.util.collections.CollectionsOperation
+import com.flixclusive.data.provider.util.collections.CollectionsOperationHandler
 import com.flixclusive.provider.ProviderApi
 
 internal class ApiListChangesHandler(
@@ -35,15 +35,14 @@ internal class ApiListChangesHandler(
     }
 
     private fun sorter(api: ProviderApi): String {
-        var name =
-            safeCall("Can't get provider name, falling back to class name instead...") {
-                api.provider.name
-            }
+        var name = safeCall("Can't get provider name, falling back to class name instead...") {
+            api.provider.name
+        }
 
         if (name.isNullOrEmpty()) {
             name = api::class.java.simpleName
         }
 
-        return name
+        return name!!
     }
 }

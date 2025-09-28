@@ -13,9 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.data.tmdb.util.TMDBFilters.Companion.getDefaultTMDBFilters
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.component.FilterCheckbox
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.component.FilterTriStateCheckbox
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.component.SelectDropdownMenu
@@ -31,25 +31,26 @@ import com.flixclusive.provider.filter.FilterGroup
 internal fun FilterItem(
     filter: Filter<*>,
     filterGroup: FilterGroup,
-    onUpdateFilters: () -> Unit
+    onUpdateFilters: () -> Unit,
 ) {
     when (filter) {
         BottomSheetComponent.HorizontalDivider -> {
             HorizontalDivider()
         }
+
         is BottomSheetComponent.HeaderLabel -> {
             Text(
                 text = filter.name,
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontSize = FilterItemLargeLabelSize,
-                    color = LocalContentColor.current.copy(FilterBottomSheetStyle.STRONGEST_EMPHASIS),
-                    fontWeight = FontWeight.Black
-                )
+                color = LocalContentColor.current.copy(FilterBottomSheetStyle.STRONGEST_EMPHASIS),
+                fontWeight = FontWeight.Black,
+                style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(FilterItemLargeLabelSize),
             )
         }
+
         is BottomSheetComponent.Spacer -> {
             Spacer(modifier = Modifier.padding(filter.state.dp))
         }
+
         is Filter.CheckBox -> {
             FilterCheckbox(
                 label = filter.name,
@@ -60,6 +61,7 @@ internal fun FilterItem(
                 },
             )
         }
+
         is Filter.TriState -> {
             FilterTriStateCheckbox(
                 label = filter.name,
@@ -67,9 +69,10 @@ internal fun FilterItem(
                 onToggle = {
                     filter.state = it
                     onUpdateFilters()
-                }
+                },
             )
         }
+
         is Filter.Select<*> -> {
             if (filter.options.size < 5 && filterGroup.size == 1) {
                 SelectRadioMenu(
@@ -78,7 +81,7 @@ internal fun FilterItem(
                     onSelect = { option ->
                         filter.state = option
                         onUpdateFilters()
-                    }
+                    },
                 )
             } else {
                 val dropdownLabel = when (filterGroup.size) {
@@ -93,10 +96,11 @@ internal fun FilterItem(
                     onSelect = { option ->
                         filter.state = option
                         onUpdateFilters()
-                    }
+                    },
                 )
             }
         }
+
         is Filter.Sort<*> -> {
             SortItems(
                 options = filter.options,
@@ -104,7 +108,7 @@ internal fun FilterItem(
                 onToggle = { selection ->
                     filter.state = selection
                     onUpdateFilters()
-                }
+                },
             )
         }
     }
@@ -115,7 +119,7 @@ internal fun FilterItem(
 private fun FilterItemPreview() {
     FlixclusiveTheme {
         Surface {
-            val filters = remember { getDefaultTmdbFilters().first() }
+            val filters = remember { getDefaultTMDBFilters().first() }
 
             FilterItem(
                 filter = filters.first(),

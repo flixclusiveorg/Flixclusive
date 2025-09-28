@@ -1,90 +1,82 @@
 package com.flixclusive.feature.mobile.searchExpanded.component
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.common.pagination.PagingState
-import com.flixclusive.core.presentation.mobile.components.LARGE_ERROR
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.common.pagination.PagingDataState
+import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.mobile.components.RetryButton
-import com.flixclusive.core.presentation.mobile.components.SMALL_ERROR
 import com.flixclusive.core.presentation.mobile.components.film.FilmCard
 import com.flixclusive.core.presentation.mobile.components.film.FilmCardPlaceholder
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.model.datastore.user.UiPreferences
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmSearchItem
-import com.flixclusive.core.strings.R as LocaleR
+import kotlinx.collections.immutable.ImmutableSet
 
 @Composable
 internal fun SearchFilmsGridView(
-    searchResults: List<FilmSearchItem>,
-    pagingState: com.flixclusive.core.common.pagination.PagingState,
+    searchResults: ImmutableSet<FilmSearchItem>,
+    pagingState: PagingDataState,
     error: UiText?,
+    scaffoldPadding: PaddingValues,
     listState: LazyGridState,
-    uiPreferences: UiPreferences,
+    showFilmTitles: Boolean,
     paginateItems: () -> Unit,
     openFilmScreen: (Film) -> Unit,
     previewFilm: (Film) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val errorHeight =
-        remember(searchResults) {
-            when {
-                searchResults.isEmpty() -> LARGE_ERROR
-                else -> SMALL_ERROR
-            }
-        }
-
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(110.dp),
+        columns = GridCells.Adaptive(getAdaptiveFilmCardWidth()),
         state = listState,
-        contentPadding = PaddingValues(),
+        contentPadding = scaffoldPadding,
         modifier = modifier,
     ) {
-        items(searchResults) { film ->
+        items(
+            searchResults.size,
+            key = { searchResults.elementAt(it).identifier },
+        ) {
+            val film = searchResults.elementAt(it)
+
             FilmCard(
-                modifier = Modifier.fillMaxSize(),
                 film = film,
-                isShowingTitle = uiPreferences.shouldShowTitleOnCards,
+                isShowingTitle = showFilmTitles,
                 onClick = openFilmScreen,
                 onLongClick = previewFilm,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
         if (pagingState.isLoading) {
             items(20) {
                 FilmCardPlaceholder(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(3.dp),
-                    isShowingTitle = uiPreferences.shouldShowTitleOnCards,
+                    isShowingTitle = showFilmTitles,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(3.dp),
                 )
             }
         }
 
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            RetryButton(
-                modifier =
-                    Modifier
-                        .height(errorHeight)
+        if (error != null) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                RetryButton(
+                    error = error.asString(),
+                    onRetry = paginateItems,
+                    modifier = Modifier
+                        .aspectRatio(FilmCover.Poster.ratio)
                         .fillMaxWidth(),
-                error =
-                    error?.asString()
-                        ?: stringResource(LocaleR.string.error_on_search),
-                onRetry = paginateItems,
-            )
+                )
+            }
         }
     }
 }

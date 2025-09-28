@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -24,20 +22,21 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.database.entity.SearchHistory
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.database.entity.search.SearchHistory
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SearchHistoryBlock(
-    modifier: Modifier = Modifier,
     item: SearchHistory,
     onClick: () -> Unit,
     onArrowClick: () -> Unit,
     onLongClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
@@ -53,34 +52,30 @@ internal fun SearchHistoryBlock(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(
+            AdaptiveIcon(
                 painter = painterResource(id = UiCommonR.drawable.time_circle_outlined),
                 contentDescription = stringResource(LocaleR.string.search_history_icon),
                 tint = LocalContentColor.current.copy(0.6f),
-                modifier = Modifier.size(16.dp)
+                dp = 16.dp,
             )
 
             Text(
                 text = item.query,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                ),
+                fontWeight = FontWeight.Normal,
+                style = MaterialTheme.typography.bodyLarge.asAdaptiveTextStyle(14.sp),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1F)
+                modifier = Modifier
+                    .weight(1F)
                     .padding(horizontal = 10.dp)
             )
 
-            Box(
-                modifier = modifier
-                    .clickable { onArrowClick() },
-            ) {
-                Icon(
+            Box(modifier = Modifier.clickable { onArrowClick() }) {
+                AdaptiveIcon(
                     painter = painterResource(id = UiCommonR.drawable.north_west_arrow),
                     contentDescription = stringResource(LocaleR.string.search_history_icon),
                     tint = LocalContentColor.current.copy(0.8F),
-                    modifier = Modifier.size(20.dp)
+                    dp = 20.dp,
                 )
             }
         }

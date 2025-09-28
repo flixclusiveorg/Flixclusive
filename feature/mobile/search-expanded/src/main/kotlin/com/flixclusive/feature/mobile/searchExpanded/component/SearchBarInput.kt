@@ -12,12 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -29,10 +29,11 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,11 +51,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.common.util.toTextFieldValue
-import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
+import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getDummyProviderMetadata
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.data.tmdb.util.TMDBFilters.Companion.getDefaultTMDBFilters
 import com.flixclusive.feature.mobile.searchExpanded.SearchItemViewType
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.ProviderFilterButton
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper
@@ -62,39 +65,44 @@ import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.getFormat
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.filter.FilterList
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun SearchBarInput(
-    currentViewType: MutableState<SearchItemViewType>,
+    currentViewType: SearchItemViewType,
     providerMetadata: ProviderMetadata,
-    searchQuery: String,
+    searchQuery: () -> String,
     lastQuerySearched: String,
     filters: FilterList,
     onSearch: () -> Unit,
+    onChangeView: (SearchItemViewType) -> Unit,
     onNavigationIconClick: () -> Unit,
     onToggleFilterSheet: (Int) -> Unit,
-    onQueryChange: (String) -> Unit
+    onQueryChange: (String) -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
 
     var isError by remember { mutableStateOf(false) }
     var textFieldValue by remember(searchQuery) {
-        mutableStateOf(searchQuery.toTextFieldValue())
+        mutableStateOf(searchQuery().toTextFieldValue())
     }
     val focusRequester = remember { FocusRequester() }
+    val isTypingNewQuery by remember {
+        derivedStateOf {
+            searchQuery() != lastQuerySearched
+        }
+    }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 
-    LaunchedEffect(searchQuery, lastQuerySearched) {
-        val isTypingNewQuery = searchQuery != lastQuerySearched
-
+    val updatedOnChangeView by rememberUpdatedState(onChangeView)
+    LaunchedEffect(isTypingNewQuery) {
         if (isTypingNewQuery) {
-            currentViewType.value = SearchItemViewType.SearchHistory
+            updatedOnChangeView(SearchItemViewType.History)
         }
     }
 
@@ -103,7 +111,7 @@ internal fun SearchBarInput(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp)
+            .padding(horizontal = 10.dp),
     ) {
         TextField(
             modifier = Modifier
@@ -124,14 +132,14 @@ internal fun SearchBarInput(
                 onSearch = {
                     keyboardController?.hide()
 
-                    if(textFieldValue.text.isEmpty()) {
+                    if (textFieldValue.text.isEmpty()) {
                         isError = true
                     } else {
-                        currentViewType.value = SearchItemViewType.Films
+                        onChangeView(SearchItemViewType.Films)
                     }
 
                     onSearch()
-                }
+                },
             ),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             shape = MaterialTheme.shapes.small,
@@ -145,7 +153,7 @@ internal fun SearchBarInput(
                 IconButton(onClick = onNavigationIconClick) {
                     Icon(
                         painter = painterResource(UiCommonR.drawable.left_arrow),
-                        contentDescription = stringResource(LocaleR.string.navigate_up)
+                        contentDescription = stringResource(LocaleR.string.navigate_up),
                     )
                 }
             },
@@ -155,7 +163,7 @@ internal fun SearchBarInput(
                     style = MaterialTheme.typography.bodyMedium,
                     color = LocalContentColor.current.copy(0.6f),
                     overflow = TextOverflow.Ellipsis,
-                    maxLines = 1
+                    maxLines = 1,
                 )
             },
             supportingText = {
@@ -166,7 +174,7 @@ internal fun SearchBarInput(
                         color = MaterialTheme.colorScheme.error,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
-                        maxLines = 1
+                        maxLines = 1,
                     )
                 }
             },
@@ -177,11 +185,11 @@ internal fun SearchBarInput(
                     exit = scaleOut(),
                 ) {
                     IconButton(
-                        onClick = { onQueryChange("") }
+                        onClick = { onQueryChange("") },
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.outline_close_square),
-                            contentDescription = stringResource(LocaleR.string.clear_text_button)
+                            contentDescription = stringResource(LocaleR.string.clear_text_button),
                         )
                     }
                 }
@@ -191,12 +199,13 @@ internal fun SearchBarInput(
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             item {
                 ProviderFilterButton(
                     currentViewType = currentViewType,
-                    providerMetadata = providerMetadata
+                    providerMetadata = providerMetadata,
+                    onChangeView = onChangeView,
                 )
             }
 
@@ -208,12 +217,12 @@ internal fun SearchBarInput(
                         shape = MaterialTheme.shapes.small,
                         enabled = false,
                         modifier = Modifier
-                            .height(32.dp)
-                            .width(40.dp)
+                            .height(getAdaptiveDp(32.dp))
+                            .widthIn(min = getAdaptiveDp(40.dp)),
                     ) {
-                        Icon(
+                        AdaptiveIcon(
                             painter = painterResource(UiCommonR.drawable.filter_list_off),
-                            contentDescription = stringResource(LocaleR.string.filter_button)
+                            contentDescription = stringResource(LocaleR.string.filter_button),
                         )
                     }
                 }
@@ -227,27 +236,24 @@ internal fun SearchBarInput(
                     contentPadding = PaddingValues(horizontal = 12.dp),
                     shape = MaterialTheme.shapes.small,
                     colors = FilterHelper.getButtonColors(isBeingUsed = isBeingUsed),
-                    border = FilterHelper.getButtonBorders(isBeingUsed = isBeingUsed),
+                    border = ButtonDefaults.outlinedButtonBorder(isBeingUsed),
                     modifier = Modifier
-                        .height(32.dp)
-                        .widthIn(min = 80.dp)
+                        .height(getAdaptiveDp(32.dp))
+                        .widthIn(min = getAdaptiveDp(80.dp)),
                 ) {
                     AnimatedContent(
                         targetState = filterGroup.getFormattedName(context = context),
-                        label = ""
+                        label = "",
                     ) {
                         Text(
                             text = it,
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
-                            ),
+                            fontWeight = FontWeight.Medium,
+                            style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(14.sp),
                         )
                     }
                 }
             }
         }
-
 
         Spacer(modifier = Modifier.height(15.dp))
     }
@@ -259,15 +265,16 @@ private fun SearchBarExpandedPreview() {
     FlixclusiveTheme {
         Surface {
             SearchBarInput(
-                searchQuery = "Star Wars",
+                searchQuery = { "Star Wars" },
                 lastQuerySearched = "Iron Man",
                 onSearch = {},
                 onNavigationIconClick = {},
                 onQueryChange = {},
                 onToggleFilterSheet = {},
-                filters = getDefaultTmdbFilters(),
+                filters = getDefaultTMDBFilters(),
                 providerMetadata = getDummyProviderMetadata(),
-                currentViewType = remember { mutableStateOf(SearchItemViewType.SearchHistory) }
+                currentViewType = SearchItemViewType.History,
+                onChangeView = {},
             )
         }
     }

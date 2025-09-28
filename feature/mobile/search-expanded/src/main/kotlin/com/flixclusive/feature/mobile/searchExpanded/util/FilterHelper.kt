@@ -1,16 +1,14 @@
 package com.flixclusive.feature.mobile.searchExpanded.util
 
 import android.content.Context
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastForEach
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.provider.filter.Filter
 import com.flixclusive.provider.filter.FilterGroup
 
@@ -18,6 +16,7 @@ internal object FilterHelper {
 
     private const val SELECTED_FILTER_BUTTON_ALPHA = 0.05F
 
+    @Stable
     fun FilterGroup.isBeingUsed(): Boolean {
         fastForEach { filter ->
             if (filter is Filter.CheckBox && filter.state) {
@@ -31,6 +30,7 @@ internal object FilterHelper {
         return false
     }
 
+    @Stable
     fun FilterGroup.getFormattedName(context: Context): String {
         if (isEmpty() || !hasOneTypeOnly())
             return name
@@ -60,6 +60,7 @@ internal object FilterHelper {
         }
     }
 
+    @Stable
     private fun FilterGroup.hasOneTypeOnly(): Boolean {
         if (isEmpty())
             return true
@@ -68,6 +69,7 @@ internal object FilterHelper {
         return fastAll { it::class == firstType }
     }
 
+    @Stable
     @Composable
     fun getButtonColors(isBeingUsed: Boolean): ButtonColors {
         return if (isBeingUsed) {
@@ -80,16 +82,7 @@ internal object FilterHelper {
         )
     }
 
-    @Composable
-    fun getButtonBorders(isBeingUsed: Boolean): BorderStroke {
-        return if (isBeingUsed) {
-            BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        } else ButtonDefaults.outlinedButtonBorder
-    }
-
+    @Stable
     private fun Filter<*>.getFilterDisplayValue(context: Context): String {
         val selectedFilter = when (this) {
             is Filter.Select<*> -> options.getOrNull(state!!)

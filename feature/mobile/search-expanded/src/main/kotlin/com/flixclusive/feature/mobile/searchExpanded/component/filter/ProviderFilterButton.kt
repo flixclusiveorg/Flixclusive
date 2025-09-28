@@ -9,13 +9,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,42 +31,44 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
+import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.feature.mobile.searchExpanded.SearchItemViewType
-import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.getButtonColors
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun ProviderFilterButton(
+    currentViewType: SearchItemViewType,
+    providerMetadata: ProviderMetadata,
+    onChangeView: (SearchItemViewType) -> Unit,
     modifier: Modifier = Modifier,
-    currentViewType: MutableState<SearchItemViewType>,
-    providerMetadata: ProviderMetadata
 ) {
     val context = LocalContext.current
 
-    var lastViewTypeSelected by rememberSaveable { mutableStateOf(currentViewType.value.ordinal) }
+    var lastViewTypeSelected by rememberSaveable { mutableIntStateOf(currentViewType.ordinal) }
     var isIconLoadingError by remember(providerMetadata.iconUrl) { mutableStateOf(false) }
 
     OutlinedButton(
         onClick = {
-            currentViewType.value = when (currentViewType.value) {
+            val viewType = when (currentViewType) {
                 SearchItemViewType.Providers -> SearchItemViewType.entries[lastViewTypeSelected]
                 else -> {
-                    lastViewTypeSelected = currentViewType.value.ordinal
+                    lastViewTypeSelected = currentViewType.ordinal
                     SearchItemViewType.Providers
                 }
             }
+
+            onChangeView(viewType)
         },
         colors = getButtonColors(isBeingUsed = true),
-        border = FilterHelper.getButtonBorders(isBeingUsed = true),
+        border = ButtonDefaults.outlinedButtonBorder(true),
         contentPadding = PaddingValues(horizontal = 12.dp),
         shape = MaterialTheme.shapes.small,
         modifier = modifier
             .height(32.dp)
-            .widthIn(min = 150.dp)
+            .widthIn(min = 150.dp),
     ) {
         AnimatedContent(
             targetState = providerMetadata.name,
@@ -81,17 +84,17 @@ internal fun ProviderFilterButton(
                         contentDescription = stringResource(LocaleR.string.provider_icon_content_desc),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
-                            .size(16.dp)
+                            .size(16.dp),
                     )
                 } else {
-                    val imageModel = remember { context.buildTMDBImageUrl(providerMetadata.iconUrl) }
+                    val imageModel = remember { context.buildImageRequest(providerMetadata.iconUrl) }
 
                     AsyncImage(
                         model = imageModel,
                         contentDescription = stringResource(LocaleR.string.provider_icon_content_desc),
                         onError = { isIconLoadingError = true },
                         modifier = Modifier
-                            .size(16.dp)
+                            .size(16.dp),
                     )
 
                     Spacer(modifier = Modifier.width(3.dp))

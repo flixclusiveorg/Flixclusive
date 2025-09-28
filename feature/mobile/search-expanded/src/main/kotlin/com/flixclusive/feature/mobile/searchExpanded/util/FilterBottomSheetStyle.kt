@@ -7,7 +7,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 
 internal object FilterBottomSheetStyle {
     const val STRONGEST_EMPHASIS = 0.8F
@@ -25,13 +25,11 @@ internal object FilterBottomSheetStyle {
     @Composable
     fun getLabelStyle(isSelected: Boolean): TextStyle {
         return MaterialTheme.typography.labelLarge.copy(
-            fontSize = FilterItemLabelSize,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface.onMediumEmphasis(
-                if (isSelected) 1F
-                else MEDIUM_EMPHASIS
-            )
-        )
+            color = MaterialTheme.colorScheme.onSurface.copy(
+                alpha = if (isSelected) 1F else MEDIUM_EMPHASIS,
+            ),
+        ).asAdaptiveTextStyle(FilterItemLabelSize)
     }
 
     @Composable

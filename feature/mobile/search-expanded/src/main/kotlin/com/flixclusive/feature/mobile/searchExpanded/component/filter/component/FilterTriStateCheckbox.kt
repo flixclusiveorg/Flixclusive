@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.tooling.preview.Preview
 import com.flixclusive.core.presentation.mobile.components.material3.CustomTriStateCheckbox
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterBottomSheetStyle.getCheckboxColors
 import com.flixclusive.provider.filter.Filter
 
@@ -24,10 +24,10 @@ private fun getNextState(currentState: MutableIntState): Int {
 
 @Composable
 internal fun FilterTriStateCheckbox(
-    modifier: Modifier = Modifier,
     label: String,
     state: Int,
     onToggle: (Int) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     require(state > -1 && state < 3) {
         "Invalid state: $state. State ordinal must be between 0 and 2"
@@ -45,12 +45,12 @@ internal fun FilterTriStateCheckbox(
         modifier = modifier,
         label = label,
         isSelected = isChecked,
-        onClick = { onToggle(getNextState(toggledState)) }
+        onClick = { onToggle(getNextState(toggledState)) },
     ) {
         CustomTriStateCheckbox(
             state = ToggleableState.entries[state],
             onClick = { onToggle(getNextState(toggledState)) },
-            colors = getCheckboxColors()
+            colors = getCheckboxColors(),
         )
     }
 }
@@ -65,7 +65,7 @@ private fun FilterCheckboxPreview() {
             FilterTriStateCheckbox(
                 label = "Label",
                 state = state,
-                onToggle = { state = it }
+                onToggle = { state = it },
             )
         }
     }

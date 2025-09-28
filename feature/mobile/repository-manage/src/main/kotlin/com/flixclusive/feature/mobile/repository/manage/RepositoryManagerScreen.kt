@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -20,7 +19,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -46,11 +44,9 @@ import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Comp
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
 import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
-import com.flixclusive.core.presentation.mobile.extensions.isCompact
-import com.flixclusive.core.presentation.mobile.extensions.isExpanded
-import com.flixclusive.core.presentation.mobile.extensions.isMedium
 import com.flixclusive.core.presentation.mobile.extensions.showMessage
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveGridCellsCount
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.feature.mobile.repository.manage.component.AddRepositoryBar
@@ -140,14 +136,6 @@ private fun RepositoryManagerScreenContent(
 
     val focusRequester = remember { FocusRequester() }
 
-    val windowSizeWidthClass = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
-    val gridColumns = when {
-        windowSizeWidthClass.isCompact -> 1
-        windowSizeWidthClass.isMedium -> 2
-        windowSizeWidthClass.isExpanded -> 3
-        else -> 1
-    }
-
     LaunchedEffect(uiState.error) {
         if (uiState.error != null) {
             val message = uiState.error
@@ -196,7 +184,7 @@ private fun RepositoryManagerScreenContent(
                 contentPadding = it,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                columns = GridCells.Fixed(gridColumns),
+                columns = getAdaptiveGridCellsCount(),
                 modifier = Modifier.padding(horizontal = 10.dp),
             ) {
                 item(span = { GridItemSpan(maxLineSpan) }) {

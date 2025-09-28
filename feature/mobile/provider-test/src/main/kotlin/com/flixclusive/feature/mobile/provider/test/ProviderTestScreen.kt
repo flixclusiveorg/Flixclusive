@@ -63,6 +63,7 @@ import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.extensions.isExpanded
 import com.flixclusive.core.presentation.mobile.extensions.isMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveGridCellsCount
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.domain.provider.testing.TestJobState
 import com.flixclusive.domain.provider.testing.TestStage
@@ -155,15 +156,6 @@ internal fun ProviderTestScreenContent(
     val context = LocalContext.current
     val localDensity = LocalDensity.current
 
-    val windowWidthSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
-
-    val gridColumns = when {
-        windowWidthSizeClass.isCompact -> 1
-        windowWidthSizeClass.isMedium -> 2
-        windowWidthSizeClass.isExpanded -> 3
-        else -> 1
-    }
-
     var headerHeight by remember { mutableStateOf(0.dp) }
     var headerHeightPx by remember { mutableFloatStateOf(0F) }
 
@@ -232,7 +224,7 @@ internal fun ProviderTestScreenContent(
     ) {
         LazyVerticalGrid(
             modifier = Modifier.padding(horizontal = 10.dp),
-            columns = GridCells.Fixed(gridColumns),
+            columns = getAdaptiveGridCellsCount(),
             state = listState,
             contentPadding = it,
             verticalArrangement = Arrangement.spacedBy(10.dp),

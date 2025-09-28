@@ -4,16 +4,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.flixclusive.core.presentation.mobile.components.material3.CustomCheckbox
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.components.material3.CommonCheckbox
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterBottomSheetStyle
 
 @Composable
 internal fun FilterCheckbox(
-    modifier: Modifier = Modifier,
     label: String,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     BaseTextButton(
         modifier = modifier,
@@ -21,7 +21,7 @@ internal fun FilterCheckbox(
         isSelected = isChecked,
         onClick = { onCheckedChange(!isChecked) }
     ) {
-        CustomCheckbox(
+        CommonCheckbox(
             checked = isChecked,
             onCheckedChange = onCheckedChange,
             colors = FilterBottomSheetStyle.getCheckboxColors()

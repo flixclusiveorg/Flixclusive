@@ -2,50 +2,49 @@ package com.flixclusive.feature.mobile.searchExpanded.component.filter.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.util.toOptionString
 import com.flixclusive.provider.filter.Filter
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 /**
  *
  * Updates/toggles the selection of a [Filter.Sort.Selection]
  * */
 private fun Filter.Sort.Selection.updateSelection(
-    index: Int = this.index, ascending: Boolean = this.ascending
+    index: Int = this.index,
+    ascending: Boolean = this.ascending,
 ): Filter.Sort.Selection {
-    if (index == this.index)
+    if (index == this.index) {
         return copy(ascending = !ascending)
+    }
 
     return copy(
         index = index,
-        ascending = false
+        ascending = false,
     )
 }
 
+@Suppress("ktlint:compose:modifier-not-used-at-root")
 @Composable
 internal fun <T> SortItems(
-    modifier: Modifier = Modifier,
     options: List<T>,
     selected: Filter.Sort.Selection?,
     onToggle: (Filter.Sort.Selection) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-
     Column {
         repeat(options.size) { index ->
             BaseTextButton(
@@ -59,18 +58,18 @@ internal fun <T> SortItems(
                     if (newState == null) {
                         newState = Filter.Sort.Selection(
                             index = index,
-                            ascending = false
+                            ascending = false,
                         )
                     }
 
                     onToggle(newState)
-                }
+                },
             ) {
                 AnimatedContent(
                     targetState = selected,
                     label = "",
-                    modifier = Modifier.size(16.dp)
-                        .align(Alignment.CenterVertically)
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically),
                 ) {
                     if (it != null && it.index == index) {
                         val iconId = when (it.ascending) {
@@ -78,12 +77,12 @@ internal fun <T> SortItems(
                             else -> UiCommonR.drawable.sort_descending
                         }
 
-                        Icon(
+                        AdaptiveIcon(
                             painter = painterResource(id = iconId),
                             contentDescription = stringResource(id = LocaleR.string.sort_icon_content_desc),
+                            dp = 16.dp,
                             modifier = Modifier
-                                .size(16.dp)
-                                .align(Alignment.CenterVertically)
+                                .align(Alignment.CenterVertically),
                         )
                     }
                 }
@@ -104,7 +103,7 @@ private fun FilterCheckboxPreview() {
                 selected = selection.value,
                 onToggle = {
                     selection.value = it
-                }
+                },
             )
         }
     }

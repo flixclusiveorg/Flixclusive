@@ -27,19 +27,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyProviderMetadata
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getDummyProviderMetadata
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.model.provider.ProviderMetadata
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun SearchProviderBlock(
-    modifier: Modifier = Modifier,
     providerMetadata: ProviderMetadata,
     isSelected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
@@ -79,7 +79,7 @@ internal fun SearchProviderBlock(
                 )
 
                 Text(
-                    text = providerMetadata.providerType?.toString() ?: stringResource(LocaleR.string.unknown_provider_type),
+                    text = providerMetadata.providerType.toString(),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium.copy(

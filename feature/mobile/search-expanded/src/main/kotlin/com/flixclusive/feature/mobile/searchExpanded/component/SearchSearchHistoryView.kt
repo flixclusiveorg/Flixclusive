@@ -1,16 +1,10 @@
 package com.flixclusive.feature.mobile.searchExpanded.component
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,12 +12,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.flixclusive.core.database.entity.SearchHistory
-import com.flixclusive.core.ui.common.dialog.TextAlertDialog
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.database.entity.search.SearchHistory
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveGridCellsCount
+import com.flixclusive.feature.mobile.searchExpanded.ViewLabelHeader
 import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -33,33 +25,18 @@ internal fun SearchSearchHistoryView(
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
     deleteSearchHistoryItem: (SearchHistory) -> Unit,
+    scaffoldPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     var searchHistoryToDelete by rememberSaveable { mutableStateOf<SearchHistory?>(null) }
 
-    LazyColumn(
+    LazyVerticalGrid(
         modifier = modifier,
-        contentPadding = PaddingValues(bottom = 10.dp),
+        contentPadding = scaffoldPadding,
+        columns = getAdaptiveGridCellsCount(),
     ) {
-        stickyHeader {
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(bottom = 5.dp),
-            ) {
-                Text(
-                    text = stringResource(id = LocaleR.string.search_history),
-                    style =
-                        MaterialTheme.typography.labelMedium.copy(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Black,
-                            color = LocalContentColor.current.copy(0.8F),
-                        ),
-                    modifier = Modifier.padding(horizontal = 10.dp),
-                )
-            }
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            ViewLabelHeader(label = stringResource(id = LocaleR.string.search_history))
         }
 
         items(
@@ -85,8 +62,8 @@ internal fun SearchSearchHistoryView(
 
     if (searchHistoryToDelete != null) {
         TextAlertDialog(
-            label = stringResource(id = LocaleR.string.delete_search_history_item),
-            description = stringResource(id = LocaleR.string.delete_search_history_item_message),
+            title = stringResource(id = LocaleR.string.delete_search_history_item),
+            message = stringResource(id = LocaleR.string.delete_search_history_item_message),
             onConfirm = { deleteSearchHistoryItem(searchHistoryToDelete!!) },
             onDismiss = { searchHistoryToDelete = null },
         )

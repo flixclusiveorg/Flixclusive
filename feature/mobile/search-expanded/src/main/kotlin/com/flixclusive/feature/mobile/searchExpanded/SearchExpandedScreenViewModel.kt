@@ -1,7 +1,7 @@
 package com.flixclusive.feature.mobile.searchExpanded
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,24 +9,25 @@ import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.common.pagination.PagingState
-import com.flixclusive.core.database.entity.SearchHistory
+import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.common.pagination.PagingDataState
+import com.flixclusive.core.database.entity.search.SearchHistory
 import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.core.datastore.util.asStateFlow
+import com.flixclusive.core.datastore.model.user.UiPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.data.tmdb.TMDBRepository
-import com.flixclusive.data.tmdb.TmdbFilters.Companion.getDefaultTmdbFilters
-import com.flixclusive.domain.database.repository.SearchHistoryRepository
-import com.flixclusive.domain.provider.repository.ProviderApiRepository
-import com.flixclusive.domain.provider.repository.ProviderRepository
-import com.flixclusive.domain.session.UserSessionManager
+import com.flixclusive.data.database.repository.SearchHistoryRepository
+import com.flixclusive.data.database.session.UserSessionManager
+import com.flixclusive.data.provider.repository.ProviderApiRepository
+import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.data.tmdb.repository.TMDBFilmSearchItemsRepository
+import com.flixclusive.data.tmdb.util.TMDBFilters.Companion.getDefaultTMDBFilters
+import com.flixclusive.domain.tmdb.usecase.GetDiscoverCardsUseCase
+import com.flixclusive.feature.mobile.searchExpanded.SearchUiState.Companion.resetPagination
 import com.flixclusive.feature.mobile.searchExpanded.util.Constant.TMDB_PROVIDER_ID
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
-import com.flixclusive.model.datastore.user.UiPreferences
-import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData
 import com.flixclusive.provider.ProviderApi
@@ -34,70 +35,42 @@ import com.flixclusive.provider.filter.BottomSheetComponent
 import com.flixclusive.provider.filter.FilterGroup
 import com.flixclusive.provider.filter.FilterList
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 internal class SearchExpandedScreenViewModel
     @Inject
     constructor(
-        private val tmdbRepository: TMDBRepository,
+        private val tmdbFilmSearchItemsRepository: TMDBFilmSearchItemsRepository,
+        private val getDiscoverCards: GetDiscoverCardsUseCase,
         private val searchHistoryRepository: SearchHistoryRepository,
         private val userSessionManager: UserSessionManager,
         private val providerApiRepository: ProviderApiRepository,
+        private val appDispatchers: AppDispatchers,
         providerRepository: ProviderRepository,
         dataStoreManager: DataStoreManager,
     ) : ViewModel() {
-        val providerMetadataList by lazy { providerRepository.getEnabledProviders() }
-        private val providerApis = mutableStateListOf<ProviderApi>()
-        private val apisChangesHandler = ApiListChangesHandler(providerApis)
-
-        private val userId: Int? get() = userSessionManager.currentUser.value?.id
-        val searchHistory =
-            userSessionManager.currentUser
-                .filterNotNull()
-                .flatMapLatest { user ->
-                    searchHistoryRepository.getAllItemsInFlow(ownerId = user.id)
-                }.stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = emptyList(),
-                )
-
-        val uiPreferences =
-            dataStoreManager
-                .getUserPrefs<UiPreferences>(UserPreferences.UI_PREFS_KEY)
-                .asStateFlow(viewModelScope)
-
-        val searchResults = mutableStateListOf<FilmSearchItem>()
-        var filters by mutableStateOf(getDefaultTmdbFilters())
-            private set
-
         private var searchingJob: Job? = null
 
-        var selectedProviderId by mutableStateOf<String>(TMDB_PROVIDER_ID)
-            private set
+        val providerMetadataList = providerRepository.getEnabledProviders().toImmutableList()
 
-        private var page by mutableIntStateOf(1)
-        private var maxPage by mutableIntStateOf(1)
-        var canPaginate by mutableStateOf(false)
-            private set
-        var pagingState by mutableStateOf(com.flixclusive.core.common.pagination.PagingState.IDLE)
-            private set
-        var error by mutableStateOf<UiText?>(null)
-            private set
-
-        var lastQuerySearched by mutableStateOf("")
-            private set
-        var searchQuery by mutableStateOf("")
-            private set
-
-        val currentViewType = mutableStateOf(SearchItemViewType.SearchHistory)
+        private val providerApis = mutableStateListOf<ProviderApi>()
+        private val apisChangesHandler = ApiListChangesHandler(providerApis)
 
         init {
             viewModelScope.launch {
@@ -109,165 +82,227 @@ internal class SearchExpandedScreenViewModel
             }
         }
 
+        val searchHistory = userSessionManager.currentUser
+            .filterNotNull()
+            .flatMapLatest { user ->
+                searchHistoryRepository.getAllItemsInFlow(ownerId = user.id)
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList(),
+            )
+
+        val showFilmTitles = dataStoreManager
+            .getUserPrefs(UserPreferences.UI_PREFS_KEY, UiPreferences::class)
+            .map { it.shouldShowTitleOnCards }
+            .distinctUntilChanged()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = false,
+            )
+
+        var searchResults by mutableStateOf(persistentSetOf<FilmSearchItem>())
+            private set
+
+        var filters by mutableStateOf(getDefaultTMDBFilters())
+            private set
+
+        private val _uiState = MutableStateFlow(SearchUiState())
+        val uiState = _uiState.asStateFlow()
+
+        private val _searchQuery = MutableStateFlow("")
+        val searchQuery = _searchQuery.asStateFlow()
+
         fun onSearch() {
-            if (searchingJob?.isActive == true) {
-                return
-            }
+            if (searchingJob?.isActive == true) return
 
-            searchingJob =
-                viewModelScope.launch {
-                    // Reset pagination
-                    page = 1
-                    maxPage = 1
-                    canPaginate = false
-                    pagingState = com.flixclusive.core.common.pagination.PagingState.IDLE
-                    searchResults.clear()
+            searchingJob = viewModelScope.launch {
+                val query = _searchQuery.value
 
-                    lastQuerySearched = searchQuery
-                    currentViewType.value = SearchItemViewType.Films
+                // Reset pagination
+                _uiState.update { it.resetPagination(lastQuerySearched = query) }
+                searchResults = searchResults.clear()
 
-                    if (searchQuery.isNotEmpty()) {
-                        searchHistoryRepository.insert(
-                            SearchHistory(
-                                query = searchQuery,
-                                ownerId = userId ?: return@launch,
-                            ),
-                        )
-                    }
-
-                    paginateItems()
+                if (query.isNotBlank()) {
+                    val userId = userSessionManager.currentUser
+                        .filterNotNull()
+                        .first()
+                        .id
+                    searchHistoryRepository.insert(SearchHistory(query = query, ownerId = userId))
                 }
+
+                paginateItems()
+            }
         }
 
         fun onChangeProvider(id: String) {
-            selectedProviderId = id
+            _uiState.update { it.copy(selectedProviderId = id) }
             onSearch()
         }
 
         fun onQueryChange(query: String) {
-            searchQuery = query
+            _searchQuery.value = query
         }
 
         fun onUpdateFilters(newFilters: FilterList) {
             filters = newFilters
         }
 
+        fun onChangeView(viewType: SearchItemViewType) {
+            _uiState.update { it.copy(currentViewType = viewType) }
+        }
+
         fun paginateItems() {
             viewModelScope.launch {
-                if (isDonePaginating()) {
-                    return@launch
+                if (isDonePaginating()) return@launch
+
+                _uiState.update {
+                    it.copy(
+                        pagingState = PagingDataState.Loading,
+                        error = null,
+                    )
                 }
 
-                pagingState =
-                    when (page) {
-                        1 -> com.flixclusive.core.common.pagination.PagingState.LOADING
-                        else -> com.flixclusive.core.common.pagination.PagingState.PAGINATING
-                    }
-
                 when (
-                    val result = getResponseFromProviderEndpoint()
+                    val result = fetchItemsFromProvider()
                 ) {
+                    Resource.Loading -> Unit
                     is Resource.Success -> {
-                        result.data?.parseResults()
+                        val data = result.data ?: SearchResponseData(
+                            page = 1,
+                            totalPages = 1,
+                            hasNextPage = false,
+                            results = emptyList(),
+                        )
+                        val canPaginate = data.results.size == 20 || data.page < data.totalPages
+
+                        if (data.page == 1) {
+                            searchResults = searchResults.clear()
+                        }
+
+                        searchResults = searchResults.addAll(data.results)
+
+                        _uiState.update {
+                            it.copy(
+                                page = it.page + 1,
+                                maxPage = data.totalPages,
+                                canPaginate = canPaginate,
+                                pagingState = PagingDataState.Success(isExhausted = !canPaginate),
+                            )
+                        }
                     }
 
                     is Resource.Failure -> {
-                        error = result.error
-                        pagingState =
-                            when (page) {
-                                1 -> com.flixclusive.core.common.pagination.PagingState.ERROR
-                                else -> com.flixclusive.core.common.pagination.PagingState.EXHAUSTED
-                            }
-                    }
-
-                    Resource.Loading -> {
-                        Unit
+                        val errorMessage = result.error ?: UiText.from(R.string.failed_to_paginate_items)
+                        _uiState.update {
+                            it.copy(
+                                error = errorMessage,
+                                pagingState = when (it.page) {
+                                    1 -> PagingDataState.Error(errorMessage)
+                                    else -> PagingDataState.Success(isExhausted = true)
+                                },
+                            )
+                        }
                     }
                 }
             }
         }
 
         fun deleteSearchHistoryItem(item: SearchHistory) {
-            viewModelScope.launch {
-                searchHistoryRepository.remove(
-                    id = item.id,
-                    ownerId = userId ?: return@launch,
-                )
+            appDispatchers.ioScope.launch {
+                searchHistoryRepository.remove(id = item.id)
             }
         }
 
-        private fun SearchResponseData<FilmSearchItem>.parseResults() {
-            val results =
-                results
-                    .filterNot { it.posterImage == null }
-
-            maxPage = totalPages
-            canPaginate = results.size == 20 || page < maxPage
-
-            if (page == 1) {
-                searchResults.clear()
-            }
-
-            searchResults.addAll(results)
-
-            pagingState = PagingState.IDLE
-
-            if (canPaginate) {
-                this@SearchExpandedScreenViewModel.page++
-            }
-        }
-
+        /**
+         * Checks if pagination should stop based on current state.
+         *
+         * Returns true if:
+         * - The current page is not the first page AND
+         *   - Pagination is not allowed OR
+         *   - The paging state is idle (indicating no more data to load)
+         * - OR the search query is empty.
+         * */
         private fun isDonePaginating(): Boolean =
-            page != 1 && (page == 1 || !canPaginate || pagingState != com.flixclusive.core.common.pagination.PagingState.IDLE) || searchQuery.isEmpty()
+            _uiState.value.let {
+                (it.page != 1 && (!it.canPaginate || it.pagingState.isDone)) ||
+                    _searchQuery.value.isEmpty()
+            }
 
-        private fun filterOutUiComponentsFromFilterList(): FilterList =
+        private fun FilterList.removeUiComponentsFromFilterList(): FilterList =
             FilterList(
-                filters
-                    .fastMap { group ->
-                        FilterGroup(
-                            name = group.name,
-                            list =
-                                group.list.fastFilter { filter ->
-                                    filter !is BottomSheetComponent<*>
-                                },
-                        )
-                    }.sortedByDescending {
-                        it.isBeingUsed()
-                    },
+                fastMap { group ->
+                    FilterGroup(
+                        name = group.name,
+                        list = group.list.fastFilter { filter ->
+                            filter !is BottomSheetComponent<*>
+                        },
+                    )
+                }.sortedByDescending {
+                    it.isBeingUsed()
+                },
             )
 
-        private suspend fun getResponseFromProviderEndpoint(): Resource<SearchResponseData<FilmSearchItem>> {
-            val filteredFilters = filterOutUiComponentsFromFilterList()
+        private suspend fun fetchItemsFromProvider(): Resource<SearchResponseData<FilmSearchItem>> {
+            val filteredFilters = filters.removeUiComponentsFromFilterList()
+
+            val selectedProviderId = _uiState.value.selectedProviderId
+            val page = _uiState.value.page
+            val query = _searchQuery.value
 
             return if (selectedProviderId == TMDB_PROVIDER_ID) {
                 val mediaTypeFilter = filteredFilters.first().first()
                 val mediaType = mediaTypeFilter.state as Int
 
-                tmdbRepository.search(
+                tmdbFilmSearchItemsRepository.search(
                     page = page,
-                    query = searchQuery,
+                    query = query,
                     filter = mediaType,
                 )
             } else {
                 try {
                     val api = providerApiRepository.getApi(selectedProviderId)!!
-                    val result =
-                        withIOContext {
-                            api.search(
-                                page = page,
-                                title = searchQuery,
-                            )
-                        }
+                    val result = withContext(appDispatchers.io) {
+                        api.search(page = page, title = query)
+                    }
 
                     Resource.Success(result)
                 } catch (e: Exception) {
                     errorLog(e)
-                    Resource
-                        .Failure(e)
-                        .also {
-                            error = it.error
-                        }
+                    Resource.Failure(e)
                 }
             }
         }
     }
+
+@Immutable
+internal data class SearchUiState(
+    val currentViewType: SearchItemViewType = SearchItemViewType.History,
+    val pagingState: PagingDataState = PagingDataState.Loading,
+    val page: Int = 1,
+    val maxPage: Int = 1,
+    val canPaginate: Boolean = false,
+    val error: UiText? = null,
+    val selectedProviderId: String = TMDB_PROVIDER_ID,
+    val lastQuerySearched: String = "",
+) {
+    companion object {
+        fun SearchUiState.resetPagination(lastQuerySearched: String) =
+            copy(
+                pagingState = PagingDataState.Loading,
+                canPaginate = false,
+                page = 1,
+                maxPage = 1,
+                lastQuerySearched = lastQuerySearched,
+                currentViewType = SearchItemViewType.Films,
+                error = null,
+            )
+    }
+}
+
+internal enum class SearchItemViewType {
+    History,
+    Providers,
+    Films,
+}
