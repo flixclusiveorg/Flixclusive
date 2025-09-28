@@ -51,7 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.mobile.components.material3.CustomCheckbox
+import com.flixclusive.core.presentation.mobile.components.material3.CommonCheckbox
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
 import com.flixclusive.feature.splashScreen.ENTER_DELAY
@@ -266,7 +266,7 @@ private fun HeaderBodyComponent(
                         .padding(top = 5.dp)
                         .align(Alignment.CenterHorizontally),
             ) {
-                CustomCheckbox(
+                CommonCheckbox(
                     checked = isOptingIn.value,
                     onCheckedChange = {
                         isOptingIn.value = !isOptingIn.value

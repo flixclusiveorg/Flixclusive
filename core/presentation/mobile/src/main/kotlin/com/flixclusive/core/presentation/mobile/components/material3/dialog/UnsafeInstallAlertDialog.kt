@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
-import com.flixclusive.core.presentation.mobile.components.material3.CustomCheckbox
+import com.flixclusive.core.presentation.mobile.components.material3.CommonCheckbox
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -153,7 +153,7 @@ fun UnsafeInstallAlertDialog(
             ) {
                 val mediumEmphasis = MaterialTheme.colorScheme.onSurface.copy(0.6f)
 
-                CustomCheckbox(
+                CommonCheckbox(
                     checked = checkboxState,
                     onCheckedChange = { checkboxState = it },
                     colors = CheckboxDefaults.colors().copy(

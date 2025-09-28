@@ -72,7 +72,7 @@ fun LabeledCheckbox(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CustomCheckbox(
+        CommonCheckbox(
             enabled = enabled,
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -88,7 +88,7 @@ fun LabeledCheckbox(
 }
 
 @Composable
-fun CustomCheckbox(
+fun CommonCheckbox(
     checked: Boolean,
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
@@ -149,8 +149,8 @@ fun CustomTriStateCheckbox(
 private fun CheckboxImpl(
     enabled: Boolean,
     value: ToggleableState,
-    modifier: Modifier = Modifier,
     colors: CheckboxColors,
+    modifier: Modifier = Modifier,
 ) {
     val transition = updateTransition(value, label = "")
     val checkDrawFraction = transition.animateFloat(

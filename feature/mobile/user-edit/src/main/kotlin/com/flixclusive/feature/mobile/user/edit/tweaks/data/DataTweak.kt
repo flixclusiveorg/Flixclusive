@@ -31,7 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.mobile.components.material3.CustomCheckbox
+import com.flixclusive.core.presentation.mobile.components.material3.CommonCheckbox
 import com.flixclusive.core.presentation.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.R
 import com.flixclusive.core.strings.UiText
@@ -221,7 +221,7 @@ internal class DataTweak(
                                     .fillMaxWidth()
                                     .padding(3.dp)
                             ) {
-                                CustomCheckbox(
+                                CommonCheckbox(
                                     checked = selectedLibraries[library]!!,
                                     onCheckedChange = onCheckedChange
                                 )
