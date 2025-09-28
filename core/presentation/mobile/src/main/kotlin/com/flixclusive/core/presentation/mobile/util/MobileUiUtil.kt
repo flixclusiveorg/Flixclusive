@@ -12,7 +12,7 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiv
  * */
 object MobileUiUtil {
     val DefaultScreenPaddingHorizontal = 8.dp
-    val DefaultFilmCardPosterWidth = 135.dp
+    val DefaultFilmCardPosterWidth = 110.dp
 
     /**
      * Returns an adaptive width for film cards based on the screen size.
@@ -22,7 +22,7 @@ object MobileUiUtil {
     @Composable
     fun getAdaptiveFilmCardWidth(
         dp: Dp = DefaultFilmCardPosterWidth,
-        increasedBy: Dp = 50.dp,
+        increasedBy: Dp = 75.dp,
     ): Dp {
         return getAdaptiveDp(
             dp = dp,

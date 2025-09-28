@@ -56,6 +56,7 @@ import com.flixclusive.core.presentation.mobile.components.material3.topbar.reme
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
+import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.util.FilmType
@@ -123,7 +124,7 @@ fun FilmsGridScreen(
             .padding(LocalGlobalScaffoldPadding.current),
     ) {
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(110.dp),
+            columns = GridCells.Adaptive(getAdaptiveFilmCardWidth()),
             contentPadding = it,
             state = listState,
             modifier = Modifier.fillMaxSize(),
