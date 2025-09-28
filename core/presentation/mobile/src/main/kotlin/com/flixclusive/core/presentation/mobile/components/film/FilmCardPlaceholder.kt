@@ -3,7 +3,6 @@ package com.flixclusive.core.presentation.mobile.components.film
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.components.FilmCover
-import com.flixclusive.core.presentation.common.extensions.placeholderEffect
+import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
 
@@ -31,11 +30,10 @@ fun FilmCardPlaceholder(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
-        Spacer(
+        Placeholder(
             modifier = Modifier
                 .width(cardWidth)
                 .aspectRatio(FilmCover.Poster.ratio)
-                .placeholderEffect()
         )
 
         if (isShowingTitle) {
@@ -46,11 +44,10 @@ fun FilmCardPlaceholder(
                         horizontal = 3.dp
                     )
             ) {
-                Spacer(
+                Placeholder(
                     modifier = Modifier
                         .height(titleHeight)
                         .fillMaxWidth()
-                        .placeholderEffect()
                 )
             }
         }
