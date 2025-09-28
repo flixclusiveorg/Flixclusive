@@ -3,14 +3,13 @@ package com.flixclusive.feature.mobile.search
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.network.util.monitor.NetworkMonitor
-import com.flixclusive.domain.provider.repository.ProviderApiRepository
-import com.flixclusive.domain.tmdb.usecase.GetSearchCardsUseCase
+import com.flixclusive.data.provider.repository.ProviderApiRepository
+import com.flixclusive.data.tmdb.repository.TMDBDiscoverCatalogRepository
 import com.flixclusive.model.provider.ProviderCatalog
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,45 +17,45 @@ import javax.inject.Inject
 internal class SearchScreenViewModel
     @Inject
     constructor(
-        private val getSearchRecommendedCardsUseCase: GetSearchCardsUseCase,
+        private val tmdbDiscoverCatalogRepository: TMDBDiscoverCatalogRepository,
         private val providerApiRepository: ProviderApiRepository,
-        networkMonitor: com.flixclusive.core.network.util.monitor.NetworkMonitor,
     ) : ViewModel() {
-        val genreCards = getSearchRecommendedCardsUseCase.cards
-        val tvShowNetworkCards = getSearchRecommendedCardsUseCase.tvShowNetworkCards
-        val movieCompanyCards = getSearchRecommendedCardsUseCase.movieCompanyCards
+        val genreCards = flow { emit(tmdbDiscoverCatalogRepository.getGenres()) }
+            .stateIn(
+                viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = emptyList(),
+            )
+
+        val tvShowNetworkCards = flow { emit(tmdbDiscoverCatalogRepository.getTvNetworks()) }
+            .stateIn(
+                viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = emptyList(),
+            )
+
+        val movieCompanyCards = flow { emit(tmdbDiscoverCatalogRepository.getMovieCompanies()) }
+            .stateIn(
+                viewModelScope,
+                started = SharingStarted.Eagerly,
+            initialValue = emptyList(),
+        )
+
         val providersCatalogsCards = mutableStateListOf<ProviderCatalog>()
 
         private val catalogsCardsOperationsHandler = ProviderCatalogsChangesHandler(providersCatalogsCards)
 
         init {
             viewModelScope.launch {
-                launch {
-                    networkMonitor.isOnline
-                        .combine(getSearchRecommendedCardsUseCase.cards) { isConnected, status ->
-                            isConnected to status
-                        }.collectLatest { (isConnected, status) ->
-                            if (isConnected && status is Resource.Failure || status is Resource.Loading) {
-                                getSearchRecommendedCardsUseCase()
-                            }
-                        }
-                }
+                providersCatalogsCards.addAll(
+                    providerApiRepository
+                        .getApis()
+                        .flatMap { it.catalogs },
+                )
 
-                launch {
-                    providersCatalogsCards.addAll(
-                        providerApiRepository
-                            .getApis()
-                            .flatMap { it.catalogs },
-                    )
-
-                    providerApiRepository.observe().collect {
-                        catalogsCardsOperationsHandler.handleOperations(it)
-                    }
-                }
+                providerApiRepository
+                    .observe()
+                    .collect(catalogsCardsOperationsHandler::handleOperations)
             }
         }
-
-        fun retryLoadingCards() {
-            getSearchRecommendedCardsUseCase()
-        }
-    }
+}

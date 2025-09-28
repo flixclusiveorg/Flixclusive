@@ -1,12 +1,14 @@
 package com.flixclusive.core.presentation.mobile
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveTextUnit
 
 object AdaptiveTextStyle {
+    @Stable
     @Composable
     fun TextStyle.asAdaptiveTextStyle(
         compact: TextUnit,
@@ -22,6 +24,7 @@ object AdaptiveTextStyle {
         return this.copy(fontSize = adaptiveSize)
     }
 
+    @Stable
     @Composable
     fun TextStyle.asAdaptiveTextStyle(
         size: TextUnit = this.fontSize,

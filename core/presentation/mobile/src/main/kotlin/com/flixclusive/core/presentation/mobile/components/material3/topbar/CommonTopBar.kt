@@ -177,7 +177,7 @@ object CommonTopBarDefaults {
 
     @Composable
     fun getTopBarHeadlinerTextStyle() =
-        MaterialTheme.typography.bodyLarge
+        MaterialTheme.typography.titleLarge
             .copy(fontWeight = FontWeight.SemiBold)
             .asAdaptiveTextStyle(
                 size = 20.sp,

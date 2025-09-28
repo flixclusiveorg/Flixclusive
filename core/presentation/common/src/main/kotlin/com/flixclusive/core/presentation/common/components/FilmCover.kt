@@ -48,6 +48,7 @@ enum class FilmCover(
      * @param imagePath The path to the image to be loaded.
      * @param imageSize The size of the image to be loaded (e.g., "w500").
      * @param title The title of the film, used for the placeholder.
+     * @param contentScale The scaling strategy for the image. Default is [ContentScale.FillBounds].
      * @param modifier Modifier to be applied to the Box containing the image.
      * @param onSuccess Optional lambda to be invoked when the image has been successfully loaded
      * @param onClick Optional lambda to be invoked when the image is clicked.
@@ -60,6 +61,7 @@ enum class FilmCover(
         imageSize: String,
         title: String,
         modifier: Modifier = Modifier,
+        contentScale: ContentScale = ContentScale.FillBounds,
         onSuccess: () -> Unit = {},
         onClick: (() -> Unit)? = null,
         onLongClick: (() -> Unit)? = null,
@@ -77,7 +79,7 @@ enum class FilmCover(
         AsyncImage(
             model = painter,
             imageLoader = LocalContext.current.imageLoader,
-            contentScale = ContentScale.FillBounds,
+            contentScale = contentScale,
             contentDescription = title,
             onSuccess = { onSuccess() },
             modifier = modifier

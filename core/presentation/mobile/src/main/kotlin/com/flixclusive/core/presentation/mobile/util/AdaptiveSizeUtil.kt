@@ -1,7 +1,9 @@
 package com.flixclusive.core.presentation.mobile.util
 
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -22,6 +24,7 @@ object AdaptiveSizeUtil {
      * @return The DP size for the current window size class.
      * */
     @Composable
+    @Stable
     fun getAdaptiveDp(
         compact: Dp,
         medium: Dp,
@@ -50,6 +53,7 @@ object AdaptiveSizeUtil {
      * @return The DP size for the current window size class.
      * */
     @Composable
+    @Stable
     fun getAdaptiveTextUnit(
         compact: TextUnit,
         medium: TextUnit,
@@ -76,6 +80,7 @@ object AdaptiveSizeUtil {
      * @return The DP size for the current window size class.
      * */
     @Composable
+    @Stable
     fun getAdaptiveDp(
         dp: Dp,
         increaseBy: Dp = 4.dp,
@@ -96,6 +101,7 @@ object AdaptiveSizeUtil {
      * @return The DP size for the current window size class.
      * */
     @Composable
+    @Stable
     fun getAdaptiveTextUnit(
         size: TextUnit,
         increaseBy: Int = 4,
@@ -111,5 +117,33 @@ object AdaptiveSizeUtil {
                 type = size.type,
             ),
         )
+    }
+
+    /**
+     * A function to get an adaptive number of grid cells based on the window size class.
+     *
+     * @param compact The number of grid cells for a compact window size. Default is 1.
+     * @param medium The number of grid cells for a medium window size. Default is 2.
+     * @param expanded The number of grid cells for an expanded window size. Default is 3.
+     *
+     * @return A [GridCells.Fixed] with the number of cells for the current window size class.
+     * */
+    @Composable
+    @Stable
+    fun getAdaptiveGridCellsCount(
+        compact: Int = 1,
+        medium: Int = 2,
+        expanded: Int = 3,
+    ): GridCells.Fixed {
+        val windowWidthSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
+
+        val columns = when {
+            windowWidthSizeClass.isCompact -> compact
+            windowWidthSizeClass.isMedium -> medium
+            windowWidthSizeClass.isExpanded -> expanded
+            else -> compact
+        }
+
+        return GridCells.Fixed(columns)
     }
 }

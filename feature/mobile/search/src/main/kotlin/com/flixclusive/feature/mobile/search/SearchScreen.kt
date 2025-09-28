@@ -8,15 +8,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -27,29 +29,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.presentation.mobile.components.LARGE_ERROR
-import com.flixclusive.core.presentation.mobile.components.RetryButton
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.common.navigation.navargs.GenreWithBackdrop
-import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navigator.ViewAllFilmsAction
-import com.flixclusive.core.ui.common.navigation.navigator.ViewGenreCatalogAction
-import com.flixclusive.feature.mobile.search.component.SearchItemCard
-import com.flixclusive.feature.mobile.search.component.SearchItemCardPlaceholderWithText
-import com.flixclusive.feature.mobile.search.component.SearchItemRow
+import com.flixclusive.core.presentation.mobile.util.copy
+import com.flixclusive.data.tmdb.model.TMDBDiscoverCatalog
+import com.flixclusive.feature.mobile.search.component.BrowseItemCard
+import com.flixclusive.feature.mobile.search.component.BrowseRow
+import com.flixclusive.feature.mobile.search.util.SearchUiUtils
+import com.flixclusive.model.provider.Catalog
+import com.flixclusive.model.provider.ProviderCatalog
 import com.ramcosta.composedestinations.annotation.Destination
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
-interface SearchScreenNavigator : GoBackAction, ViewGenreCatalogAction, ViewAllFilmsAction {
-    fun openSearchExpandedScreen()
-}
+// TODO: Remove this screen in the future and use only SearchExpandedScreen
 
 @Destination
 @Composable
@@ -61,97 +60,103 @@ internal fun SearchScreen(
     val movieCompanyCards by viewModel.movieCompanyCards.collectAsStateWithLifecycle()
     val genreCards by viewModel.genreCards.collectAsStateWithLifecycle()
 
+    SearchScreenContent(
+        tvShowNetworkCards = tvShowNetworkCards,
+        movieCompanyCards = movieCompanyCards,
+        genreCards = genreCards,
+        providerCards = viewModel.providersCatalogsCards,
+        openSearchExpandedScreen = navigator::openSearchExpandedScreen,
+        openSeeAllScreen = navigator::openSeeAllScreen,
+    )
+}
+
+@Composable
+private fun SearchScreenContent(
+    tvShowNetworkCards: List<TMDBDiscoverCatalog>,
+    movieCompanyCards: List<TMDBDiscoverCatalog>,
+    genreCards: List<TMDBDiscoverCatalog>,
+    providerCards: List<ProviderCatalog>,
+    openSearchExpandedScreen: () -> Unit,
+    openSeeAllScreen: (Catalog) -> Unit,
+) {
     LazyVerticalGrid(
-        modifier = Modifier.padding(LocalGlobalScaffoldPadding.current),
-        columns = GridCells.Adaptive(minSize = 180.dp),
+        columns = GridCells.Adaptive(minSize = SearchUiUtils.getCardWidth(180.dp)),
+        contentPadding = LocalGlobalScaffoldPadding.current.copy(
+            start = 15.dp,
+            end = 15.dp,
+        ),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             SearchBarHeader(
-                onSearchBarClick = navigator::openSearchExpandedScreen,
+                onSearchBarClick = openSearchExpandedScreen,
             )
         }
 
-        if (viewModel.providersCatalogsCards.isNotEmpty()) {
+        if (providerCards.isNotEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                SearchItemRow(
-                    list = viewModel.providersCatalogsCards,
-                    showItemNames = false,
-                    rowTitle = UiText.StringResource(LocaleR.string.browse_providers_catalogs),
-                    onClick = navigator::openSeeAllScreen,
+                BrowseRow(
+                    list = providerCards,
+                    rowTitle = UiText.from(LocaleR.string.browse_providers_catalogs),
+                ) {
+                    BrowseItemCard(
+                        label = it.name,
+                        image = it.image,
+                        isProviderCatalog = true,
+                        onClick = { openSeeAllScreen(it) },
+                        modifier = Modifier.width(SearchUiUtils.getCardWidth()),
+                    )
+                }
+            }
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            BrowseRow(
+                list = tvShowNetworkCards,
+                rowTitle = UiText.StringResource(LocaleR.string.browse_tv_networks),
+            ) {
+                BrowseItemCard(
+                    label = it.name,
+                    image = it.image,
+                    imageSize = "w500_filter(negate,000,666)",
+                    isCompanyCatalog = true,
+                    onClick = { openSeeAllScreen(it) },
+                    modifier = Modifier.width(SearchUiUtils.getCardWidth()),
                 )
             }
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            SearchItemRow(
-                list = tvShowNetworkCards,
-                showItemNames = false,
-                rowTitle = UiText.StringResource(LocaleR.string.browse_tv_networks),
-                onClick = navigator::openSeeAllScreen,
-            )
-        }
-
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            SearchItemRow(
+            BrowseRow(
                 list = movieCompanyCards,
-                showItemNames = false,
                 rowTitle = UiText.StringResource(LocaleR.string.browse_movie_companies),
-                onClick = navigator::openSeeAllScreen,
-            )
+            ) {
+                BrowseItemCard(
+                    label = it.name,
+                    image = it.image,
+                    imageSize = "w500_filter(negate,000,666)",
+                    isCompanyCatalog = true,
+                    onClick = { openSeeAllScreen(it) },
+                    modifier = Modifier.width(SearchUiUtils.getCardWidth()),
+                )
+            }
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             Text(
                 text = stringResource(LocaleR.string.browse_categories),
                 style = MaterialTheme.typography.titleMedium,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 15.dp)
-                        .padding(top = 15.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 15.dp),
             )
         }
 
-        if (genreCards.isLoading) {
-            items(20) {
-                SearchItemCardPlaceholderWithText()
-            }
-        } else if (genreCards is Resource.Failure) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                RetryButton(
-                    modifier =
-                        Modifier
-                            .height(LARGE_ERROR),
-                    error =
-                        genreCards.error?.asString()
-                            ?: stringResource(id = LocaleR.string.failed_to_initialize_search_items),
-                    onRetry = viewModel::retryLoadingCards,
-                )
-            }
-        } else {
-            items(genreCards.data!!) {
-                SearchItemCard(
-                    image = it.image,
-                    label = it.name,
-                    onClick = {
-                        // If item is not a genre but a film type instead
-                        if (it.id < 0) {
-                            navigator.openSeeAllScreen(it)
-                            return@SearchItemCard
-                        }
-
-                        navigator.openGenreScreen(
-                            genre =
-                                GenreWithBackdrop(
-                                    id = it.id,
-                                    name = it.name,
-                                    posterPath = it.image.toString(),
-                                    mediaType = it.mediaType,
-                                ),
-                        )
-                    },
-                )
-            }
+        items(genreCards) {
+            BrowseItemCard(
+                image = it.image,
+                label = it.name,
+                onClick = { openSeeAllScreen(it) },
+            )
         }
     }
 }
@@ -166,28 +171,21 @@ private fun SearchBarHeader(onSearchBarClick: () -> Unit) {
             style = getTopBarHeadlinerTextStyle(),
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 15.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding(),
         )
 
         Box(
             contentAlignment = Alignment.Center,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = TextFieldDefaults.MinHeight)
-                    .padding(horizontal = 15.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable { onSearchBarClick() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = TextFieldDefaults.MinHeight)
+                .clip(MaterialTheme.shapes.small)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable { onSearchBarClick() },
         ) {
             Row(
-                modifier =
-                    Modifier
-                        .padding(horizontal = 15.dp),
                 horizontalArrangement = Arrangement.spacedBy(15.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -206,4 +204,88 @@ private fun SearchBarHeader(onSearchBarClick: () -> Unit) {
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun SearchScreenBasePreview() {
+    val tvShowNetworkCards = List(10) {
+        TMDBDiscoverCatalog(
+            id = it,
+            name = "Network $it",
+            image = null,
+            mediaType = "tv",
+            url = "$it",
+        )
+    }
+    val movieCompanyCards = List(10) {
+        TMDBDiscoverCatalog(
+            id = it,
+            name = "Company $it",
+            image = null,
+            mediaType = "movie",
+            url = "$it",
+        )
+    }
+    val genreCards = List(10) {
+        TMDBDiscoverCatalog(
+            id = it,
+            name = "Genre $it",
+            image = null,
+            mediaType = if (it % 2 == 0) "movie" else "tv",
+            url = "$it",
+        )
+    }
+    val providerCards = List(10) {
+        ProviderCatalog(
+            name = "Provider $it",
+            image = null,
+            url = "$it",
+            canPaginate = true,
+            providerId = "$it",
+        )
+    }
+
+    FlixclusiveTheme {
+        Surface {
+            SearchScreenContent(
+                tvShowNetworkCards = tvShowNetworkCards,
+                movieCompanyCards = movieCompanyCards,
+                genreCards = genreCards,
+                providerCards = providerCards,
+                openSearchExpandedScreen = {},
+                openSeeAllScreen = {},
+            )
+        }
+    }
+}
+
+@Preview(device = "spec:parent=pixel_5,orientation=landscape")
+@Composable
+private fun SearchScreenCompactLandscapePreview() {
+    SearchScreenBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=portrait")
+@Composable
+private fun SearchScreenMediumPortraitPreview() {
+    SearchScreenBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=landscape")
+@Composable
+private fun SearchScreenMediumLandscapePreview() {
+    SearchScreenBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
+@Composable
+private fun SearchScreenExtendedPortraitPreview() {
+    SearchScreenBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
+@Composable
+private fun SearchScreenExtendedLandscapePreview() {
+    SearchScreenBasePreview()
 }

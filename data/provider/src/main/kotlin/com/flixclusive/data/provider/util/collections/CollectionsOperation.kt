@@ -2,6 +2,14 @@ package com.flixclusive.data.provider.util.collections
 
 import kotlinx.serialization.Serializable
 
+/**
+ * A sealed interface representing various operations that can be performed on async collections.
+ *
+ * It includes operations for both lists and maps, allowing for adding and removing items.
+ *
+ * @see ReactiveMap
+ * @see ReactiveList
+ * */
 sealed interface CollectionsOperation<T> {
     @Serializable
     sealed class List<T> : CollectionsOperation<T> {

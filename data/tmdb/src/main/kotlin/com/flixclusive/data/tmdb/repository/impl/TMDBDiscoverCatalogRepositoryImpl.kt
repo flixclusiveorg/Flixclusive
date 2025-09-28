@@ -25,7 +25,7 @@ internal class TMDBDiscoverCatalogRepositoryImpl
         private val gson by lazy { Gson() }
 
         private val cacheMutex = Mutex()
-        private var cachedTMDBTMDBDiscoverCatalog: TMDBDiscoverCatalogs? = null
+        private var cachedTMDBDiscoverCatalog: TMDBDiscoverCatalogs? = null
 
         companion object {
             private const val DISCOVER_CATALOGS_ASSET = "discover_catalogs.json"
@@ -41,9 +41,9 @@ internal class TMDBDiscoverCatalogRepositoryImpl
 
         private suspend fun getTMDBDiscoverCatalog(): TMDBDiscoverCatalogs {
             return cacheMutex.withLock {
-                cachedTMDBTMDBDiscoverCatalog ?: run {
+                cachedTMDBDiscoverCatalog ?: run {
                     val catalog = read(DISCOVER_CATALOGS_ASSET)
-                    cachedTMDBTMDBDiscoverCatalog = catalog
+                    cachedTMDBDiscoverCatalog = catalog
                     catalog
                 }
             }
