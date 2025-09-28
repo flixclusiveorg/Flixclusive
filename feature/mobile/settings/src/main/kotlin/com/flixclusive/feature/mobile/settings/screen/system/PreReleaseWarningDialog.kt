@@ -20,10 +20,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.presentation.theme.warningColor
-import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.presentation.common.theme.Colors
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.CommonAlertDialog
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
@@ -35,34 +34,34 @@ internal fun PreReleaseWarningDialog(
     val buttonShape = MaterialTheme.shapes.medium
     val buttonShapeRoundnessPercentage = 10
 
-    CustomBaseAlertDialog(
+    CommonAlertDialog(
         onDismiss = onDismiss,
         action = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier
                     .padding(horizontal = 10.dp)
-                    .padding(bottom = 10.dp)
+                    .padding(bottom = 10.dp),
             ) {
                 Button(
                     onClick = onConfirm,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = warningColor,
-                        contentColor = Color.Black
+                        containerColor = Colors.warningColor,
+                        contentColor = Color.Black,
                     ),
                     shape = buttonShape.copy(
-                        bottomStart = CornerSize((buttonShapeRoundnessPercentage  *2).dp),
+                        bottomStart = CornerSize((buttonShapeRoundnessPercentage * 2).dp),
                     ),
                     modifier = Modifier
                         .weight(1F)
-                        .heightIn(min = buttonMinHeight)
+                        .heightIn(min = buttonMinHeight),
                 ) {
                     Text(
                         text = stringResource(id = LocaleR.string.opt_in_prerelease),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
-                            .padding(end = 2.dp)
+                            .padding(end = 2.dp),
                     )
                 }
 
@@ -70,34 +69,34 @@ internal fun PreReleaseWarningDialog(
                     onClick = onDismiss,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6f)
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6f),
                     ),
                     shape = buttonShape.copy(
-                        bottomEnd = CornerSize((buttonShapeRoundnessPercentage  *2).dp),
+                        bottomEnd = CornerSize((buttonShapeRoundnessPercentage * 2).dp),
                     ),
                     modifier = Modifier
                         .weight(1F)
-                        .heightIn(min = buttonMinHeight)
+                        .heightIn(min = buttonMinHeight),
                 ) {
                     Text(
                         text = stringResource(id = LocaleR.string.opt_out_prerelease),
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Light
+                        fontWeight = FontWeight.Light,
                     )
                 }
             }
-        }
+        },
     ) {
         Text(
             text = "\uD83D\uDDFF\uD83D\uDDFF\uD83D\uDDFF\uD83D\uDDFF",
-            color = warningColor,
+            color = Colors.warningColor,
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Bold,
-                fontSize = 17.sp
+                fontSize = 17.sp,
             ),
             textAlign = TextAlign.Center,
             modifier = Modifier
-                .padding(10.dp)
+                .padding(10.dp),
         )
 
         Text(
@@ -108,11 +107,10 @@ internal fun PreReleaseWarningDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 20.dp)
-                .padding(horizontal = 10.dp)
+                .padding(horizontal = 10.dp),
         )
     }
 }
-
 
 @Preview
 @Composable
@@ -121,7 +119,7 @@ private fun PreReleaseUpdatesWarningDialogPreview() {
         Surface {
             PreReleaseWarningDialog(
                 onConfirm = {},
-                onDismiss = {}
+                onDismiss = {},
             )
         }
     }

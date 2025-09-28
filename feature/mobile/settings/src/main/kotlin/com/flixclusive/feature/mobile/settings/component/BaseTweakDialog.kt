@@ -17,12 +17,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.CommonAlertDialog
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.strings.R
-import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
 
 @Composable
 internal fun BaseTweakDialog(
@@ -34,7 +32,7 @@ internal fun BaseTweakDialog(
     val buttonMinHeight = 50.dp
     val buttonShape = MaterialTheme.shapes.medium
 
-    CustomBaseAlertDialog(
+    CommonAlertDialog(
         onDismiss = onDismissRequest,
         action = {
             Row(
@@ -98,15 +96,8 @@ internal fun BaseTweakDialog(
         ) {
             Text(
                 text = title,
-                style =
-                    getAdaptiveTextStyle(
-                        style = TypographyStyle.Headline,
-                        style = AdaptiveTextStyle.Emphasized,
-                        size = 20.sp,
-                    ),
-                modifier =
-                    Modifier
-                        .padding(10.dp),
+                style = MaterialTheme.typography.headlineSmall.asAdaptiveTextStyle(20.sp),
+                modifier = Modifier.padding(10.dp),
             )
 
             content()

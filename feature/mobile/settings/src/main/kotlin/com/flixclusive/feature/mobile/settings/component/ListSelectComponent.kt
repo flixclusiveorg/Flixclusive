@@ -28,16 +28,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.material3.LabeledCheckbox
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
 import kotlin.math.max
-import com.flixclusive.core.ui.common.R as UiCommonR
+import com.flixclusive.core.drawables.R as UiCommonR
 
 @Composable
 internal fun <T> ListSelectComponent(
@@ -126,19 +124,12 @@ internal fun <T> ListSelectComponent(
                         ) {
                             Text(
                                 text = label,
-                                style =
-                                    getAdaptiveTextStyle(
-                                        style = TypographyStyle.Title,
-                                    ).copy(
-                                        fontSize = 16.sp,
-                                        fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
-                                        color =
-                                            if (isSelected) {
-                                                MaterialTheme.colorScheme.primary
-                                            } else {
-                                                MaterialTheme.colorScheme.onSurface.copy(0.6f)
-                                            },
-                                    ),
+                                style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
+                                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+                                color = when {
+                                    isSelected -> MaterialTheme.colorScheme.primary
+                                    else -> MaterialTheme.colorScheme.onSurface.copy(0.6f)
+                                },
                                 modifier =
                                     Modifier
                                         .padding(start = getAdaptiveDp(10.dp)),

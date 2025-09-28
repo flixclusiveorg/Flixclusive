@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -25,20 +26,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.getTextStyle
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
+import com.flixclusive.core.datastore.model.user.player.CaptionEdgeTypePreference
+import com.flixclusive.core.datastore.model.user.player.CaptionStylePreference
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.settings.TweakPaddingHorizontal
-import com.flixclusive.model.datastore.user.SubtitlesPreferences
-import com.flixclusive.model.datastore.user.player.CaptionEdgeTypePreference
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun SubtitlePreview(
@@ -47,14 +50,13 @@ internal fun SubtitlePreview(
 ) {
     val shape = MaterialTheme.shapes.medium
 
-    val subtitlesTextStyle =
-        with(subtitlePreferencesProvider()) {
-            subtitleFontStyle.getTextStyle().copy(
-                textAlign = TextAlign.Center,
-                color = Color(subtitleColor),
-                fontSize = subtitleSize.sp,
-            )
-        }
+    val subtitlesTextStyle = with(subtitlePreferencesProvider()) {
+        subtitleFontStyle.toTextStyle().copy(
+            textAlign = TextAlign.Center,
+            color = Color(subtitleColor),
+            fontSize = subtitleSize.sp,
+        )
+    }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -66,10 +68,12 @@ internal fun SubtitlePreview(
                     width = 2.dp,
                     color = LocalContentColor.current.copy(0.6f),
                     shape = shape,
-                ).shadow(
+                )
+                .shadow(
                     elevation = 15.dp,
                     shape = shape,
-                ).graphicsLayer {
+                )
+                .graphicsLayer {
                     alpha = if (areSubtitlesAvailableProvider()) 1F else 0.4F
                 },
     ) {
@@ -146,6 +150,35 @@ internal fun OutlineTextPreview(
     )
 }
 
+@Stable
+@Composable
+private fun CaptionStylePreference.toTextStyle(): TextStyle {
+    val style = MaterialTheme.typography.labelLarge
+    return when (this) {
+        CaptionStylePreference.Normal ->
+            style.copy(
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.Normal,
+            )
+
+        CaptionStylePreference.Bold ->
+            style.copy(
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.Bold,
+            )
+
+        CaptionStylePreference.Italic ->
+            style.copy(
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.Bold,
+                fontStyle = FontStyle.Italic,
+            )
+
+        CaptionStylePreference.Monospace ->
+            style.copy(fontFamily = FontFamily.Monospace)
+    }
+}
+
 @Preview
 @Composable
 private fun SubtitlePreviewBasePreview() {
@@ -157,7 +190,7 @@ private fun SubtitlePreviewBasePreview() {
                     SubtitlesPreferences(
                         subtitleEdgeType = CaptionEdgeTypePreference.Outline,
                     )
-                }
+                },
             )
         }
     }

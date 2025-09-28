@@ -30,17 +30,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.clearFocusOnSoftKeyboardHide
-import com.flixclusive.core.ui.common.util.showSoftKeyboard
-import com.flixclusive.core.ui.common.util.toTextFieldValue
+import com.flixclusive.core.presentation.common.extensions.clearFocusOnSoftKeyboardHide
+import com.flixclusive.core.presentation.common.extensions.showSoftKeyboard
+import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun TextFieldComponent(
@@ -103,14 +100,9 @@ internal fun TextFieldComponent(
                         }
                     }
                 },
-                textStyle =
-                    getAdaptiveTextStyle(
-                        size = 16.sp,
-                        style = TypographyStyle.Body,
-                        style = AdaptiveTextStyle.Normal,
-                    ).copy(
-                        textAlign = TextAlign.Start,
-                    ),
+                textStyle = MaterialTheme.typography.bodyLarge
+                    .copy(textAlign = TextAlign.Start)
+                    .asAdaptiveTextStyle(),
                 singleLine = true,
                 shape = MaterialTheme.shapes.small,
                 colors =
@@ -120,8 +112,11 @@ internal fun TextFieldComponent(
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                     ),
-                modifier =
-                    Modifier.showSoftKeyboard(true).clearFocusOnSoftKeyboardHide().fillMaxWidth().height(
+                modifier = Modifier
+                    .showSoftKeyboard(true)
+                    .clearFocusOnSoftKeyboardHide()
+                    .fillMaxWidth()
+                    .height(
                         getAdaptiveDp(
                             dp = 65.dp,
                             increaseBy = 15.dp,

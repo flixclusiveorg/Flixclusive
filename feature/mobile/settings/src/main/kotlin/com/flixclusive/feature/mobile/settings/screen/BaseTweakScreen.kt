@@ -4,15 +4,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.datastore.preferences.core.Preferences
+import com.flixclusive.core.datastore.model.FlixclusivePrefs
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakScaffold
-import com.flixclusive.model.datastore.FlixclusivePrefs
+import com.flixclusive.feature.mobile.settings.util.PreferenceUpdater
 import kotlinx.coroutines.flow.StateFlow
 
-internal interface BaseTweakScreen<T : FlixclusivePrefs> {
+internal interface BaseTweakScreen<T : FlixclusivePrefs> : PreferenceUpdater<T> {
     val key: Preferences.Key<String>
     val preferencesAsState: StateFlow<T>
-    val onUpdatePreferences: suspend (suspend (T) -> T) -> Boolean
 
     val isSubNavigation: Boolean get() = false
 

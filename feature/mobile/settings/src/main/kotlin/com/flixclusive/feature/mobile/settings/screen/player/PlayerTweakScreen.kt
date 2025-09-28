@@ -4,7 +4,6 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,23 +11,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.datastore.model.user.PlayerPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.datastore.model.user.player.DecoderPriority
+import com.flixclusive.core.datastore.model.user.player.PlayerQuality
+import com.flixclusive.core.datastore.model.user.player.ResizeMode
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsViewModel
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
-import com.flixclusive.model.datastore.user.PlayerPreferences
-import com.flixclusive.model.datastore.user.UserPreferences
-import com.flixclusive.model.datastore.user.player.DecoderPriority
-import com.flixclusive.model.datastore.user.player.ResizeMode
+import com.flixclusive.feature.mobile.settings.util.uiText
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal class PlayerTweakScreen(
     private val viewModel: SettingsViewModel,
@@ -36,8 +38,9 @@ internal class PlayerTweakScreen(
     override val key = UserPreferences.PLAYER_PREFS_KEY
     override val preferencesAsState: StateFlow<PlayerPreferences> =
         viewModel.getUserPrefsAsState<PlayerPreferences>(key)
-    override val onUpdatePreferences: suspend (suspend (PlayerPreferences) -> PlayerPreferences) -> Boolean =
-        { viewModel.updateUserPrefs(key, it) }
+
+    override suspend fun onUpdatePreferences(transform: suspend (t: PlayerPreferences) -> PlayerPreferences): Boolean =
+        viewModel.updateUserPrefs(key, transform)
 
     @Composable
     @ReadOnlyComposable
@@ -55,9 +58,10 @@ internal class PlayerTweakScreen(
         val playerPreferences = preferencesAsState.collectAsStateWithLifecycle()
 
         return listOf(
-            getGeneralTweaks({ playerPreferences.value }),
-            getAudioTweaks({ playerPreferences.value }),
-            getAdvancedTweaks({ playerPreferences.value }),
+            getGeneralTweaks { playerPreferences.value },
+            getAudioTweaks { playerPreferences.value },
+            getAdvancedTweaks { playerPreferences.value },
+            getUiTweaks { playerPreferences.value },
         )
     }
 
@@ -72,10 +76,8 @@ internal class PlayerTweakScreen(
         }
 
         val selectedSeekAmount = remember { mutableLongStateOf(playerPreferences().seekAmount) }
-        val selectedResizeMode = remember { mutableIntStateOf(playerPreferences().resizeMode) }
+        val selectedResizeMode = remember { mutableStateOf(playerPreferences().resizeMode) }
         val selectedQuality = remember { mutableStateOf(playerPreferences().quality) }
-
-        val availableQualities = remember { getAvailableQualities(context) }
 
         return TweakGroup(
             title = stringResource(LocaleR.string.video),
@@ -84,12 +86,7 @@ internal class PlayerTweakScreen(
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.resize_mode),
                         descriptionProvider = {
-                            val mode =
-                                ResizeMode.entries
-                                    .find { it.mode == selectedResizeMode.intValue }
-                                    ?: ResizeMode.Fit
-
-                            mode.toUiText().asString(context)
+                            selectedResizeMode.uiText.asString(context)
                         },
                         value = selectedResizeMode,
                         onTweaked = {
@@ -97,23 +94,22 @@ internal class PlayerTweakScreen(
                                 oldValue.copy(resizeMode = it)
                             }
                         },
-                        options =
-                            persistentMapOf(
-                                ResizeMode.Fit.mode to ResizeMode.Fit.toUiText().asString(context),
-                                ResizeMode.Fill.mode to ResizeMode.Fill.toUiText().asString(context),
-                                ResizeMode.Zoom.mode to ResizeMode.Zoom.toUiText().asString(context),
-                            ),
+                        options = ResizeMode.entries
+                            .associateWith { it.uiText.asString(context) }
+                            .toImmutableMap(),
                     ),
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.preferred_quality),
-                        descriptionProvider = { selectedQuality.value.qualityName.asString(context) },
+                        descriptionProvider = { selectedQuality.value.uiText.asString(context) },
                         value = selectedQuality,
-                        options = availableQualities,
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
                                 oldValue.copy(quality = it)
                             }
                         },
+                        options = PlayerQuality.entries
+                            .associateWith { it.uiText.asString(context) }
+                            .toImmutableMap(),
                     ),
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.seek_length_label),
@@ -201,9 +197,20 @@ internal class PlayerTweakScreen(
                     ),
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.preferred_audio_language),
-                        descriptionProvider = { Locale(selectedAudioLanguage.value).displayLanguage },
+                        descriptionProvider = {
+                            Locale
+                                .Builder()
+                                .setLanguage(selectedAudioLanguage.value)
+                                .build()
+                                .displayLanguage
+                        },
                         value = selectedAudioLanguage,
-                        options = languages,
+                        options = Locale
+                            .getAvailableLocales()
+                            .distinctBy { it.language }
+                            .associate {
+                                it.language to "${it.displayLanguage} [${it.language}]"
+                            }.toImmutableMap(),
                         onTweaked = {
                             onUpdatePreferences { oldValue ->
                                 oldValue.copy(audioLanguage = it)
@@ -221,7 +228,7 @@ internal class PlayerTweakScreen(
         val availableDecoders =
             remember {
                 DecoderPriority.entries
-                    .associateWith { it.toUiText().asString(context) }
+                    .associateWith { it.uiText.asString(context) }
                     .toPersistentMap()
             }
 

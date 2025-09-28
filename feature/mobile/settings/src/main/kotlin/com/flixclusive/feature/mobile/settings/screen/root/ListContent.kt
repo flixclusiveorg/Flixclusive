@@ -42,15 +42,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.common.config.BuildType
+import com.flixclusive.core.common.config.CustomBuildConfig
 import com.flixclusive.core.database.entity.user.User
+import com.flixclusive.core.datastore.model.FlixclusivePrefs
+import com.flixclusive.core.presentation.mobile.components.UserAvatar
+import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
-import com.flixclusive.core.ui.common.user.UserAvatar
-import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.util.getEmphasizedLabel
 import com.flixclusive.feature.mobile.settings.util.getMediumEmphasizedLabel
-import com.flixclusive.model.datastore.FlixclusivePrefs
 import kotlinx.collections.immutable.ImmutableMap
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -59,7 +62,7 @@ private val NavigationButtonHeight = 50.dp
 
 @Composable
 internal fun ListContent(
-    appBuild: AppBuildWithPrereleaseFlag,
+    buildConfig: CustomBuildConfig,
     items: ImmutableMap<Int?, List<BaseTweakScreen<out FlixclusivePrefs>>>,
     onScroll: (Float) -> Unit,
     currentUser: () -> User,
@@ -102,7 +105,7 @@ internal fun ListContent(
         item {
             ListContentHeader(
                 currentUser = currentUser,
-                onChangeUser = { navigator.openEditUserScreen(currentUser()) },
+                onChangeUser = { navigator.openEditUserScreen(currentUser().id) },
                 modifier =
                     Modifier
                         .padding(bottom = 20.dp)
@@ -176,10 +179,9 @@ internal fun ListContent(
 
         item {
             ListContentFooter(
-                versionName = appBuild.versionName,
-                commitVersion = appBuild.commitVersion,
-                isInDebugMode = appBuild.isDebug,
-                isOnPreRelease = appBuild.isPrerelease,
+                versionName = buildConfig.versionName,
+                commitVersion = buildConfig.commitHash,
+                buildType = buildConfig.buildType,
             )
         }
     }
@@ -189,20 +191,19 @@ internal fun ListContent(
 private fun ListContentFooter(
     versionName: String,
     commitVersion: String,
-    isInDebugMode: Boolean,
-    isOnPreRelease: Boolean,
+    buildType: BuildType,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val version =
         remember {
-            versionName + (if (isOnPreRelease) "-[$commitVersion]" else "")
+            versionName + (if (buildType.isPreview) "-[$commitVersion]" else "")
         }
     val mode =
         remember {
             when {
-                isInDebugMode -> context.getString(LocaleR.string.debug)
-                isOnPreRelease -> context.getString(LocaleR.string.pre_release)
+                buildType.isDebug -> context.getString(LocaleR.string.debug)
+                buildType.isPreview -> context.getString(LocaleR.string.pre_release)
                 else -> context.getString(LocaleR.string.release)
             }
         }
@@ -263,11 +264,10 @@ private fun ListContentHeader(
         }
 
         UserAvatar(
-            user = currentUser(),
-            modifier =
-                Modifier
-                    .clickable { onChangeUser() }
-                    .size(DefaultAvatarSize),
+            avatar = currentUser().image,
+            modifier = Modifier
+                .clickable { onChangeUser() }
+                .size(getAdaptiveDp(dp = DefaultAvatarSize, increaseBy = 20.dp)),
         )
 
         Box(

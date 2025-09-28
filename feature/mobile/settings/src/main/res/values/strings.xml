@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="report_a_bug">Report a bug</string>
+    <string name="check_out_the_repository">Check out the repository</string>
+    <string name="feature_request">You have an idea? Request a feature!</string>
+</resources>

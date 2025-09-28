@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:compose:compositionlocal-allowlist")
+
 package com.flixclusive.feature.mobile.settings.util
 
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi

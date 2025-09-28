@@ -9,18 +9,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.datastore.model.user.ProviderPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsViewModel
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
-import com.flixclusive.model.datastore.user.ProviderPreferences
-import com.flixclusive.model.datastore.user.UserPreferences
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.StateFlow
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal class ProvidersTweakScreen(
     private val viewModel: SettingsViewModel,
@@ -28,8 +28,12 @@ internal class ProvidersTweakScreen(
     override val key = UserPreferences.PROVIDER_PREFS_KEY
     override val preferencesAsState: StateFlow<ProviderPreferences> =
         viewModel.getUserPrefsAsState<ProviderPreferences>(key)
-    override val onUpdatePreferences: suspend (suspend (ProviderPreferences) -> ProviderPreferences) -> Boolean =
-        { viewModel.updateUserPrefs(key, it) }
+
+    override suspend fun onUpdatePreferences(
+        transform: suspend (t: ProviderPreferences) -> ProviderPreferences,
+    ): Boolean {
+        return viewModel.updateUserPrefs(key, transform)
+    }
 
     @Composable
     override fun getTitle(): String = stringResource(LocaleR.string.providers)
@@ -68,9 +72,9 @@ internal class ProvidersTweakScreen(
                 onClick = navigator::openRepositoryManagerScreen,
             ),
             TweakUI.Divider(),
-            getGeneralTweaks({ providerPreferences.value }),
-            getTestingTweaks({ providerPreferences.value }),
-            getDataTweaks({ providerPreferences.value }),
+            getGeneralTweaks { providerPreferences.value },
+            getTestingTweaks { providerPreferences.value },
+            getDataTweaks { providerPreferences.value },
         )
     }
 
@@ -196,7 +200,7 @@ internal class ProvidersTweakScreen(
                         iconId = UiCommonR.drawable.warning_outline,
                         enabledProvider = { repositories.value.isNotEmpty() },
                         descriptionProvider = {
-                            formatWarningCountDescription(repositories.value.size,)
+                            formatWarningCountDescription(repositories.value.size)
                         },
                         dialogTitle = warningLabel,
                         dialogMessage = formatWarningMessage(deleteRepositoriesLabel),

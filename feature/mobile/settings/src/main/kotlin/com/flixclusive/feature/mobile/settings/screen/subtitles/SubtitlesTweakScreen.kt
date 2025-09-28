@@ -18,6 +18,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.datastore.model.user.player.CaptionEdgeTypePreference
+import com.flixclusive.core.datastore.model.user.player.CaptionStylePreference
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
@@ -29,10 +33,7 @@ import com.flixclusive.feature.mobile.settings.screen.subtitles.component.ColorP
 import com.flixclusive.feature.mobile.settings.screen.subtitles.component.SubtitlePreview
 import com.flixclusive.feature.mobile.settings.screen.subtitles.component.availableColors
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
-import com.flixclusive.model.datastore.user.SubtitlesPreferences
-import com.flixclusive.model.datastore.user.UserPreferences
-import com.flixclusive.model.datastore.user.player.CaptionEdgeTypePreference
-import com.flixclusive.model.datastore.user.player.CaptionStylePreference
+import com.flixclusive.feature.mobile.settings.util.uiText
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.StateFlow
@@ -44,13 +45,17 @@ private const val MAX_SUBTITLE_SIZE = 80F
 private const val MIN_SUBTITLE_SIZE = 11F
 
 internal class SubtitlesTweakScreen(
-    viewModel: SettingsViewModel,
+    private val viewModel: SettingsViewModel,
 ) : BaseTweakScreen<SubtitlesPreferences> {
     override val key = UserPreferences.SUBTITLES_PREFS_KEY
     override val preferencesAsState: StateFlow<SubtitlesPreferences> =
         viewModel.getUserPrefsAsState<SubtitlesPreferences>(key)
-    override val onUpdatePreferences: suspend (suspend (SubtitlesPreferences) -> SubtitlesPreferences) -> Boolean =
-        { viewModel.updateUserPrefs(key, it) }
+
+    override suspend fun onUpdatePreferences(
+        transform: suspend (t: SubtitlesPreferences) -> SubtitlesPreferences,
+    ): Boolean {
+        return viewModel.updateUserPrefs(key, transform)
+    }
 
     override val isSubNavigation: Boolean = true
 
@@ -92,7 +97,13 @@ internal class SubtitlesTweakScreen(
             TweakUI.ListTweak(
                 title = stringResource(LocaleR.string.language),
                 value = currentSubtitleLanguage,
-                descriptionProvider = { Locale(currentSubtitleLanguage.value).displayLanguage },
+                descriptionProvider = {
+                    Locale
+                        .Builder()
+                        .setLanguage(currentSubtitleLanguage.value)
+                        .build()
+                        .displayLanguage
+                },
                 enabledProvider = { areSubtitlesAvailable.value },
                 options = languages,
                 onTweaked = {
@@ -223,7 +234,7 @@ internal class SubtitlesTweakScreen(
                     ),
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.subtitles_edge_type),
-                        descriptionProvider = { edgeType.value.toUiText().asString(context) },
+                        descriptionProvider = { edgeType.value.uiText.asString(context) },
                         value = edgeType,
                         options = edgeTypes,
                         enabledProvider = areSubtitlesAvailableProvider,

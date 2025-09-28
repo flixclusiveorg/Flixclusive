@@ -8,9 +8,10 @@ package com.flixclusive.core.common.config
 enum class BuildType {
     DEBUG,
     RELEASE,
-    PREVIEW; // formerly known as "Pre-release"
+    PREVIEW, // formerly known as "Pre-release"
+    ;
 
-    fun isDebug(): Boolean = this == DEBUG
-    fun isRelease(): Boolean = this == RELEASE
-    fun isPreview(): Boolean = this == PREVIEW
+    val isDebug: Boolean get() = this == DEBUG
+    val isRelease: Boolean get() = this == RELEASE
+    val isPreview: Boolean get() = this == PREVIEW
 }

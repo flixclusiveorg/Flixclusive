@@ -4,26 +4,13 @@ package com.flixclusive.feature.mobile.settings.screen.player
 
 import android.content.Context
 import android.text.format.Formatter
-import com.flixclusive.model.datastore.user.DEFAULT_PLAYER_CACHE_SIZE_AMOUNT
-import com.flixclusive.model.datastore.user.player.PlayerQuality
+import androidx.compose.runtime.Stable
+import com.flixclusive.core.datastore.model.user.DEFAULT_PLAYER_CACHE_SIZE_AMOUNT
+import com.flixclusive.core.datastore.model.user.player.PlayerQuality
 import kotlinx.collections.immutable.toImmutableMap
-import java.util.Locale
 import com.flixclusive.core.strings.R as LocaleR
 
-internal fun getAvailableQualities(context: Context) =
-    PlayerQuality.entries
-        .associateWith { it.qualityName.asString(context) }
-        .toImmutableMap()
-
-internal val languages =
-    Locale
-        .getAvailableLocales()
-        .distinctBy { it.language }
-        .associate {
-            it.language to "${it.displayLanguage} [${it.language}]"
-        }.toImmutableMap()
-
-internal val playerBufferLengths =
+internal val playerBufferLengths by lazy {
     listOf(
         50L,
         60L,
@@ -51,7 +38,9 @@ internal val playerBufferLengths =
             else -> "${seconds}s"
         }
     }.toImmutableMap()
+}
 
+@Stable
 internal fun getAvailableBufferSizes(context: Context) =
     listOf<Long>(
         -1,
@@ -75,7 +64,7 @@ internal fun getAvailableBufferSizes(context: Context) =
         500,
     ).associateWith { size ->
         if (size == -1L) {
-            context.getString(LocaleR.string.auto_option)
+            context.getString(PlayerQuality.QualityAuto.qualityStringResId)
         } else {
             Formatter.formatShortFileSize(
                 // context =
@@ -86,6 +75,7 @@ internal fun getAvailableBufferSizes(context: Context) =
         }
     }.toImmutableMap()
 
+@Stable
 internal fun getAvailableCacheSizes(context: Context) =
     listOf(
         0L,

@@ -30,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -45,18 +44,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
 import com.flixclusive.core.database.entity.user.User
+import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.presentation.mobile.extensions.getAvatarResource
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.navigation.navigator.ChooseProfileAction
-import com.flixclusive.core.ui.common.navigation.navigator.EditUserAction
-import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navigator.TestProvidersAction
-import com.flixclusive.core.ui.common.user.getAvatarResource
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.appearance.AppearanceTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.data.DataTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.github.FeatureRequestTweakNavigation
-import com.flixclusive.feature.mobile.settings.screen.github.IssueBugTweakNavigation
+import com.flixclusive.feature.mobile.settings.screen.github.ReportBugTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.github.RepositoryTweakNavigation
 import com.flixclusive.feature.mobile.settings.screen.player.PlayerTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.providers.ProvidersTweakScreen
@@ -64,7 +60,6 @@ import com.flixclusive.feature.mobile.settings.screen.subtitles.SubtitlesTweakSc
 import com.flixclusive.feature.mobile.settings.screen.system.SystemTweakScreen
 import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
-import com.flixclusive.model.datastore.user.UserPreferences
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.collections.immutable.persistentMapOf
@@ -79,24 +74,20 @@ internal fun SettingsScreen(
     navigator: SettingsScreenNavigator,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
-    val currentUser by viewModel.userSessionManager.currentUser.collectAsStateWithLifecycle()
-    val appBuild by viewModel.appBuildWithPrereleaseFlag.collectAsStateWithLifecycle()
-
-    val (first, second) = remember { FocusRequester.createRefs() }
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val initialNavigation =
-        if (isLandscape) {
-            listOf(
-                ThreePaneScaffoldDestinationItem(
-                    ListDetailPaneScaffoldRole.Detail,
-                    UserPreferences.UI_PREFS_KEY.name,
-                ),
-            )
-        } else {
-            listOf(ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.List))
-        }
+    val initialNavigation = if (isLandscape) {
+        listOf(
+            ThreePaneScaffoldDestinationItem(
+                ListDetailPaneScaffoldRole.Detail,
+                UserPreferences.UI_PREFS_KEY.name,
+            ),
+        )
+    } else {
+        listOf(ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.List))
+    }
 
     val scaffoldNavigator =
         rememberListDetailPaneScaffoldNavigator<String>(initialDestinationHistory = initialNavigation)
@@ -107,27 +98,26 @@ internal fun SettingsScreen(
     val backgroundAlpha = rememberSaveable { mutableFloatStateOf(1F) }
     val backgroundBrush = getAdaptiveBackground(currentUser)
 
-    val items =
-        remember {
-            persistentMapOf(
-                null to listOf(SwitchProfileNavigation),
-                LocaleR.string.application to
-                    listOf(
-                        AppearanceTweakScreen(viewModel),
-                        PlayerTweakScreen(viewModel),
-                        DataTweakScreen(viewModel),
-                        ProvidersTweakScreen(viewModel),
-                        SubtitlesTweakScreen(viewModel),
-                        SystemTweakScreen(viewModel),
-                    ),
-                LocaleR.string.github to
-                    listOf(
-                        IssueBugTweakNavigation,
-                        FeatureRequestTweakNavigation,
-                        RepositoryTweakNavigation,
-                    ),
-            )
-        }
+    val items = remember {
+        persistentMapOf(
+            null to listOf(SwitchProfileNavigation),
+            LocaleR.string.application to
+                listOf(
+                    AppearanceTweakScreen(viewModel),
+                    PlayerTweakScreen(viewModel),
+                    DataTweakScreen(viewModel),
+                    ProvidersTweakScreen(viewModel),
+                    SubtitlesTweakScreen(viewModel),
+                    SystemTweakScreen(viewModel),
+                ),
+            LocaleR.string.github to
+                listOf(
+                    ReportBugTweakNavigation,
+                    FeatureRequestTweakNavigation,
+                    RepositoryTweakNavigation,
+                ),
+        )
+    }
     val navigationItems = remember { items.values.flatten() }
 
     BackHandler(scaffoldNavigator.canNavigateBack()) {
@@ -140,20 +130,19 @@ internal fun SettingsScreen(
             LocalSettingsNavigator provides navigator,
         ) {
             ListDetailPaneScaffold(
-                modifier =
-                    Modifier
-                        .padding(LocalGlobalScaffoldPadding.current)
-                        .drawBehind {
-                            if (isListAndDetailVisible) {
-                                drawRect(backgroundBrush, alpha = backgroundAlpha.floatValue)
-                            }
-                        },
+                modifier = Modifier
+                    .padding(LocalGlobalScaffoldPadding.current)
+                    .drawBehind {
+                        if (isListAndDetailVisible) {
+                            drawRect(backgroundBrush, alpha = backgroundAlpha.floatValue)
+                        }
+                    },
                 directive = scaffoldNavigator.scaffoldDirective,
                 value = scaffoldNavigator.scaffoldValue,
                 listPane = {
                     AnimatedPane {
                         ListContent(
-                            appBuild = appBuild,
+                            buildConfig = viewModel.buildConfig,
                             items = items,
                             currentUser = { currentUser!! },
                             navigator = navigator,
@@ -214,7 +203,7 @@ internal fun SettingsScreen(
                                         )
                                     }
                                 },
-                                modifier = Modifier.focusGroup()
+                                modifier = Modifier.focusGroup(),
                             )
                         }
                     }
@@ -258,42 +247,27 @@ private fun getAdaptiveBackground(currentUser: User?): Brush {
     }
 }
 
-interface SettingsScreenNavigator :
-    GoBackAction,
-    ChooseProfileAction,
-    TestProvidersAction,
-    EditUserAction {
-    fun openRepositoryManagerScreen()
-
-    fun openProviderManagerScreen()
-
-    fun openLink(url: String)
-}
-
-internal fun getNavigatorPreview() =
-    object : SettingsScreenNavigator {
-        override fun testProviders(providers: ArrayList<ProviderMetadata>) = Unit
-
-        override fun openProviderManagerScreen() = Unit
-
-        override fun openRepositoryManagerScreen() = Unit
-
-        override fun openLink(url: String) = Unit
-
-        override fun goBack() = Unit
-
-        override fun openProfilesScreen(shouldPopBackStack: Boolean) = Unit
-
-        override fun openEditUserScreen(user: User) = Unit
-    }
-
 @Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
 @Composable
 private fun TabletPreview() {
     FlixclusiveTheme {
         Surface {
             SettingsScreen(
-                navigator = getNavigatorPreview(),
+                navigator = object : SettingsScreenNavigator {
+                    override fun testProviders(providers: ArrayList<ProviderMetadata>) = Unit
+
+                    override fun openProviderManagerScreen() = Unit
+
+                    override fun openRepositoryManagerScreen() = Unit
+
+                    override fun openLink(url: String) = Unit
+
+                    override fun goBack() = Unit
+
+                    override fun openProfilesScreen(shouldPopBackStack: Boolean) = Unit
+
+                    override fun openEditUserScreen(userId: Int) = Unit
+                },
             )
         }
     }
@@ -305,7 +279,21 @@ private fun PhonePreview() {
     FlixclusiveTheme {
         Surface {
             SettingsScreen(
-                navigator = getNavigatorPreview(),
+                navigator = object : SettingsScreenNavigator {
+                    override fun testProviders(providers: ArrayList<ProviderMetadata>) = Unit
+
+                    override fun openProviderManagerScreen() = Unit
+
+                    override fun openRepositoryManagerScreen() = Unit
+
+                    override fun openLink(url: String) = Unit
+
+                    override fun goBack() = Unit
+
+                    override fun openProfilesScreen(shouldPopBackStack: Boolean) = Unit
+
+                    override fun openEditUserScreen(userId: Int) = Unit
+                },
             )
         }
     }

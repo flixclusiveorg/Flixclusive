@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,12 +31,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastFlatMap
 import androidx.compose.ui.util.fastForEachIndexed
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.feature.mobile.settings.component.BaseTweakComponent
 import com.flixclusive.feature.mobile.settings.component.ClickableComponent
@@ -85,7 +83,6 @@ internal fun TweakScaffold(
                             when (it) {
                                 is TweakGroup -> it.tweaks
                                 is TweakUI<*> -> listOf(it)
-                                else -> emptyList()
                             }
                         }.fastFilter {
                             it.descriptionProvider?.invoke()?.contains(query, true) == true ||
@@ -130,21 +127,12 @@ private fun SubScreenHeader(
     ) {
         Text(
             text = title,
-            style =
-                getAdaptiveTextStyle(
-                    style = TypographyStyle.Headline,
-                    style = AdaptiveTextStyle.Emphasized,
-                    size = 35.sp,
-                ),
+            style = MaterialTheme.typography.headlineLarge.asAdaptiveTextStyle(),
         )
 
         Text(
             text = description,
-            style =
-                getAdaptiveTextStyle(
-                    style = TypographyStyle.Label,
-                    style = AdaptiveTextStyle.SemiEmphasized,
-                ),
+            style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
         )
     }
 }
@@ -176,10 +164,12 @@ private fun LazyListScope.renderTweak(tweaks: List<Tweak>) {
                                 .animateItem()
                                 .graphicsLayer {
                                     alpha = if (tweak.enabledProvider()) 1F else 0.6F
-                                }.padding(
+                                }
+                                .padding(
                                     bottom = getAdaptiveDp(10.dp),
                                     top = TweakGroupSpacing,
-                                ).padding(horizontal = TweakPaddingHorizontal),
+                                )
+                                .padding(horizontal = TweakPaddingHorizontal),
                     )
                 }
 

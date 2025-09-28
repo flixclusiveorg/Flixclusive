@@ -25,9 +25,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.presentation.common.extensions.ifElse
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarWithSearch
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.ifElse
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.component.ClickableComponent
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsSearchQuery
@@ -57,8 +57,7 @@ internal fun DetailsScaffold(
             .ifElse(
                 condition = isDetailsVisible,
                 ifTrueModifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            )
-            .fillMaxSize(),
+            ).fillMaxSize(),
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
@@ -86,9 +85,9 @@ internal fun DetailsScaffold(
                         .ifElse(
                             condition = isListAndDetailVisible,
                             ifTrueModifier =
-                            Modifier
-                                .padding(UserScreenHorizontalPadding / 2)
-                                .background(brush = brush, shape = shape),
+                                Modifier
+                                    .padding(UserScreenHorizontalPadding / 2)
+                                    .background(brush = brush, shape = shape),
                         ),
                 content = content,
             )
@@ -105,7 +104,7 @@ private fun DetailsScaffoldBasePreview() {
                 TweakUI.ClickableTweak(
                     "A basic title for a clickable",
                     descriptionProvider = { "Some description" },
-                    onClick = {}
+                    onClick = {},
                 )
             }
 
@@ -115,13 +114,13 @@ private fun DetailsScaffoldBasePreview() {
                 isDetailsVisible = true,
                 content = {
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     ) {
                         items(list) { item ->
                             ClickableComponent(
                                 title = item.title,
                                 descriptionProvider = item.descriptionProvider,
-                                onClick = item.onClick
+                                onClick = item.onClick,
                             )
                         }
                     }

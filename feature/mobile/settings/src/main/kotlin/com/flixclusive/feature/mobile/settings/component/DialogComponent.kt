@@ -12,9 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.dialog.TextAlertDialog
-import com.flixclusive.core.ui.common.R as UiCommonR
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.drawables.R as UiCommonR
 
 @Composable
 internal fun DialogComponent(
@@ -44,8 +44,8 @@ internal fun DialogComponent(
 
     if (isDialogShown) {
         TextAlertDialog(
-            label = dialogTitle,
-            description = dialogMessage,
+            title = dialogTitle,
+            message = dialogMessage,
             onDismiss = onDismissRequest,
             onConfirm = onConfirm,
         )

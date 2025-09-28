@@ -11,30 +11,32 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.ui.common.util.showToast
+import com.flixclusive.core.datastore.model.system.SystemPreferences
+import com.flixclusive.core.datastore.model.user.network.DoHPreference
+import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
 import com.flixclusive.feature.mobile.settings.Tweak
 import com.flixclusive.feature.mobile.settings.TweakGroup
 import com.flixclusive.feature.mobile.settings.TweakUI
 import com.flixclusive.feature.mobile.settings.screen.BaseTweakScreen
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsViewModel
-import com.flixclusive.model.datastore.system.SystemPreferences
-import com.flixclusive.model.datastore.user.network.DoHPreference
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal class SystemTweakScreen(
-    viewModel: SettingsViewModel,
+    private val viewModel: SettingsViewModel,
 ) : BaseTweakScreen<SystemPreferences> {
     override val key = stringPreferencesKey("system_preferences")
     override val preferencesAsState: StateFlow<SystemPreferences> = viewModel.systemPreferences
-    override val onUpdatePreferences: suspend (suspend (SystemPreferences) -> SystemPreferences) -> Boolean =
-        { viewModel.updateSystemPrefs(it) }
+
+    override suspend fun onUpdatePreferences(transform: suspend (SystemPreferences) -> SystemPreferences): Boolean {
+        return viewModel.updateSystemPrefs(transform)
+    }
 
     @Composable
     override fun getTitle(): String = stringResource(LocaleR.string.system)
@@ -167,14 +169,13 @@ internal class SystemTweakScreen(
                         title = context.getString(LocaleR.string.default_user_agent),
                         descriptionProvider = { context.getString(LocaleR.string.default_user_agent_description) },
                         onTweaked = {
-                            val success =
-                                if (userAgent.value != it) {
-                                    onUpdatePreferences { oldValue ->
-                                        oldValue.copy(userAgent = it)
-                                    }
-                                } else {
-                                    false
+                            val success = if (userAgent.value != it) {
+                                onUpdatePreferences { oldValue ->
+                                    oldValue.copy(userAgent = it)
                                 }
+                            } else {
+                                false
+                            }
 
                             withMainContext {
                                 if (success) {

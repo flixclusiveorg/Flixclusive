@@ -47,7 +47,7 @@ sealed class TweakUI<T> : Tweak() {
     /**
      * A tweak that is only used for displaying texts
      * */
-    class Divider() : TweakUI<Unit>() {
+    class Divider : TweakUI<Unit>() {
         override val title: String by lazy { Random.nextDouble().toString() }
         override val descriptionProvider: (() -> String)? = null
         override val enabledProvider: () -> Boolean = { true }
