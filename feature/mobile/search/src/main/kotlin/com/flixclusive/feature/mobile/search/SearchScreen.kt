@@ -3,9 +3,9 @@ package com.flixclusive.feature.mobile.search
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -207,8 +207,9 @@ private fun SearchBarHeader(onSearchBarClick: () -> Unit) {
                 .statusBarsPadding(),
         )
 
-        Box(
-            contentAlignment = Alignment.Center,
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = TextFieldDefaults.MinHeight)
@@ -216,23 +217,24 @@ private fun SearchBarHeader(onSearchBarClick: () -> Unit) {
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .clickable { onSearchBarClick() },
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(15.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    painter = painterResource(id = UiCommonR.drawable.search_outlined),
-                    contentDescription = stringResource(id = LocaleR.string.search),
-                )
+            Spacer(modifier = Modifier.width(15.dp))
 
-                Text(
-                    text = stringResource(id = LocaleR.string.search_suggestion),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = LocalContentColor.current.copy(0.6f),
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
+            Icon(
+                painter = painterResource(id = UiCommonR.drawable.search_outlined),
+                contentDescription = stringResource(id = LocaleR.string.search),
+            )
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Text(
+                text = stringResource(id = LocaleR.string.search_suggestion),
+                style = MaterialTheme.typography.bodyMedium,
+                color = LocalContentColor.current.copy(0.6f),
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+
+            Spacer(modifier = Modifier.width(15.dp))
         }
     }
 }
@@ -242,28 +244,22 @@ private fun SearchBarHeader(onSearchBarClick: () -> Unit) {
 private fun SearchScreenBasePreview() {
     val tvShowNetworkCards = List(10) {
         TMDBDiscoverCatalog(
-            id = it,
             name = "Network $it",
             image = null,
-            mediaType = "tv",
             url = "$it",
         )
     }
     val movieCompanyCards = List(10) {
         TMDBDiscoverCatalog(
-            id = it,
             name = "Company $it",
             image = null,
-            mediaType = "movie",
             url = "$it",
         )
     }
     val genreCards = List(10) {
         TMDBDiscoverCatalog(
-            id = it,
             name = "Genre $it",
             image = null,
-            mediaType = if (it % 2 == 0) "movie" else "tv",
             url = "$it",
         )
     }
