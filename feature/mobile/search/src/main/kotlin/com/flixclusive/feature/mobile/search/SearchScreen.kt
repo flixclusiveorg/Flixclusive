@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,13 +36,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.presentation.common.components.FilmCover
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBarDefaults.getTopBarHeadlinerTextStyle
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.copy
 import com.flixclusive.data.tmdb.model.TMDBDiscoverCatalog
-import com.flixclusive.feature.mobile.search.component.BrowseItemCard
-import com.flixclusive.feature.mobile.search.component.BrowseRow
+import com.flixclusive.domain.catalog.model.DiscoverCards
+import com.flixclusive.feature.mobile.search.component.DiscoverCard
+import com.flixclusive.feature.mobile.search.component.DiscoverCardPlaceholder
+import com.flixclusive.feature.mobile.search.component.DiscoverRow
 import com.flixclusive.feature.mobile.search.util.SearchUiUtils
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderCatalog
@@ -56,31 +64,39 @@ internal fun SearchScreen(
     navigator: SearchScreenNavigator,
     viewModel: SearchScreenViewModel = hiltViewModel(),
 ) {
-    val tvShowNetworkCards by viewModel.tvShowNetworkCards.collectAsStateWithLifecycle()
-    val movieCompanyCards by viewModel.movieCompanyCards.collectAsStateWithLifecycle()
-    val genreCards by viewModel.genreCards.collectAsStateWithLifecycle()
+    val cards by viewModel.cards.collectAsStateWithLifecycle()
 
     SearchScreenContent(
-        tvShowNetworkCards = tvShowNetworkCards,
-        movieCompanyCards = movieCompanyCards,
-        genreCards = genreCards,
+        cards = cards,
         providerCards = viewModel.providersCatalogsCards,
         openSearchExpandedScreen = navigator::openSearchExpandedScreen,
+        onRetryLoadingCards = viewModel::initializeCards,
         openSeeAllScreen = navigator::openSeeAllScreen,
     )
 }
 
 @Composable
 private fun SearchScreenContent(
-    tvShowNetworkCards: List<TMDBDiscoverCatalog>,
-    movieCompanyCards: List<TMDBDiscoverCatalog>,
-    genreCards: List<TMDBDiscoverCatalog>,
+    cards: Resource<DiscoverCards>,
     providerCards: List<ProviderCatalog>,
+    onRetryLoadingCards: () -> Unit,
     openSearchExpandedScreen: () -> Unit,
     openSeeAllScreen: (Catalog) -> Unit,
 ) {
+    val tvShowNetworkCards = remember(cards) {
+        cards.data?.tvNetworks ?: emptyList()
+    }
+    val movieCompanyCards = remember(cards) {
+        cards.data?.movieCompanies ?: emptyList()
+    }
+    val categoryCards = remember(cards) {
+        cards.data?.categories ?: emptyList()
+    }
+
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = SearchUiUtils.getCardWidth(180.dp)),
+        columns = GridCells.Adaptive(minSize = SearchUiUtils.getCardWidth(170.dp)),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
         contentPadding = LocalGlobalScaffoldPadding.current.copy(
             start = 15.dp,
             end = 15.dp,
@@ -94,11 +110,11 @@ private fun SearchScreenContent(
 
         if (providerCards.isNotEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                BrowseRow(
+                DiscoverRow(
                     list = providerCards,
                     rowTitle = UiText.from(LocaleR.string.browse_providers_catalogs),
                 ) {
-                    BrowseItemCard(
+                    DiscoverCard(
                         label = it.name,
                         image = it.image,
                         isProviderCatalog = true,
@@ -110,11 +126,11 @@ private fun SearchScreenContent(
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            BrowseRow(
+            DiscoverRow(
                 list = tvShowNetworkCards,
                 rowTitle = UiText.StringResource(LocaleR.string.browse_tv_networks),
             ) {
-                BrowseItemCard(
+                DiscoverCard(
                     label = it.name,
                     image = it.image,
                     imageSize = "w500_filter(negate,000,666)",
@@ -126,11 +142,11 @@ private fun SearchScreenContent(
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            BrowseRow(
+            DiscoverRow(
                 list = movieCompanyCards,
                 rowTitle = UiText.StringResource(LocaleR.string.browse_movie_companies),
             ) {
-                BrowseItemCard(
+                DiscoverCard(
                     label = it.name,
                     image = it.image,
                     imageSize = "w500_filter(negate,000,666)",
@@ -144,19 +160,34 @@ private fun SearchScreenContent(
         item(span = { GridItemSpan(maxLineSpan) }) {
             Text(
                 text = stringResource(LocaleR.string.browse_categories),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 15.dp),
             )
         }
 
-        items(genreCards) {
-            BrowseItemCard(
-                image = it.image,
-                label = it.name,
-                onClick = { openSeeAllScreen(it) },
-            )
+        if (cards !is Resource.Failure) {
+            items(categoryCards) {
+                DiscoverCard(
+                    image = it.image,
+                    label = it.name,
+                    onClick = { openSeeAllScreen(it) },
+                )
+            }
+
+            items(10) {
+                DiscoverCardPlaceholder()
+            }
+        } else {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                RetryButton(
+                    modifier = Modifier.aspectRatio(FilmCover.Backdrop.ratio),
+                    error = cards.error?.asString()
+                        ?: stringResource(R.string.failed_to_fetch_cards),
+                    onRetry = onRetryLoadingCards,
+                )
+            }
         }
     }
 }
@@ -249,11 +280,18 @@ private fun SearchScreenBasePreview() {
     FlixclusiveTheme {
         Surface {
             SearchScreenContent(
-                tvShowNetworkCards = tvShowNetworkCards,
-                movieCompanyCards = movieCompanyCards,
-                genreCards = genreCards,
+                cards = remember {
+                    Resource.Success(
+                        DiscoverCards(
+                            tvNetworks = tvShowNetworkCards,
+                            movieCompanies = movieCompanyCards,
+                            categories = genreCards,
+                        ),
+                    )
+                },
                 providerCards = providerCards,
                 openSearchExpandedScreen = {},
+                onRetryLoadingCards = {},
                 openSeeAllScreen = {},
             )
         }

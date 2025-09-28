@@ -11,6 +11,8 @@ import java.net.UnknownHostException
 import javax.net.ssl.SSLException
 import com.flixclusive.core.strings.R as LocaleR
 
+// TODO: Move to `core-common` module
+
 /**
  * A sealed class representing a resource that can be in one of three states: Success, Failure, or Loading.
  * @param T The type of data held by the resource.

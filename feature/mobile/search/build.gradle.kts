@@ -12,11 +12,13 @@ dependencies {
     implementation(projects.coreCommon)
     implementation(projects.coreDrawables)
     implementation(projects.coreNavigation)
+    implementation(projects.coreNetwork)
     implementation(projects.corePresentationCommon)
     implementation(projects.corePresentationMobile)
     implementation(projects.coreStrings)
     implementation(projects.dataProvider)
     implementation(projects.dataTmdb)
+    implementation(projects.domainCatalog)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
