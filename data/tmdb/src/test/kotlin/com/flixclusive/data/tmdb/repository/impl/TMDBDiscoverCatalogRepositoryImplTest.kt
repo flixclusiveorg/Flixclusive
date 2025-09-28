@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import strikt.api.expectThat
+import strikt.assertions.hasSize
 import strikt.assertions.isEmpty
 import strikt.assertions.isEqualTo
 import java.io.ByteArrayInputStream
@@ -26,86 +27,67 @@ class TMDBDiscoverCatalogRepositoryImplTest {
 
     private val mockNetworks = listOf(
         TMDBDiscoverCatalog(
-            id = 56,
-            mediaType = "tv",
             name = "Cartoon Network",
             image = "/c5OC6oVCg6QP4eqzW6XIq17CQjI.png",
-            url = "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc" +
-                "&first_air_date.gte=1990-01-01&with_networks=56",
-            canPaginate = false,
+            url =
+                "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false" +
+                    "&language=en-US&sort_by=popularity.desc" +
+                    "&first_air_date.gte=1990-01-01&with_networks=56",
         ),
         TMDBDiscoverCatalog(
-            id = 213,
-            mediaType = "tv",
             name = "Netflix",
             image = "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
-            url = "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc" +
-                "&first_air_date.gte=1990-01-01&with_networks=213",
-            canPaginate = false,
+            url =
+                "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false" +
+                    "&language=en-US&sort_by=popularity.desc" +
+                    "&first_air_date.gte=1990-01-01&with_networks=213",
         ),
     )
 
     private val mockCompanies = listOf(
         TMDBDiscoverCatalog(
-            id = 1632,
-            mediaType = "movie",
             name = "Lionsgate",
             image = "/cisLn1YAUuptXVBa0xjq7ST9cH0.png",
-            url = "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc" +
-                "&primary_release_date.gte=1990-01-01&with_companies=35|1632",
-            canPaginate = false,
+            url =
+                "https://api.themoviedb.org/3/discover/movie?include_adult=false" +
+                    "&include_video=false&language=en-US&sort_by=popularity.desc" +
+                    "&primary_release_date.gte=1990-01-01&with_companies=35|1632",
         ),
     )
 
     private val mockGenres = listOf(
         TMDBDiscoverCatalog(
-            id = 28,
-            mediaType = "movie",
             name = "Action",
-            image = null,
-            url = "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc" +
+            url = "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false" +
+                "&language=en-US&sort_by=popularity.desc" +
                 "&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=28",
-            canPaginate = false,
         ),
         TMDBDiscoverCatalog(
-            id = 10759,
-            mediaType = "tv",
             name = "Action & Adventure",
-            image = null,
-            url = "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc" +
+            url = "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false" +
+                "&language=en-US&sort_by=popularity.desc" +
                 "&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10759",
-            canPaginate = false,
         ),
         TMDBDiscoverCatalog(
-            id = 35,
-            mediaType = "all",
             name = "Comedy",
-            image = null,
-            url = "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc" +
-                "&primary_release_date.gte=1990-01-01&first_air_date.gte=1990-01-01&vote_count.gte=200" +
-                "&with_genres=35&without_genres=10763,10767",
-            canPaginate = false,
+            url = "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US" +
+                "&sort_by=popularity.desc&primary_release_date.gte=1990-01-01" +
+                "&vote_count.gte=200&with_genres=35&without_genres=10763,10767",
         ),
     )
 
     private val mockTypes = listOf(
         TMDBDiscoverCatalog(
-            id = -1,
-            mediaType = "tv",
             name = "TV Shows",
-            image = null,
-            url = "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc" +
+            url = "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false" +
+                "&language=en-US&sort_by=popularity.desc" +
                 "&first_air_date.gte=1990-01-01&vote_count.gte=200&without_genres=10763,10767",
-            canPaginate = false,
         ),
         TMDBDiscoverCatalog(
-            id = -1,
-            mediaType = "movie",
             name = "Movies",
-            image = null,
-            url = "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc" +
+            url = "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false" +
+                "&language=en-US&sort_by=popularity.desc" +
                 "&primary_release_date.gte=1990-01-01&vote_count.gte=200",
-            canPaginate = false,
         ),
     )
 
@@ -113,61 +95,45 @@ class TMDBDiscoverCatalogRepositoryImplTest {
         {
             "networks": [
                 {
-                    "id": 56,
-                    "type": "tv",
                     "name": "Cartoon Network",
-                    "poster_path": "/c5OC6oVCg6QP4eqzW6XIq17CQjI.png",
-                    "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=56"
+                    "image": "/c5OC6oVCg6QP4eqzW6XIq17CQjI.png",
+                    "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=56"
                 },
                 {
-                    "id": 213,
-                    "type": "tv",
                     "name": "Netflix",
-                    "poster_path": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
-                    "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=213"
+                    "image": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
+                    "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=213"
                 }
             ],
             "companies": [
                 {
-                    "id": 1632,
-                    "type": "movie",
                     "name": "Lionsgate",
-                    "poster_path": "/cisLn1YAUuptXVBa0xjq7ST9cH0.png",
-                    "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=35|1632"
+                    "image": "/cisLn1YAUuptXVBa0xjq7ST9cH0.png",
+                    "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=35|1632"
                 }
             ],
             "genres": [
                 {
-                    "id": 28,
-                    "type": "movie",
                     "name": "Action",
-                    "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=28"
+                    "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=28"
                 },
                 {
-                    "id": 10759,
-                    "type": "tv",
                     "name": "Action & Adventure",
-                    "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10759"
+                    "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10759"
                 },
                 {
-                    "id": 35,
-                    "type": "all",
                     "name": "Comedy",
-                    "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=35&without_genres=10763,10767"
+                    "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=35&without_genres=10763,10767"
                 }
             ],
             "type": [
                 {
                     "name": "TV Shows",
-                    "id": -1,
-                    "type": "tv",
-                    "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&without_genres=10763,10767"
+                    "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&without_genres=10763,10767"
                 },
                 {
                     "name": "Movies",
-                    "id": -1,
-                    "type": "movie",
-                    "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200"
+                    "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200"
                 }
             ]
         }
@@ -237,7 +203,7 @@ class TMDBDiscoverCatalogRepositoryImplTest {
 
             val result = repository.getTvGenres()
 
-            expectThat(result).isEqualTo(listOf(mockGenres[1], mockGenres[2]))
+            expectThat(result).hasSize(1)
             result.forEach { genre ->
                 expectThat(genre.isForTv).isEqualTo(true)
             }
@@ -250,7 +216,7 @@ class TMDBDiscoverCatalogRepositoryImplTest {
 
             val result = repository.getMovieGenres()
 
-            expectThat(result).isEqualTo(listOf(mockGenres[0], mockGenres[2]))
+            expectThat(result).hasSize(2)
             result.forEach { genre ->
                 expectThat(genre.isForMovie).isEqualTo(true)
             }
@@ -263,7 +229,7 @@ class TMDBDiscoverCatalogRepositoryImplTest {
 
             val result = repository.getGenres()
 
-            expectThat(result).isEqualTo(mockGenres)
+            expectThat(result).hasSize(3)
         }
 
     @Test

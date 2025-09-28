@@ -6,7 +6,6 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.network.retrofit.TMDBApiService
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
-import com.flixclusive.data.tmdb.model.TMDBHomeCatalog
 import com.flixclusive.data.tmdb.model.TMDBHomeCatalogs
 import com.flixclusive.data.tmdb.repository.TMDBHomeCatalogRepository
 import com.flixclusive.model.film.FilmSearchItem
@@ -59,26 +58,6 @@ internal class TMDBHomeCatalogRepositoryImpl
          */
         override suspend fun getAllCatalogs(): TMDBHomeCatalogs {
             return getHomeCatalogsData()
-        }
-
-        /**
-         * Retrieves catalogs for a specific media type.
-         */
-        override suspend fun getCatalogsForMediaType(mediaType: String): List<TMDBHomeCatalog> {
-            val data = getHomeCatalogsData()
-            return when (mediaType.lowercase()) {
-                "all" -> data.all
-                "movie" -> data.movie
-                "tv" -> data.tv
-                else -> emptyList()
-            }
-        }
-
-        /**
-         * Retrieves only required catalogs for a specific media type.
-         */
-        override suspend fun getRequiredCatalogsForMediaType(mediaType: String): List<TMDBHomeCatalog> {
-            return getCatalogsForMediaType(mediaType).filter { it.required }
         }
 
         override suspend fun getTrending(

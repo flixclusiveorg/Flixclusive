@@ -1,393 +1,278 @@
 {
     "networks": [
         {
-            "id": 56,
-            "type": "tv",
             "name": "Cartoon Network",
-            "poster_path": "/c5OC6oVCg6QP4eqzW6XIq17CQjI.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=56"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=56"
         },
         {
-            "id": 2,
-            "type": "tv",
             "name": "ABC",
-            "poster_path": "/2uy2ZWcplrSObIyt4x0Y9rkG6qO.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=2&without_genres=10763,10767"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=2&without_genres=10763,10767"
         },
         {
-            "id": 16,
-            "type": "tv",
             "name": "CBS",
-            "poster_path": "/wju8KhOUsR5y4bH9p3Jc50hhaLO.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=16&without_genres=10763,10767"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=16&without_genres=10763,10767"
         },
         {
-            "id": 19,
-            "type": "tv",
             "name": "Fox",
-            "poster_path": "/1DSpHrWyOORkL9N2QHX7Adt31mQ.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=19"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=19"
         },
         {
-            "id": 6,
-            "type": "tv",
             "name": "NBC",
-            "poster_path": "/cm111bsDVlYaC1foL0itvEI4yLG.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=6&without_genres=10763,10767"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=6&without_genres=10763,10767"
         },
         {
-            "id": 71,
-            "type": "tv",
             "name": "The CW",
-            "poster_path": "/ge9hzeaU7nMtQ4PjkFlc68dGAJ9.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=71"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=71"
         },
         {
-            "id": 2552,
-            "type": "tv",
             "name": "Apple TV+",
-            "poster_path": "/4KAy34EHvRM25Ih8wb82AuGU7zJ.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=2552"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=2552"
         },
         {
-            "id": 2739,
-            "type": "tv",
             "name": "Disney+",
-            "poster_path": "/uzKjVDmQ1WRMvGBb7UNRE0wTn1H.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=2739"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=2739"
         },
         {
-            "id": 1024,
-            "type": "tv",
             "name": "Amazon Prime Video",
-            "poster_path": "/ifhbNuuVnlwYy5oXA5VIb2YR8AZ.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=1024"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=1024"
         },
         {
-            "id": 49,
-            "type": "tv",
             "name": "HBO",
-            "poster_path": "/tuomPhY2UtuPTqqFnKMVHvSb724.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=49"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=49"
         },
         {
-            "id": 213,
-            "type": "tv",
             "name": "Netflix",
-            "poster_path": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=213"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=213"
         },
         {
-            "id": 30,
-            "type": "tv",
             "name": "USA Network",
-            "poster_path": "/g1e0H0Ka97IG5SyInMXdJkHGKiH.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=30"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=30"
         },
         {
-            "id": 33,
-            "type": "tv",
             "name": "MTV",
-            "poster_path": "/w4qtv7xBkSVsbOQdSzjUjlyOuSr.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=33"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=33"
         },
         {
-            "id": 44,
-            "type": "tv",
             "name": "Disney XD",
-            "poster_path": "/nKM9EnV7jTpt3MKRbhBusJ03lAY.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=44"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=44"
         },
         {
-            "id": 54,
-            "type": "tv",
             "name": "Disney Channel",
-            "poster_path": "/gvhBea9OGqChmGKHa5CntbmsDBp.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=54"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=54"
         },
         {
-            "id": 13,
-            "type": "tv",
             "name": "Nickelodeon",
-            "poster_path": "/Aqf3nq2OZSvwYJG4USmZsvUWFgy.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=13"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=13"
         },
         {
-            "id": 41,
-            "type": "tv",
             "name": "TNT",
-            "poster_path": "/6ISsKwa2XUhSC6oBtHZjYf6xFqv.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=41"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=41"
         },
         {
-            "id": 47,
-            "type": "tv",
             "name": "Comedy Central",
-            "poster_path": "/6ooPjtXufjsoskdJqj6pxuvHEno.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=47"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=47"
         },
         {
-            "id": 43,
-            "type": "tv",
             "name": "National Geographic",
-            "poster_path": "/q9rPBG1rHbUjII1Qn98VG2v7cFa.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=43"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=43"
         },
         {
-            "id": 64,
-            "type": "tv",
             "name": "Discovery",
-            "poster_path": "/tmttRFo2OiXQD0EHMxxlw8EzUuZ.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=64"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=64"
         },
         {
-            "id": 65,
-            "type": "tv",
             "name": "History",
-            "poster_path": "/9fGgdJz17aBX7dOyfHJtsozB7bf.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=65"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=65"
         },
         {
-            "id": 29,
-            "type": "tv",
             "name": "ESPN",
-            "poster_path": "/w9le4FUeXVlKLfnlkuk1djRrena.png",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=29"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&with_networks=29"
         }
     ],
     "companies": [
         {
-            "id": 1632,
-            "type": "movie",
             "name": "Lionsgate",
-            "poster_path": "/cisLn1YAUuptXVBa0xjq7ST9cH0.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=35|1632"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=35|1632"
         },
         {
-            "id": 21,
-            "type": "movie",
             "name": "MGM",
-            "poster_path": "/kcUxVjuwsu1Rmk3iPzcCiSqW4yg.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=21"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=21"
         },
         {
-            "id": 25,
-            "type": "movie",
             "name": "20th Century Fox",
-            "poster_path": "/qZCc1lty5FzX30aOCVRBLzaVmcp.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=25"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=25"
         },
         {
-            "id": 33,
-            "type": "movie",
             "name": "Universal Pictures",
-            "poster_path": "/8lvHyhjr8oUKOOy2dKXoALWKdp0.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=33"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=33"
         },
         {
-            "id": 5,
-            "type": "movie",
             "name": "Columbia Pictures",
-            "poster_path": "/71BqEFAF4V3qjjMPCpLuyJFB9A.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=5"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=5"
         },
         {
-            "id": 9993,
-            "type": "movie",
             "name": "DC Entertainment",
-            "poster_path": "/2Tc1P3Ac8M479naPp1kYT3izLS5.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=429|9993"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=429|9993"
         },
         {
-            "id": 7,
-            "type": "movie",
             "name": "Dreamworks Pictures",
-            "poster_path": "/vru2SssLX3FPhnKZGtYw00pVIS9.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=7|521"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=7|521"
         },
         {
-            "id": 4,
-            "type": "movie",
             "name": "Paramount",
-            "poster_path": "/gz66EfNoYPqHTYI4q9UEN4CbHRc.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=4"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=4"
         },
         {
-            "id": 17,
-            "type": "movie",
             "name": "Warner Bros. Entertainment",
-            "poster_path": "/7Qu05UOqxdTGLl3kOvkRBv723Vz.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=17|174|2785"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=17|174|2785"
         },
         {
-            "id": 2,
-            "type": "movie",
             "name": "Walt Disney Pictures",
-            "poster_path": "/wdrCwmRnLFJhEoH8GSfymY85KHT.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=2"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=2"
         },
         {
-            "id": 3,
-            "type": "movie",
             "name": "Pixar",
-            "poster_path": "/1TjvGVDMYsj6JBxOAkUHpPEwLf7.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=3"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=3"
         },
         {
-            "id": 34,
-            "type": "movie",
             "name": "Sony Pictures",
-            "poster_path": "/GagSvqWlyPdkFHMfQ3pNq6ix9P.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=2251|34|58"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=2251|34|58"
         },
         {
-            "id": 7505,
-            "type": "movie",
             "name": "Marvel Entertainment",
-            "poster_path": "/837VMM4wOkODc1idNxGT0KQJlej.png",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=420|7505"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&with_companies=420|7505"
         }
     ],
     "genres": [
         {
-            "id": 28,
-            "type": "movie",
             "name": "Action",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=28"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=28"
         },
         {
-            "id": 10759,
-            "type": "tv",
             "name": "Action & Adventure",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10759"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10759"
         },
         {
-            "id": 12,
-            "type": "movie",
             "name": "Adventure",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=12"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=12"
         },
         {
-            "id": 16,
-            "type": "all",
-            "name": "Animation",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=16"
+            "name": "Animation (TV Shows)",
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=16"
         },
         {
-            "id": 35,
-            "type": "all",
-            "name": "Comedy",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=35&without_genres=10763,10767"
+            "name": "Animation (Movies)",
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=16"
         },
         {
-            "id": 80,
-            "type": "all",
-            "name": "Crime",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=80"
+            "name": "Comedy (TV Shows)",
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=35&without_genres=10763,10767"
         },
         {
-            "id": 99,
-            "type": "all",
-            "name": "Documentary",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=99"
+            "name": "Comedy (Movies)",
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=35&without_genres=10763,10767"
         },
         {
-            "id": 18,
-            "type": "all",
-            "name": "Drama",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=18"
+            "name": "Crime (TV Shows)",
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=80"
         },
         {
-            "id": 10751,
-            "type": "all",
-            "name": "Family",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10751"
+            "name": "Crime (Movies)",
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=80"
         },
         {
-            "id": 14,
-            "type": "movie",
+            "name": "Documentary (TV Shows)",
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=99"
+        },
+        {
+            "name": "Documentary (Movies)",
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=99"
+        },
+        {
+            "name": "Drama (TV Shows)",
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=18"
+        },
+        {
+            "name": "Drama (Movies)",
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=18"
+        },
+        {
+            "name": "Family (TV Shows)",
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10751"
+        },
+        {
+            "name": "Family (Movies)",
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=10751"
+        },
+        {
             "name": "Fantasy",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=14"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=14"
         },
         {
-            "id": 36,
-            "type": "movie",
             "name": "History",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=36"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=36"
         },
         {
-            "id": 27,
-            "type": "movie",
             "name": "Horror",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=27"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=27"
         },
         {
-            "id": 9648,
-            "type": "all",
-            "name": "Mystery",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=9648"
+            "name": "Mystery (TV Shows)",
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=9648"
         },
         {
-            "id": 10762,
-            "type": "tv",
+            "name": "Mystery (Movies)",
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=9648"
+        },
+        {
             "name": "Kids",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10762"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10762"
         },
         {
-            "id": 10764,
-            "type": "tv",
             "name": "Reality",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10764"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10764"
         },
         {
-            "id": 10749,
-            "type": "all",
-            "name": "Romance",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10749"
+            "name": "Romance (TV Shows)",
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10749"
         },
         {
-            "id": 878,
-            "type": "movie",
+            "name": "Romance (Movies)",
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=10749"
+        },
+        {
             "name": "Sci-Fi",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=878"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=878"
         },
         {
-            "id": 10765,
-            "type": "tv",
             "name": "Sci-Fi & Fantasy",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10765"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=10765"
         },
         {
-            "id": 53,
-            "type": "movie",
             "name": "Thriller",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=53"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=53"
         },
         {
-            "id": 10752,
-            "type": "movie",
             "name": "War",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=10752"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=10752"
         },
         {
-            "id": 37,
-            "type": "all",
-            "name": "Western",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=37"
+            "name": "Western (TV Shows)",
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&with_genres=37"
+        },
+        {
+            "name": "Western (Movies)",
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200&with_genres=37"
         }
     ],
     "type": [
         {
             "name": "TV Shows",
-            "id": -1,
-            "type": "tv",
-            "query": "discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&without_genres=10763,10767"
+            "url": "https://api.themoviedb.org/3/discover/tv?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&first_air_date.gte=1990-01-01&vote_count.gte=200&without_genres=10763,10767"
         },
         {
             "name": "Movies",
-            "id": -1,
-            "type": "movie",
-            "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200"
+            "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200"
         }
     ]
 }

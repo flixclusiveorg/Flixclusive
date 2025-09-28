@@ -40,35 +40,27 @@ class TMDBHomeCatalogRepositoryImplTest {
             "all": [
                 {
                     "name": "Trending Now",
-                    "type": "all",
                     "required": true,
-                    "canPaginate": true,
-                    "query": "trending/all/day?language=en-US"
+                    "url": "https://api.themoviedb.org/3/trending/all/day?language=en-US"
                 }
             ],
             "movie": [
                 {
                     "name": "Top Movies Recently",
-                    "type": "movie",
                     "required": true,
-                    "canPaginate": true,
-                    "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200"
+                    "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=popularity.desc&primary_release_date.gte=1990-01-01&vote_count.gte=200"
                 },
                 {
                     "name": "Modern Movie Classics",
-                    "type": "movie",
                     "required": false,
-                    "canPaginate": true,
-                    "query": "discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=vote_average.desc&vote_count.gte=300"
+                    "url": "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&sort_by=vote_average.desc&vote_count.gte=300"
                 }
             ],
             "tv": [
                 {
                     "name": "Popular TV Shows",
-                    "type": "tv",
                     "required": true,
-                    "canPaginate": true,
-                    "query": "discover/tv?sort_by=popularity.desc"
+                    "url": "https://api.themoviedb.org/3/discover/tv?sort_by=popularity.desc"
                 }
             ]
         }
@@ -81,9 +73,9 @@ class TMDBHomeCatalogRepositoryImplTest {
         appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
 
         repository = TMDBHomeCatalogRepositoryImpl(
-            context,
-            tmdbApiService,
-            appDispatchers,
+            context = context,
+            tmdbApiService = tmdbApiService,
+            appDispatchers = appDispatchers,
         )
     }
 
@@ -99,30 +91,6 @@ class TMDBHomeCatalogRepositoryImplTest {
             expectThat(result.all).hasSize(1)
             expectThat(result.movie).hasSize(2)
             expectThat(result.tv).hasSize(1)
-        }
-
-    @Test
-    fun `getCatalogsForMediaType returns correct catalogs for movie type`() =
-        runTest(testDispatcher) {
-            setupSuccessfulAssetReading()
-
-            val result = repository.getCatalogsForMediaType("movie")
-
-            expectThat(result).hasSize(2)
-            expectThat(result[0]).get { name }.isEqualTo("Top Movies Recently")
-            expectThat(result[1]).get { name }.isEqualTo("Modern Movie Classics")
-        }
-
-    @Test
-    fun `getRequiredCatalogsForMediaType returns only required catalogs`() =
-        runTest(testDispatcher) {
-            setupSuccessfulAssetReading()
-
-            val result = repository.getRequiredCatalogsForMediaType("movie")
-
-            expectThat(result).hasSize(1)
-            expectThat(result[0]).get { name }.isEqualTo("Top Movies Recently")
-            expectThat(result[0]).get { required }.isTrue()
         }
 
     @Test
@@ -178,9 +146,4 @@ class TMDBHomeCatalogRepositoryImplTest {
                 get { results }.isNotEmpty()
             }
         }
-
-    private fun setupSuccessfulAssetReading() {
-        val inputStream = ByteArrayInputStream(validHomeCatalogsJson.toByteArray())
-        every { assetManager.open("home_catalogs.json") } returns inputStream
-    }
 }

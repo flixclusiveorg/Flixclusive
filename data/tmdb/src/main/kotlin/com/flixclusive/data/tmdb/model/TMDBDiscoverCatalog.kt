@@ -1,6 +1,5 @@
 package com.flixclusive.data.tmdb.model
 
-import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.provider.Catalog
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable
@@ -10,14 +9,13 @@ import java.io.Serializable
  */
 @kotlinx.serialization.Serializable
 data class TMDBDiscoverCatalog(
-    @SerializedName("type") override val mediaType: String,
-    @SerializedName("query") override val url: String,
-    @SerializedName("poster_path") override val image: String? = null,
+    override val url: String,
     override val name: String,
-    override val canPaginate: Boolean = false,
-    val id: Int,
+    @SerializedName("poster_path") override val image: String? = null,
 ) : Catalog(),
     Serializable {
+    override val canPaginate: Boolean = true
+
     override fun equals(other: Any?): Boolean {
         val newData = other as? TMDBDiscoverCatalog
 
@@ -25,16 +23,13 @@ data class TMDBDiscoverCatalog(
     }
 
     override fun hashCode(): Int {
-        var result = id
+        var result = url.hashCode()
         result = 31 * result + name.hashCode()
-        result = 31 * result + (image?.hashCode() ?: 0)
-        result = 31 * result + url.hashCode()
-        result = 31 * result + mediaType.hashCode()
         return result
     }
 
-    val isForTv: Boolean get() = mediaType == FilmType.TV_SHOW.type || mediaType == "all"
-    val isForMovie: Boolean get() = mediaType == FilmType.MOVIE.type || mediaType == "all"
+    val isForTv: Boolean get() = url.contains("/tv?", true)
+    val isForMovie: Boolean get() = url.contains("/movie?", true)
 }
 
 /**

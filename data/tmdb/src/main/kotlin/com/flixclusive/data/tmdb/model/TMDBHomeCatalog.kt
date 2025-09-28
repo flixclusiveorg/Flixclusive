@@ -1,7 +1,6 @@
 package com.flixclusive.data.tmdb.model
 
 import com.flixclusive.model.provider.Catalog
-import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
 /**
@@ -14,13 +13,13 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class TMDBHomeCatalog(
-    @SerializedName("query") override val url: String,
-    @SerializedName("type") override val mediaType: String,
+    override val url: String,
     override val name: String,
-    override val canPaginate: Boolean,
     override val image: String? = null,
     val required: Boolean,
-) : Catalog()
+) : Catalog() {
+    override val canPaginate: Boolean = true
+}
 
 /**
  * A collection of [TMDBHomeCatalog]s organized by media type for TMDB home operations.
