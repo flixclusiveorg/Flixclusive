@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.res.stringResource
 
 /**
@@ -61,10 +62,12 @@ sealed class UiText {
     }
 
     companion object {
+        @Stable
         fun from(string: String): StringValue {
             return StringValue(string)
         }
 
+        @Stable
         fun from(
             @StringRes id: Int,
             vararg args: Any,
