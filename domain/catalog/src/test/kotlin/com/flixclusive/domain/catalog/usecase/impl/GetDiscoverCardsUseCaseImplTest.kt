@@ -1,4 +1,4 @@
-package com.flixclusive.domain.tmdb.usecase.impl
+package com.flixclusive.domain.catalog.usecase.impl
 
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.testing.extensions.isFailure
@@ -67,10 +67,10 @@ class GetDiscoverCardsUseCaseImplTest {
 
             // Assert
             expectThat(result).isSuccess()
-            expectThat(result.data).isNotNull().hasSize(4)
+            expectThat(result.data?.all).isNotNull().hasSize(4)
 
             // Verify all catalogs have thumbnails assigned
-            result.data!!.forEach { catalog ->
+            result.data!!.all.forEach { catalog ->
                 expectThat(catalog.image).isNotNull()
             }
 
@@ -146,7 +146,12 @@ class GetDiscoverCardsUseCaseImplTest {
 
             // Assert
             expectThat(result).isSuccess()
-            expectThat(result.data!!.first().image).isNull()
+            expectThat(
+                result.data!!
+                    .all
+                    .first()
+                    .image,
+            ).isNull()
         }
 
     @Test
@@ -170,7 +175,12 @@ class GetDiscoverCardsUseCaseImplTest {
 
             // Assert
             expectThat(result).isSuccess()
-            expectThat(result.data!!.first().image).isNotNull()
+            expectThat(
+                result.data!!
+                    .all
+                    .first()
+                    .image,
+            ).isNotNull()
 
             // Verify multiple pages were tried
             coVerify { tmdbFilmSearchItemsRepository.get(catalog.url, 1) }
@@ -195,7 +205,12 @@ class GetDiscoverCardsUseCaseImplTest {
 
             // Assert
             expectThat(result).isSuccess()
-            expectThat(result.data!!.first().image).isNull()
+            expectThat(
+                result.data!!
+                    .all
+                    .first()
+                    .image,
+            ).isNull()
         }
 
     @Test
@@ -220,7 +235,7 @@ class GetDiscoverCardsUseCaseImplTest {
 
             // Assert
             expectThat(result).isSuccess()
-            val sortedNames = result.data!!.map { it.name }
+            val sortedNames = result.data!!.all.map { it.name }
             expectThat(sortedNames).isEqualTo(listOf("A Network", "Z Network"))
         }
 

@@ -57,7 +57,6 @@ include(":feature:mobile:user-edit")
 include(":domain-catalog")
 include(":domain-database")
 include(":domain-provider")
-include(":domain-tmdb")
 
 include(":data-database")
 include(":data-provider")

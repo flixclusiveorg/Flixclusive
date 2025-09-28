@@ -1,11 +1,12 @@
-package com.flixclusive.domain.tmdb.usecase.impl
+package com.flixclusive.domain.catalog.usecase.impl
 
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.data.tmdb.model.TMDBDiscoverCatalog
 import com.flixclusive.data.tmdb.repository.TMDBDiscoverCatalogRepository
 import com.flixclusive.data.tmdb.repository.TMDBFilmSearchItemsRepository
-import com.flixclusive.domain.tmdb.usecase.GetDiscoverCardsUseCase
+import com.flixclusive.domain.catalog.model.DiscoverCards
+import com.flixclusive.domain.catalog.usecase.GetDiscoverCardsUseCase
 import javax.inject.Inject
 
 internal class GetDiscoverCardsUseCaseImpl
@@ -14,27 +15,28 @@ internal class GetDiscoverCardsUseCaseImpl
         private val tmdbDiscoverCatalogRepository: TMDBDiscoverCatalogRepository,
         private val tmdbFilmSearchItemsRepository: TMDBFilmSearchItemsRepository,
     ) : GetDiscoverCardsUseCase {
-        private val cards = mutableListOf<TMDBDiscoverCatalog>()
+        private var cards: DiscoverCards? = null
         private val usedThumbnails = mutableSetOf<String>()
 
-        override suspend operator fun invoke(): Resource<List<TMDBDiscoverCatalog>> {
+        override suspend operator fun invoke(): Resource<DiscoverCards> {
             return try {
-                if (cards.isNotEmpty()) {
-                    return Resource.Success(cards)
+                if (cards != null) {
+                    return Resource.Success(cards!!)
                 }
 
-                cards.clear()
                 usedThumbnails.clear()
 
                 val tvNetworks = getTvNetworks()
                 val movieCompanies = getMovieCompanies()
                 val categories = getCategories()
 
-                cards.addAll(tvNetworks)
-                cards.addAll(movieCompanies)
-                cards.addAll(categories)
-
-                Resource.Success(cards)
+                Resource.Success(
+                    DiscoverCards(
+                        categories = categories,
+                        tvNetworks = tvNetworks,
+                        movieCompanies = movieCompanies,
+                    ).also { cards = it },
+                )
             } catch (e: Exception) {
                 errorLog(e)
                 Resource.Failure(e)
