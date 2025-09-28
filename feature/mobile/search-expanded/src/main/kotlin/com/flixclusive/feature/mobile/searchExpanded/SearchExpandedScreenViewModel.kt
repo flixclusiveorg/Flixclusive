@@ -24,10 +24,10 @@ import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.tmdb.repository.TMDBFilmSearchItemsRepository
 import com.flixclusive.data.tmdb.util.TMDBFilters.Companion.getDefaultTMDBFilters
-import com.flixclusive.domain.tmdb.usecase.GetDiscoverCardsUseCase
 import com.flixclusive.feature.mobile.searchExpanded.SearchUiState.Companion.resetPagination
 import com.flixclusive.feature.mobile.searchExpanded.util.Constant.TMDB_PROVIDER_ID
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
+import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData
 import com.flixclusive.provider.ProviderApi
@@ -51,13 +51,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel
 internal class SearchExpandedScreenViewModel
     @Inject
     constructor(
         private val tmdbFilmSearchItemsRepository: TMDBFilmSearchItemsRepository,
-        private val getDiscoverCards: GetDiscoverCardsUseCase,
         private val searchHistoryRepository: SearchHistoryRepository,
         private val userSessionManager: UserSessionManager,
         private val providerApiRepository: ProviderApiRepository,
@@ -66,6 +66,7 @@ internal class SearchExpandedScreenViewModel
         dataStoreManager: DataStoreManager,
     ) : ViewModel() {
         private var searchingJob: Job? = null
+        private var paginatingJob: Job? = null
 
         val providerMetadataList = providerRepository.getEnabledProviders().toImmutableList()
 
@@ -102,7 +103,7 @@ internal class SearchExpandedScreenViewModel
                 initialValue = false,
             )
 
-        var searchResults by mutableStateOf(persistentSetOf<FilmSearchItem>())
+        var searchResults by mutableStateOf(persistentSetOf<Film>())
             private set
 
         var filters by mutableStateOf(getDefaultTMDBFilters())
@@ -115,7 +116,7 @@ internal class SearchExpandedScreenViewModel
         val searchQuery = _searchQuery.asStateFlow()
 
         fun onSearch() {
-            if (searchingJob?.isActive == true) return
+            if (searchingJob?.isActive == true || paginatingJob?.isActive == true) return
 
             searchingJob = viewModelScope.launch {
                 val query = _searchQuery.value
@@ -154,7 +155,9 @@ internal class SearchExpandedScreenViewModel
         }
 
         fun paginateItems() {
-            viewModelScope.launch {
+            if (searchingJob?.isActive == true || paginatingJob?.isActive == true) return
+
+            paginatingJob = viewModelScope.launch {
                 if (isDonePaginating()) return@launch
 
                 _uiState.update {
@@ -194,7 +197,7 @@ internal class SearchExpandedScreenViewModel
                     }
 
                     is Resource.Failure -> {
-                        val errorMessage = result.error ?: UiText.from(R.string.failed_to_paginate_items)
+                        val errorMessage = result.error ?: UiText.from(LocaleR.string.failed_to_paginate_items)
                         _uiState.update {
                             it.copy(
                                 error = errorMessage,

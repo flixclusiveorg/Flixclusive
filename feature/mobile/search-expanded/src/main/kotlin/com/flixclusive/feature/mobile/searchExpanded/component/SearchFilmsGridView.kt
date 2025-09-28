@@ -52,7 +52,9 @@ internal fun SearchFilmsGridView(
                 isShowingTitle = showFilmTitles,
                 onClick = openFilmScreen,
                 onLongClick = previewFilm,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .animateItem()
+                    .fillMaxWidth(),
             )
         }
 

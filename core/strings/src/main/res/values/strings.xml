@@ -372,6 +372,7 @@
     <string name="unknown_provider_type">Unknown provider type</string>
     <string name="up_to_date">Version is up to date!</string>
     <string name="watchlist_empty_message">Start adding now!</string>
+    <string name="failed_to_paginate_items">Failed to load more items</string>
 
     <!--  State messages with formatting  -->
     <string name="warn_delete_library_format">Are you sure you want to delete \"%1$s\"?</string>

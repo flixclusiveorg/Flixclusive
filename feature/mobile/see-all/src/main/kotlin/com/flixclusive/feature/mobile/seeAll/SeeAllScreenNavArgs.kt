@@ -1,8 +1,7 @@
-package com.flixclusive.core.navigation.navargs
+package com.flixclusive.feature.mobile.seeAll
 
 import com.flixclusive.model.provider.Catalog
 
-
 data class SeeAllScreenNavArgs(
-    val item: Catalog
+    val catalog: Catalog,
 )

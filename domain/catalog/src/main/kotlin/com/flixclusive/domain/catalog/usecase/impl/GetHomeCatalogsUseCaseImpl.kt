@@ -88,9 +88,7 @@ internal class GetHomeCatalogsUseCaseImpl
                     if (hasRecommendations && isFromTmdb) {
                         TMDBHomeCatalog(
                             name = "If you liked $title",
-                            mediaType = filmType.type,
                             required = false,
-                            canPaginate = true,
                             url = "${filmType.type}/${item.id}/recommendations?language=en-US",
                         )
                     } else {

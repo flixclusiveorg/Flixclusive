@@ -32,13 +32,12 @@ internal class PaginateItemsUseCaseImpl
                 is ProviderCatalog -> {
                     return try {
                         val api = catalog.providerApi!!
-                        val items =
-                            withContext(appDispatchers.io) {
-                                api.getCatalogItems(
-                                    page = page,
-                                    catalog = catalog,
-                                )
-                            }
+                        val items = withContext(appDispatchers.io) {
+                            api.getCatalogItems(
+                                page = page,
+                                catalog = catalog,
+                            )
+                        }
 
                         Resource.Success(items)
                     } catch (e: Exception) {
@@ -51,7 +50,6 @@ internal class PaginateItemsUseCaseImpl
                         )
                     }
                 }
-
                 else -> {
                     tmdbFilmSearchItemsRepository.get(
                         url = catalog.url,
