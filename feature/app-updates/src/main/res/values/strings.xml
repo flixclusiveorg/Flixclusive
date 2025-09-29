@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="failed_to_access_storage">Could not access storage for for downloading update.</string>
+</resources>

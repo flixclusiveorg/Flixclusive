@@ -22,7 +22,7 @@ internal object DataStoreModule {
     @Provides
     @Singleton
     fun providesDataStoreManager(
-        context: Context,
+        @ApplicationContext context: Context,
         userSessionDataStore: UserSessionDataStore,
         systemPreferences: DataStore<SystemPreferences>,
         appDispatchers: AppDispatchers,
@@ -42,6 +42,6 @@ internal object DataStoreModule {
     @Provides
     @Singleton
     fun providesUserSessionDataStore(
-        context: Context
+        @ApplicationContext context: Context,
     ): UserSessionDataStore = UserSessionDataStoreImpl(context = context)
 }

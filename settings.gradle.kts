@@ -58,11 +58,13 @@ include(":feature:mobile:user-edit")
 include(":domain-catalog")
 include(":domain-database")
 include(":domain-provider")
+include(":domain-downloads")
 
 include(":data-database")
 include(":data-provider")
 include(":data-tmdb")
 include(":data-app-updates")
+include(":data-downloads")
 
 include(":core-common")
 include(":core-database")

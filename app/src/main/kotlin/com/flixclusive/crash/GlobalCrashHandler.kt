@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import com.flixclusive.BuildConfig
 import com.flixclusive.core.util.log.errorLog
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.system.exitProcess
 
@@ -12,7 +13,7 @@ const val ERROR_MESSAGE = "error_message"
 const val SOFTWARE_INFO = "software_info"
 
 class GlobalCrashHandler @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context,
 ) : Thread.UncaughtExceptionHandler {
     override fun uncaughtException(thread: Thread, exception: Throwable) {
         try {

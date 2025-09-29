@@ -9,6 +9,7 @@ import androidx.media3.datasource.cache.NoOpCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import com.flixclusive.core.datastore.model.user.NO_LIMIT_PLAYER_CACHE_SIZE
 import com.flixclusive.core.util.exception.safeCall
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 
 private const val CACHE_DIR_KEY = "flixclusive_player"
@@ -20,7 +21,7 @@ private const val CACHE_DIR_KEY = "flixclusive_player"
  * */
 @OptIn(UnstableApi::class)
 internal class PlayerCacheManager(
-    private val context: Context,
+    @ApplicationContext private val context: Context,
 ) {
     private var simpleCache: SimpleCache? = null
 

@@ -37,6 +37,7 @@ class TestingConventionPlugin : Plugin<Project> {
                 add("testImplementation", libs.findLibrary("mockk").get())
                 add("testImplementation", libs.findLibrary("turbine").get())
                 add("testImplementation", libs.findLibrary("strikt").get())
+                add("testImplementation", libs.findLibrary("okhttp.mockwebserver").get())
 
                 add("androidTestImplementation", libs.findLibrary("androidx.test.ext.junit").get())
                 add("androidTestImplementation", libs.findLibrary("test.rules").get())
@@ -49,6 +50,7 @@ class TestingConventionPlugin : Plugin<Project> {
                 add("androidTestImplementation", libs.findLibrary("mockk-android").get())
                 add("androidTestImplementation", libs.findLibrary("turbine").get())
                 add("androidTestImplementation", libs.findLibrary("strikt").get())
+                add("androidTestImplementation", libs.findLibrary("okhttp.mockwebserver").get())
             }
 
         }

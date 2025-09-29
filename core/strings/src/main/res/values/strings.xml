@@ -379,7 +379,7 @@
     <string name="episode_non_existent_error_message_format">Episode %1$s doesn\'t exist on Season %2$s</string>
     <string name="next_episode_on_format">Next episode on %1$d…</string>
     <string name="test_providers_completed">Test results summary: %1$s</string>
-    <string name="update_out_now_format">%1$s is out now</string>
+    <string name="update_out_now_format">%1$s is out now!</string>
 
     <!--  Content descriptions  -->
     <string name="plus_button_content_desc">A plus icon indicating addition of an item</string>

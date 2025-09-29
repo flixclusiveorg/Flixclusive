@@ -37,6 +37,7 @@ import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,7 +64,7 @@ import com.flixclusive.core.strings.R as LocaleR
 internal class FilmScreenViewModel
     @Inject
     constructor(
-        context: Context,
+        @ApplicationContext context: Context,
         dataStoreManager: DataStoreManager,
         getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
         savedStateHandle: SavedStateHandle,

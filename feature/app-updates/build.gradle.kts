@@ -8,7 +8,12 @@ android {
 }
 
 dependencies {
-    implementation(libs.core.ktx)
-    implementation(libs.okhttp)
-    implementation(libs.stubs.util)
+    implementation(projects.coreCommon)
+    implementation(projects.dataAppUpdates)
+    implementation(projects.dataDownloads)
+    implementation(projects.domainDownloads)
+
+    implementation(libs.compose.runtime)
+
+    testImplementation(projects.coreTesting)
 }

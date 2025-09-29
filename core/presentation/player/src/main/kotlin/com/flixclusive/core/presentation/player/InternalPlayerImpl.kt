@@ -54,6 +54,7 @@ import com.flixclusive.core.util.network.okhttp.USER_AGENT
 import com.flixclusive.core.util.network.okhttp.UserAgentManager
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
+import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.OkHttpClient
 import javax.inject.Inject
 
@@ -71,7 +72,7 @@ internal class InternalPlayerImpl
     @Inject
     constructor(
         client: OkHttpClient,
-        private val context: Context,
+        @ApplicationContext private val context: Context,
         private val subtitlePrefs: SubtitlesPreferences,
         private val playerPrefs: PlayerPreferences,
     ) : SubtitleOffsetProvider,

@@ -9,7 +9,14 @@ android {
 }
 
 dependencies {
+    implementation(projects.coreCommon)
+    implementation(projects.coreDrawables)
+    implementation(projects.coreNavigation)
+    implementation(projects.coreStrings)
+    implementation(projects.corePresentationCommon)
     implementation(projects.dataAppUpdates)
+    implementation(projects.dataDownloads)
+    implementation(projects.domainDownloads)
     implementation(projects.feature.appUpdates)
 
     implementation(libs.coil.compose)

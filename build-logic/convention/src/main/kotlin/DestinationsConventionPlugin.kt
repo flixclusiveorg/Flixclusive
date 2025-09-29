@@ -58,7 +58,7 @@ class DestinationsConventionPlugin : Plugin<Project> {
 
             dependencies {
                 add("implementation", libs.findLibrary("destinations-core").get())
-                add("ksp", libs.findLibrary("destinations-ksp").get())
+                add("ksp", libs.findLibrary("destinations-core").get())
                 add("implementation", libs.findLibrary("destinations-animations").get())
             }
         }

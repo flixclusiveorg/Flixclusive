@@ -22,6 +22,8 @@ import com.flixclusive.core.navigation.navigator.ViewMarkdownAction
 import com.flixclusive.core.navigation.navigator.ViewNewAppUpdatesAction
 import com.flixclusive.core.navigation.navigator.ViewProviderAction
 import com.flixclusive.core.navigation.navigator.ViewRepositoryAction
+import com.flixclusive.feature.mobile.app.updates.dialog.AppUpdatesDialogNavigator
+import com.flixclusive.feature.mobile.app.updates.screen.AppUpdatesScreenNavigator
 import com.flixclusive.feature.mobile.film.FilmScreenNavigator
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.genre.GenreScreenNavigator
@@ -49,8 +51,6 @@ import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpanded
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavigator
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
-import com.flixclusive.feature.mobile.update.dialog.UpdateDialogNavigator
-import com.flixclusive.feature.mobile.update.screen.UpdateScreenNavigator
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
@@ -97,8 +97,8 @@ internal class MobileAppNavigator(
     SettingsScreenNavigator,
     SplashScreenNavigator,
     TestProvidersAction,
-    UpdateDialogNavigator,
-    UpdateScreenNavigator,
+    AppUpdatesDialogNavigator,
+    AppUpdatesScreenNavigator,
     UserEditScreenNavigator,
     UserProfilesScreenNavigator,
     ViewAllFilmsAction,

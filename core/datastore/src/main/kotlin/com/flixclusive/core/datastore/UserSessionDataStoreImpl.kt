@@ -7,16 +7,17 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.flixclusive.core.datastore.UserSessionDataStoreImpl.Companion.USER_SESSION_FILE_NAME
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = USER_SESSION_FILE_NAME)
+
 internal class UserSessionDataStoreImpl @Inject constructor(
     @ApplicationContext private val context: Context
 ) : UserSessionDataStore {
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = USER_SESSION_FILE_NAME)
-
     override val currentUserId: Flow<Int?> = context.dataStore.data.map { preferences ->
         preferences[CURRENT_USER_ID_PREF_KEY]
     }
@@ -25,7 +26,7 @@ internal class UserSessionDataStoreImpl @Inject constructor(
         preferences[SESSION_TIMEOUT_PREF_KEY] ?: 0L
     }
 
-    private companion object {
+    internal companion object {
         val CURRENT_USER_ID_PREF_KEY = intPreferencesKey(CURRENT_USER_ID_KEY)
         val SESSION_TIMEOUT_PREF_KEY = longPreferencesKey(SESSION_TIMEOUT_ID_KEY)
 
