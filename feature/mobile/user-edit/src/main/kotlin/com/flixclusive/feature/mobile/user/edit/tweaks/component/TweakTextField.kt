@@ -26,31 +26,26 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.common.util.toTextFieldValue
+import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.user.edit.tweaks.ProfileTweakUI
 import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.DefaultShape
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 private const val ON_NAME_CHANGE_DELAY = 800L
 
 @Composable
-internal fun TweakTextField(
-    tweak: ProfileTweakUI.TextField
-) {
+internal fun TweakTextField(tweak: ProfileTweakUI.TextField) {
     var value by remember { mutableStateOf(tweak.initialValue.toTextFieldValue()) }
 
     val changeCallback = onValueChangeWithDelay(tweak.onValueChange)
@@ -71,18 +66,15 @@ internal fun TweakTextField(
             onDone = {
                 focusManager.clearFocus(true)
                 keyboardController?.hide()
-            }
+            },
         ),
         placeholder = {
             tweak.placeholder?.asString()?.let {
                 Text(
                     text = it,
-                    style = getAdaptiveTextStyle(
-                        style = TypographyStyle.Label,
-                        style = AdaptiveTextStyle.Emphasized,
-                    ).copy(
-                        color = LocalContentColor.current.copy(0.6f),
-                    )
+                    color = LocalContentColor.current.copy(0.6f),
+                    fontWeight = FontWeight.Black,
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
                 )
             }
         },
@@ -93,22 +85,20 @@ internal fun TweakTextField(
                 exit = scaleOut(),
             ) {
                 IconButton(
-                    onClick = { value = "".toTextFieldValue() }
+                    onClick = { value = "".toTextFieldValue() },
                 ) {
                     Icon(
                         painter = painterResource(UiCommonR.drawable.outline_close_square),
-                        contentDescription = stringResource(LocaleR.string.clear_text_button)
+                        contentDescription = stringResource(LocaleR.string.clear_text_button),
                     )
                 }
             }
         },
-        textStyle = getAdaptiveTextStyle(
-            size = 16.sp,
-            style = TypographyStyle.Body,
-            style = AdaptiveTextStyle.Normal
-        ).copy(
-            textAlign = TextAlign.Start
-        ),
+        textStyle = MaterialTheme.typography.labelLarge
+            .copy(
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Start,
+            ).asAdaptiveTextStyle(),
         singleLine = true,
         shape = DefaultShape,
         colors = TextFieldDefaults.colors(
@@ -122,16 +112,14 @@ internal fun TweakTextField(
             .height(
                 getAdaptiveDp(
                     dp = 65.dp,
-                    increaseBy = 15.dp
-                )
-            )
+                    increaseBy = 15.dp,
+                ),
+            ),
     )
 }
 
 @Composable
-private fun onValueChangeWithDelay(
-    onValueChange: (String) -> Unit,
-): (String) -> Unit {
+private fun onValueChangeWithDelay(onValueChange: (String) -> Unit): (String) -> Unit {
     val scope = rememberCoroutineScope()
     var job by remember { mutableStateOf<Job?>(null) }
 

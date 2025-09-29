@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -22,29 +21,25 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.presentation.common.util.IconResource
 import com.flixclusive.core.presentation.mobile.components.material3.CommonCheckbox
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.CharSequenceText
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.CommonAlertDialog
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.strings.R
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.common.dialog.ALERT_DIALOG_CORNER_SIZE
-import com.flixclusive.core.ui.common.dialog.CharSequenceText
-import com.flixclusive.core.ui.common.dialog.CustomBaseAlertDialog
-import com.flixclusive.core.ui.common.util.IconResource
-import com.flixclusive.core.util.coroutines.AppDispatchers
 import com.flixclusive.feature.mobile.user.edit.Library
 import com.flixclusive.feature.mobile.user.edit.tweaks.BaseProfileTweak
 import com.flixclusive.feature.mobile.user.edit.tweaks.ProfileTweakUI
 import com.flixclusive.feature.mobile.user.edit.tweaks.data.DataTweak.Companion.DeleteDialog
-import kotlinx.coroutines.launch
+import com.flixclusive.core.drawables.R as UiCommonR
 
 internal class DataTweak(
     private val onClearSearchHistory: () -> Unit,
@@ -52,25 +47,24 @@ internal class DataTweak(
     private val onClearLibraries: (libraries: List<Library>) -> Unit,
 ) : BaseProfileTweak {
     @Composable
-    override fun getLabel()
-        = stringResource(R.string.data)
+    override fun getLabel() = stringResource(R.string.data)
 
     override fun getTweaks(): List<ProfileTweakUI<*>> {
         return listOf(
             ProfileTweakUI.Button(
                 label = UiText.StringResource(R.string.clear_search_history),
                 description = UiText.StringResource(R.string.search_history_content_desc),
-                icon = IconResource.fromDrawableResource(com.flixclusive.core.ui.common.R.drawable.search_outlined),
+                icon = IconResource.from(UiCommonR.drawable.search_outlined),
                 needsConfirmation = true,
-                onClick = onClearSearchHistory
+                onClick = onClearSearchHistory,
             ),
             getDeleteDialog(),
             ProfileTweakUI.Button(
                 label = UiText.StringResource(R.string.delete_profile),
                 description = UiText.StringResource(R.string.delete_profile_content_desc),
-                icon = IconResource.fromDrawableResource(com.flixclusive.core.ui.common.R.drawable.delete_person),
+                icon = IconResource.from(UiCommonR.drawable.delete_person),
                 needsConfirmation = true,
-                onClick = onDeleteProfile
+                onClick = onDeleteProfile,
             ),
         )
     }
@@ -79,7 +73,7 @@ internal class DataTweak(
         return ProfileTweakUI.Dialog(
             label = UiText.StringResource(R.string.clear_library),
             description = UiText.StringResource(R.string.clear_library_content_desc),
-            icon = IconResource.fromDrawableResource(com.flixclusive.core.ui.common.R.drawable.library_outline),
+            icon = IconResource.from(UiCommonR.drawable.library_outline),
         ) { onDismiss ->
             DeleteDialog(
                 onDismiss = onDismiss,
@@ -93,19 +87,11 @@ internal class DataTweak(
         fun DeleteDialog(
             onConfirm: (List<Library>) -> Unit,
             onDismiss: () -> Unit,
+            modifier: Modifier = Modifier,
         ) {
-            val scope = rememberCoroutineScope()
             val buttonMinHeight = 50.dp
-            val cornerSize = CornerSize(
-                (ALERT_DIALOG_CORNER_SIZE * 2).dp
-            )
-            val shape = MaterialTheme.shapes.medium
-            val buttonShape = shape.let {
-                it.copy(
-                    bottomStart = cornerSize,
-                    bottomEnd = it.bottomEnd,
-                )
-            }
+            val shape = MaterialTheme.shapes.small
+            val buttonShape = shape
 
             val selectedLibraries = remember {
                 mutableStateMapOf(
@@ -114,43 +100,40 @@ internal class DataTweak(
                 )
             }
 
-            CustomBaseAlertDialog(
+            CommonAlertDialog(
+                modifier = modifier,
                 onDismiss = onDismiss,
                 action = {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier
                             .padding(horizontal = 10.dp)
-                            .padding(bottom = 10.dp)
+                            .padding(bottom = 10.dp),
                     ) {
                         Button(
                             onClick = {
-                                scope.launch {
-                                    val selected = AppDispatchers.withDefaultContext {
-                                        selectedLibraries.mapNotNull { (key, checked) ->
-                                            if (checked) key else null
-                                        }
-                                    }
-
-                                    onConfirm(selected)
-                                    onDismiss()
+                                val selected = selectedLibraries.mapNotNull { (key, checked) ->
+                                    if (checked) key else null
                                 }
+
+                                onConfirm(selected)
+                                onDismiss()
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             ),
                             shape = buttonShape,
                             modifier = Modifier
                                 .weight(1F)
-                                .heightIn(min = buttonMinHeight)
+                                .heightIn(min = buttonMinHeight),
                         ) {
                             Text(
                                 text = stringResource(id = R.string.confirm),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier
-                                    .padding(end = 2.dp)
+                                    .padding(end = 2.dp),
                             )
                         }
 
@@ -158,33 +141,30 @@ internal class DataTweak(
                             onClick = onDismiss,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = Color.Black
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
                             ),
-                            shape = buttonShape.copy(
-                                bottomStart = shape.bottomStart,
-                                bottomEnd = cornerSize,
-                            ),
+                            shape = buttonShape,
                             modifier = Modifier
                                 .weight(1F)
-                                .heightIn(min = buttonMinHeight)
+                                .heightIn(min = buttonMinHeight),
                         ) {
                             Text(
                                 text = stringResource(R.string.cancel),
                                 style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Light
+                                fontWeight = FontWeight.Light,
                             )
                         }
                     }
-                }
+                },
             ) {
                 CharSequenceText(
                     text = stringResource(R.string.what_to_remove),
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp
+                        fontSize = 17.sp,
                     ),
                     modifier = Modifier
-                        .padding(10.dp)
+                        .padding(10.dp),
                 )
 
                 val availableLibraries by remember {
@@ -199,7 +179,7 @@ internal class DataTweak(
                     horizontalAlignment = Alignment.Start,
                     modifier = Modifier
                         .fillMaxWidth(0.9F)
-                        .padding(vertical = 20.dp)
+                        .padding(vertical = 20.dp),
                 ) {
                     items(availableLibraries) { library ->
                         val onCheckedChange = fun(state: Boolean) {
@@ -211,25 +191,25 @@ internal class DataTweak(
                             modifier = Modifier
                                 .clickable {
                                     onCheckedChange(
-                                        !selectedLibraries[library]!!
+                                        !selectedLibraries[library]!!,
                                     )
-                                }
+                                },
                         ) {
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(3.dp)
+                                    .padding(3.dp),
                             ) {
                                 CommonCheckbox(
                                     checked = selectedLibraries[library]!!,
-                                    onCheckedChange = onCheckedChange
+                                    onCheckedChange = onCheckedChange,
                                 )
 
                                 CharSequenceText(
                                     text = library.name.asString(),
                                     style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier
+                                    modifier = Modifier,
                                 )
                             }
                         }
@@ -247,7 +227,7 @@ private fun DataTweakBasePreview() {
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.onSurface)
+                .background(MaterialTheme.colorScheme.onSurface),
         ) {
             DeleteDialog(
                 onDismiss = {},

@@ -34,19 +34,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.database.entity.user.User
+import com.flixclusive.core.navigation.navargs.PinVerificationResult
+import com.flixclusive.core.navigation.navargs.PinWithHintResult
+import com.flixclusive.core.navigation.navigator.PinAction
+import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
+import com.flixclusive.core.presentation.mobile.components.UserAvatar
+import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.navigation.navargs.PinVerificationResult
-import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
-import com.flixclusive.core.ui.common.navigation.navigator.ChooseProfileAction
-import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navigator.OpenPinScreenAction
-import com.flixclusive.core.ui.common.navigation.navigator.PinAction
-import com.flixclusive.core.ui.common.navigation.navigator.SelectAvatarAction
-import com.flixclusive.core.ui.common.user.UserAvatar
-import com.flixclusive.core.ui.common.user.UserAvatarDefaults.DefaultAvatarSize
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.noIndicationClickable
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
@@ -56,14 +52,8 @@ import com.flixclusive.feature.mobile.user.edit.tweaks.renderTweakUi
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.ResultRecipient
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
-
-interface UserEditScreenNavigator :
-    OpenPinScreenAction,
-    SelectAvatarAction,
-    ChooseProfileAction,
-    GoBackAction
 
 @Destination
 @Composable
@@ -95,12 +85,11 @@ internal fun UserEditScreen(
                     initialName = user.name,
                     userHasPin = user.pin != null,
                     onOpenPinScreen = { isRemovingPin ->
-                        val action =
-                            if (isRemovingPin) {
-                                PinAction.Verify(user)
-                            } else {
-                                PinAction.Setup
-                            }
+                        val action = if (isRemovingPin) {
+                            PinAction.Verify(user.pin)
+                        } else {
+                            PinAction.Setup
+                        }
 
                         navigator.openUserPinScreen(action = action)
                     },
@@ -142,7 +131,7 @@ internal fun UserEditScreen(
 
     pinRemoveResultRecipient.onNavResult { result ->
         if (result is NavResult.Value && result.value.isVerified) {
-            user = result.value.user.copy(pin = null, pinHint = null)
+            user = user.copy(pin = null, pinHint = null)
             viewModel.onEditUser(user = user)
         }
     }
@@ -156,22 +145,20 @@ internal fun UserEditScreen(
         },
     ) { padding ->
         Box(
-            modifier =
-                Modifier
-                    .padding(padding)
-                    .fillMaxSize(),
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
         ) {
             LazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(5.dp),
                 contentPadding = PaddingValues(getAdaptiveDp(10.dp)),
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .noIndicationClickable {
-                            keyboardController?.hide()
-                            focusManager.clearFocus(true)
-                        },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .noIndicationClickable {
+                        keyboardController?.hide()
+                        focusManager.clearFocus(true)
+                    },
             ) {
                 item {
                     Box(
@@ -179,31 +166,28 @@ internal fun UserEditScreen(
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
-                            modifier =
-                                Modifier
-                                    .padding(getAdaptiveDp(5.dp)),
+                            modifier = Modifier
+                                .padding(getAdaptiveDp(5.dp)),
                         ) {
                             UserAvatar(
-                                user = user,
+                                avatar = user.image,
                                 borderWidth = 0.dp,
                                 shadowBlur = 0.dp,
                                 shadowSpread = 0.dp,
-                                modifier =
-                                    Modifier
-                                        .height(
-                                            getAdaptiveDp(
-                                                dp = (DefaultAvatarSize.value * 1.2).dp,
-                                                increaseBy = 80.dp,
-                                            ),
-                                        ).aspectRatio(1F),
+                                modifier = Modifier
+                                    .height(
+                                        getAdaptiveDp(
+                                            dp = (DefaultAvatarSize.value * 1.2).dp,
+                                            increaseBy = 80.dp,
+                                        ),
+                                    ).aspectRatio(1F),
                             )
                         }
 
                         ChangeImageButton(
                             onClick = { navigator.openUserAvatarSelectScreen(selected = user.image) },
-                            modifier =
-                                Modifier
-                                    .align(Alignment.BottomEnd),
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd),
                         )
                     }
                 }
@@ -230,7 +214,8 @@ private fun ChangeImageButton(
                 .background(
                     color = MaterialTheme.colorScheme.onSurface,
                     shape = CircleShape,
-                ).clickable(
+                )
+                .clickable(
                     indication =
                         ripple(
                             bounded = false,

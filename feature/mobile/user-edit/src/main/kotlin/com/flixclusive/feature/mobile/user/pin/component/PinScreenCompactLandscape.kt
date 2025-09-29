@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -17,16 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.database.entity.MAX_USER_PIN_LENGTH
+import com.flixclusive.core.database.entity.user.MAX_USER_PIN_LENGTH
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -122,11 +122,8 @@ internal fun PinSetupScreenCompactLandscape(
                             ) {
                                 Text(
                                     text = stringResource(LocaleR.string.ok),
-                                    style =
-                                        getAdaptiveTextStyle(
-                                            style = TypographyStyle.Title,
-                                            style = AdaptiveTextStyle.Emphasized,
-                                        ),
+                                    fontWeight = FontWeight.Black,
+                                    style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
                                 )
                             }
                         }

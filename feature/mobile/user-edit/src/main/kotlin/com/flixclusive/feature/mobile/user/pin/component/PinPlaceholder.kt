@@ -20,12 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 
 @Composable
 internal fun PinPlaceholder(
@@ -65,12 +63,8 @@ internal fun PinPlaceholder(
         ) {
             Text(
                 text = "${char ?: ""}",
-                style =
-                    getAdaptiveTextStyle(
-                        style = TypographyStyle.Title,
-                        style = AdaptiveTextStyle.Emphasized,
-                        size = 25.sp,
-                    ),
+                fontWeight = FontWeight.Black,
+                style = MaterialTheme.typography.headlineSmall.asAdaptiveTextStyle(),
             )
         }
 

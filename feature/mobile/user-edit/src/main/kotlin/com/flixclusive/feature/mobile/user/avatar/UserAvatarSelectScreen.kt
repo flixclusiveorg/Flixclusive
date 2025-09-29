@@ -25,20 +25,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.UserAvatar
+import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.AVATARS_IMAGE_COUNT
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.user.UserAvatar
-import com.flixclusive.core.ui.common.user.UserAvatarDefaults.AVATARS_IMAGE_COUNT
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.ResultBackNavigator
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Destination
 @Composable
@@ -49,11 +46,10 @@ internal fun UserAvatarSelectScreen(
     val surface = MaterialTheme.colorScheme.surface
     val cornerRadius = 8F
     val avatarGridSize = 150.dp
-    val columnsSize =
-        getAdaptiveDp(
-            dp = avatarGridSize,
-            increaseBy = 70.dp,
-        )
+    val columnsSize = getAdaptiveDp(
+        dp = avatarGridSize,
+        increaseBy = 70.dp,
+    )
 
     Scaffold(
         topBar = {
@@ -76,7 +72,7 @@ internal fun UserAvatarSelectScreen(
             items(AVATARS_IMAGE_COUNT) { i ->
                 Box {
                     UserAvatar(
-                        user = getDummyUser(image = i),
+                        avatar = i,
                         shadowBlur = 0.dp,
                         borderWidth = 0.dp,
                         shadowSpread = 0.dp,
@@ -126,11 +122,7 @@ internal fun UserAvatarSelectScreen(
 
                             Text(
                                 text = stringResource(LocaleR.string.selected_label),
-                                style =
-                                    getAdaptiveTextStyle(
-                                        style = AdaptiveTextStyle.Normal,
-                                        style = TypographyStyle.Title,
-                                    ),
+                                style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
                             )
                         }
                     }

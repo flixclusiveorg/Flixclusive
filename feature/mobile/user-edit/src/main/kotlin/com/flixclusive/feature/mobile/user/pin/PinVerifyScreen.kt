@@ -17,11 +17,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.database.entity.user.User
+import com.flixclusive.core.navigation.navargs.PinVerificationResult
+import com.flixclusive.core.presentation.mobile.extensions.isCompact
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.navigation.navargs.PinVerificationResult
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.isCompact
 import com.flixclusive.feature.mobile.user.pin.component.DEFAULT_DELAY
 import com.flixclusive.feature.mobile.user.pin.component.HeaderLabel
 import com.flixclusive.feature.mobile.user.pin.component.PinScreenDefault
@@ -35,7 +35,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 internal fun PinVerifyScreen(
     user: User,
-    resultNavigator: ResultBackNavigator<PinVerificationResult>
+    resultNavigator: ResultBackNavigator<PinVerificationResult>,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowHeightSizeClass
 
@@ -57,10 +57,7 @@ internal fun PinVerifyScreen(
     val onBack = fun() {
         resultNavigator.navigateBack(
             onlyIfResumed = true,
-            result = PinVerificationResult(
-                user = user,
-                isVerified = false
-            ),
+            result = PinVerificationResult(isVerified = false),
         )
     }
 
@@ -68,10 +65,7 @@ internal fun PinVerifyScreen(
         if (pinToVerify.value == user.pin) {
             resultNavigator.navigateBack(
                 onlyIfResumed = true,
-                result = PinVerificationResult(
-                    user = user,
-                    isVerified = true
-                ),
+                result = PinVerificationResult(isVerified = true),
             )
         } else {
             hasErrors.value = true
@@ -80,9 +74,9 @@ internal fun PinVerifyScreen(
 
     Box(
         modifier =
-        Modifier
-            .fillMaxSize()
-            .padding(horizontal = getAdaptiveDp(DefaultScreenPaddingHorizontal, 2.dp)),
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = getAdaptiveDp(DefaultScreenPaddingHorizontal, 2.dp)),
     ) {
         if (windowSizeClass.isCompact) {
             PinVerifyScreenCompactLandscape(
@@ -104,6 +98,7 @@ internal fun PinVerifyScreen(
     }
 }
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PinVerifyScreenCompactLandscape(
@@ -121,11 +116,12 @@ private fun PinVerifyScreenCompactLandscape(
         onConfirm = onConfirm,
     ) {
         HeaderLabel(
-            title = stringResource(LocaleR.string.pin_verify)
+            title = stringResource(LocaleR.string.pin_verify),
         )
     }
 }
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PinVerifyScreenDefault(
@@ -145,8 +141,8 @@ private fun PinVerifyScreenDefault(
         HeaderLabel(
             modifier =
                 Modifier
-                .align(Alignment.CenterHorizontally),
-            title = stringResource(LocaleR.string.pin_verify)
+                    .align(Alignment.CenterHorizontally),
+            title = stringResource(LocaleR.string.pin_verify),
         )
     }
 }

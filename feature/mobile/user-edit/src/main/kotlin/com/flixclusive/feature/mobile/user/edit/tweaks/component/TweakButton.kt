@@ -21,15 +21,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.dialog.TextAlertDialog
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
+import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.user.edit.tweaks.ProfileTweakUI
 import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.DefaultShape
 import com.flixclusive.core.strings.R as LocaleR
@@ -49,8 +46,8 @@ internal fun TweakButton(
             )
         } else {
             TextAlertDialog(
-                label = stringResource(id = LocaleR.string.heads_up),
-                description = stringResource(id = LocaleR.string.action_warning_format_message, tweak.label.asString()),
+                title = stringResource(id = LocaleR.string.heads_up),
+                message = stringResource(id = LocaleR.string.action_warning_format_message, tweak.label.asString()),
                 confirmButtonLabel = stringResource(id = LocaleR.string.proceed),
                 onConfirm = { tweak.onClick() },
                 onDismiss = { showDialog = false }
@@ -67,7 +64,7 @@ internal fun TweakButton(
             )
             .clickable(
                 onClick = if (needsDialog) {
-                    fun () {
+                    fun() {
                         showDialog = true
                     }
                 } else tweak.onClick
@@ -83,7 +80,7 @@ internal fun TweakButton(
                 .padding(spacing)
         ) {
             Icon(
-                painter = tweak.icon.asPainterResource(),
+                painter = tweak.icon.asPainter(),
                 contentDescription = tweak.label.asString(),
                 tint = LocalContentColor.current.copy(0.6f),
                 modifier = Modifier
@@ -100,19 +97,14 @@ internal fun TweakButton(
             ) {
                 Text(
                     text = tweak.label.asString(),
-                    style = getAdaptiveTextStyle(
-                        style = TypographyStyle.Label,
-                        style = AdaptiveTextStyle.Emphasized,
-                    )
+                    fontWeight = FontWeight.Black,
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
                 )
 
                 Text(
                     text = tweak.description.asString(),
-                    style = getAdaptiveTextStyle(
-                        size = 12.sp,
-                        style = TypographyStyle.Body,
-                        style = AdaptiveTextStyle.Normal,
-                    )
+                    fontWeight = FontWeight.Normal,
+                    style = MaterialTheme.typography.bodySmall.asAdaptiveTextStyle(),
                 )
             }
         }

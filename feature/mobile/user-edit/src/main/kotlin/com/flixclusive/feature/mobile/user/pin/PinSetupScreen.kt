@@ -45,21 +45,20 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.navigation.navargs.PinWithHintResult
+import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
+import com.flixclusive.core.presentation.mobile.extensions.isCompact
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveModifierUtil.fillMaxAdaptiveWidth
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.isCompact
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.DefaultShape
 import com.flixclusive.feature.mobile.user.pin.component.DEFAULT_DELAY
 import com.flixclusive.feature.mobile.user.pin.component.HeaderLabel
@@ -68,8 +67,8 @@ import com.flixclusive.feature.mobile.user.pin.component.PinSetupScreenCompactLa
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 import kotlinx.coroutines.delay
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 private enum class PinSetupStep {
     Setup,
@@ -116,11 +115,10 @@ internal fun PinSetupScreen(resultNavigator: ResultBackNavigator<PinWithHintResu
         } else if (stepState == PinSetupStep.Hint && pinHint.value.isNotEmpty()) {
             resultNavigator.navigateBack(
                 onlyIfResumed = true,
-                result =
-                    PinWithHintResult(
-                        pin = newPin.value,
-                        pinHint = pinHint.value,
-                    ),
+                result = PinWithHintResult(
+                    pin = newPin.value,
+                    pinHint = pinHint.value,
+                ),
             )
         } else if (stepState == PinSetupStep.Confirm ||
             stepState == PinSetupStep.Hint
@@ -186,6 +184,7 @@ internal fun PinSetupScreen(resultNavigator: ResultBackNavigator<PinWithHintResu
     }
 }
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PinSetupScreenCompactLandscape(
@@ -224,6 +223,7 @@ private fun PinSetupScreenCompactLandscape(
     }
 }
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PinSetupScreenDefault(
@@ -265,6 +265,7 @@ private fun PinSetupScreenDefault(
     }
 }
 
+@Suppress("ktlint:compose:mutable-state-param-check")
 @Composable
 private fun PinSetupHintScreen(
     pinHint: MutableState<String>,
@@ -278,13 +279,11 @@ private fun PinSetupHintScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val adaptiveMaxWidth =
-        Modifier
-            .fillMaxAdaptiveWidth(
-                compact = 1F,
-                medium = 0.8F,
-                expanded = 0.5F,
-            )
+    val adaptiveMaxWidth = Modifier.fillMaxAdaptiveWidth(
+        compact = 1F,
+        medium = 0.8F,
+        expanded = 0.5F,
+    )
 
     Column(
         modifier =
@@ -309,12 +308,9 @@ private fun PinSetupHintScreen(
             text = stringResource(LocaleR.string.pin_hint_sub_description),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(0.8F),
-            style =
-                getAdaptiveTextStyle(
-                    style = TypographyStyle.Body,
-                    style = AdaptiveTextStyle.NonEmphasized,
-                    size = 14.sp,
-                ),
+            style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
+            fontWeight = FontWeight.Normal,
+            color = LocalContentColor.current.copy(0.6f),
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -333,13 +329,9 @@ private fun PinSetupHintScreen(
             placeholder = {
                 Text(
                     text = stringResource(LocaleR.string.pin_hint),
-                    style =
-                        getAdaptiveTextStyle(
-                            style = TypographyStyle.Label,
-                            style = AdaptiveTextStyle.Emphasized,
-                        ).copy(
-                            color = LocalContentColor.current.copy(0.6f),
-                        ),
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
+                    fontWeight = FontWeight.Black,
+                    color = LocalContentColor.current.copy(0.6f),
                 )
             },
             trailingIcon = {
@@ -358,14 +350,12 @@ private fun PinSetupHintScreen(
                     }
                 }
             },
-            textStyle =
-                getAdaptiveTextStyle(
-                    size = 16.sp,
-                    style = TypographyStyle.Body,
-                    style = AdaptiveTextStyle.Normal,
-                ).copy(
+            textStyle = MaterialTheme.typography.bodyLarge
+                .copy(
+                    fontWeight = FontWeight.Normal,
                     textAlign = TextAlign.Start,
-                ),
+                    color = LocalContentColor.current.copy(0.6f),
+                ).asAdaptiveTextStyle(),
             singleLine = true,
             shape = DefaultShape,
             colors =
@@ -394,19 +384,12 @@ private fun PinSetupHintScreen(
             TextButton(
                 onClick = onSkip,
                 shape = MaterialTheme.shapes.small,
-                modifier =
-                    adaptiveHeight
-                        .weight(0.5F),
+                modifier = adaptiveHeight.weight(0.5F),
             ) {
                 Text(
                     text = stringResource(LocaleR.string.skip),
-                    style =
-                        getAdaptiveTextStyle(
-                            style = TypographyStyle.Label,
-                            style = AdaptiveTextStyle.NonEmphasized,
-                        ).copy(
-                            color = MaterialTheme.colorScheme.primary,
-                        ),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
                 )
             }
 
@@ -420,12 +403,7 @@ private fun PinSetupHintScreen(
             ) {
                 Text(
                     text = stringResource(LocaleR.string.finish),
-                    style =
-                        getAdaptiveTextStyle(
-                            style = TypographyStyle.Label,
-                            style = AdaptiveTextStyle.Emphasized,
-                            increaseBy = 6.sp,
-                        ),
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(increaseBy = 6.sp),
                 )
             }
         }
