@@ -12,7 +12,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,13 +37,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.GradientCircularProgressIndicator
+import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.splashScreen.APP_TAG_KEY
 import com.flixclusive.feature.splashScreen.ENTER_DELAY
 import com.flixclusive.feature.splashScreen.EXIT_DELAY
 import com.flixclusive.feature.splashScreen.TagSize
 import kotlinx.coroutines.delay
+import com.flixclusive.core.drawables.R as UiCommonR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Stable
 @Composable
@@ -75,18 +76,14 @@ internal fun LoadingTag(
 
         AnimatedVisibility(
             visible = isLoading,
-            enter =
-                fadeIn(
-                    animationSpec = tween(durationMillis = EXIT_DELAY),
-                ) + scaleIn(),
-            exit =
-                scaleOut(
-                    animationSpec = tween(durationMillis = ENTER_DELAY),
-                ) + fadeOut(),
+            enter = fadeIn(
+                animationSpec = tween(durationMillis = EXIT_DELAY),
+            ) + scaleIn(),
+            exit = scaleOut(
+                animationSpec = tween(durationMillis = ENTER_DELAY),
+            ) + fadeOut(),
         ) {
-            GradientCircularProgressIndicator(
-                colors = gradientColors,
-            )
+            GradientCircularProgressIndicator(colors = gradientColors)
         }
     }
 }
@@ -100,33 +97,28 @@ internal fun Tag(
     val gradientColors = getGradientColors()
     with(sharedTransitionScope) {
         Box(
-            modifier =
-                Modifier
-                    .sharedElement(
-                        state = rememberSharedContentState(key = APP_TAG_KEY),
-                        animatedVisibilityScope = animatedScope,
-                    ).background(MaterialTheme.colorScheme.surface), // TODO: Remove background on tag
+            modifier = Modifier
+                .sharedElement(
+                    state = rememberSharedContentState(key = APP_TAG_KEY),
+                    animatedVisibilityScope = animatedScope,
+                ),
         ) {
             Image(
-                painter = painterResource(com.flixclusive.core.ui.common.R.drawable.flixclusive_tag),
-                contentDescription =
-                    stringResource(
-                        id = com.flixclusive.core.strings.R.string.flixclusive_tag_content_desc,
-                    ),
+                painter = painterResource(UiCommonR.drawable.flixclusive_tag),
+                contentDescription = stringResource(id = LocaleR.string.flixclusive_tag_content_desc),
                 contentScale = ContentScale.Fit,
-                modifier =
-                    Modifier
-                        .width(TagSize)
-                        .graphicsLayer(alpha = 0.99F)
-                        .drawWithCache {
-                            onDrawWithContent {
-                                drawContent()
-                                drawRect(
-                                    brush = Brush.linearGradient(colors = gradientColors),
-                                    blendMode = BlendMode.SrcAtop,
-                                )
-                            }
-                        },
+                modifier = Modifier
+                    .width(TagSize)
+                    .graphicsLayer(alpha = 0.99F)
+                    .drawWithCache {
+                        onDrawWithContent {
+                            drawContent()
+                            drawRect(
+                                brush = Brush.linearGradient(colors = gradientColors),
+                                blendMode = BlendMode.SrcAtop,
+                            )
+                        }
+                    },
             )
         }
     }

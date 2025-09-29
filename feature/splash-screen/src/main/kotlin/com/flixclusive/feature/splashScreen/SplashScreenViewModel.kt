@@ -1,109 +1,101 @@
 package com.flixclusive.feature.splashScreen
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.datastore.DataStoreManager
-import com.flixclusive.core.datastore.util.asStateFlow
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.launchOnIO
-import com.flixclusive.data.configuration.AppConfigurationManager
-import com.flixclusive.data.user.UserRepository
-import com.flixclusive.domain.home.HomeItemsProviderUseCase
-import com.flixclusive.domain.home.PREFERRED_MINIMUM_HOME_ITEMS
-import com.flixclusive.domain.session.UserSessionManager
-import com.flixclusive.domain.updater.usecase.AppUpdateCheckerUseCase
-import com.flixclusive.model.datastore.system.SystemPreferences
+import com.flixclusive.core.datastore.model.system.SystemPreferences
+import com.flixclusive.data.app.updates.model.AppUpdateInfo
+import com.flixclusive.data.app.updates.repository.AppUpdatesRepository
+import com.flixclusive.data.database.repository.UserRepository
+import com.flixclusive.data.database.session.UserSessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
-
-internal sealed class SplashScreenUiState {
-    data object Loading : SplashScreenUiState()
-
-    data object Okay : SplashScreenUiState()
-
-    data object Failure : SplashScreenUiState()
-}
 
 @HiltViewModel
 internal class SplashScreenViewModel
     @Inject
     constructor(
-        homeItemsProviderUseCase: HomeItemsProviderUseCase,
-        appConfigurationManager: AppConfigurationManager,
         userSessionManager: UserSessionManager,
-        val appUpdateCheckerUseCase: AppUpdateCheckerUseCase,
-        private val userRepository: UserRepository,
+        userRepository: UserRepository,
+        private val appUpdatesRepository: AppUpdatesRepository,
         private val dataStoreManager: DataStoreManager,
+        private val appDispatchers: AppDispatchers,
     ) : ViewModel() {
-        private val _uiState = MutableStateFlow<SplashScreenUiState>(SplashScreenUiState.Loading)
+        private var saveSettingsJob: Job? = null
+
+        private val _uiState = MutableStateFlow<SplashScreenUiState>(SplashScreenUiState(isLoading = true))
         val uiState = _uiState.asStateFlow()
 
-        val configurationStatus = appConfigurationManager.configurationStatus
+        val systemPreferences = dataStoreManager
+            .getSystemPrefs()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = SystemPreferences(),
+            )
 
-        val systemPreferences =
-            dataStoreManager.systemPreferences
-                .asStateFlow(viewModelScope)
-
-        val noUsersFound =
-            userRepository
-                .observeUsers()
-                .map { it.isEmpty() }
-                .stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = runBlocking { userRepository.observeUsers().first().isEmpty() },
-                )
+        val noUsersFound = userRepository
+            .observeUsers()
+            .map { it.isEmpty() }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+            initialValue = false,
+        )
 
         val userLoggedIn = userSessionManager.currentUser
 
-        init {
-            viewModelScope.launch {
-                launch initHomeScreen@{
-                    combine(
-                        appConfigurationManager.configurationStatus,
-                        userLoggedIn,
-                    ) { status, user ->
-                        if (status is Resource.Success && user != null) {
-                            homeItemsProviderUseCase(user.id)
-                            this@initHomeScreen.cancel()
-                        }
-                    }.collect()
-                }
-
-                launch waitForHomeScreenItems@{
-                    homeItemsProviderUseCase.state.collectLatest { state ->
-                        val newState =
-                            when {
-                                state.rowItems.size >= PREFERRED_MINIMUM_HOME_ITEMS -> SplashScreenUiState.Okay
-                                state.status is Resource.Failure -> SplashScreenUiState.Failure
-                                else -> _uiState.value
-                            }
-
-                        _uiState.value = newState
-
-                        if (newState == SplashScreenUiState.Okay) {
-                            this@waitForHomeScreenItems.cancel()
-                        }
-                    }
-                }
-            }
-        }
-
         fun updateSettings(transform: suspend (t: SystemPreferences) -> SystemPreferences) {
-            launchOnIO {
+            if (saveSettingsJob?.isActive == true) return
+
+            saveSettingsJob = appDispatchers.ioScope.launch {
                 dataStoreManager.updateSystemPrefs(transform)
             }
         }
+
+        private fun checkForUpdates() {
+            viewModelScope.launch {
+                _uiState.update { SplashScreenUiState(isLoading = true) }
+
+                appUpdatesRepository
+                    .getLatestUpdate()
+                    .onSuccess { appUpdateInfo ->
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                newAppUpdateInfo = appUpdateInfo,
+                                error = null,
+                            )
+                        }
+                    }.onFailure { error ->
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = error,
+                            )
+                        }
+                    }
+            }
+        }
+
+        init {
+            checkForUpdates()
+        }
     }
+
+@Immutable
+internal data class SplashScreenUiState(
+    val isLoading: Boolean = false,
+    val error: Throwable? = null,
+    val newAppUpdateInfo: AppUpdateInfo? = null,
+)

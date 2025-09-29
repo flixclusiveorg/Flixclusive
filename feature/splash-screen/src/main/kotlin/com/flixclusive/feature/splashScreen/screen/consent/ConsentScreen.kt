@@ -36,7 +36,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,8 +51,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.mobile.components.material3.CommonCheckbox
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.splashScreen.ENTER_DELAY
 import com.flixclusive.feature.splashScreen.EXIT_DELAY
 import com.flixclusive.feature.splashScreen.PaddingHorizontal
@@ -94,16 +93,16 @@ private fun getExitAnimation(delay: Int): ExitTransition {
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun ConsentScreen(
-    modifier: Modifier = Modifier,
     animatedScope: AnimatedVisibilityScope,
     sharedTransitionScope: SharedTransitionScope,
     onAgree: (isOptingIn: Boolean) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val consents = remember { context.getConsents() }
 
     val delayMs = ENTER_DELAY
-    val isOptingIn = remember { mutableStateOf(true) }
+    var isOptingIn by remember { mutableStateOf(true) }
 
     Box(modifier = modifier) {
         LazyColumn(
@@ -143,6 +142,7 @@ internal fun ConsentScreen(
                         HeaderBodyComponent(
                             consent = it,
                             isOptingIn = isOptingIn,
+                            onOptIn = { isOptingIn = it },
                         )
                     }
                 }
@@ -167,7 +167,7 @@ internal fun ConsentScreen(
                         ),
             ) {
                 ElevatedButton(
-                    onClick = { onAgree(isOptingIn.value) },
+                    onClick = { onAgree(isOptingIn) },
                     shape = MaterialTheme.shapes.extraSmall,
                     modifier =
                         Modifier
@@ -210,7 +210,8 @@ internal fun Context.getConsents(): List<Consent> {
 @Composable
 private fun HeaderBodyComponent(
     consent: Consent,
-    isOptingIn: MutableState<Boolean>,
+    isOptingIn: Boolean,
+    onOptIn: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -267,10 +268,8 @@ private fun HeaderBodyComponent(
                         .align(Alignment.CenterHorizontally),
             ) {
                 CommonCheckbox(
-                    checked = isOptingIn.value,
-                    onCheckedChange = {
-                        isOptingIn.value = !isOptingIn.value
-                    },
+                    checked = isOptingIn,
+                    onCheckedChange = onOptIn,
                 )
 
                 Text(

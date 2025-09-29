@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:compose:lambda-param-in-effect")
+
 package com.flixclusive.feature.splashScreen
 
 import androidx.compose.animation.AnimatedContent
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,14 +25,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.flixclusive.core.network.util.Resource
-import com.flixclusive.core.ui.common.dialog.TextAlertDialog
-import com.flixclusive.core.ui.common.navigation.navigator.SplashScreenNavigator
-import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.data.configuration.UpdateStatus
+import com.flixclusive.core.database.entity.user.User
+import com.flixclusive.core.datastore.model.system.SystemPreferences
+import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.splashScreen.component.LoadingTag
 import com.flixclusive.feature.splashScreen.screen.consent.ConsentScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -54,20 +57,51 @@ internal fun SplashScreen(
     navigator: SplashScreenNavigator,
     viewModel: SplashScreenViewModel = hiltViewModel(),
 ) {
-    val context = LocalContext.current
-
     val systemPreferences by viewModel.systemPreferences.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val updateStatus by viewModel.appUpdateCheckerUseCase.updateStatus.collectAsStateWithLifecycle()
-    val configurationStatus by viewModel.configurationStatus.collectAsStateWithLifecycle()
     val userLoggedIn by viewModel.userLoggedIn.collectAsStateWithLifecycle()
     val noUsersFound by viewModel.noUsersFound.collectAsStateWithLifecycle()
 
+    SplashScreenContent(
+        systemPreferences = systemPreferences,
+        uiState = uiState,
+        userLoggedIn = userLoggedIn,
+        noUsersFound = noUsersFound,
+        updateSettings = viewModel::updateSettings,
+        openUpdateScreen = {
+            val updateInfo = uiState.newAppUpdateInfo ?: return@SplashScreenContent
+            navigator.openUpdateScreen(
+                newVersion = updateInfo.versionName,
+                updateInfo = updateInfo.changelogs,
+                updateUrl = updateInfo.updateUrl,
+                isComingFromSplashScreen = true,
+            )
+        },
+        openAddProfileScreen = navigator::openAddProfileScreen,
+        openProfilesScreen = navigator::openProfilesScreen,
+        openHomeScreen = navigator::openHomeScreen,
+    )
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun SplashScreenContent(
+    systemPreferences: SystemPreferences,
+    uiState: SplashScreenUiState,
+    userLoggedIn: User?,
+    noUsersFound: Boolean,
+    updateSettings: (suspend (t: SystemPreferences) -> SystemPreferences) -> Unit,
+    openUpdateScreen: () -> Unit,
+    openAddProfileScreen: (isInitializing: Boolean) -> Unit,
+    openProfilesScreen: (shouldPopBackStack: Boolean) -> Unit,
+    openHomeScreen: () -> Unit,
+) {
+    val context = LocalContext.current
+
     Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(horizontal = PaddingHorizontal),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = PaddingHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -85,7 +119,7 @@ internal fun SplashScreen(
                         sharedTransitionScope = this@SharedTransitionLayout,
                         modifier = Modifier.systemBarsPadding(),
                         onAgree = { isOptingIn ->
-                            viewModel.updateSettings {
+                            updateSettings {
                                 it.copy(
                                     isFirstTimeUserLaunch = false,
                                     isSendingCrashLogsAutomatically = isOptingIn,
@@ -110,80 +144,48 @@ internal fun SplashScreen(
                         if (!isLoading) {
                             delay(3000L)
                             isLoading = true
-                            delay(3000L)
+                            delay(1000L)
                             isDoneLoading = true
                         }
                     }
 
                     LaunchedEffect(
                         uiState,
-                        updateStatus,
-                        configurationStatus,
                         areAllPermissionsGranted,
                         isDoneLoading,
                         userLoggedIn,
                     ) {
                         if (areAllPermissionsGranted && isDoneLoading) {
                             val hasAutoUpdate = systemPreferences.isUsingAutoUpdateAppFeature
-                            val isAppOutdated = updateStatus is UpdateStatus.Outdated
-                            val isAppUpdated = updateStatus is UpdateStatus.UpToDate
-                            val updateHasErrors = updateStatus is UpdateStatus.Error
-                            val isConfigFetched = configurationStatus is Resource.Success
-                            val configHasErrors = configurationStatus is Resource.Failure
-                            val isHomeScreenReady = uiState is SplashScreenUiState.Okay
+                            val isAppOutdated = uiState.newAppUpdateInfo != null
+                            val updateHasErrors = uiState.error != null
                             val hasOldUserSession = userLoggedIn != null
 
-                            val isNavigatingToHome =
-                                ((isAppUpdated && hasAutoUpdate) || isConfigFetched) &&
-                                    isHomeScreenReady
-                            hasErrors = (updateHasErrors && hasAutoUpdate) || configHasErrors
+                            hasErrors = updateHasErrors && hasAutoUpdate
 
                             if (isAppOutdated && hasAutoUpdate) {
-                                with(viewModel.appUpdateCheckerUseCase) {
-                                    navigator.openUpdateScreen(
-                                        newVersion =
-                                            newVersion
-                                                ?: throw NullPointerException("App's new version is null"),
-                                        updateInfo = updateInfo,
-                                        updateUrl =
-                                            updateUrl
-                                                ?: throw NullPointerException("App's new update URL is null"),
-                                        isComingFromSplashScreen = true,
-                                    )
-                                }
+                                openUpdateScreen()
                             } else if (noUsersFound) {
-                                navigator.openAddProfileScreen(isInitializing = true)
+                                openAddProfileScreen(true)
                             } else if (!hasOldUserSession) {
-                                navigator.openProfilesScreen(shouldPopBackStack = true)
-                            } else if (isNavigatingToHome) {
-                                if (updateHasErrors) {
-                                    val message = "${context.getString(LocaleR.string.failed_to_get_app_updates)}: ${
-                                        updateStatus.errorMessage?.asString(context)
-                                    }"
-                                    context.showToast(message = message)
-                                }
-
-                                navigator.openHomeScreen()
+                                openProfilesScreen(true)
+                            } else if (!updateHasErrors && hasAutoUpdate) {
+                                openHomeScreen()
                             }
                         }
                     }
 
                     if (hasErrors) {
-                        val (title, errorMessage) =
-                            if (updateStatus is UpdateStatus.Error) {
-                                stringResource(LocaleR.string.failed_to_get_app_updates) to updateStatus.errorMessage
-                            } else {
-                                stringResource(LocaleR.string.something_went_wrong) to
-                                    (configurationStatus as Resource.Failure).error
-                            }
-
                         TextAlertDialog(
-                            label = title,
-                            description = errorMessage!!.asString(),
+                            title = stringResource(LocaleR.string.something_went_wrong),
+                            message = remember {
+                                uiState.error?.stackTraceToString()
+                                    ?: context.getString(LocaleR.string.default_error)
+                            },
                             confirmButtonLabel = stringResource(LocaleR.string.close_label),
                             dismissButtonLabel = null,
-                            onConfirm = navigator::openHomeScreen,
-                            onDismiss = navigator::openHomeScreen,
+                            onConfirm = openHomeScreen,
+                            onDismiss = openHomeScreen,
                         )
                     }
 
@@ -197,4 +199,54 @@ internal fun SplashScreen(
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun SplashScreenBasePreview() {
+    FlixclusiveTheme {
+        Surface {
+            SplashScreenContent(
+                systemPreferences = SystemPreferences(isFirstTimeUserLaunch = false),
+                uiState = SplashScreenUiState(isLoading = false),
+                userLoggedIn = null,
+                noUsersFound = true,
+                updateSettings = { },
+                openUpdateScreen = { },
+                openAddProfileScreen = { },
+                openProfilesScreen = { },
+                openHomeScreen = { },
+            )
+        }
+    }
+}
+
+@Preview(device = "spec:parent=pixel_5,orientation=landscape")
+@Composable
+private fun SplashScreenCompactLandscapePreview() {
+    SplashScreenBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=portrait")
+@Composable
+private fun SplashScreenMediumPortraitPreview() {
+    SplashScreenBasePreview()
+}
+
+@Preview(device = "spec:parent=medium_tablet,orientation=landscape")
+@Composable
+private fun SplashScreenMediumLandscapePreview() {
+    SplashScreenBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=portrait")
+@Composable
+private fun SplashScreenExtendedPortraitPreview() {
+    SplashScreenBasePreview()
+}
+
+@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160,orientation=landscape")
+@Composable
+private fun SplashScreenExtendedLandscapePreview() {
+    SplashScreenBasePreview()
 }

@@ -50,7 +50,6 @@ internal fun Context.getAllRequiredPermissions(): List<String> {
         requiredPermissions.add(Manifest.permission.POST_NOTIFICATIONS)
     }
 
-//    TODO: Uncomment when needed
     val isAndroid6AndAbove = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
     val isAndroid9AndBelow = Build.VERSION.SDK_INT <= Build.VERSION_CODES.P
     if (isAndroid6AndAbove && isAndroid9AndBelow) {
