@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.flixclusive.core.common.config.AppVersion
 import com.flixclusive.core.common.config.BuildType
 import com.flixclusive.core.common.config.CustomBuildConfig
 import com.flixclusive.core.database.entity.user.User
@@ -179,8 +180,7 @@ internal fun ListContent(
 
         item {
             ListContentFooter(
-                versionName = buildConfig.versionName,
-                commitVersion = buildConfig.commitHash,
+                version = buildConfig.version,
                 buildType = buildConfig.buildType,
             )
         }
@@ -189,24 +189,18 @@ internal fun ListContent(
 
 @Composable
 private fun ListContentFooter(
-    versionName: String,
-    commitVersion: String,
+    version: AppVersion,
     buildType: BuildType,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val version =
-        remember {
-            versionName + (if (buildType.isPreview) "-[$commitVersion]" else "")
+    val mode = remember {
+        when {
+            buildType.isDebug -> context.getString(LocaleR.string.debug)
+            buildType.isPreview -> context.getString(LocaleR.string.pre_release)
+            else -> context.getString(LocaleR.string.release)
         }
-    val mode =
-        remember {
-            when {
-                buildType.isDebug -> context.getString(LocaleR.string.debug)
-                buildType.isPreview -> context.getString(LocaleR.string.pre_release)
-                else -> context.getString(LocaleR.string.release)
-            }
-        }
+    }
 
     val defaultStyle =
         MaterialTheme.typography.headlineSmall
@@ -226,7 +220,7 @@ private fun ListContentFooter(
             text =
                 buildAnnotatedString {
                     withStyle(defaultStyle.toSpanStyle()) {
-                        append(version)
+                        append(version.toString())
                         append(" — ")
                         append(mode)
                     }

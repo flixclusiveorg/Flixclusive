@@ -72,8 +72,6 @@ class SettingsViewModelTest {
 
     private val testBuildConfig = CustomBuildConfig(
         versionName = "1.0.0",
-        versionCode = 10000,
-        commitHash = "abc123",
         buildType = BuildType.DEBUG,
         applicationId = "com.flixclusive.test",
         applicationName = "Flixclusive Test",

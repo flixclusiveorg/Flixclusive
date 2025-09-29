@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="failed_to_fetch_apk_url">There is a new update available, but failed to get the download url for the platform %1$s.</string>
+    <string name="failed_to_check_for_updates">Failed to check for updates: %1$s</string>
+</resources>

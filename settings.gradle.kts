@@ -23,6 +23,7 @@ include(":app")
 
 // Common features
 include(":feature:splash-screen")
+include(":feature:app-updates")
 
 // Mobile features
 include(":feature:mobile:film")
@@ -43,7 +44,7 @@ include(":feature:mobile:search")
 include(":feature:mobile:search-expanded")
 include(":feature:mobile:see-all")
 include(":feature:mobile:settings")
-include(":feature:mobile:update")
+include(":feature:mobile:app-updates")
 include(":feature:mobile:user-add")
 include(":feature:mobile:user-edit")
 
@@ -61,6 +62,7 @@ include(":domain-provider")
 include(":data-database")
 include(":data-provider")
 include(":data-tmdb")
+include(":data-app-updates")
 
 include(":core-common")
 include(":core-database")
@@ -74,8 +76,6 @@ include(":core-presentation-player")
 //include(":core-presentation-tv")
 include(":core-strings")
 include(":core-testing")
-
-include(":service")
 
 
 /**

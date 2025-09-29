@@ -7,11 +7,11 @@ package com.flixclusive.core.common.config
  * */
 enum class BuildType {
     DEBUG,
-    RELEASE,
+    STABLE,
     PREVIEW, // formerly known as "Pre-release"
     ;
 
     val isDebug: Boolean get() = this == DEBUG
-    val isRelease: Boolean get() = this == RELEASE
+    val isStable: Boolean get() = this == STABLE
     val isPreview: Boolean get() = this == PREVIEW
 }

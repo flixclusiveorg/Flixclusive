@@ -37,10 +37,8 @@ import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDe
 import com.flixclusive.feature.mobile.provider.add.AddProviderScreenNavigator
 import com.flixclusive.feature.mobile.provider.add.destinations.AddProviderScreenDestination
 import com.flixclusive.feature.mobile.provider.details.ProviderDetailsNavigator
-import com.flixclusive.feature.mobile.provider.details.destinations.ProviderDetailsScreenDestination
 import com.flixclusive.feature.mobile.provider.manage.ProviderManagerScreenNavigator
 import com.flixclusive.feature.mobile.provider.manage.destinations.ProviderManagerScreenDestination
-import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
 import com.flixclusive.feature.mobile.repository.details.destinations.RepositoryDetailsScreenDestination
 import com.flixclusive.feature.mobile.repository.manage.RepositoryManagerScreenNavigator
@@ -49,11 +47,10 @@ import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavigator
-import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
-import com.flixclusive.feature.mobile.update.UpdateDialogNavigator
-import com.flixclusive.feature.mobile.update.UpdateScreenNavigator
 import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
+import com.flixclusive.feature.mobile.update.dialog.UpdateDialogNavigator
+import com.flixclusive.feature.mobile.update.screen.UpdateScreenNavigator
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination

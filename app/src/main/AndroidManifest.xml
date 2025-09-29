@@ -54,11 +54,11 @@
 <!--            </intent-filter>-->
 <!--        </activity>-->
         <service
-            android:name=".service.update.AppUpdaterService"
+                android:name=".feature.app.updates.AppUpdaterService"
             android:foregroundServiceType="dataSync"
             android:exported="false" />
         <receiver
-            android:name=".service.update.AppUpdaterReceiver"
+                android:name=".feature.app.updates.AppUpdaterReceiver"
             android:exported="false" />
         <provider
             android:name="androidx.core.content.FileProvider"

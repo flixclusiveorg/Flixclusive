@@ -1,5 +1,4 @@
 import com.flixclusive.getCommitCount
-import com.flixclusive.getCommitSha
 
 plugins {
     alias(libs.plugins.flixclusive.application)
@@ -18,12 +17,11 @@ val appName = "Flixclusive"
 val appId = "com.flixclusive"
 val semanticVersion = "$versionMajor.$versionMinor.$versionPatch"
 
-val commitCount = getCommitCount()
-val previewVersionCode = "p$commitCount"
-val debugVersionCode = "d$commitCount"
+val commitCount by lazy { getCommitCount() }
+val previewVersionCode by lazy { "p$commitCount" }
+val debugVersionCode by lazy { "d$commitCount" }
 
 android {
-
     namespace = appId
 
     defaultConfig {
@@ -33,10 +31,6 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-
-        resValue("string", "app_name", appName)
-        buildConfigField("int", "BUILD_TYPE", "1") // 1 for release, 0 for debug
-        buildConfigField("String", "COMMIT_SHA", "\"${getCommitSha()}\"")
     }
 
     buildTypes {
@@ -44,7 +38,12 @@ android {
             applicationIdSuffix = ".debug"
 
             resValue("string", "app_name", "DEBUG-$appName")
-            buildConfigField("int", "BUILD_TYPE", "0") // 1 for release, 0 for debug
+            buildConfigField("int", "BUILD_TYPE", "0") // 0 for debug
+        }
+
+        release {
+            resValue("string", "app_name", appName)
+            buildConfigField("int", "BUILD_TYPE", "1") // 1 for stable
         }
 
         create("preview") {
@@ -109,7 +108,7 @@ dependencies {
     implementation(projects.feature.mobile.seeAll)
     implementation(projects.feature.mobile.settings)
     implementation(projects.feature.splashScreen)
-    implementation(projects.feature.mobile.update)
+    implementation(projects.feature.mobile.appUpdates)
     implementation(projects.feature.mobile.profiles)
     implementation(projects.feature.mobile.userAdd)
     implementation(projects.feature.mobile.userEdit)
@@ -127,7 +126,7 @@ dependencies {
 //     implementation(projects.domain)
     implementation(libs.stubs.model.provider)
 
-    implementation(projects.service)
+    implementation(projects.feature.appUpdates)
 
     implementation(libs.accompanist.navigation.animation)
     implementation(libs.coil.compose)
