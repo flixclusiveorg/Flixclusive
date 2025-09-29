@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import app.cash.turbine.test
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
@@ -12,8 +13,11 @@ import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.testing.provider.ProviderTestDefaults
+import com.flixclusive.data.downloads.model.DownloadState
+import com.flixclusive.data.downloads.model.DownloadStatus
 import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
 import io.mockk.coEvery
 import io.mockk.every
@@ -21,7 +25,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -40,6 +43,7 @@ class LoadProviderUseCaseImplTest {
     private lateinit var mockDataStoreManager: DataStoreManager
     private lateinit var mockProviderRepository: ProviderRepository
     private lateinit var mockProviderApiRepository: ProviderApiRepository
+    private lateinit var downloadFileUseCase: DownloadFileUseCase
     private lateinit var appDispatchers: AppDispatchers
     private lateinit var dummyProviderFile: File
     private val testDispatcher = StandardTestDispatcher()
@@ -49,6 +53,13 @@ class LoadProviderUseCaseImplTest {
         buildUrl = "https://raw.githubusercontent.com/flixclusiveorg/providers-template/builds/BasicDummyProvider.flx",
     )
 
+    private val DownloadState.Companion.ERROR
+        get() = DownloadState(
+            downloadId = "",
+            status = DownloadStatus.FAILED,
+            error = UiText.from("Error"),
+        )
+
     @Before
     fun setup() {
         context = InstrumentationRegistry.getInstrumentation().context
@@ -57,19 +68,17 @@ class LoadProviderUseCaseImplTest {
         mockDataStoreManager = mockk()
         mockProviderRepository = mockk(relaxed = true)
         mockProviderApiRepository = mockk(relaxed = true)
+        downloadFileUseCase = mockk(relaxed = true)
         appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
-
-        // Use real OkHttpClient for actual network calls
-        val client = OkHttpClient.Builder().build()
 
         loadProviderUseCase = LoadProviderUseCaseImpl(
             context = context,
-            client = client,
             userSessionDataStore = mockUserSessionDataStore,
             dataStoreManager = mockDataStoreManager,
             providerRepository = mockProviderRepository,
             providerApiRepository = mockProviderApiRepository,
             appDispatchers = appDispatchers,
+            downloadFile = downloadFileUseCase,
         )
 
         every { mockUserSessionDataStore.currentUserId } returns flowOf(testUserId)
@@ -96,13 +105,15 @@ class LoadProviderUseCaseImplTest {
                 buildUrl = "https://invalid-domain-that-does-not-exist-12345.com/invalid.flx",
             )
 
+            every { downloadFileUseCase.invoke(any()) } returns flowOf(DownloadState.ERROR)
+
             loadProviderUseCase(invalidMetadata).test {
                 val result = awaitItem()
                 expectThat(result).isA<LoadProviderResult.Failure>().and {
                     get { provider.id }.isEqualTo(invalidMetadata.id)
                     get { isFileDownloaded }.isEqualTo(false)
                 }
-                awaitComplete()
+                cancelAndIgnoreRemainingEvents()
             }
         }
 

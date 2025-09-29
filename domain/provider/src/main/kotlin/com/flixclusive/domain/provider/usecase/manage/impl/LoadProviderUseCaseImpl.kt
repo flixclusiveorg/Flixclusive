@@ -2,6 +2,7 @@ package com.flixclusive.domain.provider.usecase.manage.impl
 
 import android.content.Context
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.PROVIDERS_SETTINGS_FOLDER_NAME
 import com.flixclusive.core.datastore.UserSessionDataStore
@@ -14,6 +15,8 @@ import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.downloads.model.DownloadRequest
+import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
@@ -22,7 +25,6 @@ import com.flixclusive.domain.provider.util.DynamicResourceLoader
 import com.flixclusive.domain.provider.util.ProviderMigrator
 import com.flixclusive.domain.provider.util.ProviderMigrator.canMigrateSettingsFile
 import com.flixclusive.domain.provider.util.extensions.createFileForProvider
-import com.flixclusive.domain.provider.util.extensions.downloadProvider
 import com.flixclusive.domain.provider.util.extensions.getFileFromPath
 import com.flixclusive.domain.provider.util.extensions.getProviderInstance
 import com.flixclusive.model.provider.ProviderManifest
@@ -32,11 +34,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
 import java.io.File
 import java.io.FileNotFoundException
 import javax.inject.Inject
@@ -47,11 +49,11 @@ internal class LoadProviderUseCaseImpl
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
-        private val client: OkHttpClient,
         private val userSessionDataStore: UserSessionDataStore,
         private val dataStoreManager: DataStoreManager,
         private val providerRepository: ProviderRepository,
         private val providerApiRepository: ProviderApiRepository,
+        private val downloadFile: DownloadFileUseCase,
         private val appDispatchers: AppDispatchers,
     ) : LoadProviderUseCase {
         private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
@@ -84,10 +86,31 @@ internal class LoadProviderUseCaseImpl
 
                 val success = withContext(appDispatchers.io) {
                     try {
-                        client.downloadProvider(
-                            saveTo = file,
-                            buildUrl = metadata.buildUrl,
+                        val downloadRequest = DownloadRequest.from(
+                            url = metadata.buildUrl,
+                            destinationPath = file.parent!!,
+                            fileName = file.name,
                         )
+
+                        downloadFile(downloadRequest).collectLatest {
+                            val exception = it.error
+
+                            when {
+                                it.status.isFinished && exception != null -> {
+                                    send(
+                                        LoadProviderResult.Failure(
+                                            provider = metadata,
+                                            filePath = file.absolutePath,
+                                            error = ExceptionWithUiText(it.error),
+                                        ),
+                                    )
+                                }
+
+                                it.status.isFinished -> {
+                                    infoLog("Successfully downloaded provider: ${metadata.name} [${file.name}]")
+                                }
+                            }
+                        }
                     } catch (e: Throwable) {
                         errorLog("Failed to download provider: ${metadata.name} [${file.name}]")
                         errorLog(e)

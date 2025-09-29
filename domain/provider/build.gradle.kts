@@ -18,6 +18,8 @@ dependencies {
     implementation(projects.dataProvider)
     implementation(projects.dataTmdb)
     implementation(projects.dataDatabase)
+    implementation(projects.dataDownloads)
+    implementation(projects.domainDownloads)
     implementation(libs.pauseCoroutineDispatcher)
     implementation(libs.stubs.model.film)
     implementation(libs.stubs.provider)
