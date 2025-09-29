@@ -20,26 +20,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.common.adaptive.AdaptiveIcon
-import com.flixclusive.core.ui.common.navigation.navigator.PinAction
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.navigation.navigator.PinAction
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.add.OnBoardingScreen
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal class PinScreen(
-    private val navigator: AddUserScreenNavigator
+    private val navigator: AddUserScreenNavigator,
 ) : OnBoardingScreen {
     override val index: Int = 0
-    override val title: UiText
-        = UiText.StringResource(LocaleR.string.onboarding_profile_pin_title)
-    override val description: UiText
-        = UiText.StringResource(LocaleR.string.onboarding_profile_pin_description)
+    override val title: UiText = UiText.StringResource(LocaleR.string.onboarding_profile_pin_title)
+    override val description: UiText = UiText.StringResource(LocaleR.string.onboarding_profile_pin_description)
     override val canSkip = true
 
     @Composable
@@ -55,29 +51,27 @@ internal class PinScreen(
                 .height(
                     getAdaptiveDp(
                         dp = 65.dp,
-                        increaseBy = 18.dp
-                    )
-                )
-                .clickable {
+                        increaseBy = 18.dp,
+                    ),
+                ).clickable {
                     navigator.openUserPinScreen(PinAction.Setup)
-                }
-                .background(
+                }.background(
                     color = surface,
-                    shape = shape
-                )
+                    shape = shape,
+                ),
         ) {
             Icon(
                 painter = painterResource(UiCommonR.drawable.arrow_right_thin),
                 contentDescription = stringResource(LocaleR.string.choose_an_avatar),
                 modifier = Modifier
                     .padding(end = horizontalPadding)
-                    .align(Alignment.CenterEnd)
+                    .align(Alignment.CenterEnd),
             )
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(horizontalPadding * 2F),
                 modifier = Modifier
-                    .padding(start = horizontalPadding * 2F)
+                    .padding(start = horizontalPadding * 2F),
             ) {
                 AdaptiveIcon(
                     painter = painterResource(UiCommonR.drawable.pin_lock),
@@ -87,10 +81,7 @@ internal class PinScreen(
 
                 Text(
                     text = stringResource(LocaleR.string.pin_setup),
-                    style = getAdaptiveTextStyle(
-                        style = AdaptiveTextStyle.Emphasized,
-                        size = 16.sp
-                    )
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(size = 16.sp),
                 )
             }
         }

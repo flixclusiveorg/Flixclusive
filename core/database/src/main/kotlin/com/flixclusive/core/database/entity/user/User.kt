@@ -25,4 +25,8 @@ data class User(
     val image: Int,
     val pin: String? = null,
     val pinHint: String? = null,
-) : Serializable
+) : Serializable {
+    companion object {
+        val EMPTY = User(0, "", 0, null, null)
+    }
+}

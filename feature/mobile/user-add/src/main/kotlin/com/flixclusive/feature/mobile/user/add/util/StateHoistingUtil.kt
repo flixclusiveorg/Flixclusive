@@ -6,10 +6,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateOf
 import com.flixclusive.core.database.entity.user.User
-import com.flixclusive.core.ui.common.util.DummyDataForPreview.getDummyUser
 
 internal object StateHoistingUtil {
-    val LocalUserToAdd = compositionLocalOf { mutableStateOf(getDummyUser()) }
+    val LocalUserToAdd = compositionLocalOf { mutableStateOf(User(id = -1, name = "", image = 1)) }
 
     @Composable
     fun ProvideUserToAdd(

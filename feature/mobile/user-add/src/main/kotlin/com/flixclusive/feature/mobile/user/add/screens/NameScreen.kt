@@ -30,23 +30,21 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.common.util.toTextFieldValue
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.user.add.OnBoardingScreen
 import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.LocalUserToAdd
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal object NameScreen : OnBoardingScreen {
     override val index: Int = 0
@@ -70,7 +68,7 @@ internal object NameScreen : OnBoardingScreen {
         LaunchedEffect(name) {
             isError = name.text.isEmpty()
             userToAdd.value = userToAdd.value.copy(
-                name = name.text
+                name = name.text,
             )
         }
 
@@ -82,18 +80,14 @@ internal object NameScreen : OnBoardingScreen {
                 onDone = {
                     focusManager.clearFocus(true)
                     keyboardController?.hide()
-                }
+                },
             ),
             isError = isError,
             placeholder = {
                 Text(
                     text = stringResource(LocaleR.string.name),
-                    style = getAdaptiveTextStyle(
-                        style = TypographyStyle.Label,
-                        style = AdaptiveTextStyle.Emphasized,
-                    ).copy(
-                        color = LocalContentColor.current.copy(0.6f),
-                    )
+                    color = LocalContentColor.current.copy(0.6f),
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
                 )
             },
             trailingIcon = {
@@ -103,25 +97,26 @@ internal object NameScreen : OnBoardingScreen {
                     exit = scaleOut(),
                 ) {
                     IconButton(
-                        onClick = { name = "".toTextFieldValue() }
+                        onClick = { name = "".toTextFieldValue() },
                     ) {
                         Icon(
                             painter = painterResource(UiCommonR.drawable.outline_close_square),
                             contentDescription = stringResource(LocaleR.string.clear_text_button),
                             modifier = Modifier
-                                .size(getAdaptiveDp(20.dp, 8.dp))
+                                .size(getAdaptiveDp(20.dp, 8.dp)),
                         )
                     }
                 }
             },
-            textStyle = getAdaptiveTextStyle(
-                size = 16.sp,
-                increaseBy = 6.sp,
-                style = TypographyStyle.Body,
-                style = AdaptiveTextStyle.Normal,
-            ).copy(
-                textAlign = TextAlign.Start
-            ),
+            textStyle = MaterialTheme.typography.labelLarge
+                .copy(
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Start,
+                    color = LocalContentColor.current.copy(0.6f),
+                ).asAdaptiveTextStyle(
+                    size = 16.sp,
+                    increaseBy = 6.sp,
+                ),
             singleLine = true,
             shape = MaterialTheme.shapes.extraSmall,
             colors = TextFieldDefaults.colors(
@@ -136,9 +131,9 @@ internal object NameScreen : OnBoardingScreen {
                 .height(
                     getAdaptiveDp(
                         dp = 65.dp,
-                        increaseBy = 18.dp
-                    )
-                )
+                        increaseBy = 18.dp,
+                    ),
+                ),
         )
     }
 }
@@ -149,7 +144,7 @@ private fun NameScreenBasePreview() {
     FlixclusiveTheme {
         Surface(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxSize(),
         ) {
             NameScreen.Content()
         }

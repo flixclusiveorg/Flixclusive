@@ -24,26 +24,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.flixclusive.core.strings.UiText
-import com.flixclusive.core.ui.common.user.getAvatarResource
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.extensions.getAvatarResource
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
 import com.flixclusive.feature.mobile.user.add.OnBoardingScreen
 import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.LocalUserToAdd
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 internal class AvatarScreen(
-    private val navigator: AddUserScreenNavigator
+    private val navigator: AddUserScreenNavigator,
 ) : OnBoardingScreen {
     override val index: Int = 0
-    override val title: UiText
-        = UiText.StringResource(LocaleR.string.onboarding_profile_avatar_title)
-    override val description: UiText
-        = UiText.StringResource(LocaleR.string.onboarding_profile_avatar_description)
+    override val title: UiText = UiText.StringResource(LocaleR.string.onboarding_profile_avatar_title)
+    override val description: UiText = UiText.StringResource(LocaleR.string.onboarding_profile_avatar_description)
 
     @Composable
     override fun Content() {
@@ -64,20 +60,17 @@ internal class AvatarScreen(
                 .height(
                     getAdaptiveDp(
                         dp = 65.dp,
-                        increaseBy = 18.dp
-                    )
-                )
-                .background(
+                        increaseBy = 18.dp,
+                    ),
+                ).background(
                     color = surface,
-                    shape = shape
-                )
-                .graphicsLayer {
+                    shape = shape,
+                ).graphicsLayer {
                     clip = true
                     this.shape = shape
-                }
-                .clickable {
+                }.clickable {
                     navigator.openUserAvatarSelectScreen(user.image)
-                }
+                },
         ) {
             Box(
                 contentAlignment = Alignment.CenterStart,
@@ -89,16 +82,16 @@ internal class AvatarScreen(
                             Brush.horizontalGradient(
                                 0F to surface,
                                 0.4F to surface.copy(0.8F),
-                                1F to Color.Transparent
-                            )
+                                1F to Color.Transparent,
+                            ),
                         )
-                    }
+                    },
             ) {
                 Image(
                     painter = painterResource(avatarId),
                     contentDescription = stringResource(LocaleR.string.avatar_chosen_content_desc),
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
 
@@ -107,17 +100,14 @@ internal class AvatarScreen(
                 contentDescription = stringResource(LocaleR.string.choose_an_avatar),
                 modifier = Modifier
                     .padding(end = horizontalPadding)
-                    .align(Alignment.CenterEnd)
+                    .align(Alignment.CenterEnd),
             )
 
             Text(
                 text = stringResource(LocaleR.string.avatar_number, user.image + 1),
-                style = getAdaptiveTextStyle(
-                    style = AdaptiveTextStyle.Emphasized,
-                    size = 16.sp
-                ),
+                style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
                 modifier = Modifier
-                    .padding(start = horizontalPadding * 2F)
+                    .padding(start = horizontalPadding * 2F),
             )
         }
     }

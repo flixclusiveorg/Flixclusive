@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -22,16 +23,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.user.add.util.ModifierUtil.getHorizontalPadding
+import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
-import com.flixclusive.core.ui.common.R as UiCommonR
 
 @Composable
 internal fun AddUserScaffold(
@@ -43,7 +43,7 @@ internal fun AddUserScaffold(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxSize()
-            .systemBarsPadding()
+            .systemBarsPadding(),
     ) {
         content()
 
@@ -53,7 +53,7 @@ internal fun AddUserScaffold(
             exit = fadeOut(),
             modifier = Modifier
                 .padding(horizontal = getHorizontalPadding())
-                .align(Alignment.TopStart)
+                .align(Alignment.TopStart),
         ) {
             FloatingBackButton(onClick = onBack)
         }
@@ -63,7 +63,7 @@ internal fun AddUserScaffold(
 @Composable
 private fun FloatingBackButton(
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Box(
         modifier = modifier
@@ -71,28 +71,27 @@ private fun FloatingBackButton(
             .clip(MaterialTheme.shapes.small)
             .clickable {
                 onClick()
-            }
+            },
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(vertical = 6.dp, horizontal = 3.dp)
+                .padding(vertical = 6.dp, horizontal = 3.dp),
         ) {
             Icon(
                 painter = painterResource(UiCommonR.drawable.left_arrow),
                 contentDescription = stringResource(LocaleR.string.navigate_up),
                 modifier = Modifier
-                    .size(getAdaptiveDp(14.dp))
+                    .size(getAdaptiveDp(14.dp)),
             )
 
             Text(
                 text = stringResource(LocaleR.string.navigate_up),
-                style = getAdaptiveTextStyle(
-                    style = TypographyStyle.Label,
-                    style = AdaptiveTextStyle.NonEmphasized
-                )
+                style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
+                fontWeight = FontWeight.Normal,
+                color = LocalContentColor.current.copy(0.6f),
             )
         }
     }
@@ -107,7 +106,7 @@ private fun AddUserScaffoldBasePreview() {
                 AddUserScaffold(
                     hideBackButton = { false },
                     onBack = {},
-                    content = {}
+                    content = {},
                 )
             }
         }

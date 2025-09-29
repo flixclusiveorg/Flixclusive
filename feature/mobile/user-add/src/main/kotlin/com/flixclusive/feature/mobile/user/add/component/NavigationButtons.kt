@@ -17,21 +17,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun NavigationButtons(
-    modifier: Modifier = Modifier,
     canSkip: Boolean,
     disableNextButton: Boolean,
     isFinalStep: Boolean,
-    onNext: () -> Unit
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val adaptiveHeight = Modifier.height(getAdaptiveDp(45.dp, 10.dp))
     val weight by animateFloatAsState(
@@ -56,12 +55,9 @@ internal fun NavigationButtons(
             ) {
                 Text(
                     text = stringResource(LocaleR.string.skip),
-                    style = getAdaptiveTextStyle(
-                        style = TypographyStyle.Label,
-                        style = AdaptiveTextStyle.NonEmphasized,
-                    ).copy(
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(),
+                    fontWeight = FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -79,11 +75,8 @@ internal fun NavigationButtons(
             ) { state ->
                 Text(
                     text = if (state) stringResource(LocaleR.string.finish) else stringResource(LocaleR.string.next),
-                    style = getAdaptiveTextStyle(
-                        style = TypographyStyle.Label,
-                        style = AdaptiveTextStyle.Emphasized,
-                        increaseBy = 6.sp
-                    )
+                    style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(increaseBy = 6.sp),
+                    fontWeight = FontWeight.Black,
                 )
             }
         }

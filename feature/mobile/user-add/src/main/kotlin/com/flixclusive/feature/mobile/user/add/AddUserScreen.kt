@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -47,20 +49,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import coil3.imageLoader
-import com.flixclusive.core.presentation.theme.FlixclusiveTheme
-import com.flixclusive.core.ui.common.navigation.navargs.PinWithHintResult
-import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
-import com.flixclusive.core.ui.common.navigation.navigator.OpenPinScreenAction
-import com.flixclusive.core.ui.common.navigation.navigator.PinAction
-import com.flixclusive.core.ui.common.navigation.navigator.SelectAvatarAction
-import com.flixclusive.core.ui.common.navigation.navigator.StartHomeScreenAction
-import com.flixclusive.core.ui.common.util.CoilUtil.ProvideAsyncImagePreviewHandler
-import com.flixclusive.core.ui.common.util.CoilUtil.buildImageUrl
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveStylesUtil.getAdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveUiUtil.getAdaptiveDp
-import com.flixclusive.core.ui.common.util.adaptive.AdaptiveTextStyle
-import com.flixclusive.core.ui.common.util.adaptive.TypographyStyle
-import com.flixclusive.core.ui.common.util.noIndicationClickable
+import com.flixclusive.core.navigation.navargs.PinWithHintResult
+import com.flixclusive.core.navigation.navigator.PinAction
+import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
+import com.flixclusive.core.presentation.common.extensions.buildImageRequest
+import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
+import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.user.add.component.AddUserScaffold
 import com.flixclusive.feature.mobile.user.add.component.NavigationButtons
 import com.flixclusive.feature.mobile.user.add.screens.AvatarScreen
@@ -78,21 +74,15 @@ import com.flixclusive.core.strings.R as LocaleR
 
 private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 
-interface AddUserScreenNavigator :
-    GoBackAction,
-    StartHomeScreenAction,
-    OpenPinScreenAction,
-    SelectAvatarAction
-
 @Destination
 @Composable
-fun AddUserScreen(
+internal fun AddUserScreen(
     isInitializing: Boolean,
     navigator: AddUserScreenNavigator,
     avatarResultRecipient: OpenResultRecipient<Int>,
     pinResultRecipient: OpenResultRecipient<PinWithHintResult>,
+    viewModel: AddUserViewModel = hiltViewModel(),
 ) {
-    val viewModel = hiltViewModel<AddUserViewModel>()
     val context = LocalContext.current
     val orientation = LocalConfiguration.current.orientation
     val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -185,11 +175,10 @@ fun AddUserScreen(
                  * Enqueue next images
                  * */
                 LaunchedEffect(true) {
-                    val request =
-                        context.buildTMDBImageUrl(
-                            imagePath = images.getOrNull(currentScreen + 1),
-                            imageSize = "original",
-                        )
+                    val request = context.buildImageRequest(
+                        imagePath = images.getOrNull(currentScreen + 1),
+                        imageSize = "original",
+                    )
 
                     if (request != null) {
                         context.imageLoader.enqueue(request)
@@ -326,30 +315,19 @@ private fun AddUserPortraitScreen(
     ) {
         Text(
             text = screen.title.asString(),
-            style =
-                getAdaptiveTextStyle(
-                    size = 22.sp,
-                    increaseBy = 16.sp,
-                    style = TypographyStyle.Headline,
-                    style = AdaptiveTextStyle.Emphasized,
-                ),
-            modifier =
-                Modifier
-                    .padding(top = 20.dp),
+            style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(
+                size = 22.sp,
+                increaseBy = 16.sp,
+            ),
+            fontWeight = FontWeight.Black,
+            modifier = Modifier.padding(top = 20.dp),
         )
 
         Text(
             text = screen.description.asString(),
-            style =
-                getAdaptiveTextStyle(
-                    size = 14.sp,
-                    increaseBy = 10.sp,
-                    style = TypographyStyle.Body,
-                    style = AdaptiveTextStyle.NonEmphasized,
-                ),
-            modifier =
-                widthModifier
-                    .padding(bottom = getAdaptiveDp(10.dp)),
+            style = MaterialTheme.typography.bodyMedium.asAdaptiveTextStyle(increaseBy = 10.sp),
+            color = LocalContentColor.current.copy(0.6f),
+            modifier = widthModifier.padding(bottom = getAdaptiveDp(10.dp)),
         )
 
         Box(
@@ -373,13 +351,8 @@ private fun AddUserLandscapeScreen(
     ) {
         Text(
             text = screen.title.asString(),
-            style =
-                getAdaptiveTextStyle(
-                    size = 24.sp,
-                    increaseBy = 6.sp,
-                    style = TypographyStyle.Display,
-                    style = AdaptiveTextStyle.Emphasized,
-                ),
+            style = MaterialTheme.typography.headlineSmall.asAdaptiveTextStyle(increaseBy = 6.sp),
+            fontWeight = FontWeight.Black,
             modifier =
                 Modifier
                     .padding(top = 20.dp),
@@ -387,13 +360,8 @@ private fun AddUserLandscapeScreen(
 
         Text(
             text = screen.description.asString(),
-            style =
-                getAdaptiveTextStyle(
-                    size = 16.sp,
-                    increaseBy = 6.sp,
-                    style = TypographyStyle.Body,
-                    style = AdaptiveTextStyle.NonEmphasized,
-                ),
+            style = MaterialTheme.typography.bodyLarge.asAdaptiveTextStyle(increaseBy = 6.sp),
+            color = LocalContentColor.current.copy(0.6f),
             modifier =
                 Modifier
                     .padding(bottom = 10.dp),
@@ -444,12 +412,10 @@ private fun OnBoardingBackground(
     ) {
         ProvideAsyncImagePreviewHandler {
             AsyncImage(
-                model =
-                    LocalContext.current
-                        .buildTMDBImageUrl(
-                            imagePath = backgroundUrl,
-                            imageSize = "original",
-                        ),
+                model = LocalContext.current.buildImageRequest(
+                    imagePath = backgroundUrl,
+                    imageSize = "original",
+                ),
                 contentDescription = stringResource(LocaleR.string.on_boarding_background_content_desc),
                 contentScale = ContentScale.Crop,
                 modifier =
