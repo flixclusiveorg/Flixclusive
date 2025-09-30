@@ -52,7 +52,6 @@ import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.Provid
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.getLocalAnimatedVisibilityScope
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.getLocalSharedTransitionScope
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.UserAvatar
 import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.AVATARS_IMAGE_COUNT
@@ -60,6 +59,7 @@ import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.De
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveTextUnit
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.profiles.component.EditButton
 import com.flixclusive.feature.mobile.profiles.util.ModifierUtil.getPagerBlur
 import com.flixclusive.feature.mobile.profiles.util.ModifierUtil.scaleDownOnPress

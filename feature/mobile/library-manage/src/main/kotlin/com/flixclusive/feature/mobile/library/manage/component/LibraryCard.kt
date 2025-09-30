@@ -32,9 +32,9 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.feature.mobile.library.manage.LibraryListWithPreview
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster

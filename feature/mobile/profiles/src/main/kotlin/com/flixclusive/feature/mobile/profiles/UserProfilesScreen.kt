@@ -73,12 +73,12 @@ import com.flixclusive.core.navigation.navigator.PinAction
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideAnimatedVisibilityScope
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.profiles.util.UxUtil.getSlidingTransition
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.result.NavResult
@@ -87,14 +87,28 @@ import kotlinx.coroutines.launch
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Destination
+@Composable
+fun UserProfilesScreen(
+    navigator: UserProfilesScreenNavigator,
+    isFromSplashScreen: Boolean,
+    pinVerifyResultRecipient: OpenResultRecipient<PinVerificationResult>,
+) {
+    UserProfilesScreen(
+        navigator = navigator,
+        isFromSplashScreen = isFromSplashScreen,
+        pinVerifyResultRecipient = pinVerifyResultRecipient,
+        viewModel = hiltViewModel()
+    )
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun UserProfilesScreen(
     navigator: UserProfilesScreenNavigator,
     isFromSplashScreen: Boolean,
     pinVerifyResultRecipient: OpenResultRecipient<PinVerificationResult>,
-    viewModel: UserProfilesViewModel = hiltViewModel(),
+    viewModel: UserProfilesViewModel,
 ) {
     val profiles by viewModel.profiles.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -239,7 +253,7 @@ private fun UserProfilesScreenContent(
                                                 if (profile.pin.isNullOrEmpty()) {
                                                     onUseProfile(profile)
                                                 } else {
-                                                    navigator.openUserPinScreen(PinAction.Verify(profile.pin))
+                                                    navigator.openUserPinScreen(PinAction.Verify(profile.pin!!))
                                                 }
                                             },
                                         )
@@ -293,7 +307,7 @@ private fun UserProfilesScreenContent(
             errors = listOfErrors,
             onDismissRequest = {
                 if (uiState.isLoading) {
-                    context.showToast(context.getString(R.string.sheet_dismiss_disabled_on_provider_loading))
+                    context.showToast(context.getString(LocaleR.string.sheet_dismiss_disabled_on_provider_loading))
                     return@ProviderCrashBottomSheet
                 }
 

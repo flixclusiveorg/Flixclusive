@@ -3,7 +3,7 @@ package com.flixclusive.domain.provider.usecase.get.impl
 import app.cash.turbine.test
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.common.provider.MediaLinkResourceState
+import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.provider.repository.CacheKey
 import com.flixclusive.data.provider.repository.CachedLinks
@@ -199,7 +199,7 @@ class GetMediaLinksUseCaseImplTest {
             ).test {
                 // Cache hits should emit Success immediately without intermediate states
                 val result = awaitItem()
-                expectThat(result).isA<MediaLinkResourceState.Success>()
+                expectThat(result).isA<LoadLinksState.Success>()
                 awaitComplete()
             }
         }
@@ -222,7 +222,7 @@ class GetMediaLinksUseCaseImplTest {
             getMediaLinksUseCase(testTvShow, testEpisode, "test-provider").test {
                 // Cache hits should emit Success immediately without intermediate states
                 val result = awaitItem()
-                expectThat(result).isA<MediaLinkResourceState.Success>()
+                expectThat(result).isA<LoadLinksState.Success>()
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -249,7 +249,7 @@ class GetMediaLinksUseCaseImplTest {
             getMediaLinksUseCase(testMovie).test {
                 // TMDB flow should emit SuccessWithTrustedProviders immediately
                 val result = awaitItem()
-                expectThat(result).isA<MediaLinkResourceState.SuccessWithTrustedProviders>()
+                expectThat(result).isA<LoadLinksState.SuccessWithTrustedProviders>()
                 awaitComplete()
             }
 
@@ -288,8 +288,8 @@ class GetMediaLinksUseCaseImplTest {
             getMediaLinksUseCase(testMovie).test {
                 // TMDB failure should emit Error immediately
                 val result = awaitItem()
-                expectThat(result).isA<MediaLinkResourceState.Error>()
-                expectThat((result as MediaLinkResourceState.Error).message).isEqualTo(errorMessage)
+                expectThat(result).isA<LoadLinksState.Error>()
+                expectThat((result as LoadLinksState.Error).message).isEqualTo(errorMessage)
                 awaitComplete()
             }
         }
@@ -308,7 +308,7 @@ class GetMediaLinksUseCaseImplTest {
             ).test {
                 // Provider not found should emit Unavailable immediately
                 val result = awaitItem()
-                expectThat(result).isA<MediaLinkResourceState.Unavailable>()
+                expectThat(result).isA<LoadLinksState.Unavailable>()
                 awaitComplete()
             }
         }
@@ -344,12 +344,12 @@ class GetMediaLinksUseCaseImplTest {
             getMediaLinksUseCase(testMovie).test {
                 // This flow will emit: Fetching -> Extracting -> Success
                 // Skip intermediate states and verify final state
-                var currentState: MediaLinkResourceState
+                var currentState: LoadLinksState
                 do {
                     currentState = awaitItem()
                 } while (!currentState.isSuccess)
 
-                expectThat(currentState).isA<MediaLinkResourceState.Success>()
+                expectThat(currentState).isA<LoadLinksState.Success>()
                 awaitComplete()
             }
 
@@ -395,13 +395,13 @@ class GetMediaLinksUseCaseImplTest {
             getMediaLinksUseCase(testMovie).test {
                 // This flow will emit: Fetching -> Error
                 // Skip intermediate states and verify final state
-                var currentState: MediaLinkResourceState
+                var currentState: LoadLinksState
                 do {
                     currentState = awaitItem()
                 } while (currentState.isLoading)
 
-                expectThat(currentState).isA<MediaLinkResourceState.Error>()
-                expectThat((currentState as MediaLinkResourceState.Error).message).isEqualTo(errorMessage)
+                expectThat(currentState).isA<LoadLinksState.Error>()
+                expectThat((currentState as LoadLinksState.Error).message).isEqualTo(errorMessage)
                 awaitComplete()
             }
         }
@@ -425,12 +425,12 @@ class GetMediaLinksUseCaseImplTest {
             getMediaLinksUseCase(nonTmdbMovie).test {
                 // This flow will emit: Fetching -> Extracting -> Success
                 // Skip intermediate states and verify final state
-                var currentState: MediaLinkResourceState
+                var currentState: LoadLinksState
                 do {
                     currentState = awaitItem()
                 } while (!currentState.isError)
 
-                expectThat(currentState).isA<MediaLinkResourceState.Error>()
+                expectThat(currentState).isA<LoadLinksState.Error>()
                 awaitComplete()
             }
         }
@@ -463,12 +463,12 @@ class GetMediaLinksUseCaseImplTest {
             getMediaLinksUseCase(testMovie, providedWatchId, null, "test-provider").test {
                 // This flow will emit: Extracting -> Success (skips Fetching since watchId is provided)
                 // Skip intermediate states and verify final state
-                var currentState: MediaLinkResourceState
+                var currentState: LoadLinksState
                 do {
                     currentState = awaitItem()
                 } while (!currentState.isSuccess)
 
-                expectThat(currentState).isA<MediaLinkResourceState.Success>()
+                expectThat(currentState).isA<LoadLinksState.Success>()
                 awaitComplete()
             }
 
@@ -517,12 +517,12 @@ class GetMediaLinksUseCaseImplTest {
             getMediaLinksUseCase(testMovie).test {
                 // This flow will emit: Fetching -> Extracting -> Error
                 // Skip intermediate states and verify final state
-                var currentState: MediaLinkResourceState
+                var currentState: LoadLinksState
                 do {
                     currentState = awaitItem()
                 } while (currentState.isLoading)
 
-                expectThat(currentState).isA<MediaLinkResourceState.Error>()
+                expectThat(currentState).isA<LoadLinksState.Error>()
                 awaitComplete()
             }
         }

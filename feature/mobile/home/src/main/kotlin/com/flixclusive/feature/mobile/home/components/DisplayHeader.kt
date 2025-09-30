@@ -61,13 +61,13 @@ import com.flixclusive.core.presentation.common.theme.Colors
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.common.util.FilmFormatterUtil.formatAsRating
 import com.flixclusive.core.presentation.common.util.SolidColorPainter
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.extensions.isMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.feature.mobile.home.R
 import com.flixclusive.model.film.Film

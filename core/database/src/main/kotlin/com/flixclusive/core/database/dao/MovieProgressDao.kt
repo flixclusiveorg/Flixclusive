@@ -29,6 +29,10 @@ interface MovieProgressDao {
     suspend fun get(itemId: Long): MovieProgressWithMetadata?
 
     @Transaction
+    @Query("SELECT * FROM movies_watch_history WHERE filmId = :itemId AND ownerId = :ownerId")
+    suspend fun get(itemId: String, ownerId: Int): MovieProgressWithMetadata?
+
+    @Transaction
     @Query("SELECT * FROM movies_watch_history WHERE id = :itemId")
     fun getAsFlow(itemId: Long): Flow<MovieProgressWithMetadata?>
 

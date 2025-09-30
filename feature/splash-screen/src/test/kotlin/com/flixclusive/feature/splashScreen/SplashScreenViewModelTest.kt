@@ -75,7 +75,7 @@ class SplashScreenViewModelTest {
             viewModel.uiState.test {
                 val initialState = awaitItem()
                 expectThat(initialState.isLoading).isTrue()
-                expectThat(initialState.error).isNull()
+                expectThat(initialState.appUpdateError).isNull()
                 expectThat(initialState.newAppUpdateInfo).isNull()
             }
         }
@@ -96,7 +96,7 @@ class SplashScreenViewModelTest {
             viewModel.uiState.test {
                 val finalState = awaitItem()
                 expectThat(finalState.isLoading).isFalse()
-                expectThat(finalState.error).isNull()
+                expectThat(finalState.appUpdateError).isNull()
                 expectThat(finalState.newAppUpdateInfo).isEqualTo(appUpdateInfo)
             }
         }
@@ -112,7 +112,7 @@ class SplashScreenViewModelTest {
             viewModel.uiState.test {
                 val finalState = awaitItem()
                 expectThat(finalState.isLoading).isFalse()
-                expectThat(finalState.error).isNull()
+                expectThat(finalState.appUpdateError).isNull()
                 expectThat(finalState.newAppUpdateInfo).isNull()
             }
         }
@@ -129,7 +129,7 @@ class SplashScreenViewModelTest {
             viewModel.uiState.test {
                 val finalState = awaitItem()
                 expectThat(finalState.isLoading).isFalse()
-                expectThat(finalState.error).isEqualTo(testException)
+                expectThat(finalState.appUpdateError).isEqualTo(testException)
                 expectThat(finalState.newAppUpdateInfo).isNull()
             }
         }
@@ -221,7 +221,7 @@ class SplashScreenViewModelTest {
                 // Initial loading state
                 val loadingState = awaitItem()
                 expectThat(loadingState.isLoading).isTrue()
-                expectThat(loadingState.error).isNull()
+                expectThat(loadingState.appUpdateError).isNull()
                 expectThat(loadingState.newAppUpdateInfo).isNull()
 
                 testDispatcher.scheduler.advanceUntilIdle()
@@ -229,7 +229,7 @@ class SplashScreenViewModelTest {
                 // Final success state
                 val successState = awaitItem()
                 expectThat(successState.isLoading).isFalse()
-                expectThat(successState.error).isNull()
+                expectThat(successState.appUpdateError).isNull()
                 expectThat(successState.newAppUpdateInfo).isEqualTo(appUpdateInfo)
             }
         }
@@ -267,7 +267,7 @@ class SplashScreenViewModelTest {
         val defaultState = SplashScreenUiState()
 
         expectThat(defaultState.isLoading).isFalse()
-        expectThat(defaultState.error).isNull()
+        expectThat(defaultState.appUpdateError).isNull()
         expectThat(defaultState.newAppUpdateInfo).isNull()
     }
 
@@ -282,12 +282,12 @@ class SplashScreenViewModelTest {
 
         val customState = SplashScreenUiState(
             isLoading = true,
-            error = testException,
+            appUpdateError = testException,
             newAppUpdateInfo = appUpdateInfo,
         )
 
         expectThat(customState.isLoading).isTrue()
-        expectThat(customState.error).isEqualTo(testException)
+        expectThat(customState.appUpdateError).isEqualTo(testException)
         expectThat(customState.newAppUpdateInfo).isEqualTo(appUpdateInfo)
     }
 

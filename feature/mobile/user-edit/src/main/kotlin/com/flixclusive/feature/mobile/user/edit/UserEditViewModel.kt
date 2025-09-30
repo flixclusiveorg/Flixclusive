@@ -1,6 +1,8 @@
 package com.flixclusive.feature.mobile.user.edit
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.database.entity.user.User
@@ -13,10 +15,14 @@ import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.feature.mobile.user.edit.OnRemoveNavigationState.Companion.getStateIfUserIsLoggedIn
+import com.flixclusive.feature.mobile.user.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.flixclusive.core.strings.R as LocaleR
@@ -34,7 +40,18 @@ internal class UserEditViewModel
         private val providerRepository: ProviderRepository,
         private val unloadProvider: UnloadProviderUseCase,
         private val appDispatchers: AppDispatchers,
+        savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
+        private val navArgs = savedStateHandle.navArgs<UserEditScreenNavArgs>()
+
+        val user = userRepository.observeUser(navArgs.userId)
+            .filterNotNull()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = User.EMPTY,
+            )
+
         private val _onRemoveNavigationState = MutableSharedFlow<OnRemoveNavigationState>()
         val onRemoveNavigationState = _onRemoveNavigationState.asSharedFlow()
 

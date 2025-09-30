@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.common.components.FilmCover
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.feature.mobile.search.util.SearchUiUtils
 import com.flixclusive.model.provider.Catalog

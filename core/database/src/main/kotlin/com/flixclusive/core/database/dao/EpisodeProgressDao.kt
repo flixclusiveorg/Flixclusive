@@ -53,6 +53,20 @@ interface EpisodeProgressDao {
     @Query("SELECT * FROM series_watch_history WHERE id = :itemId")
     suspend fun get(itemId: Long): EpisodeProgressWithMetadata?
 
+    /**
+     * Gets only the furthest episode watched for the given series.
+     * */
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM series_watch_history
+        WHERE filmId = :itemId AND ownerId = :ownerId
+        ORDER BY seasonNumber DESC, episodeNumber DESC
+        LIMIT 1
+        """,
+    )
+    suspend fun get(itemId: String, ownerId: Int): EpisodeProgressWithMetadata?
+
     @Transaction
     @Query("SELECT * FROM series_watch_history WHERE id = :itemId")
     fun getAsFlow(itemId: Long): Flow<EpisodeProgressWithMetadata?>

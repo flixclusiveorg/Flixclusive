@@ -57,7 +57,6 @@ import kotlinx.coroutines.launch
 internal fun SearchExpandedScreen(
     navigator: SearchExpandedScreenNavigator,
     viewModel: SearchExpandedScreenViewModel = hiltViewModel(),
-    previewFilm: (Film) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -82,7 +81,7 @@ internal fun SearchExpandedScreen(
         deleteSearchHistoryItem = viewModel::deleteSearchHistoryItem,
         paginateItems = viewModel::paginateItems,
         openFilmScreen = navigator::openFilmScreen,
-        previewFilm = previewFilm,
+        previewFilm = navigator::previewFilm,
     )
 }
 
@@ -92,7 +91,7 @@ private fun SearchExpandedScreenContent(
     searchQuery: () -> String,
     showFilmTitles: Boolean,
     searchHistory: List<SearchHistory>,
-    searchResults: ImmutableSet<FilmSearchItem>,
+    searchResults: ImmutableSet<Film>,
     providerMetadataList: ImmutableList<ProviderMetadata>,
     filters: FilterList,
     onGoBack: () -> Unit,

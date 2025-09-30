@@ -1,6 +1,6 @@
 package com.flixclusive.domain.provider.usecase.get
 
-import com.flixclusive.core.common.provider.MediaLinkResourceState
+import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
@@ -19,12 +19,12 @@ interface GetMediaLinksUseCase {
      * @param movie The movie to obtain the links for.
      * @param providerId The ID of the provider to use to obtain the links.
      *
-     * @return A flow stream of [MediaLinkResourceState]
+     * @return A flow stream of [LoadLinksState]
      * */
     operator fun invoke(
         movie: Movie,
         providerId: String? = null,
-    ): Flow<MediaLinkResourceState>
+    ): Flow<LoadLinksState>
 
     /**
      * Obtains the links of the episode of a TV show.
@@ -33,13 +33,13 @@ interface GetMediaLinksUseCase {
      * @param episode The episode of the TV show to obtain the links for.
      * @param providerId The ID of the provider to use to obtain the links.
      *
-     * @return A flow stream of [MediaLinkResourceState]
+     * @return A flow stream of [LoadLinksState]
      * */
     operator fun invoke(
         tvShow: TvShow,
         episode: Episode,
         providerId: String? = null,
-    ): Flow<MediaLinkResourceState>
+    ): Flow<LoadLinksState>
 
     /**
      * Obtains the links of a film or episode using a cached watch ID.
@@ -50,12 +50,12 @@ interface GetMediaLinksUseCase {
      * If the film is a movie, this can be null.
      * @param providerId The ID of the provider to use to obtain the links.
      *
-     * @return A flow stream of [MediaLinkResourceState]
+     * @return A flow stream of [LoadLinksState]
      * */
     operator fun invoke(
         film: FilmMetadata,
         watchId: String,
         episode: Episode? = null,
         providerId: String? = null,
-    ): Flow<MediaLinkResourceState>
+    ): Flow<LoadLinksState>
 }

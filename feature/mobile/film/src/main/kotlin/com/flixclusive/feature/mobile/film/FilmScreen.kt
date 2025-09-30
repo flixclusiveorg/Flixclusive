@@ -51,7 +51,6 @@ import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.navigation.navargs.FilmScreenNavArgs
-import com.flixclusive.core.navigation.navargs.GenreWithBackdrop
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
@@ -290,17 +289,7 @@ private fun FilmScreenContent(
                                     metadata = metadata as FilmMetadata,
                                     watchProgress = watchProgress,
                                     isInLibrary = watchProgress != null,
-                                    onPlay = {
-                                        if (metadata is Movie) {
-                                            navigator.playMovie(metadata)
-                                        } else if (metadata is TvShow) {
-                                            val episodeProgress = watchProgress as? EpisodeProgress
-                                            val season = episodeProgress?.seasonNumber ?: 1
-                                            val episode = episodeProgress?.episodeNumber ?: 1
-
-                                            navigator.playEpisode(season, episode, metadata)
-                                        }
-                                    },
+                                    onPlay = { navigator.play(metadata) },
                                     onAddToLibrary = { isLibrarySheetOpen = true },
                                     onToggleDownload = {
                                         // TODO: Implement download
@@ -345,7 +334,7 @@ private fun FilmScreenContent(
                                     seasonToDisplay = seasonToDisplay,
                                     onSeasonChange = onSeasonChange,
                                     onRetry = onRetryFetchSeason,
-                                    onClick = { episode -> navigator.playEpisode(episode, metadata) },
+                                    onClick = { episode -> navigator.play(metadata, episode = episode) },
                                     longClickedEpisode = longClickedEpisode,
                                     onLongClick = { longClickedEpisode = it },
                                 )
@@ -381,7 +370,7 @@ private fun FilmScreenContent(
             onDownload = { /*TODO: Implement download feature*/ },
             onPlay = {
                 longClickedEpisode?.episode?.let {
-                    navigator.playEpisode(it, metadata as TvShow)
+                    navigator.play(metadata, episode = it)
                 }
             },
         )
@@ -433,26 +422,11 @@ private fun FilmScreenBasePreview() {
     val navigator = object : FilmScreenNavigator {
         override fun openFilmScreen(film: Film) {}
 
-        override fun openGenreScreen(genre: GenreWithBackdrop) {}
-
         override fun previewFilm(film: Film) {}
 
-        override fun playMovie(movie: Film) {}
-
-        override fun playEpisode(
-            episode: Episode,
-            film: Film,
-        ) {
-        }
+        override fun play(film: Film, episode: Episode?) {}
 
         override fun openProviderDetails(providerMetadata: ProviderMetadata) {}
-
-        override fun playEpisode(
-            season: Int,
-            episode: Int,
-            film: Film,
-        ) {
-        }
 
         override fun goBack() {}
     }

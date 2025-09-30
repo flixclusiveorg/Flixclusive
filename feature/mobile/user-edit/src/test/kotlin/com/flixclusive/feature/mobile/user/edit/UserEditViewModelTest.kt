@@ -19,6 +19,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -67,6 +68,7 @@ class UserEditViewModelTest {
         appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
 
         every { userSessionManager.currentUser } returns MutableStateFlow(null)
+        every { userRepository.observeUser(any()) } returns flowOf(null)
 
         viewModel = UserEditViewModel(
             dataStoreManager = dataStoreManager,
@@ -78,6 +80,9 @@ class UserEditViewModelTest {
             providerRepository = providerRepository,
             unloadProvider = unloadProvider,
             appDispatchers = appDispatchers,
+            savedStateHandle = mockk(relaxed = true) {
+                every { get<Int?>("userId") } returns loggedInUser.id
+            }
         )
     }
 
@@ -90,6 +95,7 @@ class UserEditViewModelTest {
     fun `onRemoveUser should remove user and emit GoBack when user is not logged in`() =
         runTest(testDispatcher) {
             every { userSessionManager.currentUser } returns MutableStateFlow(null)
+            every { userRepository.observeUser(any()) } returns flowOf(testUser)
             coEvery { dataStoreManager.deleteAllUserRelatedFiles(any()) } returns Unit
             coEvery { searchHistoryRepository.clearAll(any()) } returns Unit
             coEvery { watchProgressRepository.removeAll(any()) } returns Unit
@@ -116,6 +122,7 @@ class UserEditViewModelTest {
             val providerMetadata = DummyDataForPreview.getDummyProviderMetadata()
 
             every { userSessionManager.currentUser } returns MutableStateFlow(loggedInUser)
+            every { userRepository.observeUser(any()) } returns flowOf(loggedInUser)
             every { providerRepository.getProviders() } returns listOf(providerMetadata)
             coEvery { unloadProvider(any(), any()) } returns Unit
             coEvery { userSessionManager.signOut() } returns Unit
@@ -146,6 +153,7 @@ class UserEditViewModelTest {
     fun `onRemoveUser should not execute if already active`() =
         runTest(testDispatcher) {
             every { userSessionManager.currentUser } returns MutableStateFlow(null)
+            every { userRepository.observeUser(any()) } returns flowOf(loggedInUser)
             coEvery { dataStoreManager.deleteAllUserRelatedFiles(any()) } returns Unit
             coEvery { searchHistoryRepository.clearAll(any()) } returns Unit
             coEvery { watchProgressRepository.removeAll(any()) } returns Unit
@@ -292,6 +300,7 @@ class UserEditViewModelTest {
     fun `clearProviders should not execute when user is not logged in`() =
         runTest(testDispatcher) {
             every { userSessionManager.currentUser } returns MutableStateFlow(null)
+            every { userRepository.observeUser(any()) } returns flowOf(testUser)
             coEvery { dataStoreManager.deleteAllUserRelatedFiles(any()) } returns Unit
             coEvery { searchHistoryRepository.clearAll(any()) } returns Unit
             coEvery { watchProgressRepository.removeAll(any()) } returns Unit
@@ -309,6 +318,7 @@ class UserEditViewModelTest {
     fun `signOut should not execute when user is not logged in`() =
         runTest(testDispatcher) {
             every { userSessionManager.currentUser } returns MutableStateFlow(null)
+            every { userRepository.observeUser(any()) } returns flowOf(testUser)
             coEvery { dataStoreManager.deleteAllUserRelatedFiles(any()) } returns Unit
             coEvery { searchHistoryRepository.clearAll(any()) } returns Unit
             coEvery { watchProgressRepository.removeAll(any()) } returns Unit

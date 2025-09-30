@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
@@ -47,6 +46,7 @@ import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.extensions.isExpanded
 import com.flixclusive.core.presentation.mobile.extensions.isMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.feature.mobile.provider.add.R
 import com.flixclusive.feature.mobile.provider.add.RepositoryWithError

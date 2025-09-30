@@ -36,12 +36,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import com.flixclusive.core.presentation.mobile.rememberPipMode
 import com.flixclusive.core.ui.common.navigation.navigator.GoBackAction
 import com.flixclusive.core.ui.common.util.getActivity
 import com.flixclusive.core.ui.common.util.noIndicationClickable
 import com.flixclusive.core.ui.mobile.ListenKeyEvents
-import com.flixclusive.core.presentation.mobile.rememberPipMode
-import com.flixclusive.core.presentation.mobile.extensions.toggleSystemBars
 import com.flixclusive.core.ui.player.PLAYER_CONTROL_VISIBILITY_TIMEOUT
 import com.flixclusive.core.ui.player.PlayerScreenNavArgs
 import com.flixclusive.core.ui.player.PlayerSnackbarMessageType

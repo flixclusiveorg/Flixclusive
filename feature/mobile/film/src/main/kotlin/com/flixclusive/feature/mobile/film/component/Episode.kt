@@ -72,12 +72,12 @@ import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.Provid
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.getLocalAnimatedVisibilityScope
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.getLocalSharedTransitionScope
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.domain.provider.model.EpisodeWithProgress

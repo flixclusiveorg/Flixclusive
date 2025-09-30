@@ -84,6 +84,7 @@ private val FabButtonSize = 56.dp
 
 private fun Context.getHelpGuideTexts() = resources.getStringArray(LocaleR.array.providers_screen_help)
 
+@Destination
 @Composable
 internal fun ProviderManagerScreen(
     navigator: ProviderManagerScreenNavigator,

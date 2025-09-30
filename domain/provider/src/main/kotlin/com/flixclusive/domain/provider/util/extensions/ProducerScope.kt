@@ -1,22 +1,22 @@
 package com.flixclusive.domain.provider.util.extensions
 
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.common.provider.MediaLinkResourceState
+import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.domain.provider.R
 import kotlinx.coroutines.channels.ProducerScope
 
 /**
  * Sends a message on the [ProducerScope] indicating that the episode is being fetched.
  * */
-fun ProducerScope<MediaLinkResourceState>.sendFetchingEpisodeMessage() =
-    trySend(MediaLinkResourceState.Fetching(UiText.StringResource(R.string.fetching_episode_message)))
+fun ProducerScope<LoadLinksState>.sendFetchingEpisodeMessage() =
+    trySend(LoadLinksState.Fetching(UiText.StringResource(R.string.fetching_episode_message)))
 
 /**
  * Sends a message on the [ProducerScope] indicating that the film is being fetched from a specific provider.
  * */
-fun ProducerScope<MediaLinkResourceState>.sendFetchingFilmMessage(provider: String) =
+fun ProducerScope<LoadLinksState>.sendFetchingFilmMessage(provider: String) =
     trySend(
-        MediaLinkResourceState.Fetching(
+        LoadLinksState.Fetching(
             UiText.StringResource(
                 R.string.fetching_from_provider_format,
                 provider,
@@ -30,7 +30,7 @@ fun ProducerScope<MediaLinkResourceState>.sendFetchingFilmMessage(provider: Stri
  * @param provider the name of the provider from which links are being extracted
  * @param isOnWebView indicates whether the extraction is happening on a web view
  * */
-fun ProducerScope<MediaLinkResourceState>.sendExtractingLinksMessage(
+fun ProducerScope<LoadLinksState>.sendExtractingLinksMessage(
     provider: String,
     isOnWebView: Boolean = false,
 ) {
@@ -42,7 +42,7 @@ fun ProducerScope<MediaLinkResourceState>.sendExtractingLinksMessage(
         }
 
     trySend(
-        MediaLinkResourceState.Extracting(
+        LoadLinksState.Extracting(
             UiText.StringResource(messageFormat, provider),
         ),
     )

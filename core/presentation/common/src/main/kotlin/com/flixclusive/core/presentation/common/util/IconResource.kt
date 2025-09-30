@@ -21,7 +21,7 @@ class IconResource private constructor(
      * @return The Compose Painter representing the icon resource.
      */
     @Composable
-    fun asPainterResource(): Painter {
+    fun asPainter(): Painter {
         drawableId?.let {
             return painterResource(id = it)
         }
@@ -38,7 +38,7 @@ class IconResource private constructor(
          * @param drawableId The drawable resource ID.
          * @return The created IconResource.
          */
-        fun fromDrawableResource(@DrawableRes drawableId: Int): IconResource {
+        fun from(@DrawableRes drawableId: Int): IconResource {
             return IconResource(drawableId = drawableId)
         }
 
@@ -47,7 +47,7 @@ class IconResource private constructor(
          * @param imageVector The image vector.
          * @return The created IconResource.
          */
-        fun fromImageVector(imageVector: ImageVector?): IconResource {
+        fun from(imageVector: ImageVector?): IconResource {
             return IconResource(imageVector = imageVector)
         }
     }

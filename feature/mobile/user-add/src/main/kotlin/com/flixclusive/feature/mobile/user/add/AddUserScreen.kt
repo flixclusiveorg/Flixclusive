@@ -54,7 +54,7 @@ import com.flixclusive.core.navigation.navigator.PinAction
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.feature.mobile.user.add.component.AddUserScaffold
@@ -76,12 +76,28 @@ private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 
 @Destination
 @Composable
+fun AddUserScreen(
+    isInitializing: Boolean,
+    navigator: AddUserScreenNavigator,
+    avatarResultRecipient: OpenResultRecipient<Int>,
+    pinResultRecipient: OpenResultRecipient<PinWithHintResult>,
+) {
+    AddUserScreen(
+        isInitializing = isInitializing,
+        navigator = navigator,
+        avatarResultRecipient = avatarResultRecipient,
+        pinResultRecipient = pinResultRecipient,
+        viewModel = hiltViewModel()
+    )
+}
+
+@Composable
 internal fun AddUserScreen(
     isInitializing: Boolean,
     navigator: AddUserScreenNavigator,
     avatarResultRecipient: OpenResultRecipient<Int>,
     pinResultRecipient: OpenResultRecipient<PinWithHintResult>,
-    viewModel: AddUserViewModel = hiltViewModel(),
+    viewModel: AddUserViewModel,
 ) {
     val context = LocalContext.current
     val orientation = LocalConfiguration.current.orientation

@@ -56,7 +56,6 @@ internal fun SeeAllScreen(
     navigator: SeeAllScreenNavigator,
     args: SeeAllScreenNavArgs,
     viewModel: SeeAllViewModel = hiltViewModel(),
-    previewFilm: (Film) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val showFilmTitles by viewModel.showFilmTitles.collectAsStateWithLifecycle()
@@ -78,7 +77,7 @@ internal fun SeeAllScreen(
         catalog = args.catalog,
         searchQuery = { searchQuery },
         onQueryChange = viewModel::onQueryChange,
-        previewFilm = previewFilm,
+        previewFilm = navigator::previewFilm,
         onGoBack = navigator::goBack,
         openFilmScreen = navigator::openFilmScreen,
         onToggleSearchBar = viewModel::onToggleSearch,

@@ -51,12 +51,12 @@ import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.presentation.common.extensions.ifElse
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.extensions.isMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.film.R
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.FilmReleaseStatus
@@ -105,8 +105,8 @@ internal fun HeaderButtons(
         ExtraButton(
             inactiveDrawable = if (isCompactOrMedium) R.drawable.add else UiCommonR.drawable.round_add_24,
             activeDrawable = if (isCompactOrMedium) R.drawable.added else UiCommonR.drawable.check,
-            inactiveLabel = R.string.add,
-            activeLabel = R.string.in_library,
+            inactiveLabel = LocaleR.string.add,
+            activeLabel = LocaleR.string.in_library,
             state = isInLibrary,
             onClick = onAddToLibrary,
         )

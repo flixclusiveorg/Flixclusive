@@ -47,7 +47,6 @@ import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.common.provider.extensions.toOwnerAndRepository
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.R
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
@@ -58,6 +57,7 @@ import com.flixclusive.core.presentation.mobile.extensions.isExpanded
 import com.flixclusive.core.presentation.mobile.extensions.isMedium
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.drawables.R as UiCommonR
 

@@ -56,10 +56,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getDummyProviderMetadata
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
 import com.flixclusive.domain.provider.testing.model.ProviderTestCaseResult
 import com.flixclusive.domain.provider.testing.model.ProviderTestResult

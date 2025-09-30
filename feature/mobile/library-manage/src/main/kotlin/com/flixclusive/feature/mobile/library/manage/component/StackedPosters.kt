@@ -46,12 +46,12 @@ import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.common.components.ProvideAsyncImagePreviewHandler
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.Placeholder
 import com.flixclusive.core.presentation.mobile.extensions.boxShadow
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster
 import com.flixclusive.feature.mobile.library.manage.PreviewPoster.Companion.toPreviewPoster
 import com.flixclusive.core.drawables.R as UiCommonR

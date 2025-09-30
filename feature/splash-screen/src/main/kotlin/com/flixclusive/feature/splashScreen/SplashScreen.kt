@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,13 +32,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.datastore.model.system.SystemPreferences
+import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.TextAlertDialog
+import com.flixclusive.core.presentation.mobile.components.provider.ProviderCrashBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.splashScreen.component.LoadingTag
 import com.flixclusive.feature.splashScreen.screen.consent.ConsentScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlinx.coroutines.delay
 import com.flixclusive.core.strings.R as LocaleR
 
 internal const val APP_TAG_KEY = "tag_image"
@@ -80,6 +82,8 @@ internal fun SplashScreen(
         openAddProfileScreen = navigator::openAddProfileScreen,
         openProfilesScreen = navigator::openProfilesScreen,
         openHomeScreen = navigator::openHomeScreen,
+        onConsumeProviderErrors = viewModel::onConsumeProviderErrors,
+        onConsumeAppUpdateError = viewModel::onConsumeAppUpdateError,
     )
 }
 
@@ -94,6 +98,8 @@ private fun SplashScreenContent(
     openUpdateScreen: () -> Unit,
     openAddProfileScreen: (isInitializing: Boolean) -> Unit,
     openProfilesScreen: (shouldPopBackStack: Boolean) -> Unit,
+    onConsumeProviderErrors: () -> Unit,
+    onConsumeAppUpdateError: () -> Unit,
     openHomeScreen: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -128,40 +134,28 @@ private fun SplashScreenContent(
                         },
                     )
                 } else {
-                    var hasErrors by rememberSaveable { mutableStateOf(false) }
-                    var isLoading by rememberSaveable { mutableStateOf(false) }
-                    var isDoneLoading by rememberSaveable { mutableStateOf(false) }
                     val requiredPermissions = remember { context.getAllRequiredPermissions() }
                     var areAllPermissionsGranted by rememberSaveable { mutableStateOf(requiredPermissions.isEmpty()) }
+                    val hasAppUpdateErrors = uiState.appUpdateError != null &&
+                        systemPreferences.isUsingAutoUpdateAppFeature
 
                     LoadingTag(
-                        isLoading = isLoading,
+                        isLoading = uiState.isLoading,
                         animatedScope = this@AnimatedContent,
                         sharedTransitionScope = this@SharedTransitionLayout,
                     )
 
-                    LaunchedEffect(true) {
-                        if (!isLoading) {
-                            delay(3000L)
-                            isLoading = true
-                            delay(1000L)
-                            isDoneLoading = true
-                        }
-                    }
-
                     LaunchedEffect(
                         uiState,
                         areAllPermissionsGranted,
-                        isDoneLoading,
                         userLoggedIn,
                     ) {
-                        if (areAllPermissionsGranted && isDoneLoading) {
+                        if (areAllPermissionsGranted && !uiState.isLoading) {
                             val hasAutoUpdate = systemPreferences.isUsingAutoUpdateAppFeature
                             val isAppOutdated = uiState.newAppUpdateInfo != null
-                            val updateHasErrors = uiState.error != null
                             val hasOldUserSession = userLoggedIn != null
-
-                            hasErrors = updateHasErrors && hasAutoUpdate
+                            val hasErrors = uiState.appUpdateError != null ||
+                                uiState.providerErrors.isNotEmpty()
 
                             if (isAppOutdated && hasAutoUpdate) {
                                 openUpdateScreen()
@@ -169,27 +163,47 @@ private fun SplashScreenContent(
                                 openAddProfileScreen(true)
                             } else if (!hasOldUserSession) {
                                 openProfilesScreen(true)
-                            } else if (!updateHasErrors && hasAutoUpdate) {
+                            } else if (!hasErrors) {
                                 openHomeScreen()
                             }
                         }
                     }
 
-                    if (hasErrors) {
+                    if (hasAppUpdateErrors && !uiState.isLoading) {
                         TextAlertDialog(
                             title = stringResource(LocaleR.string.something_went_wrong),
-                            message = remember {
-                                uiState.error?.stackTraceToString()
-                                    ?: context.getString(LocaleR.string.default_error)
-                            },
+                            message = remember { uiState.appUpdateError!!.stackTraceToString() },
                             confirmButtonLabel = stringResource(LocaleR.string.close_label),
                             dismissButtonLabel = null,
-                            onConfirm = openHomeScreen,
-                            onDismiss = openHomeScreen,
+                            onConfirm = onConsumeAppUpdateError,
+                            onDismiss = onConsumeAppUpdateError,
                         )
                     }
 
-                    if (!areAllPermissionsGranted && isDoneLoading) {
+                    if (uiState.providerErrors.isNotEmpty() && !uiState.isLoading) {
+                        val listOfErrors by remember {
+                            derivedStateOf {
+                                uiState.providerErrors.values.toList()
+                            }
+                        }
+
+                        ProviderCrashBottomSheet(
+                            isLoading = uiState.isInitializingProviders,
+                            errors = listOfErrors,
+                            onDismissRequest = {
+                                if (uiState.isInitializingProviders) {
+                                    context.showToast(
+                                        context.getString(LocaleR.string.sheet_dismiss_disabled_on_provider_loading),
+                                    )
+                                    return@ProviderCrashBottomSheet
+                                }
+
+                                onConsumeProviderErrors()
+                            },
+                        )
+                    }
+
+                    if (!areAllPermissionsGranted) {
                         PermissionsRequester(
                             permissions = requiredPermissions,
                             onGrantPermissions = { areAllPermissionsGranted = true },
@@ -216,6 +230,8 @@ private fun SplashScreenBasePreview() {
                 openAddProfileScreen = { },
                 openProfilesScreen = { },
                 openHomeScreen = { },
+                onConsumeProviderErrors = { },
+                onConsumeAppUpdateError = { },
             )
         }
     }

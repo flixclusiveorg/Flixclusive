@@ -44,12 +44,12 @@ import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.Provid
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.getLocalAnimatedVisibilityScope
 import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.getLocalSharedTransitionScope
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.UserAvatar
 import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.DefaultAvatarSize
 import com.flixclusive.core.presentation.mobile.components.getUserBackgroundPalette
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable

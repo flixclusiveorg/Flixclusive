@@ -19,12 +19,11 @@ import com.flixclusive.core.presentation.mobile.components.film.FilmCard
 import com.flixclusive.core.presentation.mobile.components.film.FilmCardPlaceholder
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
 import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmSearchItem
 import kotlinx.collections.immutable.ImmutableSet
 
 @Composable
 internal fun SearchFilmsGridView(
-    searchResults: ImmutableSet<FilmSearchItem>,
+    searchResults: ImmutableSet<Film>,
     pagingState: PagingDataState,
     error: UiText?,
     scaffoldPadding: PaddingValues,

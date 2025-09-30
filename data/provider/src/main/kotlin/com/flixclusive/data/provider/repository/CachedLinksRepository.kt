@@ -47,7 +47,6 @@ data class CachedLinks(
     val watchId: String = "",
     val providerId: String = "",
     val thumbnail: String? = null,
-    val episode: Episode? = null,
     val streams: List<Stream> = emptyList(),
     val subtitles: List<Subtitle> = emptyList(),
 ) : Serializable {
@@ -57,8 +56,7 @@ data class CachedLinks(
         if (other is CachedLinks) {
             return watchId == other.watchId &&
                 providerId == other.providerId &&
-                thumbnail == other.thumbnail &&
-                episode == other.episode
+                thumbnail == other.thumbnail
         }
 
         return super.equals(other)

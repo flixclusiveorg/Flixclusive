@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="change_view">Change view</string>
-    <string name="sheet_dismiss_disabled_on_provider_loading">Cannot dismiss while providers are loading</string>
 </resources>

@@ -19,8 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.extensions.ifElse
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.provider.details.util.ProviderDetailsUiCommon.SUB_LABEL_SIZE
 import com.flixclusive.model.provider.Author
 import com.flixclusive.core.drawables.R as UiCommonR

@@ -113,7 +113,15 @@ internal class UserProfilesViewModel
                         }
                     }
                 }.onCompletion {
-                    updateProviders(providers)
+                    val providerPrefs =
+                        dataStoreManager.getUserPrefs(
+                            key = UserPreferences.PROVIDER_PREFS_KEY,
+                            type = ProviderPreferences::class
+                        ).first()
+
+                    if (providerPrefs.isAutoUpdateEnabled) {
+                        updateProviders(providers)
+                    }
 
                     _uiState.update {
                         it.copy(

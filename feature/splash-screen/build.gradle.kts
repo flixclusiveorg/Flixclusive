@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.coreNavigation)
     implementation(projects.dataDatabase)
     implementation(projects.dataAppUpdates)
+    implementation(projects.domainProvider)
 
     implementation(libs.accompanist.permissions)
     implementation(libs.compose.animation)
@@ -30,6 +31,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.lifecycle.runtimeCompose)
+    implementation(libs.stubs.model.provider)
 
     testImplementation(projects.coreTesting)
 }

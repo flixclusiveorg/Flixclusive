@@ -21,9 +21,7 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -33,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.navigation.navargs.PinWithHintResult
@@ -55,29 +54,58 @@ import com.ramcosta.composedestinations.result.ResultRecipient
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-@Destination
+@Destination(
+    navArgsDelegate = UserEditScreenNavArgs::class
+)
 @Composable
 internal fun UserEditScreen(
     navigator: UserEditScreenNavigator,
     avatarResultRecipient: ResultRecipient<UserAvatarSelectScreenDestination, Int>,
     pinSetupResultRecipient: ResultRecipient<PinSetupScreenDestination, PinWithHintResult>,
     pinRemoveResultRecipient: ResultRecipient<PinVerifyScreenDestination, PinVerificationResult>,
-    userArg: User,
     viewModel: UserEditViewModel = hiltViewModel(),
 ) {
-    var user by remember { mutableStateOf(userArg) }
+    val user by viewModel.user.collectAsStateWithLifecycle()
 
     LaunchedEffect(true) {
         viewModel.onRemoveNavigationState
             .collect {
-                if (it == OnRemoveNavigationState.PopToRoot) {
-                    navigator.openProfilesScreen(shouldPopBackStack = true)
-                } else {
-                    navigator.goBack()
+                when (it) {
+                    OnRemoveNavigationState.PopToRoot -> navigator.openProfilesScreen(true)
+                    else -> navigator.goBack()
                 }
             }
     }
 
+    UserEditScreenContent(
+        user = user,
+        onEditUser = viewModel::onEditUser,
+        onRemoveUser = viewModel::onRemoveUser,
+        onClearSearchHistory = viewModel::onClearSearchHistory,
+        onClearLibraries = viewModel::onClearLibraries,
+        openUserAvatarSelectScreen = navigator::openUserAvatarSelectScreen,
+        goBack = navigator::goBack,
+        openUserPinScreen = navigator::openUserPinScreen,
+        avatarResultRecipient = avatarResultRecipient,
+        pinSetupResultRecipient = pinSetupResultRecipient,
+        pinRemoveResultRecipient = pinRemoveResultRecipient,
+    )
+}
+
+@Composable
+private fun UserEditScreenContent(
+    user: User,
+    onEditUser: (User) -> Unit,
+    onRemoveUser: (userId: Int) -> Unit,
+    onClearSearchHistory: (userId: Int) -> Unit,
+    onClearLibraries: (userId: Int, libraries: List<Library>) -> Unit,
+    openUserAvatarSelectScreen: (selected: Int) -> Unit,
+    goBack: () -> Unit,
+    openUserPinScreen: (action: PinAction) -> Unit,
+    avatarResultRecipient: ResultRecipient<UserAvatarSelectScreenDestination, Int>,
+    pinSetupResultRecipient: ResultRecipient<PinSetupScreenDestination, PinWithHintResult>,
+    pinRemoveResultRecipient: ResultRecipient<PinVerifyScreenDestination, PinVerificationResult>,
+) {
     val tweaks =
         remember(user.pin) {
             listOf(
@@ -86,26 +114,22 @@ internal fun UserEditScreen(
                     userHasPin = user.pin != null,
                     onOpenPinScreen = { isRemovingPin ->
                         val action = if (isRemovingPin) {
-                            PinAction.Verify(user.pin)
+                            PinAction.Verify(user.pin!!)
                         } else {
                             PinAction.Setup
                         }
 
-                        navigator.openUserPinScreen(action = action)
+                        openUserPinScreen(action)
                     },
                     onNameChange = {
-                        user = user.copy(name = it)
-                        viewModel.onEditUser(user = user)
+                        onEditUser(user.copy(name = it))
                     },
                 ),
                 DataTweak(
-                    onClearSearchHistory = { viewModel.onClearSearchHistory(user.id) },
-                    onDeleteProfile = { viewModel.onRemoveUser(user.id) },
+                    onClearSearchHistory = { onClearSearchHistory(user.id) },
+                    onDeleteProfile = { onRemoveUser(user.id) },
                     onClearLibraries = { selection ->
-                        viewModel.onClearLibraries(
-                            userId = user.id,
-                            libraries = selection,
-                        )
+                        onClearLibraries(user.id, selection)
                     },
                 ),
             )
@@ -116,23 +140,20 @@ internal fun UserEditScreen(
 
     avatarResultRecipient.onNavResult { result ->
         if (result is NavResult.Value) {
-            user = user.copy(image = result.value)
-            viewModel.onEditUser(user = user)
+            onEditUser(user.copy(image = result.value))
         }
     }
 
     pinSetupResultRecipient.onNavResult { result ->
         if (result is NavResult.Value) {
             val (pin, hint) = result.value
-            user = user.copy(pin = pin, pinHint = hint)
-            viewModel.onEditUser(user = user)
+            onEditUser(user.copy(pin = pin, pinHint = hint))
         }
     }
 
     pinRemoveResultRecipient.onNavResult { result ->
         if (result is NavResult.Value && result.value.isVerified) {
-            user = user.copy(pin = null, pinHint = null)
-            viewModel.onEditUser(user = user)
+            onEditUser(user.copy(pin = null, pinHint = null))
         }
     }
 
@@ -140,7 +161,7 @@ internal fun UserEditScreen(
         topBar = {
             CommonTopBar(
                 title = stringResource(LocaleR.string.edit_profile),
-                onNavigate = { navigator.goBack() },
+                onNavigate = { goBack() },
             )
         },
     ) { padding ->
@@ -180,12 +201,13 @@ internal fun UserEditScreen(
                                             dp = (DefaultAvatarSize.value * 1.2).dp,
                                             increaseBy = 80.dp,
                                         ),
-                                    ).aspectRatio(1F),
+                                    )
+                                    .aspectRatio(1F),
                             )
                         }
 
                         ChangeImageButton(
-                            onClick = { navigator.openUserAvatarSelectScreen(selected = user.image) },
+                            onClick = { openUserAvatarSelectScreen(user.image) },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd),
                         )
@@ -252,17 +274,21 @@ private fun UserEditScreenBasePreview() {
                 Modifier
                     .fillMaxSize(),
         ) {
-            UserEditScreen(
-                navigator =
-                    object : UserEditScreenNavigator {
-                        override fun openUserAvatarSelectScreen(selected: Int) = Unit
-
-                        override fun openProfilesScreen(shouldPopBackStack: Boolean) = Unit
-
-                        override fun goBack() = Unit
-
-                        override fun openUserPinScreen(action: PinAction) = Unit
-                    },
+            UserEditScreenContent(
+                user = User(
+                    id = 1,
+                    name = "John Doe",
+                    image = 1,
+                    pin = "1234",
+                    pinHint = "My PIN",
+                ),
+                onEditUser = {},
+                onRemoveUser = {},
+                onClearSearchHistory = {},
+                onClearLibraries = { _, _ -> },
+                openUserAvatarSelectScreen = {},
+                goBack = {},
+                openUserPinScreen = {},
                 avatarResultRecipient =
                     object : ResultRecipient<UserAvatarSelectScreenDestination, Int> {
                         @Composable
@@ -287,12 +313,6 @@ private fun UserEditScreenBasePreview() {
                         @Composable
                         override fun onResult(listener: (PinVerificationResult) -> Unit) = Unit
                     },
-                userArg =
-                    User(
-                        id = 0,
-                        image = 0,
-                        name = "John Doe",
-                    ),
             )
         }
     }

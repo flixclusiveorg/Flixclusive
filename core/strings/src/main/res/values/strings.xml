@@ -13,6 +13,7 @@
     <string name="settings">Settings</string>
 
     <!--  Errors  -->
+    <string name="sheet_dismiss_disabled_on_provider_loading">Cannot dismiss while providers are loading</string>
     <string name="no_changelogs">No update changelogs found</string>
     <string name="connection_failed">Connection failure</string>
     <string name="connection_timeout">Connection timeout</string>
@@ -26,8 +27,6 @@
     <string name="error_crash_title">Oops!</string>
     <string name="error_downloading_update">Error updating the app</string>
     <string name="error_film_message">Error while fetching data!</string>
-    <string name="error_finding_episode_id_from_meta">An unknown error occurred while obtaining episode data from meta api</string>
-    <string name="error_finding_episode_id_from_source_provider">An unknown error occurred while obtaining episode data from video data api</string>
     <string name="error_on_search">Error while searching</string>
     <string name="error_search_history_is_already_cleared">Search history is already cleared!</string>
     <string name="fail_sending_error_log">Couldn\'t send error logs to server</string>
@@ -70,6 +69,7 @@
     <string name="tv_show">TV Show</string>
 
     <!--  Extra labels  -->
+    <string name="in_library">In library</string>
     <string name="create">Create</string>
     <string name="add_debug_prefix">Add debug prefix</string>
     <string name="add_own_subtitle">Add subs</string>
@@ -287,7 +287,7 @@
     <string name="warning">Warning</string>
     <string name="watch">Watch</string>
     <string name="watch_again">Watch Again</string>
-    <string name="watchlisted">Added</string>
+    <string name="add">Add</string>
     <string name="what_to_remove">What do you want to remove?</string>
     <string name="whats_new">What\'s new</string>
     <string name="whos_watching">Who\'s watching?</string>

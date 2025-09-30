@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.navigation.navargs.PinVerificationResult
 import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
@@ -34,7 +33,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Destination
 @Composable
 internal fun PinVerifyScreen(
-    user: User,
+    actualPin: String,
     resultNavigator: ResultBackNavigator<PinVerificationResult>,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowHeightSizeClass
@@ -62,7 +61,7 @@ internal fun PinVerifyScreen(
     }
 
     val onConfirm = fun() {
-        if (pinToVerify.value == user.pin) {
+        if (pinToVerify.value == actualPin) {
             resultNavigator.navigateBack(
                 onlyIfResumed = true,
                 result = PinVerificationResult(isVerified = true),
@@ -153,7 +152,7 @@ private fun PinVerifyScreenBasePreview() {
     FlixclusiveTheme {
         Surface {
             PinVerifyScreen(
-                user = User(name = "", id = 0, pin = "0000", image = 0),
+                actualPin = "0000",
                 resultNavigator = object : ResultBackNavigator<PinVerificationResult> {
                     override fun navigateBack(
                         result: PinVerificationResult,

@@ -19,7 +19,7 @@ dependencyResolutionManagement {
 rootProject.name = "Flixclusive"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-include(":app")
+include(":app-mobile")
 
 // Common features
 include(":feature:splash-screen")

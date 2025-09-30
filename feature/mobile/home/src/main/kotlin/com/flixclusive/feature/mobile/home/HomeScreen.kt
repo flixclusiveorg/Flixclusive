@@ -33,7 +33,6 @@ import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
-import com.flixclusive.core.navigation.navargs.GenreWithBackdrop
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
@@ -119,17 +118,7 @@ private fun HomeScreenContent(
                     items = continueWatchingItems,
                     showCardTitle = showFilmTitles,
                     onSeeMoreClick = navigator::previewFilm,
-                    onItemClick = {
-                        if (it is MovieProgressWithMetadata) {
-                            navigator.playMovie(it.film)
-                        } else if (it is EpisodeProgressWithMetadata) {
-                            navigator.playEpisode(
-                                season = it.watchData.seasonNumber,
-                                episode = it.watchData.episodeNumber,
-                                film = it.film,
-                            )
-                        }
-                    },
+                    onItemClick = { navigator.play(it.film) },
                 )
             }
         }
@@ -172,24 +161,11 @@ private fun HomeScreenBasePreview() {
 
                 override fun openSeeAllScreen(item: Catalog) {}
 
-                override fun openGenreScreen(genre: GenreWithBackdrop) {}
-
                 override fun goBack() {}
 
                 override fun previewFilm(film: Film) {}
 
-                override fun playMovie(movie: Film) {}
-
-                override fun playEpisode(
-                    episode: Episode,
-                    film: Film,
-                ) {}
-
-                override fun playEpisode(
-                    season: Int,
-                    episode: Int,
-                    film: Film,
-                ) {}
+                override fun play(film: Film, episode: Episode?) {}
             }
 
             var previewState by remember { mutableIntStateOf(readyState) }

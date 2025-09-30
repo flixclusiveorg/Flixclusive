@@ -64,9 +64,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.imageLoader
 import com.flixclusive.core.common.file.toUri
 import com.flixclusive.core.common.intent.createApkInstallIntent
-import com.flixclusive.core.presentation.mobile.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.data.downloads.model.DownloadState
 import com.flixclusive.data.downloads.model.DownloadStatus
 import com.flixclusive.feature.app.updates.AppUpdatesViewModel

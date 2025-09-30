@@ -59,7 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.common.provider.MediaLinkResourceState
+import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.presentation.common.components.GradientLinearProgressIndicator
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
@@ -86,7 +86,7 @@ private val SheetViewType.isViewingStreams: Boolean get() = this == STREAMS_PANE
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MediaLinksBottomSheet(
-    state: MediaLinkResourceState,
+    state: LoadLinksState,
     streams: List<Stream>,
     subtitles: List<Subtitle>,
     onLinkClick: (MediaLink) -> Unit,
@@ -260,7 +260,7 @@ private fun FilterSegmentedButtons(
 
 @Composable
 private fun ProgressHeader(
-    state: MediaLinkResourceState,
+    state: LoadLinksState,
     streams: List<Stream>,
     onSkipLoading: () -> Unit,
     modifier: Modifier = Modifier,
@@ -331,7 +331,7 @@ private fun ProgressHeader(
 
 @Composable
 private fun ErrorMessage(
-    state: MediaLinkResourceState,
+    state: LoadLinksState,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -514,8 +514,8 @@ private fun MediaLinksBottomSheetPreview() {
 //        }
 //    }
     var state by remember {
-        mutableStateOf<MediaLinkResourceState>(
-            MediaLinkResourceState.Idle,
+        mutableStateOf<LoadLinksState>(
+            LoadLinksState.Idle,
         )
     }
 
@@ -524,9 +524,9 @@ private fun MediaLinksBottomSheetPreview() {
         val delayTime = 400L
 
         delay(delayTime)
-        state = MediaLinkResourceState.Fetching()
+        state = LoadLinksState.Fetching()
         delay(delayTime)
-        state = MediaLinkResourceState.Extracting()
+        state = LoadLinksState.Extracting()
         while (itemCount < 10) {
             val randomBool = Random.nextBoolean()
             val link =
@@ -563,7 +563,7 @@ private fun MediaLinksBottomSheetPreview() {
             itemCount++
         }
         delay(delayTime)
-        state = MediaLinkResourceState.Success
+        state = LoadLinksState.Success
 //        delay(delayTime)
 //        state = MediaLinkResourceState.Unavailable()
 //        delay(delayTime * 3L)

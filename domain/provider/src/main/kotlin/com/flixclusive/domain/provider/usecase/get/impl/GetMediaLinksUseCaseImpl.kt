@@ -3,7 +3,7 @@ package com.flixclusive.domain.provider.usecase.get.impl
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.common.provider.MediaLinkResourceState
+import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
 import com.flixclusive.data.provider.repository.CacheKey
@@ -68,7 +68,7 @@ internal class GetMediaLinksUseCaseImpl
         override operator fun invoke(
             movie: Movie,
             providerId: String?,
-        ): Flow<MediaLinkResourceState> =
+        ): Flow<LoadLinksState> =
             run(
                 film = movie,
                 providerId = providerId,
@@ -78,7 +78,7 @@ internal class GetMediaLinksUseCaseImpl
             tvShow: TvShow,
             episode: Episode,
             providerId: String?,
-        ): Flow<MediaLinkResourceState> =
+        ): Flow<LoadLinksState> =
             run(
                 film = tvShow,
                 episode = episode,
@@ -90,7 +90,7 @@ internal class GetMediaLinksUseCaseImpl
             watchId: String,
             episode: Episode?,
             providerId: String?,
-        ): Flow<MediaLinkResourceState> =
+        ): Flow<LoadLinksState> =
             run(
                 film = film,
                 episode = episode,
@@ -107,10 +107,10 @@ internal class GetMediaLinksUseCaseImpl
             val isCached = film.isCached(providerId, episode)
 
             if (isCached && film.isFromTmdb && apis.isEmpty()) {
-                send(MediaLinkResourceState.SuccessWithTrustedProviders)
+                send(LoadLinksState.SuccessWithTrustedProviders)
                 return@channelFlow
             } else if (isCached) {
-                send(MediaLinkResourceState.Success)
+                send(LoadLinksState.Success)
                 return@channelFlow
             }
 
@@ -118,11 +118,11 @@ internal class GetMediaLinksUseCaseImpl
                 try {
                     extractLinksFromTMDB(film = film, episode = episode)
                 } catch (e: ExceptionWithUiText) {
-                    send(MediaLinkResourceState.Error(e.uiText))
+                    send(LoadLinksState.Error(e.uiText))
                     return@channelFlow
                 }
 
-                send(MediaLinkResourceState.SuccessWithTrustedProviders)
+                send(LoadLinksState.SuccessWithTrustedProviders)
                 return@channelFlow
             }
 
@@ -135,7 +135,7 @@ internal class GetMediaLinksUseCaseImpl
             ): Boolean {
                 val metadata = providerRepository.getProviderMetadata(id)
                 if (metadata == null) {
-                    send(MediaLinkResourceState.Error(UiText.from(R.string.provider_api_not_found, id)))
+                    send(LoadLinksState.Error(UiText.from(R.string.provider_api_not_found, id)))
                     return false
                 }
 
@@ -151,13 +151,13 @@ internal class GetMediaLinksUseCaseImpl
                 val existingCache = cachedLinksRepository.getCache(cacheKey)
                 if (existingCache?.hasStreamableLinks == true) {
                     cachedLinksRepository.reuseCache(cacheKey, existingCache)
-                    send(MediaLinkResourceState.Success)
+                    send(LoadLinksState.Success)
                     return true
                 }
 
                 if (watchId == null && !film.isFromTmdb) {
                     send(
-                        MediaLinkResourceState.Error(
+                        LoadLinksState.Error(
                             UiText.from(R.string.invalid_watch_id_for_non_tmdb_film),
                         ),
                     )
@@ -169,7 +169,7 @@ internal class GetMediaLinksUseCaseImpl
                     val response = api.getWatchId(film = film)
                     if (response is Resource.Failure || response.data == null) {
                         val error = response.error ?: UiText.from(R.string.no_watch_id_message)
-                        send(MediaLinkResourceState.Error(error))
+                        send(LoadLinksState.Error(error))
                         return false
                     }
 
@@ -189,7 +189,6 @@ internal class GetMediaLinksUseCaseImpl
                         watchId = watchIdTouse,
                         providerId = id,
                         thumbnail = film.backdropImage ?: film.posterImage,
-                        episode = episode,
                     ),
                 )
 
@@ -213,19 +212,19 @@ internal class GetMediaLinksUseCaseImpl
 
                         if (cache?.hasNoStreamLinks == true) {
                             send(
-                                MediaLinkResourceState.Error(
+                                LoadLinksState.Error(
                                     UiText.from(R.string.no_links_loaded_format_message, metadata.name),
                                 ),
                             )
                             return false
                         } else {
-                            send(MediaLinkResourceState.Success)
+                            send(LoadLinksState.Success)
                             return true
                         }
                     }
 
                     is Resource.Failure -> {
-                        send(MediaLinkResourceState.Error(result.error))
+                        send(LoadLinksState.Error(result.error))
                         return false
                     }
 
@@ -238,7 +237,7 @@ internal class GetMediaLinksUseCaseImpl
                 val api = providerApiRepository.getApi(id)
 
                 if (api == null) {
-                    send(MediaLinkResourceState.Unavailable(UiText.from(R.string.provider_api_not_found, id)))
+                    send(LoadLinksState.Unavailable(UiText.from(R.string.provider_api_not_found, id)))
                     return@channelFlow
                 }
 
