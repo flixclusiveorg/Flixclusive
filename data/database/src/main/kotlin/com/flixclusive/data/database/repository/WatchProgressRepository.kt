@@ -15,6 +15,12 @@ interface WatchProgressRepository {
         type: FilmType,
     ): WatchProgressWithMetadata?
 
+    suspend fun get(
+        id: String,
+        ownerId: Int,
+        type: FilmType,
+    ): WatchProgressWithMetadata?
+
     fun getAsFlow(
         id: Long,
         type: FilmType,

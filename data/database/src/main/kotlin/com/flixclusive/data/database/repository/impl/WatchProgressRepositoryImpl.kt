@@ -39,6 +39,19 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun get(
+        id: String,
+        ownerId: Int,
+        type: FilmType,
+    ): WatchProgressWithMetadata? {
+        return withContext(appDispatchers.io) {
+            when (type) {
+                FilmType.MOVIE -> movieProgressDao.get(id, ownerId)
+                FilmType.TV_SHOW -> episodeProgressDao.get(id, ownerId)
+            }
+        }
+    }
+
     override suspend fun getSeasonProgress(
         tvShowId: String,
         seasonNumber: Int,
