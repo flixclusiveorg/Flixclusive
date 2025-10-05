@@ -2,6 +2,7 @@ package com.flixclusive.core.presentation.player.ui.state
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
 import androidx.media3.common.listen
+import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Companion.rememberPlaybackSpeedState
 
 /**
@@ -22,8 +24,9 @@ import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Comp
  * @property[playbackSpeed] determined by
  *   [Player.playbackParameters.speed][androidx.media3.common.PlaybackParameters.speed].
  */
+@Stable
 class PlaybackSpeedState(
-    private val player: Player,
+    private val player: AppPlayer,
 ) {
     var isEnabled by mutableStateOf(arePlaybackParametersEnabled(player))
         private set
@@ -72,7 +75,7 @@ class PlaybackSpeedState(
          * compositions, produce and remember a new value.
          */
         @Composable
-        fun rememberPlaybackSpeedState(player: Player): PlaybackSpeedState {
+        fun rememberPlaybackSpeedState(player: AppPlayer): PlaybackSpeedState {
             val playbackSpeedState = remember(player) { PlaybackSpeedState(player) }
             LaunchedEffect(player) { playbackSpeedState.observe() }
             return playbackSpeedState

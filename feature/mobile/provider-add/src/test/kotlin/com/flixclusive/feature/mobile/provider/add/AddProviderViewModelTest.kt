@@ -113,7 +113,7 @@ class AddProviderViewModelTest {
         }
 
         every {
-            dataStoreManager.getUserPrefs(
+            dataStoreManager.getUserPrefs<ProviderPreferences>(
                 UserPreferences.PROVIDER_PREFS_KEY,
                 ProviderPreferences::class,
             )

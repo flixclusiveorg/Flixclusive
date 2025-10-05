@@ -6,6 +6,7 @@ import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.util.network.okhttp.UserAgentManager
 import com.flixclusive.crash.GlobalCrashHandler
 import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.database.session.UserSessionManager
@@ -45,6 +46,11 @@ internal class FlixclusiveApplication :
         GlobalCrashHandler.initialize(applicationContext)
 
         appDispatchers.ioScope.launch {
+            launch {
+                // Initialize user-agents
+                UserAgentManager(client).loadLatestUserAgents()
+            }
+
             val users = userRepository.observeUsers().first()
             val hasOldSession = userSessionManager.hasOldSession()
             val isSingleUserApp = users.size == 1

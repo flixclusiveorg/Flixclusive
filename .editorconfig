@@ -21,6 +21,8 @@ ktlint_standard_function-expression-body = disabled
 ktlint_compose_lambda-param-event-trailing = disabled
 ktlint_standard_multiline-expression-wrapping = disabled
 ktlint_standard_string-template-indent = disabled
+# https://github.com/pinterest/ktlint/issues/2138#issuecomment-1680901126
+ktlint_standard_annotation = disabled
 
 [*.md]
 trim_trailing_whitespace = false

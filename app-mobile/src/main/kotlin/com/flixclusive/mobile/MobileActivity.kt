@@ -38,6 +38,7 @@ internal class MobileActivity : ComponentActivity() {
     override fun onDestroy() {
         // Make sure to properly destroy the WebView to prevent memory leaks
         viewModel.webViewDriver.value?.destroy()
+        viewModel.onReleasePlayerCache()
         super.onDestroy()
     }
 }

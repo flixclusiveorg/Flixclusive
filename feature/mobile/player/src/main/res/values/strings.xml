@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="null_cache_links_message">Cannot switch to provider due to missing cached links</string>
+</resources>

@@ -1,13 +1,17 @@
 package com.flixclusive.core.presentation.player.ui.state
 
+import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.AppPlayerImpl
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
@@ -24,8 +28,9 @@ enum class ScrubEvent {
 /**
  *
  * */
+@Stable
 class ScrubState private constructor(
-    private val player: Player,
+    private val player: AppPlayer,
 ) {
     /** The current position or progress of the scrubber up towards the [duration] */
     var progress by mutableLongStateOf(player.currentPosition)
@@ -47,6 +52,41 @@ class ScrubState private constructor(
      * */
     var event by mutableStateOf(ScrubEvent.NONE)
         private set
+
+    /**
+     * Called when the user starts interacting with the scrubber.
+     * */
+    @OptIn(UnstableApi::class)
+    fun onScrubStart() {
+        (player as AppPlayerImpl).exoPlayer?.let {
+            // TODO: Check if this is helpful for the app
+            it.isScrubbingModeEnabled = true
+            event = ScrubEvent.SCRUBBING
+        }
+    }
+
+    /**
+     * Updates the current [progress] of the scrubber as the user moves it.
+     *
+     * @param position The new position to update the [progress] to.
+     * */
+    fun onScrubMove(position: Long) {
+        progress = position
+    }
+
+    /**
+     * Called when the user stops interacting with the scrubber.
+     *
+     * @param position The final position where the user released the scrubber.
+     * */
+    @OptIn(UnstableApi::class)
+    fun onScrubEnd(position: Long) {
+        (player as AppPlayerImpl).exoPlayer?.let {
+            it.isScrubbingModeEnabled = false
+            it.seekTo(position)
+            event = ScrubEvent.NONE
+        }
+    }
 
     internal suspend fun observe() {
         while (player.isPlaying) {
@@ -86,7 +126,7 @@ class ScrubState private constructor(
          * Remembers and observes the scrub state of the given [player].
          * */
         @Composable
-        fun rememberScrubState(player: Player): ScrubState {
+        fun rememberScrubState(player: AppPlayer): ScrubState {
             val scrubState = remember(player) { ScrubState(player) }
             LaunchedEffect(player.isPlaying) { scrubState.observe() }
             return scrubState

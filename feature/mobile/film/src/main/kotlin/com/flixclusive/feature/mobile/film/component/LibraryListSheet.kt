@@ -125,7 +125,7 @@ internal fun LibraryListSheet(
                 ItemContent(
                     listAndState = listAndState,
                     toggleOnLibrary = { toggleOnLibrary(listAndState.list.id) },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier.animateItem(),
                 )
             }
         }
@@ -261,7 +261,7 @@ private fun ItemContent(
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
                 .size(imageSize)
-                .align(Alignment.CenterVertically)
+                .align(Alignment.CenterVertically),
         )
 
         Text(
@@ -285,9 +285,9 @@ private fun ItemContent(
             }
 
             val description = if (isInLibrary) {
-                stringResource(R.string.add)
+                stringResource(LocaleR.string.add)
             } else {
-                stringResource(R.string.in_library)
+                stringResource(LocaleR.string.in_library)
             }
 
             val tint = if (isInLibrary) {

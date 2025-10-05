@@ -2,6 +2,7 @@ package com.flixclusive.core.presentation.player.ui.state
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -9,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
 import androidx.media3.common.Player.EVENT_PLAYBACK_STATE_CHANGED
 import androidx.media3.common.listen
+import com.flixclusive.core.presentation.player.AppPlayer
 
 enum class PlaybackStatus {
     IDLE,
@@ -29,8 +31,9 @@ enum class PlaybackStatus {
     }
 }
 
+@Stable
 class PlaybackState(
-    private val player: Player
+    private val player: AppPlayer
 ) {
     var status by mutableStateOf(PlaybackStatus.from(player.playbackState))
         private set
@@ -50,7 +53,7 @@ class PlaybackState(
          * @see PlaybackStatus
          * */
         @Composable
-        fun rememberPlaybackState(player: Player): PlaybackState {
+        fun rememberPlaybackState(player: AppPlayer): PlaybackState {
             val state = remember(player) { PlaybackState(player) }
             LaunchedEffect(player) { state.observe() }
             return state

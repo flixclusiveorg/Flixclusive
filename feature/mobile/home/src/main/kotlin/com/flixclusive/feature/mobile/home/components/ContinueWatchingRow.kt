@@ -177,7 +177,7 @@ private fun ContinueWatchingCard(
             ) {
                 AdaptiveIcon(
                     painter = painterResource(id = UiCommonR.drawable.play),
-                    contentDescription = stringResource(id = LocaleR.string.play_button),
+                    contentDescription = stringResource(id = LocaleR.string.play),
                     tint = Color.White,
                     dp = 30.dp,
                     modifier = Modifier

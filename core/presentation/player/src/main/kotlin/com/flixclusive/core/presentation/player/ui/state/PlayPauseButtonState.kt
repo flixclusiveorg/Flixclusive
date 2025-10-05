@@ -2,6 +2,7 @@ package com.flixclusive.core.presentation.player.ui.state
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,6 +13,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util.handlePlayPauseButtonAction
 import androidx.media3.common.util.Util.shouldEnablePlayPauseButton
 import androidx.media3.common.util.Util.shouldShowPlayButton
+import com.flixclusive.core.presentation.player.AppPlayer
 
 /**
  * State that converts the necessary information from the [Player] to correctly deal with a UI
@@ -22,8 +24,9 @@ import androidx.media3.common.util.Util.shouldShowPlayButton
  * @property[showPlay] determined by [shouldShowPlayButton]
  */
 @UnstableApi
+@Stable
 class PlayPauseButtonState private constructor(
-    private val player: Player,
+    private val player: AppPlayer,
 ) {
     var isEnabled by mutableStateOf(shouldEnablePlayPauseButton(player))
         private set
@@ -79,7 +82,7 @@ class PlayPauseButtonState private constructor(
          */
         @UnstableApi
         @Composable
-        fun rememberPlayPauseButtonState(player: Player): PlayPauseButtonState {
+        fun rememberPlayPauseButtonState(player: AppPlayer): PlayPauseButtonState {
             val playPauseButtonState = remember(player) { PlayPauseButtonState(player) }
             LaunchedEffect(player) { playPauseButtonState.observe() }
             return playPauseButtonState

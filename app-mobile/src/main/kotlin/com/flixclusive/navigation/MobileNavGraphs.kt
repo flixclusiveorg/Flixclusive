@@ -1,7 +1,7 @@
 package com.flixclusive.navigation
 
+import com.flixclusive.feature.mobile.app.updates.destinations.AppUpdatesScreenDestination
 import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
-import com.flixclusive.feature.mobile.genre.destinations.GenreScreenDestination
 import com.flixclusive.feature.mobile.home.destinations.HomeScreenDestination
 import com.flixclusive.feature.mobile.library.details.destinations.LibraryDetailsScreenDestination
 import com.flixclusive.feature.mobile.library.manage.destinations.ManageLibraryScreenDestination
@@ -13,13 +13,11 @@ import com.flixclusive.feature.mobile.provider.details.destinations.ProviderDeta
 import com.flixclusive.feature.mobile.provider.manage.destinations.ProviderManagerScreenDestination
 import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
 import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
-import com.flixclusive.feature.mobile.repository.details.destinations.RepositoryDetailsScreenDestination
 import com.flixclusive.feature.mobile.repository.manage.destinations.RepositoryManagerScreenDestination
 import com.flixclusive.feature.mobile.search.destinations.SearchScreenDestination
 import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
 import com.flixclusive.feature.mobile.settings.screen.root.destinations.SettingsScreenDestination
-import com.flixclusive.feature.mobile.update.destinations.UpdateScreenDestination
 import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
 import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestination
@@ -41,7 +39,6 @@ internal object MobileNavGraphs {
                 listOf<DestinationSpec<*>>(
                     HomeScreenDestination,
                     FilmScreenDestination,
-                    GenreScreenDestination,
                     SeeAllScreenDestination,
                 ).routedIn(this)
                     .associateBy { it.route }
@@ -58,7 +55,6 @@ internal object MobileNavGraphs {
                     SearchScreenDestination,
                     SearchExpandedScreenDestination,
                     FilmScreenDestination,
-                    GenreScreenDestination,
                     SeeAllScreenDestination,
                 ).routedIn(this)
                     .associateBy { it.route }
@@ -75,7 +71,6 @@ internal object MobileNavGraphs {
                     ManageLibraryScreenDestination,
                     LibraryDetailsScreenDestination,
                     FilmScreenDestination,
-                    GenreScreenDestination,
                     SeeAllScreenDestination,
                 ).routedIn(this)
                     .associateBy { it.route }
@@ -93,7 +88,6 @@ internal object MobileNavGraphs {
                     AddProviderScreenDestination,
                     ProviderManagerScreenDestination,
                     RepositoryManagerScreenDestination,
-                    RepositoryDetailsScreenDestination,
                     ProviderDetailsScreenDestination,
                     ProviderSettingsScreenDestination,
                     MarkdownScreenDestination,
@@ -112,7 +106,7 @@ internal object MobileNavGraphs {
                 listOf<DestinationSpec<*>>(
                     PlayerScreenDestination,
                     SplashScreenDestination,
-                    UpdateScreenDestination,
+                    AppUpdatesScreenDestination,
                     UserEditScreenDestination,
                     UserProfilesScreenDestination,
                     UserAvatarSelectScreenDestination,

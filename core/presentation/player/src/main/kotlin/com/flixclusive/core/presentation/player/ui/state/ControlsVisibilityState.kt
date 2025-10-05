@@ -2,6 +2,7 @@ package com.flixclusive.core.presentation.player.ui.state
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,26 +10,37 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
 import androidx.media3.common.listen
-import com.flixclusive.core.presentation.player.InternalPlayer
+import com.flixclusive.core.presentation.player.AppPlayer
 import kotlinx.coroutines.delay
 
 /**
  * Manages the visibility state of media controls for a [Player].
  * */
-class ControlsVisibilityState(val player: Player) {
-    internal var controlTimeoutVisibility by mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
+@Stable
+class ControlsVisibilityState(
+    val player: AppPlayer,
+) {
+    private var controlTimeoutVisibility by mutableIntStateOf(PLAYER_CONTROL_VISIBILITY_TIMEOUT)
 
     var isVisible: Boolean by mutableStateOf(true)
         private set
 
     fun toggle() {
-        if (isVisible) {
-            isVisible = false
-            controlTimeoutVisibility = 0
+        if(isVisible) {
+            hide()
         } else {
-            isVisible = true
-            controlTimeoutVisibility = PLAYER_CONTROL_VISIBILITY_TIMEOUT
+            show()
         }
+    }
+
+    fun hide() {
+        isVisible = false
+        controlTimeoutVisibility = 0
+    }
+
+    fun show() {
+        isVisible = true
+        controlTimeoutVisibility = PLAYER_CONTROL_VISIBILITY_TIMEOUT
     }
 
     /**
@@ -39,9 +51,9 @@ class ControlsVisibilityState(val player: Player) {
      *
      * @param isScrubbing A boolean indicating whether the user is currently scrubbing (or seeking).
      * */
-    suspend fun observe(isScrubbing: Boolean) {
-        val internalPlayer = player as InternalPlayer
-        internalPlayer.listen { events ->
+    private suspend fun observe(isScrubbing: Boolean) {
+        val appPlayer = player as AppPlayer
+        appPlayer.listen { events ->
             if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED)) {
                 if (isScrubbing) return@listen
 
@@ -53,12 +65,11 @@ class ControlsVisibilityState(val player: Player) {
     }
 
     private fun shouldShowIndefinitely(): Boolean {
-        val internalPlayer = player as InternalPlayer
+        val appPlayer = player as AppPlayer
 
-        return !internalPlayer.isInitialized
-            || !internalPlayer.isPlaying
-            || internalPlayer.playbackState == Player.STATE_BUFFERING
-            || internalPlayer.playbackState == Player.STATE_ENDED
+        return !appPlayer.isLoading ||
+            !appPlayer.isPlaying ||
+            appPlayer.playbackState == Player.STATE_ENDED
     }
 
     companion object {
@@ -69,7 +80,10 @@ class ControlsVisibilityState(val player: Player) {
          * Remembers and manages the visibility state of media controls for a [Player].
          * */
         @Composable
-        fun rememberControlsVisibilityState(player: Player, isScrubbing: Boolean): ControlsVisibilityState {
+        fun rememberControlsVisibilityState(
+            player: AppPlayer,
+            isScrubbing: Boolean,
+        ): ControlsVisibilityState {
             val state = remember(player) { ControlsVisibilityState(player) }
 
             LaunchedEffect(player, isScrubbing) {

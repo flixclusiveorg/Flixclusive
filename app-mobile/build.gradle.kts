@@ -126,6 +126,7 @@ dependencies {
     implementation(projects.coreDatabase)
     implementation(projects.coreDrawables)
     implementation(projects.coreNavigation)
+    implementation(projects.corePresentationPlayer)
     implementation(projects.corePresentationCommon)
     implementation(projects.corePresentationMobile)
 

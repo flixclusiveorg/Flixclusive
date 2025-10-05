@@ -6,6 +6,7 @@ import android.media.audiofx.LoudnessEnhancer
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -16,10 +17,12 @@ import androidx.media3.common.Player
 import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import com.flixclusive.core.presentation.player.AppPlayer
 
 /**
- * Manages the device volume and applies loudness enhancement when the volume exceeds the maximum stream volume.
+ * Manages the device volume and applies loudness enhancement when the volume exceeds the maximum server volume.
  * */
+@Stable
 class VolumeManager(
     context: Context,
 ) {
@@ -90,14 +93,14 @@ class VolumeManager(
 
         @OptIn(UnstableApi::class)
         @Composable
-        fun rememberVolumeManager(player: Player): VolumeManager {
+        fun rememberVolumeManager(player: AppPlayer): VolumeManager {
             val context = LocalContext.current
             val manager = remember { VolumeManager(context = context) }
 
             LaunchedEffect(player) {
                 if (player is ExoPlayer) {
                     player.listen { events ->
-                        if (events.containsAny(Player.EVENT_AUDIO_ATTRIBUTES_CHANGED, Player.EVENT_AUDIO_SESSION_ID)) {
+                        if (events.contains(Player.EVENT_AUDIO_SESSION_ID)) {
                             manager.loudnessEnhancer = LoudnessEnhancer(player.audioSessionId)
                         }
                     }

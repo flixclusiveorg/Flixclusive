@@ -58,6 +58,7 @@ import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestinatio
 import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
 import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderMetadata
@@ -198,15 +199,9 @@ internal class MobileAppNavigator(
         exitAction.onExitApplication()
     }
 
-    override fun onEpisodeChange(
-        film: Film,
-        episodeToPlay: Episode,
-    ) {
+    override fun onEpisodeChange(film: FilmMetadata, episode: Episode) {
         navController.navigate(
-            PlayerScreenDestination(
-                film = film,
-                episodeToPlay = episodeToPlay,
-            ),
+            PlayerScreenDestination(film = film, episode = episode),
         ) {
             launchSingleTop = true
         }

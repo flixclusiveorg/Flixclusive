@@ -34,8 +34,10 @@ import androidx.media3.ui.compose.state.rememberPresentationState
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.player.ResizeMode
-import com.flixclusive.core.presentation.player.InternalPlayer
-import com.flixclusive.core.presentation.player.InternalPlayerImpl
+import com.flixclusive.core.presentation.player.AppDataSourceFactoryImpl
+import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.AppPlayerImpl
+import com.flixclusive.core.presentation.player.PlayerCache
 import com.flixclusive.core.presentation.player.extensions.toContentScale
 import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState.Companion.rememberControlsVisibilityState
 import com.google.common.collect.ImmutableList
@@ -48,7 +50,7 @@ import okhttp3.OkHttpClient
 @OptIn(UnstableApi::class)
 @Composable
 fun ComposePlayer(
-    player: InternalPlayer,
+    player: AppPlayer,
     resizeMode: ResizeMode,
     modifier: Modifier = Modifier,
 ) {
@@ -56,25 +58,27 @@ fun ComposePlayer(
 
     Box(modifier = modifier) {
         PlayerSurface(
-            player = (player as InternalPlayerImpl).exoPlayer,
+            player = (player as AppPlayerImpl).exoPlayer,
             modifier = Modifier.resizeWithContentScale(
                 contentScale = resizeMode.toContentScale(),
-                sourceSizeDp = presentationState.videoSizeDp
+                sourceSizeDp = presentationState.videoSizeDp,
             ),
         )
 
         AndroidView(
             factory = ::SubtitleView,
             update = { player.subtitleView = it },
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         )
 
         if (presentationState.coverSurface) {
             // Cover the surface that is being prepared with a shutter
             // Do not use scaledModifier here, makes the Box be measured at 0x0
-            Box(Modifier
-                .matchParentSize()
-                .background(Color.Black))
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .background(Color.Black),
+            )
         }
     }
 
@@ -115,11 +119,15 @@ private fun ComposePlayerPreview() {
     val context = LocalContext.current
 
     val player = remember {
-        InternalPlayerImpl(
+        AppPlayerImpl(
             context = context,
-            client = OkHttpClient(),
             subtitlePrefs = SubtitlesPreferences(),
-            playerPrefs = PlayerPreferences(resizeMode = ResizeMode.Fit)
+            playerPrefs = PlayerPreferences(resizeMode = ResizeMode.Fit),
+            dataSourceFactory = AppDataSourceFactoryImpl(
+                context = context,
+                client = OkHttpClient(),
+                cache = PlayerCache(context).get(size = -1L),
+            ),
         ).also {
             val videos = listOf(
                 "https://html5demos.com/assets/dizzy.mp4",
@@ -139,15 +147,16 @@ private fun ComposePlayerPreview() {
                         .setUri(videoUrl.toUri())
                         .setSubtitleConfigurations(
                             ImmutableList.of(
-                                MediaItem.SubtitleConfiguration.Builder(subtitle.toUri()).apply {
-                                    setMimeType("application/x-subrip")
-                                    setLanguage("en")
-                                    setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
-                                }.build()
-                            )
-                        )
-                        .build()
-                }
+                                MediaItem.SubtitleConfiguration
+                                    .Builder(subtitle.toUri())
+                                    .apply {
+                                        setMimeType("application/x-subrip")
+                                        setLanguage("en")
+                                        setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+                                    }.build(),
+                            ),
+                        ).build()
+                },
             )
             it.prepare()
             it.playWhenReady = true
@@ -155,22 +164,24 @@ private fun ComposePlayerPreview() {
     }
 
     val controlsVisibilityState = rememberControlsVisibilityState(
-        player, isScrubbing = false
+        player,
+        isScrubbing = false,
     )
 
     MaterialTheme {
         Surface(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Box {
                 ComposePlayer(
                     player = player,
                     resizeMode = ResizeMode.Fit,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
                         .clickable(
                             indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) { controlsVisibilityState.toggle() }
+                            interactionSource = remember { MutableInteractionSource() },
+                        ) { controlsVisibilityState.toggle() },
                 )
 
                 if (controlsVisibilityState.isVisible) {

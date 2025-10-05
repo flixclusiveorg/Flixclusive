@@ -74,6 +74,7 @@ import com.flixclusive.mobile.component.DisplayChangelogsObserver
 import com.flixclusive.mobile.component.FilmCoverPreview
 import com.flixclusive.mobile.component.FilmPreviewBottomSheet
 import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.navigation.AppNavHost
 import com.flixclusive.navigation.MobileNavGraphs
@@ -121,7 +122,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 
     fun onStartPlayer(playerData: PlayerData) {
         val (film, episode) = playerData
-        navController.navigateIfResumed(PlayerScreenDestination(film = film, episodeToPlay = episode))
+        navController.navigateIfResumed(PlayerScreenDestination(film = film as FilmMetadata, episode = episode))
         viewModel.updateLoadLinksState(LoadLinksState.Idle)
     }
 

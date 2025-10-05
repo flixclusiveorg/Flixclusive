@@ -10,7 +10,6 @@ import com.flixclusive.data.tmdb.repository.TMDBDiscoverCatalogRepository
 import com.flixclusive.data.tmdb.repository.TMDBFilmSearchItemsRepository
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData
-import com.flixclusive.model.film.util.FilmType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -218,8 +217,8 @@ class GetDiscoverCardsUseCaseImplTest {
         runTest(testDispatcher) {
             // Arrange
             val unsortedTvNetworks = listOf(
-                createTMDBDiscoverCatalog(name = "Z Network", id = 1),
-                createTMDBDiscoverCatalog(name = "A Network", id = 2),
+                createTMDBDiscoverCatalog(name = "Z Network"),
+                createTMDBDiscoverCatalog(name = "A Network"),
             )
             val searchResponse = createSearchResponseWithBackdropImages()
 
@@ -241,38 +240,34 @@ class GetDiscoverCardsUseCaseImplTest {
 
     private fun createTvNetworkCatalogs(): List<TMDBDiscoverCatalog> {
         return listOf(
-            createTMDBDiscoverCatalog(name = "Netflix", id = 1),
+            createTMDBDiscoverCatalog(name = "Netflix"),
         )
     }
 
     private fun createMovieCompanyCatalogs(): List<TMDBDiscoverCatalog> {
         return listOf(
-            createTMDBDiscoverCatalog(name = "Warner Bros", id = 2),
+            createTMDBDiscoverCatalog(name = "Warner Bros"),
         )
     }
 
     private fun createMediaTypeCatalogs(): List<TMDBDiscoverCatalog> {
         return listOf(
-            createTMDBDiscoverCatalog(name = "Popular TV", id = 3, mediaType = FilmType.TV_SHOW.type),
+            createTMDBDiscoverCatalog(name = "Popular TV"),
         )
     }
 
     private fun createGenreCatalogs(): List<TMDBDiscoverCatalog> {
         return listOf(
-            createTMDBDiscoverCatalog(name = "Action", id = 4),
+            createTMDBDiscoverCatalog(name = "Action"),
         )
     }
 
     private fun createTMDBDiscoverCatalog(
         name: String,
-        id: Int,
-        mediaType: String = FilmType.MOVIE.type,
         url: String = "https://api.themoviedb.org/3/discover/movie",
     ): TMDBDiscoverCatalog {
         return TMDBDiscoverCatalog(
-            id = id,
             name = name,
-            mediaType = mediaType,
             url = url,
             image = null,
         )

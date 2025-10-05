@@ -26,8 +26,6 @@ dependencies {
     implementation(libs.media3.ffmpeg)
     implementation(libs.universalchardet)
     implementation(libs.stubs.util)
-    implementation(libs.stubs.model.provider)
-    implementation(libs.stubs.model.film)
     // implementation(libs.media3.cast)
 
     api(libs.media3.common)
@@ -35,6 +33,7 @@ dependencies {
     api(libs.media3.datasource.okhttp)
     api(libs.media3.exoplayer)
     api(libs.media3.exoplayer.hls)
+    api(libs.media3.exoplayer.dash)
     api(libs.media3.session)
     api(libs.media3.ui)
     implementation(libs.media3.ui.compose)

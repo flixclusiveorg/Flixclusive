@@ -2,6 +2,7 @@ package com.flixclusive.core.presentation.player.ui.state
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
 import androidx.media3.common.listen
+import com.flixclusive.core.presentation.player.AppPlayer
 
 /**
  * State that holds all interactions to correctly deal with a UI component representing a seek
@@ -17,8 +19,9 @@ import androidx.media3.common.listen
  * @property[isEnabled] determined by `isCommandAvailable(Player.COMMAND_SEEK_FORWARD)`
  * @property[seekForwardAmountMs] determined by [Player's][Player] `seekForwardIncrement`.
  */
+@Stable
 class SeekForwardButtonState private constructor(
-    private val player: Player,
+    private val player: AppPlayer,
 ) {
     var isEnabled by mutableStateOf(isSeekForwardEnabled(player))
         private set
@@ -67,7 +70,7 @@ class SeekForwardButtonState private constructor(
          * compositions, produce and remember a new value.
          */
         @Composable
-        fun rememberSeekForwardButtonState(player: Player): SeekForwardButtonState {
+        fun rememberSeekForwardButtonState(player: AppPlayer): SeekForwardButtonState {
             val seekForwardButtonState = remember(player) { SeekForwardButtonState(player) }
             LaunchedEffect(player) { seekForwardButtonState.observe() }
             return seekForwardButtonState

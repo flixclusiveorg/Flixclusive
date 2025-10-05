@@ -4,6 +4,7 @@ import androidx.annotation.Nullable
 import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -14,6 +15,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.common.VideoSize
 import androidx.media3.common.listen
+import com.flixclusive.core.presentation.player.AppPlayer
 
 /**
  * State that holds information to correctly deal with UI components related to the rendering of
@@ -32,6 +34,7 @@ import androidx.media3.common.listen
  *   and reset back to true on [Player.EVENT_TRACKS_CHANGED] depending on the number and type of
  *   tracks.
  */
+@Stable
 class PresentationState private constructor(
     keepContentOnReset: Boolean = false,
 ) {
@@ -50,7 +53,7 @@ class PresentationState private constructor(
         }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    var player: Player? = null
+    var player: AppPlayer? = null
 
     private var lastPeriodUidWithTracks: Any? = null
 
@@ -60,7 +63,7 @@ class PresentationState private constructor(
      * * [Player.EVENT_RENDERED_FIRST_FRAME] and [Player.EVENT_TRACKS_CHANGED]to determine whether the
      *   surface is ready to be shown
      */
-    internal suspend fun observe(player: Player?) {
+    internal suspend fun observe(player: AppPlayer?) {
         try {
             this@PresentationState.player = player
             videoSizeDp = getVideoSizeDp(player)
@@ -87,7 +90,7 @@ class PresentationState private constructor(
     }
 
     @Nullable
-    private fun getVideoSizeDp(player: Player?): Size? {
+    private fun getVideoSizeDp(player: AppPlayer?): Size? {
         player ?: return null
         var videoSize = Size(player.videoSize.width.toFloat(), player.videoSize.height.toFloat())
         if (videoSize.width == 0f || videoSize.height == 0f) return null
@@ -101,7 +104,7 @@ class PresentationState private constructor(
         return videoSize
     }
 
-    private fun maybeHideSurface(player: Player?) {
+    private fun maybeHideSurface(player: AppPlayer?) {
         if (player != null) {
             val hasTracks =
                 player.isCommandAvailable(Player.COMMAND_GET_TRACKS) && !player.currentTracks.isEmpty
@@ -116,7 +119,7 @@ class PresentationState private constructor(
         }
     }
 
-    private fun shouldKeepSurfaceVisible(player: Player): Boolean {
+    private fun shouldKeepSurfaceVisible(player: AppPlayer): Boolean {
         // Suppress the shutter if transitioning to an unprepared period within the same window. This
         // is necessary to avoid closing the shutter (i.e covering the surface) when such a transition
         // occurs. See: https://github.com/google/ExoPlayer/issues/5507.
@@ -135,7 +138,7 @@ class PresentationState private constructor(
         val period = Timeline.Period()
         if (player.isCommandAvailable(Player.COMMAND_GET_TRACKS) && !player.currentTracks.isEmpty) {
             lastPeriodUidWithTracks =
-                timeline.getPeriod(player.currentPeriodIndex, period, /* setIds= */ true).uid
+                timeline.getPeriod(player.currentPeriodIndex, period, true).uid
         } else {
             lastPeriodUidWithTracks?.let {
                 val lastPeriodIndexWithTracks = timeline.getIndexOfPeriod(it)
@@ -153,7 +156,7 @@ class PresentationState private constructor(
         return false
     }
 
-    private fun hasSelectedVideoTrack(player: Player): Boolean =
+    private fun hasSelectedVideoTrack(player: AppPlayer): Boolean =
         player.isCommandAvailable(Player.COMMAND_GET_TRACKS) &&
             player.currentTracks.isTypeSelected(C.TRACK_TYPE_VIDEO)
 
@@ -171,7 +174,7 @@ class PresentationState private constructor(
          */
         @Composable
         fun rememberPresentationState(
-            player: Player?,
+            player: AppPlayer?,
             keepContentOnReset: Boolean = false,
         ): PresentationState {
             val presentationState = remember { PresentationState(keepContentOnReset) }

@@ -104,19 +104,14 @@ internal fun getAvailableCacheSizes(context: Context) =
         when (size) {
             0L -> context.getString(LocaleR.string.none_label)
             -1L -> context.getString(LocaleR.string.no_cache_limit_label)
-            else ->
+            else -> {
                 Formatter.formatShortFileSize(
-                    // context =
                     context,
-                    // sizeBytes =
                     size * 1000L * 1000L,
-                ) +
-                    if (size ==
-                        DEFAULT_PLAYER_CACHE_SIZE_AMOUNT
-                    ) {
-                        " " + context.getString(LocaleR.string.default_label)
-                    } else {
-                        ""
-                    }
+                ) + when (size) {
+                    DEFAULT_PLAYER_CACHE_SIZE_AMOUNT -> " " + context.getString(LocaleR.string.default_label)
+                    else -> ""
+                }
+            }
         }
     }.toImmutableMap()

@@ -1,5 +1,6 @@
 package com.flixclusive.domain.catalog.usecase.impl
 
+import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.session.UserSessionManager
@@ -9,7 +10,6 @@ import com.flixclusive.data.tmdb.repository.TMDBHomeCatalogRepository
 import com.flixclusive.domain.catalog.usecase.GetHomeCatalogsUseCase
 import com.flixclusive.domain.catalog.util.ProviderCatalogsOperationsHandler
 import com.flixclusive.model.provider.Catalog
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
@@ -28,12 +28,12 @@ internal class GetHomeCatalogsUseCaseImpl
         private val tmdbHomeCatalogRepository: TMDBHomeCatalogRepository,
         private val userSessionManager: UserSessionManager,
         providerApiRepository: ProviderApiRepository,
-        scope: CoroutineScope,
+        appDispatchers: AppDispatchers,
     ) : GetHomeCatalogsUseCase {
         private val apiChangesHandler = ProviderCatalogsOperationsHandler()
 
         init {
-            scope.launch {
+            appDispatchers.defaultScope.launch {
                 providerApiRepository.observe().collect {
                     apiChangesHandler.handleOperations(it)
                 }

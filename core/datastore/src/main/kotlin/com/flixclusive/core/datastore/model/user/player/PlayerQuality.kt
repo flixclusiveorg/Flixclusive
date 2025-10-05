@@ -1,7 +1,6 @@
 package com.flixclusive.core.datastore.model.user.player
 
 import com.flixclusive.core.datastore.R
-import com.flixclusive.model.provider.link.Stream
 
 enum class PlayerQuality(
     val qualityStringResId: Int,
@@ -47,29 +46,4 @@ enum class PlayerQuality(
         qualityStringResId = R.string.quality_auto,
         regex = Regex("auto|hls|dash", RegexOption.IGNORE_CASE)
     );
-
-    companion object {
-        fun List<Stream>.getIndexOfPreferredQuality(preference: PlayerQuality): Int {
-            val preferredQualityIndex = indexOfFirst {
-                preference.regex.containsMatchIn(it)
-            }
-
-
-            if (preferredQualityIndex != -1) {
-                return preferredQualityIndex
-            }
-
-            return entries.firstNotNullOfOrNull { quality ->
-                val index = indexOfFirst {
-                    quality.regex.containsMatchIn(it)
-                }
-
-                if (index != -1) index else null
-            } ?: 0
-        }
-
-        private fun Regex.containsMatchIn(link: Stream): Boolean {
-            return containsMatchIn(link.name) || containsMatchIn(link.url)
-        }
-    }
 }

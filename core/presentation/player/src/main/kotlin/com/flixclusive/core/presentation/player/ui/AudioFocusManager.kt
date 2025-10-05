@@ -14,7 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import com.flixclusive.core.presentation.player.InternalPlayer
+import com.flixclusive.core.presentation.player.AppPlayer
 
 private class AudioFocusManager(
     private val audioManager: AudioManager,
@@ -131,7 +131,7 @@ private enum class AudioFocusResult {
 @Composable
 fun AudioFocusManager(
     activity: Activity,
-    player: InternalPlayer,
+    player: AppPlayer,
     isPlaying: Boolean,
 ) {
     var playbackNowAuthorized by rememberSaveable { mutableStateOf(false) }

@@ -9,8 +9,9 @@ import com.flixclusive.core.common.config.BuildType
 import com.flixclusive.core.common.config.CustomBuildConfig
 import com.flixclusive.core.common.config.PlatformType
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
-internal class BuildConfigProviderImpl(
+internal class BuildConfigProviderImpl @Inject constructor(
     @ApplicationContext private val context: Context
 ) : BuildConfigProvider {
     override fun get(): CustomBuildConfig {

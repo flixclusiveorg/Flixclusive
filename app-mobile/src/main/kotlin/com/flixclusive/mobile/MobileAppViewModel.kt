@@ -13,6 +13,7 @@ import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.network.monitor.NetworkMonitor
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.presentation.player.PlayerCache
 import com.flixclusive.core.util.webview.WebViewDriverManager
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
@@ -56,6 +57,7 @@ internal class MobileAppViewModel
         private val userSessionManager: UserSessionManager,
         private val libraryListRepository: LibraryListRepository,
         private val appDispatchers: AppDispatchers,
+        private val playerCache: PlayerCache,
         cachedLinksRepository: CachedLinksRepository,
         networkMonitor: NetworkMonitor,
     ) : ViewModel() {
@@ -252,6 +254,12 @@ internal class MobileAppViewModel
 
         fun onRemovePreviewFilm() {
             _uiState.update { it.copy(filmPreviewState = null) }
+        }
+
+        fun onReleasePlayerCache() {
+            appDispatchers.ioScope.launch {
+                playerCache.release()
+            }
         }
 
         fun updateLoadLinksState(state: LoadLinksState) {

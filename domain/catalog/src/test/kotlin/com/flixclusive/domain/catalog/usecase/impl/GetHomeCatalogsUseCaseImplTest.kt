@@ -5,6 +5,7 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
+import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.session.UserSessionManager
@@ -18,13 +19,16 @@ import com.flixclusive.provider.ProviderApi
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import strikt.api.expectThat
@@ -45,20 +49,24 @@ class GetHomeCatalogsUseCaseImplTest {
 
     @Before
     fun setUp() {
+        Dispatchers.setMain(testDispatcher)
         watchProgressRepository = mockk()
         tmdbHomeCatalogRepository = mockk()
         userSessionManager = mockk()
         providerApiRepository = mockk()
-        appDispatchers = mockk {
-            every { io } returns testDispatcher
-        }
+        appDispatchers = DispatcherTestDefaults.createTestAppDispatchers(testDispatcher)
         getHomeCatalogsUseCase = GetHomeCatalogsUseCaseImpl(
             watchProgressRepository = watchProgressRepository,
             tmdbHomeCatalogRepository = tmdbHomeCatalogRepository,
             userSessionManager = userSessionManager,
             providerApiRepository = providerApiRepository,
-            scope = TestScope(testDispatcher),
+            appDispatchers = appDispatchers,
         )
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
@@ -66,16 +74,12 @@ class GetHomeCatalogsUseCaseImplTest {
         runTest(testDispatcher) {
             val requiredCatalog = TMDBHomeCatalog(
                 name = "Trending",
-                mediaType = "all",
                 required = true,
-                canPaginate = true,
                 url = "trending/all/day",
             )
             val optionalCatalog = TMDBHomeCatalog(
                 name = "Popular Movies",
-                mediaType = "movie",
                 required = false,
-                canPaginate = true,
                 url = "movie/popular",
             )
             val testFilm = FilmTestDefaults
@@ -126,9 +130,7 @@ class GetHomeCatalogsUseCaseImplTest {
                 expectThat(recommendationCatalog).isEqualTo(
                     TMDBHomeCatalog(
                         name = "If you liked Test Movie",
-                        mediaType = "movie",
                         required = false,
-                        canPaginate = true,
                         url = "movie/${watchProgress.filmId}/recommendations?language=en-US",
                     ),
                 )
@@ -142,9 +144,7 @@ class GetHomeCatalogsUseCaseImplTest {
         runTest(testDispatcher) {
             val tmdbCatalog = TMDBHomeCatalog(
                 name = "Trending",
-                mediaType = "all",
                 required = true,
-                canPaginate = true,
                 url = "trending/all/day",
             )
 
@@ -188,7 +188,7 @@ class GetHomeCatalogsUseCaseImplTest {
                 tmdbHomeCatalogRepository = tmdbHomeCatalogRepository,
                 userSessionManager = userSessionManager,
                 providerApiRepository = modifiedProviderApiRepository,
-                scope = backgroundScope,
+                appDispatchers = appDispatchers,
             )
 
             modifiedGetHomeCatalogsUseCase().test {
@@ -208,9 +208,7 @@ class GetHomeCatalogsUseCaseImplTest {
         runTest(testDispatcher) {
             val requiredCatalog = TMDBHomeCatalog(
                 name = "Trending",
-                mediaType = "all",
                 required = true,
-                canPaginate = true,
                 url = "trending/all/day",
             )
             val testFilm = FilmTestDefaults
@@ -265,9 +263,7 @@ class GetHomeCatalogsUseCaseImplTest {
         runTest(testDispatcher) {
             val requiredCatalog = TMDBHomeCatalog(
                 name = "Trending",
-                mediaType = "all",
                 required = true,
-                canPaginate = true,
                 url = "trending/all/day",
             )
             val testFilm = FilmTestDefaults
@@ -318,16 +314,12 @@ class GetHomeCatalogsUseCaseImplTest {
         runTest(testDispatcher) {
             val trendingCatalog = TMDBHomeCatalog(
                 name = "Trending",
-                mediaType = "all",
                 required = true,
-                canPaginate = true,
                 url = "trending/all/day",
             )
             val otherCatalog = TMDBHomeCatalog(
                 name = "Popular Movies",
-                mediaType = "movie",
                 required = false,
-                canPaginate = true,
                 url = "movie/popular",
             )
             val tmdbCatalogs = mockk<TMDBHomeCatalogs> {
@@ -360,9 +352,7 @@ class GetHomeCatalogsUseCaseImplTest {
         runTest(testDispatcher) {
             val requiredCatalog = TMDBHomeCatalog(
                 name = "Trending",
-                mediaType = "all",
                 required = true,
-                canPaginate = true,
                 url = "trending/all/day",
             )
             val tmdbCatalogs = mockk<TMDBHomeCatalogs> {
