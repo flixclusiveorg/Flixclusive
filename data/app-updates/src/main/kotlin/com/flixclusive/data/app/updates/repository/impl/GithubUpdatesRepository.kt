@@ -32,7 +32,7 @@ internal class GithubUpdatesRepository
             val buildConfig = buildConfigProvider.get()
 
             val repository = when (buildConfig.buildType) {
-                BuildType.PREVIEW -> PREVIEW_CHANNEL_NAME
+                BuildType.PREVIEW, BuildType.DEBUG -> PREVIEW_CHANNEL_NAME
                 else -> STABLE_CHANNEL_NAME
             }
 
@@ -56,7 +56,7 @@ internal class GithubUpdatesRepository
 
                     val updateUrl = releases.getDownloadUrl(buildConfig.platformType)
                         ?: throw ExceptionWithUiText(
-                            uiText = UiText.from(R.string.failed_to_fetch_apk_url, buildConfig.platformType),
+                            uiText = UiText.from(R.string.failed_to_fetch_apk_url, buildConfig.platformType.toString()),
                         )
 
                     Result.success(

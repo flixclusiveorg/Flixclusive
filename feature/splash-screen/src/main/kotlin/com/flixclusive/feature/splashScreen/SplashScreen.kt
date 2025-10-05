@@ -150,12 +150,12 @@ private fun SplashScreenContent(
                         areAllPermissionsGranted,
                         userLoggedIn,
                     ) {
-                        if (areAllPermissionsGranted && !uiState.isLoading) {
+                        val hasErrors = hasAppUpdateErrors || uiState.providerErrors.isNotEmpty()
+
+                        if (areAllPermissionsGranted && !uiState.isLoading && !hasErrors) {
                             val hasAutoUpdate = systemPreferences.isUsingAutoUpdateAppFeature
                             val isAppOutdated = uiState.newAppUpdateInfo != null
                             val hasOldUserSession = userLoggedIn != null
-                            val hasErrors = uiState.appUpdateError != null ||
-                                uiState.providerErrors.isNotEmpty()
 
                             if (isAppOutdated && hasAutoUpdate) {
                                 openUpdateScreen()
@@ -163,24 +163,18 @@ private fun SplashScreenContent(
                                 openAddProfileScreen(true)
                             } else if (!hasOldUserSession) {
                                 openProfilesScreen(true)
-                            } else if (!hasErrors) {
+                            } else {
                                 openHomeScreen()
                             }
                         }
                     }
 
-                    if (hasAppUpdateErrors && !uiState.isLoading) {
-                        TextAlertDialog(
-                            title = stringResource(LocaleR.string.something_went_wrong),
-                            message = remember { uiState.appUpdateError!!.stackTraceToString() },
-                            confirmButtonLabel = stringResource(LocaleR.string.close_label),
-                            dismissButtonLabel = null,
-                            onConfirm = onConsumeAppUpdateError,
-                            onDismiss = onConsumeAppUpdateError,
+                    if (!areAllPermissionsGranted) {
+                        PermissionsRequester(
+                            permissions = requiredPermissions,
+                            onGrantPermissions = { areAllPermissionsGranted = true },
                         )
-                    }
-
-                    if (uiState.providerErrors.isNotEmpty() && !uiState.isLoading) {
+                    } else if (uiState.providerErrors.isNotEmpty() && !uiState.isLoading) {
                         val listOfErrors by remember {
                             derivedStateOf {
                                 uiState.providerErrors.values.toList()
@@ -201,12 +195,14 @@ private fun SplashScreenContent(
                                 onConsumeProviderErrors()
                             },
                         )
-                    }
-
-                    if (!areAllPermissionsGranted) {
-                        PermissionsRequester(
-                            permissions = requiredPermissions,
-                            onGrantPermissions = { areAllPermissionsGranted = true },
+                    } else if (hasAppUpdateErrors && !uiState.isLoading) {
+                        TextAlertDialog(
+                            title = stringResource(LocaleR.string.something_went_wrong),
+                            message = uiState.appUpdateError?.uiText?.asString() ?: "",
+                            confirmButtonLabel = stringResource(LocaleR.string.close_label),
+                            dismissButtonLabel = null,
+                            onConfirm = onConsumeAppUpdateError,
+                            onDismiss = onConsumeAppUpdateError,
                         )
                     }
                 }

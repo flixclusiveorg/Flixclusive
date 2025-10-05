@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.provider.ProviderWithThrowable
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.system.SystemPreferences
@@ -97,7 +98,7 @@ internal class SplashScreenViewModel
                         )
                     }
                 }.onFailure { error ->
-                    _uiState.update { it.copy(appUpdateError = error) }
+                    _uiState.update { it.copy(appUpdateError = error as ExceptionWithUiText) }
                 }
         }
 
@@ -159,7 +160,7 @@ internal class SplashScreenViewModel
 @Immutable
 internal data class SplashScreenUiState(
     val isLoading: Boolean = false,
-    val appUpdateError: Throwable? = null,
+    val appUpdateError: ExceptionWithUiText? = null,
     val newAppUpdateInfo: AppUpdateInfo? = null,
     val isInitializingProviders: Boolean = false,
     val providerErrors: Map<String, ProviderWithThrowable> = emptyMap(),

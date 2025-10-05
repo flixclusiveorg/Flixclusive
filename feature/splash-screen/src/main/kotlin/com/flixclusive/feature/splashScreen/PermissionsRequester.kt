@@ -61,11 +61,6 @@ internal fun Context.getAllRequiredPermissions(): List<String> {
         requiredPermissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 
-    val isAndroid11AndAbove = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
-    if (isAndroid11AndAbove) {
-        requiredPermissions.add(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
-    }
-
     return requiredPermissions.filterNot { permission ->
         checkCallingOrSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
     }
