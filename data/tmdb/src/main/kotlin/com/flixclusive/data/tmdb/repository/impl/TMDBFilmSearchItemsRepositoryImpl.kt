@@ -2,7 +2,6 @@ package com.flixclusive.data.tmdb.repository.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.network.retrofit.TMDBApiService
-import com.flixclusive.core.network.retrofit.TMDB_API_BASE_URL
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.network.util.Resource.Failure.Companion.toNetworkException
 import com.flixclusive.core.util.exception.actualMessage
@@ -50,7 +49,7 @@ internal class TMDBFilmSearchItemsRepositoryImpl
             page: Int,
         ): Resource<SearchResponseData<FilmSearchItem>> {
             return withContext(appDispatchers.io) {
-                val fullUrl = "$TMDB_API_BASE_URL$url&page=$page"
+                val fullUrl = "$url&page=$page"
 
                 try {
                     val response = tmdbApiService.get(fullUrl)
