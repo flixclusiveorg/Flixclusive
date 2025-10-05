@@ -7,6 +7,12 @@ import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import kotlinx.coroutines.flow.Flow
 
+// TODO: Refactor to a repository instead of a use case
+//  Then each `invoke` method should be renamed to `getLinks`
+//  then the methods must return a flow of `MediaLink` instead of `LoadLinksState`.
+//  We also need to merge the `CachedLinksRepository` into the `MediaLinksRepository`
+//  The repository will handle caching internally.
+
 /**
  * This use case is used to obtain the links of a film or episode
  * from a provider, which can be used to stream the film or episode.

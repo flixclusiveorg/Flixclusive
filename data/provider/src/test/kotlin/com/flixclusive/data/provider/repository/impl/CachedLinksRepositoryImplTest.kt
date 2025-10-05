@@ -62,7 +62,7 @@ class CachedLinksRepositoryImplTest {
 
             turbineScope {
                 val caches = repository.caches.testIn(this)
-                val currentCache = repository.currentCache.testIn(this)
+                val currentCache = repository.observeCache(testCacheKey).testIn(this)
 
                 with(caches) {
                     val emission = awaitItem()
@@ -72,7 +72,6 @@ class CachedLinksRepositoryImplTest {
                 }
 
                 with(currentCache) {
-                    skipItems(1)
                     val emission = awaitItem()
                     expectThat(emission).isEqualTo(testCachedLinks)
                     cancelAndIgnoreRemainingEvents()
@@ -224,8 +223,7 @@ class CachedLinksRepositoryImplTest {
         runTest(testDispatcher) {
             repository.storeCache(testCacheKey, testCachedLinks)
 
-            repository.currentCache.test {
-                skipItems(1)
+            repository.observeCache(testCacheKey).test {
                 val emission = awaitItem()
                 expectThat(emission).isEqualTo(testCachedLinks)
             }
@@ -275,6 +273,7 @@ class CachedLinksRepositoryImplTest {
             )
 
             repository.storeCache(keyWithEpisode, testCachedLinks)
+            repository.setCurrentCache(keyWithEpisode)
 
             expectThat(repository.getCache(keyWithEpisode)).isEqualTo(testCachedLinks)
             repository.currentCache.test {

@@ -5,6 +5,7 @@ import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.Serializable
 
@@ -147,6 +148,15 @@ interface CachedLinksRepository {
     )
 
     /**
+     * Sets the current cache to the one associated with the given [CacheKey].
+     *
+     * If the cache does not exist, it will set the [currentCache] to null.
+     *
+     * @see currentCache
+     * */
+    fun setCurrentCache(key: CacheKey)
+
+    /**
      * Removes the cache associated with the given [CacheKey].
      * This will remove both the cache in the observable [caches] map
      * and the [currentCache] state flow, if it matches it.
@@ -156,7 +166,7 @@ interface CachedLinksRepository {
     fun removeCache(key: CacheKey)
 
     /**
-     * Observes the cache associated with the given [CacheKey].
+     * Gets the cache associated with the given [CacheKey].
      * If the cache does not exist, it will store and return the [defaultValue] if provided.
      *
      * If all streams in the cache are expired, it will return null.
@@ -170,6 +180,22 @@ interface CachedLinksRepository {
         key: CacheKey,
         defaultValue: CachedLinks? = null,
     ): CachedLinks?
+
+    /**
+     * Observes the cache associated with the given [CacheKey].
+     * If the cache does not exist, it will store and return the [defaultValue] if provided.
+     *
+     * If all streams in the cache are expired, it will return null.
+     *
+     * @param key The [CacheKey] to observe.
+     * @param defaultValue The default [CachedLinks] to store if the cache does not exist.
+     *
+     * @return A flow of [CachedLinks] object if it exists, or the [defaultValue] if provided.
+     * */
+    fun observeCache(
+        key: CacheKey,
+        defaultValue: CachedLinks? = null,
+    ): Flow<CachedLinks?>
 
     /**
      * Clears all cached links including all streams and subtitles.
