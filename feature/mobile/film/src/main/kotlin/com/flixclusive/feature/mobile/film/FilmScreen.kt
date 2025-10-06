@@ -300,7 +300,7 @@ private fun FilmScreenContent(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(DefaultScreenPaddingHorizontal)
-                                        .padding(top = 10.dp),
+                                        .padding(top = 20.dp),
                                 )
                             }
 
@@ -309,7 +309,7 @@ private fun FilmScreenContent(
                                     metadata = metadata as FilmMetadata,
                                     modifier = Modifier
                                         .padding(horizontal = DefaultScreenPaddingHorizontal)
-                                        .padding(top = 25.dp),
+                                        .padding(top = 30.dp),
                                 )
                             }
 
