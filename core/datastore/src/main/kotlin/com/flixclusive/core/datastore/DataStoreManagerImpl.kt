@@ -113,12 +113,10 @@ internal class DataStoreManagerImpl @Inject constructor(
                 val oldValue = preferences[key]
                 val newValue =
                     if (oldValue != null) {
-                        Json.decodeFromString(type.serializer(), oldValue)
+                        transform(Json.decodeFromString(type.serializer(), oldValue))
                     } else {
-                        type.java.getDeclaredConstructor().newInstance()
+                        transform(type.java.getDeclaredConstructor().newInstance())
                     }
-
-                transform(newValue)
 
                 preferences[key] = Json.encodeToString(type.serializer(), newValue)
             }
