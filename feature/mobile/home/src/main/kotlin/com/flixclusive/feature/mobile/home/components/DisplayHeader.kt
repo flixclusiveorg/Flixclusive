@@ -147,6 +147,7 @@ internal fun DisplayHeader(
     ) {
         AnimatedContent(
             targetState = error != null,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
             modifier = Modifier.fillMaxSize(),
         ) { hasErrors ->
             when (hasErrors) {
@@ -254,7 +255,9 @@ internal fun DisplayHeader(
                             }
 
                             FlowRow(
-                                modifier = Modifier.padding(top = 4.dp),
+                                modifier = Modifier
+                                    .padding(top = 4.dp)
+                                    .padding(horizontal = 16.dp),
                                 verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                             ) {
