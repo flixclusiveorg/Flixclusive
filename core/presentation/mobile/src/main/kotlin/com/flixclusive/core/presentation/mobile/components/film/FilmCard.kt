@@ -10,7 +10,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +17,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,6 +29,7 @@ import com.flixclusive.core.presentation.common.components.FilmCover
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getFilm
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.model.film.Film
 
@@ -66,10 +67,12 @@ fun FilmCard(
                 onSuccess = { showPlaceholder = false },
                 onClick = { onClick(film) },
                 onLongClick = { onLongClick(film) },
-                modifier = Modifier.background(
-                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                    shape = MaterialTheme.shapes.extraSmall,
-                ),
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(3),
+                        shape = MaterialTheme.shapes.small,
+                    ),
             )
 
             if (showPlaceholder) {
