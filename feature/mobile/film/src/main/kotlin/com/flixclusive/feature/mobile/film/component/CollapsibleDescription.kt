@@ -191,7 +191,7 @@ private fun FilmMetadata.getDetailedDescription(context: Context): String {
         cast
             .takeIf { it.isNotEmpty() }
             ?.take(3)
-            ?.joinToString(separator = ", ")
+            ?.joinToString(separator = ", ") { it.name }
             ?.also { appendLine(context.getString(R.string.casts, it)) }
 
         producers
