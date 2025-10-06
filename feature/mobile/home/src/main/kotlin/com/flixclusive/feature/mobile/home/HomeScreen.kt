@@ -165,7 +165,10 @@ private fun HomeScreenBasePreview() {
 
                 override fun previewFilm(film: Film) {}
 
-                override fun play(film: Film, episode: Episode?) {}
+                override fun play(
+                    film: Film,
+                    episode: Episode?,
+                ) {}
             }
 
             var previewState by remember { mutableIntStateOf(readyState) }

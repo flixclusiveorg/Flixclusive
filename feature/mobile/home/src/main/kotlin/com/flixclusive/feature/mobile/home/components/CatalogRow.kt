@@ -70,7 +70,7 @@ internal fun CatalogRow(
     val shouldPaginate = remember {
         derivedStateOf {
             if (!pagingState.state.isLoading && pagingState.hasNext) {
-                listState.shouldPaginate()
+                listState.shouldPaginate() || (items.isEmpty() && pagingState.page == 1)
             } else {
                 false
             }
