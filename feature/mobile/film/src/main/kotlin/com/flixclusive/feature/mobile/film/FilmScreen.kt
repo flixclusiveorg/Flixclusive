@@ -287,10 +287,16 @@ private fun FilmScreenContent(
                             }
 
                             item(span = { GridItemSpan(maxLineSpan) }) {
+                                val isInLibrary by remember {
+                                    derivedStateOf {
+                                        libraryListStates().any { it.containsFilm }
+                                    }
+                                }
+
                                 HeaderButtons(
                                     metadata = metadata as FilmMetadata,
                                     watchProgress = watchProgress,
-                                    isInLibrary = watchProgress != null,
+                                    isInLibrary = isInLibrary,
                                     onPlay = { navigator.play(metadata) },
                                     onAddToLibrary = { isLibrarySheetOpen = true },
                                     onToggleDownload = {

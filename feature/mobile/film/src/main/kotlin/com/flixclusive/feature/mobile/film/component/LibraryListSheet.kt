@@ -7,31 +7,35 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -41,6 +45,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import coil3.imageLoader
+import coil3.request.ImageRequest
 import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
@@ -48,13 +55,14 @@ import com.flixclusive.core.database.entity.library.LibraryListItemWithMetadata
 import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
 import com.flixclusive.core.presentation.common.extensions.clearFocusOnSoftKeyboardHide
-import com.flixclusive.core.presentation.common.extensions.showSoftKeyboard
 import com.flixclusive.core.presentation.common.extensions.toTextFieldValue
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
+import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
+import com.flixclusive.core.presentation.mobile.components.material3.CustomOutlinedTextField
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.ActionButton
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.theme.MobileColors.surfaceColorAtElevation
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.film.LibraryListAndState
@@ -76,17 +84,11 @@ internal fun LibraryListSheet(
 ) {
     var isCreateDialogOpen by remember { mutableStateOf(false) }
 
-    ModalBottomSheet(
+    CommonBottomSheet(
         modifier = modifier,
         onDismissRequest = onDismissRequest,
-        shape = MaterialTheme.shapes.small.copy(
-            bottomEnd = CornerSize(0.dp),
-            bottomStart = CornerSize(0.dp),
-        ),
     ) {
-        LazyColumn(
-            contentPadding = PaddingValues(10.dp),
-        ) {
+        LazyColumn(contentPadding = PaddingValues(10.dp)) {
             item {
                 Text(
                     text = stringResource(LocaleR.string.add_to_list),
@@ -115,6 +117,8 @@ internal fun LibraryListSheet(
                 HorizontalDivider(
                     thickness = 0.5.dp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3F),
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
                 )
             }
 
@@ -153,7 +157,7 @@ private fun SearchBar(
     val focusManager = LocalFocusManager.current
     val keyboardManager = LocalSoftwareKeyboardController.current
 
-    TextField(
+    CustomOutlinedTextField(
         value = textFieldValue.value,
         onValueChange = {
             textFieldValue.value = it
@@ -197,7 +201,6 @@ private fun SearchBar(
         }),
         modifier = modifier
             .fillMaxWidth()
-            .showSoftKeyboard(true)
             .clearFocusOnSoftKeyboardHide(),
     )
 }
@@ -210,6 +213,7 @@ private fun CreateLibraryButton(
     TextButton(
         onClick = onClick,
         shape = MaterialTheme.shapes.small,
+        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 24.dp),
         modifier = modifier.fillMaxWidth(),
     ) {
         AdaptiveIcon(
@@ -252,13 +256,9 @@ private fun ItemContent(
         shape = MaterialTheme.shapes.small,
         modifier = modifier.fillMaxWidth(),
     ) {
-        ImageWithSmallPlaceholder(
+        LibraryItemIcon(
             model = imageModel,
             contentDescription = listAndState.list.name,
-            contentScale = ContentScale.Crop,
-            placeholder = painterResource(UiCommonR.drawable.library_outline),
-            placeholderSize = imageSize.times(0.5f),
-            shape = MaterialTheme.shapes.small,
             modifier = Modifier
                 .size(imageSize)
                 .align(Alignment.CenterVertically),
@@ -304,6 +304,53 @@ private fun ItemContent(
         }
     }
 }
+
+@Composable
+private fun LibraryItemIcon(
+    model: ImageRequest?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+) {
+    var isSuccess by remember { mutableStateOf(false) }
+
+    LaunchedEffect(model) {
+        if (model == null) {
+            isSuccess = false
+        }
+    }
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3))
+    ) {
+        AnimatedVisibility(
+            visible = !isSuccess,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Icon(
+                painter = painterResource(UiCommonR.drawable.library_outline),
+                contentDescription = contentDescription,
+                tint = LocalContentColor.current.copy(0.8F),
+                modifier = Modifier
+                    .matchParentSize()
+                    .scale(0.5f)
+            )
+        }
+
+        AsyncImage(
+            model = model,
+            imageLoader = LocalContext.current.imageLoader,
+            contentDescription = contentDescription,
+            contentScale = ContentScale.Crop,
+            onSuccess = { isSuccess = true },
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
 
 @Preview
 @Composable
