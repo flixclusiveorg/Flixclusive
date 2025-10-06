@@ -25,8 +25,8 @@ import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.tmdb.repository.TMDBFilmSearchItemsRepository
 import com.flixclusive.data.tmdb.util.TMDBFilters.Companion.getDefaultTMDBFilters
 import com.flixclusive.feature.mobile.searchExpanded.SearchUiState.Companion.resetPagination
-import com.flixclusive.feature.mobile.searchExpanded.util.Constant.TMDB_PROVIDER_ID
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData
@@ -254,7 +254,7 @@ internal class SearchExpandedScreenViewModel
             val page = _uiState.value.page
             val query = _searchQuery.value
 
-            return if (selectedProviderId == TMDB_PROVIDER_ID) {
+            return if (selectedProviderId == DEFAULT_FILM_SOURCE_NAME) {
                 val mediaTypeFilter = filteredFilters.first().first()
                 val mediaType = mediaTypeFilter.state as Int
 
@@ -287,7 +287,7 @@ internal data class SearchUiState(
     val maxPage: Int = 1,
     val canPaginate: Boolean = false,
     val error: UiText? = null,
-    val selectedProviderId: String = TMDB_PROVIDER_ID,
+    val selectedProviderId: String = DEFAULT_FILM_SOURCE_NAME,
     val lastQuerySearched: String = "",
 ) {
     companion object {

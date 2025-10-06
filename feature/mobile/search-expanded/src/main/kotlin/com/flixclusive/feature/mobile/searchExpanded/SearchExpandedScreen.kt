@@ -33,15 +33,14 @@ import com.flixclusive.core.presentation.mobile.extensions.shouldPaginate
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.data.tmdb.util.TMDBFilters
+import com.flixclusive.data.tmdb.util.TMDBProviderUtils
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchBarInput
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchFilmsGridView
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchProvidersView
 import com.flixclusive.feature.mobile.searchExpanded.component.SearchSearchHistoryView
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.FilterBottomSheet
-import com.flixclusive.feature.mobile.searchExpanded.util.Constant
 import com.flixclusive.feature.mobile.searchExpanded.util.FilterHelper.isBeingUsed
 import com.flixclusive.model.film.Film
-import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.filter.FilterList
 import com.ramcosta.composedestinations.annotation.Destination
@@ -125,7 +124,7 @@ private fun SearchExpandedScreenContent(
         val providerMetadata = providerMetadataList.find { uiState.selectedProviderId == it.id }
 
         if (providerMetadata == null) {
-            return@remember Constant.tmdbProviderMetadata
+            return@remember TMDBProviderUtils.tmdbProviderMetadata
         }
 
         providerMetadata
@@ -233,7 +232,7 @@ private fun SearchExpandedScreenContent(
 private fun SearchExpandedScreenBasePreview() {
     val providers = remember {
         List(10) {
-            Constant.tmdbProviderMetadata.copy(
+            TMDBProviderUtils.tmdbProviderMetadata.copy(
                 id = "provider_$it",
                 name = "Provider $it",
             )

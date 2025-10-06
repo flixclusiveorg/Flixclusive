@@ -11,8 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveGridCellsCount
+import com.flixclusive.data.tmdb.util.TMDBProviderUtils
 import com.flixclusive.feature.mobile.searchExpanded.ViewLabelHeader
-import com.flixclusive.feature.mobile.searchExpanded.util.Constant
 import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.collections.immutable.ImmutableList
 import kotlin.math.max
@@ -44,7 +44,7 @@ internal fun SearchProvidersView(
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            val tmdbMetadata = Constant.tmdbProviderMetadata
+            val tmdbMetadata = TMDBProviderUtils.tmdbProviderMetadata
 
             SearchProviderBlock(
                 providerMetadata = tmdbMetadata,

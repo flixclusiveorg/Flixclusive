@@ -25,6 +25,7 @@ import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.repository.WatchlistRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.data.tmdb.util.TMDBProviderUtils
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase
 import com.flixclusive.domain.database.usecase.ToggleWatchlistStatusUseCase
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
@@ -34,6 +35,7 @@ import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUse
 import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
 import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchProgressLibraryList
 import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchlistLibraryList
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.provider.ProviderMetadata
@@ -246,8 +248,10 @@ internal class FilmScreenViewModel @Inject constructor(
 
     private fun fetchProviderUsed() {
         val providerId = _metadata.value?.providerId
-        val providerUsed = providerId?.let {
-            providerRepository.getProviderMetadata(it)
+        val providerUsed = if (providerId == DEFAULT_FILM_SOURCE_NAME) {
+            TMDBProviderUtils.tmdbProviderMetadata
+        } else {
+            providerId?.let { providerRepository.getProviderMetadata(it) }
         }
 
         if (providerUsed == null) {
