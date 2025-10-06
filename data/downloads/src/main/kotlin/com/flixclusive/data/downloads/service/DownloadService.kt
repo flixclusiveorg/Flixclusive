@@ -22,6 +22,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
@@ -168,7 +170,7 @@ class DownloadService : Service() {
                 val file = File(filePath, fileName)
 
                 downloadRepository.executeDownload(downloadId, url, file)
-                downloadRepository.getDownloadState(downloadId).collect { state ->
+                downloadRepository.getDownloadState(downloadId).takeWhile { state ->
                     updateNotification(fileName, state.progress, state.status)
 
                     if (state.status.isFinished) {
@@ -179,10 +181,10 @@ class DownloadService : Service() {
                             releaseWakeLockIfNeeded()
                             stopSelf()
                         }
-
-                        this.cancel() // Exit the collection
                     }
-                }
+
+                    !state.status.isFinished
+                }.collect()
             } catch (e: Exception) {
                 activeDownloads.remove(downloadId)
                 if (activeDownloads.isEmpty()) {

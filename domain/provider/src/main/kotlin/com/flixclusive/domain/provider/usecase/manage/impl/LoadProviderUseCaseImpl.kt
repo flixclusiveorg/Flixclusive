@@ -34,10 +34,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dalvik.system.PathClassLoader
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
@@ -92,7 +93,7 @@ internal class LoadProviderUseCaseImpl
                             fileName = file.name,
                         )
 
-                        downloadFile(downloadRequest).collectLatest {
+                        downloadFile(downloadRequest).takeWhile {
                             val exception = it.error
 
                             when {
@@ -110,7 +111,9 @@ internal class LoadProviderUseCaseImpl
                                     infoLog("Successfully downloaded provider: ${metadata.name} [${file.name}]")
                                 }
                             }
-                        }
+
+                            !it.status.isFinished
+                        }.collect()
                     } catch (e: Throwable) {
                         errorLog("Failed to download provider: ${metadata.name} [${file.name}]")
                         errorLog(e)
