@@ -16,10 +16,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -316,30 +316,16 @@ private fun ExtraButton(
         stringResource(inactiveLabel)
     }
 
-    @Composable
-    fun LabelIconContent() {
-        AdaptiveIcon(
-            painter = if (state) {
-                painterResource(activeDrawable)
-            } else {
-                painterResource(inactiveDrawable)
-            },
-            contentDescription = label,
-            tint = if (state) {
-                LocalContentColor.current
-            } else {
-                MaterialTheme.colorScheme.onSurface.copy(0.6F)
-            },
-            dp = if (isCompactOrMedium) null else 18.dp,
-        )
+    val drawable = if (state) {
+        painterResource(activeDrawable)
+    } else {
+        painterResource(inactiveDrawable)
+    }
 
-        if(isCompactOrMedium) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall.asAdaptiveTextStyle(),
-                color = MaterialTheme.colorScheme.onSurface.copy(0.6F),
-            )
-        }
+    val tint = if (state) {
+        LocalContentColor.current
+    } else {
+        MaterialTheme.colorScheme.onSurface.copy(0.6F)
     }
 
     PlainTooltipBox(description = label) {
@@ -367,20 +353,24 @@ private fun ExtraButton(
                 border = border,
                 contentPadding = PaddingValues(vertical = 10.dp, horizontal = 15.dp)
             ) {
-                LabelIconContent()
+                AdaptiveIcon(
+                    painter = drawable,
+                    contentDescription = label,
+                    tint = tint,
+                    dp = 18.dp,
+                )
             }
         } else {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(3.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .sizeIn(50.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .focusable()
-                    .clickable { onClick() }
-                    .padding(3.dp),
+            IconButton(
+                onClick = onClick,
+                modifier = Modifier.padding(3.dp),
             ) {
-                LabelIconContent()
+                AdaptiveIcon(
+                    painter = drawable,
+                    contentDescription = label,
+                    tint = tint,
+                    dp = 30.dp,
+                )
             }
         }
 
