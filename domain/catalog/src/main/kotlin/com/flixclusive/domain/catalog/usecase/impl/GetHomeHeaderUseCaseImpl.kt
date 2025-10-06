@@ -65,10 +65,9 @@ internal class GetHomeHeaderUseCaseImpl
 
                         val metadata = getMetadata(headerItem) ?: return@forEach
 
-                        val genres = metadata.genres + metadata.genres
                         val enhancedMetadata = when (metadata) {
-                            is Movie -> metadata.copy(genres = genres)
-                            is TvShow -> metadata.copy(genres = genres)
+                            is Movie -> metadata.copy(genres = metadata.genres)
+                            is TvShow -> metadata.copy(genres = metadata.genres)
                             else -> throw IllegalArgumentException(
                                 "Unsupported FilmMetadata type: ${metadata::class.java.simpleName}",
                             )
