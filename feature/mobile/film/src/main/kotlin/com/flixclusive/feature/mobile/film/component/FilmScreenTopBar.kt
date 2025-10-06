@@ -1,7 +1,10 @@
 package com.flixclusive.feature.mobile.film.component
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +41,7 @@ internal fun FilmScreenTopBar(
 
     Surface(
         modifier = modifier
+            .windowInsetsPadding(WindowInsets.statusBars)
             .drawBehind {
                 drawRect(
                     color = appBarContainerColor,

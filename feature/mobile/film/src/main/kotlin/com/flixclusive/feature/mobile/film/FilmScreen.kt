@@ -77,6 +77,7 @@ import com.flixclusive.feature.mobile.film.component.HeaderButtons
 import com.flixclusive.feature.mobile.film.component.LibraryListSheet
 import com.flixclusive.feature.mobile.film.component.seriesContent
 import com.flixclusive.feature.mobile.film.util.FilmScreenUtils
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.FilmSearchItem
@@ -268,7 +269,8 @@ private fun FilmScreenContent(
                                     BriefDetails(
                                         metadata = metadata,
                                         onProviderClick = {
-                                            if (uiState.provider != null) {
+                                            if (uiState.provider != null
+                                                && uiState.provider.id != DEFAULT_FILM_SOURCE_NAME) {
                                                 navigator.openProviderDetails(uiState.provider)
                                                 return@BriefDetails
                                             }

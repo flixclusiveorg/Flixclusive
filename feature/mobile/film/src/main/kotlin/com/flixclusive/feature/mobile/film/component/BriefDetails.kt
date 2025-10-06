@@ -51,6 +51,7 @@ import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.film.R
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.Genre
 import com.flixclusive.model.film.TvShow
@@ -87,7 +88,7 @@ internal fun BriefDetails(
     ) {
         ProviderUsed(
             provider = provider,
-            onClick = onProviderClick
+            onClick = onProviderClick,
         )
 
         Text(
@@ -179,6 +180,11 @@ private fun ProviderUsed(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val providerName = if (provider?.id == DEFAULT_FILM_SOURCE_NAME) {
+        stringResource(LocaleR.string.app_name)
+    } else {
+        provider!!.name
+    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -186,7 +192,7 @@ private fun ProviderUsed(
             .clickable { onClick() }
             .padding(3.dp),
     ) {
-        if (provider != null) {
+        if (provider.id != DEFAULT_FILM_SOURCE_NAME) {
             ImageWithSmallPlaceholder(
                 model = context.buildImageRequest(provider.iconUrl),
                 placeholder = painterResource(UiCommonR.drawable.movie_icon),
@@ -208,7 +214,7 @@ private fun ProviderUsed(
         }
 
         Text(
-            text = provider?.name ?: stringResource(LocaleR.string.app_name),
+            text = providerName,
             style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle().let {
                 it.copy(letterSpacing = it.letterSpacing * 1.2f)
             },
@@ -321,7 +327,7 @@ private fun BriefDetailsBasePreview() {
                 metadata = remember { DummyDataForPreview.getMovie() },
                 provider = DummyDataForPreview.getDummyProviderMetadata(),
                 onGenreClick = {},
-                onProviderClick = {}
+                onProviderClick = {},
             )
         }
     }
