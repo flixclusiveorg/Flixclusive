@@ -64,7 +64,7 @@ internal fun FilmScreenTopBar(
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     modifier = Modifier
-                        .padding(start = 15.dp)
+                        .padding(horizontal = 15.dp)
                         .graphicsLayer {
                             alpha = containerAlpha()
                         },
