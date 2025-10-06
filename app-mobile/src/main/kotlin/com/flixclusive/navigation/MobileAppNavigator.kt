@@ -269,8 +269,7 @@ internal class MobileAppNavigator(
 
     override fun openAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {
         navController.navigateIfResumed(
-            AddProviderScreenDestination(initialSelectedRepositoryFilter = initialSelectedRepositoryFilter) within
-                destination.navGraph(),
+            AddProviderScreenDestination(initialSelectedRepositoryFilter = initialSelectedRepositoryFilter),
         )
     }
 }

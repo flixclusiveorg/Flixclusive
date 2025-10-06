@@ -37,8 +37,8 @@ internal object MobileNavGraphs {
 
             override val destinationsByRoute =
                 listOf<DestinationSpec<*>>(
-                    HomeScreenDestination,
                     FilmScreenDestination,
+                    HomeScreenDestination,
                     SeeAllScreenDestination,
                 ).routedIn(this)
                     .associateBy { it.route }
@@ -52,9 +52,9 @@ internal object MobileNavGraphs {
 
             override val destinationsByRoute =
                 listOf<DestinationSpec<*>>(
-                    SearchScreenDestination,
-                    SearchExpandedScreenDestination,
                     FilmScreenDestination,
+                    SearchExpandedScreenDestination,
+                    SearchScreenDestination,
                     SeeAllScreenDestination,
                 ).routedIn(this)
                     .associateBy { it.route }
@@ -68,9 +68,9 @@ internal object MobileNavGraphs {
 
             override val destinationsByRoute =
                 listOf<DestinationSpec<*>>(
-                    ManageLibraryScreenDestination,
-                    LibraryDetailsScreenDestination,
                     FilmScreenDestination,
+                    LibraryDetailsScreenDestination,
+                    ManageLibraryScreenDestination,
                     SeeAllScreenDestination,
                 ).routedIn(this)
                     .associateBy { it.route }
@@ -84,14 +84,13 @@ internal object MobileNavGraphs {
 
             override val destinationsByRoute =
                 listOf<DestinationSpec<*>>(
-                    SettingsScreenDestination,
-                    AddProviderScreenDestination,
-                    ProviderManagerScreenDestination,
-                    RepositoryManagerScreenDestination,
-                    ProviderDetailsScreenDestination,
-                    ProviderSettingsScreenDestination,
                     MarkdownScreenDestination,
+                    ProviderDetailsScreenDestination,
+                    ProviderManagerScreenDestination,
+                    ProviderSettingsScreenDestination,
                     ProviderTestScreenDestination,
+                    RepositoryManagerScreenDestination,
+                    SettingsScreenDestination,
                 ).routedIn(this)
                     .associateBy { it.route }
         }
@@ -104,16 +103,17 @@ internal object MobileNavGraphs {
 
             override val destinationsByRoute =
                 listOf<DestinationSpec<*>>(
-                    PlayerScreenDestination,
-                    SplashScreenDestination,
-                    AppUpdatesScreenDestination,
-                    UserEditScreenDestination,
-                    UserProfilesScreenDestination,
-                    UserAvatarSelectScreenDestination,
+                    AddProviderScreenDestination,
                     AddUserScreenDestination,
+                    AppUpdatesScreenDestination,
                     MarkdownScreenDestination,
                     PinSetupScreenDestination,
                     PinVerifyScreenDestination,
+                    PlayerScreenDestination,
+                    SplashScreenDestination,
+                    UserAvatarSelectScreenDestination,
+                    UserEditScreenDestination,
+                    UserProfilesScreenDestination,
                 ).associateBy { it.route }
 
             override val nestedNavGraphs =

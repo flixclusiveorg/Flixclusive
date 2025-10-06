@@ -159,8 +159,6 @@ internal fun AddProviderScreenContent(
             .padding(horizontal = getAdaptiveDp(DefaultScreenPaddingHorizontal, 2.dp))
             .fillMaxSize(),
     ) {
-        val padding by remember { derivedStateOf { it } }
-
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize(),
@@ -177,7 +175,7 @@ internal fun AddProviderScreenContent(
                 )
             } else {
                 LazyColumn(
-                    contentPadding = padding,
+                    contentPadding = it,
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.align(Alignment.TopCenter),
                 ) {

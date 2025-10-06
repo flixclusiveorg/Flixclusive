@@ -350,10 +350,7 @@ private fun shouldHideBottomBar(route: Route): Boolean {
         )
 
     val noBottomBarNestedScreens =
-        listOf(
-            SearchExpandedScreenDestination.within(MobileNavGraphs.search).route,
-            AddProviderScreenDestination().within(MobileNavGraphs.settings).route,
-        )
+        listOf(SearchExpandedScreenDestination.within(MobileNavGraphs.search).route)
 
     return noBottomBarNestedScreens.none { it == route.route } &&
         noBottomBarScreens.none { it == route }
