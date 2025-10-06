@@ -270,7 +270,7 @@ internal class FilmScreenViewModel @Inject constructor(
         if (tvShow !is TvShow) return
 
         val episodeProgress = watchProgress.first() as? EpisodeProgress
-        val initialSelectedSeason = episodeProgress?.seasonNumber ?: tvShow.totalSeasons
+        val initialSelectedSeason = episodeProgress?.seasonNumber ?: 1
 
         _uiState.update {
             it.copy(selectedSeason = initialSelectedSeason)

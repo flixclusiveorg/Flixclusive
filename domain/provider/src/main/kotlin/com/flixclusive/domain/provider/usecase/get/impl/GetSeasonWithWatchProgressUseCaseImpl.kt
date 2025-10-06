@@ -32,7 +32,7 @@ internal class GetSeasonWithWatchProgressUseCaseImpl
                 // Try to get the season from the TvShow.seasons property first
                 var season = tvShow.seasons.find { it.number == number }
 
-                if (season == null && tvShow.isFromTmdbSource) {
+                if ((season == null || season.episodes.isEmpty()) && tvShow.isFromTmdbSource) {
                     val tmdbSeason = tmdbMetadataRepository.getSeason(
                         id = tvShow.tmdbId!!,
                         seasonNumber = number,
