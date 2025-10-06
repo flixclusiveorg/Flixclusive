@@ -16,7 +16,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -61,28 +60,19 @@ internal fun CatalogRow(
     items: PersistentSet<Film>,
     onFilmClick: (Film) -> Unit,
     onFilmLongClick: (Film) -> Unit,
-    paginate: (page: Int) -> Unit,
+    paginate: () -> Unit,
     onSeeAllItems: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
 
-    val shouldPaginate = remember {
-        derivedStateOf {
-            if (!pagingState.state.isLoading && pagingState.hasNext) {
-                listState.shouldPaginate() || (items.isEmpty() && pagingState.page == 1)
-            } else {
-                false
-            }
-        }
-    }
-
-    LaunchedEffect(listState, paginate) {
-        snapshotFlow { shouldPaginate.value }
-            .distinctUntilChanged()
+    LaunchedEffect(listState, paginate, pagingState) {
+        snapshotFlow {
+            pagingState.hasNext && (listState.shouldPaginate() || items.isEmpty() && pagingState.page == 1)
+        }.distinctUntilChanged()
             .filter { it }
             .collect {
-                paginate(pagingState.page + 1)
+                paginate()
             }
     }
 
@@ -152,10 +142,12 @@ internal fun CatalogRow(
                 pagingState.state.isError ||
                 items.isEmpty()
             ) {
-                items(3) {
+                items(20) {
                     FilmCardPlaceholder(
                         isShowingTitle = showTitles,
-                        modifier = Modifier.padding(3.dp)
+                        modifier = Modifier
+                            .padding(3.dp)
+                            .width(getAdaptiveFilmCardWidth())
                     )
                 }
             }
@@ -234,12 +226,12 @@ private fun CatalogRowBasePreview() {
                 items = items,
                 onFilmClick = { },
                 onFilmLongClick = { },
-                paginate = { page ->
-                    if (!isLoading && page <= 3) {
-                        requestedPage = page
+                onSeeAllItems = { },
+                paginate = {
+                    if (!isLoading && requestedPage <= 3) {
+                        requestedPage += 1
                     }
                 },
-                onSeeAllItems = { },
             )
         }
     }

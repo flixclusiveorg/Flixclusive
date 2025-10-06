@@ -35,7 +35,6 @@ import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentHashMap
-import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -232,10 +231,7 @@ internal class HomeScreenViewModel
             }
         }
 
-        fun paginate(
-            catalog: Catalog,
-            page: Int,
-        ) {
+        fun paginate(catalog: Catalog) {
             if (paginationJobs[catalog.url]?.isActive == true) {
                 return
             }
@@ -251,6 +247,7 @@ internal class HomeScreenViewModel
                     )
                 }
 
+                val page = _uiState.value.pagingStates[catalog.url]!!.page
                 val response = paginateItems(catalog = catalog, page = page)
                 val data = response.data
 
@@ -282,11 +279,8 @@ internal class HomeScreenViewModel
                             key = catalog.url,
                             newState = CatalogPagingState(
                                 hasNext = hasNext,
-                                state = when {
-                                    hasNext -> PagingDataState.Loading
-                                    else -> PagingDataState.Error(LocaleR.string.end_of_list)
-                                },
-                                page = page,
+                                page = page + 1, // Add 1 to the current page
+                                state = PagingDataState.Success(isExhausted = !hasNext),
                             ),
                         )
                 }
@@ -308,9 +302,9 @@ internal data class HomeUiState(
             key: String,
             newItems: List<Film>,
         ): HomeUiState {
-            if (!items.containsKey(key)) return this
+            val currentItems = items[key] ?: return this
 
-            return copy(items = items.put(key, newItems.toPersistentSet()))
+            return copy(items = items.put(key, currentItems.addAll(newItems)))
         }
 
         fun HomeUiState.updatePagingState(

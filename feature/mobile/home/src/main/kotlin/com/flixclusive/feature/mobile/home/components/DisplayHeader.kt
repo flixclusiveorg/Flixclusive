@@ -91,8 +91,8 @@ internal fun DisplayHeader(
 
     val feedbackOnLongPress = getFeedbackOnLongPress()
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-    val usePortraitView = windowSizeClass.windowWidthSizeClass.isCompact
-        || windowSizeClass.windowWidthSizeClass.isMedium
+    val usePortraitView = windowSizeClass.windowWidthSizeClass.isCompact ||
+        windowSizeClass.windowWidthSizeClass.isMedium
 
     var showTextInsteadOfLogo by rememberSaveable { mutableStateOf(false) }
     val logoImage = remember(film) {
@@ -199,7 +199,7 @@ internal fun DisplayHeader(
                             .align(labelAlignment)
                             .fillMaxWidth(labelMaxWidth)
                             .padding(top = 15.dp),
-                    ) DisplayHeaderLabelContent@ { state ->
+                    ) DisplayHeaderLabelContent@{ state ->
                         if (state == null) {
                             return@DisplayHeaderLabelContent
                         }
@@ -211,7 +211,9 @@ internal fun DisplayHeader(
                             if (showTextInsteadOfLogo) {
                                 Text(
                                     text = state.title,
-                                    style = MaterialTheme.typography.headlineMedium.asAdaptiveTextStyle(increaseBy = 5.sp),
+                                    style = MaterialTheme.typography.headlineMedium.asAdaptiveTextStyle(
+                                        increaseBy = 5.sp,
+                                    ),
                                     textAlign = TextAlign.Center,
                                     softWrap = true,
                                     modifier = Modifier.padding(
@@ -244,7 +246,7 @@ internal fun DisplayHeader(
                                     contentDescription = stringResource(LocaleR.string.rating_icon_content_desc),
                                     modifier = Modifier.scale(0.6F),
                                     tint = Colors.starColor,
-                                    increaseBy = 10.dp
+                                    increaseBy = 10.dp,
                                 )
 
                                 Text(
@@ -264,7 +266,9 @@ internal fun DisplayHeader(
                                 state.genres.forEachIndexed { index, genre ->
                                     Text(
                                         text = genre.name,
-                                        style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(increaseBy = 5.sp),
+                                        style = MaterialTheme.typography.labelMedium.asAdaptiveTextStyle(
+                                            increaseBy = 5.sp,
+                                        ),
                                         color = LocalContentColor.current.copy(0.6f),
                                     )
 
@@ -315,17 +319,17 @@ private fun BoxScope.ScrimOverlay(usePortraitView: Boolean) {
                             brush = Brush.linearGradient(
                                 colors = listOf(
                                     Color.Transparent,
-                                    backgroundColor
+                                    backgroundColor,
                                 ),
                                 start = Offset(
                                     size.width.times(0.2f),
-                                    size.height.times(0.5f)
+                                    size.height.times(0.5f),
                                 ),
                                 end = Offset(
                                     size.width.times(0.9f),
-                                    0f
-                                )
-                            )
+                                    0f,
+                                ),
+                            ),
                         )
                     }
                 }
@@ -345,7 +349,7 @@ private fun DisplayHeaderBasePreview() {
                 "Action",
                 "Adventure",
                 "Fantasy",
-            )
+            ),
         )
     }
 

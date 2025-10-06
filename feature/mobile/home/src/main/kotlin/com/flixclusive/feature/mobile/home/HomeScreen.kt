@@ -76,7 +76,7 @@ private fun HomeScreenContent(
     uiState: HomeUiState,
     showFilmTitles: Boolean,
     catalogs: List<Catalog>,
-    paginate: (Catalog, Int) -> Unit,
+    paginate: (Catalog) -> Unit,
     continueWatchingItems: List<WatchProgressWithMetadata>,
     onRetryFetchingHeaderItem: () -> Unit,
 ) {
@@ -138,7 +138,7 @@ private fun HomeScreenContent(
                 onFilmClick = navigator::openFilmScreen,
                 showTitles = showFilmTitles,
                 onFilmLongClick = navigator::previewFilm,
-                paginate = { paginate(catalog, it) },
+                paginate = { paginate(catalog) },
                 onSeeAllItems = { navigator.openSeeAllScreen(item = catalog) },
             )
         }
@@ -180,7 +180,7 @@ private fun HomeScreenBasePreview() {
                         uiState = HomeUiState(),
                         showFilmTitles = true,
                         catalogs = emptyList(),
-                        paginate = { _, _ -> },
+                        paginate = { },
                         continueWatchingItems = emptyList(),
                         onRetryFetchingHeaderItem = { previewState = readyState },
                     )
@@ -192,7 +192,7 @@ private fun HomeScreenBasePreview() {
                         uiState = HomeUiState(itemHeaderError = UiText.from(R.string.failed_to_get_header_item)),
                         showFilmTitles = true,
                         catalogs = emptyList(),
-                        paginate = { _, _ -> },
+                        paginate = { },
                         continueWatchingItems = emptyList(),
                         onRetryFetchingHeaderItem = { previewState = readyState },
                     )
@@ -323,10 +323,7 @@ private fun HomeScreenBasePreview() {
                         ),
                         showFilmTitles = true,
                         catalogs = dummyCatalogs,
-                        paginate = { catalog, page ->
-                            // Simulate pagination without LaunchedEffect
-                            println("Paginating ${catalog.name} to page $page")
-                        },
+                        paginate = {  },
                         continueWatchingItems = continueWatchingItems,
                         onRetryFetchingHeaderItem = { previewState = loadingState },
                     )
