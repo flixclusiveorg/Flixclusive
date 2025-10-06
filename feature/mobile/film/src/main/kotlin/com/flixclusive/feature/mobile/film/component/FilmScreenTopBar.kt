@@ -41,13 +41,13 @@ internal fun FilmScreenTopBar(
 
     Surface(
         modifier = modifier
-            .windowInsetsPadding(WindowInsets.statusBars)
             .drawBehind {
                 drawRect(
                     color = appBarContainerColor,
                     alpha = containerAlpha()
                 )
-            },
+            }
+            .windowInsetsPadding(WindowInsets.statusBars),
         color = Color.Transparent
     ) {
         TopAppBarLayout(
