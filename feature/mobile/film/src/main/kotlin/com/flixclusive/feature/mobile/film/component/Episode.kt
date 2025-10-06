@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -273,6 +274,7 @@ private fun EpisodePreview(
                     imageSize = "w300",
                     title = episode.title,
                     onSuccess = { showPlaceholder = false },
+                    contentScale = ContentScale.Crop,
                     modifier = imageWidthModifier
                         .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
                         .sharedElement(
