@@ -14,7 +14,7 @@ data class TMDBDiscoverCatalog(
     @SerializedName("poster_path") override val image: String? = null,
 ) : Catalog(),
     Serializable {
-    override val canPaginate: Boolean = true
+    override val canPaginate: Boolean get() = true
 
     override fun equals(other: Any?): Boolean {
         val newData = other as? TMDBDiscoverCatalog

@@ -1,7 +1,6 @@
 package com.flixclusive.data.tmdb.model
 
 import com.flixclusive.model.provider.Catalog
-import kotlinx.serialization.Serializable
 
 /**
  * A catalog model used for the home screen and dashboard content.
@@ -11,14 +10,13 @@ import kotlinx.serialization.Serializable
  * efficient pagination and consistent content delivery for home screen
  * catalog sections.
  */
-@Serializable
 data class TMDBHomeCatalog(
+    val required: Boolean,
     override val url: String,
     override val name: String,
     override val image: String? = null,
-    val required: Boolean,
 ) : Catalog() {
-    override val canPaginate: Boolean = true
+    override val canPaginate: Boolean get() = true
 }
 
 /**
