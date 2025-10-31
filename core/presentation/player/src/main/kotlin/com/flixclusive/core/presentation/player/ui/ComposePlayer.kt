@@ -58,7 +58,7 @@ fun ComposePlayer(
 
     Box(modifier = modifier) {
         PlayerSurface(
-            player = (player as AppPlayerImpl).exoPlayer,
+            player = player,
             modifier = Modifier.resizeWithContentScale(
                 contentScale = resizeMode.toContentScale(),
                 sourceSizeDp = presentationState.videoSizeDp,

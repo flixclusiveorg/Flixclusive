@@ -22,7 +22,9 @@ enum class ScrubEvent {
     EIGHTY_PERCENT_REMAINING,
     TEN_SECONDS_REMAINING,
     SCRUBBING,
-    NONE,
+    NONE;
+
+    val isScrubbing get() = this == SCRUBBING
 }
 
 /**
@@ -71,19 +73,16 @@ class ScrubState private constructor(
      * @param position The new position to update the [progress] to.
      * */
     fun onScrubMove(position: Long) {
-        progress = position
+        player.seekTo(position)
     }
 
     /**
      * Called when the user stops interacting with the scrubber.
-     *
-     * @param position The final position where the user released the scrubber.
      * */
     @OptIn(UnstableApi::class)
-    fun onScrubEnd(position: Long) {
+    fun onScrubEnd() {
         (player as AppPlayerImpl).exoPlayer?.let {
             it.isScrubbingModeEnabled = false
-            it.seekTo(position)
             event = ScrubEvent.NONE
         }
     }

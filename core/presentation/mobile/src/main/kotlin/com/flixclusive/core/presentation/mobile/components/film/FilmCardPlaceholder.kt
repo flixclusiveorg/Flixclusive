@@ -29,6 +29,7 @@ fun FilmCardPlaceholder(
     ) {
         Placeholder(
             modifier = Modifier
+                .fillMaxWidth()
                 .aspectRatio(FilmCover.Poster.ratio)
         )
 
