@@ -18,9 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -43,6 +40,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -68,6 +66,7 @@ import com.flixclusive.model.provider.ProviderMetadata
 import kotlin.random.Random
 import kotlin.time.Duration
 import com.flixclusive.core.strings.R as LocaleR
+import com.flixclusive.core.drawables.R as UiCommonR
 
 private val ButtonHeight = 40.dp
 private val CardShape = RoundedCornerShape(8.dp)
@@ -178,13 +177,13 @@ private fun TestResultCardHeader(
                 label = "",
             ) {
                 val icon = if (it) {
-                    Icons.Rounded.KeyboardArrowUp
+                    painterResource(UiCommonR.drawable.up_arrow)
                 } else {
-                    Icons.Rounded.KeyboardArrowDown
+                    painterResource(UiCommonR.drawable.down_arrow)
                 }
 
                 AdaptiveIcon(
-                    imageVector = icon,
+                    painter = icon,
                     contentDescription = stringResource(id = LocaleR.string.expand_card_icon_content_desc),
                     tint = LocalContentColor.current.copy(0.8F),
                 )
@@ -206,6 +205,7 @@ private fun TestResultCardContent(
     val horizontalPadding = ContentPadding.calculateLeftPadding(LocalLayoutDirection.current)
 
     val context = LocalContext.current
+    val resources = LocalResources.current
     val hapticFeedback = getFeedbackOnLongPress()
 
     ElevatedCard(
@@ -253,7 +253,7 @@ private fun TestResultCardContent(
                                             testName = output.name.asString(context),
                                             otherLabels = otherLabels,
                                             fullLog = output.fullLog?.asString(context)
-                                                ?: context.getString(LocaleR.string.no_full_log),
+                                                ?: resources.getString(LocaleR.string.no_full_log),
                                         ),
                                     )
                                 },
@@ -274,13 +274,14 @@ private fun TestOutputLog(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     val shortLog = remember(output.shortLog) {
         if (output.status != TestStatus.RUNNING) {
             output.shortLog?.asString(context)
-                ?: context.getString(LocaleR.string.no_short_log)
+                ?: resources.getString(LocaleR.string.no_short_log)
         } else {
-            context.getString(LocaleR.string.asserting)
+            resources.getString(LocaleR.string.asserting)
         }
     }
 

@@ -443,7 +443,7 @@
     <string name="pin_hint_sub_description">This will help you remember what your PIN is if you somehow forget it</string>
     <string name="pin_remove_content_desc">Remove the pin lock for this profile</string>
     <string name="pip_mode_desc">Picture-in-picture (PiP) lets you watch videos while using other apps.</string>
-    <string name="play_pause_button_content_description">Play or pause button</string>
+    <string name="play_pause_button_content_description">Play / Pause</string>
     <string name="playback_speed_snackbar_message">Playback speed set to %1$s</string>
     <string name="provider_icon_content_desc">Default icon of a provider</string>
     <string name="provider_snackbar_message">Provider set to %1$s</string>

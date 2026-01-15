@@ -65,7 +65,7 @@ private const val TOLERANCE_AFTER_US = 300_000L
 @OptIn(UnstableApi::class)
 @Stable
 internal class AppPlayerImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val dataSourceFactory: AppDataSourceFactoryImpl,
     private val playerPrefs: PlayerPreferences,
     private val subtitlePrefs: SubtitlesPreferences,
@@ -288,7 +288,10 @@ internal class AppPlayerImpl @Inject constructor(
             // The renderer will pick up the new offset from the updated state
             // when it re-renders the current position
             try {
-                textRenderer?.resetPosition(currentPos)
+                textRenderer?.resetPosition(
+                    currentPos,
+                    false
+                )
             } catch (e: Exception) {
                 val seekPos = (currentPos - 50).coerceAtLeast(0L)
                 seekTo(seekPos)
@@ -891,5 +894,13 @@ internal class AppPlayerImpl @Inject constructor(
         handleAudioFocus: Boolean,
     ) {
         exoPlayer?.setAudioAttributes(audioAttributes, handleAudioFocus)
+    }
+
+    override fun mute() {
+        exoPlayer?.mute()
+    }
+
+    override fun unmute() {
+        exoPlayer?.unmute()
     }
 }

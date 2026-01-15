@@ -29,7 +29,7 @@ import com.ramcosta.composedestinations.manualcomposablecalls.composable
 import com.ramcosta.composedestinations.navigation.dependency
 import com.ramcosta.composedestinations.scope.resultRecipient
 
-@OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialNavigationApi::class)
 @Composable
 internal fun AppNavHost(
     navController: NavHostController,

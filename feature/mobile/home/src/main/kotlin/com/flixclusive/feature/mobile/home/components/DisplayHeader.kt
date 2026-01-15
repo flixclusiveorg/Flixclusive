@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.home.components
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -22,8 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -77,6 +76,7 @@ import com.flixclusive.core.strings.R as LocaleR
 
 private const val LANDSCAPE_RATIO = 16f / 6f
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun DisplayHeader(
@@ -242,7 +242,7 @@ internal fun DisplayHeader(
                                 modifier = Modifier.padding(top = 15.dp),
                             ) {
                                 AdaptiveIcon(
-                                    imageVector = Icons.Rounded.Star,
+                                    painter = painterResource(UiCommonR.drawable.star),
                                     contentDescription = stringResource(LocaleR.string.rating_icon_content_desc),
                                     modifier = Modifier.scale(0.6F),
                                     tint = Colors.starColor,

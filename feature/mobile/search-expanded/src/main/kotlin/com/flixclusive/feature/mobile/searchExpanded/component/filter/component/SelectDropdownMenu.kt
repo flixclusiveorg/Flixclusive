@@ -14,9 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,6 +43,7 @@ import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.CustomOutlinedTextField
 import com.flixclusive.feature.mobile.searchExpanded.component.filter.util.toOptionString
 import com.flixclusive.core.strings.R as LocaleR
+import com.flixclusive.core.drawables.R as UiCommonR
 
 /**
  *
@@ -99,7 +98,7 @@ internal fun <T> SelectDropdownMenu(
             ).asAdaptiveTextStyle(16.sp),
             trailingIcon = {
                 AdaptiveIcon(
-                    imageVector = Icons.Filled.ArrowDropDown,
+                    painter = painterResource(UiCommonR.drawable.down_arrow),
                     contentDescription = null,
                     modifier = Modifier.graphicsLayer {
                         rotationZ = lerp(
@@ -201,7 +200,7 @@ internal fun SelectDropdownMenuItem(
 
         if (selected) {
             AdaptiveIcon(
-                imageVector = Icons.Rounded.Check,
+                painter = painterResource(UiCommonR.drawable.check),
                 contentDescription = stringResource(LocaleR.string.check_indicator_content_desc),
                 dp = 20.dp,
             )

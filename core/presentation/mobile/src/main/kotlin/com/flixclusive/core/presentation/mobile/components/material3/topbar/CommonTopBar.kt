@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -213,8 +211,8 @@ private fun CommonTopBarBasePreview() {
                     title = "Title",
                     onNavigate = {},
                     actions = {
-                        Icon(Icons.Default.AccountBox, contentDescription = null)
-                        Icon(Icons.Default.AccountBox, contentDescription = null)
+                        Icon(painterResource(UiCommonR.drawable.round_close_24), contentDescription = null)
+                        Icon(painterResource(UiCommonR.drawable.round_close_24), contentDescription = null)
                     },
                 )
             }

@@ -3,8 +3,6 @@ package com.flixclusive.core.presentation.mobile.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -22,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.mobile.R
+import com.flixclusive.core.drawables.R as UiCommonR
 
 /**
  * Custom visuals for the network connectivity Snackbar.
@@ -91,7 +90,7 @@ class NetworkMonitorSnackbarVisuals(
                             colors = dismissButtonColor,
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.Close,
+                                painter = painterResource(id = UiCommonR.drawable.round_close_24),
                                 contentDescription = stringResource(R.string.close_network_snackbar_content_desc),
                             )
                         }

@@ -139,7 +139,7 @@ dependencies {
     implementation(libs.stubs.model.provider)
     implementation(libs.stubs.util)
 
-    implementation(libs.accompanist.navigation.animation)
+    implementation(libs.accompanist.navigation.material)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.compose.foundation)

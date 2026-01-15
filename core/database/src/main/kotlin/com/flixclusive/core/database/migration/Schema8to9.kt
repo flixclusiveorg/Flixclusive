@@ -216,7 +216,7 @@ internal object Schema8to9 : Migration(8, 9) {
                 (filmId, ownerId, progress, status, duration, watchedAt, watchCount)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """.trimIndent(),
-                arrayOf(filmId, ownerId, progress, status, duration, dateWatched, 1),
+                arrayOf<Any>(filmId, ownerId, progress, status, duration, dateWatched, 1),
             )
         } catch (e: Exception) {
             errorLog("Error migrating movie progress for film $filmId: ${e.message}")
@@ -248,7 +248,7 @@ internal object Schema8to9 : Migration(8, 9) {
                     (filmId, ownerId, progress, duration, status, watchedAt, seasonNumber, episodeNumber)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """.trimIndent(),
-                    arrayOf(
+                    arrayOf<Any>(
                         filmId,
                         ownerId,
                         episode.watchTime,
@@ -408,7 +408,7 @@ internal object Schema8to9 : Migration(8, 9) {
                     // Insert into new table structure
                     db.execSQL(
                         "INSERT OR IGNORE INTO watchlist_new (filmId, ownerId, addedAt) VALUES (?, ?, ?)",
-                        arrayOf(dbFilm.id, ownerId, addedOn),
+                        arrayOf<Any>(dbFilm.id, ownerId, addedOn),
                     )
                 }
             } catch (e: Exception) {
@@ -460,7 +460,7 @@ internal object Schema8to9 : Migration(8, 9) {
                 logoImage, year, filmType, rating, customProperties, hasRecommendations, createdAt, updatedAt
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
-            arrayOf(
+            arrayOf<Any?>(
                 dbFilm.id,
                 dbFilm.providerId,
                 dbFilm.imdbId,

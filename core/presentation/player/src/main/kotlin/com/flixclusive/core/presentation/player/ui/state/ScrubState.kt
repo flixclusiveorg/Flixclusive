@@ -13,6 +13,7 @@ import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.AppPlayerImpl
 import kotlinx.coroutines.delay
+import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -39,7 +40,7 @@ class ScrubState private constructor(
         private set
 
     /** The total or max value the scrubber can [progress] through */
-    var duration by mutableLongStateOf(player.duration)
+    var duration by mutableLongStateOf(max(0, player.duration))
         private set
 
     /** The current position on the scrubber of amount of data buffered by the player */
@@ -60,7 +61,9 @@ class ScrubState private constructor(
      * */
     @OptIn(UnstableApi::class)
     fun onScrubStart() {
-        (player as AppPlayerImpl).exoPlayer?.let {
+        if (player !is AppPlayerImpl) return
+
+        player.exoPlayer?.let {
             // TODO: Check if this is helpful for the app
             it.isScrubbingModeEnabled = true
             event = ScrubEvent.SCRUBBING
@@ -81,7 +84,9 @@ class ScrubState private constructor(
      * */
     @OptIn(UnstableApi::class)
     fun onScrubEnd() {
-        (player as AppPlayerImpl).exoPlayer?.let {
+        if (player !is AppPlayerImpl) return
+
+        player.exoPlayer?.let {
             it.isScrubbingModeEnabled = false
             event = ScrubEvent.NONE
         }

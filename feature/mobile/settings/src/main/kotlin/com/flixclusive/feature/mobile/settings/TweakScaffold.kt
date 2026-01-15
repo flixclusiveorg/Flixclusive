@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +48,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import com.flixclusive.core.drawables.R as UiCommonR
 
 internal val TweakPaddingHorizontal = 10.dp
 private val TweakGroupSpacing = 25.dp
@@ -220,7 +219,7 @@ private fun RenderTweakUi(
                 enabledProvider = tweak.enabledProvider,
                 startContent = {
                     AdaptiveIcon(
-                        imageVector = Icons.Outlined.Info,
+                        painter = painterResource(UiCommonR.drawable.info),
                         contentDescription = null,
                         tint = LocalContentColor.current.copy(0.6f),
                     )
