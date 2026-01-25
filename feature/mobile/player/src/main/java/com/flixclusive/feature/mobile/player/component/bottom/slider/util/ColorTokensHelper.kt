@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.player.controls.common.slider.util
+package com.flixclusive.feature.mobile.player.component.bottom.slider.util
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme

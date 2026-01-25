@@ -428,7 +428,7 @@ internal class PreviewPlayer(
     }
 
     override fun getDuration(): Long {
-        return exoPlayer?.duration ?: C.TIME_UNSET
+        return exoPlayer?.duration ?: 0L
     }
 
     override fun getCurrentPosition(): Long {
@@ -512,6 +512,14 @@ internal class PreviewPlayer(
 
     override fun getVolume(): Float {
         return exoPlayer?.volume ?: 1f
+    }
+
+    override fun mute() {
+        return exoPlayer?.mute() ?: Unit
+    }
+
+    override fun unmute() {
+        return exoPlayer?.unmute() ?: Unit
     }
 
     override fun clearVideoSurface() {

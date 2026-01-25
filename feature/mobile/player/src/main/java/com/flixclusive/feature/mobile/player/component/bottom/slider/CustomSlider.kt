@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.player.controls.common.slider
+package com.flixclusive.feature.mobile.player.component.bottom.slider
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.scaleIn
@@ -7,6 +7,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.MutatorMutex
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.DragScope
 import androidx.compose.foundation.gestures.DraggableState
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.requiredSizeIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.progressSemantics
@@ -70,8 +72,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import androidx.compose.ui.util.lerp
-import com.flixclusive.feature.mobile.player.controls.common.slider.util.SliderTokens
-import com.flixclusive.feature.mobile.player.controls.common.slider.util.toColor
+import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.feature.mobile.player.component.bottom.slider.util.SliderTokens
+import com.flixclusive.feature.mobile.player.component.bottom.slider.util.toColor
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -337,11 +340,8 @@ private fun SliderImpl(
             Box(modifier = Modifier.layoutId(SliderComponents.TRACK)) { track(customSliderPositions) }
         },
         modifier = modifier
-            .minimumInteractiveComponentSize()
-            .requiredSizeIn(
-                minWidth = ThumbWidth,
-                minHeight = ThumbHeight,
-            ).sliderSemantics(
+            .height(getAdaptiveDp(30.dp))
+            .sliderSemantics(
                 value,
                 enabled,
                 onValueChange,
@@ -352,7 +352,6 @@ private fun SliderImpl(
             .then(press)
             .then(drag),
     ) { measurables, constraints ->
-
         val seekTextPlaceable = measurables
             .first {
                 it.layoutId == SliderComponents.SEEK_TEXT
@@ -586,7 +585,7 @@ internal object CustomSliderDefaults {
         Canvas(
             modifier
                 .fillMaxWidth()
-                .height(50.dp), // Modified so it has BIGGER touch surface!!!! screw the original slider!!
+                .height(getAdaptiveDp(30.dp)), // Modified so it has BIGGER touch surface!!!! screw the original slider!!
         ) {
             val isRtl = layoutDirection == LayoutDirection.Rtl
             val sliderLeft = Offset(0f, center.y)
