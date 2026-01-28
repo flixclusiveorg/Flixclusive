@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -46,6 +50,8 @@ internal fun PlayerScreenContent(
     episode: Episode?,
     modifier: Modifier = Modifier,
 ) {
+    var isSpeedPanelOpen by remember { mutableStateOf(false) }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -55,10 +61,11 @@ internal fun PlayerScreenContent(
 //            resizeMode = playerPreferences.resizeMode,
 //        )
 
+        // TODO(rhenwinch): Remove hardcoded height when implementing fullscreen
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFEEA0FF))
+                .background(Color(0xFF2A2A2A))
                 .drawBehind {
                     drawRect(
                         brush = Brush.verticalGradient(
@@ -76,8 +83,11 @@ internal fun PlayerScreenContent(
         ) {
             BottomControls(
                 player = player,
+                hasNext = false,
+                isSpeedPanelOpen = isSpeedPanelOpen,
+                onToggleSpeedPanel = { isOpen -> isSpeedPanelOpen = isOpen },
+                onNext = {},
                 onLock = {},
-                onShowSpeedPanel = {},
                 onShowCcPanel = {},
                 onShowServersPanel = {},
                 onShowSubtitleSyncPanel = {},

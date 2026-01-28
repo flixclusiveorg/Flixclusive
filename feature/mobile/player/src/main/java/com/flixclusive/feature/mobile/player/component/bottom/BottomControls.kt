@@ -1,21 +1,35 @@
 package com.flixclusive.feature.mobile.player.component.bottom
 
-import android.widget.Space
 import androidx.annotation.OptIn
-import androidx.compose.foundation.border
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
+import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState.Companion.rememberPlayPauseButtonState
+import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Companion.rememberPlaybackSpeedState
 import com.flixclusive.core.presentation.player.ui.state.ScrubState.Companion.rememberScrubState
+import com.flixclusive.core.presentation.player.ui.state.SeekButtonState.Companion.rememberSeekButtonState
+import com.flixclusive.core.drawables.R as UiCommonR
+import com.flixclusive.core.presentation.player.R as PlayerR
+import com.flixclusive.core.strings.R as LocaleR
 
 internal const val TIMER_WEIGHT = 0.08F
 
@@ -23,8 +37,11 @@ internal const val TIMER_WEIGHT = 0.08F
 @Composable
 internal fun BottomControls(
     player: AppPlayer,
+    hasNext: Boolean,
+    isSpeedPanelOpen: Boolean,
+    onNext: () -> Unit,
     onLock: () -> Unit,
-    onShowSpeedPanel: () -> Unit,
+    onToggleSpeedPanel: (Boolean) -> Unit,
     onShowCcPanel: () -> Unit,
     onShowServersPanel: () -> Unit,
     onShowSubtitleSyncPanel: () -> Unit,
@@ -33,10 +50,24 @@ internal fun BottomControls(
 ) {
     val scrubState = rememberScrubState(player = player)
     val playPauseState = rememberPlayPauseButtonState(player = player)
+    val seekButtonState = rememberSeekButtonState(player = player)
+    val playbackSpeedState = rememberPlaybackSpeedState(player = player)
 
     Column(
         modifier = modifier.fillMaxWidth()
     ) {
+        AnimatedVisibility(
+            visible = isSpeedPanelOpen,
+            enter = fadeIn() + slideInVertically { it / 4 },
+            exit = fadeOut() + slideOutVertically { it / 6 },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            PlaybackSpeedSheet(
+                playbackSpeedState = playbackSpeedState,
+                onDismiss = { onToggleSpeedPanel(false) },
+            )
+        }
+
         Scrubber(
             state = scrubState,
             modifier = Modifier
@@ -45,22 +76,78 @@ internal fun BottomControls(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            PlayPauseButton(
-                state = playPauseState,
-                onForward = player::seekForward,
-                onRewind = player::seekBack,
-                seekIncrementMs = player.seekBackIncrement
+            MainPlaybackControls(
+                playPauseButtonState = playPauseState,
+                seekButtonState = seekButtonState,
+                hasNext = hasNext,
+                onNext = onNext,
             )
 
             Spacer(modifier = Modifier.weight(1F))
 
-            ConfigButtons(
-                onLock = onLock,
-                onShowSpeedPanel = onShowSpeedPanel,
-                onShowCcPanel = onShowCcPanel,
-                onShowServersPanel = onShowServersPanel,
-                onShowSubtitleSyncPanel = onShowSubtitleSyncPanel,
-                onShowEpisodesPanel = onShowEpisodesPanel
+            Row {
+                onShowEpisodesPanel?.let { onClick ->
+                    ConfigButton(
+                        icon = painterResource(PlayerR.drawable.outline_video_library_24),
+                        contentDescription = stringResource(LocaleR.string.episodes),
+                        onClick = onClick
+                    )
+                }
+
+                ConfigButton(
+                    icon = painterResource(PlayerR.drawable.gauge),
+                    contentDescription = stringResource(LocaleR.string.playback_speed),
+                    enabled = playbackSpeedState.isEnabled && !isSpeedPanelOpen,
+                    onClick = { onToggleSpeedPanel(true) }
+                )
+
+                ConfigButton(
+                    icon = painterResource(PlayerR.drawable.record_voice_over_black_24dp),
+                    contentDescription = stringResource(LocaleR.string.audio_and_subtitle),
+                    onClick = onShowCcPanel
+                )
+
+                ConfigButton(
+                    icon = painterResource(PlayerR.drawable.round_cloud_queue_24),
+                    contentDescription = stringResource(LocaleR.string.servers),
+                    onClick = onShowServersPanel
+                )
+
+                ConfigButton(
+                    icon = painterResource(PlayerR.drawable.sync_black_24dp),
+                    contentDescription = stringResource(LocaleR.string.sync_subtitles),
+                    onClick = onShowSubtitleSyncPanel
+                )
+
+                ConfigButton(
+                    icon = painterResource(UiCommonR.drawable.lock_thin),
+                    contentDescription = stringResource(LocaleR.string.lock),
+                    onClick = onLock
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConfigButton(
+    icon: Painter,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    PlainTooltipBox(
+        description = contentDescription,
+    ) {
+        IconButton(
+            onClick = onClick,
+            enabled = enabled,
+            modifier = modifier
+        ) {
+            AdaptiveIcon(
+                painter = icon,
+                contentDescription = contentDescription
             )
         }
     }

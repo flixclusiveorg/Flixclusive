@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -227,11 +228,8 @@ fun Modifier.boxShadow(
                 drawContent()
             }
         }
-    }.run {
-        when {
-            clip -> clip(shape)
-            else -> this
-        }
+    }.graphicsLayer {
+        this.clip = clip
     }
 }
 

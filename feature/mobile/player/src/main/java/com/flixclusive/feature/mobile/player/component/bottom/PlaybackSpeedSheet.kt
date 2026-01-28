@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,10 +41,12 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
+import com.flixclusive.core.presentation.mobile.extensions.boxShadow
 import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSlider
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSliderDefaults
 import com.flixclusive.core.strings.R as LocaleR
@@ -53,17 +56,18 @@ import com.flixclusive.core.drawables.R as UiCommonR
 private val Float.toPlayerSpeed: String
     get() = String.format("%.2fx", this)
 
+
 @Composable
 internal fun PlaybackSpeedSheet(
-    currentSpeed: Float,
-    onSave: (speed: Float) -> Unit,
+    playbackSpeedState: PlaybackSpeedState,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val shape = MaterialTheme.shapes.small
     val interactionSource = remember { MutableInteractionSource() }
     val speed by remember {
         derivedStateOf {
-            mutableFloatStateOf(currentSpeed)
+            mutableFloatStateOf(playbackSpeedState.playbackSpeed)
         }
     }
 
@@ -74,15 +78,18 @@ internal fun PlaybackSpeedSheet(
                 medium = 0.6f,
                 expanded = 0.65f
             )
-            .clip(MaterialTheme.shapes.small)
             .border(
                 width = 0.5.dp,
                 color = Color.White.copy(0.3f),
-                shape = MaterialTheme.shapes.small
+                shape = shape
+            )
+            .boxShadow(
+                color = Color.Black,
+                blurRadius = 8.dp,
+                shape = shape
             )
             .drawBehind {
-                drawRect(Color.Black)
-                drawRect(Color.White.copy(0.1f))
+                drawRect(Color.Black.copy(0.6f))
             }
             .padding(10.dp)
     ) {
@@ -164,7 +171,7 @@ internal fun PlaybackSpeedSheet(
                 modifier = Modifier.weight(1f),
                 onClick = {
                     speed.floatValue = 1.0f
-                    onSave(speed.floatValue)
+                    playbackSpeedState.updatePlaybackSpeed(1.0f)
                     onDismiss()
                 }
             ) {
@@ -177,7 +184,7 @@ internal fun PlaybackSpeedSheet(
                 shape = MaterialTheme.shapes.small,
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    onSave(speed.floatValue)
+                    playbackSpeedState.updatePlaybackSpeed(speed.floatValue)
                     onDismiss()
                 }
             ) {
@@ -187,57 +194,4 @@ internal fun PlaybackSpeedSheet(
             }
         }
     }
-}
-
-@Preview(device = "spec:parent=pixel_5,orientation=landscape")
-@Composable
-private fun PlaybackSpeedSheetBasePreview() {
-    FlixclusiveTheme {
-        Surface(
-            color = Color(0xFFA25050),
-            modifier = Modifier
-                .fillMaxSize(),
-        ) {
-            Box {
-                PlaybackSpeedSheet(
-                    currentSpeed = 1.25f,
-                    onSave = {},
-                    onDismiss = {},
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 10.dp)
-                )
-            }
-        }
-    }
-}
-
-@Preview(device = "spec:parent=pixel_5")
-@Composable
-private fun PlaybackSpeedSheetCompactLandscapePreview() {
-    PlaybackSpeedSheetBasePreview()
-}
-
-@Preview(device = "spec:parent=medium_tablet")
-@Composable
-private fun PlaybackSpeedSheetMediumPortraitPreview() {
-    PlaybackSpeedSheetBasePreview()
-}
-
-@Preview(device = "spec:parent=medium_tablet")
-@Composable
-private fun PlaybackSpeedSheetMediumLandscapePreview() {
-    PlaybackSpeedSheetBasePreview()
-}
-
-@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160")
-@Composable
-private fun PlaybackSpeedSheetExtendedPortraitPreview() {
-    PlaybackSpeedSheetBasePreview()
-}
-
-@Preview(device = "spec:width=1920dp,height=1080dp,dpi=160")
-@Composable
-private fun PlaybackSpeedSheetExtendedLandscapePreview() {
-    PlaybackSpeedSheetBasePreview()
 }

@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -22,42 +22,51 @@ import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState
-import com.flixclusive.core.strings.R as LocaleR
+import com.flixclusive.core.presentation.player.ui.state.SeekButtonState
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.player.R as PlayerR
+import com.flixclusive.core.strings.R as LocaleR
 
 @OptIn(UnstableApi::class)
 @Composable
-internal fun PlayPauseButton(
-    state: PlayPauseButtonState,
-    onForward: () -> Unit,
-    onRewind: () -> Unit,
-    seekIncrementMs: Long,
+internal fun MainPlaybackControls(
+    playPauseButtonState: PlayPauseButtonState,
+    seekButtonState: SeekButtonState,
+    hasNext: Boolean,
+    onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val (replaySeekIcon, forwardSeekIcon) = when(seekIncrementMs) {
-        5000L -> PlayerR.drawable.round_replay_5_24 to PlayerR.drawable.forward_5_black_24dp
-        10000L -> PlayerR.drawable.replay_10_black_24dp to PlayerR.drawable.round_forward_10_24
-        else -> PlayerR.drawable.replay_30_black_24dp to PlayerR.drawable.forward_30_black_24dp
+    val (replaySeekIcon, forwardSeekIcon) = remember {
+        when(seekButtonState.seekBackAmountMs) {
+            5000L -> PlayerR.drawable.round_replay_5_24 to PlayerR.drawable.forward_5_black_24dp
+            10000L -> PlayerR.drawable.replay_10_black_24dp to PlayerR.drawable.round_forward_10_24
+            else -> PlayerR.drawable.replay_30_black_24dp to PlayerR.drawable.forward_30_black_24dp
+        }
     }
 
     Row(
         modifier = modifier
     ) {
-        IconButton(
-            onClick = onForward,
+        PlainTooltipBox(
+            description = stringResource(PlayerR.string.seek_backward),
         ) {
-            AdaptiveIcon(
-                painter = painterResource(replaySeekIcon),
-                contentDescription = stringResource(LocaleR.string.backward_button_content_description),
-            )
+            IconButton(
+                onClick = seekButtonState::onSeekBack,
+                enabled = seekButtonState.isSeekBackEnabled
+            ) {
+                AdaptiveIcon(
+                    painter = painterResource(replaySeekIcon),
+                    contentDescription = stringResource(PlayerR.string.seek_backward)
+                )
+            }
         }
 
         PlainTooltipBox(
-            description = stringResource(LocaleR.string.play_pause_button_content_description),
+            description = stringResource(PlayerR.string.play_pause),
         ) {
             IconButton(
-                onClick = state::onClick,
+                onClick = playPauseButtonState::onClick,
+                enabled = playPauseButtonState.isEnabled
             ) {
                 Box(
                     modifier = Modifier
@@ -68,7 +77,7 @@ internal fun PlayPauseButton(
                         )
                 ) {
                     AnimatedContent(
-                        targetState = state.showPlay,
+                        targetState = playPauseButtonState.showPlay,
                         transitionSpec = {
                             ContentTransform(
                                 targetContentEnter = fadeIn(),
@@ -84,7 +93,7 @@ internal fun PlayPauseButton(
 
                         AdaptiveIcon(
                             painter = painterResource(icon),
-                            contentDescription = stringResource(LocaleR.string.play_pause_button_content_description),
+                            contentDescription = stringResource(PlayerR.string.play_pause),
                             modifier = Modifier
                                 .padding(5.dp)
                         )
@@ -93,13 +102,29 @@ internal fun PlayPauseButton(
             }
         }
 
-        IconButton(
-            onClick = onRewind,
+        PlainTooltipBox(
+            description = stringResource(PlayerR.string.seek_forward),
         ) {
-            AdaptiveIcon(
-                painter = painterResource(forwardSeekIcon),
-                contentDescription = stringResource(LocaleR.string.backward_button_content_description),
-            )
+            IconButton(
+                onClick = seekButtonState::onSeekForward,
+                enabled = seekButtonState.isSeekForwardEnabled
+            ) {
+                AdaptiveIcon(
+                    painter = painterResource(forwardSeekIcon),
+                    contentDescription = stringResource(PlayerR.string.seek_forward)
+                )
+            }
+        }
+
+        if(hasNext) {
+            IconButton(
+                onClick = onNext,
+            ) {
+                AdaptiveIcon(
+                    painter = painterResource(PlayerR.drawable.round_skip_next_24),
+                    contentDescription = stringResource(LocaleR.string.next),
+                )
+            }
         }
     }
 }

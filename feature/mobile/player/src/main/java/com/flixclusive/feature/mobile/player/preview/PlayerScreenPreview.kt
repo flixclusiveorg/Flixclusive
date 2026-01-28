@@ -12,12 +12,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.feature.mobile.player.PlayerScreenContent
 
 @Preview
 @Composable
 private fun PlayerScreenBasePreview() {
+    val tvShow = remember { DummyDataForPreview.getTvShow() }
     val context = LocalContext.current
 
     val player = remember {
@@ -40,6 +42,9 @@ private fun PlayerScreenBasePreview() {
                 player = player,
                 playerPreferences = PlayerPreferences(),
                 subtitlesPreferences = SubtitlesPreferences(),
+                onBack = {},
+                film = tvShow,
+                episode = tvShow.seasons.first().episodes.first(),
                 modifier = Modifier.background(Color.Black)
             )
         }
