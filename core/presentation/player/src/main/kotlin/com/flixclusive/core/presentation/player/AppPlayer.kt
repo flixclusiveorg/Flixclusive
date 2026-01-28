@@ -117,12 +117,7 @@ interface AppPlayer :
     fun handlePiPEvent(event: Int)
 
     companion object {
-        /**
-         * A list of available playback speeds ranging from 0.25x to 2.0x in increments of 0.25.
-         * */
-        val availablePlaybackSpeeds = List(8) {
-            0F + ((it + 1) * 0.25F)
-        }
+        val playbackSpeedRange = 0.15f..5.0f
 
         /**
          * Calculates 15% of the [duration] and returns the remaining time.
