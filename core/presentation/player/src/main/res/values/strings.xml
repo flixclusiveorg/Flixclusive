@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="seek_forward">Seek Forward</string>
+    <string name="seek_backward">Seek Backward</string>
+    <string name="play_pause">Play / Pause</string>
+</resources>

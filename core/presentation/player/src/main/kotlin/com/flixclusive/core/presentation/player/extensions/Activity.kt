@@ -79,17 +79,17 @@ fun Activity.updatePiPParams(
         val actions = arrayListOf(
             getRemoteAction(
                 icon = backwardSeekIcon,
-                label = LocaleR.string.backward_button_content_description,
+                label = R.string.seek_backward,
                 event = PiPEvent.BACKWARD,
             ),
             getRemoteAction(
                 icon = playPauseIcon,
-                label = LocaleR.string.play_pause_button_content_description,
+                label = R.string.play_pause,
                 event = eventCode,
             ),
             getRemoteAction(
                 icon = forwardSeekIcon,
-                label = LocaleR.string.forward_button_content_description,
+                label = R.string.seek_forward,
                 event = PiPEvent.FORWARD,
             ).also {
                 it.isEnabled = !hasEnded
