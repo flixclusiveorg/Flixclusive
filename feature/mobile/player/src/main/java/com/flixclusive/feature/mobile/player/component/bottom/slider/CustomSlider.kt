@@ -360,7 +360,7 @@ private fun SliderImpl(
         val thumbPlaceable = measurables
             .first {
                 it.layoutId == SliderComponents.THUMB
-            }.measure(constraints)
+            }.measure(constraints.copy(minHeight = 0))
 
         val trackPlaceable = measurables
             .first {
@@ -383,7 +383,7 @@ private fun SliderImpl(
         val seekTextOffsetX =
             thumbOffsetX + thumbPlaceable.width.times(0.5).roundToInt() - (seekTextPlaceable.width / 2)
 
-        val trackOffsetY = sliderHeight - trackPlaceable.height
+        val trackOffsetY = (sliderHeight - trackPlaceable.height) / 2
         val thumbOffsetY = (sliderHeight - thumbPlaceable.height) / 2
         val seekTextOffsetY = thumbOffsetY + -(50.dp.toPx().roundToInt())
 
