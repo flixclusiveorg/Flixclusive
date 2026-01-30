@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,18 +16,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
+import com.flixclusive.core.presentation.common.extensions.noOpClickable
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
-import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState.Companion.rememberPlayPauseButtonState
-import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Companion.rememberPlaybackSpeedState
-import com.flixclusive.core.presentation.player.ui.state.ScrubState.Companion.rememberScrubState
-import com.flixclusive.core.presentation.player.ui.state.SeekButtonState.Companion.rememberSeekButtonState
+import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState
+import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState
+import com.flixclusive.core.presentation.player.ui.state.ScrubState
+import com.flixclusive.core.presentation.player.ui.state.SeekButtonState
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
@@ -36,23 +38,20 @@ internal const val TIMER_WEIGHT = 0.08F
 @OptIn(UnstableApi::class)
 @Composable
 internal fun BottomControls(
-    player: AppPlayer,
-    hasNext: Boolean,
+    playbackSpeedState: PlaybackSpeedState,
+    scrubState: ScrubState,
+    playPauseState: PlayPauseButtonState,
+    seekButtonState: SeekButtonState,
     isSpeedPanelOpen: Boolean,
-    onNext: () -> Unit,
     onLock: () -> Unit,
     onToggleSpeedPanel: (Boolean) -> Unit,
     onShowCcPanel: () -> Unit,
     onShowServersPanel: () -> Unit,
     onShowSubtitleSyncPanel: () -> Unit,
     modifier: Modifier = Modifier,
+    onNext: (() -> Unit)? = null,
     onShowEpisodesPanel: (() -> Unit)? = null,
 ) {
-    val scrubState = rememberScrubState(player = player)
-    val playPauseState = rememberPlayPauseButtonState(player = player)
-    val seekButtonState = rememberSeekButtonState(player = player)
-    val playbackSpeedState = rememberPlaybackSpeedState(player = player)
-
     Column(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -74,12 +73,12 @@ internal fun BottomControls(
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.noOpClickable()
         ) {
             MainPlaybackControls(
                 playPauseButtonState = playPauseState,
                 seekButtonState = seekButtonState,
-                hasNext = hasNext,
                 onNext = onNext,
             )
 

@@ -49,12 +49,13 @@ import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSlider
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSliderDefaults
+import java.util.Locale
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.drawables.R as UiCommonR
 
 
 private val Float.toPlayerSpeed: String
-    get() = String.format("%.2fx", this)
+    get() = String.format(Locale.ROOT, "%.2fx", this)
 
 
 @Composable
@@ -85,7 +86,7 @@ internal fun PlaybackSpeedSheet(
             )
             .boxShadow(
                 color = Color.Black,
-                blurRadius = 8.dp,
+                blurRadius = 5.dp,
                 shape = shape
             )
             .drawBehind {
@@ -171,8 +172,6 @@ internal fun PlaybackSpeedSheet(
                 modifier = Modifier.weight(1f),
                 onClick = {
                     speed.floatValue = 1.0f
-                    playbackSpeedState.updatePlaybackSpeed(1.0f)
-                    onDismiss()
                 }
             ) {
                 Text(

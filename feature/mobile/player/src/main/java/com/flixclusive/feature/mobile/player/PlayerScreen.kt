@@ -22,6 +22,7 @@ import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.ComposePlayer
+import com.flixclusive.feature.mobile.player.component.PlayerControls
 import com.flixclusive.feature.mobile.player.component.bottom.BottomControls
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
 import com.flixclusive.model.film.FilmMetadata
@@ -50,8 +51,6 @@ internal fun PlayerScreenContent(
     episode: Episode?,
     modifier: Modifier = Modifier,
 ) {
-    var isSpeedPanelOpen by remember { mutableStateOf(false) }
-
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -66,44 +65,12 @@ internal fun PlayerScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF2A2A2A))
-                .drawBehind {
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                        0f to Color.Black,
-                            0.15f to Color.Transparent,
-                            0.75f to Color.Transparent,
-                            1f to Color.Black,
-                        )
-                    )
-                }
         )
 
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            BottomControls(
-                player = player,
-                hasNext = false,
-                isSpeedPanelOpen = isSpeedPanelOpen,
-                onToggleSpeedPanel = { isOpen -> isSpeedPanelOpen = isOpen },
-                onNext = {},
-                onLock = {},
-                onShowCcPanel = {},
-                onShowServersPanel = {},
-                onShowSubtitleSyncPanel = {},
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-            )
-
-            PlayerTopBar(
-                title = film.title,
-                episode = episode,
-                onBack = onBack,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopCenter)
-            )
-        }
+        PlayerControls(
+            player = player,
+            film = film,
+            onBack = onBack
+        )
     }
 }

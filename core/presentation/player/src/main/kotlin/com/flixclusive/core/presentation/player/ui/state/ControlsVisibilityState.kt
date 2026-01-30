@@ -29,7 +29,7 @@ class ControlsVisibilityState(
         if(isVisible) {
             hide()
         } else {
-            show()
+            show(indefinite = shouldShowIndefinitely())
         }
     }
 
@@ -38,9 +38,9 @@ class ControlsVisibilityState(
         controlTimeoutVisibility = 0
     }
 
-    fun show() {
+    fun show(indefinite: Boolean = false) {
         isVisible = true
-        controlTimeoutVisibility = PLAYER_CONTROL_VISIBILITY_TIMEOUT
+        controlTimeoutVisibility = if (indefinite) Int.MAX_VALUE else PLAYER_CONTROL_VISIBILITY_TIMEOUT
     }
 
     /**
@@ -52,8 +52,7 @@ class ControlsVisibilityState(
      * @param isScrubbing A boolean indicating whether the user is currently scrubbing (or seeking).
      * */
     private suspend fun observe(isScrubbing: Boolean) {
-        val appPlayer = player as AppPlayer
-        appPlayer.listen { events ->
+        player.listen { events ->
             if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED)) {
                 if (isScrubbing) return@listen
 
@@ -65,11 +64,9 @@ class ControlsVisibilityState(
     }
 
     private fun shouldShowIndefinitely(): Boolean {
-        val appPlayer = player as AppPlayer
-
-        return !appPlayer.isLoading ||
-            !appPlayer.isPlaying ||
-            appPlayer.playbackState == Player.STATE_ENDED
+        return !player.isPlaying ||
+            player.playbackState == Player.STATE_ENDED ||
+            player.playbackState == Player.STATE_BUFFERING
     }
 
     companion object {

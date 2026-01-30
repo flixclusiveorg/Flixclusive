@@ -271,7 +271,6 @@
     <string name="understood">Understood</string>
     <string name="uninstall">Uninstall</string>
     <string name="unknown_language">Unknown language</string>
-    <string name="unlock_label">Unlock</string>
     <string name="unsafe_and_untrusted">Unsafe and Untrusted</string>
     <string name="update_info">Update information</string>
     <string name="update_label">Update</string>
@@ -474,7 +473,6 @@
     <string name="subtract_1000ms_content_description">Subtract 1000ms on subtitle delay</string>
     <string name="subtract_500ms_content_description">Subtract 500ms on subtitle delay</string>
     <string name="subtract_sync_offset_message">Subtract if subs are early.</string>
-    <string name="unlock_content_description">An icon for unlocking the player</string>
     <string name="use_search_history_item_icon">An icon to use a search history item</string>
     <string name="video_buffer_max_length_desc">The default maximum duration of media that the player will attempt to ensure is buffered at all times.</string>
     <string name="video_buffer_size_label">The target size to always buffer. Setting this too high could cause device problems.</string>

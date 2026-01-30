@@ -133,3 +133,6 @@ fun Modifier.noIndicationClickable(onClick: () -> Unit): Modifier {
         onClick = onClick,
     )
 }
+
+@Composable
+fun Modifier.noOpClickable() = noIndicationClickable {  }

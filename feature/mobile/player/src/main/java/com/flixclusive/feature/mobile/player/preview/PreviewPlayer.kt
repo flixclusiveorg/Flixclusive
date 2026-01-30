@@ -357,7 +357,7 @@ internal class PreviewPlayer(
     }
 
     override fun getTrackSelectionParameters(): TrackSelectionParameters {
-        return exoPlayer?.trackSelectionParameters ?: TrackSelectionParameters.DEFAULT_WITHOUT_CONTEXT
+        return exoPlayer?.trackSelectionParameters ?: TrackSelectionParameters.DEFAULT
     }
 
     override fun setTrackSelectionParameters(parameters: TrackSelectionParameters) {

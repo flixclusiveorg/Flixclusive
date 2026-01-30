@@ -9,6 +9,8 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.media3.common.Player
+import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.AppPlayerImpl
@@ -93,9 +95,9 @@ class ScrubState private constructor(
     }
 
     internal suspend fun observe() {
-        while (player.isPlaying) {
+        do {
             progress = player.currentPosition
-            duration = player.duration
+            duration = max(0, player.duration)
             buffered = player.bufferedPosition
 
             val lessThan10Seconds = isTimeInRangeOfThreshold(10_000L)
@@ -107,7 +109,7 @@ class ScrubState private constructor(
             }
 
             delay(1.seconds / 30)
-        }
+        } while (player.isPlaying)
     }
 
     /**

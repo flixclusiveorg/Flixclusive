@@ -32,9 +32,8 @@ import com.flixclusive.core.strings.R as LocaleR
 internal fun MainPlaybackControls(
     playPauseButtonState: PlayPauseButtonState,
     seekButtonState: SeekButtonState,
-    hasNext: Boolean,
-    onNext: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNext: (() -> Unit)? = null
 ) {
     val (replaySeekIcon, forwardSeekIcon) = remember {
         when(seekButtonState.seekBackAmountMs) {
@@ -116,7 +115,7 @@ internal fun MainPlaybackControls(
             }
         }
 
-        if(hasNext) {
+        if(onNext != null) {
             IconButton(
                 onClick = onNext,
             ) {
