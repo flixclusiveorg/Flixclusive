@@ -199,7 +199,7 @@ private fun SplashScreenContent(
                         TextAlertDialog(
                             title = stringResource(LocaleR.string.something_went_wrong),
                             message = uiState.appUpdateError?.uiText?.asString() ?: "",
-                            confirmButtonLabel = stringResource(LocaleR.string.close_label),
+                            confirmButtonLabel = stringResource(LocaleR.string.close),
                             dismissButtonLabel = null,
                             onConfirm = onConsumeAppUpdateError,
                             onDismiss = onConsumeAppUpdateError,

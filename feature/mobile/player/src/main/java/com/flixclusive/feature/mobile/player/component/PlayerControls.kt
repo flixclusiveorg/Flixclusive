@@ -9,16 +9,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -28,9 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import com.flixclusive.core.datastore.model.user.PlayerPreferences
+import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
-import com.flixclusive.core.presentation.common.extensions.noOpClickable
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState.Companion.rememberControlsVisibilityState
 import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState.Companion.rememberPlayPauseButtonState
@@ -38,8 +34,9 @@ import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Comp
 import com.flixclusive.core.presentation.player.ui.state.ScrubEvent
 import com.flixclusive.core.presentation.player.ui.state.ScrubState.Companion.rememberScrubState
 import com.flixclusive.core.presentation.player.ui.state.SeekButtonState.Companion.rememberSeekButtonState
+import com.flixclusive.core.presentation.player.ui.state.TracksState.Companion.rememberTracksState
 import com.flixclusive.feature.mobile.player.component.bottom.BottomControls
-import com.flixclusive.feature.mobile.player.component.bottom.PlaybackSpeedSheet
+import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleAndAudioScreen
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
@@ -48,6 +45,8 @@ import com.flixclusive.model.film.common.tv.Episode
 internal fun PlayerControls(
     player: AppPlayer,
     film: FilmMetadata,
+    playerPrefs: PlayerPreferences,
+    subtitlesPrefs: SubtitlesPreferences,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     episode: Episode? = null,
@@ -66,6 +65,12 @@ internal fun PlayerControls(
     val controlsVisibilityState = rememberControlsVisibilityState(
         player = player,
         isScrubbing = scrubState.event == ScrubEvent.SCRUBBING
+    )
+
+    val tracksState = rememberTracksState(
+        player = player,
+        subtitlesPreferences = subtitlesPrefs,
+        playerPreferences = playerPrefs
     )
 
     AnimatedContent(
@@ -147,6 +152,19 @@ internal fun PlayerControls(
                         )
                     }
 
+                }
+
+                AnimatedVisibility(
+                    visible = isCcPanelOpened,
+                    enter = fadeIn() + slideInVertically { it / 4 },
+                    exit = fadeOut() + slideOutVertically { it / 6 },
+                ) {
+                    SubtitleAndAudioScreen(
+                        tracksState = tracksState,
+                        onDismiss = { isCcPanelOpened = false },
+                        modifier = Modifier
+                            .fillMaxSize()
+                    )
                 }
             }
         }

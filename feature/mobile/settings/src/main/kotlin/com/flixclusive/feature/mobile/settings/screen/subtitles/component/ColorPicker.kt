@@ -201,7 +201,7 @@ private fun ColorButton(
             ) {
                 AdaptiveIcon(
                     painter = painterResource(UiCommonR.drawable.check),
-                    contentDescription = stringResource(LocaleR.string.selected_label),
+                    contentDescription = stringResource(LocaleR.string.selected),
                     tint = Color.Black,
                     dp = 18.dp,
                     increaseBy = 4.dp,

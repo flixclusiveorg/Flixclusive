@@ -185,7 +185,7 @@ private fun SearchBar(
                 ) {
                     AdaptiveIcon(
                         painter = painterResource(UiCommonR.drawable.round_close_24),
-                        contentDescription = stringResource(LocaleR.string.close_label),
+                        contentDescription = stringResource(LocaleR.string.close),
                         tint = LocalContentColor.current.copy(0.6f),
                     )
                 }

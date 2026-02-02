@@ -1,30 +1,16 @@
 package com.flixclusive.feature.mobile.player
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.ui.ComposePlayer
 import com.flixclusive.feature.mobile.player.component.PlayerControls
-import com.flixclusive.feature.mobile.player.component.bottom.BottomControls
-import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
 import com.ramcosta.composedestinations.annotation.Destination
@@ -70,7 +56,9 @@ internal fun PlayerScreenContent(
         PlayerControls(
             player = player,
             film = film,
-            onBack = onBack
+            playerPrefs = playerPreferences,
+            subtitlesPrefs = subtitlesPreferences,
+            onBack = onBack,
         )
     }
 }

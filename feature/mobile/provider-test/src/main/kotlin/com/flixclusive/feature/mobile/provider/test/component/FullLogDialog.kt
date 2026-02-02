@@ -84,7 +84,7 @@ internal fun FullLogDialog(
                         .fillMaxWidth(),
                 ) {
                     Text(
-                        text = stringResource(id = LocaleR.string.close_label),
+                        text = stringResource(id = LocaleR.string.close),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Light,
                     )

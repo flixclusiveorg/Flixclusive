@@ -121,7 +121,7 @@ internal fun UserAvatarSelectScreen(
                             )
 
                             Text(
-                                text = stringResource(LocaleR.string.selected_label),
+                                text = stringResource(LocaleR.string.selected),
                                 style = MaterialTheme.typography.titleMedium.asAdaptiveTextStyle(),
                             )
                         }
