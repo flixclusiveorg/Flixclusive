@@ -103,6 +103,26 @@ class TracksState(
         player.selectAudio(audioIndex)
     }
 
+    fun onAddSubtitle(subtitle: MediaSubtitle) {
+        player.addSubtitle(subtitle = subtitle)
+    }
+
+    fun onSubtitleSelect(index: Int) {
+        selectedSubtitle = index
+        val subtitle = subtitles.getOrNull(index)
+
+        preferredSubtitleLanguage = subtitle?.label.orEmpty()
+        player.selectSubtitle(index)
+    }
+
+    fun onAudioSelect(index: Int) {
+        selectedAudio = index
+        val audio = audios.getOrNull(index)
+
+        preferredAudioLanguage = audio.orEmpty()
+        player.selectAudio(index)
+    }
+
     companion object {
         /**
          * Remembers and initializes a [TracksState] for managing audio and subtitle tracks in a media player.
@@ -114,7 +134,7 @@ class TracksState(
             playerPreferences: PlayerPreferences,
         ): TracksState {
             val state = remember(player, subtitlesPreferences, playerPreferences) {
-                TracksState(player as AppPlayer, subtitlesPreferences, playerPreferences)
+                TracksState(player, subtitlesPreferences, playerPreferences)
             }
 
             LaunchedEffect(
