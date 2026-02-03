@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -21,23 +22,24 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.model.film.common.tv.Season
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
 @Composable
 internal fun SeasonsRow(
-    availableSeasons: Int,
-    currentSeasonSelected: Int?,
-    onSeasonChange: (Int) -> Unit,
+    seasons: List<Season>,
+    currentSeason: Season?,
+    onSeasonChange: (Season) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    val (selectedIndex, onIndexChange) = remember { mutableStateOf(currentSeasonSelected) }
+    val (selectedIndex, onIndexChange) = remember { mutableStateOf(currentSeason) }
 
     LaunchedEffect(Unit) {
-        selectedIndex?.let {
+        currentSeason?.number?.let {
             safeCall { listState.animateScrollToItem(max(0, it - 1)) }
         }
     }
@@ -54,9 +56,7 @@ internal fun SeasonsRow(
                 edgeSize = 100.dp
             )
     ) {
-        items(availableSeasons) { i ->
-            val season = remember { i + 1 }
-
+        items(seasons) { season ->
             SeasonPill(
                 season = season,
                 selected = season == selectedIndex,
@@ -65,7 +65,7 @@ internal fun SeasonsRow(
                         onIndexChange(season)
                         onSeasonChange(season)
                         safeCall {
-                            listState.animateScrollToItem(i)
+                            listState.animateScrollToItem(season.number - 1)
                         }
                     }
                 }
@@ -87,8 +87,16 @@ private fun SeasonsRowPreview() {
                 contentAlignment = Alignment.Center
             ) {
                 SeasonsRow(
-                    availableSeasons = 14,
-                    currentSeasonSelected = 1,
+                    seasons = List(5) {
+                        Season(
+                            number = it + 1,
+                            episodeCount = 10,
+                        )
+                    },
+                    currentSeason = Season(
+                        number = 2,
+                        episodeCount = 10,
+                    ),
                     onSeasonChange = {}
                 )
             }

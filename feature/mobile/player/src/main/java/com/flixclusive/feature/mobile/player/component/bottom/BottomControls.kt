@@ -27,6 +27,7 @@ import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState
 import com.flixclusive.core.presentation.player.ui.state.ScrubState
 import com.flixclusive.core.presentation.player.ui.state.SeekButtonState
+import com.flixclusive.feature.mobile.player.util.UiPanel
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
@@ -42,10 +43,7 @@ internal fun BottomControls(
     seekButtonState: SeekButtonState,
     isSpeedPanelOpen: Boolean,
     onLock: () -> Unit,
-    onToggleSpeedPanel: (Boolean) -> Unit,
-    onShowCcPanel: () -> Unit,
-    onShowServersPanel: () -> Unit,
-    onShowSubtitleSyncPanel: () -> Unit,
+    onToggleUiPanel: (UiPanel) -> Unit,
     modifier: Modifier = Modifier,
     onNext: (() -> Unit)? = null,
     onShowEpisodesPanel: (() -> Unit)? = null,
@@ -61,7 +59,7 @@ internal fun BottomControls(
         ) {
             PlaybackSpeedSheet(
                 playbackSpeedState = playbackSpeedState,
-                onDismiss = { onToggleSpeedPanel(false) },
+                onDismiss = { onToggleUiPanel(UiPanel.NONE) },
             )
         }
 
@@ -85,7 +83,7 @@ internal fun BottomControls(
             Row {
                 onShowEpisodesPanel?.let { onClick ->
                     ConfigButton(
-                        icon = painterResource(PlayerR.drawable.outline_video_library_24),
+                        icon = painterResource(PlayerR.drawable.playlist_play),
                         contentDescription = stringResource(LocaleR.string.episodes),
                         onClick = onClick
                     )
@@ -95,25 +93,25 @@ internal fun BottomControls(
                     icon = painterResource(PlayerR.drawable.gauge),
                     contentDescription = stringResource(LocaleR.string.playback_speed),
                     enabled = playbackSpeedState.isEnabled && !isSpeedPanelOpen,
-                    onClick = { onToggleSpeedPanel(true) }
+                    onClick = { onToggleUiPanel(UiPanel.PLAYBACK_SPEED) }
                 )
 
                 ConfigButton(
                     icon = painterResource(PlayerR.drawable.record_voice_over_black_24dp),
                     contentDescription = stringResource(LocaleR.string.audio_and_subtitle),
-                    onClick = onShowCcPanel
+                    onClick = { onToggleUiPanel(UiPanel.SUBS) }
                 )
 
                 ConfigButton(
                     icon = painterResource(PlayerR.drawable.round_cloud_queue_24),
                     contentDescription = stringResource(LocaleR.string.servers),
-                    onClick = onShowServersPanel
+                    onClick = { onToggleUiPanel(UiPanel.SERVERS) }
                 )
 
                 ConfigButton(
                     icon = painterResource(PlayerR.drawable.sync_black_24dp),
                     contentDescription = stringResource(LocaleR.string.sync_subtitles),
-                    onClick = onShowSubtitleSyncPanel
+                    onClick = { onToggleUiPanel(UiPanel.SUBS_SYNC) }
                 )
 
                 ConfigButton(

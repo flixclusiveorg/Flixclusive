@@ -14,12 +14,26 @@ import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.domain.provider.model.EpisodeWithProgress
+import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.PlayerScreenContent
 
 @Preview
 @Composable
 private fun PlayerScreenBasePreview() {
     val tvShow = remember { DummyDataForPreview.getTvShow() }
+    val currentSeason = remember {
+        SeasonWithProgress(
+            season = tvShow.seasons.first(),
+            episodes = tvShow.seasons.first().episodes.map {
+                EpisodeWithProgress(
+                    episode = it,
+                    watchProgress = null
+                )
+            },
+        )
+    }
+    val currentEpisode = remember { currentSeason.episodes.first().episode }
     val context = LocalContext.current
 
     val player = remember {
@@ -44,7 +58,11 @@ private fun PlayerScreenBasePreview() {
                 subtitlesPreferences = SubtitlesPreferences(),
                 onBack = {},
                 film = tvShow,
-                episode = tvShow.seasons.first().episodes.first(),
+                currentSeason = currentSeason,
+                currentEpisode = currentEpisode,
+                onEpisodeChange = {},
+                onSeasonChange = {},
+                onNext = {},
                 modifier = Modifier.background(Color.Black)
             )
         }

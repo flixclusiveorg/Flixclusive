@@ -38,11 +38,17 @@ import com.flixclusive.core.presentation.player.ui.state.ScrubEvent
 import com.flixclusive.core.presentation.player.ui.state.ScrubState.Companion.rememberScrubState
 import com.flixclusive.core.presentation.player.ui.state.SeekButtonState.Companion.rememberSeekButtonState
 import com.flixclusive.core.presentation.player.ui.state.TracksState.Companion.rememberTracksState
+import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.component.bottom.BottomControls
+import com.flixclusive.feature.mobile.player.component.episodes.EpisodesScreen
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleAndAudioScreen
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
+import com.flixclusive.feature.mobile.player.util.UiPanel
 import com.flixclusive.model.film.FilmMetadata
+import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
+
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -53,14 +59,14 @@ internal fun PlayerControls(
     subtitlesPrefs: SubtitlesPreferences,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    episode: Episode? = null,
+    currentEpisode: Episode? = null,
+    currentSeason: SeasonWithProgress? = null,
+    onSeasonChange: ((Season) -> Unit)? = null,
+    onEpisodeChange: ((Episode) -> Unit)? = null,
     onNext: (() -> Unit)? = null
 ) {
     var isLocked by rememberSaveable { mutableStateOf(false) }
-    var isSpeedPanelOpened by rememberSaveable { mutableStateOf(false) }
-    var isCcPanelOpened by rememberSaveable { mutableStateOf(false) }
-    var isServersPanelOpened by rememberSaveable { mutableStateOf(false) }
-    var isSubsSyncPanelOpened by rememberSaveable { mutableStateOf(false) }
+    var visiblePanel by rememberSaveable { mutableStateOf(UiPanel.NONE) }
     var queueControlVisibility by rememberSaveable { mutableStateOf(false) }
 
     val scrubState = rememberScrubState(player = player)
@@ -79,21 +85,18 @@ internal fun PlayerControls(
     )
 
     LaunchedEffect(
-        isSpeedPanelOpened,
-        isCcPanelOpened,
-        isServersPanelOpened,
-        isSubsSyncPanelOpened,
+        visiblePanel,
         controlsVisibilityState.isVisible
     ) {
-        if (isSpeedPanelOpened) {
+        if (visiblePanel.isPlaybackSpeed) {
             controlsVisibilityState.show(indefinite = true)
             return@LaunchedEffect
         }
 
-        if (isCcPanelOpened || isServersPanelOpened || isSubsSyncPanelOpened) {
+        if (controlsVisibilityState.isVisible && !visiblePanel.isNone) {
             controlsVisibilityState.hide()
             queueControlVisibility = true
-        } else if (queueControlVisibility) {
+        } else if (queueControlVisibility && visiblePanel.isNone) {
             controlsVisibilityState.show()
             queueControlVisibility = false
         }
@@ -114,8 +117,8 @@ internal fun PlayerControls(
                 .fillMaxSize()
                 .noIndicationClickable(
                     onClick = {
-                        if (isSpeedPanelOpened) {
-                            isSpeedPanelOpened = false
+                        if (visiblePanel.isPlaybackSpeed) {
+                            visiblePanel = UiPanel.NONE
                         } else {
                             controlsVisibilityState.toggle()
                         }
@@ -150,7 +153,7 @@ internal fun PlayerControls(
                     ) {
                         PlayerTopBar(
                             title = film.title,
-                            episode = episode,
+                            episode = currentEpisode,
                             onBack = onBack,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -166,13 +169,13 @@ internal fun PlayerControls(
                             seekButtonState = seekButtonState,
                             playbackSpeedState = playbackSpeedState,
                             scrubState = scrubState,
-                            isSpeedPanelOpen = isSpeedPanelOpened,
-                            onToggleSpeedPanel = { isOpen -> isSpeedPanelOpened = isOpen },
+                            isSpeedPanelOpen = visiblePanel.isPlaybackSpeed,
                             onNext = onNext,
                             onLock = { isLocked = true },
-                            onShowCcPanel = { isCcPanelOpened = true },
-                            onShowServersPanel = { isServersPanelOpened = true },
-                            onShowSubtitleSyncPanel = { isSubsSyncPanelOpened = true },
+                            onToggleUiPanel = { visiblePanel = it },
+                            onShowEpisodesPanel = currentEpisode?.let {
+                                { visiblePanel = UiPanel.EPISODES }
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                         )
@@ -180,21 +183,52 @@ internal fun PlayerControls(
 
                 }
 
-                AnimatedVisibility(
-                    visible = isCcPanelOpened,
-                    enter = fadeIn() + slideInVertically { it / 4 },
-                    exit = fadeOut() + slideOutVertically { it / 6 },
-                ) {
+                AnimatedPanel(visible = visiblePanel.isSubs) {
                     SubtitleAndAudioScreen(
                         tracksState = tracksState,
-                        onDismiss = { isCcPanelOpened = false },
+                        onDismiss = { visiblePanel = UiPanel.NONE },
                         modifier = Modifier
                             .fillMaxSize()
+                    )
+                }
+
+                AnimatedPanel(
+                    visible = visiblePanel.isEpisodes
+                        && film is TvShow
+                        && currentSeason != null
+                        && currentEpisode != null
+                        && onEpisodeChange != null
+                        && onSeasonChange != null
+                ) {
+                    EpisodesScreen(
+                        currentSeason = currentSeason!!,
+                        seasons = (film as TvShow).seasons,
+                        currentEpisode = currentEpisode!!,
+                        onSeasonChange = onSeasonChange!!::invoke,
+                        onEpisodeClick = onEpisodeChange!!::invoke,
+                        onDismiss = { visiblePanel = UiPanel.NONE },
+                        modifier = Modifier
+                            .fillMaxSize(),
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun AnimatedPanel(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable AnimatedVisibilityScope.() -> Unit
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn() + slideInVertically { it / 4 },
+        exit = fadeOut() + slideOutVertically { it / 6 },
+        modifier = modifier,
+        content = content
+    )
 }
 
 @Composable

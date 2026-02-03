@@ -116,13 +116,17 @@ internal fun MainPlaybackControls(
         }
 
         if(onNext != null) {
-            IconButton(
-                onClick = onNext,
+            PlainTooltipBox(
+                description = stringResource(LocaleR.string.next),
             ) {
-                AdaptiveIcon(
-                    painter = painterResource(PlayerR.drawable.round_skip_next_24),
-                    contentDescription = stringResource(LocaleR.string.next),
-                )
+                IconButton(
+                    onClick = onNext,
+                ) {
+                    AdaptiveIcon(
+                        painter = painterResource(PlayerR.drawable.round_skip_next_24),
+                        contentDescription = stringResource(LocaleR.string.next),
+                    )
+                }
             }
         }
     }

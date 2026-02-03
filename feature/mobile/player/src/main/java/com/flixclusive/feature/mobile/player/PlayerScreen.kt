@@ -6,13 +6,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.component.PlayerControls
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
 import com.ramcosta.composedestinations.annotation.Destination
 
 @Destination(
@@ -34,7 +36,11 @@ internal fun PlayerScreenContent(
     onBack: () -> Unit,
     playerPreferences: PlayerPreferences,
     subtitlesPreferences: SubtitlesPreferences,
-    episode: Episode?,
+    currentEpisode: Episode?,
+    currentSeason: SeasonWithProgress?,
+    onEpisodeChange: (Episode) -> Unit,
+    onSeasonChange: (Season) -> Unit,
+    onNext: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -58,6 +64,11 @@ internal fun PlayerScreenContent(
             film = film,
             playerPrefs = playerPreferences,
             subtitlesPrefs = subtitlesPreferences,
+            currentEpisode = currentEpisode,
+            currentSeason = currentSeason,
+            onEpisodeChange = currentEpisode?.let { onEpisodeChange },
+            onSeasonChange = currentSeason?.let { onSeasonChange },
+            onNext = onNext,
             onBack = onBack,
         )
     }

@@ -14,10 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,23 +37,20 @@ import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.component.episodes.component.EpisodesRow
 import com.flixclusive.feature.mobile.player.component.episodes.component.SeasonsRow
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun EpisodesScreen(
     modifier: Modifier = Modifier,
-    seasonData: SeasonWithProgress,
-    availableSeasons: Int,
-    currentEpisodeSelected: Episode,
-    onSeasonChange: (Int) -> Unit,
+    seasons: List<Season>,
+    currentSeason: SeasonWithProgress,
+    currentEpisode: Episode,
+    onSeasonChange: (Season) -> Unit,
     onEpisodeClick: (Episode) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var selectedSeason by remember {
-        mutableIntStateOf(seasonData.number)
-    }
-
     BackHandler {
         onDismiss()
     }
@@ -85,7 +79,7 @@ internal fun EpisodesScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = seasonData.title,
+                    text = currentSeason.title,
                     style = MaterialTheme.typography.headlineSmall
                         .asAdaptiveTextStyle(size = 22.sp)
                         .copy(fontWeight = FontWeight.Bold),
@@ -107,18 +101,17 @@ internal fun EpisodesScreen(
             }
 
             SeasonsRow(
-                availableSeasons = availableSeasons,
-                currentSeasonSelected = selectedSeason,
+                seasons = seasons,
+                currentSeason = currentSeason.season,
                 onSeasonChange = {
-                    selectedSeason = it
                     onSeasonChange(it)
                 },
                 modifier = Modifier.padding(bottom = 10.dp)
             )
 
             EpisodesRow(
-                seasonData = seasonData,
-                currentEpisodeSelected = currentEpisodeSelected,
+                seasonData = currentSeason,
+                currentEpisodeSelected = currentEpisode,
                 onEpisodeClick = onEpisodeClick,
                 onClose = onDismiss
             )
@@ -181,9 +174,9 @@ private fun EpisodesScreenPreview() {
                 )
 
                 EpisodesScreen(
-                    seasonData = seasonData,
-                    availableSeasons = 20,
-                    currentEpisodeSelected = sampleEpisode.episode,
+                    currentSeason = seasonData,
+                    seasons = sampleShow.seasons,
+                    currentEpisode = sampleEpisode.episode,
                     onSeasonChange = {},
                     onEpisodeClick = {},
                     onDismiss = {}
