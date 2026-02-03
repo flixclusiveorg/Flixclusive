@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.player.component
 
+import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -24,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
@@ -41,6 +44,7 @@ import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
 
+@OptIn(UnstableApi::class)
 @Composable
 internal fun PlayerControls(
     player: AppPlayer,
@@ -52,11 +56,12 @@ internal fun PlayerControls(
     episode: Episode? = null,
     onNext: (() -> Unit)? = null
 ) {
-    var isSpeedPanelOpened by rememberSaveable { mutableStateOf(false) }
     var isLocked by rememberSaveable { mutableStateOf(false) }
+    var isSpeedPanelOpened by rememberSaveable { mutableStateOf(false) }
     var isCcPanelOpened by rememberSaveable { mutableStateOf(false) }
     var isServersPanelOpened by rememberSaveable { mutableStateOf(false) }
     var isSubsSyncPanelOpened by rememberSaveable { mutableStateOf(false) }
+    var queueControlVisibility by rememberSaveable { mutableStateOf(false) }
 
     val scrubState = rememberScrubState(player = player)
     val playPauseState = rememberPlayPauseButtonState(player = player)
@@ -72,6 +77,27 @@ internal fun PlayerControls(
         subtitlesPreferences = subtitlesPrefs,
         playerPreferences = playerPrefs
     )
+
+    LaunchedEffect(
+        isSpeedPanelOpened,
+        isCcPanelOpened,
+        isServersPanelOpened,
+        isSubsSyncPanelOpened,
+        controlsVisibilityState.isVisible
+    ) {
+        if (isSpeedPanelOpened) {
+            controlsVisibilityState.show(indefinite = true)
+            return@LaunchedEffect
+        }
+
+        if (isCcPanelOpened || isServersPanelOpened || isSubsSyncPanelOpened) {
+            controlsVisibilityState.hide()
+            queueControlVisibility = true
+        } else if (queueControlVisibility) {
+            controlsVisibilityState.show()
+            queueControlVisibility = false
+        }
+    }
 
     AnimatedContent(
         targetState = isLocked,

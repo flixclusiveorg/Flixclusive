@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.player.component.bottom
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +56,10 @@ internal fun PlaybackSpeedSheet(
         derivedStateOf {
             mutableFloatStateOf(playbackSpeedState.playbackSpeed)
         }
+    }
+
+    BackHandler {
+        onDismiss()
     }
 
     Column(

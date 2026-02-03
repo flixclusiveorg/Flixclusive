@@ -2,8 +2,10 @@ package com.flixclusive.feature.mobile.player.component.subtitles
 
 import android.content.ClipData
 import android.content.Intent
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.extensions.noOpClickable
@@ -44,6 +47,7 @@ import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
 
+@OptIn(UnstableApi::class)
 @Composable
 internal fun SubtitleAndAudioScreen(
     tracksState: TracksState,
@@ -53,6 +57,10 @@ internal fun SubtitleAndAudioScreen(
     val context = LocalContext.current
     val clipboardManager = LocalClipboard.current
     val hapticFeedback = getFeedbackOnLongPress()
+
+    BackHandler {
+        onDismiss()
+    }
 
     val subtitleLabel = stringResource(id = LocaleR.string.subtitle)
     val subtitleFileSelector =
@@ -160,25 +168,22 @@ internal fun SubtitleAndAudioScreen(
                         )
                     },
                     actions = {
-                        Box(
-                            contentAlignment = Alignment.CenterEnd,
-                            modifier = Modifier
-                                .clickable {
-                                    subtitleFileSelector.launch(
-                                        arrayOf(
-                                            "text/plain",
-                                            "text/str",
-                                            "application/octet-stream",
-                                            MimeTypes.TEXT_UNKNOWN,
-                                            MimeTypes.TEXT_VTT,
-                                            MimeTypes.TEXT_SSA,
-                                            MimeTypes.APPLICATION_TTML,
-                                            MimeTypes.APPLICATION_MP4VTT,
-                                            MimeTypes.APPLICATION_SUBRIP,
-                                        )
+                        IconButton(
+                            onClick = {
+                                subtitleFileSelector.launch(
+                                    arrayOf(
+                                        "text/plain",
+                                        "text/str",
+                                        "application/octet-stream",
+                                        MimeTypes.TEXT_UNKNOWN,
+                                        MimeTypes.TEXT_VTT,
+                                        MimeTypes.TEXT_SSA,
+                                        MimeTypes.APPLICATION_TTML,
+                                        MimeTypes.APPLICATION_MP4VTT,
+                                        MimeTypes.APPLICATION_SUBRIP,
                                     )
-                                }
-                                .clip(CircleShape)
+                                )
+                            }
                         ) {
                             AdaptiveIcon(
                                 painter = painterResource(id = UiCommonR.drawable.round_add_24),

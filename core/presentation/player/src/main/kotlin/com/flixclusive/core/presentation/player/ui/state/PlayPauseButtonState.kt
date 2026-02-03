@@ -80,7 +80,6 @@ class PlayPauseButtonState private constructor(
          * coroutine to listen to [Player's][Player] changes. If the [Player] instance changes between
          * compositions, produce and remember a new value.
          */
-        @UnstableApi
         @Composable
         fun rememberPlayPauseButtonState(player: AppPlayer): PlayPauseButtonState {
             val playPauseButtonState = remember(player) { PlayPauseButtonState(player) }

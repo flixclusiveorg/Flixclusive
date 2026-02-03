@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.player.component.episodes
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +55,10 @@ internal fun EpisodesScreen(
 ) {
     var selectedSeason by remember {
         mutableIntStateOf(seasonData.number)
+    }
+
+    BackHandler {
+        onDismiss()
     }
 
     Box(
