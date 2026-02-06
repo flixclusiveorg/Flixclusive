@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.text.Cue
 import androidx.media3.common.util.Consumer
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.extractor.text.CuesWithTiming
@@ -125,16 +126,34 @@ internal class CustomDecoder(
         output: Consumer<CuesWithTiming>,
     ) {
         val customOutput =
-            Consumer<CuesWithTiming> { cue ->
+            Consumer<CuesWithTiming> { data ->
                 val currentOffset = offsetProvider.currentSubtitleOffset
-                val updatedCues =
-                    CuesWithTiming(
-                        cue.cues,
-                        cue.startTimeUs - currentOffset.times(1000),
-                        cue.durationUs,
-                    )
 
-                output.accept(updatedCues)
+                val updatedCues = data.cues.map { cue ->
+                    // See https://github.com/google/ExoPlayer/issues/7934
+
+                    // Personal note:
+                    // Some VTTs already has a set line position
+                    // In order to make it even more consistent, all cues could
+                    // Be set to DIMEN_UNSET instead and use bottomPaddingFraction()
+                    // to mutate the bottom padding of the cues
+                    cue.buildUpon()
+                        .apply {
+                            if (cue.line == -1f) {
+                                setLine(Cue.DIMEN_UNSET, Cue.LINE_TYPE_NUMBER)
+                            }
+                        }
+                        .setSize(Cue.DIMEN_UNSET)
+                        .build()
+                }
+
+                output.accept(
+                    CuesWithTiming(
+                        updatedCues,
+                        data.durationUs,
+                        data.startTimeUs - currentOffset.times(1000),
+                    )
+                )
             }
 
         try {
