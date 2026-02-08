@@ -89,16 +89,26 @@ internal fun Scrubber(
 
         Box(modifier = Modifier.weight(1F)) {
             // buffer bar
+            val bufferColors = CustomSliderDefaults.colors(
+                disabledThumbColor = Color.Transparent,
+                disabledActiveTrackColor = Color.White.copy(0.6f)
+            )
+
             CustomSlider(
                 value = state.buffered.toFloat(),
                 enabled = false,
                 onValueChange = {},
                 valueRange = 0F..state.duration.toFloat(),
                 thumb = {},
-                colors = CustomSliderDefaults.colors(
-                    disabledThumbColor = Color.Transparent,
-                    disabledActiveTrackColor = Color.White.copy(0.6f)
-                )
+                track = {
+                    CustomSliderDefaults.Track(
+                        customSliderPositions = it,
+                        colors = bufferColors,
+                        enabled = false,
+                        gradient = false
+                    )
+                },
+                colors = bufferColors
             )
 
             // seek bar
