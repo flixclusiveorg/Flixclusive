@@ -8,7 +8,7 @@ import androidx.media3.extractor.text.SimpleSubtitleDecoder
 import androidx.media3.extractor.text.Subtitle
 import androidx.media3.extractor.text.SubtitleDecoder
 import androidx.media3.extractor.text.SubtitleParser
-import com.flixclusive.core.presentation.player.SubtitleOffsetProvider
+import com.flixclusive.core.presentation.player.CuesProvider
 import java.lang.ref.WeakReference
 
 /**
@@ -22,7 +22,7 @@ import java.lang.ref.WeakReference
  * */
 @UnstableApi
 internal class CustomSubtitleDecoderFactory(
-    private val offsetProvider: SubtitleOffsetProvider
+    private val offsetProvider: CuesProvider
 ) : SubtitleDecoderFactory {
     override fun supportsFormat(format: Format): Boolean {
         return listOf(
@@ -41,7 +41,7 @@ internal class CustomSubtitleDecoderFactory(
      * Keep a weak reference to the latest decoder to allow access to subtitle cues
      * without preventing it from being garbage collected.
      * */
-    private var latestDecoder: WeakReference<CustomDecoder>? = null
+    private var latestDecoder: WeakReference<CustomSubtitleParser>? = null
 
 //    fun getSubtitleCues(): List<SubtitleCue>? {
 //        return latestDecoder?.get()?.currentSubtitleCues
@@ -52,7 +52,7 @@ internal class CustomSubtitleDecoderFactory(
      * Do not save state in the decoder which you want to reset (e.g subtitle offset)
      **/
     override fun createDecoder(format: Format): SubtitleDecoder {
-        val parser = CustomDecoder(format, offsetProvider)
+        val parser = CustomSubtitleParser(format, offsetProvider)
 
         latestDecoder = WeakReference(parser)
 

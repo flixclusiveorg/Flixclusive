@@ -10,6 +10,7 @@ import androidx.annotation.OptIn
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.setValue
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -41,6 +42,7 @@ import com.flixclusive.core.presentation.player.extensions.isNetworkException
 import com.flixclusive.core.presentation.player.extensions.setStyle
 import com.flixclusive.core.presentation.player.extensions.switchTrack
 import com.flixclusive.core.presentation.player.model.CacheMediaItem
+import com.flixclusive.core.presentation.player.model.CueWithTiming
 import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.core.presentation.player.model.track.MediaServer
 import com.flixclusive.core.presentation.player.model.track.MediaServer.Companion.getIndexOfPreferredQuality
@@ -68,8 +70,11 @@ class AppPlayer(
     private val dataSourceFactory: AppDataSourceFactory,
     private val playerPrefs: PlayerPreferences,
     private val subtitlePrefs: SubtitlesPreferences,
-) : SubtitleOffsetProvider, Player {
-    override var currentSubtitleOffset by mutableLongStateOf(0L)
+) : CuesProvider, Player {
+    override var offset by mutableLongStateOf(0L)
+        private set
+
+    val currentCuesWithTiming = mutableStateListOf<CueWithTiming>()
 
     var subtitleView: SubtitleView? = null
 
@@ -126,7 +131,7 @@ class AppPlayer(
                             audioRendererEventListener = audioRendererEventListener,
                             textRendererOutput = textRendererOutput,
                             metadataRendererOutput = metadataRendererOutput,
-                            subtitleOffsetProvider = this@AppPlayer,
+                            cuesProvider = this@AppPlayer,
                             decoderPriority = playerPrefs.decoderPriority,
                             onTextRendererChange = { textRenderer = it },
                         )
@@ -280,7 +285,7 @@ class AppPlayer(
     }
 
     fun changeSubtitleDelay(offset: Long) {
-        currentSubtitleOffset = offset
+        this.offset = offset
 
         // Apply the offset change immediately to the current text renderer
         if (textRenderer?.state == TextRenderer.STATE_ENABLED ||
@@ -331,6 +336,14 @@ class AppPlayer(
     override fun setPlayWhenReady(value: Boolean) {
         _playWhenReady = value
         exoPlayer?.playWhenReady = value
+    }
+
+    override fun addCue(cue: CueWithTiming) {
+        currentCuesWithTiming.add(cue)
+    }
+
+    override fun clearCues() {
+        currentCuesWithTiming.clear()
     }
 
     private inner class InternalPlayerListener : Player.Listener {
@@ -407,7 +420,7 @@ class AppPlayer(
         ) = (duration - progress) <= threshold
     }
 
-    // TODO: Don't scroll down anymore pls
+    // MARK: Don't scroll down anymore pls
 
     override fun play() {
         exoPlayer?.play()

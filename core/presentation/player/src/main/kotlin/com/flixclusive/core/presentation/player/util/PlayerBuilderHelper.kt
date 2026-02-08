@@ -16,7 +16,7 @@ import androidx.media3.exoplayer.text.TextOutput
 import androidx.media3.exoplayer.text.TextRenderer
 import androidx.media3.exoplayer.video.VideoRendererEventListener
 import com.flixclusive.core.datastore.model.user.player.DecoderPriority
-import com.flixclusive.core.presentation.player.SubtitleOffsetProvider
+import com.flixclusive.core.presentation.player.CuesProvider
 import com.flixclusive.core.presentation.player.renderer.CustomSubtitleDecoderFactory
 import com.flixclusive.core.util.network.okhttp.SSLTrustManager
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory
@@ -37,7 +37,7 @@ internal object PlayerBuilderHelper {
         audioRendererEventListener: AudioRendererEventListener,
         textRendererOutput: TextOutput,
         metadataRendererOutput: MetadataOutput,
-        subtitleOffsetProvider: SubtitleOffsetProvider,
+        cuesProvider: CuesProvider,
         decoderPriority: DecoderPriority,
         onTextRendererChange: (TextRenderer) -> Unit,
     ): Array<Renderer> {
@@ -58,7 +58,7 @@ internal object PlayerBuilderHelper {
             ).map {
                 if (it is TextRenderer) {
                     // Pass subtitle offset provider directly to the decoder factory
-                    val decoder = CustomSubtitleDecoderFactory(subtitleOffsetProvider)
+                    val decoder = CustomSubtitleDecoderFactory(cuesProvider)
 
                     val currentTextRenderer = TextRenderer(
                         textRendererOutput,

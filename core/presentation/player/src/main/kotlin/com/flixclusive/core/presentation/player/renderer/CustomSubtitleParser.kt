@@ -18,7 +18,8 @@ import androidx.media3.extractor.text.ttml.TtmlParser
 import androidx.media3.extractor.text.tx3g.Tx3gParser
 import androidx.media3.extractor.text.webvtt.Mp4WebvttParser
 import androidx.media3.extractor.text.webvtt.WebvttParser
-import com.flixclusive.core.presentation.player.SubtitleOffsetProvider
+import com.flixclusive.core.presentation.player.CuesProvider
+import com.flixclusive.core.presentation.player.model.CueWithTiming.Companion.toCue
 import com.flixclusive.core.util.log.errorLog
 import org.mozilla.universalchardet.UniversalDetector
 
@@ -31,9 +32,9 @@ import org.mozilla.universalchardet.UniversalDetector
  * enough to identify the subtitle format.
  **/
 @OptIn(UnstableApi::class)
-internal class CustomDecoder(
+internal class CustomSubtitleParser(
     private val fallbackFormat: Format?,
-    private val offsetProvider: SubtitleOffsetProvider,
+    private val cuesProvider: CuesProvider,
 ) : SubtitleParser {
     private var realDecoder: SubtitleParser? = null
 
@@ -117,8 +118,6 @@ internal class CustomDecoder(
         return subtitleParser
     }
 
-//    val currentSubtitleCues = mutableListOf<SubtitleCue>()
-
     override fun parse(
         data: ByteArray,
         offset: Int,
@@ -128,7 +127,7 @@ internal class CustomDecoder(
     ) {
         val customOutput =
             Consumer<CuesWithTiming> { data ->
-                val currentOffset = offsetProvider.currentSubtitleOffset
+                val currentOffset = cuesProvider.offset
 
                 val updatedCues = data.cues.fastMap { cue ->
                     // See https://github.com/google/ExoPlayer/issues/7934
@@ -148,6 +147,8 @@ internal class CustomDecoder(
                         .build()
                 }
 
+                cuesProvider.addCue(data.toCue())
+
                 output.accept(
                     CuesWithTiming(
                         updatedCues,
@@ -159,7 +160,7 @@ internal class CustomDecoder(
 
         try {
             val inputString = data.toReadableSubtitle()
-            Log.i(TAG, "Current subtitle to preview: ${inputString.substring(0, 30)}")
+            Log.i(TAG, "Current subtitle to preview: ${inputString.take(30)}")
 
             if (inputString.isNotBlank()) {
                 var str = inputString.trimStr()
@@ -204,8 +205,8 @@ internal class CustomDecoder(
     }
 
     override fun reset() {
-//        currentSubtitleCues.clear()
         super.reset()
+        cuesProvider.clearCues()
     }
 
     internal companion object {
