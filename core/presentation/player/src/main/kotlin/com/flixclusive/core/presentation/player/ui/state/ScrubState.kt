@@ -73,6 +73,7 @@ class ScrubState private constructor(
      * @param position The new position to update the [progress] to.
      * */
     fun onScrubMove(position: Long) {
+        progress = position
         player.seekTo(position)
     }
 
