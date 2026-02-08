@@ -47,6 +47,9 @@ class SeekButtonState private constructor(
                     Player.EVENT_AVAILABLE_COMMANDS_CHANGED,
                     Player.EVENT_SEEK_BACK_INCREMENT_CHANGED,
                     Player.EVENT_SEEK_FORWARD_INCREMENT_CHANGED,
+                    Player.EVENT_POSITION_DISCONTINUITY,
+                    Player.EVENT_PLAYBACK_STATE_CHANGED,
+                    Player.EVENT_IS_PLAYING_CHANGED,
                 )
             ) {
                 isSeekBackEnabled = getSeekBackEnabled()
@@ -60,7 +63,7 @@ class SeekButtonState private constructor(
     private fun Player.getSeekBackEnabled(): Boolean {
         return isCommandAvailable(Player.COMMAND_SEEK_BACK)
             && seekBackIncrement > 0L
-            && currentPosition > 0L
+            && duration > 0L
     }
 
     private fun Player.getSeekForwardEnabled(): Boolean {
