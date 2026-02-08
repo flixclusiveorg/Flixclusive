@@ -119,7 +119,7 @@ class UserEditViewModelTest {
     @Test
     fun `onRemoveUser should remove logged in user and emit PopToRoot`() =
         runTest(testDispatcher) {
-            val providerMetadata = DummyDataForPreview.getDummyProviderMetadata()
+            val providerMetadata = DummyDataForPreview.getProviderMetadata()
 
             every { userSessionManager.currentUser } returns MutableStateFlow(loggedInUser)
             every { userRepository.observeUser(any()) } returns flowOf(loggedInUser)

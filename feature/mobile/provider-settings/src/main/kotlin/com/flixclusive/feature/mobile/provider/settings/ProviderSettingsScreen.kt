@@ -82,7 +82,7 @@ internal fun ProviderSettingsScreenContent(
 @Preview
 @Composable
 private fun ProviderSettingsScreenBasePreview() {
-    val metadata = remember { DummyDataForPreview.getDummyProviderMetadata() }
+    val metadata = remember { DummyDataForPreview.getProviderMetadata() }
     val provider = remember {
         object : Provider() {
             override fun getApi(

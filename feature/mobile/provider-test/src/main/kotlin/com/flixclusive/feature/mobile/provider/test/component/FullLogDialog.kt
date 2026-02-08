@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
-import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getDummyProviderMetadata
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getProviderMetadata
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.CommonAlertDialog
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.domain.provider.testing.model.ProviderTestCaseResult
@@ -276,7 +276,7 @@ private fun FullLogDialogPreview() {
         shortLog = UiText.StringValue("Failed to fetch film details for The Godfather [tt0068646]"),
     )
 
-    val provider = getDummyProviderMetadata()
+    val provider = getProviderMetadata()
 
     FlixclusiveTheme {
         Surface(

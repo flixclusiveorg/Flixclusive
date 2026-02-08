@@ -67,14 +67,14 @@ class AddProviderViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher(TestCoroutineScheduler())
 
-    private val testProvider1 = DummyDataForPreview.getDummyProviderMetadata(
+    private val testProvider1 = DummyDataForPreview.getProviderMetadata(
         id = "test-provider-1",
         name = "Test Provider 1",
         versionName = "1.0.0",
         versionCode = 10000,
     )
 
-    private val testProvider2 = DummyDataForPreview.getDummyProviderMetadata(
+    private val testProvider2 = DummyDataForPreview.getProviderMetadata(
         id = "test-provider-2",
         name = "Test Provider 2",
         versionName = "2.0.0",

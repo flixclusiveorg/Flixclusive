@@ -396,7 +396,7 @@ private fun ProviderManagerScreenBasePreview() {
         mutableStateListOf<ProviderMetadata>().also {
             it.addAll(
                 List(20) {
-                    DummyDataForPreview.getDummyProviderMetadata(
+                    DummyDataForPreview.getProviderMetadata(
                         id = it.toString(),
                         name = "Provider #$it",
                     )

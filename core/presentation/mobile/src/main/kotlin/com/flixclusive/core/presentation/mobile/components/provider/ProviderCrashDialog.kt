@@ -159,7 +159,7 @@ private fun ProviderCrashDialogPreview() {
             modifier = Modifier.fillMaxSize(),
         ) {
             ProviderCrashDialog(
-                provider = DummyDataForPreview.getDummyProviderMetadata(),
+                provider = DummyDataForPreview.getProviderMetadata(),
                 error = NullPointerException("This is a sample error message for provider."),
                 onDismissRequest = {},
             )

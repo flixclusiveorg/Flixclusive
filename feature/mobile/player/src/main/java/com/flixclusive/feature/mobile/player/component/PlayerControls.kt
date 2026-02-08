@@ -37,10 +37,12 @@ import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Comp
 import com.flixclusive.core.presentation.player.ui.state.ScrubEvent
 import com.flixclusive.core.presentation.player.ui.state.ScrubState.Companion.rememberScrubState
 import com.flixclusive.core.presentation.player.ui.state.SeekButtonState.Companion.rememberSeekButtonState
+import com.flixclusive.core.presentation.player.ui.state.ServersState.Companion.rememberServersState
 import com.flixclusive.core.presentation.player.ui.state.TracksState.Companion.rememberTracksState
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.component.bottom.BottomControls
 import com.flixclusive.feature.mobile.player.component.episodes.EpisodesScreen
+import com.flixclusive.feature.mobile.player.component.servers.ServersScreen
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleAndAudioScreen
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
 import com.flixclusive.feature.mobile.player.util.UiPanel
@@ -48,6 +50,7 @@ import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.provider.ProviderMetadata
 
 
 @OptIn(UnstableApi::class)
@@ -57,6 +60,9 @@ internal fun PlayerControls(
     film: FilmMetadata,
     playerPrefs: PlayerPreferences,
     subtitlesPrefs: SubtitlesPreferences,
+    currentProvider: ProviderMetadata,
+    providers: List<ProviderMetadata>,
+    onProviderChange: (ProviderMetadata) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     currentEpisode: Episode? = null,
@@ -78,6 +84,7 @@ internal fun PlayerControls(
         isScrubbing = scrubState.event == ScrubEvent.SCRUBBING
     )
 
+    val serversState = rememberServersState(player = player)
     val tracksState = rememberTracksState(
         player = player,
         subtitlesPreferences = subtitlesPrefs,
@@ -100,6 +107,15 @@ internal fun PlayerControls(
             controlsVisibilityState.show()
             queueControlVisibility = false
         }
+    }
+
+    LaunchedEffect(controlsVisibilityState.isVisible) {
+        var subtitleBottomPaddingFraction = 0.05f
+        if (controlsVisibilityState.isVisible) {
+            subtitleBottomPaddingFraction = 0.15f
+        }
+
+        player.subtitleView?.setBottomPaddingFraction(subtitleBottomPaddingFraction)
     }
 
     AnimatedContent(
@@ -209,6 +225,20 @@ internal fun PlayerControls(
                         onDismiss = { visiblePanel = UiPanel.NONE },
                         modifier = Modifier
                             .fillMaxSize(),
+                    )
+                }
+
+                AnimatedPanel(
+                    visible = visiblePanel.isServers
+                ) {
+                    ServersScreen(
+                        serversState = serversState,
+                        onDismiss = { visiblePanel = UiPanel.NONE },
+                        currentProvider = currentProvider,
+                        providers = providers,
+                        onProviderChange = onProviderChange,
+                        modifier = Modifier
+                            .fillMaxSize()
                     )
                 }
             }

@@ -5,7 +5,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -14,6 +17,8 @@ import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.PlayerScreenContent
@@ -21,7 +26,21 @@ import com.flixclusive.feature.mobile.player.PlayerScreenContent
 @Preview
 @Composable
 private fun PlayerScreenBasePreview() {
-    val tvShow = remember { DummyDataForPreview.getTvShow() }
+    val providers = remember {
+        List(10) { index ->
+            DummyDataForPreview.getProviderMetadata(
+                id = "provider_$index",
+                name = "Provider $index"
+            )
+        }
+    }
+    var currentProvider by remember { mutableStateOf(providers.first()) }
+
+    val tvShow = remember {
+        DummyDataForPreview.getTvShow(
+            providerId = currentProvider.id,
+        )
+    }
     val currentSeason = remember {
         SeasonWithProgress(
             season = tvShow.seasons.first(),
@@ -36,9 +55,32 @@ private fun PlayerScreenBasePreview() {
     val currentEpisode = remember { currentSeason.episodes.first().episode }
     val context = LocalContext.current
 
+    var playerPrefs by remember {
+        mutableStateOf(PlayerPreferences())
+    }
+    var subtitlePrefs by remember {
+        mutableStateOf(SubtitlesPreferences())
+    }
+
     val player = remember {
-        PreviewPlayer(context).apply {
+        AppPlayer(
+            context = context,
+            playerPrefs = playerPrefs,
+            dataSourceFactory = PreviewDataSourceFactory(context),
+            subtitlePrefs = subtitlePrefs,
+        ).apply {
             initialize()
+            prepare(
+                key = MediaItemKey(
+                    filmId = tvShow.identifier,
+                    episodeId = currentEpisode.id,
+                    providerId = currentProvider.id,
+                ),
+                servers = PreviewPlayerData.getTestMediaServers(),
+                subtitles = PreviewPlayerData.getTestMediaSubtitles(),
+                startPositionMs = 0L,
+                playImmediately = true,
+            )
         }
     }
 
@@ -54,8 +96,8 @@ private fun PlayerScreenBasePreview() {
         ) {
             PlayerScreenContent(
                 player = player,
-                playerPreferences = PlayerPreferences(),
-                subtitlesPreferences = SubtitlesPreferences(),
+                playerPreferences = playerPrefs,
+                subtitlesPreferences = subtitlePrefs,
                 onBack = {},
                 film = tvShow,
                 currentSeason = currentSeason,
@@ -63,6 +105,9 @@ private fun PlayerScreenBasePreview() {
                 onEpisodeChange = {},
                 onSeasonChange = {},
                 onNext = {},
+                providers = providers,
+                currentProvider = currentProvider,
+                onProviderChange = { currentProvider = it },
                 modifier = Modifier.background(Color.Black)
             )
         }

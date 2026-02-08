@@ -11,10 +11,9 @@ import android.util.Rational
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
-import com.flixclusive.core.presentation.player.PiPEvent
 import com.flixclusive.core.presentation.player.R
+import com.flixclusive.core.presentation.player.ui.PiPEvent
 import com.flixclusive.core.drawables.R as UiCommonR
-import com.flixclusive.core.strings.R as LocaleR
 
 const val ACTION_PIP_CONTROL = "player_pip_control"
 const val PLAYER_PIP_EVENT = "player_pip_event"

@@ -102,7 +102,7 @@ internal fun ProviderDetailsHeader(
 @Preview
 @Composable
 private fun ProviderDetailsHeaderBasePreview() {
-    val providerMetadata = DummyDataForPreview.getDummyProviderMetadata()
+    val providerMetadata = DummyDataForPreview.getProviderMetadata()
 
     FlixclusiveTheme {
         Surface(

@@ -6,11 +6,8 @@ import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
-import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.presentation.player.AppDataSourceFactoryImpl
-import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.AppPlayerImpl
 import com.flixclusive.core.presentation.player.PlayerCache
 import dagger.Module
 import dagger.Provides
@@ -26,36 +23,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object PlayerModule {
-    @Provides
-    @Singleton
-    fun providerAppPlayer(
-        @ApplicationContext context: Context,
-        dataStoreManager: DataStoreManager,
-        appDispatchers: AppDispatchers,
-        dataSourceFactory: AppDataSourceFactoryImpl
-    ): AppPlayer {
-        val subtitlePrefs = runBlocking(appDispatchers.io) {
-            dataStoreManager.getUserPrefs(
-                key = UserPreferences.SUBTITLES_PREFS_KEY,
-                type = SubtitlesPreferences::class
-            ).first()
-        }
-
-        val playerPrefs = runBlocking(appDispatchers.io) {
-            dataStoreManager.getUserPrefs(
-                key = UserPreferences.PLAYER_PREFS_KEY,
-                type = PlayerPreferences::class
-            ).first()
-        }
-
-        return AppPlayerImpl(
-            context = context,
-            subtitlePrefs = subtitlePrefs,
-            playerPrefs = playerPrefs,
-            dataSourceFactory = dataSourceFactory
-        )
-    }
-
     @Provides
     @Singleton
     fun providePlayerCache(

@@ -56,13 +56,13 @@ class ProviderManagerViewModelTest {
     private val testDispatcher = StandardTestDispatcher(TestCoroutineScheduler())
     private val providerRepositoryObserveFlow = MutableSharedFlow<CollectionsOperation.List<ProviderFromPreferences>>()
 
-    private val testProvider1 = DummyDataForPreview.getDummyProviderMetadata(
+    private val testProvider1 = DummyDataForPreview.getProviderMetadata(
         id = "test-provider-1",
         name = "Test Provider 1",
         versionName = "1.0.0",
     )
 
-    private val testProvider2 = DummyDataForPreview.getDummyProviderMetadata(
+    private val testProvider2 = DummyDataForPreview.getProviderMetadata(
         id = "test-provider-2",
         name = "Test Provider 2",
         versionName = "2.0.0",
@@ -359,7 +359,7 @@ class ProviderManagerViewModelTest {
     @Test
     fun `providersChangesHandler handles add operation`() =
         runTest(testDispatcher) {
-            val newProvider = DummyDataForPreview.getDummyProviderMetadata(
+            val newProvider = DummyDataForPreview.getProviderMetadata(
                 id = "new-provider",
                 name = "New Provider",
             )

@@ -26,7 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getDummyProviderMetadata
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getProviderMetadata
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.model.provider.ProviderMetadata
@@ -110,7 +110,7 @@ private fun ProviderCardPreview() {
     FlixclusiveTheme {
         Surface {
             SearchProviderBlock(
-                providerMetadata = getDummyProviderMetadata(),
+                providerMetadata = getProviderMetadata(),
                 isSelected = true,
                 onClick = {}
             )

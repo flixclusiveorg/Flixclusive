@@ -55,7 +55,7 @@ import coil3.compose.AsyncImage
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.navigation.navigator.GoBackAction
 import com.flixclusive.core.presentation.common.extensions.buildImageRequest
-import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getDummyProviderMetadata
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getProviderMetadata
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveGridCellsCount
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
@@ -373,7 +373,7 @@ private fun ProviderTestScreenBasePreview() {
     val results = remember {
         List(5) {
             ProviderTestResult(
-                provider = getDummyProviderMetadata().copy(id = it.toString()),
+                provider = getProviderMetadata().copy(id = it.toString()),
                 date = java.util.Date(),
             ).also { result ->
                 repeat(5) {

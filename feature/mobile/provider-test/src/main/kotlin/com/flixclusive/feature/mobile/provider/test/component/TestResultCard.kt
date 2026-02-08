@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
-import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getDummyProviderMetadata
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getProviderMetadata
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
@@ -65,8 +65,8 @@ import com.flixclusive.domain.provider.testing.model.TestStatus
 import com.flixclusive.model.provider.ProviderMetadata
 import kotlin.random.Random
 import kotlin.time.Duration
-import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.drawables.R as UiCommonR
+import com.flixclusive.core.strings.R as LocaleR
 
 private val ButtonHeight = 40.dp
 private val CardShape = RoundedCornerShape(8.dp)
@@ -347,7 +347,7 @@ private fun List<ProviderTestCaseResult>.getScore(): String {
 @Preview
 @Composable
 private fun TestResultCardBasePreview() {
-    val providers = List(5) { getDummyProviderMetadata() }
+    val providers = List(5) { getProviderMetadata() }
     val isExpandedMap = remember {
         List(providers.size) { index: Int -> index to Random.nextBoolean() }
             .toMutableStateMap()

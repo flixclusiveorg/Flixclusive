@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.player
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,11 @@ import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
+import com.flixclusive.core.datastore.DataStoreManager
+import com.flixclusive.core.datastore.model.user.PlayerPreferences
+import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
+import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.core.presentation.player.model.track.MediaServer
@@ -28,7 +34,9 @@ import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,12 +44,14 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flattenConcat
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
@@ -55,13 +65,38 @@ internal class PlayerScreenViewModel @Inject constructor(
     private val setWatchProgress: SetWatchProgressUseCase,
     private val userSessionManager: UserSessionManager,
     private val watchProgressRepository: WatchProgressRepository,
-    val player: AppPlayer,
+    private val dataStoreManager: DataStoreManager,
+    private val playerDataSourceFactory: AppDataSourceFactory,
+    @get:ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     /**
      * Using [SavedStateHandle]'s navArgs delegate to get the navigation arguments.
      * */
     private val navArgs = savedStateHandle.navArgs<PlayerScreenNavArgs>()
+
+    val player by lazy {
+        val playerPreferences = runBlocking(appDispatchers.io) {
+            dataStoreManager.getUserPrefs(
+                key = UserPreferences.PLAYER_PREFS_KEY,
+                type = PlayerPreferences::class
+            ).first()
+        }
+
+        val subtitlePreferences = runBlocking(appDispatchers.io) {
+            dataStoreManager.getUserPrefs(
+                key = UserPreferences.SUBTITLES_PREFS_KEY,
+                type = SubtitlesPreferences::class
+            ).first()
+        }
+
+        AppPlayer(
+            context = context,
+            dataSourceFactory = playerDataSourceFactory,
+            playerPrefs = playerPreferences,
+            subtitlePrefs = subtitlePreferences,
+        )
+    }
 
     /**
      * The film metadata passed to the player screen.
@@ -446,6 +481,8 @@ internal class PlayerScreenViewModel @Inject constructor(
                     if (success && filmMetadata is TvShow) {
                         nextEpisode = getNextEpisode()
                     }
+
+                    cancel()
                 }
             } else {
                 val startPositionMs = getSavedStartPositionMs()

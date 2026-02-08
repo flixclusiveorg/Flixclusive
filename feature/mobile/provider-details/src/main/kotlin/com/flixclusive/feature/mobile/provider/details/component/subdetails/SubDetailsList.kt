@@ -93,7 +93,7 @@ internal fun SubDetailsList(
 @Preview
 @Composable
 private fun SubDetailsListPreview() {
-    val providerMetadata = DummyDataForPreview.getDummyProviderMetadata()
+    val providerMetadata = DummyDataForPreview.getProviderMetadata()
 
     FlixclusiveTheme {
         Surface {

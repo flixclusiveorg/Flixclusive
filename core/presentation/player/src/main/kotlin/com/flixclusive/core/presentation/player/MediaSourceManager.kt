@@ -4,11 +4,9 @@ import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.dash.DashMediaSource
 import androidx.media3.exoplayer.hls.HlsMediaSource
-import androidx.media3.exoplayer.source.ConcatenatingMediaSource2
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.MergingMediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
@@ -23,45 +21,23 @@ import com.flixclusive.core.presentation.player.util.MimeTypeParser
 import com.flixclusive.core.presentation.player.util.MimeTypeParser.toMimeType
 
 @OptIn(UnstableApi::class)
-internal class MediaSourceManager(
-    private val dataSourceFactory: AppDataSourceFactoryImpl,
+class MediaSourceManager(
+    private val dataSourceFactory: AppDataSourceFactory,
 ) {
     private val mediaSources = mutableMapOf<MediaItemKey, CacheMediaItem>()
     private lateinit var currentKey: MediaItemKey
 
-    /**
-     * Creates a concatenated media source with all servers, merged with subtitles.
-     *
-     * @param servers The list of available servers
-     * @param subtitles The list of available subtitles
-     *
-     * @return The constructed [MediaSource]
-     */
     fun createMediaSource(
-        servers: List<MediaServer>,
+        server: MediaServer,
         subtitles: List<MediaSubtitle>,
     ): MediaSource {
-        val concatenatedStreams = ConcatenatingMediaSource2.Builder()
+        val subtitleSources = subtitles.mapNotNull { createSubtitleMediaSource(it) }
+        val video = createStreamMediaSource(url = server.url)
 
-        servers.forEach { server ->
-            val streamSource = createStreamMediaSource(url = server.url)
-
-            // If subtitles exist, merge them with each server
-            val finalSource = if (subtitles.isNotEmpty()) {
-                val subtitleSources = subtitles.mapNotNull { createSubtitleMediaSource(it) }
-                if (subtitleSources.isNotEmpty()) {
-                    MergingMediaSource(streamSource, *subtitleSources.toTypedArray())
-                } else {
-                    streamSource
-                }
-            } else {
-                streamSource
-            }
-
-            concatenatedStreams.add(finalSource)
-        }
-
-        return concatenatedStreams.build()
+        return MergingMediaSource(
+            video,
+            *subtitleSources.toTypedArray(),
+        )
     }
 
     fun setCacheMediaItem(
@@ -71,11 +47,6 @@ internal class MediaSourceManager(
         mediaSources[key] = cacheMediaItem
     }
 
-    /**
-     * Sets the current active media item key.
-     *
-     * @param key The key of the media item to set as current
-     */
     fun setCurrentKey(key: MediaItemKey) {
         when (key) {
             in mediaSources -> currentKey = key
@@ -134,7 +105,7 @@ internal class MediaSourceManager(
 
             val updatedSubtitles = sourceData.subtitles + newSubtitle
             val updatedMediaSource = createMediaSource(
-                servers = sourceData.servers,
+                server = sourceData.servers[sourceData.currentServerIndex],
                 subtitles = updatedSubtitles,
             )
 
@@ -219,11 +190,7 @@ internal class MediaSourceManager(
      * Creates the appropriate MediaSource based on the server URL type.
      */
     private fun createStreamMediaSource(url: String): MediaSource {
-        val mediaItem = MediaItem
-            .Builder()
-            .setUri(url)
-            .setMediaId(url)
-            .build()
+        val mediaItem = createMediaItem(url)
 
         val dataSourceFactory = dataSourceFactory.remote
 
@@ -237,6 +204,14 @@ internal class MediaSourceManager(
             else ->
                 ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
         }
+    }
+
+    fun createMediaItem(url: String): MediaItem {
+        return MediaItem
+            .Builder()
+            .setUri(url)
+            .setMediaId(url)
+            .build()
     }
 
     /**

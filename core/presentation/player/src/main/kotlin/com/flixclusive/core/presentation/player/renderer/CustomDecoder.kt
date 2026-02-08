@@ -2,6 +2,7 @@ package com.flixclusive.core.presentation.player.renderer
 
 import android.util.Log
 import androidx.annotation.OptIn
+import androidx.compose.ui.util.fastMap
 import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.text.Cue
@@ -129,7 +130,7 @@ internal class CustomDecoder(
             Consumer<CuesWithTiming> { data ->
                 val currentOffset = offsetProvider.currentSubtitleOffset
 
-                val updatedCues = data.cues.map { cue ->
+                val updatedCues = data.cues.fastMap { cue ->
                     // See https://github.com/google/ExoPlayer/issues/7934
 
                     // Personal note:

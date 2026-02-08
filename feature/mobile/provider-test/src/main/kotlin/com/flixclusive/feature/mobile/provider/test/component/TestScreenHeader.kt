@@ -29,7 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getDummyProviderMetadata
+import com.flixclusive.core.presentation.common.util.DummyDataForPreview.getProviderMetadata
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
@@ -184,7 +184,7 @@ private fun HeaderLabels(
 
 @Preview
 @Composable
-private fun TestScreenHeaderBasePreview(stage: TestStage = TestStage.Stage2(remember { getDummyProviderMetadata() })) {
+private fun TestScreenHeaderBasePreview(stage: TestStage = TestStage.Stage2(remember { getProviderMetadata() })) {
     FlixclusiveTheme {
         Surface {
             TestScreenHeader(stage = stage)
@@ -195,7 +195,7 @@ private fun TestScreenHeaderBasePreview(stage: TestStage = TestStage.Stage2(reme
 @Preview(device = "spec:parent=pixel_5,orientation=landscape")
 @Composable
 private fun TestScreenHeaderCompactLandscapePreview() {
-    TestScreenHeaderBasePreview(stage = TestStage.Stage1(remember { getDummyProviderMetadata() }))
+    TestScreenHeaderBasePreview(stage = TestStage.Stage1(remember { getProviderMetadata() }))
 }
 
 @Preview(device = "spec:parent=medium_tablet,orientation=portrait")

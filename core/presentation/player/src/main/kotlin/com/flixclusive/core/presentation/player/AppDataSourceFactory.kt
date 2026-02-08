@@ -3,6 +3,7 @@ package com.flixclusive.core.presentation.player
 import android.content.Context
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.SimpleCache
@@ -13,8 +14,8 @@ import javax.inject.Inject
 
 @OptIn(UnstableApi::class)
 interface AppDataSourceFactory {
-    val remote: CacheDataSource.Factory
-    val local: DefaultDataSource.Factory
+    val remote: DataSource.Factory
+    val local: DataSource.Factory
 
     /**
      * Sets the default request properties for the HTTP data source factory.

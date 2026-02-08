@@ -313,7 +313,7 @@ private fun String.getNewIssueUrl(): String {
 @Preview
 @Composable
 private fun ProviderDetailsScreenBasePreview() {
-    val providerMetadata = DummyDataForPreview.getDummyProviderMetadata()
+    val providerMetadata = DummyDataForPreview.getProviderMetadata()
 
     FlixclusiveTheme {
         Surface {

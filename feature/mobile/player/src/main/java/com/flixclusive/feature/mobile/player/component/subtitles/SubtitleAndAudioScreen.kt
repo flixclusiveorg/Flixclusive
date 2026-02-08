@@ -7,22 +7,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -31,16 +27,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
-import com.flixclusive.core.datastore.model.user.PlayerPreferences
-import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.extensions.noOpClickable
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.util.getFeedbackOnLongPress
-import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
 import com.flixclusive.core.presentation.player.ui.state.TracksState
-import com.flixclusive.core.presentation.player.ui.state.TracksState.Companion.rememberTracksState
 import com.flixclusive.feature.mobile.player.component.common.ListContentHolder
 import com.hippo.unifile.UniFile
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -56,7 +47,6 @@ internal fun SubtitleAndAudioScreen(
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboard.current
-    val hapticFeedback = getFeedbackOnLongPress()
 
     BackHandler {
         onDismiss()
@@ -156,7 +146,6 @@ internal fun SubtitleAndAudioScreen(
                     onItemClick = tracksState::onSubtitleSelect,
                     onItemLongClick = {
                         val item = tracksState.subtitles[it]
-                        hapticFeedback()
                         val data = """
                             Subtitle label: ${item.label}
                             Subtitle source: ${item.source}
@@ -164,7 +153,7 @@ internal fun SubtitleAndAudioScreen(
                         """.trimIndent()
 
                         clipboardManager.nativeClipboard.setPrimaryClip(
-                            ClipData.newPlainText(subtitleLabel, data)
+                            ClipData.newPlainText("${item.label} - ${item.source}", data)
                         )
                     },
                     actions = {

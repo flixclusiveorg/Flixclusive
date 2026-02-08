@@ -1,20 +1,20 @@
 package com.flixclusive.feature.mobile.player
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.ui.ComposePlayer
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.component.PlayerControls
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 
 @Destination(
@@ -33,11 +33,14 @@ internal fun PlayerScreen(
 internal fun PlayerScreenContent(
     player: AppPlayer,
     film: FilmMetadata,
-    onBack: () -> Unit,
     playerPreferences: PlayerPreferences,
     subtitlesPreferences: SubtitlesPreferences,
     currentEpisode: Episode?,
     currentSeason: SeasonWithProgress?,
+    currentProvider: ProviderMetadata,
+    providers: List<ProviderMetadata>,
+    onBack: () -> Unit,
+    onProviderChange: (ProviderMetadata) -> Unit,
     onEpisodeChange: (Episode) -> Unit,
     onSeasonChange: (Season) -> Unit,
     onNext: (() -> Unit)?,
@@ -47,16 +50,9 @@ internal fun PlayerScreenContent(
         modifier = modifier
             .fillMaxSize()
     ) {
-//        ComposePlayer(
-//            player = player,
-//            resizeMode = playerPreferences.resizeMode,
-//        )
-
-        // TODO(rhenwinch): Remove hardcoded height when implementing fullscreen
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF2A2A2A))
+        ComposePlayer(
+            player = player,
+            resizeMode = playerPreferences.resizeMode,
         )
 
         PlayerControls(
@@ -70,6 +66,9 @@ internal fun PlayerScreenContent(
             onSeasonChange = currentSeason?.let { onSeasonChange },
             onNext = onNext,
             onBack = onBack,
+            currentProvider = currentProvider,
+            providers = providers,
+            onProviderChange = onProviderChange,
         )
     }
 }

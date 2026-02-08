@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -27,8 +28,8 @@ import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.drawables.R as UiCommonR
+import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun PlayerTopBar(
@@ -60,6 +61,7 @@ internal fun PlayerTopBar(
             title = title,
             episode = episode,
             modifier = Modifier
+                .padding(top = 20.dp)
                 .weight(1F)
         )
     }

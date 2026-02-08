@@ -21,7 +21,7 @@ private const val CACHE_DIR_KEY = "flixclusive_player"
  * */
 @OptIn(UnstableApi::class)
 class PlayerCache @Inject constructor(
-    @ApplicationContext private val context: Context
+    @get:ApplicationContext private val context: Context
 ) {
     private var cache: SimpleCache? = null
 

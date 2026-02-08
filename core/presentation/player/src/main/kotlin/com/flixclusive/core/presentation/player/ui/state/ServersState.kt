@@ -5,7 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
@@ -17,17 +17,27 @@ import com.flixclusive.core.presentation.player.model.track.MediaServer
 class ServersState(
     private val player: AppPlayer,
 ) {
+    val servers = mutableStateSetOf<MediaServer>()
+
     var selectedServer by mutableIntStateOf(0)
         private set
 
-    val servers = mutableStateListOf<MediaServer>()
-
     internal suspend fun observe() {
         player.listen { events ->
-            if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)) {
+            if (
+                events.containsAny(
+                    Player.EVENT_MEDIA_ITEM_TRANSITION,
+                    Player.EVENT_PLAYBACK_STATE_CHANGED,
+                    Player.EVENT_PLAYBACK_PARAMETERS_CHANGED,
+                    Player.EVENT_PLAY_WHEN_READY_CHANGED,
+                    Player.EVENT_SEEK_BACK_INCREMENT_CHANGED,
+                    Player.EVENT_SEEK_FORWARD_INCREMENT_CHANGED,
+                )
+            ) {
                 val currentItem = player.currentCacheMediaItem ?: return@listen
 
                 selectedServer = currentItem.currentServerIndex
+                servers.addAll(currentItem.servers)
             }
         }
     }

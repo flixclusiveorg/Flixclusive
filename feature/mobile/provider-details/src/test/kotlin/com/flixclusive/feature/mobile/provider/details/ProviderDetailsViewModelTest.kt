@@ -68,7 +68,7 @@ class ProviderDetailsViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher(TestCoroutineScheduler())
 
-    private val testProvider = DummyDataForPreview.getDummyProviderMetadata(
+    private val testProvider = DummyDataForPreview.getProviderMetadata(
         id = "test-provider",
         name = "Test Provider",
         versionName = "1.0.0",

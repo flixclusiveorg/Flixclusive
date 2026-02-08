@@ -36,15 +36,15 @@ class ProviderTestScreenViewModelTest {
     private val testJobStateFlow = MutableStateFlow(TestJobState.IDLE)
     private val filmOnTestFlow = MutableStateFlow<String?>(null)
 
-    private val dummyProvider1 = DummyDataForPreview.getDummyProviderMetadata(
+    private val dummyProvider1 = DummyDataForPreview.getProviderMetadata(
         id = "provider1",
         name = "Provider 1",
     )
-    private val dummyProvider2 = DummyDataForPreview.getDummyProviderMetadata(
+    private val dummyProvider2 = DummyDataForPreview.getProviderMetadata(
         id = "provider2",
         name = "Provider 2",
     )
-    private val dummyProvider3 = DummyDataForPreview.getDummyProviderMetadata(
+    private val dummyProvider3 = DummyDataForPreview.getProviderMetadata(
         id = "provider3",
         name = "Provider 3",
     )

@@ -20,7 +20,7 @@ import com.flixclusive.model.provider.Status
  * Dummy data for compose previews
  * */
 object DummyDataForPreview {
-    fun getDummyProviderMetadata(
+    fun getProviderMetadata(
         id: String = "TEST-FLX-PROVIDER",
         name: String = DEFAULT_FILM_SOURCE_NAME,
         description: String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",

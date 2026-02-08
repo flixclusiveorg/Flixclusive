@@ -325,7 +325,7 @@ private fun BriefDetailsBasePreview() {
         ) {
             BriefDetails(
                 metadata = remember { DummyDataForPreview.getMovie() },
-                provider = DummyDataForPreview.getDummyProviderMetadata(),
+                provider = DummyDataForPreview.getProviderMetadata(),
                 onGenreClick = {},
                 onProviderClick = {},
             )

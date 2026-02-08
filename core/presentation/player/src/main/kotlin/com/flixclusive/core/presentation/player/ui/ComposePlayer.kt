@@ -36,7 +36,6 @@ import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.player.ResizeMode
 import com.flixclusive.core.presentation.player.AppDataSourceFactoryImpl
 import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.AppPlayerImpl
 import com.flixclusive.core.presentation.player.PlayerCache
 import com.flixclusive.core.presentation.player.extensions.toContentScale
 import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState.Companion.rememberControlsVisibilityState
@@ -119,7 +118,7 @@ private fun ComposePlayerPreview() {
     val context = LocalContext.current
 
     val player = remember {
-        AppPlayerImpl(
+        AppPlayer(
             context = context,
             subtitlePrefs = SubtitlesPreferences(),
             playerPrefs = PlayerPreferences(resizeMode = ResizeMode.Fit),

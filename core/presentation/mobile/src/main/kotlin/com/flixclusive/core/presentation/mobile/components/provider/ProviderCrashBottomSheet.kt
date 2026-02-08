@@ -349,7 +349,7 @@ private fun StackTracePreview(
 private fun ProviderCrashBottomSheetBasePreview() {
     val errors = remember {
         List(10) {
-            val provider = DummyDataForPreview.getDummyProviderMetadata(
+            val provider = DummyDataForPreview.getProviderMetadata(
                 id = it.toString(),
                 name = "Provider $it",
             )

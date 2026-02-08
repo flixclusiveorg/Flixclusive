@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.player.component.bottom
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +22,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.draw.innerShadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -29,15 +33,14 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.mobile.extensions.boxShadow
 import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSlider
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSliderDefaults
 import java.util.Locale
-import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.drawables.R as UiCommonR
+import com.flixclusive.core.strings.R as LocaleR
 
 
 private val Float.toPlayerSpeed: String
@@ -51,6 +54,7 @@ internal fun PlaybackSpeedSheet(
     modifier: Modifier = Modifier
 ) {
     val shape = MaterialTheme.shapes.small
+    val bgColor = MaterialTheme.colorScheme.primary
     val interactionSource = remember { MutableInteractionSource() }
     val speed by remember {
         derivedStateOf {
@@ -64,23 +68,57 @@ internal fun PlaybackSpeedSheet(
 
     Column(
         modifier = modifier
+            .dropShadow(shape = shape) {
+                radius = 40f
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.Black.copy(alpha = 0.6f),
+                        Color.Black.copy(alpha = 0.9f)
+                    )
+                )
+            }
+            .border(
+                width = 0.5.dp,
+                shape = shape,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.3f),
+                        Color.White.copy(alpha = 0.1f),
+                        Color.White.copy(alpha = 0.08f),
+                        Color.White.copy(alpha = 0.2f)
+                    ),
+                    start = Offset.Zero,
+                    end = Offset.Infinite
+                )
+            )
             .fillMaxAdaptiveWidth(
                 compact = 0.4f,
                 medium = 0.6f,
                 expanded = 0.65f
             )
-            .border(
-                width = 0.5.dp,
-                color = Color.White.copy(0.3f),
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        bgColor.copy(alpha = 0.1f),
+                        Color.Black.copy(alpha = 0.8f),
+                        Color.Black.copy(alpha = 0.6f)
+                    ),
+                    start = Offset.Zero,
+                    end = Offset.Infinite
+                ),
                 shape = shape
             )
-            .boxShadow(
-                color = Color.Black,
-                blurRadius = 5.dp,
-                shape = shape
-            )
-            .drawBehind {
-                drawRect(Color.Black.copy(0.6f))
+            .innerShadow(shape = shape) {
+                radius = 40f
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.15f),
+                        Color.Transparent,
+                        Color.Transparent
+                    ),
+                    start = Offset.Zero,
+                    end = Offset(200f, 200f)
+                )
             }
             .padding(10.dp)
     ) {

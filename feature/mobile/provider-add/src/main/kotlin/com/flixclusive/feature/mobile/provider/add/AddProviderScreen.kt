@@ -270,7 +270,7 @@ private fun AddProviderScreenBasePreview() {
     val filters = remember { mutableStateListOf<AddProviderFilterType<*>>() }
     val providers = remember { mutableStateListOf<SearchableProvider>() }
 
-    val sampleProvider = DummyDataForPreview.getDummyProviderMetadata()
+    val sampleProvider = DummyDataForPreview.getProviderMetadata()
     LaunchedEffect(true) {
         providers.addAll(
             List(50) {

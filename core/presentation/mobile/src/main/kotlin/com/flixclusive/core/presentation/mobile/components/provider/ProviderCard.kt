@@ -131,7 +131,7 @@ fun ProviderCard(
 @Preview
 @Composable
 private fun ProviderCardPreview() {
-    val providerMetadata = DummyDataForPreview.getDummyProviderMetadata()
+    val providerMetadata = DummyDataForPreview.getProviderMetadata()
 
     FlixclusiveTheme {
         Surface {

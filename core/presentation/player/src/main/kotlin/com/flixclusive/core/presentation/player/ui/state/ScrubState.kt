@@ -9,11 +9,8 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.media3.common.Player
-import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.AppPlayerImpl
 import kotlinx.coroutines.delay
 import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
@@ -63,8 +60,6 @@ class ScrubState private constructor(
      * */
     @OptIn(UnstableApi::class)
     fun onScrubStart() {
-        if (player !is AppPlayerImpl) return
-
         player.exoPlayer?.let {
             // TODO: Check if this is helpful for the app
             it.isScrubbingModeEnabled = true
@@ -86,8 +81,6 @@ class ScrubState private constructor(
      * */
     @OptIn(UnstableApi::class)
     fun onScrubEnd() {
-        if (player !is AppPlayerImpl) return
-
         player.exoPlayer?.let {
             it.isScrubbingModeEnabled = false
             event = ScrubEvent.NONE
