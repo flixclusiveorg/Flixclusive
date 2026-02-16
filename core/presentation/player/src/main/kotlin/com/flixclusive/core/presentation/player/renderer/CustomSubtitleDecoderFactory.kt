@@ -24,8 +24,8 @@ import java.lang.ref.WeakReference
 internal class CustomSubtitleDecoderFactory(
     private val offsetProvider: CuesProvider
 ) : SubtitleDecoderFactory {
-    override fun supportsFormat(format: Format): Boolean {
-        return listOf(
+    private val supportedMimeTypes by lazy {
+        setOf(
             MimeTypes.TEXT_VTT,
             MimeTypes.TEXT_SSA,
             MimeTypes.APPLICATION_TTML,
@@ -34,7 +34,11 @@ internal class CustomSubtitleDecoderFactory(
             MimeTypes.APPLICATION_TX3G,
             MimeTypes.APPLICATION_DVBSUBS,
             MimeTypes.APPLICATION_PGS,
-        ).contains(format.sampleMimeType)
+        )
+    }
+
+    override fun supportsFormat(format: Format): Boolean {
+        return supportedMimeTypes.contains(format.sampleMimeType)
     }
 
     /**

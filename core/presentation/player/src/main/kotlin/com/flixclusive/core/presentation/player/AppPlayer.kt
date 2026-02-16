@@ -348,10 +348,6 @@ class AppPlayer(
 
     private inner class InternalPlayerListener : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
-            infoLog("Media item count: ${mediaItemCount}, Current media item index: $currentMediaItemIndex")
-
-            val mediaItems = (0 until mediaItemCount).map { getMediaItemAt(it) }
-            infoLog("Media items: ${mediaItems.joinToString(", ")}")
             if (playbackState == Player.STATE_ENDED) {
                 changeSubtitleDelay(0)
                 return

@@ -17,9 +17,9 @@ data class CueWithTiming(
         fun CuesWithTiming.toCue(): CueWithTiming {
             return CueWithTiming(
                 cue = cues.map { it.text.toString() },
-                startTimeMs = startTimeUs,
-                durationMs = durationUs,
-                endTimeMs = endTimeUs
+                startTimeMs = startTimeUs / 1000,
+                durationMs = durationUs / 1000,
+                endTimeMs = endTimeUs / 1000
             )
         }
     }

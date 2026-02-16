@@ -42,6 +42,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 internal fun SubtitleAndAudioScreen(
     tracksState: TracksState,
+    onSyncSubtitles: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -157,6 +158,13 @@ internal fun SubtitleAndAudioScreen(
                         )
                     },
                     actions = {
+                        IconButton(onClick = onSyncSubtitles) {
+                            AdaptiveIcon(
+                                painter = painterResource(id = PlayerR.drawable.sync_black_24dp),
+                                contentDescription = stringResource(id = PlayerR.string.sync_subtitles)
+                            )
+                        }
+
                         IconButton(
                             onClick = {
                                 subtitleFileSelector.launch(

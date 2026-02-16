@@ -1,8 +1,10 @@
 package com.flixclusive.core.presentation.player.extensions
 
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.layout.ContentScale
 import com.flixclusive.core.datastore.model.user.player.ResizeMode
 
+@Stable
 internal fun ResizeMode.toContentScale(): ContentScale
     = when (this) {
     ResizeMode.Fit -> ContentScale.Fit

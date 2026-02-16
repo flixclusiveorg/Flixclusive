@@ -34,12 +34,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSlider
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSliderDefaults
 import java.util.Locale
 import com.flixclusive.core.drawables.R as UiCommonR
+import com.flixclusive.core.presentation.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
 
 
@@ -128,7 +130,7 @@ internal fun PlaybackSpeedSheet(
         ) {
             Column {
                 Text(
-                    text = stringResource(LocaleR.string.playback_speed),
+                    text = stringResource(PlayerR.string.speed),
                     style = MaterialTheme.typography.titleMedium.copy(
                             color = Color.White
                     )
@@ -174,8 +176,7 @@ internal fun PlaybackSpeedSheet(
             ProvideTextStyle(
                 value = MaterialTheme.typography.labelSmall.copy(
                     color = Color.White.copy(0.5f),
-                    fontSize = 12.sp
-                )
+                ).asAdaptiveTextStyle(size = 12.sp)
             ) {
                 Text(
                     text = AppPlayer.playbackSpeedRange.start.toPlayerSpeed,

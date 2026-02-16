@@ -164,7 +164,6 @@
     <string name="languages">Languages</string>
     <string name="load_url">Load URL</string>
     <string name="loading">Loading…</string>
-    <string name="lock">Lock</string>
     <string name="maintenance_all_caps">MAINTENANCE</string>
     <string name="manage_providers">Manage providers</string>
     <string name="manage_repositories">Manage repositories</string>
@@ -172,7 +171,6 @@
     <string name="name">Name</string>
     <string name="network">Network</string>
     <string name="next">Next</string>
-    <string name="next_episode">Next episode</string>
     <string name="no_cache_limit_label">No cache limit (plz dont)</string>
     <string name="no_full_log">No full logs provided</string>
     <string name="no_release_date">No release date</string>
@@ -181,6 +179,7 @@
     <string name="not_now_label">Not now</string>
     <string name="notify_about_new_app_updates">Notify about new app updates</string>
     <string name="ok">OK</string>
+    <string name="offset">Offset</string>
     <string name="open_in_web">Open in Web</string>
     <string name="opt_in_prerelease">Ok 🗿</string>
     <string name="opt_out_prerelease">Hell nah 😭</string>
@@ -193,7 +192,6 @@
     <string name="pin_verify">Enter your current PIN</string>
     <string name="pip_mode">PiP mode</string>
     <string name="play">Play</string>
-    <string name="playback_speed">Playback Speed</string>
     <string name="player">Player</string>
     <string name="pre_release">PRE-RELEASE</string>
     <string name="preferred_audio_language">Preferred audio language</string>
@@ -260,7 +258,6 @@
     <string name="subtitles_size">Font size</string>
     <string name="subtitles_window_color">Window color</string>
     <string name="sync">Sync</string>
-    <string name="sync_subtitles">Sync Subtitles</string>
     <string name="system">System</string>
     <string name="test">Test</string>
     <string name="run_tests">Run tests</string>

@@ -3,6 +3,10 @@ package com.flixclusive.feature.mobile.player
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
@@ -46,13 +50,15 @@ internal fun PlayerScreenContent(
     onNext: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    var resizeMode by rememberSaveable { mutableStateOf(playerPreferences.resizeMode) }
+
     Box(
         modifier = modifier
             .fillMaxSize()
     ) {
         ComposePlayer(
             player = player,
-            resizeMode = playerPreferences.resizeMode,
+            resizeMode = resizeMode,
         )
 
         PlayerControls(
@@ -62,6 +68,7 @@ internal fun PlayerScreenContent(
             subtitlesPrefs = subtitlesPreferences,
             currentEpisode = currentEpisode,
             currentSeason = currentSeason,
+            currentResizeMode = resizeMode,
             onEpisodeChange = currentEpisode?.let { onEpisodeChange },
             onSeasonChange = currentSeason?.let { onSeasonChange },
             onNext = onNext,
@@ -69,6 +76,7 @@ internal fun PlayerScreenContent(
             currentProvider = currentProvider,
             providers = providers,
             onProviderChange = onProviderChange,
+            onResizeModeChange = { resizeMode = it },
         )
     }
 }

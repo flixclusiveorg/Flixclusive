@@ -16,7 +16,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.Player
 import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
 import com.flixclusive.core.presentation.player.AppPlayer
 
 /**
@@ -98,11 +97,9 @@ class VolumeManager(
             val manager = remember { VolumeManager(context = context) }
 
             LaunchedEffect(player) {
-                if (player is ExoPlayer) {
-                    player.listen { events ->
-                        if (events.contains(Player.EVENT_AUDIO_SESSION_ID)) {
-                            manager.loudnessEnhancer = LoudnessEnhancer(player.audioSessionId)
-                        }
+                player.listen { events ->
+                    if (events.contains(Player.EVENT_AUDIO_SESSION_ID)) {
+                        manager.loudnessEnhancer = LoudnessEnhancer(player.audioSessionId)
                     }
                 }
             }

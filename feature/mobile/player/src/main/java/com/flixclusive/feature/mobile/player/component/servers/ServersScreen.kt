@@ -85,6 +85,29 @@ internal fun ServersScreen(
                     .fillMaxHeight(0.85F)
             ) {
                 ListContentHolder(
+                    icon = painterResource(id = UiCommonR.drawable.provider_logo),
+                    contentDescription = stringResource(id = LocaleR.string.providers),
+                    label = stringResource(id = LocaleR.string.providers),
+                    items = providers,
+                    selectedIndex = selectedProviderIndex,
+                    onItemClick = {
+                        val provider = providers[it]
+                        onProviderChange(provider)
+                    },
+                    modifier = Modifier
+                        .weight(1F)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .padding(horizontal = 10.dp)
+                        .fillMaxHeight(0.9F)
+                        .width(0.5.dp)
+                        .background(LocalContentColor.current.copy(alpha = 0.4F))
+                )
+
+                ListContentHolder(
                     icon = painterResource(id = PlayerR.drawable.round_cloud_queue_24),
                     contentDescription = stringResource(id = LocaleR.string.servers),
                     label = stringResource(id = LocaleR.string.servers),
@@ -102,29 +125,6 @@ internal fun ServersScreen(
                         clipboardManager.nativeClipboard.setPrimaryClip(
                             ClipData.newPlainText("${item.label} - ${item.source}", data)
                         )
-                    },
-                    modifier = Modifier
-                        .weight(1F)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .padding(horizontal = 10.dp)
-                        .fillMaxHeight(0.9F)
-                        .width(0.5.dp)
-                        .background(LocalContentColor.current.copy(alpha = 0.4F))
-                )
-
-                ListContentHolder(
-                    icon = painterResource(id = UiCommonR.drawable.provider_logo),
-                    contentDescription = stringResource(id = LocaleR.string.providers),
-                    label = stringResource(id = LocaleR.string.providers),
-                    items = providers,
-                    selectedIndex = selectedProviderIndex,
-                    onItemClick = {
-                        val provider = providers[it]
-                        onProviderChange(provider)
                     },
                     modifier = Modifier
                         .weight(1F)

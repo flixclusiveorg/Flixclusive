@@ -4,4 +4,8 @@
     <string name="seek_backward">Seek backward</string>
     <string name="play_pause">Play / Pause</string>
     <string name="add_subtitle">Add subs</string>
+    <string name="speed">Speed</string>
+    <string name="resize">Resize</string>
+    <string name="next_episode">Next episode</string>
+    <string name="sync_subtitles">Sync Subtitles</string>
 </resources>
