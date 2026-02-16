@@ -1,0 +1,340 @@
+package com.flixclusive.feature.mobile.player.component.gestures
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.ripple
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.dp
+import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
+import com.flixclusive.core.presentation.player.ui.state.VolumeManager
+import com.flixclusive.feature.mobile.player.R
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+private const val DRAG_MULTIPLIER = 2F
+private const val HIDE_DELAY = 1000L
+private const val SEEK_ANIMATION_DELAY = 600L
+private const val SEEK_ACCUMULATE_TIMEOUT = 1200L
+
+@Stable
+internal class PlayerGestureState(
+    val seekAmountMs: Long
+) {
+    var isDoubleTapSeekingForward by mutableStateOf(false)
+        private set
+    var isDoubleTapSeekingBackward by mutableStateOf(false)
+        private set
+    var seekSeconds by mutableIntStateOf(0)
+        private set
+
+    var isBrightnessSliderVisible by mutableStateOf(false)
+        private set
+    var isVolumeSliderVisible by mutableStateOf(false)
+        private set
+    var isSliding by mutableStateOf(false)
+        private set
+    var isDoubleTapping by mutableStateOf(false)
+        private set
+
+    private var lastTapTimeMs by mutableLongStateOf(0L)
+
+    fun onDoubleTap(isForward: Boolean) {
+        val currentTime = System.currentTimeMillis()
+        val seekIncrement = (seekAmountMs / 1000).toInt()
+        val isSameSide = (isForward && isDoubleTapSeekingForward) || (!isForward && isDoubleTapSeekingBackward)
+
+        if (currentTime - lastTapTimeMs < SEEK_ACCUMULATE_TIMEOUT && isSameSide) {
+            seekSeconds += seekIncrement
+        } else {
+            seekSeconds = seekIncrement
+        }
+
+        lastTapTimeMs = currentTime
+        isDoubleTapping = true
+
+        if (isForward) {
+            isDoubleTapSeekingForward = true
+            isDoubleTapSeekingBackward = false
+        } else {
+            isDoubleTapSeekingBackward = true
+            isDoubleTapSeekingForward = false
+        }
+    }
+
+    fun hideSeekOverlay() {
+        isDoubleTapSeekingForward = false
+        isDoubleTapSeekingBackward = false
+        isDoubleTapping = false
+    }
+
+    fun showBrightnessSlider() {
+        isBrightnessSliderVisible = true
+        isVolumeSliderVisible = false
+        isSliding = true
+    }
+
+    fun showVolumeSlider() {
+        isVolumeSliderVisible = true
+        isBrightnessSliderVisible = false
+        isSliding = true
+    }
+
+    fun hideSliders() {
+        isBrightnessSliderVisible = false
+        isVolumeSliderVisible = false
+        isSliding = false
+    }
+
+    companion object {
+        @Composable
+        fun rememberPlayerGestureState(seekAmountMs: Long): PlayerGestureState {
+            return remember(seekAmountMs) { PlayerGestureState(seekAmountMs) }
+        }
+    }
+}
+
+@Composable
+internal fun PlayerGestureHandler(
+    gestureState: PlayerGestureState,
+    brightnessManager: BrightnessManager,
+    volumeManager: VolumeManager,
+    areControlsVisible: Boolean,
+    onSeekForward: () -> Unit,
+    onSeekBackward: () -> Unit,
+    onSingleTap: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scope = rememberCoroutineScope()
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+
+    var screenHeight by remember { mutableIntStateOf(0) }
+    var dragStartBrightness by remember { mutableFloatStateOf(0f) }
+    var dragStartVolume by remember { mutableFloatStateOf(0f) }
+
+    var sliderVisibilityJob: Job? by remember { mutableStateOf(null) }
+    var seekAnimationJob: Job? by remember { mutableStateOf(null) }
+
+    val leftInteractionSource = remember { MutableInteractionSource() }
+    val rightInteractionSource = remember { MutableInteractionSource() }
+
+    LaunchedEffect(areControlsVisible) {
+        if (areControlsVisible && sliderVisibilityJob?.isActive == true) {
+            gestureState.hideSliders()
+            sliderVisibilityJob?.cancel()
+            sliderVisibilityJob = null
+        }
+    }
+
+    LaunchedEffect(gestureState.seekSeconds, gestureState.isDoubleTapping) {
+        if (gestureState.isDoubleTapping && gestureState.seekSeconds > 0) {
+            delay(SEEK_ANIMATION_DELAY)
+            gestureState.hideSeekOverlay()
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .noIndicationClickable { onSingleTap() }
+            .onSizeChanged { size ->
+                screenHeight = size.height
+            }
+    ) {
+        GestureBox(
+            interactionSource = leftInteractionSource,
+            screenWidth = screenWidth,
+            onSingleTap = onSingleTap,
+            onDoubleTap = { offset ->
+                scope.launch {
+                    seekAnimationJob?.cancel()
+                    seekAnimationJob = launch {
+                        val press = PressInteraction.Press(offset)
+                        leftInteractionSource.emit(press)
+
+                        gestureState.onDoubleTap(isForward = false)
+                        onSeekBackward()
+
+                        leftInteractionSource.emit(PressInteraction.Release(press))
+                    }
+                }
+            },
+            onDragStart = {
+                dragStartVolume = volumeManager.currentVolume
+                gestureState.showVolumeSlider()
+            },
+            onDragEnd = {
+                sliderVisibilityJob?.cancel()
+                sliderVisibilityJob = scope.launch {
+                    delay(HIDE_DELAY)
+                    gestureState.hideSliders()
+                }
+            },
+            onVerticalDrag = { dragAmount ->
+                sliderVisibilityJob?.cancel()
+                val dragPercent = dragAmount * DRAG_MULTIPLIER / screenHeight
+                val volumeChange = dragPercent * volumeManager.maxVolume
+                val newVolume = dragStartVolume - volumeChange
+                volumeManager.setVolume(newVolume)
+                dragStartVolume = volumeManager.currentVolume
+            },
+            modifier = Modifier.align(Alignment.CenterStart)
+        )
+
+        GestureBox(
+            interactionSource = rightInteractionSource,
+            screenWidth = screenWidth,
+            onSingleTap = onSingleTap,
+            onDoubleTap = { offset ->
+                scope.launch {
+                    seekAnimationJob?.cancel()
+                    seekAnimationJob = launch {
+                        val press = PressInteraction.Press(offset)
+                        rightInteractionSource.emit(press)
+
+                        gestureState.onDoubleTap(isForward = true)
+                        onSeekForward()
+
+                        rightInteractionSource.emit(PressInteraction.Release(press))
+                    }
+                }
+            },
+            onDragStart = {
+                dragStartBrightness = brightnessManager.currentBrightness
+                gestureState.showBrightnessSlider()
+            },
+            onDragEnd = {
+                sliderVisibilityJob?.cancel()
+                sliderVisibilityJob = scope.launch {
+                    delay(HIDE_DELAY)
+                    gestureState.hideSliders()
+                }
+            },
+            onVerticalDrag = { dragAmount ->
+                sliderVisibilityJob?.cancel()
+                val dragPercent = dragAmount * DRAG_MULTIPLIER / screenHeight
+                val newBrightness = dragStartBrightness - dragPercent
+                brightnessManager.setBrightness(newBrightness)
+                dragStartBrightness = brightnessManager.currentBrightness
+            },
+            modifier = Modifier.align(Alignment.CenterEnd)
+        )
+
+        DoubleTapSeekOverlay(
+            isVisible = gestureState.isDoubleTapSeekingBackward,
+            isForward = false,
+            seekSeconds = gestureState.seekSeconds,
+            modifier = Modifier
+                .fillMaxWidth(0.45f)
+                .fillMaxHeight()
+                .align(Alignment.CenterStart)
+        )
+
+        DoubleTapSeekOverlay(
+            isVisible = gestureState.isDoubleTapSeekingForward,
+            isForward = true,
+            seekSeconds = gestureState.seekSeconds,
+            modifier = Modifier
+                .fillMaxWidth(0.45f)
+                .fillMaxHeight()
+                .align(Alignment.CenterEnd)
+        )
+
+        PlayerVerticalSlider(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .background(
+                    Brush.horizontalGradient(
+                        0f to Color.Transparent,
+                        1f to Color.Black.copy(0.6f),
+                    )
+                ),
+            isVisible = gestureState.isVolumeSliderVisible,
+            iconId = R.drawable.volume_up_black_24dp,
+            value = volumeManager.currentVolumePercentage,
+            onValueChange = { volumeManager.setVolume(it * volumeManager.maxVolume) },
+            valueRange = 0f..1f
+        )
+
+        PlayerVerticalSlider(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .background(
+                    Brush.horizontalGradient(
+                        0f to Color.Black.copy(0.6f),
+                        1f to Color.Transparent,
+                    )
+                ),
+            isVisible = gestureState.isBrightnessSliderVisible,
+            iconId = R.drawable.round_wb_sunny_24,
+            value = brightnessManager.currentBrightnessPercentage,
+            onValueChange = { brightnessManager.setBrightness(it) },
+            valueRange = 0f..1f
+        )
+    }
+}
+
+@Composable
+private fun GestureBox(
+    interactionSource: MutableInteractionSource,
+    screenWidth: androidx.compose.ui.unit.Dp,
+    onSingleTap: () -> Unit,
+    onDoubleTap: (androidx.compose.ui.geometry.Offset) -> Unit,
+    onDragStart: () -> Unit,
+    onDragEnd: () -> Unit,
+    onVerticalDrag: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth(0.45f)
+            .fillMaxHeight()
+            .indication(
+                interactionSource,
+                ripple(bounded = false, radius = screenWidth.div(2f))
+            )
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onSingleTap() },
+                    onDoubleTap = { offset -> onDoubleTap(offset) }
+                )
+            }
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onDragStart = { onDragStart() },
+                    onDragEnd = { onDragEnd() },
+                    onDragCancel = { onDragEnd() },
+                    onVerticalDrag = { change, dragAmount ->
+                        change.consume()
+                        onVerticalDrag(dragAmount)
+                    }
+                )
+            }
+    )
+}

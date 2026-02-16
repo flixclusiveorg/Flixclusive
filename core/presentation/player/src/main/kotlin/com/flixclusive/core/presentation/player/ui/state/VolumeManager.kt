@@ -17,6 +17,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.util.exception.safeCall
 
 /**
  * Manages the device volume and applies loudness enhancement when the volume exceeds the maximum server volume.
@@ -99,7 +100,11 @@ class VolumeManager(
             LaunchedEffect(player) {
                 player.listen { events ->
                     if (events.contains(Player.EVENT_AUDIO_SESSION_ID)) {
-                        manager.loudnessEnhancer = LoudnessEnhancer(player.audioSessionId)
+                        manager.loudnessEnhancer?.release()
+
+                        safeCall {
+                            manager.loudnessEnhancer = LoudnessEnhancer(audioSessionId)
+                        }
                     }
                 }
             }

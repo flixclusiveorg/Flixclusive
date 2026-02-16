@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.player.component
 
+import android.app.Activity
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -31,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -39,10 +41,11 @@ import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.player.ResizeMode
-import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
+import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.ui.AudioFocusManager
 import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState.Companion.rememberControlsVisibilityState
 import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState.Companion.rememberPlayPauseButtonState
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Companion.rememberPlaybackSpeedState
@@ -51,11 +54,15 @@ import com.flixclusive.core.presentation.player.ui.state.ScrubState.Companion.re
 import com.flixclusive.core.presentation.player.ui.state.SeekButtonState.Companion.rememberSeekButtonState
 import com.flixclusive.core.presentation.player.ui.state.ServersState.Companion.rememberServersState
 import com.flixclusive.core.presentation.player.ui.state.TracksState.Companion.rememberTracksState
+import com.flixclusive.core.presentation.player.ui.state.VolumeManager.Companion.rememberVolumeManager
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.R
 import com.flixclusive.feature.mobile.player.component.bottom.BottomControls
 import com.flixclusive.feature.mobile.player.component.center.CenterControls
 import com.flixclusive.feature.mobile.player.component.episodes.EpisodesScreen
+import com.flixclusive.feature.mobile.player.component.gestures.BrightnessManager.Companion.rememberBrightnessManager
+import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureHandler
+import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureState.Companion.rememberPlayerGestureState
 import com.flixclusive.feature.mobile.player.component.servers.ServersScreen
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleAndAudioScreen
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleSyncScreen
@@ -101,11 +108,17 @@ internal fun PlayerControls(
         isScrubbing = scrubState.event == ScrubEvent.SCRUBBING
     )
 
-    val isCenterControlsVisible by remember {
+    val volumeManager = rememberVolumeManager(player = player)
+    val brightnessManager = rememberBrightnessManager()
+    val gestureState = rememberPlayerGestureState(seekAmountMs = seekButtonState.seekForwardAmountMs)
+
+    val areCenterControlsVisible by remember {
         derivedStateOf {
             controlsVisibilityState.isVisible
                 && !uiMode.isPlaybackSpeed
                 && !uiMode.isResize
+                && !gestureState.isDoubleTapping
+                && !gestureState.isSliding
         }
     }
 
@@ -116,10 +129,24 @@ internal fun PlayerControls(
         playerPreferences = playerPrefs
     )
 
+    AudioFocusManager(
+        player = player,
+        activity = LocalContext.current.getActivity<Activity>(),
+        isPlaying = !playPauseState.showPlay,
+    )
+
     LaunchedEffect(
         uiMode,
-        controlsVisibilityState.isVisible
+        controlsVisibilityState.isVisible,
+        gestureState.isDoubleTapping,
+        gestureState.isSliding
     ) {
+        if (controlsVisibilityState.isVisible && (gestureState.isDoubleTapping || gestureState.isSliding)) {
+            queueControlVisibility = true
+            controlsVisibilityState.hide()
+            return@LaunchedEffect
+        }
+
         if (uiMode.isPlaybackSpeed || uiMode.isResize) {
             controlsVisibilityState.show(indefinite = true)
             return@LaunchedEffect
@@ -128,7 +155,7 @@ internal fun PlayerControls(
         if (controlsVisibilityState.isVisible && !uiMode.isNone) {
             controlsVisibilityState.hide()
             queueControlVisibility = true
-        } else if (queueControlVisibility && uiMode.isNone) {
+        } else if (queueControlVisibility && uiMode.isNone && !gestureState.isDoubleTapping && !gestureState.isSliding) {
             controlsVisibilityState.show()
             queueControlVisibility = false
         }
@@ -137,7 +164,7 @@ internal fun PlayerControls(
     LaunchedEffect(controlsVisibilityState.isVisible) {
         var subtitleBottomPaddingFraction = 0.05f
         if (controlsVisibilityState.isVisible) {
-            subtitleBottomPaddingFraction = 0.15f
+            subtitleBottomPaddingFraction = 0.20f
         }
 
         player.subtitleView?.setBottomPaddingFraction(subtitleBottomPaddingFraction)
@@ -156,15 +183,6 @@ internal fun PlayerControls(
             contentAlignment = Alignment.Center,
             modifier = modifier
                 .fillMaxSize()
-                .noIndicationClickable(
-                    onClick = {
-                        if (uiMode.isPlaybackSpeed || uiMode.isResize) {
-                            uiMode = UiMode.NONE
-                        } else {
-                            controlsVisibilityState.toggle()
-                        }
-                    }
-                )
         ) {
             if (state) {
                 AnimatedVisibility(
@@ -183,56 +201,69 @@ internal fun PlayerControls(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                Box(
+                PlayerGestureHandler(
+                    gestureState = gestureState,
+                    brightnessManager = brightnessManager,
+                    volumeManager = volumeManager,
+                    areControlsVisible = controlsVisibilityState.isVisible,
+                    onSeekForward = { player.seekForward() },
+                    onSeekBackward = { player.seekBack() },
+                    onSingleTap = {
+                        if (uiMode.isPlaybackSpeed || uiMode.isResize) {
+                            uiMode = UiMode.NONE
+                        } else {
+                            controlsVisibilityState.toggle()
+                        }
+                    },
                     modifier = Modifier.fillMaxSize()
+                )
+
+                VerticalSlideAnimation(
+                    visible = controlsVisibilityState.isVisible,
+                    slideDown = false,
+                    modifier = Modifier.align(Alignment.TopCenter)
                 ) {
-                    VerticalSlideAnimation(
-                        visible = controlsVisibilityState.isVisible,
-                        slideDown = false,
-                        modifier = Modifier.align(Alignment.TopCenter)
-                    ) {
-                        PlayerTopBar(
-                            title = film.title,
-                            episode = currentEpisode,
-                            onBack = onBack,
-                        )
-                    }
-
-                    AnimatedVisibility(
-                        visible = isCenterControlsVisible,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
-                        modifier = Modifier.align(Alignment.Center)
-                    ) {
-                        CenterControls(
-                            playPauseButtonState = playPauseState,
-                            seekButtonState = seekButtonState,
-                            modifier = Modifier
-                        )
-                    }
-
-                    VerticalSlideAnimation(
-                        visible = controlsVisibilityState.isVisible,
-                        slideDown = true,
-                        modifier = Modifier.align(Alignment.BottomCenter)
-                    ) {
-                        BottomControls(
-                            playbackSpeedState = playbackSpeedState,
-                            scrubState = scrubState,
-                            uiMode = uiMode,
-                            onNext = onNext,
-                            onResizeModeChange = onResizeModeChange,
-                            currentResizeMode = currentResizeMode,
-                            onToggleUiPanel = { uiMode = it },
-                            onShowEpisodesPanel = currentEpisode?.let {
-                                { uiMode = UiMode.EPISODES }
-                            },
-                        )
-                    }
+                    PlayerTopBar(
+                        title = film.title,
+                        episode = currentEpisode,
+                        onBack = onBack,
+                    )
                 }
 
                 AnimatedVisibility(
-                    visible = isCenterControlsVisible,
+                    visible = areCenterControlsVisible,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier.align(Alignment.Center)
+                ) {
+                    CenterControls(
+                        playPauseButtonState = playPauseState,
+                        seekButtonState = seekButtonState,
+                        modifier = Modifier
+                    )
+                }
+
+                VerticalSlideAnimation(
+                    visible = controlsVisibilityState.isVisible,
+                    slideDown = true,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    BottomControls(
+                        playbackSpeedState = playbackSpeedState,
+                        scrubState = scrubState,
+                        uiMode = uiMode,
+                        onNext = onNext,
+                        onResizeModeChange = onResizeModeChange,
+                        currentResizeMode = currentResizeMode,
+                        onToggleUiPanel = { uiMode = it },
+                        onShowEpisodesPanel = currentEpisode?.let {
+                            { uiMode = UiMode.EPISODES }
+                        },
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = areCenterControlsVisible,
                     enter = slideInHorizontally { it / 4 } + fadeIn(),
                     exit = slideOutHorizontally { it / 6 } + fadeOut(),
                     modifier = Modifier
