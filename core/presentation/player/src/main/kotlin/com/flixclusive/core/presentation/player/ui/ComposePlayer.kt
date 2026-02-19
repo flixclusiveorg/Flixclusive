@@ -50,6 +50,7 @@ import okhttp3.OkHttpClient
 @Composable
 fun ComposePlayer(
     player: AppPlayer,
+    forceRelease: Boolean,
     resizeMode: ResizeMode,
     modifier: Modifier = Modifier,
 ) {
@@ -94,7 +95,12 @@ fun ComposePlayer(
             onStopOrDispose {
                 player.playWhenReady = player.isPlaying
                 player.pause()
-                player.release()
+
+                if (forceRelease) {
+                    player.release()
+                }
+
+                player.releaseMediaSession()
             }
         }
     } else {
@@ -106,7 +112,14 @@ fun ComposePlayer(
             }
 
             onPauseOrDispose {
-                player.release()
+                player.playWhenReady = player.isPlaying
+                player.pause()
+
+                if (forceRelease) {
+                    player.release()
+                }
+
+                player.releaseMediaSession()
             }
         }
     }
@@ -174,6 +187,7 @@ private fun ComposePlayerPreview() {
             Box {
                 ComposePlayer(
                     player = player,
+                    forceRelease = false,
                     resizeMode = ResizeMode.Fit,
                     modifier = Modifier
                         .fillMaxSize()

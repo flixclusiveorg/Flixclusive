@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +22,7 @@ import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.PlayerScreenContent
+import kotlinx.coroutines.delay
 
 @Preview
 @Composable
@@ -68,26 +69,22 @@ private fun PlayerScreenBasePreview() {
             playerPrefs = playerPrefs,
             dataSourceFactory = PreviewDataSourceFactory(context),
             subtitlePrefs = subtitlePrefs,
-        ).apply {
-            initialize()
-            prepare(
-                key = MediaItemKey(
-                    filmId = tvShow.identifier,
-                    episodeId = currentEpisode.id,
-                    providerId = currentProvider.id,
-                ),
-                servers = PreviewPlayerData.getTestMediaServers(),
-                subtitles = PreviewPlayerData.getTestMediaSubtitles(),
-                startPositionMs = 0L,
-                playImmediately = true,
-            )
-        }
+        )
     }
 
-    DisposableEffect(player) {
-        onDispose {
-            player.release()
-        }
+    LaunchedEffect(true) {
+        delay(3000)
+        player.prepare(
+            key = MediaItemKey(
+                filmId = tvShow.identifier,
+                episodeId = currentEpisode.id,
+                providerId = currentProvider.id,
+            ),
+            servers = PreviewPlayerData.getTestMediaServers(),
+            subtitles = PreviewPlayerData.getTestMediaSubtitles(),
+            startPositionMs = 0L,
+            playImmediately = true,
+        )
     }
 
     FlixclusiveTheme {
@@ -98,7 +95,7 @@ private fun PlayerScreenBasePreview() {
                 player = player,
                 playerPreferences = playerPrefs,
                 subtitlesPreferences = subtitlePrefs,
-                onBack = {},
+                onBack = { player.release() },
                 film = tvShow,
                 currentSeason = currentSeason,
                 currentEpisode = currentEpisode,

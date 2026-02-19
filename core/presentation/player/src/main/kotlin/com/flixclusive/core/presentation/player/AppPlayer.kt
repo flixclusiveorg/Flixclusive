@@ -142,13 +142,13 @@ class AppPlayer(
                     }
                     setSeekParameters(SeekParameters(PLAYER_TOLERANCE_BEFORE_US, PLAYER_TOLERANCE_AFTER_US))
                     setLoadControl(loadControl)
+
                     val playbackAttributes = AudioAttributes
                         .Builder()
                         .setUsage(C.USAGE_MEDIA)
                         .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
                         .build()
 
-                    // TODO: Check this one out if it will handle audio focus properly
                     setAudioAttributes(playbackAttributes, true)
                 }.build()
                 .apply {

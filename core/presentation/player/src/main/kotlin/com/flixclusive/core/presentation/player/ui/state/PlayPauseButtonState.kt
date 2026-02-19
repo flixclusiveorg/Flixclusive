@@ -61,13 +61,7 @@ class PlayPauseButtonState private constructor(
         showPlay = shouldShowPlayButton(player)
         isEnabled = shouldEnablePlayPauseButton(player)
         player.listen { events ->
-            if (
-                events.containsAny(
-                    Player.EVENT_PLAYBACK_STATE_CHANGED,
-                    Player.EVENT_PLAY_WHEN_READY_CHANGED,
-                    Player.EVENT_AVAILABLE_COMMANDS_CHANGED,
-                )
-            ) {
+            if (events.contains(Player.EVENT_IS_PLAYING_CHANGED)) {
                 showPlay = shouldShowPlayButton(this)
                 isEnabled = shouldEnablePlayPauseButton(this)
             }

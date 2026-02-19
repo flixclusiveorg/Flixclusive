@@ -260,7 +260,7 @@ private fun UserAvatarWithEdit(
                 shadowBlur = 30.dp,
                 modifier = avatarModifier
                     .sharedElement(
-                        state = rememberSharedContentState(key = "${user.id}-grid"),
+                        sharedContentState = rememberSharedContentState(key = "${user.id}-grid"),
                         animatedVisibilityScope = animatedVisibilityScope,
                     )
             )

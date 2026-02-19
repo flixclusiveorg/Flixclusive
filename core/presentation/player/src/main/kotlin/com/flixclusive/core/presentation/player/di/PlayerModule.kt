@@ -7,6 +7,7 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppDataSourceFactoryImpl
 import com.flixclusive.core.presentation.player.PlayerCache
 import dagger.Module
@@ -37,7 +38,7 @@ internal object PlayerModule {
         playerCache: PlayerCache,
         dataStoreManager: DataStoreManager,
         appDispatchers: AppDispatchers
-    ): AppDataSourceFactoryImpl {
+    ): AppDataSourceFactory {
         val playerPreferences = runBlocking(appDispatchers.io) {
             dataStoreManager.getUserPrefs(
                 key = UserPreferences.PLAYER_PREFS_KEY,

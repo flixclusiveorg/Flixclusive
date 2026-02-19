@@ -5,6 +5,7 @@ import android.media.AudioManager
 import android.media.audiofx.LoudnessEnhancer
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
@@ -13,6 +14,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
@@ -106,6 +108,12 @@ class VolumeManager(
                             manager.loudnessEnhancer = LoudnessEnhancer(audioSessionId)
                         }
                     }
+                }
+            }
+
+            DisposableEffect(LocalLifecycleOwner.current) {
+                onDispose {
+                    manager.loudnessEnhancer?.release()
                 }
             }
 

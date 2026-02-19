@@ -27,6 +27,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -40,7 +41,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.palette.graphics.Palette
 import com.flixclusive.core.database.entity.user.User
@@ -63,6 +64,7 @@ import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.coroutines.launch
 import com.flixclusive.core.strings.R as LocaleR
 
 @Suppress("ktlint:compose:vm-forwarding-check")
@@ -75,6 +77,8 @@ internal fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+
+    val scope = rememberCoroutineScope()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -121,7 +125,9 @@ internal fun SettingsScreen(
     val navigationItems = remember { items.values.flatten() }
 
     BackHandler(scaffoldNavigator.canNavigateBack()) {
-        scaffoldNavigator.navigateBack()
+        scope.launch {
+            scaffoldNavigator.navigateBack()
+        }
     }
 
     if (currentUser != null) {
@@ -148,7 +154,9 @@ internal fun SettingsScreen(
                             navigator = navigator,
                             onScroll = { backgroundAlpha.floatValue = it },
                             onItemClick = { item ->
-                                scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
+                                scope.launch {
+                                    scaffoldNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item)
+                                }
                             },
                             modifier = Modifier
                                 .drawBehind {
@@ -167,7 +175,7 @@ internal fun SettingsScreen(
                                     return@fastFirstOrNull false
                                 }
 
-                                it.key.name == scaffoldNavigator.currentDestination?.content
+                                it.key.name == scaffoldNavigator.currentDestination?.contentKey
                             }
                         }
                     }
@@ -197,10 +205,12 @@ internal fun SettingsScreen(
                                 isDetailsVisible = !isListVisible,
                                 content = { it.Content() },
                                 navigateBack = {
-                                    if (scaffoldNavigator.canNavigateBack()) {
-                                        scaffoldNavigator.navigateBack(
-                                            backNavigationBehavior = BackNavigationBehavior.PopLatest,
-                                        )
+                                    scope.launch {
+                                        if (scaffoldNavigator.canNavigateBack()) {
+                                            scaffoldNavigator.navigateBack(
+                                                backNavigationBehavior = BackNavigationBehavior.PopLatest,
+                                            )
+                                        }
                                     }
                                 },
                                 modifier = Modifier.focusGroup(),

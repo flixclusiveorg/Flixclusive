@@ -67,7 +67,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     private val watchProgressRepository: WatchProgressRepository,
     private val dataStoreManager: DataStoreManager,
     private val playerDataSourceFactory: AppDataSourceFactory,
-    @get:ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     /**
@@ -75,26 +75,40 @@ internal class PlayerScreenViewModel @Inject constructor(
      * */
     private val navArgs = savedStateHandle.navArgs<PlayerScreenNavArgs>()
 
-    val player by lazy {
-        val playerPreferences = runBlocking(appDispatchers.io) {
+    val playerPreferences = dataStoreManager.getUserPrefs(
+        key = UserPreferences.PLAYER_PREFS_KEY,
+        type = PlayerPreferences::class,
+    ).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking {
             dataStoreManager.getUserPrefs(
                 key = UserPreferences.PLAYER_PREFS_KEY,
-                type = PlayerPreferences::class
+                type = PlayerPreferences::class,
             ).first()
-        }
+        },
+    )
 
-        val subtitlePreferences = runBlocking(appDispatchers.io) {
+    val subtitlesPreferences = dataStoreManager.getUserPrefs(
+        key = UserPreferences.SUBTITLES_PREFS_KEY,
+        type = SubtitlesPreferences::class,
+    ).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = runBlocking {
             dataStoreManager.getUserPrefs(
                 key = UserPreferences.SUBTITLES_PREFS_KEY,
-                type = SubtitlesPreferences::class
+                type = SubtitlesPreferences::class,
             ).first()
-        }
+        },
+    )
 
+    val player by lazy {
         AppPlayer(
             context = context,
             dataSourceFactory = playerDataSourceFactory,
-            playerPrefs = playerPreferences,
-            subtitlePrefs = subtitlePreferences,
+            playerPrefs = playerPreferences.value,
+            subtitlePrefs = subtitlesPreferences.value,
         )
     }
 
@@ -162,6 +176,7 @@ internal class PlayerScreenViewModel @Inject constructor(
             if (metadata !is TvShow) return@mapNotNull null
 
             getSeasonWithWatchProgress(metadata, selectedSeason)
+                .map { it.data }
         }.flattenConcat()
         .stateIn(
             scope = viewModelScope,
@@ -196,6 +211,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     override fun onCleared() {
         player.release()
+        player.releaseMediaSession()
         super.onCleared()
     }
 
@@ -227,7 +243,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
         updateWatchProgress()
 
-        viewModelScope.launch {
+       loadLinksJob = viewModelScope.launch {
             val startPositionMs = getSavedStartPositionMs(episode)
 
             loadLinks(
@@ -236,6 +252,23 @@ internal class PlayerScreenViewModel @Inject constructor(
                 episode = episode,
                 playImmediately = false,
                 quiet = true,
+            )
+        }
+    }
+
+    fun onEpisodeChange(episode: Episode) {
+        if (loadLinksJob?.isActive == true) return
+
+        updateWatchProgress()
+
+        loadLinksJob = viewModelScope.launch {
+            val startPositionMs = getSavedStartPositionMs(episode)
+
+            loadLinks(
+                providerId = _uiState.value.selectedProvider,
+                startPositionMs = startPositionMs,
+                episode = episode,
+                playImmediately = true,
             )
         }
     }

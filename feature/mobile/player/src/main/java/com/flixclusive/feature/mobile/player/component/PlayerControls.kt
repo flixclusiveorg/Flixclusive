@@ -1,6 +1,6 @@
 package com.flixclusive.feature.mobile.player.component
 
-import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -32,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -41,11 +40,9 @@ import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.player.ResizeMode
-import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.ui.AudioFocusManager
 import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState.Companion.rememberControlsVisibilityState
 import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState.Companion.rememberPlayPauseButtonState
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Companion.rememberPlaybackSpeedState
@@ -129,11 +126,9 @@ internal fun PlayerControls(
         playerPreferences = playerPrefs
     )
 
-    AudioFocusManager(
-        player = player,
-        activity = LocalContext.current.getActivity<Activity>(),
-        isPlaying = !playPauseState.showPlay,
-    )
+    BackHandler(enabled = isLocked) {
+        controlsVisibilityState.show()
+    }
 
     LaunchedEffect(
         uiMode,

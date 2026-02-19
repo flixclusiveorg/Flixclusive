@@ -99,7 +99,7 @@ internal fun Tag(
         Box(
             modifier = Modifier
                 .sharedElement(
-                    state = rememberSharedContentState(key = APP_TAG_KEY),
+                    sharedContentState = rememberSharedContentState(key = APP_TAG_KEY),
                     animatedVisibilityScope = animatedScope,
                 ),
         ) {

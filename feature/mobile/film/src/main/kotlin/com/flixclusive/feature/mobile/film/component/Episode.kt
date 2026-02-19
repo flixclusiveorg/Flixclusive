@@ -278,7 +278,7 @@ private fun EpisodePreview(
                     modifier = imageWidthModifier
                         .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
                         .sharedElement(
-                            state = rememberSharedContentState(key = "${episode.number}_image"),
+                            sharedContentState = rememberSharedContentState(key = "${episode.number}_image"),
                             animatedVisibilityScope = animatedVisibilityScope,
                             boundsTransform = boundsTransition,
                         )
@@ -296,7 +296,7 @@ private fun EpisodePreview(
                         contentDescription = episode.title,
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         modifier = Modifier.sharedElement(
-                            state = rememberSharedContentState(key = "${episode.number}_image_placeholder"),
+                            sharedContentState = rememberSharedContentState(key = "${episode.number}_image_placeholder"),
                             animatedVisibilityScope = animatedVisibilityScope,
                             boundsTransform = boundsTransition,
                         ),
@@ -307,7 +307,7 @@ private fun EpisodePreview(
                 Box(
                     modifier = Modifier
                         .sharedElement(
-                            state = rememberSharedContentState(key = "${episode.number}_image_scrim"),
+                            sharedContentState = rememberSharedContentState(key = "${episode.number}_image_scrim"),
                             animatedVisibilityScope = animatedVisibilityScope,
                             boundsTransform = boundsTransition,
                         )
@@ -345,7 +345,7 @@ private fun EpisodePreview(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .sharedElement(
-                                state = rememberSharedContentState(key = "${episode.number}_downloaded"),
+                                sharedContentState = rememberSharedContentState(key = "${episode.number}_downloaded"),
                                 animatedVisibilityScope = animatedVisibilityScope,
                                 boundsTransform = boundsTransition,
                             )
@@ -357,7 +357,7 @@ private fun EpisodePreview(
                 episodeProgress = episode.watchProgress,
                 modifier = imageWidthModifier
                     .sharedElement(
-                        state = rememberSharedContentState(key = "${episode.number}_episode_progress"),
+                        sharedContentState = rememberSharedContentState(key = "${episode.number}_episode_progress"),
                         animatedVisibilityScope = animatedVisibilityScope,
                         boundsTransform = boundsTransition,
                     ),
@@ -565,7 +565,7 @@ private fun RowActions(
                 onClick = onDownload,
                 iconModifier = Modifier
                     .sharedElement(
-                        state = rememberSharedContentState(key = "${episodeWithProgress.number}_downloaded"),
+                        sharedContentState = rememberSharedContentState(key = "${episodeWithProgress.number}_downloaded"),
                         animatedVisibilityScope = animatedVisibilityScope,
                         boundsTransform = boundsTransition,
                     )

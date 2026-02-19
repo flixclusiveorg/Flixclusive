@@ -122,11 +122,11 @@ internal fun ClickedProfileScreen(
                     modifier = Modifier
                         .size(getAvatarSize())
                         .sharedElement(
-                            state = rememberSharedContentState(key = "${user.id}-pager"),
+                            sharedContentState = rememberSharedContentState(key = "${user.id}-pager"),
                             animatedVisibilityScope = animatedVisibilityScope
                         )
                         .sharedElement(
-                            state = rememberSharedContentState(key = "${user.id}-grid"),
+                            sharedContentState = rememberSharedContentState(key = "${user.id}-grid"),
                             animatedVisibilityScope = animatedVisibilityScope
                         )
                         .noIndicationClickable {  }

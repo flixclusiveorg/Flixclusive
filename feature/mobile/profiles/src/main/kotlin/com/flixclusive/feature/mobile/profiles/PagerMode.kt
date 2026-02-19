@@ -161,7 +161,7 @@ internal fun PagerMode(
                                     shadowBlur = 30.dp,
                                     modifier = Modifier
                                         .sharedElement(
-                                            state = rememberSharedContentState(key = "${item.id}-pager"),
+                                            sharedContentState = rememberSharedContentState(key = "${item.id}-pager"),
                                             animatedVisibilityScope = animatedVisibilityScope,
                                         ).size(pageWidth)
                                         .scaleDownOnPress(

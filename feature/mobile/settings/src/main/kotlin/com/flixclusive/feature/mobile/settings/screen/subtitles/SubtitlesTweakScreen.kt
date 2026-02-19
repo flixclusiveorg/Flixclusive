@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -37,6 +38,7 @@ import com.flixclusive.feature.mobile.settings.util.uiText
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.util.Locale
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -123,10 +125,14 @@ internal class SubtitlesTweakScreen(
     @Composable
     override fun Content() {
         val navigator = LocalScaffoldNavigator.current
+        val scope = rememberCoroutineScope()
+
         BackHandler {
-            navigator?.navigateBack(
-                backNavigationBehavior = BackNavigationBehavior.PopLatest,
-            )
+            scope.launch {
+                navigator?.navigateBack(
+                    backNavigationBehavior = BackNavigationBehavior.PopLatest,
+                )
+            }
         }
 
         super.Content()

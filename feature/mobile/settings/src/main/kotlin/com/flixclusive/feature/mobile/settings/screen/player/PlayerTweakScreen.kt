@@ -7,6 +7,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -28,6 +29,7 @@ import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.util.Locale
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -70,6 +72,8 @@ internal class PlayerTweakScreen(
     private fun getGeneralTweaks(playerPreferences: () -> PlayerPreferences): TweakGroup {
         val context = LocalContext.current
         val navigator = LocalScaffoldNavigator.current!!
+
+        val scope = rememberCoroutineScope()
 
         val formatInSeconds = fun(amount: Long): String {
             return context.getString(LocaleR.string.n_seconds_format, amount)
@@ -134,10 +138,12 @@ internal class PlayerTweakScreen(
                         title = stringResource(LocaleR.string.subtitle),
                         descriptionProvider = { context.getString(LocaleR.string.subtitles_settings_content_desc) },
                         onClick = {
-                            navigator.navigateTo(
-                                pane = ListDetailPaneScaffoldRole.Detail,
-                                content = UserPreferences.SUBTITLES_PREFS_KEY.name,
-                            )
+                            scope.launch {
+                                navigator.navigateTo(
+                                    pane = ListDetailPaneScaffoldRole.Detail,
+                                    contentKey = UserPreferences.SUBTITLES_PREFS_KEY.name,
+                                )
+                            }
                         },
                     ),
                 ),
