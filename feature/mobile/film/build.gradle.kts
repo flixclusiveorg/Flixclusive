@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.flixclusive.feature.mobile)
     alias(libs.plugins.flixclusive.compose)
-    alias(libs.plugins.flixclusive.destinations)
     alias(libs.plugins.flixclusive.testing)
 }
 
@@ -10,8 +9,6 @@ android {
 }
 
 dependencies {
-    // implementation(projects.core.ui.mobile)
-    // implementation(projects.core.ui.film)
     implementation(projects.coreCommon)
     implementation(projects.coreStrings)
     implementation(projects.coreDrawables)

@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -85,21 +86,30 @@ import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.provider.ProviderMetadata
-import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-@OptIn(ExperimentalFoundationApi::class)
-@Destination(
-    navArgsDelegate = FilmScreenNavArgs::class,
-)
 @Composable
-internal fun FilmScreen(
+fun FilmScreen(
     navigator: FilmScreenNavigator,
     navArgs: FilmScreenNavArgs,
-    viewModel: FilmScreenViewModel = hiltViewModel(),
+) {
+    InternalFilmScreen(
+        navigator = navigator,
+        navArgs = navArgs,
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun InternalFilmScreen(
+    navigator: FilmScreenNavigator,
+    navArgs: FilmScreenNavArgs,
+    viewModel: FilmScreenViewModel = hiltViewModel<FilmScreenViewModel, FilmScreenViewModel.Factory>(
+        creationCallback = { it.create(navArgs = navArgs.film) }
+    ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val metadata by viewModel.metadata.collectAsStateWithLifecycle()
@@ -152,6 +162,7 @@ private fun FilmScreenContent(
     onRetryFetchSeason: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val usePortraitView = windowSizeClass.windowWidthSizeClass.isCompact ||
         windowSizeClass.windowWidthSizeClass.isMedium
@@ -301,7 +312,7 @@ private fun FilmScreenContent(
                                     onAddToLibrary = { isLibrarySheetOpen = true },
                                     onToggleDownload = {
                                         // TODO: Implement download
-                                        context.showToast(context.getString(LocaleR.string.coming_soon))
+                                        context.showToast(resources.getString(LocaleR.string.coming_soon))
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()

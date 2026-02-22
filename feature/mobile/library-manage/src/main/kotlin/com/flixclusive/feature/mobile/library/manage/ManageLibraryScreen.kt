@@ -59,6 +59,7 @@ import com.flixclusive.feature.mobile.library.manage.component.LibraryCard
 import com.flixclusive.feature.mobile.library.manage.component.LibraryOptionsBottomSheet
 import com.flixclusive.feature.mobile.library.manage.component.ManageLibraryTopBar
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
@@ -71,7 +72,7 @@ import kotlin.random.Random
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun ManageLibraryScreen(
     navigator: ManageLibraryScreenNavigator,

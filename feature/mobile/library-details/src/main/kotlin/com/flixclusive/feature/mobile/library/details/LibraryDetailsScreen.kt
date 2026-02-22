@@ -63,6 +63,7 @@ import com.flixclusive.feature.mobile.library.details.component.topbar.LibraryDe
 import com.flixclusive.feature.mobile.library.details.component.topbar.TopTitleAlphaEasing
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentSetOf
@@ -72,7 +73,7 @@ import java.util.Date
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-@Destination(navArgsDelegate = LibraryDetailsNavArgs::class)
+@Destination<ExternalModuleGraph>(navArgs = LibraryDetailsNavArgs::class)
 @Composable
 internal fun LibraryDetailsScreen(
     navigator: LibraryDetailsScreenNavigator,

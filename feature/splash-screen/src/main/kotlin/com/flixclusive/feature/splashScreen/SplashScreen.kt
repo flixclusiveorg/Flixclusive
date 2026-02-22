@@ -40,6 +40,7 @@ import com.flixclusive.feature.splashScreen.component.LoadingTag
 import com.flixclusive.feature.splashScreen.screen.consent.ConsentScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.flixclusive.core.strings.R as LocaleR
 
 internal const val APP_TAG_KEY = "tag_image"
@@ -53,7 +54,7 @@ internal val TagSize = 300.dp
     ExperimentalPermissionsApi::class,
     ExperimentalSharedTransitionApi::class,
 )
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun SplashScreen(
     navigator: SplashScreenNavigator,

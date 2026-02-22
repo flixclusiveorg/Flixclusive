@@ -42,20 +42,29 @@ import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.provider.Catalog
-import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
-@Destination(
-    navArgsDelegate = SeeAllScreenNavArgs::class,
-)
 @Composable
-internal fun SeeAllScreen(
+fun SeeAllScreen(
     navigator: SeeAllScreenNavigator,
-    args: SeeAllScreenNavArgs,
-    viewModel: SeeAllViewModel = hiltViewModel(),
+    navArgs: SeeAllScreenNavArgs,
+) {
+    InternalSeeAllScreen(
+        navigator = navigator,
+        navArgs = navArgs,
+    )
+}
+
+@Composable
+internal fun InternalSeeAllScreen(
+    navigator: SeeAllScreenNavigator,
+    navArgs: SeeAllScreenNavArgs,
+    viewModel: SeeAllViewModel = hiltViewModel<SeeAllViewModel, SeeAllViewModel.Factory>(
+        creationCallback = { it.create(navArgs.catalog) }
+    ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val showFilmTitles by viewModel.showFilmTitles.collectAsStateWithLifecycle()
@@ -74,7 +83,7 @@ internal fun SeeAllScreen(
         },
         uiState = uiState,
         showFilmTitles = showFilmTitles,
-        catalog = args.catalog,
+        catalog = navArgs.catalog,
         searchQuery = { searchQuery },
         onQueryChange = viewModel::onQueryChange,
         previewFilm = navigator::previewFilm,

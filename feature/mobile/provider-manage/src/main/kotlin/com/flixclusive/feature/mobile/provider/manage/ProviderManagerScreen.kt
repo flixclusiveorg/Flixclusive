@@ -1,6 +1,8 @@
 package com.flixclusive.feature.mobile.provider.manage
 
 import android.content.Context
+import android.os.Build
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -44,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -54,8 +57,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.HapticFeedbackConstantsCompat
-import androidx.core.view.ViewCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.provider.ProviderWithThrowable
@@ -74,6 +75,7 @@ import com.flixclusive.feature.mobile.provider.manage.reorderable.ReorderableIte
 import com.flixclusive.feature.mobile.provider.manage.reorderable.rememberReorderableLazyGridState
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -84,7 +86,7 @@ private val FabButtonSize = 56.dp
 
 private fun Context.getHelpGuideTexts() = resources.getStringArray(LocaleR.array.providers_screen_help)
 
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun ProviderManagerScreen(
     navigator: ProviderManagerScreenNavigator,
@@ -123,7 +125,7 @@ internal fun ProviderManagerScreen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun ProviderManagerScreenContent(
     uiState: ProviderManageUiState,
@@ -145,6 +147,7 @@ internal fun ProviderManagerScreenContent(
     openMarkdownScreen: (String, String) -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     var providerToUninstall by rememberSaveable { mutableStateOf<ProviderMetadata?>(null) }
 
     val view = LocalView.current
@@ -156,10 +159,11 @@ internal fun ProviderManagerScreenContent(
         onMove = { from, to ->
             if (!uiState.isSearching) {
                 onMove(from.index, to.index)
-                ViewCompat.performHapticFeedback(
-                    view,
-                    HapticFeedbackConstantsCompat.SEGMENT_FREQUENT_TICK,
-                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_FREQUENT_TICK)
+                } else {
+                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                }
             }
         },
     )
@@ -284,16 +288,14 @@ internal fun ProviderManagerScreenContent(
                                     dragModifier =
                                         Modifier.draggableHandle(
                                             onDragStarted = {
-                                                ViewCompat.performHapticFeedback(
-                                                    view,
-                                                    HapticFeedbackConstantsCompat.GESTURE_START,
-                                                )
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
+                                                }
                                             },
                                             onDragStopped = {
-                                                ViewCompat.performHapticFeedback(
-                                                    view,
-                                                    HapticFeedbackConstantsCompat.GESTURE_END,
-                                                )
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                                    view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+                                                }
                                             },
                                             interactionSource = interactionSource,
                                         ),
@@ -314,7 +316,7 @@ internal fun ProviderManagerScreenContent(
             contentDescription = stringResource(id = LocaleR.string.warning_content_description),
             description =
                 buildAnnotatedString {
-                    append(context.getString(LocaleR.string.warning_uninstall_message_first_half))
+                    append(resources.getString(LocaleR.string.warning_uninstall_message_first_half))
                     append(" ")
                     withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
                         append(metadata.name)

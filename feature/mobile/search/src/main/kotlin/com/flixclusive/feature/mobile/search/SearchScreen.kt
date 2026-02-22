@@ -53,12 +53,13 @@ import com.flixclusive.feature.mobile.search.util.SearchUiUtils
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderCatalog
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
 // TODO: Remove this screen in the future and use only SearchExpandedScreen
 
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun SearchScreen(
     navigator: SearchScreenNavigator,

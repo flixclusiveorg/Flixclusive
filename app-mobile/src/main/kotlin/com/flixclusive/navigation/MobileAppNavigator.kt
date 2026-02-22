@@ -1,7 +1,8 @@
 package com.flixclusive.navigation
 
 import androidx.compose.ui.platform.UriHandler
-import androidx.navigation.NavController
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavDestination
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.navigation.navigator.AddProfileAction
@@ -20,41 +21,22 @@ import com.flixclusive.core.navigation.navigator.ViewFilmPreviewAction
 import com.flixclusive.core.navigation.navigator.ViewMarkdownAction
 import com.flixclusive.core.navigation.navigator.ViewNewAppUpdatesAction
 import com.flixclusive.core.navigation.navigator.ViewProviderAction
-import com.flixclusive.feature.mobile.app.updates.destinations.AppUpdatesScreenDestination
 import com.flixclusive.feature.mobile.app.updates.dialog.AppUpdatesDialogNavigator
 import com.flixclusive.feature.mobile.app.updates.screen.AppUpdatesScreenNavigator
 import com.flixclusive.feature.mobile.film.FilmScreenNavigator
-import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
 import com.flixclusive.feature.mobile.home.HomeNavigator
 import com.flixclusive.feature.mobile.library.details.LibraryDetailsScreenNavigator
-import com.flixclusive.feature.mobile.library.details.destinations.LibraryDetailsScreenDestination
 import com.flixclusive.feature.mobile.library.manage.ManageLibraryScreenNavigator
-import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
 import com.flixclusive.feature.mobile.player.PlayerScreenNavigator
-import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
 import com.flixclusive.feature.mobile.profiles.UserProfilesScreenNavigator
-import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
 import com.flixclusive.feature.mobile.provider.add.AddProviderScreenNavigator
-import com.flixclusive.feature.mobile.provider.add.destinations.AddProviderScreenDestination
 import com.flixclusive.feature.mobile.provider.details.ProviderDetailsNavigator
-import com.flixclusive.feature.mobile.provider.details.destinations.ProviderDetailsScreenDestination
 import com.flixclusive.feature.mobile.provider.manage.ProviderManagerScreenNavigator
-import com.flixclusive.feature.mobile.provider.manage.destinations.ProviderManagerScreenDestination
-import com.flixclusive.feature.mobile.provider.settings.destinations.ProviderSettingsScreenDestination
-import com.flixclusive.feature.mobile.provider.test.destinations.ProviderTestScreenDestination
-import com.flixclusive.feature.mobile.repository.manage.destinations.RepositoryManagerScreenDestination
 import com.flixclusive.feature.mobile.search.SearchScreenNavigator
 import com.flixclusive.feature.mobile.searchExpanded.SearchExpandedScreenNavigator
-import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavigator
-import com.flixclusive.feature.mobile.seeAll.destinations.SeeAllScreenDestination
 import com.flixclusive.feature.mobile.settings.screen.root.SettingsScreenNavigator
 import com.flixclusive.feature.mobile.user.add.AddUserScreenNavigator
-import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
-import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
-import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestination
-import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
-import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
 import com.flixclusive.feature.mobile.user.edit.UserEditScreenNavigator
 import com.flixclusive.feature.splashScreen.SplashScreenNavigator
 import com.flixclusive.model.film.Film
@@ -64,14 +46,41 @@ import com.flixclusive.model.provider.Catalog
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
 import com.flixclusive.navigation.extensions.navGraph
-import com.flixclusive.navigation.extensions.navigateIfResumed
-import com.ramcosta.composedestinations.dynamic.within
-import com.ramcosta.composedestinations.navigation.navigate
-import com.ramcosta.composedestinations.navigation.popUpTo
+import com.ramcosta.composedestinations.generated.appmobile.destinations.AppAppLevelMarkdownScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelFilmScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelSeeAllScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelFilmScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelSeeAllScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SearchAppLevelFilmScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SearchAppLevelSeeAllScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMarkdownScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
+import com.ramcosta.composedestinations.generated.appmobile.navgraphs.HomeGraph
+import com.ramcosta.composedestinations.generated.appmobile.navgraphs.LibraryGraph
+import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SearchGraph
+import com.ramcosta.composedestinations.generated.appmobile.navgraphs.SettingsGraph
+import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
+import com.ramcosta.composedestinations.generated.librarydetails.destinations.LibraryDetailsScreenDestination
+import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
+import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
+import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
+import com.ramcosta.composedestinations.generated.providerdetails.destinations.ProviderDetailsScreenDestination
+import com.ramcosta.composedestinations.generated.providermanage.destinations.ProviderManagerScreenDestination
+import com.ramcosta.composedestinations.generated.providersettings.destinations.ProviderSettingsScreenDestination
+import com.ramcosta.composedestinations.generated.providertest.destinations.ProviderTestScreenDestination
+import com.ramcosta.composedestinations.generated.repositorymanage.destinations.RepositoryManagerScreenDestination
+import com.ramcosta.composedestinations.generated.searchexpanded.destinations.SearchExpandedScreenDestination
+import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserScreenDestination
+import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetupScreenDestination
+import com.ramcosta.composedestinations.generated.useredit.destinations.PinVerifyScreenDestination
+import com.ramcosta.composedestinations.generated.useredit.destinations.UserAvatarSelectScreenDestination
+import com.ramcosta.composedestinations.generated.useredit.destinations.UserEditScreenDestination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 internal class MobileAppNavigator(
+    private val lifecycleOwner: LifecycleOwner,
     private val destination: NavDestination,
-    private val navController: NavController,
+    private val navigator: DestinationsNavigator,
     private val uriHandler: UriHandler,
     private val exitAction: ExitAction,
     private val previewFilmAction: ViewFilmPreviewAction,
@@ -108,26 +117,50 @@ internal class MobileAppNavigator(
     ViewMarkdownAction,
     ViewNewAppUpdatesAction,
     ViewProviderAction {
+    private val currentNavGraph get() = destination.navGraph()
+
+    private fun runOnResumed(
+        navigationAction: () -> Unit,
+    ) {
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            navigationAction()
+        }
+    }
+
     override fun goBack() {
-        navController.navigateUp()
+        navigator.navigateUp()
     }
 
     override fun openSearchExpandedScreen() {
-        navController.navigateIfResumed(SearchExpandedScreenDestination within destination.navGraph())
+        runOnResumed {
+            navigator.navigate(SearchExpandedScreenDestination)
+        }
     }
 
     override fun openSeeAllScreen(item: Catalog) {
-        navController.navigateIfResumed(SeeAllScreenDestination(catalog = item) within destination.navGraph())
+        runOnResumed {
+            when (currentNavGraph) {
+                is HomeGraph -> navigator.navigate(HomeAppLevelSeeAllScreenDestination(catalog = item))
+                is SearchGraph -> navigator.navigate(SearchAppLevelSeeAllScreenDestination(catalog = item))
+                is LibraryGraph -> navigator.navigate(LibraryAppLevelSeeAllScreenDestination(catalog = item))
+            }
+        }
     }
 
     override fun openFilmScreen(film: Film) {
-        navController.navigateIfResumed(
-            FilmScreenDestination(film = film) within destination.navGraph(),
-        )
+        runOnResumed {
+            when (currentNavGraph) {
+                is HomeGraph -> navigator.navigate(HomeAppLevelFilmScreenDestination(film = film))
+                is SearchGraph -> navigator.navigate(SearchAppLevelFilmScreenDestination(film = film))
+                is LibraryGraph -> navigator.navigate(LibraryAppLevelFilmScreenDestination(film = film))
+            }
+        }
     }
 
     override fun openLibraryDetails(list: LibraryList) {
-        navController.navigateIfResumed(LibraryDetailsScreenDestination(list) within destination.navGraph())
+        runOnResumed {
+            navigator.navigate(LibraryDetailsScreenDestination(list))
+        }
     }
 
     override fun openUpdateScreen(
@@ -136,40 +169,48 @@ internal class MobileAppNavigator(
         updateInfo: String?,
         isComingFromSplashScreen: Boolean,
     ) {
-        navController.navigateIfResumed(
-            AppUpdatesScreenDestination(
-                newVersion = newVersion,
-                updateUrl = updateUrl,
-                updateInfo = updateInfo,
-                isComingFromSplashScreen = isComingFromSplashScreen,
-            ),
-        )
-    }
-
-    override fun openHomeScreen() {
-        navController.navigate(MobileNavGraphs.home) {
-            popUpTo(MobileNavGraphs.root) {
-                inclusive = true
-            }
+        runOnResumed {
+            navigator.navigate(
+                AppUpdatesScreenDestination(
+                    newVersion = newVersion,
+                    updateUrl = updateUrl,
+                    updateInfo = updateInfo,
+                    isComingFromSplashScreen = isComingFromSplashScreen,
+                ),
+            )
         }
     }
 
-    override fun openProfilesScreen(shouldPopBackStack: Boolean) {
-        navController.navigateIfResumed(
-            UserProfilesScreenDestination(isFromSplashScreen = shouldPopBackStack),
-        ) {
-            if (shouldPopBackStack) {
-                popUpTo(MobileNavGraphs.root) {
+    override fun openHomeScreen() {
+        runOnResumed {
+            navigator.navigate(HomeGraph) {
+                popUpTo(AppGraph) {
                     inclusive = true
                 }
             }
         }
     }
 
+    override fun openProfilesScreen(shouldPopBackStack: Boolean) {
+        runOnResumed {
+            navigator.navigate(
+                UserProfilesScreenDestination(isFromSplashScreen = shouldPopBackStack),
+            ) {
+                if (shouldPopBackStack) {
+                    popUpTo(AppGraph) {
+                        inclusive = true
+                    }
+                }
+            }
+        }
+    }
+
     override fun openUserAvatarSelectScreen(selected: Int) {
-        navController.navigateIfResumed(
-            UserAvatarSelectScreenDestination(selected = selected),
-        )
+        runOnResumed {
+            navigator.navigate(
+                UserAvatarSelectScreenDestination(selected = selected),
+            )
+        }
     }
 
     override fun openUserPinScreen(action: PinAction) {
@@ -179,19 +220,14 @@ internal class MobileAppNavigator(
                 is PinAction.Verify -> PinVerifyScreenDestination(actualPin = action.userPin)
             }
 
-        navController.navigateIfResumed(destination)
+        runOnResumed {
+            navigator.navigate(destination)
+        }
     }
 
     override fun openAddProfileScreen(isInitializing: Boolean) {
-        navController.navigateIfResumed(AddUserScreenDestination(isInitializing = isInitializing)) {
-            if (isInitializing) {
-                popUpTo(MobileNavGraphs.root) {
-                    saveState = true
-                }
-
-                launchSingleTop = true
-                restoreState = true
-            }
+        runOnResumed {
+            navigator.navigate(AddUserScreenDestination(isInitializing = isInitializing))
         }
     }
 
@@ -200,55 +236,68 @@ internal class MobileAppNavigator(
     }
 
     override fun onEpisodeChange(film: FilmMetadata, episode: Episode) {
-        navController.navigate(
-            PlayerScreenDestination(film = film, episode = episode),
-        ) {
-            launchSingleTop = true
+        runOnResumed {
+            navigator.navigate(
+                PlayerScreenDestination(film = film, episode = episode),
+            ) {
+                launchSingleTop = true
+            }
         }
     }
 
     override fun openProviderSettings(providerMetadata: ProviderMetadata) {
-        navController.navigateIfResumed(
-            ProviderSettingsScreenDestination(
-                metadata = providerMetadata,
-            ) within destination.navGraph(),
-        )
+        runOnResumed {
+            navigator.navigate(
+                ProviderSettingsScreenDestination(
+                    metadata = providerMetadata,
+                ),
+            )
+        }
     }
 
     override fun openRepositoryManagerScreen() {
-        navController.navigateIfResumed(
-            RepositoryManagerScreenDestination within destination.navGraph(),
-        )
+        runOnResumed {
+            navigator.navigate(
+                RepositoryManagerScreenDestination,
+            )
+        }
     }
 
     override fun testProviders(providers: ArrayList<ProviderMetadata>) {
-        navController.navigateIfResumed(
-            ProviderTestScreenDestination(providers = providers) within destination.navGraph(),
-        )
+        runOnResumed {
+            navigator.navigate(
+                ProviderTestScreenDestination(providers = providers),
+            )
+        }
     }
 
     override fun openProviderDetails(providerMetadata: ProviderMetadata) {
-        navController.navigateIfResumed(
-            ProviderDetailsScreenDestination(metadata = providerMetadata) within destination.navGraph(),
-        )
+        runOnResumed {
+            navigator.navigate(
+                ProviderDetailsScreenDestination(metadata = providerMetadata),
+            )
+        }
     }
 
     override fun openMarkdownScreen(
         title: String,
         description: String,
     ) {
-        navController.navigateIfResumed(
-            MarkdownScreenDestination(
-                title = title,
-                description = description,
-            ) within destination.navGraph(),
-        )
+        val direction = when (currentNavGraph) {
+            is HomeGraph -> AppAppLevelMarkdownScreenDestination(title = title, description = description)
+            is SettingsGraph -> SettingsAppLevelMarkdownScreenDestination(title = title, description = description)
+            else -> throw IllegalStateException("Markdown screen can only be opened from Home or Settings graph")
+        }
+
+        runOnResumed {
+            navigator.navigate(direction)
+        }
     }
 
     override fun openProviderManagerScreen() {
-        navController.navigateIfResumed(
-            ProviderManagerScreenDestination within destination.navGraph(),
-        )
+        runOnResumed {
+            navigator.navigate(ProviderManagerScreenDestination)
+        }
     }
 
     override fun openLink(url: String) {
@@ -256,7 +305,9 @@ internal class MobileAppNavigator(
     }
 
     override fun openEditUserScreen(userId: Int) {
-        navController.navigateIfResumed(UserEditScreenDestination(userId = userId))
+        runOnResumed {
+            navigator.navigate(UserEditScreenDestination(userId = userId))
+        }
     }
 
     override fun previewFilm(film: Film) {
@@ -268,8 +319,10 @@ internal class MobileAppNavigator(
     }
 
     override fun openAddProviderScreen(initialSelectedRepositoryFilter: Repository?) {
-        navController.navigateIfResumed(
-            AddProviderScreenDestination(initialSelectedRepositoryFilter = initialSelectedRepositoryFilter),
-        )
+        runOnResumed {
+            navigator.navigate(
+                AddProviderScreenDestination(initialSelectedRepositoryFilter = initialSelectedRepositoryFilter),
+            )
+        }
     }
 }

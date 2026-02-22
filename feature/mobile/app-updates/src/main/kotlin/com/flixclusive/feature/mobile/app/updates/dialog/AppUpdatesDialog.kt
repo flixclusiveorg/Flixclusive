@@ -41,10 +41,11 @@ import com.flixclusive.feature.app.updates.AppUpdatesUiState
 import com.flixclusive.feature.app.updates.AppUpdatesViewModel
 import com.flixclusive.feature.mobile.app.updates.R
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.spec.DestinationStyle
 import com.flixclusive.core.strings.R as LocaleR
 
-internal object DismissibleDialog : DestinationStyle.Dialog {
+internal object DismissibleDialog : DestinationStyle.Dialog() {
     override val properties =
         DialogProperties(
             dismissOnClickOutside = true,
@@ -53,7 +54,7 @@ internal object DismissibleDialog : DestinationStyle.Dialog {
         )
 }
 
-@Destination(style = DismissibleDialog::class)
+@Destination<ExternalModuleGraph>(style = DismissibleDialog::class)
 @Composable
 internal fun AppUpdatesDialog(
     navigator: AppUpdatesDialogNavigator,

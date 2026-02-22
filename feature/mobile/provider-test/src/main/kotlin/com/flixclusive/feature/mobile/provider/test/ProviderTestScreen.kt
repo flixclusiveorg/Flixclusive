@@ -74,6 +74,7 @@ import com.flixclusive.feature.mobile.provider.test.component.TestResultCard
 import com.flixclusive.feature.mobile.provider.test.component.TestScreenHeader
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.flow.first
 import kotlin.random.Random
 import kotlin.time.DurationUnit
@@ -81,7 +82,7 @@ import kotlin.time.toDuration
 import com.flixclusive.core.strings.R as LocaleR
 
 @Suppress("ktlint:compose:mutable-params-check")
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun ProviderTestScreen(
     navigator: GoBackAction,

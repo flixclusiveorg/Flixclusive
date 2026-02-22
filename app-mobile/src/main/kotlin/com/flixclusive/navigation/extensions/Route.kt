@@ -1,7 +1,7 @@
 package com.flixclusive.navigation.extensions
 
-import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
-import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
+import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
+import com.ramcosta.composedestinations.generated.splashscreen.destinations.SplashScreenDestination
 import com.ramcosta.composedestinations.spec.Route
 
 internal val Route.isSplashScreen: Boolean

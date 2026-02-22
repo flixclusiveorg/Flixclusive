@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.flixclusive.library)
     alias(libs.plugins.flixclusive.hilt)
+    alias(libs.plugins.flixclusive.compose)
 }
 
 android {
@@ -14,6 +15,7 @@ dependencies {
     implementation(projects.domainDownloads)
 
     implementation(libs.compose.runtime)
+    implementation(libs.lifecycle.viewModelKtx)
 
     testImplementation(projects.coreTesting)
 }

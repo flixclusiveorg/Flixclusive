@@ -45,6 +45,7 @@ import com.flixclusive.feature.mobile.provider.add.filter.StatusFilters.Companio
 import com.flixclusive.feature.mobile.provider.add.filter.StatusFilters.Companion.toStatusFilters
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository
+import com.ramcosta.composedestinations.generated.provideradd.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf

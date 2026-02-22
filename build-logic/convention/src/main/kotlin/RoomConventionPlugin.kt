@@ -1,11 +1,12 @@
 
 import androidx.room.gradle.RoomExtension
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.LibraryExtension
 import com.flixclusive.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+
 class RoomConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
@@ -24,7 +25,7 @@ class RoomConventionPlugin : Plugin<Project> {
             extensions.configure<LibraryExtension> {
                 sourceSets {
                     // Adds exported schema location as test app assets.
-                    getByName("androidTest").assets.srcDir("$projectDir/schemas")
+                    getByName("androidTest").assets.directories.add("$projectDir/schemas")
                 }
             }
 

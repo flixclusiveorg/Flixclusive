@@ -53,11 +53,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.navigation.navargs.PinWithHintResult
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
 import com.flixclusive.core.presentation.mobile.extensions.isCompact
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.DefaultScreenPaddingHorizontal
 import com.flixclusive.feature.mobile.user.edit.tweaks.TweakUiUtil.DefaultShape
 import com.flixclusive.feature.mobile.user.pin.component.DEFAULT_DELAY
@@ -65,6 +65,7 @@ import com.flixclusive.feature.mobile.user.pin.component.HeaderLabel
 import com.flixclusive.feature.mobile.user.pin.component.PinScreenDefault
 import com.flixclusive.feature.mobile.user.pin.component.PinSetupScreenCompactLandscape
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 import kotlinx.coroutines.delay
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -76,7 +77,7 @@ private enum class PinSetupStep {
     Hint,
 }
 
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun PinSetupScreen(resultNavigator: ResultBackNavigator<PinWithHintResult>) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowHeightSizeClass
@@ -114,7 +115,6 @@ internal fun PinSetupScreen(resultNavigator: ResultBackNavigator<PinWithHintResu
             stepState = PinSetupStep.Hint
         } else if (stepState == PinSetupStep.Hint && pinHint.value.isNotEmpty()) {
             resultNavigator.navigateBack(
-                onlyIfResumed = true,
                 result = PinWithHintResult(
                     pin = newPin.value,
                     pinHint = pinHint.value,
@@ -129,7 +129,7 @@ internal fun PinSetupScreen(resultNavigator: ResultBackNavigator<PinWithHintResu
 
     val onBack = {
         if (stepState == PinSetupStep.Setup) {
-            resultNavigator.navigateBack(onlyIfResumed = true)
+            resultNavigator.navigateBack()
         } else if (stepState == PinSetupStep.Confirm || stepState == PinSetupStep.Hint) {
             newPin.value = ""
             stepState = PinSetupStep.Setup
@@ -153,12 +153,10 @@ internal fun PinSetupScreen(resultNavigator: ResultBackNavigator<PinWithHintResu
                 onConfirm = onConfirm,
                 onSkip = {
                     resultNavigator.navigateBack(
-                        onlyIfResumed = true,
-                        result =
-                            PinWithHintResult(
-                                pin = newPin.value,
-                                pinHint = null,
-                            ),
+                        result = PinWithHintResult(
+                            pin = newPin.value,
+                            pinHint = null,
+                        ),
                     )
                 },
             )
@@ -418,13 +416,8 @@ private fun PinSetupScreenBasePreview() {
             PinSetupScreen(
                 resultNavigator =
                     object : ResultBackNavigator<PinWithHintResult> {
-                        override fun navigateBack(
-                            result: PinWithHintResult,
-                            onlyIfResumed: Boolean,
-                        ) = Unit
-
-                        override fun navigateBack(onlyIfResumed: Boolean) = Unit
-
+                        override fun navigateBack(result: PinWithHintResult) = Unit
+                        override fun navigateBack() = Unit
                         override fun setResult(result: PinWithHintResult) = Unit
                     },
             )

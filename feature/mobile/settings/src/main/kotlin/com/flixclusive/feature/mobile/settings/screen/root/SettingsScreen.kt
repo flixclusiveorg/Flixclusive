@@ -63,6 +63,7 @@ import com.flixclusive.feature.mobile.settings.util.LocalScaffoldNavigator
 import com.flixclusive.feature.mobile.settings.util.LocalSettingsNavigator
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.launch
 import com.flixclusive.core.strings.R as LocaleR
@@ -70,7 +71,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Suppress("ktlint:compose:vm-forwarding-check")
 @SuppressLint("UnusedContentLambdaTargetStateParameter")
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun SettingsScreen(
     navigator: SettingsScreenNavigator,

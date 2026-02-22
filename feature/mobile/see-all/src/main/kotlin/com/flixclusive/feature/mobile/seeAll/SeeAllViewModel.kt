@@ -4,7 +4,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.locale.UiText
@@ -16,6 +15,10 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.domain.catalog.usecase.PaginateItemsUseCase
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.SearchResponseData
+import com.flixclusive.model.provider.Catalog
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.Job
@@ -27,16 +30,18 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import com.flixclusive.core.strings.R as LocaleR
 
-@HiltViewModel
-internal class SeeAllViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = SeeAllViewModel.Factory::class)
+internal class SeeAllViewModel @AssistedInject constructor(
     private val paginateItems: PaginateItemsUseCase,
-    savedStateHandle: SavedStateHandle,
     dataStoreManager: DataStoreManager,
+    @Assisted private val navArgs: Catalog,
 ) : ViewModel() {
-    private val navArgs = savedStateHandle.navArgs<SeeAllScreenNavArgs>()
+    @AssistedFactory
+    interface Factory {
+        fun create(navArgs: Catalog): SeeAllViewModel
+    }
 
     private var paginatingJob: Job? = null
 
@@ -83,7 +88,7 @@ internal class SeeAllViewModel @Inject constructor(
 
             when (
                 val result = paginateItems(
-                    catalog = navArgs.catalog,
+                    catalog = navArgs,
                     page = _uiState.value.page,
                 )
             ) {

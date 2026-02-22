@@ -22,6 +22,7 @@ import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
+import com.ramcosta.composedestinations.generated.providerdetails.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.flixclusive.data.app.updates"
+    namespace = "com.flixclusive.data.downloads"
 }
 
 dependencies {

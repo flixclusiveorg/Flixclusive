@@ -81,13 +81,14 @@ import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiv
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.feature.mobile.profiles.util.UxUtil.getSlidingTransition
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.OpenResultRecipient
 import kotlinx.coroutines.launch
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 fun UserProfilesScreen(
     navigator: UserProfilesScreenNavigator,

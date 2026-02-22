@@ -1,5 +1,7 @@
 
-import com.android.build.gradle.BaseExtension
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.LibraryExtension
 import com.flixclusive.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -10,23 +12,42 @@ class TestingConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             pluginManager.apply {
-                apply("org.jetbrains.kotlin.android")
                 apply("org.jetbrains.kotlin.plugin.serialization")
             }
 
-            extensions.configure<BaseExtension> {
-                defaultConfig {
-                    testInstrumentationRunner =
-                        "androidx.test.runner.AndroidJUnitRunner"
-                }
+            extensions.configure<CommonExtension> {
+                when (this) {
+                    is LibraryExtension -> {
+                        defaultConfig {
+                            testInstrumentationRunner =
+                                "androidx.test.runner.AndroidJUnitRunner"
+                        }
 
-                packagingOptions {
-                    resources {
-                        excludes += "/META-INF/{AL2.0,LGPL2.1}"
-                        excludes += "META-INF/INDEX.LIST"
-                        excludes += "META-INF/DEPENDENCIES"
-                        merges += "META-INF/LICENSE.md"
-                        merges += "META-INF/LICENSE-notice.md"
+                        packaging {
+                            resources {
+                                excludes += "/META-INF/{AL2.0,LGPL2.1}"
+                                excludes += "META-INF/INDEX.LIST"
+                                excludes += "META-INF/DEPENDENCIES"
+                                merges += "META-INF/LICENSE.md"
+                                merges += "META-INF/LICENSE-notice.md"
+                            }
+                        }
+                    }
+                    is ApplicationExtension -> {
+                        defaultConfig {
+                            testInstrumentationRunner =
+                                "androidx.test.runner.AndroidJUnitRunner"
+                        }
+
+                        packaging {
+                            resources {
+                                excludes += "/META-INF/{AL2.0,LGPL2.1}"
+                                excludes += "META-INF/INDEX.LIST"
+                                excludes += "META-INF/DEPENDENCIES"
+                                merges += "META-INF/LICENSE.md"
+                                merges += "META-INF/LICENSE-notice.md"
+                            }
+                        }
                     }
                 }
             }
@@ -52,8 +73,6 @@ class TestingConventionPlugin : Plugin<Project> {
                 add("androidTestImplementation", libs.findLibrary("strikt").get())
                 add("androidTestImplementation", libs.findLibrary("okhttp.mockwebserver").get())
             }
-
         }
     }
-
 }

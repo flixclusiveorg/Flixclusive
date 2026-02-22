@@ -19,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -42,20 +43,22 @@ import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.De
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
-import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
-import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestination
-import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
 import com.flixclusive.feature.mobile.user.edit.tweaks.data.DataTweak
 import com.flixclusive.feature.mobile.user.edit.tweaks.identity.IdentityTweak
 import com.flixclusive.feature.mobile.user.edit.tweaks.renderTweakUi
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
+import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetupScreenDestination
+import com.ramcosta.composedestinations.generated.useredit.destinations.PinVerifyScreenDestination
+import com.ramcosta.composedestinations.generated.useredit.destinations.UserAvatarSelectScreenDestination
 import com.ramcosta.composedestinations.result.NavResult
+import com.ramcosta.composedestinations.result.OpenResultRecipient
 import com.ramcosta.composedestinations.result.ResultRecipient
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-@Destination(
-    navArgsDelegate = UserEditScreenNavArgs::class
+@Destination<ExternalModuleGraph>(
+    navArgs = UserEditScreenNavArgs::class
 )
 @Composable
 internal fun UserEditScreen(
@@ -295,7 +298,10 @@ private fun UserEditScreenBasePreview() {
                         override fun onNavResult(listener: (NavResult<Int>) -> Unit) = Unit
 
                         @Composable
-                        override fun onResult(listener: (Int) -> Unit) = Unit
+                        override fun onNavResult(
+                            deliverResultOn: OpenResultRecipient.DeliverResultOn,
+                            listener: @DisallowComposableCalls ((NavResult<Int>) -> Unit)
+                        ) = Unit
                     },
                 pinSetupResultRecipient =
                     object : ResultRecipient<PinSetupScreenDestination, PinWithHintResult> {
@@ -303,7 +309,10 @@ private fun UserEditScreenBasePreview() {
                         override fun onNavResult(listener: (NavResult<PinWithHintResult>) -> Unit) = Unit
 
                         @Composable
-                        override fun onResult(listener: (PinWithHintResult) -> Unit) = Unit
+                        override fun onNavResult(
+                            deliverResultOn: OpenResultRecipient.DeliverResultOn,
+                            listener: @DisallowComposableCalls ((NavResult<PinWithHintResult>) -> Unit)
+                        ) = Unit
                     },
                 pinRemoveResultRecipient =
                     object : ResultRecipient<PinVerifyScreenDestination, PinVerificationResult> {
@@ -311,7 +320,10 @@ private fun UserEditScreenBasePreview() {
                         override fun onNavResult(listener: (NavResult<PinVerificationResult>) -> Unit) = Unit
 
                         @Composable
-                        override fun onResult(listener: (PinVerificationResult) -> Unit) = Unit
+                        override fun onNavResult(
+                            deliverResultOn: OpenResultRecipient.DeliverResultOn,
+                            listener: @DisallowComposableCalls ((NavResult<PinVerificationResult>) -> Unit)
+                        ) = Unit
                     },
             )
         }

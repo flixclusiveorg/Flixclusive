@@ -49,6 +49,7 @@ import com.flixclusive.feature.tv.home.component.watched.HOME_WATCHED_FILMS_FOCU
 import com.flixclusive.feature.tv.home.component.watched.HomeContinueWatchingRow
 import com.flixclusive.model.film.Film
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.delay
 import java.util.Locale
 
@@ -57,7 +58,7 @@ interface HomeScreenTvNavigator : ViewFilmAction, GoBackAction {
 }
 
 @OptIn(ExperimentalTvMaterial3Api::class)
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun HomeScreen(
     navigator: HomeScreenTvNavigator

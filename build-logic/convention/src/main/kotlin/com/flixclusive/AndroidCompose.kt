@@ -1,21 +1,26 @@
 package com.flixclusive
 
-import com.android.build.gradle.BaseExtension
+import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 
-internal fun Project.configureAndroidCompose(commonExtension: BaseExtension) {
+internal fun Project.configureAndroidCompose(
+    commonExtension: CommonExtension
+) {
     commonExtension.apply {
         buildFeatures.apply {
             compose = true
             viewBinding = true
         }
 
-        packagingOptions {
-            resources {
-                excludes += "/META-INF/{AL2.0,LGPL2.1}"
-                merges += "META-INF/LICENSE.md"
-                merges += "META-INF/LICENSE-notice.md"
+        if (this is LibraryExtension) {
+            packaging {
+                resources {
+                    excludes += "/META-INF/{AL2.0,LGPL2.1}"
+                    merges += "META-INF/LICENSE.md"
+                    merges += "META-INF/LICENSE-notice.md"
+                }
             }
         }
 

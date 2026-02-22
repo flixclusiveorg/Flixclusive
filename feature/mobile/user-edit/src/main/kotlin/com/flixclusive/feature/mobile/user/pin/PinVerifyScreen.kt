@@ -26,11 +26,12 @@ import com.flixclusive.feature.mobile.user.pin.component.HeaderLabel
 import com.flixclusive.feature.mobile.user.pin.component.PinScreenDefault
 import com.flixclusive.feature.mobile.user.pin.component.PinSetupScreenCompactLandscape
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 import kotlinx.coroutines.delay
 import com.flixclusive.core.strings.R as LocaleR
 
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun PinVerifyScreen(
     actualPin: String,
@@ -54,18 +55,12 @@ internal fun PinVerifyScreen(
     }
 
     val onBack = fun() {
-        resultNavigator.navigateBack(
-            onlyIfResumed = true,
-            result = PinVerificationResult(isVerified = false),
-        )
+        resultNavigator.navigateBack(result = PinVerificationResult(isVerified = false))
     }
 
     val onConfirm = fun() {
         if (pinToVerify.value == actualPin) {
-            resultNavigator.navigateBack(
-                onlyIfResumed = true,
-                result = PinVerificationResult(isVerified = true),
-            )
+            resultNavigator.navigateBack(result = PinVerificationResult(isVerified = true))
         } else {
             hasErrors.value = true
         }
@@ -154,12 +149,9 @@ private fun PinVerifyScreenBasePreview() {
             PinVerifyScreen(
                 actualPin = "0000",
                 resultNavigator = object : ResultBackNavigator<PinVerificationResult> {
-                    override fun navigateBack(
-                        result: PinVerificationResult,
-                        onlyIfResumed: Boolean,
-                    ) = Unit
+                    override fun navigateBack(result: PinVerificationResult) = Unit
 
-                    override fun navigateBack(onlyIfResumed: Boolean) = Unit
+                    override fun navigateBack() = Unit
 
                     override fun setResult(result: PinVerificationResult) = Unit
                 },

@@ -26,9 +26,10 @@ import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.util.res.LocalResources
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import okhttp3.OkHttpClient
 
-@Destination(navArgsDelegate = ProviderMetadataNavArgs::class)
+@Destination<ExternalModuleGraph>(navArgs = ProviderMetadataNavArgs::class)
 @Composable
 internal fun ProviderSettingsScreen(
     navigator: GoBackAction,

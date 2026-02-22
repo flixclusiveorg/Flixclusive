@@ -36,7 +36,6 @@ import com.flixclusive.core.presentation.mobile.components.material3.topbar.Comm
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.rememberEnterAlwaysScrollBehavior
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import com.ramcosta.composedestinations.annotation.Destination
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.flixclusive.core.strings.R as LocaleR
 
@@ -44,9 +43,8 @@ private fun isValidUrl(url: String): Boolean {
     return Patterns.WEB_URL.matcher(url).matches()
 }
 
-@Destination
 @Composable
-internal fun MarkdownScreen(
+fun MarkdownScreen(
     navigator: GoBackAction,
     title: String,
     description: String,

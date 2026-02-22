@@ -60,6 +60,7 @@ import com.flixclusive.feature.tv.search.component.KEYBOARD_FOCUS_KEY_FORMAT
 import com.flixclusive.feature.tv.search.component.SearchCustomKeyboard
 import com.flixclusive.feature.tv.search.component.SuggestionBlock
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.flixclusive.core.ui.common.R as UiCommonR
@@ -67,7 +68,7 @@ import com.flixclusive.core.ui.common.R as UiCommonR
 interface SearchScreenNavigator : GoBackAction, ViewFilmAction
 
 @OptIn(ExperimentalTvMaterial3Api::class)
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun SearchScreen(
     navigator: SearchScreenNavigator

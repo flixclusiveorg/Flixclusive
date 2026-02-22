@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.flixclusive.core.navigation.navargs.ProviderMetadataNavArgs
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.ramcosta.composedestinations.generated.providersettings.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

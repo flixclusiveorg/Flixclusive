@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -67,6 +68,7 @@ import com.flixclusive.feature.mobile.user.add.util.ModifierUtil.getHorizontalPa
 import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.LocalUserToAdd
 import com.flixclusive.feature.mobile.user.add.util.StateHoistingUtil.ProvideUserToAdd
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.OpenResultRecipient
 import kotlinx.collections.immutable.persistentListOf
@@ -74,7 +76,7 @@ import com.flixclusive.core.strings.R as LocaleR
 
 private const val LANDSCAPE_CONTENT_WIDTH_FRACTION = 0.5F
 
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 fun AddUserScreen(
     isInitializing: Boolean,
@@ -464,11 +466,23 @@ private fun AddUserScreenBasePreview() {
                     object : OpenResultRecipient<Int> {
                         @Composable
                         override fun onNavResult(listener: (NavResult<Int>) -> Unit) = Unit
+
+                        @Composable
+                        override fun onNavResult(
+                            deliverResultOn: OpenResultRecipient.DeliverResultOn,
+                            listener: @DisallowComposableCalls ((NavResult<Int>) -> Unit)
+                        ) = Unit
                     },
                 pinResultRecipient =
                     object : OpenResultRecipient<PinWithHintResult> {
                         @Composable
                         override fun onNavResult(listener: (NavResult<PinWithHintResult>) -> Unit) = Unit
+
+                        @Composable
+                        override fun onNavResult(
+                            deliverResultOn: OpenResultRecipient.DeliverResultOn,
+                            listener: @DisallowComposableCalls ((NavResult<PinWithHintResult>) -> Unit)
+                        ) = Unit
                     },
             )
         }

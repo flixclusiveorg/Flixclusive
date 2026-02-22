@@ -6,27 +6,25 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
-import androidx.navigation.NavOptionsBuilder
-import com.flixclusive.navigation.MobileNavGraphs
 import com.flixclusive.navigation.ROOT
-import com.ramcosta.composedestinations.navigation.navigate
-import com.ramcosta.composedestinations.spec.Direction
+import com.ramcosta.composedestinations.generated.appmobile.AppmobileNavGraphs
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.ramcosta.composedestinations.spec.DirectionNavGraphSpec
 import com.ramcosta.composedestinations.spec.NavGraphSpec
 import com.ramcosta.composedestinations.utils.startDestination
 
-internal fun NavController.bottomBarNavigate(
-    screen: NavGraphSpec,
+internal fun DestinationsNavigator.bottomBarNavigate(
+    screen: DirectionNavGraphSpec,
     currentNavGraph: NavGraphSpec,
 ) {
     val isPoppingToRoot = screen == currentNavGraph
 
     navigate(screen) {
         if (isPoppingToRoot) {
-            popUpTo(screen.startRoute.route)
+            popUpTo(screen.startRoute)
         } else {
-            popUpTo(MobileNavGraphs.home.startDestination.route) {
+            popUpTo(AppmobileNavGraphs.home.startDestination) {
                 saveState = true
             }
         }
@@ -34,18 +32,6 @@ internal fun NavController.bottomBarNavigate(
         launchSingleTop = true
         restoreState = true
     }
-}
-
-internal fun NavController.navigateIfResumed(
-    direction: Direction,
-    navOptionsBuilder: NavOptionsBuilder.() -> Unit = {},
-) {
-    val isResumed = currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED
-    if (isResumed == false) {
-        return
-    }
-
-    navigate(direction, navOptionsBuilder)
 }
 
 @Stable

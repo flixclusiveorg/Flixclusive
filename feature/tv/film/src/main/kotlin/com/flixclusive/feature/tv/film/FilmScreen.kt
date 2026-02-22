@@ -75,6 +75,7 @@ import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.util.FilmType
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.flixclusive.core.strings.R as LocaleR
 import com.flixclusive.core.ui.common.R as UiCommonR
 
@@ -82,8 +83,8 @@ interface FilmScreenTvNavigator : GoBackAction {
     fun openFilmScreenSeamlessly(film: Film)
 }
 
-@Destination(
-    navArgsDelegate = FilmScreenNavArgs::class,
+@Destination<ExternalModuleGraph>(
+    navArgs = FilmScreenNavArgs::class,
     style = FadeInAndOutScreenTransition::class
 )
 @Composable

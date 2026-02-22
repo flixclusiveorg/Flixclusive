@@ -15,15 +15,14 @@ internal val NavDestination.hostNavGraph: NavGraph
     get() = hierarchy.first { it is NavGraph } as NavGraph
 
 @ExperimentalAnimationApi
-internal fun AnimatedContentTransitionScope<*>.defaultEnterTransition(
-    isTv: Boolean,
+internal fun AnimatedContentTransitionScope<NavBackStackEntry>.defaultEnterTransition(
     initial: NavBackStackEntry,
     target: NavBackStackEntry,
 ): EnterTransition {
     val initialNavGraph = initial.destination.hostNavGraph
     val targetNavGraph = target.destination.hostNavGraph
     // If we're crossing nav graphs (bottom navigation graphs), we crossfade
-    if (initialNavGraph.id != targetNavGraph.id || isTv) {
+    if (initialNavGraph.id != targetNavGraph.id) {
         return fadeIn()
     }
 
@@ -33,14 +32,13 @@ internal fun AnimatedContentTransitionScope<*>.defaultEnterTransition(
 
 @ExperimentalAnimationApi
 internal fun AnimatedContentTransitionScope<*>.defaultExitTransition(
-    isTv: Boolean,
     initial: NavBackStackEntry,
     target: NavBackStackEntry,
 ): ExitTransition {
     val initialNavGraph = initial.destination.hostNavGraph
     val targetNavGraph = target.destination.hostNavGraph
     // If we're crossing nav graphs (bottom navigation graphs), we crossfade
-    if (initialNavGraph.id != targetNavGraph.id || isTv) {
+    if (initialNavGraph.id != targetNavGraph.id) {
         return fadeOut()
     }
     // Otherwise we're in the same nav graph, we can imply a direction
@@ -48,20 +46,12 @@ internal fun AnimatedContentTransitionScope<*>.defaultExitTransition(
 }
 
 @ExperimentalAnimationApi
-internal fun AnimatedContentTransitionScope<*>.defaultPopEnterTransition(isTv: Boolean): EnterTransition {
-    if (isTv) {
-        return fadeIn()
-    }
-
+internal fun AnimatedContentTransitionScope<*>.defaultPopEnterTransition(): EnterTransition {
     return fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End)
 }
 
 @ExperimentalAnimationApi
-internal fun AnimatedContentTransitionScope<*>.defaultPopExitTransition(isTv: Boolean): ExitTransition {
-    if (isTv) {
-        return fadeOut()
-    }
-
+internal fun AnimatedContentTransitionScope<*>.defaultPopExitTransition(): ExitTransition {
     return fadeOut() + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End)
 }
 

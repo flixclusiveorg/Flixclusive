@@ -15,7 +15,7 @@ import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.feature.mobile.user.edit.OnRemoveNavigationState.Companion.getStateIfUserIsLoggedIn
-import com.flixclusive.feature.mobile.user.navArgs
+import com.ramcosta.composedestinations.generated.useredit.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow

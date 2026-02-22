@@ -35,9 +35,10 @@ import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 
-@Destination(
-    navArgsDelegate = PlayerScreenNavArgs::class,
+@Destination<ExternalModuleGraph>(
+    navArgs = PlayerScreenNavArgs::class,
 )
 @Composable
 internal fun PlayerScreen(

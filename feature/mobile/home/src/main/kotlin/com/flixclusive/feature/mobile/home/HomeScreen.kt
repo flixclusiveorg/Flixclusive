@@ -44,11 +44,12 @@ import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.provider.Catalog
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.launch
 
-@Destination
+@Destination<ExternalModuleGraph>(start = true)
 @Composable
 internal fun HomeScreen(
     navigator: HomeNavigator,

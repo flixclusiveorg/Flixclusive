@@ -43,7 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.compose.rememberNavController
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
@@ -56,19 +59,6 @@ import com.flixclusive.core.presentation.mobile.components.provider.MediaLinksBo
 import com.flixclusive.core.presentation.mobile.util.LocalGlobalScaffoldPadding
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
 import com.flixclusive.core.util.webview.WebViewDriver
-import com.flixclusive.feature.mobile.app.updates.destinations.AppUpdatesScreenDestination
-import com.flixclusive.feature.mobile.film.destinations.FilmScreenDestination
-import com.flixclusive.feature.mobile.markdown.destinations.MarkdownScreenDestination
-import com.flixclusive.feature.mobile.player.destinations.PlayerScreenDestination
-import com.flixclusive.feature.mobile.profiles.destinations.UserProfilesScreenDestination
-import com.flixclusive.feature.mobile.provider.add.destinations.AddProviderScreenDestination
-import com.flixclusive.feature.mobile.searchExpanded.destinations.SearchExpandedScreenDestination
-import com.flixclusive.feature.mobile.user.add.destinations.AddUserScreenDestination
-import com.flixclusive.feature.mobile.user.destinations.PinSetupScreenDestination
-import com.flixclusive.feature.mobile.user.destinations.PinVerifyScreenDestination
-import com.flixclusive.feature.mobile.user.destinations.UserAvatarSelectScreenDestination
-import com.flixclusive.feature.mobile.user.destinations.UserEditScreenDestination
-import com.flixclusive.feature.splashScreen.destinations.SplashScreenDestination
 import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.DisplayChangelogsObserver
 import com.flixclusive.mobile.component.FilmCoverPreview
@@ -77,13 +67,29 @@ import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.navigation.AppNavHost
-import com.flixclusive.navigation.MobileNavGraphs
 import com.flixclusive.navigation.extensions.bottomBarNavigate
 import com.flixclusive.navigation.extensions.currentScreenAsState
-import com.flixclusive.navigation.extensions.navigateIfResumed
-import com.ramcosta.composedestinations.dynamic.within
+import com.ramcosta.composedestinations.generated.appmobile.AppmobileNavGraphs
+import com.ramcosta.composedestinations.generated.appmobile.destinations.AppAppLevelMarkdownScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.HomeAppLevelFilmScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.LibraryAppLevelFilmScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SearchAppLevelFilmScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.destinations.SettingsAppLevelMarkdownScreenDestination
+import com.ramcosta.composedestinations.generated.appmobile.navgraphs.AppGraph
+import com.ramcosta.composedestinations.generated.appupdates.destinations.AppUpdatesScreenDestination
+import com.ramcosta.composedestinations.generated.player.destinations.PlayerScreenDestination
+import com.ramcosta.composedestinations.generated.profiles.destinations.UserProfilesScreenDestination
+import com.ramcosta.composedestinations.generated.provideradd.destinations.AddProviderScreenDestination
+import com.ramcosta.composedestinations.generated.searchexpanded.destinations.SearchExpandedScreenDestination
+import com.ramcosta.composedestinations.generated.splashscreen.destinations.SplashScreenDestination
+import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserScreenDestination
+import com.ramcosta.composedestinations.generated.useredit.destinations.PinSetupScreenDestination
+import com.ramcosta.composedestinations.generated.useredit.destinations.PinVerifyScreenDestination
+import com.ramcosta.composedestinations.generated.useredit.destinations.UserAvatarSelectScreenDestination
+import com.ramcosta.composedestinations.generated.useredit.destinations.UserEditScreenDestination
 import com.ramcosta.composedestinations.spec.Route
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
+import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 import com.flixclusive.core.strings.R as LocaleR
@@ -93,6 +99,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @Composable
 internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val hasNotSeenNewChangelogs by viewModel.hasNotSeenNewChangelogs.collectAsStateWithLifecycle()
@@ -107,7 +114,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 
     val scope = rememberCoroutineScope()
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     val skipPartiallyExpanded by remember { mutableStateOf(true) }
     val bottomSheetState =
         rememberModalBottomSheetState(
@@ -115,14 +122,17 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         )
 
     val navController = rememberNavController()
+    val destinationsNavigator = navController.rememberDestinationsNavigator()
     val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(
-        initialValue = MobileNavGraphs.root.startRoute,
+        initialValue = AppGraph.startRoute
     )
-    val currentNavGraph by navController.currentScreenAsState(MobileNavGraphs.home)
+    val currentNavGraph by navController.currentScreenAsState(AppmobileNavGraphs.home)
 
     fun onStartPlayer(playerData: PlayerData) {
         val (film, episode) = playerData
-        navController.navigateIfResumed(PlayerScreenDestination(film = film as FilmMetadata, episode = episode))
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            destinationsNavigator.navigate(PlayerScreenDestination(film = film as FilmMetadata, episode = episode))
+        }
         viewModel.updateLoadLinksState(LoadLinksState.Idle)
     }
 
@@ -158,7 +168,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     LaunchedEffect(isConnectedAtNetwork) {
         if (!isConnectedAtNetwork) {
             hasBeenDisconnected = true
-            snackbarHostState.showSnackbar(
+            snackBarHostState.showSnackbar(
                 NetworkMonitorSnackbarVisuals(
                     message = UiText.from(LocaleR.string.offline_message).asString(context),
                     isDisconnected = true,
@@ -166,7 +176,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
             )
         } else if (hasBeenDisconnected) {
             hasBeenDisconnected = false
-            snackbarHostState.showSnackbar(
+            snackBarHostState.showSnackbar(
                 NetworkMonitorSnackbarVisuals(
                     message = UiText.StringResource(LocaleR.string.online_message).asString(context),
                     isDisconnected = false,
@@ -189,7 +199,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         contentWindowInsets = windowInsets,
         snackbarHost = {
             if (!isInPipMode) {
-                NetworkMonitorSnackbarHost(hostState = snackbarHostState)
+                NetworkMonitorSnackbarHost(hostState = snackBarHostState)
             }
         },
         bottomBar = {
@@ -201,10 +211,12 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                 BottomBar(
                     currentSelectedScreen = currentNavGraph,
                     onNavigate = {
-                        navController.bottomBarNavigate(
-                            screen = it,
-                            currentNavGraph = currentNavGraph,
-                        )
+                        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                            destinationsNavigator.bottomBarNavigate(
+                                screen = it,
+                                currentNavGraph = currentNavGraph,
+                            )
+                        }
                     },
                 )
             }
@@ -248,10 +260,24 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         if (uiState.filmPreviewState != null) {
             val film = uiState.filmPreviewState!!.film
 
-            val navigateToFilmScreen = {
-                navController.navigateIfResumed(
-                    direction = FilmScreenDestination(film = film) within currentNavGraph,
-                )
+            val navigateToFilmScreen = dropUnlessResumed {
+                when (currentNavGraph) {
+                    AppmobileNavGraphs.home -> {
+                        destinationsNavigator.navigate(
+                            direction = HomeAppLevelFilmScreenDestination(film = film)
+                        )
+                    }
+                    AppmobileNavGraphs.search -> {
+                        destinationsNavigator.navigate(
+                            direction = SearchAppLevelFilmScreenDestination(film = film)
+                        )
+                    }
+                    AppmobileNavGraphs.library -> {
+                        destinationsNavigator.navigate(
+                            direction = LibraryAppLevelFilmScreenDestination(film = film)
+                        )
+                    }
+                }
                 viewModel.onRemovePreviewFilm()
             }
 
@@ -261,14 +287,13 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                 onSeeMoreClick = {
                     navigateToFilmScreen()
 
-                    scope
-                        .launch {
-                            bottomSheetState.hide()
-                        }.invokeOnCompletion {
-                            if (!bottomSheetState.isVisible) {
-                                viewModel.onRemovePreviewFilm()
-                            }
+                    scope.launch {
+                        bottomSheetState.hide()
+                    }.invokeOnCompletion {
+                        if (!bottomSheetState.isVisible) {
+                            viewModel.onRemovePreviewFilm()
                         }
+                    }
                 },
                 onDismissRequest = viewModel::onRemovePreviewFilm,
                 onPlayClick = {
@@ -338,7 +363,8 @@ private fun shouldHideBottomBar(route: Route): Boolean {
         listOf(
             AddProviderScreenDestination,
             AddUserScreenDestination,
-            MarkdownScreenDestination,
+            AppAppLevelMarkdownScreenDestination,
+            SettingsAppLevelMarkdownScreenDestination,
             PinSetupScreenDestination,
             PinVerifyScreenDestination,
             PlayerScreenDestination,
@@ -350,7 +376,7 @@ private fun shouldHideBottomBar(route: Route): Boolean {
         )
 
     val noBottomBarNestedScreens =
-        listOf(SearchExpandedScreenDestination.within(MobileNavGraphs.search).route)
+        listOf(SearchExpandedScreenDestination.route)
 
     return noBottomBarNestedScreens.none { it == route.route } &&
         noBottomBarScreens.none { it == route }

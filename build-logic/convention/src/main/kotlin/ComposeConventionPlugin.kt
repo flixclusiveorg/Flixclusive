@@ -1,8 +1,9 @@
 
-import com.android.build.gradle.BaseExtension
+import com.android.build.api.dsl.CommonExtension
 import com.flixclusive.configureAndroidCompose
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.internal.Actions.with
 import org.gradle.kotlin.dsl.getByType
 
 class ComposeConventionPlugin : Plugin<Project> {
@@ -12,7 +13,7 @@ class ComposeConventionPlugin : Plugin<Project> {
                 apply("org.jetbrains.kotlin.plugin.compose")
             }
 
-            val extension = extensions.getByType<BaseExtension>()
+            val extension = extensions.getByType<CommonExtension>()
             configureAndroidCompose(extension)
         }
     }

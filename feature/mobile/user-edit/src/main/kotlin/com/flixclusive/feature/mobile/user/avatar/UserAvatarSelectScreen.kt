@@ -25,19 +25,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.UserAvatar
 import com.flixclusive.core.presentation.mobile.components.UserAvatarDefaults.AVATARS_IMAGE_COUNT
 import com.flixclusive.core.presentation.mobile.components.material3.topbar.CommonTopBar
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveSizeUtil.getAdaptiveDp
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun UserAvatarSelectScreen(
     selected: Int,
@@ -55,7 +56,7 @@ internal fun UserAvatarSelectScreen(
         topBar = {
             CommonTopBar(
                 title = stringResource(LocaleR.string.choose_an_avatar),
-                onNavigate = { resultNavigator.navigateBack(onlyIfResumed = true) },
+                onNavigate = { resultNavigator.navigateBack() },
             )
         },
     ) {
@@ -80,10 +81,7 @@ internal fun UserAvatarSelectScreen(
                             Modifier
                                 .aspectRatio(1F)
                                 .clickable {
-                                    resultNavigator.navigateBack(
-                                        result = i,
-                                        onlyIfResumed = true,
-                                    )
+                                    resultNavigator.navigateBack(result = i)
                                 },
                     )
 
@@ -141,13 +139,8 @@ private fun UserAvatarSelectScreenBasePreview() {
                 selected = 1,
                 resultNavigator =
                     object : ResultBackNavigator<Int> {
-                        override fun navigateBack(
-                            result: Int,
-                            onlyIfResumed: Boolean,
-                        ) = Unit
-
-                        override fun navigateBack(onlyIfResumed: Boolean) = Unit
-
+                        override fun navigateBack(result: Int) = Unit
+                        override fun navigateBack() = Unit
                         override fun setResult(result: Int) = Unit
                     },
             )

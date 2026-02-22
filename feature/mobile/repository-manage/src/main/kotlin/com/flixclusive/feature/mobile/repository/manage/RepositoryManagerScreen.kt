@@ -54,12 +54,13 @@ import com.flixclusive.feature.mobile.repository.manage.component.RepositoryCard
 import com.flixclusive.feature.mobile.repository.manage.component.RepositoryManagerTopBar
 import com.flixclusive.model.provider.Repository
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun RepositoryManagerScreen(
     navigator: GoBackAction,

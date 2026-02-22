@@ -5,7 +5,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flixclusive.core.common.dispatchers.AppDispatchers
@@ -18,7 +17,6 @@ import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.UiPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.navigation.navargs.FilmScreenNavArgs
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
@@ -36,9 +34,13 @@ import com.flixclusive.feature.mobile.library.common.util.LibraryListUtil
 import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchProgressLibraryList
 import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchlistLibraryList
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.provider.ProviderMetadata
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
@@ -60,15 +62,13 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import com.flixclusive.core.strings.R as LocaleR
 
-@HiltViewModel
-internal class FilmScreenViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = FilmScreenViewModel.Factory::class)
+internal class FilmScreenViewModel @AssistedInject constructor(
     @ApplicationContext context: Context,
     dataStoreManager: DataStoreManager,
     getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
-    savedStateHandle: SavedStateHandle,
     private val appDispatchers: AppDispatchers,
     private val getEpisode: GetEpisodeUseCase,
     private val getFilmMetadata: GetFilmMetadataUseCase,
@@ -79,9 +79,12 @@ internal class FilmScreenViewModel @Inject constructor(
     private val userSessionManager: UserSessionManager,
     private val watchProgressRepository: WatchProgressRepository,
     private val watchlistRepository: WatchlistRepository,
+    @Assisted private val navArgFilm: Film,
 ) : ViewModel() {
-    /** The partial film data obtained from nav args */
-    private val navArgFilm = savedStateHandle.navArgs<FilmScreenNavArgs>().film
+    @AssistedFactory
+    interface Factory {
+        fun create(navArgs: Film): FilmScreenViewModel
+    }
 
     private var fetchMetadataJob: Job? = null
 

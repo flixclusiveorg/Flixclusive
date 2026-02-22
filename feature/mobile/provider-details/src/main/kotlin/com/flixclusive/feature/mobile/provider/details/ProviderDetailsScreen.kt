@@ -57,11 +57,12 @@ import com.flixclusive.feature.mobile.provider.details.component.subdetails.SubD
 import com.flixclusive.feature.mobile.provider.details.util.ProviderDetailsUiCommon.HORIZONTAL_PADDING
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.launch
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-@Destination(navArgsDelegate = ProviderMetadataNavArgs::class)
+@Destination<ExternalModuleGraph>(navArgs = ProviderMetadataNavArgs::class)
 @Composable
 internal fun ProviderDetailsScreen(
     navigator: ProviderDetailsNavigator,

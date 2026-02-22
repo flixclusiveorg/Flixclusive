@@ -72,12 +72,13 @@ import com.flixclusive.data.downloads.model.DownloadStatus
 import com.flixclusive.feature.app.updates.AppUpdatesViewModel
 import com.flixclusive.feature.mobile.app.updates.util.fromGitmoji
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.delay
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
-@Destination
+@Destination<ExternalModuleGraph>
 @Composable
 internal fun AppUpdatesScreen(
     navigator: AppUpdatesScreenNavigator,
