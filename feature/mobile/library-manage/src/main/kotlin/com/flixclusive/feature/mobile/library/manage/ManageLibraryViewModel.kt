@@ -73,20 +73,24 @@ internal class ManageLibraryViewModel
         val libraries =
             userSessionManager.currentUser
                 .filterNotNull()
-                .flatMapLatest {
+                .flatMapLatest { user ->
                     combine(
                         libraryListRepository
-                            .getUserWithListsAndItems(it.id)
-                            .mapLatest { it.lists }
+                            .getUserWithListsAndItems(user.id)
+                            .mapLatest { data -> data.lists }
                             .distinctUntilChanged(),
-                        watchProgressRepository.getAllAsFlow(it.id),
-                        watchlistRepository.getAllAsFlow(it.id),
+                        watchProgressRepository.getAllAsFlow(user.id),
+                        watchlistRepository.getAllAsFlow(user.id),
                     ) { lists, watchProgressList, watchlist ->
                         // Pre-process watch progress list
-                        val preProcessedWatchProgress = watchProgressList.toWatchProgressLibraryList(context)
+                        val preProcessedWatchProgress = watchProgressList.toWatchProgressLibraryList(
+                            context = context, ownerId = user.id
+                        )
 
                         // Pre-process watchlist
-                        val preProcessedWatchlist = watchlist.toWatchlistLibraryList(context)
+                        val preProcessedWatchlist = watchlist.toWatchlistLibraryList(
+                            context = context, ownerId = user.id
+                        )
 
                         (lists + preProcessedWatchProgress + preProcessedWatchlist)
                             .fastMap { it.toPreview() }

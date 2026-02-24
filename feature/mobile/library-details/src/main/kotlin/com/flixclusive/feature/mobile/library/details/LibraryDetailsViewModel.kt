@@ -50,7 +50,7 @@ import com.flixclusive.core.strings.R as LocaleR
 internal class LibraryDetailsViewModel
     @Inject
     constructor(
-        @ApplicationContext private val context: Context,
+        @param:ApplicationContext private val context: Context,
         private val libraryListRepository: LibraryListRepository,
         private val watchProgressRepository: WatchProgressRepository,
         private val watchlistRepository: WatchlistRepository,
@@ -199,7 +199,9 @@ internal class LibraryDetailsViewModel
                 .getAllAsFlow(navArgs.library.ownerId)
                 .filterNotNull()
                 .mapLatest { items ->
-                    items.toWatchlistLibraryList(context)
+                    items.toWatchlistLibraryList(
+                        context = context, ownerId = navArgs.library.ownerId,
+                    )
                 }
         }
 
@@ -208,7 +210,9 @@ internal class LibraryDetailsViewModel
                 .getAllAsFlow(navArgs.library.ownerId)
                 .filterNotNull()
                 .mapLatest { items ->
-                    items.toWatchProgressLibraryList(context)
+                    items.toWatchProgressLibraryList(
+                        context = context, ownerId = navArgs.library.ownerId,
+                    )
                 }
         }
 

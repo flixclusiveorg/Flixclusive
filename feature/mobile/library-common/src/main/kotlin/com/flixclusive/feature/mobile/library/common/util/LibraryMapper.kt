@@ -31,25 +31,29 @@ object LibraryMapper {
             ),
         )
 
-    fun List<WatchProgressWithMetadata>.toWatchProgressLibraryList(context: Context) =
-        LibraryListWithItems(
-            list = LibraryList(
-                id = LibraryListUtil.WATCH_PROGRESS_LIB_ID,
-                ownerId = -1,
-                name = context.getString(LocaleR.string.recently_watched),
-                description = context.getString(LocaleR.string.recently_watched_description),
-            ),
-            items = fastMap { it.toLibraryListItem() }
-        )
+    fun List<WatchProgressWithMetadata>.toWatchProgressLibraryList(
+        context: Context,
+        ownerId: Int,
+    ) = LibraryListWithItems(
+        list = LibraryList(
+            id = LibraryListUtil.WATCH_PROGRESS_LIB_ID,
+            ownerId = ownerId,
+            name = context.getString(LocaleR.string.recently_watched),
+            description = context.getString(LocaleR.string.recently_watched_description),
+        ),
+        items = fastMap { it.toLibraryListItem() }
+    )
 
-    fun List<WatchlistWithMetadata>.toWatchlistLibraryList(context: Context) =
-        LibraryListWithItems(
-            list = LibraryList(
-                id = LibraryListUtil.WATCHLIST_LIB_ID,
-                ownerId = -1,
-                name = context.getString(LocaleR.string.watchlist),
-                description = context.getString(LocaleR.string.watchlist_description),
-            ),
-            items = fastMap { it.toLibraryListItem() }
-        )
+    fun List<WatchlistWithMetadata>.toWatchlistLibraryList(
+        context: Context,
+        ownerId: Int,
+    ) = LibraryListWithItems(
+        list = LibraryList(
+            id = LibraryListUtil.WATCHLIST_LIB_ID,
+            ownerId = ownerId,
+            name = context.getString(LocaleR.string.watchlist),
+            description = context.getString(LocaleR.string.watchlist_description),
+        ),
+        items = fastMap { it.toLibraryListItem() }
+    )
 }

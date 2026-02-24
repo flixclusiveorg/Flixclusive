@@ -183,10 +183,14 @@ internal class FilmScreenViewModel @AssistedInject constructor(
                 val filmId = navArgFilm.identifier
 
                 // Pre-process watch progress list
-                val preProcessedWatchProgress = watchProgressList.toWatchProgressLibraryList(context)
+                val preProcessedWatchProgress = watchProgressList.toWatchProgressLibraryList(
+                    context = context, ownerId = user.id
+                )
 
                 // Pre-process watchlist
-                val preProcessedWatchlist = watchlist.toWatchlistLibraryList(context)
+                val preProcessedWatchlist = watchlist.toWatchlistLibraryList(
+                    context = context, ownerId = user.id
+                )
 
                 val combinedLists = lists + preProcessedWatchProgress + preProcessedWatchlist
 
