@@ -314,6 +314,7 @@ internal class GetMediaLinksUseCaseImpl
                     )
 
                     cachedLinksRepository.storeCache(tmdbKey, cache)
+                    cachedLinksRepository.setCurrentCache(tmdbKey)
                 }
 
                 is Resource.Failure -> throw ExceptionWithUiText(response.error)
