@@ -256,7 +256,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         }
     }
 
-    if (currentSelectedScreen == PlayerScreenDestination) {
+    if (currentSelectedScreen != PlayerScreenDestination) {
         if (uiState.filmPreviewState != null) {
             val film = uiState.filmPreviewState!!.film
 
@@ -348,14 +348,15 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                 )
             }
         }
+
+        if (webViewDriver != null) {
+            WebViewDriverDialog(
+                webView = webViewDriver!!,
+                onDismiss = viewModel::hideWebViewDriver,
+            )
+        }
     }
 
-    if (webViewDriver != null) {
-        WebViewDriverDialog(
-            webView = webViewDriver!!,
-            onDismiss = viewModel::hideWebViewDriver,
-        )
-    }
 }
 
 private fun shouldHideBottomBar(route: Route): Boolean {
