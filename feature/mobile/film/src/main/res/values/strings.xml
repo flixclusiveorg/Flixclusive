@@ -13,6 +13,9 @@
     <string name="more_like_this">More like this</string>
 
     <string name="downloaded">Downloaded</string>
+    <string name="episode_number_label">E%1$d</string>
+    <string name="see_more">See more</string>
+    <string name="see_less">See less</string>
 
     <string name="default_provider_content_desc">Default provider warning</string>
     <string name="default_provider_message">

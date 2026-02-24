@@ -292,8 +292,8 @@
     <string name="recently_watched">Recently Watched</string>
     <string name="watchlist">Watchlist</string>
     <string name="mark_as_watched">Mark as watched</string>
+    <string name="mark_as_unwatched">Mark as unwatched</string>
     <string name="watched">Watched</string>
-    <string name="unwatch">Unwatch</string>
 
     <!--  On-boarding messages  -->
     <string name="onboarding_profile_avatar_description">The next step to personalize your journey is to pick an avatar that feels just right!</string>

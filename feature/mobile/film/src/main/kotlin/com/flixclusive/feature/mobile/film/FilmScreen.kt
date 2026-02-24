@@ -3,7 +3,6 @@ package com.flixclusive.feature.mobile.film
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -55,7 +54,6 @@ import com.flixclusive.core.navigation.navargs.FilmScreenNavArgs
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
-import com.flixclusive.core.presentation.common.util.SharedTransitionUtil.ProvideSharedTransitionScope
 import com.flixclusive.core.presentation.mobile.components.RetryButton
 import com.flixclusive.core.presentation.mobile.components.film.FilmCard
 import com.flixclusive.core.presentation.mobile.components.material3.dialog.IconAlertDialog
@@ -71,7 +69,7 @@ import com.flixclusive.feature.mobile.film.component.BackdropImage
 import com.flixclusive.feature.mobile.film.component.BriefDetails
 import com.flixclusive.feature.mobile.film.component.CollapsibleDescription
 import com.flixclusive.feature.mobile.film.component.ContentTabs
-import com.flixclusive.feature.mobile.film.component.EpisodeDetailedCard
+import com.flixclusive.feature.mobile.film.component.EpisodeOptionsBottomSheet
 import com.flixclusive.feature.mobile.film.component.FilmScreenPlaceholder
 import com.flixclusive.feature.mobile.film.component.FilmScreenTopBar
 import com.flixclusive.feature.mobile.film.component.HeaderButtons
@@ -140,7 +138,6 @@ internal fun InternalFilmScreen(
     )
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 private fun FilmScreenContent(
@@ -177,8 +174,8 @@ private fun FilmScreenContent(
 
     var appBarContainerAlpha by remember { mutableFloatStateOf(0f) }
     var isLibrarySheetOpen by remember { mutableStateOf(false) }
-    var showDefaultProviderDialog by remember { mutableStateOf(false) }
     var longClickedEpisode by remember { mutableStateOf<EpisodeWithProgress?>(null) }
+    var showDefaultProviderDialog by remember { mutableStateOf(false) }
 
     val tabs = remember(metadata) { FilmScreenUtils.getTabs(metadata) }
     val (currentTabSelected, onTabChange) = rememberSaveable(tabs.size) { mutableStateOf(tabs.firstOrNull()) }
@@ -229,170 +226,153 @@ private fun FilmScreenContent(
         }
     }
 
-    ProvideSharedTransitionScope {
-        Scaffold(
-            modifier = Modifier
-                .padding(LocalGlobalScaffoldPadding.current),
-            topBar = {
-                FilmScreenTopBar(
-                    title = metadata.title,
-                    onNavigate = navigator::goBack,
-                    containerAlpha = { appBarContainerAlpha },
-                )
-            },
-        ) {
-            AnimatedContent(
-                modifier = Modifier,
-                targetState = uiState.screenState,
-                label = "FilmScreenContent",
-            ) { state ->
-                when (state) {
-                    FilmScreenState.Loading -> {
-                        FilmScreenPlaceholder()
-                    }
+    Scaffold(
+        modifier = Modifier
+            .padding(LocalGlobalScaffoldPadding.current),
+        topBar = {
+            FilmScreenTopBar(
+                title = metadata.title,
+                onNavigate = navigator::goBack,
+                containerAlpha = { appBarContainerAlpha },
+            )
+        },
+    ) {
+        AnimatedContent(
+            modifier = Modifier,
+            targetState = uiState.screenState,
+            label = "FilmScreenContent",
+        ) { state ->
+            when (state) {
+                FilmScreenState.Loading -> {
+                    FilmScreenPlaceholder()
+                }
 
-                    FilmScreenState.Error -> {
-                        RetryButton(
-                            error = uiState.error?.asString(),
-                            modifier = Modifier.fillMaxSize(),
-                            onRetry = onRetry,
-                        )
-                    }
+                FilmScreenState.Error -> {
+                    RetryButton(
+                        error = uiState.error?.asString(),
+                        modifier = Modifier.fillMaxSize(),
+                        onRetry = onRetry,
+                    )
+                }
 
-                    FilmScreenState.Success -> {
-                        LazyVerticalGrid(
-                            columns = GridCells.Adaptive(
-                                getAdaptiveFilmCardWidth() *
-                                    (if (currentTabSelected?.isOnEpisodesSection == true) 1.6f else 1f),
-                            ),
-                            state = listState,
-                        ) {
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                Box(
-                                    contentAlignment = Alignment.TopCenter,
-                                ) {
-                                    BackdropImage(
-                                        metadata = metadata as FilmMetadata,
-                                        modifier = Modifier
-                                            .aspectRatio(backdropAspectRatio),
-                                    )
+                FilmScreenState.Success -> {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(
+                            getAdaptiveFilmCardWidth() *
+                                (if (currentTabSelected?.isOnEpisodesSection == true) 3.5f else 1f),
+                        ),
+                        state = listState,
+                    ) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Box(
+                                contentAlignment = Alignment.TopCenter,
+                            ) {
+                                BackdropImage(
+                                    metadata = metadata as FilmMetadata,
+                                    modifier = Modifier
+                                        .aspectRatio(backdropAspectRatio),
+                                )
 
-                                    BriefDetails(
-                                        metadata = metadata,
-                                        onProviderClick = {
-                                            if (uiState.provider != null
-                                                && uiState.provider.id != DEFAULT_FILM_SOURCE_NAME) {
-                                                navigator.openProviderDetails(uiState.provider)
-                                                return@BriefDetails
-                                            }
+                                BriefDetails(
+                                    metadata = metadata,
+                                    onProviderClick = {
+                                        if (uiState.provider != null
+                                            && uiState.provider.id != DEFAULT_FILM_SOURCE_NAME) {
+                                            navigator.openProviderDetails(uiState.provider)
+                                            return@BriefDetails
+                                        }
 
-                                            showDefaultProviderDialog = true
-                                        },
-                                        onGenreClick = { /*TODO: Implement GenreCatalogs*/ },
-                                        provider = uiState.provider,
-                                        modifier = Modifier
-                                            .aspectRatio(backdropAspectRatio * 0.95f)
-                                            .padding(horizontal = DefaultScreenPaddingHorizontal),
-                                    )
+                                        showDefaultProviderDialog = true
+                                    },
+                                    onGenreClick = { /*TODO: Implement GenreCatalogs*/ },
+                                    provider = uiState.provider,
+                                    modifier = Modifier
+                                        .aspectRatio(backdropAspectRatio * 0.95f)
+                                        .padding(horizontal = DefaultScreenPaddingHorizontal),
+                                )
+                            }
+                        }
+
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            val isInLibrary by remember {
+                                derivedStateOf {
+                                    libraryListStates().any { it.containsFilm }
                                 }
                             }
 
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                val isInLibrary by remember {
-                                    derivedStateOf {
-                                        libraryListStates().any { it.containsFilm }
-                                    }
-                                }
+                            HeaderButtons(
+                                metadata = metadata as FilmMetadata,
+                                watchProgress = watchProgress,
+                                isInLibrary = isInLibrary,
+                                onPlay = { navigator.play(metadata) },
+                                onAddToLibrary = { isLibrarySheetOpen = true },
+                                onToggleDownload = {
+                                    // TODO: Implement download
+                                    context.showToast(resources.getString(LocaleR.string.coming_soon))
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(DefaultScreenPaddingHorizontal)
+                                    .padding(top = 20.dp),
+                            )
+                        }
 
-                                HeaderButtons(
-                                    metadata = metadata as FilmMetadata,
-                                    watchProgress = watchProgress,
-                                    isInLibrary = isInLibrary,
-                                    onPlay = { navigator.play(metadata) },
-                                    onAddToLibrary = { isLibrarySheetOpen = true },
-                                    onToggleDownload = {
-                                        // TODO: Implement download
-                                        context.showToast(resources.getString(LocaleR.string.coming_soon))
-                                    },
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            CollapsibleDescription(
+                                metadata = metadata as FilmMetadata,
+                                modifier = Modifier
+                                    .padding(horizontal = DefaultScreenPaddingHorizontal)
+                                    .padding(top = 30.dp),
+                            )
+                        }
+
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            ContentTabs(
+                                tabs = tabs,
+                                currentTabSelected = tabs.indexOf(currentTabSelected),
+                                onTabChange = { onTabChange(tabs[it]) },
+                                modifier = Modifier
+                                    .padding(top = 20.dp, bottom = 10.dp),
+                            )
+                        }
+
+                        if (metadata is TvShow &&
+                            currentTabSelected?.isOnEpisodesSection == true &&
+                            seasonToDisplay != null &&
+                            uiState.selectedSeason != null
+                        ) {
+                            seriesContent(
+                                listState = seasonsListState,
+                                selectedSeason = uiState.selectedSeason,
+                                seasons = metadata.seasons,
+                                seasonToDisplay = seasonToDisplay,
+                                onSeasonChange = onSeasonChange,
+                                onRetry = onRetryFetchSeason,
+                                onClick = { episode -> navigator.play(metadata, episode = episode) },
+                                onLongClick = { longClickedEpisode = it },
+                            )
+                        }
+
+                        if (currentTabSelected?.isOnFilmsSection == true && extraFilmCards != null) {
+                            items(
+                                items = extraFilmCards,
+                                key = { film -> film.identifier },
+                            ) { film ->
+                                FilmCard(
+                                    isShowingTitle = showFilmTitles,
+                                    film = film,
+                                    onClick = navigator::openFilmScreen,
+                                    onLongClick = navigator::previewFilm,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(DefaultScreenPaddingHorizontal)
-                                        .padding(top = 20.dp),
+                                        .animateItem(),
                                 )
-                            }
-
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                CollapsibleDescription(
-                                    metadata = metadata as FilmMetadata,
-                                    modifier = Modifier
-                                        .padding(horizontal = DefaultScreenPaddingHorizontal)
-                                        .padding(top = 30.dp),
-                                )
-                            }
-
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                ContentTabs(
-                                    tabs = tabs,
-                                    currentTabSelected = tabs.indexOf(currentTabSelected),
-                                    onTabChange = { onTabChange(tabs[it]) },
-                                    modifier = Modifier
-                                        .padding(top = 20.dp, bottom = 10.dp),
-                                )
-                            }
-
-                            // Seasons and Episodes
-                            if (metadata is TvShow &&
-                                currentTabSelected?.isOnEpisodesSection == true &&
-                                seasonToDisplay != null &&
-                                uiState.selectedSeason != null
-                            ) {
-                                seriesContent(
-                                    listState = seasonsListState,
-                                    selectedSeason = uiState.selectedSeason,
-                                    seasons = metadata.seasons,
-                                    seasonToDisplay = seasonToDisplay,
-                                    onSeasonChange = onSeasonChange,
-                                    onRetry = onRetryFetchSeason,
-                                    onClick = { episode -> navigator.play(metadata, episode = episode) },
-                                    longClickedEpisode = longClickedEpisode,
-                                    onLongClick = { longClickedEpisode = it },
-                                )
-                            }
-
-                            if (currentTabSelected?.isOnFilmsSection == true && extraFilmCards != null) {
-                                items(
-                                    items = extraFilmCards,
-                                    key = { film -> film.identifier },
-                                ) { film ->
-                                    FilmCard(
-                                        isShowingTitle = showFilmTitles,
-                                        film = film,
-                                        onClick = navigator::openFilmScreen,
-                                        onLongClick = navigator::previewFilm,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .animateItem(),
-                                    )
-                                }
                             }
                         }
                     }
                 }
             }
         }
-
-        EpisodeDetailedCard(
-            isDownloaded = false,
-            toggleOnLibrary = toggleEpisodeOnLibrary,
-            episodeWithProgress = longClickedEpisode,
-            onDismissRequest = { longClickedEpisode = null },
-            onDownload = { /*TODO: Implement download feature*/ },
-            onPlay = {
-                longClickedEpisode?.episode?.let {
-                    navigator.play(metadata, episode = it)
-                }
-            },
-        )
     }
 
     if (isLibrarySheetOpen) {
@@ -409,6 +389,17 @@ private fun FilmScreenContent(
             toggleOnLibrary = toggleOnLibrary,
             createLibrary = createLibrary,
             onDismissRequest = { isLibrarySheetOpen = false },
+        )
+    }
+
+    longClickedEpisode?.let { episode ->
+        EpisodeOptionsBottomSheet(
+            episode = episode,
+            onToggleWatchStatus = {
+                toggleEpisodeOnLibrary(episode)
+                longClickedEpisode = null
+            },
+            onDismissRequest = { longClickedEpisode = null },
         )
     }
 

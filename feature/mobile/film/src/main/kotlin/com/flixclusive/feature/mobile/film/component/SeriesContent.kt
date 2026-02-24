@@ -30,7 +30,6 @@ import com.flixclusive.core.strings.R as LocaleR
 internal fun LazyGridScope.seriesContent(
     listState: LazyListState,
     selectedSeason: Int,
-    longClickedEpisode: EpisodeWithProgress?,
     seasons: List<Season>,
     seasonToDisplay: Resource<SeasonWithProgress>,
     onSeasonChange: (Int) -> Unit,
@@ -110,8 +109,7 @@ internal fun LazyGridScope.seriesContent(
                 EpisodeCard(
                     episode = item,
                     onClick = { onClick(item.episode) },
-                    visible = longClickedEpisode != item,
-                    onLongClick = { onLongClick(item) },
+                    onLongClick = onLongClick,
                     modifier = Modifier
                         .fillMaxWidth()
                         .animateItem(),
