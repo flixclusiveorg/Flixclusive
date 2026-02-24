@@ -160,13 +160,19 @@ private fun EpisodeThumbnail(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp))
                     .clip(
-                        MaterialTheme.shapes.small.copy(
-                            bottomEnd = CornerSize(0),
-                            bottomStart = CornerSize(0),
-                        )
-                    ),
+                        MaterialTheme.shapes.small.let {
+                            if (episode.watchProgress == null) {
+                                return@let it
+                            }
+
+                            it.copy(
+                                bottomStart = CornerSize(0.dp),
+                                bottomEnd = CornerSize(0.dp),
+                            )
+                        }
+                    )
+                    .background(MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)),
             )
 
             if (showPlaceholder) {
