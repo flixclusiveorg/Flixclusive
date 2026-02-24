@@ -34,7 +34,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -64,6 +63,7 @@ import com.flixclusive.core.presentation.common.components.GradientLinearProgres
 import com.flixclusive.core.presentation.common.util.CustomClipboardManager.Companion.rememberClipboardManager
 import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
+import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.MediaLink
@@ -100,14 +100,7 @@ fun MediaLinksBottomSheet(
         else -> emptyList()
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        shape = MaterialTheme.shapes.small.copy(
-            bottomEnd = CornerSize(0.dp),
-            bottomStart = CornerSize(0.dp),
-        ),
-        dragHandle = { DragHandle() },
-    ) {
+    CommonBottomSheet(onDismissRequest = onDismiss) {
         LazyColumn(
             contentPadding = PaddingValues(10.dp),
             verticalArrangement = Arrangement.spacedBy(5.dp),
@@ -179,22 +172,6 @@ fun MediaLinksBottomSheet(
 }
 
 @Composable
-private fun DragHandle(modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier.padding(top = 22.dp, bottom = 5.dp),
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.2F),
-        shape = MaterialTheme.shapes.extraLarge,
-    ) {
-        Box(
-            Modifier.size(
-                width = 32.dp,
-                height = 4.dp,
-            ),
-        )
-    }
-}
-
-@Composable
 private fun FilterSegmentedButtons(
     viewType: SheetViewType,
     isSubtitleListEmpty: Boolean,
@@ -232,7 +209,7 @@ private fun FilterSegmentedButtons(
             },
         )
 
-        if (isSubtitleListEmpty) {
+        if (!isSubtitleListEmpty) {
             SegmentedButton(
                 selected = viewType.isViewingSubtitles,
                 onClick = { onToggleView(SUBTITLES_PANEL) },
@@ -401,10 +378,9 @@ private fun MediaLinkItem(
 ) {
     val uriHandler = LocalUriHandler.current
     val clipboardManager = rememberClipboardManager()
-    val trustedFlag =
-        remember {
-            link.flags?.getOrNull(Flag.Trusted::class)
-        }
+    val trustedFlag = remember {
+        link.flags?.getOrNull(Flag.Trusted::class)
+    }
     val hasTrustedFlag = trustedFlag != null
 
     val clickLink = {
@@ -435,15 +411,14 @@ private fun MediaLinkItem(
                 ),
     ) {
         Row(
-            modifier =
-                Modifier
-                    .heightIn(min = 60.dp)
-                    .padding(10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier
+                .heightIn(min = 60.dp)
+                .padding(10.dp),
         ) {
             if (hasTrustedFlag) {
                 ImageWithSmallPlaceholder(
-                    urlImage = trustedFlag!!.logo,
+                    urlImage = trustedFlag.logo,
                     placeholderId = UiCommonR.drawable.provider_logo,
                     contentDescId = LocaleR.string.provider_icon_content_desc,
                     shape = MaterialTheme.shapes.extraSmall,
@@ -454,30 +429,26 @@ private fun MediaLinkItem(
             }
 
             Column(
-                modifier =
-                    Modifier
-                        .weight(1F),
-                verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier.weight(1F),
             ) {
                 Text(
                     text = link.name.trim(),
-                    style =
-                        MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            fontSize = 14.sp,
-                        ),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Black,
+                        fontSize = 14.sp,
+                    ),
                 )
 
                 Text(
                     text = link.description ?: link.url,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = if (link.description == null) 1 else Int.MAX_VALUE,
-                    style =
-                        MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Normal,
-                            color = LocalContentColor.current.copy(0.6f),
-                            fontSize = 12.sp,
-                        ),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Normal,
+                        color = LocalContentColor.current.copy(0.6f),
+                        fontSize = 12.sp,
+                    ),
                 )
             }
         }
