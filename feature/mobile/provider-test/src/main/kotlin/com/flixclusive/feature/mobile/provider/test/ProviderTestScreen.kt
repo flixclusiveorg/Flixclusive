@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.provider.test
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
@@ -28,6 +29,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -35,6 +37,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -77,6 +80,7 @@ import com.flixclusive.model.provider.ProviderMetadata
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
@@ -153,6 +157,7 @@ internal fun ProviderTestScreenContent(
     val context = LocalContext.current
     val resources = LocalResources.current
     val localDensity = LocalDensity.current
+    val scope = rememberCoroutineScope()
 
     var headerHeight by remember { mutableStateOf(0.dp) }
     var headerHeightPx by remember { mutableFloatStateOf(0F) }
@@ -172,6 +177,25 @@ internal fun ProviderTestScreenContent(
         targetValue = MaterialTheme.colorScheme.surface.copy(alpha = topBarBackgroundAlpha),
         label = "",
     )
+
+    DisposableEffect(true) {
+        onDispose {
+            if (snackbarHostState.currentSnackbarData != null) {
+                snackbarHostState.currentSnackbarData?.dismiss()
+            }
+        }
+    }
+
+    BackHandler(
+        enabled = !stage.isIdle
+    ) {
+        scope.launch {
+            snackbarHostState.showSnackbar(
+                resources.getString(R.string.warn_message_on_testing_back),
+                duration = SnackbarDuration.Short,
+            )
+        }
+    }
 
     LaunchedEffect(stage, results.size) {
         val resultsAreNotEmpty = results.isNotEmpty()
@@ -210,7 +234,18 @@ internal fun ProviderTestScreenContent(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ProviderTestScreenTopBar(
-                onNavigationIconClick = onGoBack,
+                onNavigationIconClick = {
+                    if (stage.isIdle) {
+                            onGoBack()
+                    } else if (snackbarHostState.currentSnackbarData == null) {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                resources.getString(R.string.warn_message_on_testing_back),
+                                duration = SnackbarDuration.Short,
+                            )
+                        }
+                    }
+                },
                 onOpenSortBottomSheet = { isSortingBottomSheetOpen = true },
                 modifier =
                     Modifier
@@ -293,7 +328,7 @@ internal fun ProviderTestScreenContent(
 
             items(
                 items = testResults,
-                key = { it.provider.id },
+                key = { testResult -> testResult.provider.name },
             ) { data ->
                 TestResultCard(
                     isExpanded = testResultCardsIsExpandedMap.getOrElse(data.provider.id) { false },

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="warn_message_on_testing_back">Stop tests to go back</string>
+</resources>
