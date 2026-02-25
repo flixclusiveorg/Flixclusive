@@ -9,8 +9,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -20,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
+import com.flixclusive.core.presentation.common.components.GradientCircularProgressIndicator
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState
@@ -69,42 +72,69 @@ internal fun CenterControls(
             }
         }
 
-        PlainTooltipBox(
-            description = stringResource(PlayerR.string.play_pause),
-        ) {
-            IconButton(
-                onClick = playPauseButtonState::onClick,
-                enabled = playPauseButtonState.isEnabled,
-                modifier = Modifier
-                    .background(
-                        iconBgColor,
-                        shape = CircleShape
-                    )
-                    .padding(5.dp)
-            ) {
-                AnimatedContent(
-                    targetState = playPauseButtonState.showPlay,
-                    transitionSpec = {
-                        ContentTransform(
-                            targetContentEnter = fadeIn(),
-                            initialContentExit = fadeOut(),
+        AnimatedContent(
+            targetState = playPauseButtonState.isBuffering,
+            transitionSpec = {
+                ContentTransform(
+                    targetContentEnter = fadeIn(),
+                    initialContentExit = fadeOut(),
+                )
+            }
+        ) { state ->
+            if (state) {
+                GradientCircularProgressIndicator(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.tertiary
+                    ),
+                    modifier = Modifier
+                        .size(iconSize * 2.2f)
+                        .background(
+                            iconBgColor,
+                            shape = CircleShape
                         )
-                    }
+                        .padding(5.dp)
+                )
+            } else {
+                PlainTooltipBox(
+                    description = stringResource(PlayerR.string.play_pause),
                 ) {
-                    val icon = if (it) {
-                        UiCommonR.drawable.play
-                    } else {
-                        PlayerR.drawable.pause
-                    }
+                    IconButton(
+                        onClick = playPauseButtonState::onClick,
+                        enabled = playPauseButtonState.isEnabled,
+                        modifier = Modifier
+                            .background(
+                                iconBgColor,
+                                shape = CircleShape
+                            )
+                            .padding(5.dp)
+                    ) {
+                        AnimatedContent(
+                            targetState = playPauseButtonState.showPlay,
+                            transitionSpec = {
+                                ContentTransform(
+                                    targetContentEnter = fadeIn(),
+                                    initialContentExit = fadeOut(),
+                                )
+                            }
+                        ) {
+                            val icon = if (it) {
+                                UiCommonR.drawable.play
+                            } else {
+                                PlayerR.drawable.pause
+                            }
 
-                    AdaptiveIcon(
-                        painter = painterResource(icon),
-                        contentDescription = stringResource(PlayerR.string.play_pause),
-                        dp = iconSize * 2.5f,
-                    )
+                            AdaptiveIcon(
+                                painter = painterResource(icon),
+                                contentDescription = stringResource(PlayerR.string.play_pause),
+                                dp = iconSize * 2.5f,
+                            )
+                        }
+                    }
                 }
             }
         }
+
 
         PlainTooltipBox(
             description = stringResource(PlayerR.string.seek_forward),

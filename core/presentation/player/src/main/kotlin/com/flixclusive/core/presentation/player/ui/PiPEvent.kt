@@ -7,7 +7,6 @@ package com.flixclusive.core.presentation.player.ui
 enum class PiPEvent {
     PLAY,
     PAUSE,
-    REPLAY,
     BACKWARD,
     FORWARD,
 }

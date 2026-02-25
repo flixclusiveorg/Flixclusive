@@ -8,13 +8,14 @@ import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.SubtitleView
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 
-private const val FONT_SIZE_PIP_MODE = 8F // Equivalent to 8dp
+private const val PIP_SCALE_FACTOR = 1F
+private const val REFERENCE_PIP_WIDTH_DP = 360F
 
 @OptIn(UnstableApi::class)
 internal fun SubtitleView.setStyle(
+    isInPipMode: Boolean,
     subtitlePrefs: SubtitlesPreferences
 ) {
-    // Modify subtitle style
     val style = CaptionStyleCompat(
         subtitlePrefs.subtitleColor,
         subtitlePrefs.subtitleBackgroundColor,
@@ -27,10 +28,12 @@ internal fun SubtitleView.setStyle(
     setApplyEmbeddedFontSizes(false)
     setApplyEmbeddedStyles(false)
     setStyle(style)
-    setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, subtitlePrefs.subtitleSize)
-}
 
-@OptIn(UnstableApi::class)
-internal fun SubtitleView.setStyleInPipMode() {
-    setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, FONT_SIZE_PIP_MODE)
+    if (isInPipMode) {
+        val screenWidthDp = context.resources.configuration.screenWidthDp
+        val scaledSize = subtitlePrefs.subtitleSize * PIP_SCALE_FACTOR * (screenWidthDp / REFERENCE_PIP_WIDTH_DP)
+        setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, scaledSize)
+    } else {
+        setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, subtitlePrefs.subtitleSize)
+    }
 }

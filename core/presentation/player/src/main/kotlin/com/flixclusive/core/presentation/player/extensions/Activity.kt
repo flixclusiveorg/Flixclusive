@@ -9,10 +9,13 @@ import android.graphics.drawable.Icon
 import android.os.Build
 import android.util.Rational
 import androidx.annotation.DrawableRes
+import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
+import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.R
 import com.flixclusive.core.presentation.player.ui.PiPEvent
+import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState
 import com.flixclusive.core.drawables.R as UiCommonR
 
 const val ACTION_PIP_CONTROL = "player_pip_control"
@@ -46,59 +49,69 @@ private fun Activity.getPendingIntent(event: Int): PendingIntent {
         // intent =
         Intent(ACTION_PIP_CONTROL).apply {
             putExtra(PLAYER_PIP_EVENT, event)
+            setPackage(packageName)
         },
-        // flags =
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        PendingIntent.FLAG_IMMUTABLE,
     )
 }
 
+@OptIn(UnstableApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 fun Activity.updatePiPParams(
-    isPlaying: Boolean,
-    hasEnded: Boolean,
-    preferredSeekIncrement: Long,
-): PictureInPictureParams {
-    val params = with(PictureInPictureParams.Builder()) {
-        val width = 16
-        val height = 9
-        setAspectRatio(Rational(width, height))
-
-        val (backwardSeekIcon, forwardSeekIcon) = when (preferredSeekIncrement) {
-            5000L -> R.drawable.round_replay_5_24 to R.drawable.forward_5_black_24dp
-            10000L -> R.drawable.replay_10_black_24dp to R.drawable.round_forward_10_24
-            else -> R.drawable.replay_30_black_24dp to R.drawable.forward_30_black_24dp
-        }
-
-        val (playPauseIcon, eventCode) = when {
-            hasEnded -> R.drawable.round_replay_24 to PiPEvent.REPLAY
-            isPlaying -> R.drawable.pause to PiPEvent.PAUSE
-            else -> UiCommonR.drawable.play to PiPEvent.PLAY
-        }
-
-        val actions = arrayListOf(
-            getRemoteAction(
-                icon = backwardSeekIcon,
-                label = R.string.seek_backward,
-                event = PiPEvent.BACKWARD,
-            ),
-            getRemoteAction(
-                icon = playPauseIcon,
-                label = R.string.play_pause,
-                event = eventCode,
-            ),
-            getRemoteAction(
-                icon = forwardSeekIcon,
-                label = R.string.seek_forward,
-                event = PiPEvent.FORWARD,
-            ).also {
-                it.isEnabled = !hasEnded
-            },
-        )
-
-        setActions(actions)
-        build()
-    }
+    playPauseState: PlayPauseButtonState,
+    seekAmount: Long,
+) {
+    val params = createPiPParams(
+        playPauseState = playPauseState,
+        seekAmount = seekAmount,
+    ).build()
 
     setPictureInPictureParams(params)
-    return params
+}
+
+@OptIn(UnstableApi::class)
+@RequiresApi(Build.VERSION_CODES.O)
+fun Activity.createPiPParams(
+    playPauseState: PlayPauseButtonState,
+    seekAmount: Long,
+): PictureInPictureParams.Builder {
+    val width = 16
+    val height = 9
+
+    val (backwardSeekIcon, forwardSeekIcon) = when (seekAmount) {
+        5000L -> R.drawable.round_replay_5_24 to R.drawable.forward_5_black_24dp
+        10000L -> R.drawable.replay_10_black_24dp to R.drawable.round_forward_10_24
+        else -> R.drawable.replay_30_black_24dp to R.drawable.forward_30_black_24dp
+    }
+
+    val (playPauseIcon, eventCode) = when {
+        playPauseState.isBuffering -> R.drawable.pip_loading_icon to PiPEvent.PAUSE
+        playPauseState.showPlay -> UiCommonR.drawable.play to PiPEvent.PLAY
+        else -> R.drawable.pause to PiPEvent.PAUSE
+    }
+
+    val actions = arrayListOf(
+        getRemoteAction(
+            icon = backwardSeekIcon,
+            label = R.string.seek_backward,
+            event = PiPEvent.BACKWARD,
+        ),
+        getRemoteAction(
+            icon = playPauseIcon,
+            label = R.string.play_pause,
+            event = eventCode,
+        ).apply {
+            isEnabled = !playPauseState.isBuffering && playPauseState.isEnabled
+        },
+        getRemoteAction(
+            icon = forwardSeekIcon,
+            label = R.string.seek_forward,
+            event = PiPEvent.FORWARD,
+        ),
+    )
+
+
+    return PictureInPictureParams.Builder()
+        .setAspectRatio(Rational(width, height))
+        .setActions(actions)
 }

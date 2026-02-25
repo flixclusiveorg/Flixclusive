@@ -10,7 +10,6 @@ import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
 import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.common.util.Util.handlePlayPauseButtonAction
 import androidx.media3.common.util.Util.shouldEnablePlayPauseButton
 import androidx.media3.common.util.Util.shouldShowPlayButton
 import com.flixclusive.core.presentation.player.AppPlayer
@@ -28,6 +27,9 @@ import com.flixclusive.core.presentation.player.AppPlayer
 class PlayPauseButtonState private constructor(
     private val player: AppPlayer,
 ) {
+    var isBuffering by mutableStateOf(player.playbackState == Player.STATE_BUFFERING)
+        private set
+
     var isEnabled by mutableStateOf(shouldEnablePlayPauseButton(player))
         private set
 
@@ -46,7 +48,16 @@ class PlayPauseButtonState private constructor(
      * @see [androidx.media3.common.util.Util.shouldShowPlayButton]
      */
     fun onClick() {
-        handlePlayPauseButtonAction(player)
+        if (!showPlay) {
+            player.pause()
+            return
+        }
+
+        when (player.playbackState) {
+            Player.STATE_IDLE -> player.prepare()
+            Player.STATE_ENDED -> player.seekToDefaultPosition()
+            else -> player.play()
+        }
     }
 
     /**
@@ -60,10 +71,13 @@ class PlayPauseButtonState private constructor(
     internal suspend fun observe(): Nothing {
         showPlay = shouldShowPlayButton(player)
         isEnabled = shouldEnablePlayPauseButton(player)
+        isBuffering = player.playbackState == Player.STATE_BUFFERING
+
         player.listen { events ->
             if (events.contains(Player.EVENT_IS_PLAYING_CHANGED)) {
                 showPlay = shouldShowPlayButton(this)
                 isEnabled = shouldEnablePlayPauseButton(this)
+                isBuffering = playbackState == Player.STATE_BUFFERING
             }
         }
     }

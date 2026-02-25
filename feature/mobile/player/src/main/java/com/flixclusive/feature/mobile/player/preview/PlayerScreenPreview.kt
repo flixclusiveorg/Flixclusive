@@ -22,7 +22,6 @@ import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.PlayerScreenContent
-import kotlinx.coroutines.delay
 
 @Preview
 @Composable
@@ -73,7 +72,6 @@ private fun PlayerScreenBasePreview() {
     }
 
     LaunchedEffect(true) {
-        delay(3000)
         player.prepare(
             key = MediaItemKey(
                 filmId = tvShow.identifier,

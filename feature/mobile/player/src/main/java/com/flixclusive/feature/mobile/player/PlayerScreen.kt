@@ -25,11 +25,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.extensions.getActivity
+import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.ComposePlayer
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.component.PlayerControls
-import com.flixclusive.feature.mobile.player.component.PlayerPipReceiver
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
@@ -99,9 +99,8 @@ internal fun PlayerScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current.getActivity<Activity>()
+    val isInPipMode = rememberIsInPipMode()
     var resizeMode by rememberSaveable { mutableStateOf(playerPreferences.resizeMode) }
-
-    PlayerPipReceiver(player = player)
 
     BackHandler(onBack = onBack)
 
@@ -123,12 +122,14 @@ internal fun PlayerScreenContent(
     ) {
         ComposePlayer(
             player = player,
+            isInPipMode = isInPipMode,
             resizeMode = resizeMode,
         )
 
         PlayerControls(
             player = player,
             film = film,
+            isInPipMode = isInPipMode,
             playerPrefs = playerPreferences,
             subtitlesPrefs = subtitlesPreferences,
             currentEpisode = currentEpisode,

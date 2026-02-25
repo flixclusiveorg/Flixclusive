@@ -162,7 +162,6 @@ class AppPlayer(
 
         subtitleView?.let {
             infoLog("Initializing SubtitleView...")
-            it.setStyle(subtitlePrefs)
             it.setCues(null)
 
             if (isCommandAvailable(Player.COMMAND_GET_TEXT)) {
@@ -323,14 +322,16 @@ class AppPlayer(
                 _playWhenReady = false
             }
 
-            PiPEvent.REPLAY.ordinal -> {
-                seekTo(0)
-                _playWhenReady = true
-            }
-
             PiPEvent.FORWARD.ordinal -> seekForward()
             PiPEvent.BACKWARD.ordinal -> seekBack()
         }
+    }
+
+    fun setSubtitleStyle(isInPipMode: Boolean) {
+        subtitleView?.setStyle(
+            isInPipMode = isInPipMode,
+            subtitlePrefs = subtitlePrefs
+        )
     }
 
     override fun setPlayWhenReady(value: Boolean) {
@@ -378,7 +379,6 @@ class AppPlayer(
         }
 
         override fun onCues(cueGroup: CueGroup) {
-            subtitleView?.setStyle(subtitlePrefs)
             subtitleView?.setCues(cueGroup.cues)
         }
     }

@@ -47,7 +47,6 @@ import okhttp3.OkHttpClient
 /**
  * A composable that displays a video player with subtitles and handles the player's lifecycle.
  * */
-
 @OptIn(UnstableApi::class)
 @Composable
 fun ComposePlayer(
@@ -72,7 +71,10 @@ fun ComposePlayer(
 
         AndroidView(
             factory = ::SubtitleView,
-            update = { player.subtitleView = it },
+            update = {
+                player.subtitleView = it
+                player.setSubtitleStyle(isInPipMode)
+            },
             modifier = Modifier.fillMaxSize(),
         )
 

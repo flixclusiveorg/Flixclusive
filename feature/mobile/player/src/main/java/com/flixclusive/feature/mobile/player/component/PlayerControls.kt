@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.player.component
 
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedContent
@@ -64,6 +65,7 @@ import com.flixclusive.feature.mobile.player.component.servers.ServersScreen
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleAndAudioScreen
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleSyncScreen
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
+import com.flixclusive.feature.mobile.player.util.AutoPipModeObserverForAndroidOToR
 import com.flixclusive.feature.mobile.player.util.UiMode
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
@@ -77,6 +79,7 @@ import com.flixclusive.core.drawables.R as UiCommonR
 internal fun PlayerControls(
     player: AppPlayer,
     film: FilmMetadata,
+    isInPipMode: Boolean,
     playerPrefs: PlayerPreferences,
     subtitlesPrefs: SubtitlesPreferences,
     currentResizeMode: ResizeMode,
@@ -126,31 +129,45 @@ internal fun PlayerControls(
         playerPreferences = playerPrefs
     )
 
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        AutoPipModeObserverForAndroidOToR(
+            player = player,
+            isInPipMode = isInPipMode,
+            playPauseState = playPauseState,
+            seekAmount = playerPrefs.seekAmount,
+            onPipInvoke = {
+                player.setSubtitleStyle(true)
+                isLocked = false
+                uiMode = UiMode.NONE
+                queueControlVisibility = controlsVisibilityState.isVisible
+                controlsVisibilityState.hide()
+            }
+        )
+    }
+
     BackHandler(enabled = isLocked) {
         controlsVisibilityState.show()
     }
 
     LaunchedEffect(
+        isInPipMode,
         uiMode,
         controlsVisibilityState.isVisible,
         gestureState.isDoubleTapping,
         gestureState.isSliding
     ) {
-        if (controlsVisibilityState.isVisible && (gestureState.isDoubleTapping || gestureState.isSliding)) {
-            queueControlVisibility = true
-            controlsVisibilityState.hide()
-            return@LaunchedEffect
-        }
-
-        if (uiMode.isPlaybackSpeed || uiMode.isResize) {
+        if ((uiMode.isPlaybackSpeed || uiMode.isResize) && !isInPipMode) {
             controlsVisibilityState.show(indefinite = true)
             return@LaunchedEffect
         }
 
-        if (controlsVisibilityState.isVisible && !uiMode.isNone) {
+        if (gestureState.isDoubleTapping || gestureState.isSliding || isInPipMode || !uiMode.isNone) {
+            queueControlVisibility = controlsVisibilityState.isVisible
             controlsVisibilityState.hide()
-            queueControlVisibility = true
-        } else if (queueControlVisibility && uiMode.isNone && !gestureState.isDoubleTapping && !gestureState.isSliding) {
+            return@LaunchedEffect
+        }
+
+        if (queueControlVisibility) {
             controlsVisibilityState.show()
             queueControlVisibility = false
         }
@@ -172,7 +189,7 @@ internal fun PlayerControls(
                 targetContentEnter = fadeIn(),
                 initialContentExit = fadeOut()
             )
-        }
+        },
     ) { state ->
         Box(
             contentAlignment = Alignment.Center,

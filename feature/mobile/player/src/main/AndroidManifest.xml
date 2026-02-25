@@ -4,8 +4,10 @@
     <application>
         <activity
             android:name="androidx.compose.ui.tooling.PreviewActivity"
+            android:supportsPictureInPicture="true"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
             android:theme="@style/Theme.Flixclusive"
             tools:node="merge"
-        />
+            tools:targetApi="24" />
     </application>
 </manifest>
