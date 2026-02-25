@@ -326,14 +326,16 @@ private fun FilmScreenContent(
                             )
                         }
 
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            ContentTabs(
-                                tabs = tabs,
-                                currentTabSelected = tabs.indexOf(currentTabSelected),
-                                onTabChange = { onTabChange(tabs[it]) },
-                                modifier = Modifier
-                                    .padding(top = 20.dp, bottom = 10.dp),
-                            )
+                        if (tabs.isNotEmpty()) {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                ContentTabs(
+                                    tabs = tabs,
+                                    currentTabSelected = tabs.indexOf(currentTabSelected),
+                                    onTabChange = { onTabChange(tabs[it]) },
+                                    modifier = Modifier
+                                        .padding(top = 20.dp, bottom = 10.dp),
+                                )
+                            }
                         }
 
                         if (metadata is TvShow &&
