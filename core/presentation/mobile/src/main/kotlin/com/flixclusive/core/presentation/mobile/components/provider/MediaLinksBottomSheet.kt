@@ -65,6 +65,7 @@ import com.flixclusive.core.presentation.mobile.components.EmptyDataMessage
 import com.flixclusive.core.presentation.mobile.components.ImageWithSmallPlaceholder
 import com.flixclusive.core.presentation.mobile.components.material3.CommonBottomSheet
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.model.provider.link.MediaLink.Companion.getOrNull
@@ -534,7 +535,11 @@ private fun MediaLinksBottomSheetPreview() {
             itemCount++
         }
         delay(delayTime)
-        state = LoadLinksState.Success
+        state = LoadLinksState.Success(
+            providerId = DEFAULT_FILM_SOURCE_NAME,
+            streams = emptyList(),
+            subtitles = emptyList()
+        )
 //        delay(delayTime)
 //        state = MediaLinkResourceState.Unavailable()
 //        delay(delayTime * 3L)

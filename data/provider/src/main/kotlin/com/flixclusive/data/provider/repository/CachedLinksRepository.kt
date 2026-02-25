@@ -1,5 +1,6 @@
 package com.flixclusive.data.provider.repository
 
+import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.data.provider.util.extensions.filterOutExpiredLinks
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.provider.link.MediaLink
@@ -28,6 +29,17 @@ value class CacheKey private constructor(
             providerId: String,
             episode: Episode? = null,
         ) = CacheKey("$providerId::$filmId-${episode?.season}:${episode?.number}")
+
+        fun LoadLinksState.Success.toCacheKey(
+            filmId: String,
+            episode: Episode? = null,
+        ): CacheKey {
+            return create(
+                filmId = filmId,
+                providerId = providerId,
+                episode = episode,
+            )
+        }
     }
 }
 
@@ -51,7 +63,7 @@ data class CachedLinks(
     val streams: List<Stream> = emptyList(),
     val subtitles: List<Subtitle> = emptyList(),
 ) : Serializable {
-    val hasNoStreamLinks: Boolean get() = streams.isEmpty()
+    val hasStreamableLinks get() = streams.filterOutExpiredLinks().isNotEmpty()
 
     override fun equals(other: Any?): Boolean {
         if (other is CachedLinks) {
@@ -63,10 +75,10 @@ data class CachedLinks(
         return super.equals(other)
     }
 
+
     override fun hashCode(): Int {
         return javaClass.hashCode()
     }
-
 
     companion object {
         fun CachedLinks.appendStream(stream: Stream): CachedLinks {
@@ -89,8 +101,6 @@ data class CachedLinks(
             return copy(subtitles = subtitles.toList())
         }
     }
-
-    val hasStreamableLinks get() = streams.filterOutExpiredLinks().isNotEmpty()
 }
 
 /**

@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.player
 
 import android.content.Context
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -308,12 +309,12 @@ internal class PlayerScreenViewModel @Inject constructor(
         val cacheKey = CacheKey.create(
             filmId = filmMetadata.identifier,
             providerId = providerId,
-            episode = selectedEpisode.value,
+            episode = episode,
         )
 
         val mediaItemKey = MediaItemKey(
             filmId = filmMetadata.identifier,
-            episodeId = selectedEpisode.value?.id,
+            episodeId = episode?.id,
             providerId = providerId,
         )
 
@@ -360,9 +361,6 @@ internal class PlayerScreenViewModel @Inject constructor(
                         if (state.isSuccess) {
                             areLinksLoaded = true
 
-                            // Set the current cache in the repository after preparing the player
-                            cachedLinksRepository.setCurrentCache(cacheKey)
-
                             return@update it.copy(
                                 selectedProvider = providerId,
                                 loadLinksState = if (quiet) it.loadLinksState else LoadLinksState.Idle,
@@ -395,6 +393,10 @@ internal class PlayerScreenViewModel @Inject constructor(
             )
         }
 
+        if (playImmediately) {
+            cachedLinksRepository.setCurrentCache(cacheKey)
+        }
+
         player.prepare(
             key = mediaItemKey,
             servers = servers,
@@ -402,6 +404,7 @@ internal class PlayerScreenViewModel @Inject constructor(
             startPositionMs = startPositionMs,
             playImmediately = playImmediately,
         )
+
 
         return true
     }
@@ -533,6 +536,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 }
 
+@Immutable
 internal data class PlayerUiState(
     val selectedProvider: String,
     val selectedSeason: Int? = null,

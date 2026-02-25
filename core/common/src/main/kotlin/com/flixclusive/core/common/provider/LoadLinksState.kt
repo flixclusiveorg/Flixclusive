@@ -4,13 +4,9 @@ import androidx.annotation.StringRes
 import com.flixclusive.core.common.R
 import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.locale.UiText
-import com.flixclusive.core.common.provider.LoadLinksState.Error
-import com.flixclusive.core.common.provider.LoadLinksState.Extracting
-import com.flixclusive.core.common.provider.LoadLinksState.Fetching
-import com.flixclusive.core.common.provider.LoadLinksState.Idle
-import com.flixclusive.core.common.provider.LoadLinksState.Success
-import com.flixclusive.core.common.provider.LoadLinksState.Unavailable
 import com.flixclusive.model.provider.link.MediaLink
+import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.model.provider.link.Subtitle
 
 /**
  * Represents the state of a media link resource.
@@ -157,8 +153,11 @@ sealed class LoadLinksState(
     /**
      * The state when the resource has been successfully fetched and extracted.
      */
-    data object Success :
-        LoadLinksState(message = UiText.from(R.string.source_data_dialog_state_success)) {
+    data class Success(
+        val providerId: String,
+        val streams: List<Stream>,
+        val subtitles: List<Subtitle>
+    ) : LoadLinksState(message = UiText.from(R.string.source_data_dialog_state_success)) {
         override val ordinal = 5
     }
 

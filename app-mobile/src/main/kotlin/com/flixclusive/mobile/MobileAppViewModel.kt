@@ -19,6 +19,7 @@ import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.repository.WatchlistRepository
 import com.flixclusive.data.database.session.UserSessionManager
+import com.flixclusive.data.provider.repository.CacheKey.Companion.toCacheKey
 import com.flixclusive.data.provider.repository.CachedLinksRepository
 import com.flixclusive.domain.provider.usecase.get.GetFilmMetadataUseCase
 import com.flixclusive.domain.provider.usecase.get.GetMediaLinksUseCase
@@ -58,7 +59,7 @@ internal class MobileAppViewModel
         private val libraryListRepository: LibraryListRepository,
         private val appDispatchers: AppDispatchers,
         private val playerCache: PlayerCache,
-        cachedLinksRepository: CachedLinksRepository,
+        private val cachedLinksRepository: CachedLinksRepository,
         networkMonitor: NetworkMonitor,
     ) : ViewModel() {
         private var onFilmLongClickJob: Job? = null
@@ -263,6 +264,15 @@ internal class MobileAppViewModel
         }
 
         fun updateLoadLinksState(state: LoadLinksState) {
+            val playerData = _uiState.value.playerData
+            if (state is LoadLinksState.Success && playerData != null) {
+                val cache = state.toCacheKey(
+                    filmId = playerData.film.identifier,
+                    episode = playerData.episode,
+                )
+
+                cachedLinksRepository.setCurrentCache(cache)
+            }
             _uiState.update { it.copy(loadLinksState = state) }
         }
     }
