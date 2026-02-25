@@ -7,8 +7,10 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.data.provider.repository.ProviderRepository
+import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.get.GetProviderFromRemoteUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
@@ -16,17 +18,18 @@ import com.flixclusive.domain.provider.usecase.manage.LoadProviderUseCase
 import com.flixclusive.domain.provider.usecase.manage.UnloadProviderUseCase
 import com.flixclusive.domain.provider.usecase.updater.ProviderUpdateResult
 import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
+import com.flixclusive.domain.provider.util.Constants
 import com.flixclusive.domain.provider.util.extensions.createFileForProvider
 import com.flixclusive.domain.provider.util.extensions.downloadProvider
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.model.provider.Repository.Companion.toValidRepositoryLink
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
 import java.io.File
 import javax.inject.Inject
 
@@ -35,14 +38,14 @@ import javax.inject.Inject
 internal class UpdateProviderUseCaseImpl
     @Inject
     constructor(
-        @ApplicationContext private val context: Context,
+        @param:ApplicationContext private val context: Context,
         private val dataStoreManager: DataStoreManager,
         private val userSessionDataStore: UserSessionDataStore,
         private val providerRepository: ProviderRepository,
         private val loadProviderUseCase: LoadProviderUseCase,
         private val unloadProviderUseCase: UnloadProviderUseCase,
+        private val downloadFileUseCase: DownloadFileUseCase,
         private val getProviderFromRemoteUseCase: GetProviderFromRemoteUseCase,
-        private val client: OkHttpClient,
         private val appDispatchers: AppDispatchers,
     ) : UpdateProviderUseCase {
         private suspend fun getProviderPrefs() =
@@ -68,15 +71,34 @@ internal class UpdateProviderUseCaseImpl
                 newMetadata = updatedMetadata,
             )
 
-            try {
-                withContext(appDispatchers.io) {
-                    client.downloadProvider(
-                        saveTo = File(newPreference.filePath),
-                        buildUrl = updatedMetadata.buildUrl,
+            val success = withContext(appDispatchers.io) {
+                val oldFile = File(oldPreference.filePath)
+                val newFile = File(newPreference.filePath)
+
+                oldFile.delete()
+
+                downloadFileUseCase.downloadProvider(
+                    metadata = updatedMetadata,
+                    file = newFile,
+                ).catch {
+                    errorLog("Failed to update provider: ${provider.name}")
+                    errorLog(it)
+                }.collect()
+
+                newFile.exists()
+            }
+
+            if (!success) {
+                restoreBackup(oldPreference)
+                throw DownloadException(
+                    Throwable(
+                        message = context.getString(
+                            R.string.failed_to_download_provider,
+                            provider.name,
+                            provider.id,
+                        )
                     )
-                }
-            } catch (e: Throwable) {
-                throw DownloadException(e)
+                )
             }
 
             try {
@@ -93,7 +115,7 @@ internal class UpdateProviderUseCaseImpl
                 metadata = updatedMetadata,
                 filePath = newPreference.filePath,
             ).onEach {
-                // If the provider failed to load but it was
+                // If the provider failed to load, but it was
                 // previously loaded, just log the exception
                 if (it is LoadProviderResult.Failure &&
                     providerRepository.getProvider(provider.id) != null
@@ -103,7 +125,7 @@ internal class UpdateProviderUseCaseImpl
                     return@onEach
                 }
 
-                // If the provider failed to load and it wasn't previously
+                // If the provider failed to load, and it wasn't previously
                 // loaded, restore the backup and throw an exception
                 if (it is LoadProviderResult.Failure) {
                     restoreBackup(oldPreference)
@@ -208,43 +230,43 @@ internal class UpdateProviderUseCaseImpl
             )
         }
 
-        /**
-         * Creates a backup of all files in the same directory as the provider file.
-         *
-         * The backup files will have the same name as the original file with a .bak extension
-         * appended to it.
-         *
-         * @param preference The provider preference item containing the file path.
-         * */
         private suspend fun createBackup(preference: ProviderFromPreferences) {
-            val directory = File(preference.filePath).parentFile ?: return
+            val file = File(preference.filePath)
+            val directory = file.parentFile ?: return
+            val updaterJsonFile = File(directory, Constants.UPDATER_FILE)
 
             withContext(appDispatchers.io) {
-                directory.listFiles()?.forEach {
-                    val backup = File(directory, "${it.name}.bak")
-                    it.copyTo(backup, true)
-                }
+                // Backup provider file
+                file.copyTo(
+                    target = File(directory, "${file.name}.bak"),
+                    overwrite = true,
+                )
+
+                // Backup updater.json
+                updaterJsonFile.copyTo(
+                    target = File(directory, "${updaterJsonFile.name}.bak"),
+                    overwrite = true,
+                )
             }
         }
 
-        /**
-         * Restores the backup of all files in the same directory as the provider file.
-         *
-         * The backup files are expected to have a .bak extension appended to the original file name.
-         * */
         private suspend fun restoreBackup(backup: ProviderFromPreferences) {
-            val directory = File(backup.filePath).parentFile ?: return
+            val file = File(backup.filePath)
+            val directory = file.parentFile ?: return
+            val updaterJsonFile = File(directory, Constants.UPDATER_FILE)
+
+            val backupFile = File(directory, "${file.name}.bak")
+            val backupUpdaterJsonFile = File(directory, "${updaterJsonFile.name}.bak")
 
             withContext(appDispatchers.io) {
-                directory.listFiles()?.forEach {
-                    if (!it.name.endsWith(".bak")) {
-                        it.delete()
-                        return@forEach
-                    }
+                if (backupFile.exists()) {
+                    backupFile.copyTo(target = file, overwrite = true)
+                    backupFile.delete()
+                }
 
-                    val original = File(directory, it.name.removeSuffix(".bak"))
-                    it.copyTo(original, true)
-                    it.delete()
+                if (backupUpdaterJsonFile.exists()) {
+                    backupUpdaterJsonFile.copyTo(target = updaterJsonFile, overwrite = true)
+                    backupUpdaterJsonFile.delete()
                 }
             }
         }

@@ -9,13 +9,11 @@ import com.flixclusive.core.datastore.UserSessionDataStore
 import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
 import com.flixclusive.core.datastore.model.user.ProviderPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
-import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
-import com.flixclusive.domain.downloads.model.DownloadRequest
 import com.flixclusive.domain.downloads.usecase.DownloadFileUseCase
 import com.flixclusive.domain.provider.R
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
@@ -25,6 +23,7 @@ import com.flixclusive.domain.provider.util.DynamicResourceLoader
 import com.flixclusive.domain.provider.util.ProviderMigrator
 import com.flixclusive.domain.provider.util.ProviderMigrator.canMigrateSettingsFile
 import com.flixclusive.domain.provider.util.extensions.createFileForProvider
+import com.flixclusive.domain.provider.util.extensions.downloadProvider
 import com.flixclusive.domain.provider.util.extensions.getFileFromPath
 import com.flixclusive.domain.provider.util.extensions.getProviderInstance
 import com.flixclusive.model.provider.ProviderManifest
@@ -38,7 +37,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
@@ -49,7 +47,7 @@ private const val MANIFEST_FILE = "manifest.json"
 internal class LoadProviderUseCaseImpl
     @Inject
     constructor(
-        @ApplicationContext private val context: Context,
+        @param:ApplicationContext private val context: Context,
         private val userSessionDataStore: UserSessionDataStore,
         private val dataStoreManager: DataStoreManager,
         private val providerRepository: ProviderRepository,
@@ -87,47 +85,28 @@ internal class LoadProviderUseCaseImpl
 
                 val success = withContext(appDispatchers.io) {
                     try {
-                        val downloadRequest = DownloadRequest.from(
-                            url = metadata.buildUrl,
-                            destinationPath = file.parent!!,
-                            fileName = file.name,
-                        )
-
-                        downloadFile(downloadRequest).takeWhile {
-                            val exception = it.error
-
-                            when {
-                                it.status.isFinished && exception != null -> {
-                                    send(
-                                        LoadProviderResult.Failure(
-                                            provider = metadata,
-                                            filePath = file.absolutePath,
-                                            error = ExceptionWithUiText(it.error),
-                                        ),
-                                    )
-                                }
-
-                                it.status.isFinished -> {
-                                    infoLog("Successfully downloaded provider: ${metadata.name} [${file.name}]")
-                                }
-                            }
-
-                            !it.status.isFinished
-                        }.collect()
+                        downloadFile.downloadProvider(
+                            file = file,
+                            metadata = metadata,
+                        ).collect()
                     } catch (e: Throwable) {
-                        errorLog("Failed to download provider: ${metadata.name} [${file.name}]")
+                        errorLog("Failed to download provider: ${metadata.name}")
                         errorLog(e)
+
                         send(
                             LoadProviderResult.Failure(
                                 provider = metadata,
                                 filePath = file.absolutePath,
-                                error = e,
+                                error = when (e) {
+                                    is ExceptionWithUiText -> e.cause ?: e
+                                    else -> e
+                                },
                             ),
                         )
                         return@withContext false
                     }
 
-                    return@withContext true
+                    file.exists()
                 }
 
                 if (!success) {
@@ -146,7 +125,7 @@ internal class LoadProviderUseCaseImpl
             metadata: ProviderMetadata,
             filePath: String,
         ): Flow<LoadProviderResult> =
-            flow<LoadProviderResult> {
+            flow {
                 if (isProviderAlreadyLoaded(metadata)) {
                     emit(
                         LoadProviderResult.Failure(
@@ -162,15 +141,7 @@ internal class LoadProviderUseCaseImpl
 
                 try {
                     val file = File(filePath)
-                    val isFileExisting = withContext(appDispatchers.io) {
-                        safeCall {
-                            file.setReadOnly()
-                        }
-
-                        return@withContext file.exists()
-                    }
-
-                    if (!isFileExisting) {
+                    if (!file.exists()) {
                         errorLog("Provider file does not exist: $filePath")
                         emit(
                             LoadProviderResult.Failure(
@@ -187,9 +158,16 @@ internal class LoadProviderUseCaseImpl
                         return@flow
                     }
 
+                    // In case of Android 14+ then
+                    withContext(appDispatchers.io) {
+                        if (!file.setReadOnly()) {
+                            warnLog("Failed to set dex as read-only for provider: ${metadata.name}")
+                        }
+                    }
+
                     infoLog("Loading provider: ${metadata.name} [${file.name}]")
 
-                    val loader = PathClassLoader(filePath, context.classLoader)
+                    val loader = PathClassLoader(file.absolutePath, context.classLoader)
                     val manifest: ProviderManifest = withContext(appDispatchers.io) {
                         loader.getFileFromPath(MANIFEST_FILE)
                     }

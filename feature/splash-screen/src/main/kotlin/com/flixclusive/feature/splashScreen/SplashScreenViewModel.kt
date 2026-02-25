@@ -16,6 +16,8 @@ import com.flixclusive.data.database.repository.UserRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.domain.provider.usecase.manage.InitializeProvidersUseCase
 import com.flixclusive.domain.provider.usecase.manage.LoadProviderResult
+import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderResult
+import com.flixclusive.domain.provider.usecase.updater.CheckOutdatedProviderUseCase
 import com.flixclusive.domain.provider.usecase.updater.UpdateProviderUseCase
 import com.flixclusive.model.provider.ProviderMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +28,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -43,11 +44,12 @@ internal class SplashScreenViewModel
         private val dataStoreManager: DataStoreManager,
         private val appDispatchers: AppDispatchers,
         private val initializeProviders: InitializeProvidersUseCase,
-        private val updateProviders: UpdateProviderUseCase
+        private val checkOutdatedProviders: CheckOutdatedProviderUseCase,
+        private val updateProvider: UpdateProviderUseCase
     ) : ViewModel() {
         private var saveSettingsJob: Job? = null
 
-        private val _uiState = MutableStateFlow<SplashScreenUiState>(SplashScreenUiState(isLoading = true))
+        private val _uiState = MutableStateFlow(SplashScreenUiState(isLoading = true))
         val uiState = _uiState.asStateFlow()
 
         val systemPreferences = dataStoreManager
@@ -131,17 +133,22 @@ internal class SplashScreenViewModel
                             }
                         }
                     }
-                }.onCompletion {
-                    val providerPrefs =
-                        dataStoreManager.getUserPrefs(
-                            key = UserPreferences.PROVIDER_PREFS_KEY,
-                            type = ProviderPreferences::class
-                        ).first()
-
-                    if (providerPrefs.isAutoUpdateEnabled) {
-                        updateProviders(providers)
-                    }
                 }.collect()
+
+            val providerPrefs =
+                dataStoreManager.getUserPrefs(
+                    key = UserPreferences.PROVIDER_PREFS_KEY,
+                    type = ProviderPreferences::class
+                ).first()
+
+            if (providerPrefs.isAutoUpdateEnabled) {
+                val outdatedProviders = checkOutdatedProviders()
+                outdatedProviders
+                    .filterIsInstance<CheckOutdatedProviderResult.Outdated>()
+                    .forEach {
+                        updateProvider(it.metadata)
+                    }
+            }
         }
 
         init {
