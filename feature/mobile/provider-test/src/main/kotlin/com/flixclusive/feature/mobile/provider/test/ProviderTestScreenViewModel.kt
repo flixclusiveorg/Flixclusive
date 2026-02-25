@@ -41,11 +41,6 @@ internal class ProviderTestScreenViewModel
             skipTestedProviders: Boolean = false,
             testAgainIfTested: Boolean = false,
         ): StartTestResult {
-            // Show warning if any of the selected providers have already been tested
-            if (!testAgainIfTested && !skipTestedProviders && providers.fastAny(::isAlreadyBeenTested)) {
-                return StartTestResult.SHOW_WARNING
-            }
-
             val providersToTest = providers.let {
                 // If no providers were selected, test all providers
                 if (it.isEmpty()) {
@@ -57,6 +52,11 @@ internal class ProviderTestScreenViewModel
                 } else {
                     it
                 }
+            }
+
+            // Show warning if any of the selected providers have already been tested
+            if (!testAgainIfTested && !skipTestedProviders && providersToTest.fastAny(::isAlreadyBeenTested)) {
+                return StartTestResult.SHOW_WARNING
             }
 
             providerTester.start(providers = providersToTest)
