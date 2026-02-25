@@ -73,6 +73,7 @@ internal fun SubtitleSyncScreen(
     currentOffset: Long,
     currentPosition: Long,
     onSave: (Long) -> Unit,
+    onBack: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {

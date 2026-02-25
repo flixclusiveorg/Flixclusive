@@ -353,6 +353,7 @@ internal fun PlayerControls(
                         cues = player.currentCuesWithTiming,
                         currentOffset = player.offset,
                         currentPosition = scrubState.progress,
+                        onBack = { uiMode = UiMode.SUBS },
                         onDismiss = { uiMode = UiMode.NONE },
                         onSave = {
                             player.changeSubtitleDelay(it)
