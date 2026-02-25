@@ -31,7 +31,7 @@ import kotlin.time.Duration.Companion.milliseconds
 internal class ProviderTesterImpl
     @Inject
     constructor(
-        @ApplicationContext private val context: Context,
+        @param:ApplicationContext private val context: Context,
         private val providerApiRepository: ProviderApiRepository,
         private val providerRepository: ProviderRepository,
         private val appDispatchers: AppDispatchers,
@@ -65,14 +65,14 @@ internal class ProviderTesterImpl
                     val provider = providers[i]
 
                     val testOutputs = ProviderTestResult(provider = provider.addTestCountSuffix())
-
-                    _results.add(testOutputs)
                     val apiTestCaseIndex = testOutputs.add(
                         ProviderTestCaseResult(
                             status = TestStatus.RUNNING,
                             name = UiText.from(R.string.ptest_get_api),
                         ),
                     )
+
+                    _results.add(testOutputs)
 
                     val api = loadProviderApi(
                         metadata = provider,

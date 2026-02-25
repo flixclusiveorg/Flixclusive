@@ -45,6 +45,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -150,6 +151,7 @@ internal fun ProviderTestScreenContent(
     var sortOption by remember { mutableStateOf(SortOption(sort = SortOption.SortType.Date)) }
 
     val context = LocalContext.current
+    val resources = LocalResources.current
     val localDensity = LocalDensity.current
 
     var headerHeight by remember { mutableStateOf(0.dp) }
@@ -180,7 +182,7 @@ internal fun ProviderTestScreenContent(
             }
 
             snackbarHostState.showSnackbar(
-                message = context.getString(
+                message = resources.getString(
                     LocaleR.string.test_providers_completed,
                     "$totalTestsPassed/$totalTestsPerformed",
                 ),
@@ -192,15 +194,13 @@ internal fun ProviderTestScreenContent(
         }
     }
 
-    val testResults by remember {
-        derivedStateOf {
-            results.sortedWith { a, b ->
-                compareTestResults(
-                    a = a,
-                    b = b,
-                    sortOption = sortOption,
-                )
-            }
+    val testResults = remember(results, sortOption) {
+        results.sortedWith { a, b ->
+            compareTestResults(
+                a = a,
+                b = b,
+                sortOption = sortOption,
+            )
         }
     }
 
