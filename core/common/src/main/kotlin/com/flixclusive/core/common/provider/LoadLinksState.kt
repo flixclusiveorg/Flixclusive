@@ -5,8 +5,6 @@ import com.flixclusive.core.common.R
 import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.model.provider.link.MediaLink
-import com.flixclusive.model.provider.link.Stream
-import com.flixclusive.model.provider.link.Subtitle
 
 /**
  * Represents the state of a media link resource.
@@ -73,8 +71,10 @@ sealed class LoadLinksState(
      * The state when the resource is being extracted.
      *
      * @param message An optional message to display while extracting.
+     * @property providerId The ID of the provider that is being extracted from.
      */
     class Extracting(
+        val providerId: String,
         message: UiText? = null,
     ) : LoadLinksState(
             message = message
@@ -87,7 +87,7 @@ sealed class LoadLinksState(
          *
          * @param message The custom message to display.
          */
-        constructor(message: String) : this(UiText.from(message))
+        constructor(providerId: String, message: String) : this(providerId, UiText.from(message))
     }
 
     /**
@@ -152,12 +152,10 @@ sealed class LoadLinksState(
 
     /**
      * The state when the resource has been successfully fetched and extracted.
+     *
+     * @property providerId The ID of the provider that provided the links.
      */
-    data class Success(
-        val providerId: String,
-        val streams: List<Stream>,
-        val subtitles: List<Subtitle>
-    ) : LoadLinksState(message = UiText.from(R.string.source_data_dialog_state_success)) {
+    data class Success(val providerId: String) : LoadLinksState(message = UiText.from(R.string.source_data_dialog_state_success)) {
         override val ordinal = 5
     }
 

@@ -114,13 +114,7 @@ internal class GetMediaLinksUseCaseImpl
                 send(LoadLinksState.SuccessWithTrustedProviders)
                 return@channelFlow
             } else if (isCached) {
-                send(
-                    element = LoadLinksState.Success(
-                        providerId = oldCache.providerId,
-                        streams = oldCache.streams,
-                        subtitles = oldCache.subtitles,
-                    )
-                )
+                send(LoadLinksState.Success(providerId = oldCache.providerId))
                 return@channelFlow
             }
 
@@ -161,13 +155,7 @@ internal class GetMediaLinksUseCaseImpl
                 val existingCache = cachedLinksRepository.getCache(cacheKey)
                 if (existingCache?.hasStreamableLinks == true) {
                     cachedLinksRepository.reuseCache(cacheKey, existingCache)
-                    send(
-                        element = LoadLinksState.Success(
-                            providerId = existingCache.providerId,
-                            streams = existingCache.streams,
-                            subtitles = existingCache.subtitles,
-                        )
-                    )
+                    send(LoadLinksState.Success(providerId = existingCache.providerId))
                     return true
                 }
 
@@ -194,11 +182,6 @@ internal class GetMediaLinksUseCaseImpl
                     watchId!!
                 }
 
-                sendExtractingLinksMessage(
-                    provider = metadata.name,
-                    isOnWebView = api is ProviderWebViewApi,
-                )
-
                 cachedLinksRepository.storeCache(
                     key = cacheKey,
                     cachedLinks = CachedLinks(
@@ -206,6 +189,11 @@ internal class GetMediaLinksUseCaseImpl
                         providerId = id,
                         thumbnail = film.backdropImage ?: film.posterImage,
                     ),
+                )
+
+                sendExtractingLinksMessage(
+                    provider = metadata,
+                    isOnWebView = api is ProviderWebViewApi,
                 )
 
                 val result = getMediaLinks(
@@ -225,13 +213,7 @@ internal class GetMediaLinksUseCaseImpl
                     is Resource.Success -> {
                         val cache = cachedLinksRepository.getCache(cacheKey)
                         if (cache != null && cache.hasStreamableLinks) {
-                            send(
-                                element = LoadLinksState.Success(
-                                    providerId = cache.providerId,
-                                    streams = cache.streams,
-                                    subtitles = cache.subtitles,
-                                )
-                            )
+                            send(LoadLinksState.Success(providerId = cache.providerId))
                             return true
                         } else {
                             send(

@@ -498,7 +498,7 @@ private fun MediaLinksBottomSheetPreview() {
         delay(delayTime)
         state = LoadLinksState.Fetching()
         delay(delayTime)
-        state = LoadLinksState.Extracting()
+        state = LoadLinksState.Extracting(DEFAULT_FILM_SOURCE_NAME)
         while (itemCount < 10) {
             val randomBool = Random.nextBoolean()
             val link =
@@ -537,8 +537,6 @@ private fun MediaLinksBottomSheetPreview() {
         delay(delayTime)
         state = LoadLinksState.Success(
             providerId = DEFAULT_FILM_SOURCE_NAME,
-            streams = emptyList(),
-            subtitles = emptyList()
         )
 //        delay(delayTime)
 //        state = MediaLinkResourceState.Unavailable()

@@ -46,236 +46,248 @@ import javax.inject.Inject
 import com.flixclusive.core.strings.R as LocaleR
 
 @HiltViewModel
-internal class MobileAppViewModel
-    @Inject
-    constructor(
-        private val _getFilmMetadata: GetFilmMetadataUseCase,
-        private val getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
-        private val getMediaLinks: GetMediaLinksUseCase,
-        private val watchProgressRepository: WatchProgressRepository,
-        private val watchlistRepository: WatchlistRepository,
-        private val dataStoreManager: DataStoreManager,
-        private val userSessionManager: UserSessionManager,
-        private val libraryListRepository: LibraryListRepository,
-        private val appDispatchers: AppDispatchers,
-        private val playerCache: PlayerCache,
-        private val cachedLinksRepository: CachedLinksRepository,
-        networkMonitor: NetworkMonitor,
-    ) : ViewModel() {
-        private var onFilmLongClickJob: Job? = null
-        private var onFetchMediaLinksJob: Job? = null
+internal class MobileAppViewModel @Inject constructor(
+    private val _getFilmMetadata: GetFilmMetadataUseCase,
+    private val getSeasonWithWatchProgress: GetSeasonWithWatchProgressUseCase,
+    private val getMediaLinks: GetMediaLinksUseCase,
+    private val watchProgressRepository: WatchProgressRepository,
+    private val watchlistRepository: WatchlistRepository,
+    private val dataStoreManager: DataStoreManager,
+    private val userSessionManager: UserSessionManager,
+    private val libraryListRepository: LibraryListRepository,
+    private val appDispatchers: AppDispatchers,
+    private val playerCache: PlayerCache,
+    private val cachedLinksRepository: CachedLinksRepository,
+    networkMonitor: NetworkMonitor,
+) : ViewModel() {
+    private var onFilmLongClickJob: Job? = null
+    private var onFetchMediaLinksJob: Job? = null
 
-        private val userId: Int
-            get() {
-                return userSessionManager.currentUser.value?.id
-                    ?: error("It is now allowed to browse the app without a logged in user!")
-            }
-
-        /**
-         * A WebView driver instance that is shared across the app.
-         *
-         * This is initialized by providers that require a WebView to fetch media links.
-         * It is destroyed when the user leaves the app or when it's no longer needed to free up resources.
-         * */
-        val webViewDriver = WebViewDriverManager.webView
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = null,
-            )
-
-        /**
-         * A StateFlow to check if user is connected to the internet.
-         * */
-        val hasInternet = networkMonitor.isOnline
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = true,
-            )
-
-        val hasNotSeenNewChangelogs = dataStoreManager
-            .getSystemPrefs()
-            .mapLatest { BuildConfig.VERSION_CODE > it.lastSeenChangelogs }
-            .distinctUntilChanged()
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = true,
-            )
-
-        private val _uiState = MutableStateFlow(MobileAppUiState())
-        val uiState: StateFlow<MobileAppUiState> = _uiState.asStateFlow()
-
-        val currentLinksCache = cachedLinksRepository.currentCache
-
-        fun previewFilm(film: Film) {
-            if (onFilmLongClickJob?.isActive == true) return
-
-            onFilmLongClickJob = viewModelScope.launch {
-                val watchlistItem = watchlistRepository.get(filmId = film.identifier, ownerId = userId)
-                val libraryItem =
-                    libraryListRepository.getListsContainingFilm(filmId = film.identifier, ownerId = userId).first()
-                val watchProgressItem = watchProgressRepository.get(
-                    id = film.identifier,
-                    ownerId = userId,
-                    type = film.filmType,
-                )
-
-                val isInLibrary = libraryItem.isNotEmpty() ||
-                    watchProgressItem != null ||
-                    watchlistItem != null
-
-                _uiState.update {
-                    it.copy(
-                        filmPreviewState = FilmPreview(
-                            film = film,
-                            isInLibrary = isInLibrary,
-                        ),
-                    )
-                }
-            }
+    private val userId: Int
+        get() {
+            return userSessionManager.currentUser.value?.id
+                ?: error("It is now allowed to browse the app without a logged in user!")
         }
 
-        fun onFetchMediaLinks(
-            film: Film,
-            episode: Episode? = null,
-        ) {
-            if (onFetchMediaLinksJob?.isActive == true) return
+    /**
+     * A WebView driver instance that is shared across the app.
+     *
+     * This is initialized by providers that require a WebView to fetch media links.
+     * It is destroyed when the user leaves the app or when it's no longer needed to free up resources.
+     * */
+    val webViewDriver = WebViewDriverManager.webView
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null,
+        )
 
-            onFetchMediaLinksJob = viewModelScope.launch {
-                updateLoadLinksState(LoadLinksState.Fetching(LocaleR.string.film_data_fetching))
+    /**
+     * A StateFlow to check if user is connected to the internet.
+     * */
+    val hasInternet = networkMonitor.isOnline
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = true,
+        )
 
-                val metadata = getFilmMetadata(film = film)
-                if (metadata == null) {
-                    updateLoadLinksState(LoadLinksState.Error(LocaleR.string.film_data_fetch_failed))
-                    return@launch
-                }
+    val hasNotSeenNewChangelogs = dataStoreManager
+        .getSystemPrefs()
+        .mapLatest { BuildConfig.VERSION_CODE > it.lastSeenChangelogs }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = true,
+        )
 
-                // Data to be passed to the player screen
-                var playerData = PlayerData(film = metadata)
+    private val _uiState = MutableStateFlow(MobileAppUiState())
+    val uiState: StateFlow<MobileAppUiState> = _uiState.asStateFlow()
 
-                val responseFlow = when (metadata) {
-                    is Movie -> getMediaLinks(movie = metadata)
-                    is TvShow -> {
-                        var episodeToLoad = episode
+    val currentLinksCache = cachedLinksRepository.currentCache
 
-                        if (episode == null) {
-                            getSeason(tvShow = metadata)
-                                .onSuccess { episodeToLoad = it }
-                                .onFailure { e ->
-                                    updateLoadLinksState(LoadLinksState.Error(e))
-                                    return@launch
-                                }
-                        }
+    fun previewFilm(film: Film) {
+        if (onFilmLongClickJob?.isActive == true) return
 
-                        playerData = playerData.copy(episode = episodeToLoad)
-
-                        getMediaLinks(
-                            tvShow = metadata,
-                            episode = episodeToLoad!!,
-                        )
-                    }
-
-                    else -> error("This is not a valid FilmMetadata subclass: $metadata")
-                }
-
-                _uiState.update { it.copy(playerData = playerData) }
-                responseFlow.collect(::updateLoadLinksState)
-            }
-        }
-
-        /**
-         * Gets a detailed metadata of a non-detailed [Film].
-         *
-         * This assumes that [Film] could be a search item.
-         * */
-        private suspend fun getFilmMetadata(film: Film): FilmMetadata? {
-            if (film is FilmMetadata) return film
-
-            return when (val response = _getFilmMetadata(film = film)) {
-                is Resource.Success -> response.data
-                else -> null
-            }
-        }
-
-        private suspend fun getSeason(tvShow: TvShow): Result<Episode> {
-            val episodeProgress = watchProgressRepository.get(
-                id = tvShow.identifier,
+        onFilmLongClickJob = viewModelScope.launch {
+            val watchlistItem = watchlistRepository.get(filmId = film.identifier, ownerId = userId)
+            val libraryItem =
+                libraryListRepository.getListsContainingFilm(filmId = film.identifier, ownerId = userId).first()
+            val watchProgressItem = watchProgressRepository.get(
+                id = film.identifier,
                 ownerId = userId,
-                type = tvShow.filmType,
-            ) as? EpisodeProgressWithMetadata
+                type = film.filmType,
+            )
 
-            // Default to 1 if this has not been saved yet
-            val seasonNumber = episodeProgress?.watchData?.seasonNumber ?: 1
-            val episodeNumber = episodeProgress?.watchData?.episodeNumber ?: 1
+            val isInLibrary = libraryItem.isNotEmpty() ||
+                watchProgressItem != null ||
+                watchlistItem != null
 
-            val response = getSeasonWithWatchProgress(tvShow = tvShow, number = seasonNumber)
-                .dropWhile { it is Resource.Loading }
-                .first()
-
-            when (response) {
-                is Resource.Failure -> {
-                    return Result.failure(ExceptionWithUiText(response.error))
-                }
-
-                is Resource.Success -> {
-                    val season = response.data!!
-                    val episodeWithProgress = season.episodes.fastFirstOrNull { it.number == episodeNumber }
-
-                    if (episodeWithProgress == null) {
-                        return Result.failure(ExceptionWithUiText(UiText.from(LocaleR.string.unavailable_episode)))
-                    }
-
-                    return Result.success(episodeWithProgress.episode)
-                }
-
-                else -> error("Fetching seasons for load links state is still loading!")
-            }
-        }
-
-        fun hideWebViewDriver() {
-            WebViewDriverManager.destroy()
-        }
-
-        fun onStopLoadingLinks(isForceClosing: Boolean = false) {
-            updateLoadLinksState(LoadLinksState.Idle)
-            if (isForceClosing) {
-                onFetchMediaLinksJob?.cancel() // Cancel job
-            }
-        }
-
-        fun onSaveLastSeenChangelogs(version: Long) {
-            appDispatchers.ioScope.launch {
-                dataStoreManager.updateSystemPrefs {
-                    it.copy(lastSeenChangelogs = version)
-                }
-            }
-        }
-
-        fun onRemovePreviewFilm() {
-            _uiState.update { it.copy(filmPreviewState = null) }
-        }
-
-        fun onReleasePlayerCache() {
-            appDispatchers.ioScope.launch {
-                playerCache.release()
-            }
-        }
-
-        fun updateLoadLinksState(state: LoadLinksState) {
-            val playerData = _uiState.value.playerData
-            if (state is LoadLinksState.Success && playerData != null) {
-                val cache = state.toCacheKey(
-                    filmId = playerData.film.identifier,
-                    episode = playerData.episode,
+            _uiState.update {
+                it.copy(
+                    filmPreviewState = FilmPreview(
+                        film = film,
+                        isInLibrary = isInLibrary,
+                    ),
                 )
-
-                cachedLinksRepository.setCurrentCache(cache)
             }
-            _uiState.update { it.copy(loadLinksState = state) }
         }
     }
+
+    fun onFetchMediaLinks(
+        film: Film,
+        episode: Episode? = null,
+    ) {
+        if (onFetchMediaLinksJob?.isActive == true) return
+
+        onFetchMediaLinksJob = viewModelScope.launch {
+            updateLoadLinksState(LoadLinksState.Fetching(LocaleR.string.film_data_fetching))
+
+            val metadata = getFilmMetadata(film = film)
+            if (metadata == null) {
+                updateLoadLinksState(LoadLinksState.Error(LocaleR.string.film_data_fetch_failed))
+                return@launch
+            }
+
+            // Data to be passed to the player screen
+            var playerData = PlayerData(film = metadata)
+
+            val responseFlow = when (metadata) {
+                is Movie -> getMediaLinks(movie = metadata)
+                is TvShow -> {
+                    var episodeToLoad = episode
+
+                    if (episode == null) {
+                        getSeason(tvShow = metadata)
+                            .onSuccess { episodeToLoad = it }
+                            .onFailure { e ->
+                                updateLoadLinksState(LoadLinksState.Error(e))
+                                return@launch
+                            }
+                    }
+
+                    playerData = playerData.copy(episode = episodeToLoad)
+
+                    getMediaLinks(
+                        tvShow = metadata,
+                        episode = episodeToLoad!!,
+                    )
+                }
+
+                else -> error("This is not a valid FilmMetadata subclass: $metadata")
+            }
+
+            _uiState.update { it.copy(playerData = playerData) }
+            responseFlow.collect(::updateLoadLinksState)
+
+            if (isFailureButHasLinks()) {
+                cachedLinksRepository.setCurrentCache(null)
+            }
+        }
+    }
+
+    /**
+     * Gets a detailed metadata of a non-detailed [Film].
+     *
+     * This assumes that [Film] could be a search item.
+     * */
+    private suspend fun getFilmMetadata(film: Film): FilmMetadata? {
+        if (film is FilmMetadata) return film
+
+        return when (val response = _getFilmMetadata(film = film)) {
+            is Resource.Success -> response.data
+            else -> null
+        }
+    }
+
+    private suspend fun getSeason(tvShow: TvShow): Result<Episode> {
+        val episodeProgress = watchProgressRepository.get(
+            id = tvShow.identifier,
+            ownerId = userId,
+            type = tvShow.filmType,
+        ) as? EpisodeProgressWithMetadata
+
+        // Default to 1 if this has not been saved yet
+        val seasonNumber = episodeProgress?.watchData?.seasonNumber ?: 1
+        val episodeNumber = episodeProgress?.watchData?.episodeNumber ?: 1
+
+        val response = getSeasonWithWatchProgress(tvShow = tvShow, number = seasonNumber)
+            .dropWhile { it is Resource.Loading }
+            .first()
+
+        when (response) {
+            is Resource.Failure -> {
+                return Result.failure(ExceptionWithUiText(response.error))
+            }
+
+            is Resource.Success -> {
+                val season = response.data!!
+                val episodeWithProgress = season.episodes.fastFirstOrNull { it.number == episodeNumber }
+
+                if (episodeWithProgress == null) {
+                    return Result.failure(ExceptionWithUiText(UiText.from(LocaleR.string.unavailable_episode)))
+                }
+
+                return Result.success(episodeWithProgress.episode)
+            }
+
+            else -> error("Fetching seasons for load links state is still loading!")
+        }
+    }
+
+    fun hideWebViewDriver() {
+        WebViewDriverManager.destroy()
+    }
+
+    fun onStopLoadingLinks(isForceClosing: Boolean = false) {
+        updateLoadLinksState(LoadLinksState.Idle)
+        if (isForceClosing) {
+            onFetchMediaLinksJob?.cancel() // Cancel job
+        }
+    }
+
+    fun onSaveLastSeenChangelogs(version: Long) {
+        appDispatchers.ioScope.launch {
+            dataStoreManager.updateSystemPrefs {
+                it.copy(lastSeenChangelogs = version)
+            }
+        }
+    }
+
+    fun onRemovePreviewFilm() {
+        _uiState.update { it.copy(filmPreviewState = null) }
+    }
+
+    fun onReleasePlayerCache() {
+        appDispatchers.ioScope.launch {
+            playerCache.release()
+        }
+    }
+
+    fun updateLoadLinksState(state: LoadLinksState) {
+        val playerData = _uiState.value.playerData
+        if (state is LoadLinksState.Extracting && playerData != null) {
+            val cache = state.toCacheKey(
+                filmId = playerData.film.identifier,
+                episode = playerData.episode,
+            )
+
+            cachedLinksRepository.setCurrentCache(cache)
+        }
+
+        _uiState.update { it.copy(loadLinksState = state) }
+    }
+
+    private fun isFailureButHasLinks(): Boolean {
+        val currentCache = currentLinksCache.value
+        val loadLinksState = _uiState.value.loadLinksState
+
+        return loadLinksState.isError
+            && currentCache != null
+            && currentCache.hasStreamableLinks
+    }
+}
 
 @Stable
 internal data class MobileAppUiState(

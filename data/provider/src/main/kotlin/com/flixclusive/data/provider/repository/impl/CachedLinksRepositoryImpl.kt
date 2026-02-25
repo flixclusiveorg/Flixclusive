@@ -9,14 +9,16 @@ import com.flixclusive.data.provider.repository.CachedLinksRepository
 import com.flixclusive.data.provider.util.extensions.filterOutExpiredLinks
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -33,24 +35,29 @@ internal class CachedLinksRepositoryImpl @Inject constructor(
     private val map = HashMap<CacheKey, CachedLinks>()
     private val _caches = MutableStateFlow(map.toMap())
 
-    private val _currentCache = MutableStateFlow<CachedLinks?>(null)
-    override val currentCache = _currentCache
-        .mapLatest {
-            if (it != null) {
-                val validStreams = it.streams.filterOutExpiredLinks()
-                if (validStreams.isEmpty()) return@mapLatest null
-
-                it.copy(streams = validStreams)
-            } else {
-                null
-            }
-        }.stateIn(
-            scope = appDispatchers.ioScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = _currentCache.value,
-        )
-
     override val caches: StateFlow<Map<CacheKey, CachedLinks>> = _caches.asStateFlow()
+
+    private val currentCacheKey = MutableStateFlow<CacheKey?>(null)
+
+    @OptIn(FlowPreview::class)
+    override val currentCache = combine(
+        currentCacheKey,
+        caches.debounce(300), // Debounce to prevent emitting too many times when adding streams or subtitles
+    ) { key, c ->
+        if (key == null) return@combine null
+
+        val cache = c.getOrElse(key) { null }
+        if (cache == null) return@combine null
+
+        val validStreams = cache.streams.filterOutExpiredLinks()
+        if (validStreams.isEmpty()) return@combine null
+
+        cache.copy(streams = validStreams)
+    }.stateIn(
+        scope = appDispatchers.ioScope,
+        started = SharingStarted.Lazily,
+        initialValue = null,
+    )
 
     override fun storeCache(
         key: CacheKey,
@@ -80,16 +87,16 @@ internal class CachedLinksRepositoryImpl @Inject constructor(
         _caches.value = map.toMap()
     }
 
-    override fun setCurrentCache(key: CacheKey) {
-        _currentCache.value = map.getOrElse(key) { null }
+    override fun setCurrentCache(key: CacheKey?) {
+        currentCacheKey.value = key
     }
 
     override fun removeCache(key: CacheKey) {
-        val item = map.remove(key) ?: return
-        if (item == _currentCache.value) {
-            _currentCache.value = null
+        if (currentCacheKey.value == key) {
+            currentCacheKey.value = null
         }
 
+        map.remove(key) ?: return
         _caches.value = map.toMap()
     }
 
@@ -99,7 +106,7 @@ internal class CachedLinksRepositoryImpl @Inject constructor(
     ): CachedLinks? {
         if (!map.contains(key) && defaultValue != null) storeCache(key, defaultValue)
 
-        var cache = map[key] ?: return null
+        val cache = map[key] ?: return null
 
         val validStreams = cache.streams.filterOutExpiredLinks()
         if (validStreams.isEmpty()) return null

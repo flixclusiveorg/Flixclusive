@@ -3,13 +3,8 @@ package com.flixclusive.domain.provider.util.extensions
 import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.domain.provider.R
+import com.flixclusive.model.provider.ProviderMetadata
 import kotlinx.coroutines.channels.ProducerScope
-
-/**
- * Sends a message on the [ProducerScope] indicating that the episode is being fetched.
- * */
-fun ProducerScope<LoadLinksState>.sendFetchingEpisodeMessage() =
-    trySend(LoadLinksState.Fetching(UiText.StringResource(R.string.fetching_episode_message)))
 
 /**
  * Sends a message on the [ProducerScope] indicating that the film is being fetched from a specific provider.
@@ -31,7 +26,7 @@ fun ProducerScope<LoadLinksState>.sendFetchingFilmMessage(provider: String) =
  * @param isOnWebView indicates whether the extraction is happening on a web view
  * */
 fun ProducerScope<LoadLinksState>.sendExtractingLinksMessage(
-    provider: String,
+    provider: ProviderMetadata,
     isOnWebView: Boolean = false,
 ) {
     val messageFormat =
@@ -43,7 +38,8 @@ fun ProducerScope<LoadLinksState>.sendExtractingLinksMessage(
 
     trySend(
         LoadLinksState.Extracting(
-            UiText.StringResource(messageFormat, provider),
+            providerId = provider.id,
+            message = UiText.StringResource(messageFormat, provider.name),
         ),
     )
 }

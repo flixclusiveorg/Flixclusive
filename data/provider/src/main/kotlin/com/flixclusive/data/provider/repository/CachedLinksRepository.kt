@@ -30,6 +30,17 @@ value class CacheKey private constructor(
             episode: Episode? = null,
         ) = CacheKey("$providerId::$filmId-${episode?.season}:${episode?.number}")
 
+        fun LoadLinksState.Extracting.toCacheKey(
+            filmId: String,
+            episode: Episode? = null,
+        ): CacheKey {
+            return create(
+                filmId = filmId,
+                providerId = providerId,
+                episode = episode,
+            )
+        }
+
         fun LoadLinksState.Success.toCacheKey(
             filmId: String,
             episode: Episode? = null,
@@ -64,21 +75,6 @@ data class CachedLinks(
     val subtitles: List<Subtitle> = emptyList(),
 ) : Serializable {
     val hasStreamableLinks get() = streams.filterOutExpiredLinks().isNotEmpty()
-
-    override fun equals(other: Any?): Boolean {
-        if (other is CachedLinks) {
-            return watchId == other.watchId &&
-                providerId == other.providerId &&
-                thumbnail == other.thumbnail
-        }
-
-        return super.equals(other)
-    }
-
-
-    override fun hashCode(): Int {
-        return javaClass.hashCode()
-    }
 
     companion object {
         fun CachedLinks.appendStream(stream: Stream): CachedLinks {
@@ -164,7 +160,7 @@ interface CachedLinksRepository {
      *
      * @see currentCache
      * */
-    fun setCurrentCache(key: CacheKey)
+    fun setCurrentCache(key: CacheKey?)
 
     /**
      * Removes the cache associated with the given [CacheKey].
