@@ -20,6 +20,18 @@ sealed interface CollectionsOperation<T> {
         data class Remove<T>(
             val item: T,
         ) : List<T>()
+
+        data class Move<T>(
+            val from: Int,
+            val to: Int,
+        ) : List<T>()
+
+        data class Replace<T>(
+            val index: Int,
+            val item: T,
+        ) : List<T>()
+
+        class Clear<T> : List<T>()
     }
 
     @Serializable

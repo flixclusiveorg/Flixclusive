@@ -57,6 +57,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastFilter
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.provider.ProviderWithThrowable
@@ -101,7 +102,7 @@ internal fun ProviderManagerScreen(
         uiState = uiState,
         providers = {
             if (searchQuery.isNotBlank() && uiState.isSearching) {
-                viewModel.providers.filter { it.name.contains(searchQuery, true) }
+                viewModel.providers.fastFilter { it.name.contains(searchQuery, true) }
             } else {
                 viewModel.providers
             }

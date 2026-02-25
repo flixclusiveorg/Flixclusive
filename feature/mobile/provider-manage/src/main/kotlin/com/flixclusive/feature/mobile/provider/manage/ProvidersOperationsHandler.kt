@@ -17,6 +17,14 @@ internal class ProvidersOperationsHandler(
         when (operation) {
             is CollectionsOperation.List.Add -> handleAdd(operation.item.id)
             is CollectionsOperation.List.Remove -> handleRemove(operation.item.id)
+            is CollectionsOperation.List.Clear -> providers.clear()
+            is CollectionsOperation.List.Move -> {
+                providers.add(operation.to, providers.removeAt(operation.from))
+            }
+            is CollectionsOperation.List.Replace -> {
+                val provider = repository.getProviderMetadata(operation.item.id) ?: return
+                providers[operation.index] = provider
+            }
         }
     }
 

@@ -73,7 +73,7 @@ internal class ProviderManagerViewModel @Inject constructor(
 
     val providerToggles = dataStoreManager
         .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
-        .map { it.providers.fastMap { it.isDisabled } }
+        .map { prefs -> prefs.providers.fastMap { it.isDisabled } }
         .distinctUntilChanged()
         .stateIn(
             viewModelScope,
