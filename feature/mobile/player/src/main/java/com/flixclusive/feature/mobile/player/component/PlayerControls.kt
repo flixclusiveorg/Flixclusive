@@ -161,15 +161,16 @@ internal fun PlayerControls(
             return@LaunchedEffect
         }
 
-        if (gestureState.isDoubleTapping || gestureState.isSliding || isInPipMode || !uiMode.isNone) {
-            queueControlVisibility = controlsVisibilityState.isVisible
+        val shouldHideControls = gestureState.isDoubleTapping || gestureState.isSliding || isInPipMode || !uiMode.isNone
+        if (controlsVisibilityState.isVisible && shouldHideControls) {
+            queueControlVisibility = true
             controlsVisibilityState.hide()
             return@LaunchedEffect
         }
 
-        if (queueControlVisibility) {
-            controlsVisibilityState.show()
+        if (queueControlVisibility && !shouldHideControls) {
             queueControlVisibility = false
+            controlsVisibilityState.show()
         }
     }
 
