@@ -151,7 +151,14 @@ internal fun ContentTabs(
                 subcompose("Indicator") {
                     TabRowDefaults.PrimaryIndicator(
                         modifier = Modifier
-                            .tabIndicatorOffset(tabPositions[currentTabSelected])
+                            .tabIndicatorOffset(
+                                tabPositions.getOrElse(
+                                    currentTabSelected,
+
+                                ) {
+                                    TabPosition(0.dp, 0.dp)
+                                }
+                            )
                             .padding(horizontal = 25.dp),
                         width = Dp.Unspecified,
                     )
