@@ -2,6 +2,7 @@ package com.flixclusive.feature.mobile.player.component.top
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -18,10 +19,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
+import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
@@ -43,6 +46,7 @@ internal fun PlayerTopBar(
             IconButton(
                 onClick = onBack,
                 modifier = Modifier
+                    .padding(top = 5.dp, end = 5.dp)
                     .align(Alignment.CenterStart)
             ) {
                 AdaptiveIcon(
@@ -67,7 +71,7 @@ private fun PlayerLabel(
     episode: Episode?,
     modifier: Modifier = Modifier
 ) {
-    val titleStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp)
+    val titleStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp).asAdaptiveTextStyle()
 
     Box(
         modifier = modifier,

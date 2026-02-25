@@ -108,17 +108,28 @@ internal fun SubtitleSyncScreen(
                 .fillMaxSize()
                 .padding(horizontal = 25.dp)
         ) {
-            IconButton(
-                onClick = onDismiss,
+            Row(
                 modifier = Modifier
-                    .padding(end = 20.dp)
-                    .align(Alignment.End)
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp, horizontal = 5.dp)
             ) {
-                AdaptiveIcon(
-                    painter = painterResource(id = UiCommonR.drawable.round_close_24),
-                    contentDescription = stringResource(id = LocaleR.string.close),
-                    tint = Color.White
-                )
+                IconButton(onClick = onDismiss) {
+                    AdaptiveIcon(
+                        painter = painterResource(id = UiCommonR.drawable.left_arrow),
+                        contentDescription = stringResource(id = LocaleR.string.navigate_up),
+                        tint = Color.White
+                    )
+                }
+
+                Spacer(Modifier.weight(1f))
+
+                IconButton(onClick = onDismiss) {
+                    AdaptiveIcon(
+                        painter = painterResource(id = UiCommonR.drawable.round_close_24),
+                        contentDescription = stringResource(id = LocaleR.string.close),
+                        tint = Color.White
+                    )
+                }
             }
 
             Row(

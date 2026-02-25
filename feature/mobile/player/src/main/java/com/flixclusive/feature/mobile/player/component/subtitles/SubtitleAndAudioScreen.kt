@@ -102,7 +102,7 @@ internal fun SubtitleAndAudioScreen(
             IconButton(
                 onClick = onDismiss,
                 modifier = Modifier
-                    .padding(end = 20.dp)
+                    .padding(end = 5.dp, top = 10.dp)
                     .align(Alignment.End)
             ) {
                 AdaptiveIcon(
