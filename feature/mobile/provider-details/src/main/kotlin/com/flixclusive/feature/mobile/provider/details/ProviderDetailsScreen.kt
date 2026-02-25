@@ -27,7 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -120,7 +120,7 @@ private fun ProviderDetailsScreenContent(
     onViewMarkdown: (String, String) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
-    val context = LocalContext.current
+    val resources = LocalResources.current
 
     val windowWidthSizeClass = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass
 
@@ -148,18 +148,21 @@ private fun ProviderDetailsScreenContent(
                 title = "",
                 onNavigate = onGoBack,
                 scrollBehavior = scrollBehavior,
-                actions = {
-                    val description = stringResource(LocaleR.string.provider_settings)
+                actions =
+                    if (!uiState.installationStatus.isNotInstalled && !uiState.installationStatus.isInstalling) {
+                        {
+                            val description = stringResource(LocaleR.string.provider_settings)
 
-                    PlainTooltipBox(description) {
-                        IconButton(onClick = onGoToProviderSettings) {
-                            AdaptiveIcon(
-                                painter = painterResource(UiCommonR.drawable.provider_settings),
-                                contentDescription = description,
-                            )
+                            PlainTooltipBox(description) {
+                                IconButton(onClick = onGoToProviderSettings) {
+                                    AdaptiveIcon(
+                                        painter = painterResource(UiCommonR.drawable.provider_settings),
+                                        contentDescription = description,
+                                    )
+                                }
+                            }
                         }
-                    }
-                },
+                    } else null,
             )
         },
         modifier = Modifier
@@ -245,7 +248,7 @@ private fun ProviderDetailsScreenContent(
                                             onViewMarkdown(name, changelog!!)
                                         } else {
                                             scope.launch {
-                                                val message = context.getString(LocaleR.string.no_changelogs)
+                                                val message = resources.getString(LocaleR.string.no_changelogs)
                                                 snackbarHostState.showMessage(message)
                                             }
                                         }
@@ -294,11 +297,11 @@ private fun ProviderDetailsScreenContent(
             quantity = 1,
             formattedName = metadata.name,
             warnOnInstall = warnOnInstall,
+            onDismiss = { isWarnOnInstallDialogOpened = false },
             onConfirm = { disableWarning ->
                 onDisableInstallationWarning(disableWarning)
                 onToggleInstallation()
             },
-            onDismiss = { isWarnOnInstallDialogOpened = false },
         )
     }
 }
