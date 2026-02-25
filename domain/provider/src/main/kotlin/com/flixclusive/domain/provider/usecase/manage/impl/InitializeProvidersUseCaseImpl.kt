@@ -32,7 +32,7 @@ import javax.inject.Inject
 internal class InitializeProvidersUseCaseImpl
     @Inject
     constructor(
-        @ApplicationContext private val context: Context,
+        @param:ApplicationContext private val context: Context,
         private val dataStoreManager: DataStoreManager,
         private val loadProviderUseCase: LoadProviderUseCase,
         private val appDispatchers: AppDispatchers,
@@ -46,7 +46,7 @@ internal class InitializeProvidersUseCaseImpl
             channelFlow {
                 withContext(appDispatchers.io) {
                     initializeDebugProviders()
-                    initializeLocalProviders().collect { (provider, file) ->
+                    getAllProviders().forEach { (provider, file) ->
                         loadProviderUseCase(
                             metadata = provider,
                             filePath = file.absolutePath,
@@ -118,51 +118,47 @@ internal class InitializeProvidersUseCaseImpl
         /**
          * Initializes all downloaded providers from local storage.
          * */
-        private fun initializeLocalProviders() =
-            channelFlow<Pair<ProviderMetadata, File>> {
-                val providers = getProviderPrefs().providers
+        private suspend fun getAllProviders(): List<Pair<ProviderMetadata, File>> {
+            val providers = getProviderPrefs().providers
 
-                if (providers.isEmpty()) {
-                    infoLog("No providers found in preferences!")
-                    return@channelFlow
+            if (providers.isEmpty()) {
+                infoLog("No providers found in preferences!")
+                return emptyList()
+            }
+
+            return providers.mapNotNull { provider ->
+                val file = File(provider.filePath)
+
+                if (!file.exists()) {
+                    warnLog("Provider file doesn't exist for: ${provider.name}")
+                    return@mapNotNull null
                 }
 
-                providers.forEach { provider ->
-                    val file = File(provider.filePath)
+                val metadata = getMetadata(id = provider.id, file = file)
+                    ?: return@mapNotNull null
 
-                    if (!file.exists()) {
-                        warnLog("Provider file doesn't exist for: ${provider.name}")
-                        return@forEach
+                val rootParentFolder = file.parentFile?.parentFile?.name
+                val isDebugProvider = rootParentFolder.equals(Constants.PROVIDER_DEBUG, true)
+
+                return@mapNotNull when {
+                    file.isProviderFile && isDebugProvider && getProviderPrefs().shouldAddDebugPrefix -> {
+                        val debugMetadata = metadata.copy(
+                            id = "${metadata.id}-${Constants.PROVIDER_DEBUG}",
+                            name = "${metadata.name}-${Constants.PROVIDER_DEBUG}",
+                        )
+
+                        debugMetadata to file
                     }
-
-                    val metadata = getMetadata(id = provider.id, file = file)
-                        ?: return@forEach
-
-                    val rootParentFolder = file.parentFile?.parentFile?.name
-                    val isDebugProvider = rootParentFolder.equals(Constants.PROVIDER_DEBUG, true)
-
-                    when {
-                        file.isProviderFile && isDebugProvider && getProviderPrefs().shouldAddDebugPrefix -> {
-                            val debugMetadata = metadata.copy(
-                                id = "${metadata.id}-${Constants.PROVIDER_DEBUG}",
-                                name = "${metadata.name}-${Constants.PROVIDER_DEBUG}",
-                            )
-
-                            send(debugMetadata to file)
-                        }
-
-                        file.isProviderFile -> {
-                            send(metadata to file)
-                        }
-
-                        else -> {
-                            // `file` could either be a dex file, an oat file, a json file, or a directory
-                            // so for safety, we will delete the file using `rmrf`
-                            rmrf(file)
-                        }
+                    file.isProviderFile -> metadata to file
+                    else -> {
+                        // `file` could either be a dex file, an oat file, a json file, or a directory
+                        // so for safety, we will delete the file using `rmrf`
+                        rmrf(file)
+                        null
                     }
                 }
             }
+        }
 
         /**
          * Adds the debug provider to the preferences if it is not already present.
