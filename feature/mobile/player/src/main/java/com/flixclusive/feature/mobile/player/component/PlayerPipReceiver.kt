@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.player.component
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -13,6 +14,7 @@ import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.extensions.ACTION_PIP_CONTROL
 import com.flixclusive.core.presentation.player.extensions.PLAYER_PIP_EVENT
 
+@SuppressLint("UnspecifiedRegisterReceiverFlag")
 @Composable
 internal fun PlayerPipReceiver(player: AppPlayer) {
     val context = LocalContext.current

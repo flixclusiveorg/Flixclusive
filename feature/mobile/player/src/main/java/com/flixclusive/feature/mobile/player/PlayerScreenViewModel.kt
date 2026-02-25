@@ -405,7 +405,6 @@ internal class PlayerScreenViewModel @Inject constructor(
             playImmediately = playImmediately,
         )
 
-
         return true
     }
 

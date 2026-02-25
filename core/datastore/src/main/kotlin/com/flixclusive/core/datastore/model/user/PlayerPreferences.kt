@@ -12,7 +12,6 @@ const val DEFAULT_PLAYER_BUFFER_AMOUNT = 50L
 
 @Serializable
 data class PlayerPreferences(
-    val isForcingPlayerRelease: Boolean = true,
     val isDurationReversed: Boolean = true,
     val isPiPModeEnabled: Boolean = true,
     val isUsingVolumeBoost: Boolean = false,

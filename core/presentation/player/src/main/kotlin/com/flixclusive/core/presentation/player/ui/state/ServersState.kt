@@ -37,6 +37,7 @@ class ServersState(
                 val currentItem = player.currentCacheMediaItem ?: return@listen
 
                 selectedServer = currentItem.currentServerIndex
+                servers.clear()
                 servers.addAll(currentItem.servers)
             }
         }

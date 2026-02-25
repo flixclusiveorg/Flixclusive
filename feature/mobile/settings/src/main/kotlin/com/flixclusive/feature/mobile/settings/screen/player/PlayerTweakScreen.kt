@@ -242,16 +242,6 @@ internal class PlayerTweakScreen(
             title = stringResource(LocaleR.string.advanced),
             tweaks =
                 persistentListOf(
-                    TweakUI.SwitchTweak(
-                        title = stringResource(LocaleR.string.release_player),
-                        descriptionProvider = { context.getString(LocaleR.string.release_player_desc) },
-                        value = remember { mutableStateOf(playerPreferences().isForcingPlayerRelease) },
-                        onTweaked = {
-                            onUpdatePreferences { oldValue ->
-                                oldValue.copy(isForcingPlayerRelease = it)
-                            }
-                        },
-                    ),
                     TweakUI.ListTweak(
                         title = stringResource(LocaleR.string.decoder_priority),
                         descriptionProvider = { context.getString(LocaleR.string.decoder_priority_description) },

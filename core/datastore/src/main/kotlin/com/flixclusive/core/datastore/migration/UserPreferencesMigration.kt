@@ -18,7 +18,6 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.datastore.model.user.player.CaptionSizePreference.Companion.getDp
 import com.flixclusive.core.datastore.model.user.player.ResizeMode
 import kotlinx.coroutines.flow.first
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 internal class UserPreferencesMigration(
@@ -74,7 +73,6 @@ internal class UserPreferencesMigration(
 
     private fun OldAppSettings.toPlayerPreferences(): PlayerPreferences =
         PlayerPreferences(
-            isForcingPlayerRelease = shouldReleasePlayer,
             isDurationReversed = isPlayerTimeReversed,
             isPiPModeEnabled = isPiPModeEnabled,
             isUsingVolumeBoost = isUsingVolumeBoost,

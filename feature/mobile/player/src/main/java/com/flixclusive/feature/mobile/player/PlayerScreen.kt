@@ -123,7 +123,6 @@ internal fun PlayerScreenContent(
     ) {
         ComposePlayer(
             player = player,
-            forceRelease = playerPreferences.isForcingPlayerRelease,
             resizeMode = resizeMode,
         )
 
