@@ -346,8 +346,14 @@ internal fun ProviderTestScreenContent(
 
     if (showRepetitiveTestWarning) {
         RepetitiveTestNoticeDialog(
-            onSkip = onSkipTestedProviders,
-            onTestAgain = onRetestAllProviders,
+            onSkip = {
+                onSkipTestedProviders()
+                showRepetitiveTestWarning = false
+            },
+            onTestAgain = {
+                onRetestAllProviders()
+                showRepetitiveTestWarning = false
+            },
             onDismiss = { showRepetitiveTestWarning = false },
         )
     }
