@@ -22,26 +22,26 @@ internal fun ConditionalContent(
 ) {
     SubcomposeLayout { constraints ->
         val measurables = subcompose("content", content)
-        val placeables = measurables.map { it.measure(constraints) }
+        val placeable = measurables.map { it.measure(constraints) }
 
-        val hasContent = placeables.any { it.width > 0 || it.height > 0 }
+        val hasContent = placeable.any { it.width > 0 || it.height > 0 }
 
         if (hasContent) {
             layout(
-                width = placeables.maxOfOrNull { it.width } ?: 0,
-                height = placeables.maxOfOrNull { it.height } ?: 0,
+                width = placeable.maxOfOrNull { it.width } ?: 0,
+                height = placeable.maxOfOrNull { it.height } ?: 0,
             ) {
-                placeables.forEach { it.placeRelative(0, 0) }
+                placeable.forEach { it.placeRelative(0, 0) }
             }
         } else {
             val fallbackMeasurables = subcompose("fallback", fallback)
-            val fallbackPlaceables = fallbackMeasurables.map { it.measure(constraints) }
+            val fallbackPlaceable = fallbackMeasurables.map { it.measure(constraints) }
 
             layout(
-                width = fallbackPlaceables.maxOfOrNull { it.width } ?: 0,
-                height = fallbackPlaceables.maxOfOrNull { it.height } ?: 0,
+                width = fallbackPlaceable.maxOfOrNull { it.width } ?: 0,
+                height = fallbackPlaceable.maxOfOrNull { it.height } ?: 0,
             ) {
-                fallbackPlaceables.forEach { it.placeRelative(0, 0) }
+                fallbackPlaceable.forEach { it.placeRelative(0, 0) }
             }
         }
     }

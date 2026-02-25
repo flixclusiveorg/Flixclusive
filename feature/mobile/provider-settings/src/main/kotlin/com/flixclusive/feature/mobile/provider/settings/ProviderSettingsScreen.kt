@@ -13,7 +13,6 @@ import androidx.compose.runtime.reflect.getDeclaredComposableMethod
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.flixclusive.core.navigation.navargs.ProviderMetadataNavArgs
@@ -65,14 +64,18 @@ internal fun ProviderSettingsScreenContent(
                 // Need to call the composable with the reflection way bc
                 // Compose won't let us call it the normal way.
                 val method = remember {
-                    provider::class.java
-                        .getDeclaredComposableMethod("SettingsScreen")
+                    try {
+                        provider::class.java
+                            .getDeclaredComposableMethod("SettingsScreen")
+                    } catch (_: NoSuchMethodException) {
+                        null
+                    }
                 }
 
                 ConditionalContent {
-                    val resources = provider.resources ?: LocalContext.current.resources
+                    val resources = provider.resources ?: androidx.compose.ui.platform.LocalResources.current
                     CompositionLocalProvider(LocalResources provides resources) {
-                        method.invoke(currentComposer, provider)
+                        method?.invoke(currentComposer, provider)
                     }
                 }
             }
