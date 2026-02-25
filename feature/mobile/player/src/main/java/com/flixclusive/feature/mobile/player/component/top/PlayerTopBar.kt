@@ -1,11 +1,7 @@
 package com.flixclusive.feature.mobile.player.component.top
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -22,7 +18,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
@@ -38,9 +33,7 @@ internal fun PlayerTopBar(
     modifier: Modifier = Modifier,
     episode: Episode? = null,
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
         modifier = modifier
             .fillMaxWidth()
     ) {
@@ -49,6 +42,8 @@ internal fun PlayerTopBar(
         ) {
             IconButton(
                 onClick = onBack,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
             ) {
                 AdaptiveIcon(
                     painter = painterResource(UiCommonR.drawable.left_arrow),
@@ -61,8 +56,7 @@ internal fun PlayerTopBar(
             title = title,
             episode = episode,
             modifier = Modifier
-                .padding(top = 20.dp)
-                .weight(1F)
+                .align(Alignment.Center)
         )
     }
 }
@@ -73,22 +67,19 @@ private fun PlayerLabel(
     episode: Episode?,
     modifier: Modifier = Modifier
 ) {
-    val titleStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 12.sp)
+    val titleStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp)
 
-    Column(
+    Box(
         modifier = modifier,
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-        )
-
         if (episode != null) {
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = titleStyle.toSpanStyle()) {
                         append("S${episode.season} E${episode.number}: ")
                     }
+
                     withStyle(
                         style = titleStyle.copy(
                             fontWeight = FontWeight.Light,
@@ -103,18 +94,21 @@ private fun PlayerLabel(
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
             )
+        } else {
+            Text(
+                text = title,
+                style = titleStyle,
+            )
         }
     }
+
 }
 
 @Preview(device = "spec:parent=pixel_5,orientation=landscape")
 @Composable
 private fun PlayerTopBarBasePreview() {
     FlixclusiveTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize(),
-        ) {
+        Surface {
             PlayerTopBar(
                 title = "Movie Title",
                 episode = Episode(

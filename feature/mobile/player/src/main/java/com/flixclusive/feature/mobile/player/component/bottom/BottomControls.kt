@@ -87,7 +87,7 @@ internal fun BottomControls(
 
         Scrubber(
             state = scrubState,
-            modifier = Modifier
+            modifier = Modifier.padding(horizontal = 6.dp)
         )
 
         Row(
