@@ -15,8 +15,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import java.util.Collections
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 @Singleton
 internal class ProviderRepositoryImpl
@@ -58,18 +56,18 @@ internal class ProviderRepositoryImpl
             }
 
             saveToPreferences {
-                if (it.providers.contains(preferenceItem)) {
-                    val updatedPreferences = it.providers.toMutableList()
-                    val indexOfProvider = updatedPreferences.indexOfFirst { provider ->
-                        provider.id == preferenceItem.id
-                    }
-
-                    updatedPreferences[indexOfProvider] = preferenceItem
-
-                    it.copy(providers = updatedPreferences.toList())
+                if (!it.providers.contains(preferenceItem)) {
+                    return@saveToPreferences it.copy(providers = it.providers + preferenceItem)
                 }
 
-                it.copy(providers = it.providers + preferenceItem)
+                val updatedPreferences = it.providers.toMutableList()
+                val indexOfProvider = updatedPreferences.indexOfFirst { provider ->
+                    provider.id == preferenceItem.id
+                }
+
+                updatedPreferences[indexOfProvider] = preferenceItem
+
+                return@saveToPreferences it.copy(providers = updatedPreferences.toList())
             }
         }
 
