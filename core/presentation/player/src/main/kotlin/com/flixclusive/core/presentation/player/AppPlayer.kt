@@ -70,6 +70,7 @@ class AppPlayer(
     private val dataSourceFactory: AppDataSourceFactory,
     private val playerPrefs: PlayerPreferences,
     private val subtitlePrefs: SubtitlesPreferences,
+    errorReceiver: PlayerErrorReceiver,
 ) : CuesProvider, Player {
     override var offset by mutableLongStateOf(0L)
         private set
@@ -83,7 +84,7 @@ class AppPlayer(
     /** Only internally visible so ComposePlayer component can access it */
     internal var exoPlayer: ExoPlayer? = null
     private var mediaSession: MediaSession? = null
-    private val listener = InternalPlayerListener()
+    private val listener = InternalPlayerListener(errorReceiver)
 
     /** Backing property for playWhenReady to keep the value when the player is null. */
     private var _playWhenReady: Boolean = true
@@ -347,7 +348,9 @@ class AppPlayer(
         currentCuesWithTiming.clear()
     }
 
-    private inner class InternalPlayerListener : Player.Listener {
+    private inner class InternalPlayerListener(
+        private val errorReceiver: PlayerErrorReceiver,
+    ) : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_ENDED) {
                 changeSubtitleDelay(0)
@@ -356,6 +359,8 @@ class AppPlayer(
         }
 
         override fun onPlayerError(error: PlaybackException) {
+            errorReceiver.onPlayerError(error)
+
             val isDurationNotUnset = exoPlayer?.duration != null && exoPlayer?.duration != C.TIME_UNSET
 
             errorLog(error.stackTraceToString())

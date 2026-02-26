@@ -7,6 +7,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,6 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -47,6 +51,7 @@ import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState.Companion.rememberControlsVisibilityState
 import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState.Companion.rememberPlayPauseButtonState
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Companion.rememberPlaybackSpeedState
+import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.core.presentation.player.ui.state.ScrubEvent
 import com.flixclusive.core.presentation.player.ui.state.ScrubState.Companion.rememberScrubState
 import com.flixclusive.core.presentation.player.ui.state.SeekButtonState.Companion.rememberSeekButtonState
@@ -62,10 +67,11 @@ import com.flixclusive.feature.mobile.player.component.gestures.BrightnessManage
 import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureHandler
 import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureState.Companion.rememberPlayerGestureState
 import com.flixclusive.feature.mobile.player.component.servers.ServersScreen
+import com.flixclusive.feature.mobile.player.component.snackbar.PlayerErrorSnackbar
+import com.flixclusive.feature.mobile.player.component.snackbar.PlayerMessageSnackbar
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleAndAudioScreen
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleSyncScreen
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
-import com.flixclusive.feature.mobile.player.util.AutoPipModeObserverForAndroidOToR
 import com.flixclusive.feature.mobile.player.util.UiMode
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.TvShow
@@ -79,6 +85,7 @@ import com.flixclusive.core.drawables.R as UiCommonR
 internal fun PlayerControls(
     player: AppPlayer,
     film: FilmMetadata,
+    snackbarState: PlayerSnackbarState,
     isInPipMode: Boolean,
     playerPrefs: PlayerPreferences,
     subtitlesPrefs: SubtitlesPreferences,
@@ -98,14 +105,17 @@ internal fun PlayerControls(
     var isLocked by rememberSaveable { mutableStateOf(false) }
     var uiMode by rememberSaveable { mutableStateOf(UiMode.NONE) }
     var queueControlVisibility by rememberSaveable { mutableStateOf(false) }
+    var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
 
     val scrubState = rememberScrubState(player = player)
+    val isScrubbing = remember(scrubState.event) { scrubState.event == ScrubEvent.SCRUBBING }
+
     val playPauseState = rememberPlayPauseButtonState(player = player)
     val seekButtonState = rememberSeekButtonState(player = player)
     val playbackSpeedState = rememberPlaybackSpeedState(player = player)
     val controlsVisibilityState = rememberControlsVisibilityState(
         player = player,
-        isScrubbing = scrubState.event == ScrubEvent.SCRUBBING
+        isScrubbing = isScrubbing
     )
 
     val volumeManager = rememberVolumeManager(player = player)
@@ -183,196 +193,240 @@ internal fun PlayerControls(
         player.subtitleView?.setBottomPaddingFraction(subtitleBottomPaddingFraction)
     }
 
-    AnimatedContent(
-        targetState = isLocked,
-        transitionSpec = {
-            ContentTransform(
-                targetContentEnter = fadeIn(),
-                initialContentExit = fadeOut()
-            )
-        },
-    ) { state ->
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = modifier
-                .fillMaxSize()
-        ) {
-            if (state) {
-                AnimatedVisibility(
-                    visible = controlsVisibilityState.isVisible,
-                    enter = fadeIn(),
-                    exit = fadeOut(animationSpec = tween(durationMillis = 400))
-                ) {
-                    LockControls(
-                        unlock = { isLocked = false },
-                        showControls = { controlsVisibilityState.show() }
-                    )
-                }
-            } else {
-                ControlsBlackOverlay(
-                    visible = controlsVisibilityState.isVisible,
-                    modifier = Modifier.fillMaxSize()
+    Box(modifier = modifier.fillMaxSize()) {
+        AnimatedContent(
+            targetState = isLocked,
+            transitionSpec = {
+                ContentTransform(
+                    targetContentEnter = fadeIn(),
+                    initialContentExit = fadeOut()
                 )
-
-                PlayerGestureHandler(
-                    gestureState = gestureState,
-                    brightnessManager = brightnessManager,
-                    volumeManager = volumeManager,
-                    areControlsVisible = controlsVisibilityState.isVisible,
-                    onSeekForward = { player.seekForward() },
-                    onSeekBackward = { player.seekBack() },
-                    onSingleTap = {
-                        if (uiMode.isPlaybackSpeed || uiMode.isResize) {
-                            uiMode = UiMode.NONE
-                        } else {
-                            controlsVisibilityState.toggle()
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                VerticalSlideAnimation(
-                    visible = controlsVisibilityState.isVisible,
-                    slideDown = false,
-                    modifier = Modifier.align(Alignment.TopCenter)
-                ) {
-                    PlayerTopBar(
-                        title = film.title,
-                        episode = currentEpisode,
-                        onBack = onBack,
-                    )
-                }
-
-                AnimatedVisibility(
-                    visible = areCenterControlsVisible,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                    modifier = Modifier.align(Alignment.Center)
-                ) {
-                    CenterControls(
-                        playPauseButtonState = playPauseState,
-                        seekButtonState = seekButtonState,
-                        modifier = Modifier
-                    )
-                }
-
-                VerticalSlideAnimation(
-                    visible = controlsVisibilityState.isVisible,
-                    slideDown = true,
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                ) {
-                    BottomControls(
-                        playbackSpeedState = playbackSpeedState,
-                        scrubState = scrubState,
-                        uiMode = uiMode,
-                        onNext = onNext,
-                        onResizeModeChange = onResizeModeChange,
-                        currentResizeMode = currentResizeMode,
-                        onToggleUiPanel = { uiMode = it },
-                        onShowEpisodesPanel = currentEpisode?.let {
-                            { uiMode = UiMode.EPISODES }
-                        },
-                    )
-                }
-
-                AnimatedVisibility(
-                    visible = areCenterControlsVisible,
-                    enter = slideInHorizontally { it / 4 } + fadeIn(),
-                    exit = slideOutHorizontally { it / 6 } + fadeOut(),
-                    modifier = Modifier
-                        .padding(end = 30.dp)
-                        .align(Alignment.CenterEnd)
-                ) {
-                    PlainTooltipBox(
-                        description = stringResource(R.string.lock),
+            },
+        ) { state ->
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                if (state) {
+                    AnimatedVisibility(
+                        visible = controlsVisibilityState.isVisible,
+                        enter = fadeIn(),
+                        exit = fadeOut(animationSpec = tween(durationMillis = 400))
                     ) {
-                        IconButton(
-                            onClick = { isLocked = true },
-                            modifier = Modifier.background(
-                                Color.Black.copy(0.3f),
-                                shape = CircleShape
-                            )
-                        ) {
-                            AdaptiveIcon(
-                                painter = painterResource(UiCommonR.drawable.lock_thin),
-                                contentDescription = stringResource(R.string.lock),
-                                dp = 30.dp
-                            )
-                        }
+                        LockControls(
+                            unlock = { isLocked = false },
+                            showControls = { controlsVisibilityState.show() }
+                        )
                     }
-                }
-
-                AnimatedPanel(visible = uiMode.isSubs) {
-                    SubtitleAndAudioScreen(
-                        tracksState = tracksState,
-                        onDismiss = { uiMode = UiMode.NONE },
-                        onSyncSubtitles = { uiMode = UiMode.SUBS_SYNC },
-                        modifier = Modifier
-                            .fillMaxSize()
+                } else {
+                    ControlsBlackOverlay(
+                        visible = controlsVisibilityState.isVisible,
+                        modifier = Modifier.fillMaxSize()
                     )
-                }
 
-                AnimatedPanel(
-                    visible = uiMode.isEpisodes
-                        && film is TvShow
-                        && currentSeason != null
-                        && currentEpisode != null
-                        && onEpisodeChange != null
-                        && onSeasonChange != null
-                ) {
-                    EpisodesScreen(
-                        currentSeason = currentSeason!!,
-                        seasons = (film as TvShow).seasons,
-                        currentEpisode = currentEpisode!!,
-                        onSeasonChange = onSeasonChange!!::invoke,
-                        onEpisodeClick = onEpisodeChange!!::invoke,
-                        onDismiss = { uiMode = UiMode.NONE },
-                        modifier = Modifier
-                            .fillMaxSize(),
-                    )
-                }
-
-                AnimatedPanel(
-                    visible = uiMode.isServers
-                ) {
-                    ServersScreen(
-                        serversState = serversState,
-                        onDismiss = { uiMode = UiMode.NONE },
-                        currentProvider = currentProvider,
-                        providers = providers,
-                        onProviderChange = onProviderChange,
-                        modifier = Modifier
-                            .fillMaxSize()
-                    )
-                }
-
-                AnimatedPanel(
-                    visible = uiMode.isSubsSync
-                ) {
-                    SubtitleSyncScreen(
-                        cues = player.currentCuesWithTiming,
-                        currentOffset = player.offset,
-                        currentPosition = scrubState.progress,
-                        onBack = { uiMode = UiMode.SUBS },
-                        onDismiss = { uiMode = UiMode.NONE },
-                        onSave = {
-                            player.changeSubtitleDelay(it)
-
-                            // Force seek to update subtitle timings immediately after changing the offset
-                            val isMediaSeekable = player.isCommandAvailable(
-                                command = Player.COMMAND_GET_CURRENT_MEDIA_ITEM
-                            ) && player.isCurrentMediaItemSeekable
-
-                            if (isMediaSeekable) {
-                                player.seekTo(scrubState.progress + 1L)
+                    PlayerGestureHandler(
+                        gestureState = gestureState,
+                        brightnessManager = brightnessManager,
+                        volumeManager = volumeManager,
+                        areControlsVisible = controlsVisibilityState.isVisible,
+                        onSeekForward = { player.seekForward() },
+                        onSeekBackward = { player.seekBack() },
+                        onSingleTap = {
+                            if (uiMode.isPlaybackSpeed || uiMode.isResize) {
+                                uiMode = UiMode.NONE
+                            } else {
+                                controlsVisibilityState.toggle()
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxSize()
+                        modifier = Modifier.fillMaxSize()
                     )
+
+                    VerticalSlideAnimation(
+                        visible = controlsVisibilityState.isVisible,
+                        slideDown = false,
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    ) {
+                        PlayerTopBar(
+                            title = film.title,
+                            episode = currentEpisode,
+                            onBack = onBack,
+                        )
+                    }
+
+                    AnimatedVisibility(
+                        visible = areCenterControlsVisible,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                        modifier = Modifier.align(Alignment.Center)
+                    ) {
+                        CenterControls(
+                            playPauseButtonState = playPauseState,
+                            seekButtonState = seekButtonState,
+                            modifier = Modifier
+                        )
+                    }
+
+                    VerticalSlideAnimation(
+                        visible = controlsVisibilityState.isVisible,
+                        slideDown = true,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .onSizeChanged { if (it.height > 0) bottomControlsHeightPx = it.height }
+                    ) {
+                        BottomControls(
+                            playbackSpeedState = playbackSpeedState,
+                            scrubState = scrubState,
+                            uiMode = uiMode,
+                            onNext = onNext,
+                            onResizeModeChange = onResizeModeChange,
+                            currentResizeMode = currentResizeMode,
+                            onToggleUiPanel = { uiMode = it },
+                            onShowEpisodesPanel = currentEpisode?.let {
+                                { uiMode = UiMode.EPISODES }
+                            },
+                        )
+                    }
+
+                    AnimatedVisibility(
+                        visible = areCenterControlsVisible,
+                        enter = slideInHorizontally { it / 4 } + fadeIn(),
+                        exit = slideOutHorizontally { it / 6 } + fadeOut(),
+                        modifier = Modifier
+                            .padding(end = 30.dp)
+                            .align(Alignment.CenterEnd)
+                    ) {
+                        PlainTooltipBox(
+                            description = stringResource(R.string.lock),
+                        ) {
+                            IconButton(
+                                onClick = { isLocked = true },
+                                modifier = Modifier.background(
+                                    Color.Black.copy(0.3f),
+                                    shape = CircleShape
+                                )
+                            ) {
+                                AdaptiveIcon(
+                                    painter = painterResource(UiCommonR.drawable.lock_thin),
+                                    contentDescription = stringResource(R.string.lock),
+                                    dp = 30.dp
+                                )
+                            }
+                        }
+                    }
+
+                    AnimatedPanel(visible = uiMode.isSubs) {
+                        SubtitleAndAudioScreen(
+                            tracksState = tracksState,
+                            onDismiss = { uiMode = UiMode.NONE },
+                            onSyncSubtitles = { uiMode = UiMode.SUBS_SYNC },
+                            modifier = Modifier
+                                .fillMaxSize()
+                        )
+                    }
+
+                    AnimatedPanel(
+                        visible = uiMode.isEpisodes
+                            && film is TvShow
+                            && currentSeason != null
+                            && currentEpisode != null
+                            && onEpisodeChange != null
+                            && onSeasonChange != null
+                    ) {
+                        EpisodesScreen(
+                            currentSeason = currentSeason!!,
+                            seasons = (film as TvShow).seasons,
+                            currentEpisode = currentEpisode!!,
+                            onSeasonChange = onSeasonChange!!::invoke,
+                            onEpisodeClick = onEpisodeChange!!::invoke,
+                            onDismiss = { uiMode = UiMode.NONE },
+                            modifier = Modifier
+                                .fillMaxSize(),
+                        )
+                    }
+
+                    AnimatedPanel(
+                        visible = uiMode.isServers
+                    ) {
+                        ServersScreen(
+                            serversState = serversState,
+                            onDismiss = { uiMode = UiMode.NONE },
+                            currentProvider = currentProvider,
+                            providers = providers,
+                            onProviderChange = onProviderChange,
+                            modifier = Modifier
+                                .fillMaxSize()
+                        )
+                    }
+
+                    AnimatedPanel(
+                        visible = uiMode.isSubsSync
+                    ) {
+                        SubtitleSyncScreen(
+                            cues = player.currentCuesWithTiming,
+                            currentOffset = player.offset,
+                            currentPosition = scrubState.progress,
+                            onBack = { uiMode = UiMode.SUBS },
+                            onDismiss = { uiMode = UiMode.NONE },
+                            onSave = {
+                                player.changeSubtitleDelay(it)
+
+                                // Force seek to update subtitle timings immediately after changing the offset
+                                val isMediaSeekable = player.isCommandAvailable(
+                                    command = Player.COMMAND_GET_CURRENT_MEDIA_ITEM
+                                ) && player.isCurrentMediaItemSeekable
+
+                                if (isMediaSeekable) {
+                                    player.seekTo(scrubState.progress + 1L)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxSize()
+                        )
+                    }
                 }
             }
         }
+
+        PlayerSnackbarLayer(
+            snackbarState = snackbarState,
+            areControlsVisible = controlsVisibilityState.isVisible,
+            bottomControlsHeightPx = bottomControlsHeightPx,
+        )
+    }
+}
+
+@Composable
+private fun PlayerSnackbarLayer(
+    snackbarState: PlayerSnackbarState,
+    areControlsVisible: Boolean,
+    bottomControlsHeightPx: Int,
+) {
+    val density = LocalDensity.current
+    val bottomControlsHeightDp = with(density) { bottomControlsHeightPx.toDp() }
+    val snackbarBottomPadding by animateDpAsState(
+        targetValue = if (areControlsVisible) {
+            bottomControlsHeightDp + 8.dp
+        } else {
+            16.dp
+        },
+        label = "snackbar_bottom_padding",
+    )
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        PlayerErrorSnackbar(
+            snackbarState = snackbarState,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 16.dp, bottom = snackbarBottomPadding)
+        )
+
+        PlayerMessageSnackbar(
+            snackbarState = snackbarState,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = snackbarBottomPadding)
+        )
     }
 }
 

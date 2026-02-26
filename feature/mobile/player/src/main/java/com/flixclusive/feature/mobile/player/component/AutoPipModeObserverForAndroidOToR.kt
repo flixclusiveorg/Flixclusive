@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.player.util
+package com.flixclusive.feature.mobile.player.component
 
 
 import android.content.BroadcastReceiver

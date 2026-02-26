@@ -114,7 +114,7 @@ internal fun SubtitleSyncScreen(
                     .fillMaxWidth()
                     .padding(vertical = 10.dp, horizontal = 5.dp)
             ) {
-                IconButton(onClick = onDismiss) {
+                IconButton(onClick = onBack) {
                     AdaptiveIcon(
                         painter = painterResource(id = UiCommonR.drawable.left_arrow),
                         contentDescription = stringResource(id = LocaleR.string.navigate_up),

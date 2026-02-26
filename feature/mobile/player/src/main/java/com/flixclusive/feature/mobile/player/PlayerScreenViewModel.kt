@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.PlaybackException
 import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
@@ -17,6 +18,7 @@ import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.PlayerErrorReceiver
 import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.core.presentation.player.model.track.MediaServer
 import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
@@ -39,8 +41,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -71,7 +76,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     private val playerDataSourceFactory: AppDataSourceFactory,
     @param:ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+) : ViewModel(), PlayerErrorReceiver {
     /**
      * Using [SavedStateHandle]'s navArgs delegate to get the navigation arguments.
      * */
@@ -111,6 +116,7 @@ internal class PlayerScreenViewModel @Inject constructor(
             dataSourceFactory = playerDataSourceFactory,
             playerPrefs = playerPreferences.value,
             subtitlePrefs = subtitlesPreferences.value,
+            errorReceiver = this,
         )
     }
 
@@ -141,6 +147,9 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     // Only using non-suspend function since we don't need to observe changes here
     val providers by lazy { providerRepository.getEnabledProviders() }
+
+    private val _playerErrors = MutableSharedFlow<String>(extraBufferCapacity = 5)
+    val playerErrors: SharedFlow<String> = _playerErrors.asSharedFlow()
 
     private val _uiState = MutableStateFlow(PlayerUiState(selectedProvider = initialProviderId))
     val uiState = _uiState.asStateFlow()
@@ -215,6 +224,11 @@ internal class PlayerScreenViewModel @Inject constructor(
         player.release()
         player.releaseMediaSession()
         super.onCleared()
+    }
+
+    override fun onPlayerError(error: PlaybackException) {
+        val message = error.localizedMessage ?: "Unknown playback error"
+        _playerErrors.tryEmit(message)
     }
 
     /**

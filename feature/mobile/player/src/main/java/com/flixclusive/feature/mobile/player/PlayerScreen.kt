@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +29,8 @@ import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.ComposePlayer
+import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
+import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState.Companion.rememberPlayerSnackbarState
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.component.PlayerControls
 import com.flixclusive.model.film.FilmMetadata
@@ -59,6 +62,14 @@ internal fun PlayerScreen(
         } ?: throw IllegalStateException("Selected provider not found in the list of providers")
     }
 
+    val snackbarState = rememberPlayerSnackbarState()
+
+    LaunchedEffect(Unit) {
+        viewModel.playerErrors.collect { error ->
+            snackbarState.showError(error)
+        }
+    }
+
     PlayerScreenContent(
         player = viewModel.player,
         film = args.film,
@@ -68,6 +79,7 @@ internal fun PlayerScreen(
         currentSeason = currentSeason,
         currentProvider = currentProvider,
         providers = viewModel.providers,
+        snackbarState = snackbarState,
         onBack = navigator::goBack,
         onEpisodeChange = viewModel::onEpisodeChange,
         onProviderChange = {
@@ -91,6 +103,7 @@ internal fun PlayerScreenContent(
     currentSeason: SeasonWithProgress?,
     currentProvider: ProviderMetadata,
     providers: List<ProviderMetadata>,
+    snackbarState: PlayerSnackbarState,
     onBack: () -> Unit,
     onProviderChange: (ProviderMetadata) -> Unit,
     onEpisodeChange: (Episode) -> Unit,
@@ -129,6 +142,7 @@ internal fun PlayerScreenContent(
         PlayerControls(
             player = player,
             film = film,
+            snackbarState = snackbarState,
             isInPipMode = isInPipMode,
             playerPrefs = playerPreferences,
             subtitlesPrefs = subtitlesPreferences,

@@ -13,15 +13,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.media3.common.PlaybackException
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.PlayerErrorReceiver
 import com.flixclusive.core.presentation.player.model.MediaItemKey
+import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.PlayerScreenContent
+import kotlinx.coroutines.delay
 
 @Preview
 @Composable
@@ -54,6 +58,7 @@ private fun PlayerScreenBasePreview() {
     }
     val currentEpisode = remember { currentSeason.episodes.first().episode }
     val context = LocalContext.current
+    val snackbarState = remember { PlayerSnackbarState() }
 
     var playerPrefs by remember {
         mutableStateOf(PlayerPreferences())
@@ -68,6 +73,11 @@ private fun PlayerScreenBasePreview() {
             playerPrefs = playerPrefs,
             dataSourceFactory = PreviewDataSourceFactory(context),
             subtitlePrefs = subtitlePrefs,
+            errorReceiver = object : PlayerErrorReceiver {
+                override fun onPlayerError(error: PlaybackException) {
+                    snackbarState.showError(error.localizedMessage ?: "Unknown error")
+                }
+            },
         )
     }
 
@@ -83,6 +93,38 @@ private fun PlayerScreenBasePreview() {
             startPositionMs = 0L,
             playImmediately = true,
         )
+    }
+
+    LaunchedEffect(Unit) {
+        delay(1500)
+        snackbarState.showError(
+            "PlaybackException [4001]: Source error occurred while trying to load " +
+                "the media resource from the remote server. The connection was " +
+                "refused by the host after multiple retry attempts."
+        )
+        delay(800)
+        snackbarState.showError("PlaybackException [2003]: Network timeout")
+        delay(800)
+        snackbarState.showError("Anti-DDoS protection detected")
+
+        delay(1000)
+        snackbarState.showMessage("Switched to Server 2")
+
+        delay(3000)
+        snackbarState.showMessage(
+            text = "Next episode in 5...",
+            durationMs = PlayerSnackbarState.NO_AUTO_DISMISS,
+        )
+        delay(1000)
+        snackbarState.updateMessage("Next episode in 4...")
+        delay(1000)
+        snackbarState.updateMessage("Next episode in 3...")
+        delay(1000)
+        snackbarState.updateMessage("Next episode in 2...")
+        delay(1000)
+        snackbarState.updateMessage("Next episode in 1...")
+        delay(1000)
+        snackbarState.dismissMessage()
     }
 
     FlixclusiveTheme {
@@ -103,6 +145,7 @@ private fun PlayerScreenBasePreview() {
                 providers = providers,
                 currentProvider = currentProvider,
                 onProviderChange = { currentProvider = it },
+                snackbarState = snackbarState,
                 modifier = Modifier.background(Color.Black)
             )
         }
