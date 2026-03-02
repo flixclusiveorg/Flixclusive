@@ -109,22 +109,6 @@ private fun PlayerScreenBasePreview() {
 
         delay(1000)
         snackbarState.showMessage("Switched to Server 2")
-
-        delay(3000)
-        snackbarState.showMessage(
-            text = "Next episode in 5...",
-            durationMs = PlayerSnackbarState.NO_AUTO_DISMISS,
-        )
-        delay(1000)
-        snackbarState.updateMessage("Next episode in 4...")
-        delay(1000)
-        snackbarState.updateMessage("Next episode in 3...")
-        delay(1000)
-        snackbarState.updateMessage("Next episode in 2...")
-        delay(1000)
-        snackbarState.updateMessage("Next episode in 1...")
-        delay(1000)
-        snackbarState.dismissMessage()
     }
 
     FlixclusiveTheme {

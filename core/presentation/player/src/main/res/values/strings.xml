@@ -8,4 +8,5 @@
     <string name="resize">Resize</string>
     <string name="next_episode">Next episode</string>
     <string name="sync_subtitles">Sync Subtitles</string>
+    <string name="next_episode_in">Next episode in %1$d…</string>
 </resources>

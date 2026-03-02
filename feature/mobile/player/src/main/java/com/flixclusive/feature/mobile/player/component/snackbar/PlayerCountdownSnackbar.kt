@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,37 +30,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.mobile.components.GlassSurface
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
+import com.flixclusive.core.presentation.player.ui.state.SnackbarCountdown
 import kotlinx.coroutines.delay
 
 private const val EXIT_ANIMATION_MS = 250L
 
 @Composable
-internal fun PlayerMessageSnackbar(
+internal fun PlayerCountdownSnackbar(
     snackbarState: PlayerSnackbarState,
     modifier: Modifier = Modifier,
 ) {
     var isVisible by remember { mutableStateOf(false) }
-    var displayedMessage by remember { mutableStateOf("") }
+    var displayedCountdown by remember { mutableStateOf<SnackbarCountdown?>(null) }
 
-    LaunchedEffect(snackbarState.messageKey) {
-        val currentMessage = snackbarState.message
-        if (currentMessage != null) {
+    LaunchedEffect(snackbarState.countdownKey) {
+        val current = snackbarState.countdown
+        if (current != null) {
             if (isVisible) {
                 isVisible = false
                 delay(EXIT_ANIMATION_MS)
             }
-
-            displayedMessage = currentMessage
+            displayedCountdown = current
             isVisible = true
-
-            delay(snackbarState.messageDurationMs)
-            isVisible = false
-            delay(EXIT_ANIMATION_MS)
-            snackbarState.dismissMessage()
         } else {
             if (isVisible) {
                 isVisible = false
                 delay(EXIT_ANIMATION_MS)
+                displayedCountdown = null
             }
         }
     }
@@ -77,28 +74,36 @@ internal fun PlayerMessageSnackbar(
         ) { it / 2 } + fadeOut(animationSpec = tween(200)),
         modifier = modifier,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(0.4f),
-            horizontalArrangement = Arrangement.End,
-        ) {
-            GlassSurface(
-                shape = MaterialTheme.shapes.small,
-                accentColor = MaterialTheme.colorScheme.primary,
+        displayedCountdown?.let { countdown ->
+            val text by remember(countdown) {
+                derivedStateOf {
+                    countdown.format(countdown.valueProvider())
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(0.4f),
+                horizontalArrangement = Arrangement.End,
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                GlassSurface(
+                    shape = MaterialTheme.shapes.small,
+                    accentColor = MaterialTheme.colorScheme.primary,
                 ) {
-                    Text(
-                        text = displayedMessage,
-                        color = Color.White.copy(alpha = 0.9f),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        lineHeight = 16.sp,
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    ) {
+                        Text(
+                            text = text,
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            lineHeight = 16.sp,
+                        )
+                    }
                 }
             }
         }

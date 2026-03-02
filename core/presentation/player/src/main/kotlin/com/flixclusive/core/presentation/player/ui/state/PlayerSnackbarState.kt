@@ -21,9 +21,14 @@ class PlayerSnackbarState {
     var messageDurationMs by mutableLongStateOf(0L)
         private set
 
+    var countdown by mutableStateOf<SnackbarCountdown?>(null)
+        private set
+    var countdownKey by mutableLongStateOf(0L)
+        private set
+
     fun showError(text: String) {
         if (errors.size >= MAX_ERRORS) {
-            errors.removeFirst()
+            errors.removeAt(0)
         }
         errors.add(SnackbarError(text = text, key = System.nanoTime()))
     }
@@ -38,20 +43,25 @@ class PlayerSnackbarState {
         messageKey = System.nanoTime()
     }
 
-    fun updateMessage(text: String) {
-        message = text
-    }
-
     fun dismissMessage() {
         message = null
         messageKey = 0L
+    }
+
+    fun showCountdown(countdown: SnackbarCountdown) {
+        this.countdown = countdown
+        countdownKey = System.nanoTime()
+    }
+
+    fun dismissCountdown() {
+        countdown = null
+        countdownKey = 0L
     }
 
     companion object {
         const val MAX_ERRORS = 3
         const val DEFAULT_MESSAGE_DURATION_MS = 4000L
         const val ERROR_AUTO_DISMISS_MS = 5000L
-        const val NO_AUTO_DISMISS = 0L
 
         @Composable
         fun rememberPlayerSnackbarState(): PlayerSnackbarState {
@@ -64,4 +74,10 @@ class PlayerSnackbarState {
 data class SnackbarError(
     val text: String,
     val key: Long,
+)
+
+@Stable
+class SnackbarCountdown(
+    val valueProvider: () -> Long,
+    val format: (Long) -> String,
 )

@@ -121,12 +121,12 @@ internal fun Scrubber(
                 thumb = {
                     CustomSliderDefaults.Thumb(
                         interactionSource = sliderInteractionSource,
-                        isValueChanging = state.event.isScrubbing,
+                        isValueChanging = state.isScrubbing,
                         colors = sliderTimeProgressColors
                     )
                 },
                 seekTextComposable = {
-                    androidx.compose.animation.AnimatedVisibility(state.event.isScrubbing) {
+                    androidx.compose.animation.AnimatedVisibility(state.isScrubbing) {
                         Text(
                             text = position,
                             color = Color.White,

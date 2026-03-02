@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -51,7 +50,6 @@ import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState
 import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState.Companion.rememberPlayPauseButtonState
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Companion.rememberPlaybackSpeedState
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
-import com.flixclusive.core.presentation.player.ui.state.ScrubEvent
 import com.flixclusive.core.presentation.player.ui.state.ScrubState.Companion.rememberScrubState
 import com.flixclusive.core.presentation.player.ui.state.SeekButtonState.Companion.rememberSeekButtonState
 import com.flixclusive.core.presentation.player.ui.state.ServersState.Companion.rememberServersState
@@ -61,11 +59,13 @@ import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.R
 import com.flixclusive.feature.mobile.player.component.bottom.BottomControls
 import com.flixclusive.feature.mobile.player.component.center.CenterControls
+import com.flixclusive.feature.mobile.player.component.effect.NextEpisodeCountdownEffect
 import com.flixclusive.feature.mobile.player.component.episodes.EpisodesScreen
 import com.flixclusive.feature.mobile.player.component.gestures.BrightnessManager.Companion.rememberBrightnessManager
 import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureHandler
 import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureState.Companion.rememberPlayerGestureState
 import com.flixclusive.feature.mobile.player.component.servers.ServersScreen
+import com.flixclusive.feature.mobile.player.component.snackbar.PlayerCountdownSnackbar
 import com.flixclusive.feature.mobile.player.component.snackbar.PlayerErrorSnackbar
 import com.flixclusive.feature.mobile.player.component.snackbar.PlayerMessageSnackbar
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleAndAudioScreen
@@ -107,29 +107,24 @@ internal fun PlayerControls(
     var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
 
     val scrubState = rememberScrubState(player = player)
-    val isScrubbing = remember(scrubState.event) { scrubState.event == ScrubEvent.SCRUBBING }
 
     val playPauseState = rememberPlayPauseButtonState(player = player)
     val seekButtonState = rememberSeekButtonState(player = player)
     val playbackSpeedState = rememberPlaybackSpeedState(player = player)
     val controlsVisibilityState = rememberControlsVisibilityState(
         player = player,
-        isScrubbing = isScrubbing
+        isScrubbing = scrubState.isScrubbing
     )
 
     val volumeManager = rememberVolumeManager(player = player)
     val brightnessManager = rememberBrightnessManager()
     val gestureState = rememberPlayerGestureState(seekAmountMs = seekButtonState.seekForwardAmountMs)
 
-    val areCenterControlsVisible by remember {
-        derivedStateOf {
-            controlsVisibilityState.isVisible
-                && !uiMode.isPlaybackSpeed
-                && !uiMode.isResize
-                && !gestureState.isDoubleTapping
-                && !gestureState.isSliding
-        }
-    }
+    val areCenterControlsVisible = controlsVisibilityState.isVisible
+        && !uiMode.isPlaybackSpeed
+        && !uiMode.isResize
+        && !gestureState.isDoubleTapping
+        && !gestureState.isSliding
 
     val serversState = rememberServersState(player = player)
     val tracksState = rememberTracksState(
@@ -137,6 +132,18 @@ internal fun PlayerControls(
         subtitlesPreferences = subtitlesPrefs,
         playerPreferences = playerPrefs
     )
+
+    BackHandler(enabled = isLocked) {
+        controlsVisibilityState.show()
+    }
+
+    if (onNext != null) {
+        NextEpisodeCountdownEffect(
+            scrubState = scrubState,
+            snackbarState = snackbarState,
+            isPlaying = !playPauseState.showPlay,
+        )
+    }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         AutoPipModeObserverForAndroidOToR(
@@ -152,10 +159,6 @@ internal fun PlayerControls(
                 controlsVisibilityState.hide()
             }
         )
-    }
-
-    BackHandler(enabled = isLocked) {
-        controlsVisibilityState.show()
     }
 
     LaunchedEffect(
@@ -428,6 +431,13 @@ private fun PlayerSnackbarLayer(
         )
 
         PlayerMessageSnackbar(
+            snackbarState = snackbarState,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = snackbarBottomPadding)
+        )
+
+        PlayerCountdownSnackbar(
             snackbarState = snackbarState,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
