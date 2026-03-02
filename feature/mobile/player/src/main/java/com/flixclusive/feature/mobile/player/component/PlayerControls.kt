@@ -28,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -102,9 +101,9 @@ internal fun PlayerControls(
     onEpisodeChange: ((Episode) -> Unit)? = null,
     onNext: (() -> Unit)? = null
 ) {
-    var isLocked by rememberSaveable { mutableStateOf(false) }
-    var uiMode by rememberSaveable { mutableStateOf(UiMode.NONE) }
-    var queueControlVisibility by rememberSaveable { mutableStateOf(false) }
+    var isLocked by remember { mutableStateOf(false) }
+    var uiMode by remember { mutableStateOf(UiMode.NONE) }
+    var queueControlVisibility by remember { mutableStateOf(false) }
     var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
 
     val scrubState = rememberScrubState(player = player)
@@ -166,12 +165,18 @@ internal fun PlayerControls(
         gestureState.isDoubleTapping,
         gestureState.isSliding
     ) {
-        if ((uiMode.isPlaybackSpeed || uiMode.isResize) && !isInPipMode) {
+        if (isInPipMode) {
+            controlsVisibilityState.hide()
+            return@LaunchedEffect
+        }
+
+        if (uiMode.isPlaybackSpeed || uiMode.isResize) {
+            queueControlVisibility = true
             controlsVisibilityState.show(indefinite = true)
             return@LaunchedEffect
         }
 
-        val shouldHideControls = gestureState.isDoubleTapping || gestureState.isSliding || isInPipMode || !uiMode.isNone
+        val shouldHideControls = gestureState.isDoubleTapping || gestureState.isSliding || !uiMode.isNone
         if (controlsVisibilityState.isVisible && shouldHideControls) {
             queueControlVisibility = true
             controlsVisibilityState.hide()
