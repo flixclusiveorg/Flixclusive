@@ -84,6 +84,8 @@ internal fun AutoPipModeObserverForAndroidOToR(
         )
 
         val onUserLeaveBehavior = Runnable {
+            if (!player.isPlaying) return@Runnable
+
             onPipInvoke()
             activity.enterPictureInPictureMode(params.build())
         }
