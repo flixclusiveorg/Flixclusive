@@ -10,9 +10,14 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.media3.common.Player
+import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
 
@@ -57,6 +62,8 @@ class ScrubState private constructor(
     var event by mutableStateOf(ScrubEvent.NONE)
         private set
 
+    private var observeJob: Job? = null
+
     /**
      * Called when the user starts interacting with the scrubber.
      * */
@@ -90,22 +97,30 @@ class ScrubState private constructor(
         }
     }
 
-    internal suspend fun observe() {
-        do {
-            progressState = player.currentPosition
-            duration = max(0, player.duration)
-            buffered = player.bufferedPosition
+    private suspend fun observe(scope: CoroutineScope) {
+        player.listen { events ->
+            if (events.contains(Player.EVENT_IS_PLAYING_CHANGED)) {
+                observeJob?.cancel()
 
-            val lessThan10Seconds = isTimeInRangeOfThreshold(10_000L)
-            val done80Percent = isTimeInRangeOfThreshold(calculate80Percent())
-            event = when {
-                !lessThan10Seconds && done80Percent -> ScrubEvent.EIGHTY_PERCENT_REMAINING
-                lessThan10Seconds -> ScrubEvent.TEN_SECONDS_REMAINING
-                else -> ScrubEvent.NONE
+                observeJob = scope.launch {
+                    do {
+                        progressState = player.currentPosition
+                        this@ScrubState.duration = max(0, player.duration)
+                        buffered = player.bufferedPosition
+
+                        val lessThan10Seconds = isTimeInRangeOfThreshold(10_000L)
+                        val done80Percent = isTimeInRangeOfThreshold(calculate80Percent())
+                        event = when {
+                            !lessThan10Seconds && done80Percent -> ScrubEvent.EIGHTY_PERCENT_REMAINING
+                            lessThan10Seconds -> ScrubEvent.TEN_SECONDS_REMAINING
+                            else -> ScrubEvent.NONE
+                        }
+
+                        delay(1.seconds / 30)
+                    } while (player.isPlaying)
+                }
             }
-
-            delay(1.seconds / 30)
-        } while (player.isPlaying)
+        }
     }
 
     /**
@@ -130,7 +145,7 @@ class ScrubState private constructor(
         @Composable
         fun rememberScrubState(player: AppPlayer): ScrubState {
             val scrubState = remember(player) { ScrubState(player) }
-            LaunchedEffect(player.isPlaying) { scrubState.observe() }
+            LaunchedEffect(player) { scrubState.observe(scope = this) }
             return scrubState
         }
     }
