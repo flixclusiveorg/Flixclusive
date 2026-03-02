@@ -44,200 +44,180 @@ import javax.inject.Inject
 
 private const val MANIFEST_FILE = "manifest.json"
 
-internal class LoadProviderUseCaseImpl
-    @Inject
-    constructor(
-        @param:ApplicationContext private val context: Context,
-        private val userSessionDataStore: UserSessionDataStore,
-        private val dataStoreManager: DataStoreManager,
-        private val providerRepository: ProviderRepository,
-        private val providerApiRepository: ProviderApiRepository,
-        private val downloadFile: DownloadFileUseCase,
-        private val appDispatchers: AppDispatchers,
-    ) : LoadProviderUseCase {
-        private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
+internal class LoadProviderUseCaseImpl @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+    private val userSessionDataStore: UserSessionDataStore,
+    private val dataStoreManager: DataStoreManager,
+    private val providerRepository: ProviderRepository,
+    private val providerApiRepository: ProviderApiRepository,
+    private val downloadFile: DownloadFileUseCase,
+    private val appDispatchers: AppDispatchers,
+) : LoadProviderUseCase {
+    private val dynamicResourceLoader by lazy { DynamicResourceLoader(context = context) }
 
-        private suspend fun getProviderPrefs() =
-            dataStoreManager
-                .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
-                .first()
+    private suspend fun getProviderPrefs() =
+        dataStoreManager
+            .getUserPrefs(UserPreferences.PROVIDER_PREFS_KEY, ProviderPreferences::class)
+            .first()
 
-        override fun invoke(metadata: ProviderMetadata): Flow<LoadProviderResult> =
-            channelFlow {
-                val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-                val file = context.createFileForProvider(
-                    provider = metadata,
-                    userId = userId,
+    override fun invoke(metadata: ProviderMetadata): Flow<LoadProviderResult> =
+        channelFlow {
+            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+            val file = context.createFileForProvider(
+                provider = metadata,
+                userId = userId,
+            )
+
+            if (isProviderAlreadyLoaded(metadata)) {
+                send(
+                    LoadProviderResult.Failure(
+                        provider = metadata,
+                        filePath = file.absolutePath,
+                        error = IllegalStateException(
+                            context.getString(R.string.provider_already_exists, metadata.name)
+                        ),
+                    ),
                 )
+                return@channelFlow
+            }
 
-                if (isProviderAlreadyLoaded(metadata)) {
+            val success = withContext(appDispatchers.io) {
+                try {
+                    downloadFile.downloadProvider(
+                        file = file,
+                        metadata = metadata,
+                    ).collect()
+                } catch (e: Throwable) {
+                    errorLog("Failed to download provider: ${metadata.name}")
+                    errorLog(e)
+
                     send(
                         LoadProviderResult.Failure(
                             provider = metadata,
                             filePath = file.absolutePath,
-                            error = IllegalStateException(
-                                context.getString(R.string.provider_already_exists, metadata.name)
-                            ),
+                            error = when (e) {
+                                is ExceptionWithUiText -> e.cause ?: e
+                                else -> e
+                            },
                         ),
                     )
-                    return@channelFlow
+                    return@withContext false
                 }
 
-                val success = withContext(appDispatchers.io) {
-                    try {
-                        downloadFile.downloadProvider(
-                            file = file,
-                            metadata = metadata,
-                        ).collect()
-                    } catch (e: Throwable) {
-                        errorLog("Failed to download provider: ${metadata.name}")
-                        errorLog(e)
-
-                        send(
-                            LoadProviderResult.Failure(
-                                provider = metadata,
-                                filePath = file.absolutePath,
-                                error = when (e) {
-                                    is ExceptionWithUiText -> e.cause ?: e
-                                    else -> e
-                                },
-                            ),
-                        )
-                        return@withContext false
-                    }
-
-                    file.exists()
-                }
-
-                if (!success) {
-                    return@channelFlow
-                }
-
-                invoke(
-                    filePath = file.absolutePath,
-                    metadata = metadata,
-                ).collect(::send)
+                file.exists()
             }
 
-        // TODO: Create a separate service for loading providers
-        //       since `InitializeProvidersUseCase` also needs to load providers
-        override fun invoke(
-            metadata: ProviderMetadata,
-            filePath: String,
-        ): Flow<LoadProviderResult> =
-            flow {
-                if (isProviderAlreadyLoaded(metadata)) {
+            if (!success) {
+                return@channelFlow
+            }
+
+            invoke(
+                filePath = file.absolutePath,
+                metadata = metadata,
+            ).collect(::send)
+        }
+
+    // TODO: Create a separate service for loading providers
+    //       since `InitializeProvidersUseCase` also needs to load providers
+    override fun invoke(
+        metadata: ProviderMetadata,
+        filePath: String,
+    ): Flow<LoadProviderResult> =
+        flow {
+            if (isProviderAlreadyLoaded(metadata)) {
+                emit(
+                    LoadProviderResult.Failure(
+                        provider = metadata,
+                        filePath = filePath,
+                        error = IllegalStateException(
+                            context.getString(R.string.provider_already_exists, metadata.name)
+                        ),
+                    ),
+                )
+                return@flow
+            }
+
+            try {
+                val file = File(filePath)
+                if (!file.exists()) {
+                    errorLog("Provider file does not exist: $filePath")
                     emit(
                         LoadProviderResult.Failure(
                             provider = metadata,
                             filePath = filePath,
-                            error = IllegalStateException(
-                                context.getString(R.string.provider_already_exists, metadata.name)
+                            error = FileNotFoundException(
+                                context.getString(
+                                    R.string.provider_file_not_found,
+                                    filePath,
+                                ),
                             ),
                         ),
                     )
                     return@flow
                 }
 
-                try {
-                    val file = File(filePath)
-                    if (!file.exists()) {
-                        errorLog("Provider file does not exist: $filePath")
-                        emit(
-                            LoadProviderResult.Failure(
-                                provider = metadata,
-                                filePath = filePath,
-                                error = FileNotFoundException(
-                                    context.getString(
-                                        R.string.provider_file_not_found,
-                                        filePath,
-                                    ),
-                                ),
-                            ),
-                        )
-                        return@flow
+                withContext(appDispatchers.io) {
+                    if (!file.setReadOnly(metadata = metadata)) {
+                        warnLog("Failed to set dex as read-only for provider: ${metadata.name}.")
                     }
+                }
 
-                    // In case of Android 14+ then
+                infoLog("Loading provider: ${metadata.name} [${file.name}]")
+
+                val loader = PathClassLoader(file.absolutePath, context.classLoader)
+                val manifest: ProviderManifest = withContext(appDispatchers.io) {
+                    loader.getFileFromPath(MANIFEST_FILE)
+                }
+                val settingsDirPath = createSettingsDirPath(
+                    repositoryUrl = metadata.repositoryUrl,
+                    isDebugProvider = metadata.id.endsWith(Constants.PROVIDER_DEBUG),
+                )
+
+                val preferenceItem = getPreferenceItemOrCreate(
+                    id = metadata.id,
+                    fileName = file.nameWithoutExtension,
+                    filePath = filePath,
+                )
+
+                if (getProviderPrefs().canMigrateSettingsFile(metadata)) {
                     withContext(appDispatchers.io) {
-                        if (!file.setReadOnly()) {
-                            warnLog("Failed to set dex as read-only for provider: ${metadata.name}")
-                        }
-                    }
-
-                    infoLog("Loading provider: ${metadata.name} [${file.name}]")
-
-                    val loader = PathClassLoader(file.absolutePath, context.classLoader)
-                    val manifest: ProviderManifest = withContext(appDispatchers.io) {
-                        loader.getFileFromPath(MANIFEST_FILE)
-                    }
-                    val settingsDirPath = createSettingsDirPath(
-                        repositoryUrl = metadata.repositoryUrl,
-                        isDebugProvider = metadata.id.endsWith(Constants.PROVIDER_DEBUG),
-                    )
-
-                    val preferenceItem = getPreferenceItemOrCreate(
-                        id = metadata.id,
-                        fileName = file.nameWithoutExtension,
-                        filePath = filePath,
-                    )
-
-                    if (getProviderPrefs().canMigrateSettingsFile(metadata)) {
-                        withContext(appDispatchers.io) {
-                            ProviderMigrator.migrateForOldSettingsFile(
-                                directory = settingsDirPath,
-                                metadata = metadata,
-                            )
-                        }
-                    }
-
-                    val provider = loader.getProviderInstance(
-                        id = metadata.id,
-                        file = file,
-                        manifest = manifest,
-                        settingsDirPath = settingsDirPath,
-                    )
-
-                    if (manifest.requiresResources) {
-                        withContext(appDispatchers.io) {
-                            provider.resources = dynamicResourceLoader.load(inputFile = file)
-
-                            if (dynamicResourceLoader.forceCleanUp) {
-                                dynamicResourceLoader.cleanupArtifacts(file)
-                            }
-                        }
-                    }
-
-                    var isApiDisabled = preferenceItem.isDisabled
-                    try {
-                        if (!isApiDisabled) {
-                            providerApiRepository.addApiFromProvider(
-                                id = metadata.id,
-                                provider = provider,
-                            )
-                        }
-
-                        emit(LoadProviderResult.Success(provider = metadata))
-                    } catch (e: Throwable) {
-                        isApiDisabled = true
-
-                        emit(
-                            LoadProviderResult.Failure(
-                                provider = metadata,
-                                filePath = filePath,
-                                error = e,
-                            ),
-                        )
-                        errorLog(e)
-                    } finally {
-                        providerRepository.add(
-                            classLoader = loader,
-                            provider = provider,
+                        ProviderMigrator.migrateForOldSettingsFile(
+                            directory = settingsDirPath,
                             metadata = metadata,
-                            preferenceItem = preferenceItem.copy(isDisabled = isApiDisabled),
                         )
                     }
+                }
+
+                val provider = loader.getProviderInstance(
+                    id = metadata.id,
+                    file = file,
+                    manifest = manifest,
+                    settingsDirPath = settingsDirPath,
+                )
+
+                if (manifest.requiresResources) {
+                    withContext(appDispatchers.io) {
+                        provider.resources = dynamicResourceLoader.load(inputFile = file)
+
+                        if (dynamicResourceLoader.forceCleanUp) {
+                            dynamicResourceLoader.cleanupArtifacts(file)
+                        }
+                    }
+                }
+
+                var isApiDisabled = preferenceItem.isDisabled
+                try {
+                    if (!isApiDisabled) {
+                        providerApiRepository.addApiFromProvider(
+                            id = metadata.id,
+                            provider = provider,
+                        )
+                    }
+
+                    emit(LoadProviderResult.Success(provider = metadata))
                 } catch (e: Throwable) {
+                    isApiDisabled = true
+
                     emit(
                         LoadProviderResult.Failure(
                             provider = metadata,
@@ -245,56 +225,107 @@ internal class LoadProviderUseCaseImpl
                             error = e,
                         ),
                     )
-                    errorLog("${metadata.name} crashed with an error!")
                     errorLog(e)
-                }
-            }
-
-        private suspend fun createSettingsDirPath(
-            repositoryUrl: String,
-            isDebugProvider: Boolean,
-        ): String {
-            val userId = userSessionDataStore.currentUserId.filterNotNull().first()
-            val parentDirectoryName = if (isDebugProvider) Constants.PROVIDER_DEBUG else "user-$userId"
-
-            val repository = repositoryUrl.toValidRepositoryLink()
-            val childDirectoryName = "${repository.owner}-${repository.name}"
-            val finalPathPrefix = "$PROVIDERS_SETTINGS_FOLDER_NAME/$parentDirectoryName/$childDirectoryName"
-
-            return "${context.getExternalFilesDir(null)}/$finalPathPrefix"
-        }
-
-        private suspend fun getPreferenceItemOrCreate(
-            id: String,
-            fileName: String,
-            filePath: String,
-        ): ProviderFromPreferences {
-            var providerFromPreferences =
-                getProviderPrefs()
-                    .providers
-                    .find { it.id == id }
-
-            if (providerFromPreferences == null) {
-                providerFromPreferences =
-                    ProviderFromPreferences(
-                        id = id,
-                        name = fileName,
-                        filePath = filePath,
-                        isDisabled = false,
+                } finally {
+                    providerRepository.add(
+                        classLoader = loader,
+                        provider = provider,
+                        metadata = metadata,
+                        preferenceItem = preferenceItem.copy(isDisabled = isApiDisabled),
                     )
+                }
+            } catch (e: Throwable) {
+                emit(
+                    LoadProviderResult.Failure(
+                        provider = metadata,
+                        filePath = filePath,
+                        error = e,
+                    ),
+                )
+                errorLog("${metadata.name} crashed with an error!")
+                errorLog(e)
             }
-
-            return providerFromPreferences
         }
 
-        private fun isProviderAlreadyLoaded(
-            metadata: ProviderMetadata,
-        ): Boolean {
-            if (providerRepository.getProvider(metadata.id) != null) {
-                warnLog("Provider with name ${metadata.name} already exists")
-                return true
+    private suspend fun createSettingsDirPath(
+        repositoryUrl: String,
+        isDebugProvider: Boolean,
+    ): String {
+        val userId = userSessionDataStore.currentUserId.filterNotNull().first()
+        val parentDirectoryName = if (isDebugProvider) Constants.PROVIDER_DEBUG else "user-$userId"
+
+        val repository = repositoryUrl.toValidRepositoryLink()
+        val childDirectoryName = "${repository.owner}-${repository.name}"
+        val finalPathPrefix = "$PROVIDERS_SETTINGS_FOLDER_NAME/$parentDirectoryName/$childDirectoryName"
+
+        return "${context.getExternalFilesDir(null)}/$finalPathPrefix"
+    }
+
+    private suspend fun getPreferenceItemOrCreate(
+        id: String,
+        fileName: String,
+        filePath: String,
+    ): ProviderFromPreferences {
+        var providerFromPreferences =
+            getProviderPrefs()
+                .providers
+                .find { it.id == id }
+
+        if (providerFromPreferences == null) {
+            providerFromPreferences =
+                ProviderFromPreferences(
+                    id = id,
+                    name = fileName,
+                    filePath = filePath,
+                    isDisabled = false,
+                )
+        }
+
+        return providerFromPreferences
+    }
+
+    private fun isProviderAlreadyLoaded(
+        metadata: ProviderMetadata,
+    ): Boolean {
+        if (providerRepository.getProvider(metadata.id) != null) {
+            warnLog("Provider with name ${metadata.name} already exists")
+            return true
+        }
+
+        return false
+    }
+
+    /**
+     * On Android 14+, files created/downloaded by ADB or other external means
+     * may be owned by external UIDs, causing `setReadOnly` to fail due to
+     * permission issues.
+     *
+     * To ensure the provider can still be loaded, we fall back to creating an
+     * app-owned copy of the file which we can set as read-only without restrictions.
+     * */
+    private fun File.setReadOnly(metadata: ProviderMetadata): Boolean {
+        if (setReadOnly()) {
+            return true
+        }
+
+        warnLog("Failed to set dex as read-only for provider: ${metadata.name}. Replacing with app-owned copy...")
+        val tmpFile = File(parentFile, "${nameWithoutExtension}.tmp")
+        try {
+            copyTo(target = tmpFile, overwrite = true)
+            delete()
+            tmpFile.renameTo(this)
+
+            if (!setReadOnly()) {
+                return false
             }
 
+            infoLog("Replaced with app-owned copy for provider: ${metadata.name}")
+            return true
+        } catch (e: Throwable) {
+            tmpFile.delete()
+            errorLog("Failed to replace with app-owned copy for provider: ${metadata.name}")
+            errorLog(e)
             return false
         }
     }
+}
