@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -90,12 +91,18 @@ import com.ramcosta.composedestinations.generated.useredit.destinations.UserEdit
 import com.ramcosta.composedestinations.spec.Route
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 import com.flixclusive.core.strings.R as LocaleR
 
 @SuppressLint("DiscouragedApi", "UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     val context = LocalContext.current
@@ -143,14 +150,24 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         onSaveLastSeenChangelogs = viewModel::onSaveLastSeenChangelogs,
     )
 
-    LaunchedEffect(uiState.loadLinksState) {
-        if (
-            uiState.loadLinksState is LoadLinksState.Success &&
-            uiState.playerData != null &&
-            currentSelectedScreen != PlayerScreenDestination
-        ) {
-            onStartPlayer(uiState.playerData!!)
-        }
+    LaunchedEffect(true) {
+        combine(
+            flow = snapshotFlow { currentSelectedScreen },
+            flow2 = viewModel.uiState.map {
+                it.loadLinksState to it.playerData
+            }.distinctUntilChanged(),
+            flow3 = viewModel.currentLinksCache,
+        ) { screen, (loadLinksState, playerData), linksCache ->
+            if (
+                screen != PlayerScreenDestination &&
+                loadLinksState is LoadLinksState.Success &&
+                playerData != null &&
+                linksCache != null
+            ) {
+                onStartPlayer(playerData)
+            }
+        }.debounce(300)
+            .collect()
     }
 
     // Detect when we leave the PlayerScreen to stop loading links if needed
