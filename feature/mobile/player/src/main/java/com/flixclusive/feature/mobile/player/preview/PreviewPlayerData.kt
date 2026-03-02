@@ -41,14 +41,9 @@ internal object PreviewPlayerData {
             ),
             MediaSubtitle(
                 label = "English",
-                url = "https://cdmdemo.contentdm.oclc.org/utils/getfile/collection/p15700coll2/id/18/filename/video2.vtt",
+                url = "https://commons.wikimedia.org/w/api.php?action=timedtext&title=File%3ABig_Buck_Bunny_4K.webm&lang=en&trackformat=vtt",
                 source = TrackSource.REMOTE
             ),
-            MediaSubtitle(
-                label = "French",
-                url = "https://cdmdemo.contentdm.oclc.org/utils/getfile/collection/p15700coll2/id/18/filename/video2.vtt",
-                source = TrackSource.REMOTE
-            )
         )
     }
 }

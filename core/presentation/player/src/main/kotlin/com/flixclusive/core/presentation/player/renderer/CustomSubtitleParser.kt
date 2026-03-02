@@ -152,7 +152,7 @@ internal class CustomSubtitleParser(
                 output.accept(
                     CuesWithTiming(
                         /* cues = */ updatedCues,
-                        /* startTimeUs = */ data.startTimeUs - currentOffset.times(1000),
+                        /* startTimeUs = */ data.startTimeUs + currentOffset.times(1000),
                         /* durationUs = */ data.durationUs,
                     )
                 )

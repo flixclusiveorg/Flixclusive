@@ -4,6 +4,7 @@ import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.annotation.FrequentlyChangingValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,11 +35,12 @@ enum class ScrubEvent {
 class ScrubState private constructor(
     private val player: AppPlayer,
 ) {
-    /** The current position or progress of the scrubber up towards the [duration] */
-    var progress by mutableLongStateOf(player.currentPosition)
-        private set
+    /** The current position or progressState of the scrubber up towards the [duration] */
+    private var progressState by mutableLongStateOf(player.currentPosition)
 
-    /** The total or max value the scrubber can [progress] through */
+    val progress @FrequentlyChangingValue get() = progressState
+
+    /** The total or max value the scrubber can [progressState] through */
     var duration by mutableLongStateOf(max(0, player.duration))
         private set
 
@@ -68,12 +70,12 @@ class ScrubState private constructor(
     }
 
     /**
-     * Updates the current [progress] of the scrubber as the user moves it.
+     * Updates the current [progressState] of the scrubber as the user moves it.
      *
-     * @param position The new position to update the [progress] to.
+     * @param position The new position to update the [progressState] to.
      * */
     fun onScrubMove(position: Long) {
-        progress = position
+        progressState = position
         player.seekTo(position)
     }
 
@@ -90,7 +92,7 @@ class ScrubState private constructor(
 
     internal suspend fun observe() {
         do {
-            progress = player.currentPosition
+            progressState = player.currentPosition
             duration = max(0, player.duration)
             buffered = player.bufferedPosition
 

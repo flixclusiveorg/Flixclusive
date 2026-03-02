@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -83,8 +82,7 @@ internal fun ListItem(
                     AdaptiveIcon(
                         painter = painterResource(UiCommonR.drawable.check),
                         contentDescription = stringResource(LocaleR.string.selected),
-                        modifier = Modifier
-                            .size(18.dp)
+                        dp = 18.dp
                     )
                 }
             } else {

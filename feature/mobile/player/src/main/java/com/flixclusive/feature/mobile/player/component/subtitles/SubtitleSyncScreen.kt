@@ -1,30 +1,17 @@
 package com.flixclusive.feature.mobile.player.component.subtitles
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -32,9 +19,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -47,49 +32,78 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.common.extensions.dropShadow
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
-import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
 import com.flixclusive.core.presentation.common.extensions.noOpClickable
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.player.model.CueWithTiming
+import com.flixclusive.core.presentation.player.ui.state.ScrubState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun SubtitleSyncScreen(
-    cues: List<CueWithTiming>,
+    cuesWithTiming: List<CueWithTiming>,
     currentOffset: Long,
-    currentPosition: Long,
+    scrubState: ScrubState,
     onSave: (Long) -> Unit,
     onBack: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var tempOffset by remember { mutableLongStateOf(currentOffset) }
+    val hasUnsavedChanges by remember {
+        derivedStateOf { tempOffset != currentOffset }
+    }
+
+    val initialIndex = remember {
+        cuesWithTiming.findCueIndex(
+            position = scrubState.progress,
+            offset = tempOffset,
+            lastIndex = -1
+        )
+    }
+
+    val activeIndex = remember {
+        mutableIntStateOf(initialIndex)
+    }
+
+    val scrollTargetIndex = remember {
+        mutableIntStateOf(
+            if (initialIndex >= 0) initialIndex
+            else cuesWithTiming.findNearestCueIndex(scrubState.progress, tempOffset)
+        )
+    }
 
     BackHandler {
         onDismiss()
     }
 
-    val activeIndex by remember(cues, currentPosition, currentOffset) {
-        derivedStateOf {
-            cues.indexOfLast { cue ->
-                val adjustedStart = cue.startTimeMs + currentOffset
-                currentPosition >= adjustedStart
-            }.coerceAtLeast(0)
-        }
+    LaunchedEffect(scrubState) {
+        snapshotFlow { scrubState.progress }
+            .collectLatest { playerPosition ->
+                if (hasUnsavedChanges) return@collectLatest
+
+                val newIndex = cuesWithTiming.findCueIndex(
+                    position = playerPosition,
+                    offset = tempOffset,
+                    lastIndex = activeIndex.intValue
+                )
+
+                activeIndex.intValue = newIndex
+                scrollTargetIndex.intValue = if (newIndex >= 0) newIndex
+                    else cuesWithTiming.findNearestCueIndex(playerPosition, tempOffset)
+            }
     }
 
     Box(
@@ -122,7 +136,16 @@ internal fun SubtitleSyncScreen(
                     )
                 }
 
-                Spacer(Modifier.weight(1f))
+                Text(
+                    text = stringResource(id = PlayerR.string.sync_subtitles),
+                    style = MaterialTheme.typography.headlineSmall
+                        .asAdaptiveTextStyle(size = 22.sp)
+                        .copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .weight(1f)
+                        .align(Alignment.CenterVertically)
+                )
 
                 IconButton(onClick = onDismiss) {
                     AdaptiveIcon(
@@ -138,11 +161,13 @@ internal fun SubtitleSyncScreen(
                     .fillMaxHeight(0.85F)
             ) {
                 SubtitleCuesList(
-                    cues = cues,
-                    activeIndex = activeIndex,
+                    cues = cuesWithTiming,
+                    activeIndex = { activeIndex.intValue },
+                    scrollTargetIndex = { scrollTargetIndex.intValue },
                     onCueClick = { index ->
-                        val cue = cues[index]
-                        tempOffset = currentPosition - cue.startTimeMs
+                        val cue = cuesWithTiming[index]
+                        tempOffset = scrubState.progress - cue.startTimeMs
+                        activeIndex.intValue = index
                     },
                     modifier = Modifier.weight(1F)
                 )
@@ -157,7 +182,8 @@ internal fun SubtitleSyncScreen(
                 )
 
                 OffsetControlPanel(
-                    currentOffset = currentOffset,
+                    hasUnsavedChanges = hasUnsavedChanges,
+                    currentOffset = tempOffset,
                     onOffsetChange = { tempOffset = it },
                     onSave = {
                         onSave(tempOffset)
@@ -173,280 +199,141 @@ internal fun SubtitleSyncScreen(
 @Composable
 private fun SubtitleCuesList(
     cues: List<CueWithTiming>,
-    activeIndex: Int,
+    activeIndex: () -> Int,
+    scrollTargetIndex: () -> Int,
     onCueClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
-    var userScrolledManually by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.isScrollInProgress }
+    LaunchedEffect(Unit) {
+        snapshotFlow(scrollTargetIndex)
             .distinctUntilChanged()
-            .collect { isScrolling ->
-                if (isScrolling) {
-                    userScrolledManually++
+            .collectLatest { index ->
+                if (cues.isEmpty() || index < 0) return@collectLatest
+
+                // If the user is scrolling, wait until they stop + debounce
+                if (listState.isScrollInProgress) {
+                    snapshotFlow { listState.isScrollInProgress }
+                        .first { !it }
+                    delay(300L)
                 }
+
+                listState.animateScrollToItem(index = index)
             }
     }
 
-    LaunchedEffect(activeIndex, userScrolledManually) {
-        if (cues.isNotEmpty() && activeIndex >= 0) {
-            listState.animateScrollToItem(
-                index = activeIndex,
-                scrollOffset = -200
-            )
-        }
-    }
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.padding(15.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 10.dp)
-        ) {
-            AdaptiveIcon(
-                painter = painterResource(id = PlayerR.drawable.sync_black_24dp),
-                contentDescription = stringResource(PlayerR.string.sync_subtitles),
-                modifier = Modifier.size(20.dp)
-            )
-
-            Text(
-                text = stringResource(id = PlayerR.string.sync_subtitles),
-                style = MaterialTheme.typography.titleMedium
-                    .asAdaptiveTextStyle()
-                    .copy(fontWeight = FontWeight.Bold),
-                color = Color.White
-            )
-        }
-
-        LazyColumn(
-            state = listState,
-            flingBehavior = rememberSnapFlingBehavior(lazyListState = listState, snapPosition = SnapPosition.Start),
-            modifier = Modifier
-                .weight(1F)
-                .fadingEdge(
-                    scrollableState = listState,
-                    orientation = Orientation.Vertical,
-                    startEdge = 100.dp,
-                    endEdge = 100.dp
-                ),
-        ) {
-            itemsIndexed(
-                items = cues,
-                key = { index, cue -> "${index}_${cue.startTimeMs}" }
-            ) { index, cue ->
-                SubtitleCueItem(
-                    cue = cue,
-                    isActive = index == activeIndex,
-                    onClick = { onCueClick(index) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SubtitleCueItem(
-    cue: CueWithTiming,
-    isActive: Boolean,
-    onClick: () -> Unit
-) {
-    val textColor by animateColorAsState(
-        targetValue = if (isActive) Color.White else Color.White.copy(alpha = 0.4f),
-        animationSpec = tween(300),
-        label = "cue_color"
-    )
-
-    val scale by animateFloatAsState(
-        targetValue = if (isActive) 1f else 0.85f,
-        animationSpec = tween(300),
-        label = "cue_scale"
-    )
-
-    val baseStyle = MaterialTheme.typography.titleMedium
-    val style = remember(isActive) {
-        if (isActive) {
-            baseStyle.copy(
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 24.sp
-            ).dropShadow()
-        } else {
-            baseStyle.copy(
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                lineHeight = 24.sp
-            )
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .noIndicationClickable(onClick = onClick)
-            .padding(vertical = 8.dp, horizontal = 16.dp)
-    ) {
-        Text(
-            text = cue.cue.joinToString("\n"),
-            color = textColor,
-            style = style,
-            modifier = Modifier.graphicsLayer(
-                scaleX = scale,
-                scaleY = scale,
-                transformOrigin = TransformOrigin(0f, 0.5f)
-            )
-        )
-    }
-}
-
-@Composable
-private fun OffsetControlPanel(
-    currentOffset: Long,
-    onOffsetChange: (Long) -> Unit,
-    onSave: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    LazyColumn(
+        state = listState,
+        flingBehavior = rememberSnapFlingBehavior(lazyListState = listState, snapPosition = SnapPosition.Start),
         modifier = modifier
-            .fillMaxHeight()
-            .padding(15.dp)
+            .fadingEdge(
+                scrollableState = listState,
+                orientation = Orientation.Vertical,
+                startEdge = 50.dp,
+                endEdge = 50.dp
+            )
+            .padding(15.dp),
     ) {
-        Text(
-            text = stringResource(id = LocaleR.string.offset),
-            style = MaterialTheme.typography.titleMedium
-                .asAdaptiveTextStyle()
-                .copy(fontWeight = FontWeight.Bold),
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 20.dp)
-        )
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            IconButton(
-                onClick = { onOffsetChange(currentOffset - 1000) }
-            ) {
-                AdaptiveIcon(
-                    painter = painterResource(id = PlayerR.drawable.keyboard_double_arrow_left_thin),
-                    contentDescription = stringResource(LocaleR.string.subtract_1000ms_content_description),
-                    tint = Color.White
-                )
-            }
-
-            IconButton(
-                onClick = { onOffsetChange(currentOffset - 500) }
-            ) {
-                AdaptiveIcon(
-                    painter = painterResource(id = PlayerR.drawable.chevron_left_thin),
-                    contentDescription = stringResource(LocaleR.string.subtract_500ms_content_description),
-                    tint = Color.White
-                )
-            }
-
-            AnimatedContent(
-                targetState = currentOffset,
-                transitionSpec = {
-                    if (targetState > initialState) {
-                        slideInHorizontally { it / 3 } + fadeIn() togetherWith
-                            slideOutHorizontally { -it / 3 } + fadeOut()
-                    } else {
-                        slideInHorizontally { -it / 3 } + fadeIn() togetherWith
-                            slideOutHorizontally { it / 3 } + fadeOut()
-                    }.using(SizeTransform(clip = false))
-                },
-                label = "offset_animation",
-                modifier = Modifier.weight(1F)
-            ) { targetOffset ->
-                Text(
-                    text = "${targetOffset}ms",
-                    style = MaterialTheme.typography.headlineMedium
-                        .asAdaptiveTextStyle()
-                        .copy(
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        ),
-                    color = Color.White
-                )
-            }
-
-            IconButton(
-                onClick = { onOffsetChange(currentOffset + 500) }
-            ) {
-                AdaptiveIcon(
-                    painter = painterResource(id = PlayerR.drawable.chevron_right_thin),
-                    contentDescription = stringResource(LocaleR.string.add_500ms_content_description),
-                    tint = Color.White
-                )
-            }
-
-            IconButton(
-                onClick = { onOffsetChange(currentOffset + 1000) }
-            ) {
-                AdaptiveIcon(
-                    painter = painterResource(id = PlayerR.drawable.keyboard_double_arrow_right_thin),
-                    contentDescription = stringResource(LocaleR.string.add_1000ms_content_description),
-                    tint = Color.White
-                )
-            }
-        }
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
-            modifier = Modifier.padding(top = 20.dp)
-        ) {
-            TextButton(
-                onClick = { onOffsetChange(0L) },
-                enabled = currentOffset != 0L,
-                shape = MaterialTheme.shapes.small
-            ) {
-                AdaptiveIcon(
-                    painter = painterResource(id = PlayerR.drawable.round_replay_24),
-                    contentDescription = stringResource(LocaleR.string.reset),
-                    dp = 18.dp,
-                    tint = Color.White
-                )
-
-                Spacer(Modifier.width(6.dp))
-
-                Text(
-                    text = stringResource(LocaleR.string.reset),
-                    style = MaterialTheme.typography.bodyMedium
-                        .asAdaptiveTextStyle()
-                        .copy(fontWeight = FontWeight.Medium),
-                    color = Color.White
-                )
-            }
-
-            OutlinedButton(
-                onClick = onSave,
-                shape = MaterialTheme.shapes.small
-            ) {
-                AdaptiveIcon(
-                    painter = painterResource(id = UiCommonR.drawable.save),
-                    contentDescription = stringResource(LocaleR.string.reset),
-                    dp = 18.dp,
-                    tint = Color.White
-                )
-
-                Spacer(Modifier.width(6.dp))
-
-                Text(
-                    text = stringResource(LocaleR.string.save),
-                    style = MaterialTheme.typography.bodyMedium
-                        .asAdaptiveTextStyle()
-                        .copy(fontWeight = FontWeight.Medium),
-                    color = Color.White
-                )
-            }
+        itemsIndexed(
+            items = cues,
+            key = { index, cue -> "${index}_${cue.cue.firstOrNull()}" }
+        ) { index, cue ->
+            SubtitleCueItem(
+                cue = cue,
+                isActive = { index == activeIndex() },
+                onClick = { onCueClick(index) }
+            )
         }
     }
 }
 
+/**
+ * Finds the cue index whose adjusted time range contains [position].
+ *
+ * Uses O(1) sequential lookup from [lastIndex] for normal playback,
+ * and falls back to O(log n) binary search on seeks or gaps.
+ *
+ * Assumes the list is sorted by [CueWithTiming.startTimeMs] ascending.
+ *
+ * @return the matching index, or -1 if no cue contains the position.
+ */
+private fun List<CueWithTiming>.findCueIndex(
+    position: Long,
+    offset: Long = 0L,
+    lastIndex: Int = -1
+): Int {
+    if (isEmpty()) return -1
+
+    // O(1) fast path: check if still inside the current cue
+    if (lastIndex in indices) {
+        val current = this[lastIndex]
+        val curStart = current.startTimeMs + offset
+        val curEnd = curStart + current.durationMs
+        if (position in curStart..<curEnd) return lastIndex
+
+        // O(1) fast path: check next cue (normal playback progression)
+        val nextIndex = lastIndex + 1
+        if (nextIndex in indices) {
+            val next = this[nextIndex]
+            val nextStart = next.startTimeMs + offset
+            val nextEnd = nextStart + next.durationMs
+            if (position in nextStart..<nextEnd) return nextIndex
+
+            // Still in the gap between current and next cue
+            if (position in curEnd..<nextStart) return -1
+        } else if (position >= curEnd) {
+            // Past the last cue entirely
+            return -1
+        }
+    }
+
+    // O(log n) fallback: binary search (seek, or no valid lastIndex)
+    var low = 0
+    var high = this.lastIndex
+    while (low <= high) {
+        val mid = (low + high) ushr 1
+        val cue = this[mid]
+        val adjustedStart = cue.startTimeMs + offset
+        val adjustedEnd = adjustedStart + cue.durationMs
+
+        when {
+            position < adjustedStart -> high = mid - 1
+            position >= adjustedEnd -> low = mid + 1
+            else -> return mid
+        }
+    }
+    return -1
+}
+
+
+/**
+ * Finds the nearest cue index to [position], even if position is in a gap.
+ * Returns the last cue that ended before or at [position], or 0 if before all cues.
+ *
+ * Assumes the list is sorted by [CueWithTiming.startTimeMs] ascending.
+ */
+private fun List<CueWithTiming>.findNearestCueIndex(
+    position: Long,
+    offset: Long = 0L
+): Int {
+    if (isEmpty()) return 0
+
+    var low = 0
+    var high = lastIndex
+    while (low <= high) {
+        val mid = (low + high) ushr 1
+        val cue = this[mid]
+        val adjustedStart = cue.startTimeMs + offset
+        val adjustedEnd = adjustedStart + cue.durationMs
+
+        when {
+            position < adjustedStart -> high = mid - 1
+            position >= adjustedEnd -> low = mid + 1
+            else -> return mid // exact match
+        }
+    }
+
+    // high = last cue that ended before position (or -1 if before all cues)
+    return high.coerceAtLeast(0)
+}

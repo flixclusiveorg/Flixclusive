@@ -317,6 +317,7 @@ internal fun PlayerControls(
 
                     AnimatedPanel(visible = uiMode.isSubs) {
                         SubtitleAndAudioScreen(
+                            isSyncEnabled = player.currentCuesWithTiming.isNotEmpty(),
                             tracksState = tracksState,
                             onDismiss = { uiMode = UiMode.NONE },
                             onSyncSubtitles = { uiMode = UiMode.SUBS_SYNC },
@@ -363,9 +364,9 @@ internal fun PlayerControls(
                         visible = uiMode.isSubsSync
                     ) {
                         SubtitleSyncScreen(
-                            cues = player.currentCuesWithTiming,
+                            cuesWithTiming = player.currentCuesWithTiming,
                             currentOffset = player.offset,
-                            currentPosition = scrubState.progress,
+                            scrubState = scrubState,
                             onBack = { uiMode = UiMode.SUBS },
                             onDismiss = { uiMode = UiMode.NONE },
                             onSave = {
