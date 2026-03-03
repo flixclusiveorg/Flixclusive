@@ -96,7 +96,7 @@ internal class HomeScreenViewModel
                 paginationJobs.clear()
 
                 list.forEach { catalog ->
-                    items[catalog.url] = persistentSetOf<Film>()
+                    items[catalog.url] = persistentSetOf()
                     pagingStates[catalog.url] = CatalogPagingState(
                         hasNext = catalog.canPaginate,
                         state = when {
@@ -117,7 +117,7 @@ internal class HomeScreenViewModel
                 }
             }.stateIn(
                 scope = appDispatchers.defaultScope,
-                started = SharingStarted.Eagerly,
+                started = SharingStarted.WhileSubscribed(5000),
                 initialValue = emptyList(),
             )
 
