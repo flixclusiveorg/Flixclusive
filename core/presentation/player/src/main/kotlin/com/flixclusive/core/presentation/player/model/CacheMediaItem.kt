@@ -7,7 +7,7 @@ import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
 data class CacheMediaItem(
     val servers: List<MediaServer>,
     val subtitles: List<MediaSubtitle>,
-    val mediaSource: MediaSource,
+    val mediaSources: List<MediaSource>,
     val currentServerIndex: Int = 0,
     val failedStreamIndices: Set<Int> = emptySet(),
 ) {

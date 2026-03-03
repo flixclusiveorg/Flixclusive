@@ -30,7 +30,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.text.TextRenderer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
@@ -150,6 +149,7 @@ class AppPlayer(
                         .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
                         .build()
 
+                    setPauseAtEndOfMediaItems(true)
                     setAudioAttributes(playbackAttributes, true)
                 }.build()
                 .apply {
@@ -182,41 +182,37 @@ class AppPlayer(
     ) {
         if (exoPlayer == null) return
 
-        val mediaSource: MediaSource
         var cacheMediaItem = mediaSourceManager.getCacheMediaItem(key)
         if (cacheMediaItem == null) {
             val streamIndex = servers.getIndexOfPreferredQuality(playerPrefs.quality)
 
-            mediaSource = mediaSourceManager.createMediaSource(
-                server = servers[streamIndex],
+            val mediaSources = mediaSourceManager.createMediaSources(
+                servers = servers,
                 subtitles = subtitles,
             )
 
             cacheMediaItem = CacheMediaItem(
-                mediaSource = mediaSource,
+                mediaSources = mediaSources,
                 servers = servers,
                 subtitles = subtitles,
                 currentServerIndex = streamIndex,
             )
 
             mediaSourceManager.setCacheMediaItem(key = key, cacheMediaItem = cacheMediaItem)
-        } else {
-            mediaSource = cacheMediaItem.mediaSource
         }
 
         if (playImmediately) {
             infoLog("Preparing the player...")
             mediaSourceManager.setCurrentKey(key)
 
-            // Update data source headers
             val selectedStreamIndex = cacheMediaItem.currentServerIndex
             val selectedStream = cacheMediaItem.servers[selectedStreamIndex]
             selectedStream.headers?.let {
                 dataSourceFactory.setRequestProperties(it)
             }
 
+            exoPlayer?.setMediaSources(cacheMediaItem.mediaSources)
             seekTo(selectedStreamIndex, startPositionMs)
-            exoPlayer?.setMediaSource(mediaSource)
             prepare()
             playWhenReady = _playWhenReady
         }
@@ -241,8 +237,7 @@ class AppPlayer(
         val cacheMediaItem = mediaSourceManager.getCacheMediaItem(key) ?: return false
         mediaSourceManager.setCurrentKey(key)
 
-        // Set new media source
-        exoPlayer!!.setMediaSource(cacheMediaItem.mediaSource)
+        exoPlayer!!.setMediaSources(cacheMediaItem.mediaSources)
         exoPlayer!!.prepare()
         exoPlayer!!.seekTo(startPositionMs)
         playWhenReady = _playWhenReady
@@ -257,16 +252,14 @@ class AppPlayer(
     fun selectServer(index: Int) {
         mediaSourceManager.switchStreamIndex(index)
 
-        val cacheMediaItem = mediaSourceManager.getCurrentMediaItem()
-            ?: throw IllegalStateException("No cached media item found for the current key.")
-
-        val server = cacheMediaItem.servers[index]
-        val mediaItem = mediaSourceManager.createMediaItem(server.url)
-
         exoPlayer?.let {
-            val currentMediaItemIndex = it.currentMediaItemIndex
-            it.replaceMediaItem(currentMediaItemIndex, mediaItem)
+            val currentPosition = it.currentPosition
+            it.seekTo(index, currentPosition)
         }
+    }
+
+    fun markServerAsFailed(index: Int) {
+        mediaSourceManager.markStreamAsFailed(index)
     }
 
     fun selectSubtitle(index: Int) {
@@ -361,27 +354,16 @@ class AppPlayer(
         }
 
         override fun onPlayerError(error: PlaybackException) {
-            errorReceiver.onPlayerError(error)
-            val isDurationNotUnset = exoPlayer?.duration != null && exoPlayer?.duration != C.TIME_UNSET
-
             errorLog(error.stackTraceToString())
+
+            val isDurationNotUnset = exoPlayer?.duration != null && exoPlayer?.duration != C.TIME_UNSET
             if (error.isNetworkException() && isDurationNotUnset || error.isLiveError()) {
+                errorReceiver.onPlayerError(error)
                 seekToDefaultPosition()
                 prepare()
                 playWhenReady = _playWhenReady
                 return
             }
-
-            mediaSourceManager.markStreamAsFailed(currentMediaItemIndex)
-
-            val nextIndex = mediaSourceManager.getNextAvailableStreamIndex(currentMediaItemIndex)
-            if (nextIndex == null) {
-                errorLog("All servers have failed or no alternative servers available.")
-                return
-            }
-
-            seekTo(nextIndex, currentPosition)
-            prepare()
         }
 
         override fun onCues(cueGroup: CueGroup) {
@@ -391,35 +373,6 @@ class AppPlayer(
 
     companion object {
         val playbackSpeedRange = 0.1f..5.0f
-
-        /**
-         * Calculates 15% of the [duration] and returns the remaining time.
-         * This is used to determine when 80% of the video has been watched.
-         *
-         * @param duration Total duration in milliseconds.
-         *
-         * @return The threshold time in milliseconds.
-         * */
-        internal fun getCompletionThreshold(duration: Long): Long {
-            val deductedAmount = (duration * 0.85).toLong()
-            return duration - deductedAmount
-        }
-
-        /**
-         * Checks if the [progress] is within the [threshold] of the [duration].
-         * Default threshold is 10 seconds (10,000 milliseconds).
-         *
-         * @param progress Current progress in milliseconds.
-         * @param duration Total duration in milliseconds.
-         * @param threshold Threshold in milliseconds to check against.
-         *
-         * @return True if within threshold, false otherwise.
-         * */
-        internal fun isInThreshold(
-            progress: Long,
-            duration: Long,
-            threshold: Long = 10_000L,
-        ) = (duration - progress) <= threshold
     }
 
     // MARK: Don't scroll down anymore pls

@@ -11,7 +11,9 @@ import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
 import androidx.media3.common.listen
 import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.model.CacheMediaItem
 import com.flixclusive.core.presentation.player.model.track.MediaServer
+import com.flixclusive.core.util.log.errorLog
 
 @Stable
 class ServersState(
@@ -22,7 +24,14 @@ class ServersState(
     var selectedServer by mutableIntStateOf(0)
         private set
 
-    internal suspend fun observe() {
+    private val currentItem: CacheMediaItem?
+        get() {
+            return if (player.isCommandAvailable(Player.COMMAND_SET_PLAYLIST_METADATA)) {
+                player.currentCacheMediaItem
+            } else null
+        }
+
+    private suspend fun observe() {
         player.listen { events ->
             if (
                 events.containsAny(
@@ -34,12 +43,38 @@ class ServersState(
                     Player.EVENT_SEEK_FORWARD_INCREMENT_CHANGED,
                 )
             ) {
-                val currentItem = player.currentCacheMediaItem ?: return@listen
-
-                selectedServer = currentItem.currentServerIndex
-                servers.clear()
-                servers.addAll(currentItem.servers)
+                currentItem?.servers?.let {
+                    servers.clear()
+                    servers.addAll(it)
+                }
+                selectedServer = currentItem?.currentServerIndex ?: return@listen
             }
+
+            if (events.contains(Player.EVENT_PLAYER_ERROR)) {
+                player.markServerAsFailed(currentMediaItemIndex)
+
+                val nextIndex = getNextAvailableServerIndex()
+                if (nextIndex == null) {
+                    errorLog("All servers have failed or no alternative servers available.")
+                    return@listen
+                }
+
+                selectedServer = nextIndex
+                seekTo(nextIndex, currentPosition)
+                prepare()
+            }
+        }
+    }
+
+    private fun getNextAvailableServerIndex(): Int? {
+        if (currentItem == null) return null
+
+        if (selectedServer + 1 in currentItem!!.servers.indices) {
+            return selectedServer + 1
+        }
+
+        return currentItem!!.servers.indices.firstOrNull {
+            it !in currentItem!!.failedStreamIndices
         }
     }
 
