@@ -57,7 +57,7 @@ internal fun EpisodeCard(
     currentEpisodeSelected: Episode,
     onEpisodeClick: (Episode) -> Unit,
 ) {
-    val title = remember { "${data.number}. ${data.title}" }
+    val title = remember(data) { "${data.number}. ${data.title}" }
 
     val cardEmphasisColor = MaterialTheme.colorScheme.primary
     val progressEmphasisColor = MaterialTheme.colorScheme.tertiary
@@ -139,6 +139,7 @@ internal fun EpisodeCard(
                         progress = { it / (data.duration ?: it).toFloat() },
                         color = progressColor,
                         trackColor = progressColor.copy(0.2F),
+                        drawStopIndicator = {},
                         modifier = Modifier
                             .clip(MaterialTheme.shapes.large)
                             .padding(8.dp)
@@ -224,7 +225,7 @@ internal fun EpisodeCardPlaceholder(
             color = LocalContentColor.current.copy(0.6f)
         )
 
-        for (i in 0..3) {
+        repeat(3) {
             val number = remember { Random.nextDouble(0.9, 1.0).toFloat() }
 
             Spacer(
