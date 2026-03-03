@@ -57,6 +57,7 @@ import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Comp
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.core.presentation.player.ui.state.ScrubState.Companion.rememberScrubState
 import com.flixclusive.core.presentation.player.ui.state.SeekButtonState.Companion.rememberSeekButtonState
+import com.flixclusive.core.presentation.player.ui.state.SeekPreviewState.Companion.rememberSeekPreviewState
 import com.flixclusive.core.presentation.player.ui.state.ServersState.Companion.rememberServersState
 import com.flixclusive.core.presentation.player.ui.state.TracksState.Companion.rememberTracksState
 import com.flixclusive.core.presentation.player.ui.state.VolumeManager.Companion.rememberVolumeManager
@@ -116,6 +117,7 @@ internal fun PlayerControls(
     var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
 
     val scrubState = rememberScrubState(player = player)
+    val seekPreviewState = rememberSeekPreviewState(player = player)
 
     val playPauseState = rememberPlayPauseButtonState(player = player)
     val seekButtonState = rememberSeekButtonState(player = player)
@@ -185,26 +187,27 @@ internal fun PlayerControls(
         uiMode,
         controlsVisibilityState.isVisible,
         gestureState.isDoubleTapping,
-        gestureState.isSliding
+        gestureState.isSliding,
+        scrubState.isScrubbing
     ) {
         if (isInPipMode) {
             controlsVisibilityState.hide()
             return@LaunchedEffect
         }
 
-        if (uiMode.isPlaybackSpeed || uiMode.isResize) {
-            queueControlVisibility = true
+        if (uiMode.isPlaybackSpeed || uiMode.isResize || scrubState.isScrubbing) {
+            queueControlVisibility = true // to reset indefinite timer
             controlsVisibilityState.show(indefinite = true)
             return@LaunchedEffect
         }
 
-        val shouldHideControls = gestureState.isDoubleTapping
-            || gestureState.isSliding
-            || (!uiMode.isNone && !uiMode.isSubsSync && !uiMode.isSubs)
+        val isUiModeNotNone = !uiMode.isNone && !uiMode.isSubsSync && !uiMode.isSubs
+        val shouldHideControls = gestureState.isDoubleTapping || gestureState.isSliding || isUiModeNotNone
         if (controlsVisibilityState.isVisible && shouldHideControls) {
             queueControlVisibility = true
             controlsVisibilityState.hide()
-            if (player.isPlaying) {
+
+            if (player.isPlaying && isUiModeNotNone) {
                 queuePlay = true
                 player.playWhenReady = true
                 player.pause()
@@ -324,6 +327,7 @@ internal fun PlayerControls(
                         BottomControls(
                             playbackSpeedState = playbackSpeedState,
                             scrubState = scrubState,
+                            seekPreviewState = seekPreviewState,
                             uiMode = uiMode,
                             onNext = onNext,
                             onToggleUiPanel = { uiMode = it },

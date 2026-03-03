@@ -26,6 +26,7 @@ import com.flixclusive.core.presentation.mobile.components.material3.PlainToolti
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState
 import com.flixclusive.core.presentation.player.ui.state.ScrubState
+import com.flixclusive.core.presentation.player.ui.state.SeekPreviewState
 import com.flixclusive.feature.mobile.player.util.UiMode
 import com.flixclusive.core.presentation.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
@@ -37,6 +38,7 @@ internal const val TIMER_WEIGHT = 0.08F
 internal fun BottomControls(
     playbackSpeedState: PlaybackSpeedState,
     scrubState: ScrubState,
+    seekPreviewState: SeekPreviewState,
     uiMode: UiMode,
     onToggleUiPanel: (UiMode) -> Unit,
     modifier: Modifier = Modifier,
@@ -48,6 +50,7 @@ internal fun BottomControls(
     ) {
         Scrubber(
             state = scrubState,
+            seekPreviewState = seekPreviewState,
             modifier = Modifier.padding(horizontal = 6.dp)
         )
 

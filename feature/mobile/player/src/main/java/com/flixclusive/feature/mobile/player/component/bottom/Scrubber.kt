@@ -15,21 +15,27 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.player.extensions.formatMinSec
 import com.flixclusive.core.presentation.player.ui.state.ScrubState
+import com.flixclusive.core.presentation.player.ui.state.SeekPreviewState
+import com.flixclusive.core.presentation.player.ui.state.SeekPreviewState.Companion.FRAME_INTERVAL_MS
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSlider
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSliderDefaults
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 
+@OptIn(FlowPreview::class)
 @Composable
 internal fun Scrubber(
     state: ScrubState,
+    seekPreviewState: SeekPreviewState,
     modifier: Modifier = Modifier
 ) {
     val progress by remember { derivedStateOf { state.progress.toFloat() } }
@@ -69,9 +75,24 @@ internal fun Scrubber(
         sliderInteractionSource.interactions.collect { interaction ->
             when (interaction) {
                 is PressInteraction.Press, is DragInteraction.Start -> state.onScrubStart()
-                else -> state.onScrubEnd()
+                else -> {
+                    state.onScrubEnd()
+                    seekPreviewState.onScrubEnd()
+                }
             }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        snapshotFlow {
+            (state.progress / FRAME_INTERVAL_MS) * FRAME_INTERVAL_MS
+        }.distinctUntilChanged()
+            .debounce(600L)
+            .collectLatest { _ ->
+                if (state.isScrubbing) {
+                    seekPreviewState.onScrubbing(state.progress, this)
+                }
+            }
     }
 
     Row(
@@ -130,16 +151,12 @@ internal fun Scrubber(
                     )
                 },
                 seekTextComposable = {
-                    androidx.compose.animation.AnimatedVisibility(state.isScrubbing) {
-                        Text(
-                            text = position,
-                            color = Color.White,
-                            fontWeight = FontWeight.Black,
-                            style = MaterialTheme.typography.labelLarge.asAdaptiveTextStyle(size = 20.sp),
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                        )
-                    }
+                    SeekPreview(
+                        isVisible = state.isScrubbing,
+                        bitmap = seekPreviewState.currentFrame,
+                        positionText = position,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                    )
                 }
             )
         }
