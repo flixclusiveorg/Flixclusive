@@ -130,6 +130,7 @@ private fun PlayerScreenBasePreview() {
                 currentProvider = currentProvider,
                 onProviderChange = { currentProvider = it },
                 snackbarState = snackbarState,
+                onUpdateWatchProgress = {},
                 modifier = Modifier.background(Color.Black)
             )
         }

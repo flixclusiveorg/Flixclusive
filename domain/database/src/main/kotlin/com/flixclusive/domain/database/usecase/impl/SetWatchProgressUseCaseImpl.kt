@@ -3,6 +3,7 @@ package com.flixclusive.domain.database.usecase.impl
 import com.flixclusive.core.database.entity.watched.WatchProgress
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.domain.database.usecase.SetWatchProgressUseCase
+import com.flixclusive.model.film.Film
 import javax.inject.Inject
 
 internal class SetWatchProgressUseCaseImpl
@@ -10,11 +11,11 @@ internal class SetWatchProgressUseCaseImpl
     constructor(
         private val watchProgressRepository: WatchProgressRepository,
     ) : SetWatchProgressUseCase {
-        override suspend fun invoke(watchProgress: WatchProgress) {
+        override suspend fun invoke(watchProgress: WatchProgress, film: Film?): Long {
             if (watchProgress.isLessThanAMinute()) {
-                return
+                return -1
             }
 
-            watchProgressRepository.insert(watchProgress)
+            return watchProgressRepository.insert(watchProgress, film)
         }
     }

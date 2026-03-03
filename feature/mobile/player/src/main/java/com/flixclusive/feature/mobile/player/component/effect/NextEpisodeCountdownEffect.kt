@@ -24,7 +24,7 @@ internal fun NextEpisodeCountdownEffect(
     val isTenSecondsRemaining by remember {
         derivedStateOf {
             val remaining = scrubState.duration - scrubState.progress
-            remaining in 1..TEN_SECONDS_MS && scrubState.duration > 0
+            remaining <= TEN_SECONDS_MS && scrubState.duration > 0
         }
     }
 
@@ -38,7 +38,7 @@ internal fun NextEpisodeCountdownEffect(
                     }
                 )
             )
-        } else {
+        } else if (snackbarState.countdown != null) {
             snackbarState.dismissCountdown()
         }
     }

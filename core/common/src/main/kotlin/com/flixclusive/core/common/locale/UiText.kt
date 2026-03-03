@@ -33,7 +33,7 @@ sealed class UiText {
      */
     @Immutable
     class StringResource(
-        @StringRes val stringId: Int,
+        @param:StringRes val stringId: Int,
         vararg val args: Any,
     ) : UiText()
 

@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -94,12 +95,13 @@ internal fun PlayerControls(
     onProviderChange: (ProviderMetadata) -> Unit,
     onResizeModeChange: (ResizeMode) -> Unit,
     onBack: () -> Unit,
+    onUpdateWatchProgress: () -> Unit,
     modifier: Modifier = Modifier,
     currentEpisode: Episode? = null,
     currentSeason: SeasonWithProgress? = null,
     onSeasonChange: ((Season) -> Unit)? = null,
     onEpisodeChange: ((Episode) -> Unit)? = null,
-    onNext: (() -> Unit)? = null
+    onNext: (() -> Unit)? = null,
 ) {
     var isLocked by remember { mutableStateOf(false) }
     var uiMode by remember { mutableStateOf(UiMode.NONE) }
@@ -132,6 +134,10 @@ internal fun PlayerControls(
         subtitlesPreferences = subtitlesPrefs,
         playerPreferences = playerPrefs
     )
+
+    SideEffect {
+        onUpdateWatchProgress()
+    }
 
     BackHandler(enabled = isLocked) {
         controlsVisibilityState.show()

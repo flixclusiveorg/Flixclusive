@@ -12,6 +12,7 @@ import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.network.util.Resource
+import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
@@ -219,7 +220,6 @@ class PlayerScreenViewModelTest {
             setWatchProgress = setWatchProgress,
             userSessionManager = userSessionManager,
             watchProgressRepository = watchProgressRepository,
-            player = player,
             savedStateHandle = savedStateHandle,
         )
     }

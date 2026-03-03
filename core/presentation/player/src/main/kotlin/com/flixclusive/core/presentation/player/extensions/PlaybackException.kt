@@ -4,6 +4,8 @@ import androidx.annotation.OptIn
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.HttpDataSource
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.presentation.player.R
 import com.flixclusive.core.util.log.errorLog
 
 internal fun String?.isDdosProtection(): Boolean {
@@ -13,17 +15,21 @@ internal fun String?.isDdosProtection(): Boolean {
         contains("cloudflare", true)
 }
 
-internal fun PlaybackException.isNetworkException() =
+fun PlaybackException.isNetworkException() =
     errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
         errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
 
-internal fun PlaybackException.isLiveError() = errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW
+fun PlaybackException.isLiveError() = errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW
 
 @OptIn(UnstableApi::class)
-internal fun PlaybackException.getFormatMessage(): String {
-    var message = localizedMessage
+fun PlaybackException.getFormatMessage(): UiText {
+    var message: UiText = UiText.from(localizedMessage ?: "Unknown error")
 
-    if (cause is HttpDataSource.InvalidResponseCodeException) {
+    if (isLiveError()) {
+        message = UiText.from(R.string.live_stream_error_message)
+    } else if (isNetworkException()) {
+        message = UiText.from(R.string.network_error_message)
+    } else if (cause is HttpDataSource.InvalidResponseCodeException) {
         val okHttpError = cause as HttpDataSource.InvalidResponseCodeException
         val responseBody = String(okHttpError.responseBody)
 
@@ -36,9 +42,9 @@ internal fun PlaybackException.getFormatMessage(): String {
         )
 
         if (responseBody.isDdosProtection()) {
-            message = "Anti-DDoS"
+            message = UiText.from(R.string.anti_ddos_message)
         }
     }
 
-    return "PlaybackException [$errorCode]: $message"
+    return UiText.from("ERR [$errorCode]: $message")
 }

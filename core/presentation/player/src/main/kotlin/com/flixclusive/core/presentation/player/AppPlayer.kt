@@ -235,21 +235,23 @@ class AppPlayer(
         textRenderer = null
     }
 
-    fun switchMediaSource(key: MediaItemKey): Boolean {
+    fun switchMediaSource(key: MediaItemKey, startPositionMs: Long = C.TIME_UNSET): Boolean {
         if (exoPlayer == null) return false
 
         val cacheMediaItem = mediaSourceManager.getCacheMediaItem(key) ?: return false
         mediaSourceManager.setCurrentKey(key)
 
-        val savedPosition = exoPlayer!!.currentPosition
-
         // Set new media source
         exoPlayer!!.setMediaSource(cacheMediaItem.mediaSource)
         exoPlayer!!.prepare()
-        exoPlayer!!.seekTo(savedPosition)
+        exoPlayer!!.seekTo(startPositionMs)
         playWhenReady = _playWhenReady
 
         return true
+    }
+
+    fun hasMediaSource(key: MediaItemKey): Boolean {
+        return mediaSourceManager.getCacheMediaItem(key) != null
     }
 
     fun selectServer(index: Int) {
@@ -360,7 +362,6 @@ class AppPlayer(
 
         override fun onPlayerError(error: PlaybackException) {
             errorReceiver.onPlayerError(error)
-
             val isDurationNotUnset = exoPlayer?.duration != null && exoPlayer?.duration != C.TIME_UNSET
 
             errorLog(error.stackTraceToString())

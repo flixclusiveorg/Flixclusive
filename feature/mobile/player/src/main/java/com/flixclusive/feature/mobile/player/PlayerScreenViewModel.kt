@@ -6,7 +6,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.listenTo
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -19,6 +22,7 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.PlayerErrorReceiver
+import com.flixclusive.core.presentation.player.extensions.getFormatMessage
 import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.core.presentation.player.model.track.MediaServer
 import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
@@ -59,6 +63,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -76,11 +81,14 @@ internal class PlayerScreenViewModel @Inject constructor(
     private val playerDataSourceFactory: AppDataSourceFactory,
     @param:ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
-) : ViewModel(), PlayerErrorReceiver {
-    /**
-     * Using [SavedStateHandle]'s navArgs delegate to get the navigation arguments.
-     * */
+) : ViewModel() {
     private val navArgs = savedStateHandle.navArgs<PlayerScreenNavArgs>()
+
+
+    private val _playerErrors = MutableSharedFlow<UiText>(extraBufferCapacity = 5)
+    val playerErrors: SharedFlow<UiText> = _playerErrors.asSharedFlow()
+
+    private val errorConsumer by lazy { PlayerErrorConsumer(_playerErrors) }
 
     val playerPreferences = dataStoreManager.getUserPrefs(
         key = UserPreferences.PLAYER_PREFS_KEY,
@@ -116,8 +124,11 @@ internal class PlayerScreenViewModel @Inject constructor(
             dataSourceFactory = playerDataSourceFactory,
             playerPrefs = playerPreferences.value,
             subtitlePrefs = subtitlesPreferences.value,
-            errorReceiver = this,
-        )
+            errorReceiver = errorConsumer,
+        ).also {
+            it.initialize()
+            it.observePlaybackProgress()
+        }
     }
 
     /**
@@ -148,19 +159,11 @@ internal class PlayerScreenViewModel @Inject constructor(
     // Only using non-suspend function since we don't need to observe changes here
     val providers by lazy { providerRepository.getEnabledProviders() }
 
-    private val _playerErrors = MutableSharedFlow<String>(extraBufferCapacity = 5)
-    val playerErrors: SharedFlow<String> = _playerErrors.asSharedFlow()
-
     private val _uiState = MutableStateFlow(PlayerUiState(selectedProvider = initialProviderId))
     val uiState = _uiState.asStateFlow()
 
-    /**
-     * Instead of obtaining the selected episode using the non-reactive
-     * [SavedStateHandle.get] function, we use a flow to allow for
-     * reacting to changes in the selected episode.
-     * */
-    val selectedEpisode = savedStateHandle
-        .getStateFlow<Episode?>("episode", navArgs.episode)
+    private val _selectedEpisode = MutableStateFlow(navArgs.episode)
+    val selectedEpisode = _selectedEpisode.asStateFlow()
 
     var nextEpisode: Episode? = null
         private set
@@ -215,6 +218,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     )
 
     private var loadLinksJob: Job? = null
+    private var updateProgressJob: Job? = null
 
     init {
         initialize()
@@ -224,11 +228,6 @@ internal class PlayerScreenViewModel @Inject constructor(
         player.release()
         player.releaseMediaSession()
         super.onCleared()
-    }
-
-    override fun onPlayerError(error: PlaybackException) {
-        val message = error.localizedMessage ?: "Unknown playback error"
-        _playerErrors.tryEmit(message)
     }
 
     /**
@@ -244,7 +243,9 @@ internal class PlayerScreenViewModel @Inject constructor(
         loadLinksJob = viewModelScope.launch {
             loadLinks(
                 providerId = providerId,
-                startPositionMs = player.currentPosition,
+                startPositionMs = withContext(appDispatchers.main) {
+                    player.currentPosition
+                },
                 episode = selectedEpisode.value,
                 playImmediately = true,
             )
@@ -255,11 +256,13 @@ internal class PlayerScreenViewModel @Inject constructor(
      * Called when the player auto-queues the next episode to play.
      * */
     fun onQueueNextEpisode() {
+        if (loadLinksJob?.isActive == true) return
+
         val episode = nextEpisode ?: return
 
         updateWatchProgress()
 
-       loadLinksJob = viewModelScope.launch {
+        loadLinksJob = viewModelScope.launch {
             val startPositionMs = getSavedStartPositionMs(episode)
 
             loadLinks(
@@ -280,12 +283,17 @@ internal class PlayerScreenViewModel @Inject constructor(
         loadLinksJob = viewModelScope.launch {
             val startPositionMs = getSavedStartPositionMs(episode)
 
-            loadLinks(
+            val success = loadLinks(
                 providerId = _uiState.value.selectedProvider,
                 startPositionMs = startPositionMs,
                 episode = episode,
                 playImmediately = true,
             )
+
+            if (success) {
+                _selectedEpisode.value = episode
+                nextEpisode = getNextEpisode(episode)
+            }
         }
     }
 
@@ -332,8 +340,15 @@ internal class PlayerScreenViewModel @Inject constructor(
             providerId = providerId,
         )
 
-        // Check if this media key is already loaded on the player
-        val success = player.switchMediaSource(key = mediaItemKey)
+        val success = withContext(appDispatchers.main) {
+            when {
+                playImmediately -> player.switchMediaSource(
+                    key = mediaItemKey,
+                    startPositionMs = startPositionMs
+                )
+                else -> player.hasMediaSource(key = mediaItemKey)
+            }
+        }
         if (success) return true
 
         // Check if we have cached links for this key
@@ -411,13 +426,15 @@ internal class PlayerScreenViewModel @Inject constructor(
             cachedLinksRepository.setCurrentCache(cacheKey)
         }
 
-        player.prepare(
-            key = mediaItemKey,
-            servers = servers,
-            subtitles = cleanedSubtitles,
-            startPositionMs = startPositionMs,
-            playImmediately = playImmediately,
-        )
+        withContext(appDispatchers.main) {
+            player.prepare(
+                key = mediaItemKey,
+                servers = servers,
+                subtitles = cleanedSubtitles,
+                startPositionMs = startPositionMs,
+                playImmediately = playImmediately,
+            )
+        }
 
         return true
     }
@@ -426,11 +443,8 @@ internal class PlayerScreenViewModel @Inject constructor(
      * Returns the next episode based on the currently selected episode.
      * If there is no next episode, returns null.
      * */
-    private suspend fun getNextEpisode(): Episode? {
-        val episode = selectedEpisode.value
-        requireNotNull(episode) {
-            "Current episode must not be null when getting the next episode"
-        }
+    private suspend fun getNextEpisode(episode: Episode?): Episode? {
+        if (episode == null) return null
 
         return getEpisode(
             tvShow = filmMetadata as TvShow,
@@ -461,21 +475,54 @@ internal class PlayerScreenViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Updates the current watch progress in the database.
-     * */
-    private fun updateWatchProgress() {
-        appDispatchers.ioScope.launch {
+    private fun AppPlayer.observePlaybackProgress() {
+        viewModelScope.launch(appDispatchers.main) {
+            listenTo(Player.EVENT_PLAYBACK_STATE_CHANGED) { events ->
+                if (!events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED))
+                    return@listenTo
+
+                val isFinished = !isPlaying && currentPosition >= duration
+                if (isFinished && nextEpisode != null) {
+                    onEpisodeChange(nextEpisode!!)
+                    return@listenTo
+                }
+
+                if (filmMetadata is TvShow) {
+                    if (duration <= 0) return@listenTo
+
+                    if (currentPosition >= (duration * QUEUE_THRESHOLD)) {
+                        onQueueNextEpisode()
+                    }
+                }
+            }
+        }
+    }
+
+    fun updateWatchProgress() {
+        if (updateProgressJob?.isActive == true) return
+
+        updateProgressJob = appDispatchers.ioScope.launch {
+            val currentPosition = withContext(appDispatchers.main) {
+                player.currentPosition
+            }
+            val duration = withContext(appDispatchers.main) {
+                player.duration
+            }
+
+            val canSaveProgress = currentPosition > 60_000L
+            if (!canSaveProgress) return@launch
+
             setWatchProgress(
+                film = filmMetadata,
                 watchProgress = when (val progress = watchProgress.value) {
                     is EpisodeProgress -> progress.copy(
-                        progress = player.currentPosition,
-                        duration = player.duration,
+                        progress = currentPosition,
+                        duration = duration,
                     )
 
                     is MovieProgress -> progress.copy(
-                        progress = player.currentPosition,
-                        duration = player.duration,
+                        progress = currentPosition,
+                        duration = duration,
                     )
                 },
             )
@@ -529,7 +576,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
                     // Pre-fetch next episode if available and if the current metadata is a TV show
                     if (success && filmMetadata is TvShow) {
-                        nextEpisode = getNextEpisode()
+                        nextEpisode = getNextEpisode(episode)
                     }
 
                     cancel()
@@ -546,6 +593,18 @@ internal class PlayerScreenViewModel @Inject constructor(
                 )
             }
         }
+    }
+}
+
+// TODO: Make this threshold configurable in the future, maybe even allow users to set it themselves.
+//  For now, 80% seems like a reasonable default that allows enough time for links to load without cutting off too early.
+private const val QUEUE_THRESHOLD = 0.8
+
+private class PlayerErrorConsumer(
+    private val errorFlow: MutableSharedFlow<UiText>,
+) : PlayerErrorReceiver {
+    override fun onPlayerError(error: PlaybackException) {
+        errorFlow.tryEmit(error.getFormatMessage())
     }
 }
 

@@ -92,14 +92,8 @@ fun ComposePlayer(
     }
 
     DisposableEffect(lifecycleOwner) {
-        // Pre-initialize the player
-        if (player.exoPlayer != null) {
-            player.initialize()
-        }
-
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_START -> player.initialize()
                 Lifecycle.Event.ON_STOP -> {
                     player.playWhenReady = player.isPlaying
                     player.pause()

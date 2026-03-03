@@ -1,6 +1,7 @@
 package com.flixclusive.domain.database.usecase
 
 import com.flixclusive.core.database.entity.watched.WatchProgress
+import com.flixclusive.model.film.Film
 
 /**
  * Use case for setting the watch time of a movie or TV show episode.
@@ -12,5 +13,5 @@ interface SetWatchProgressUseCase {
      *
      * @param watchProgress The [WatchProgress] to update.
      * */
-    suspend operator fun invoke(watchProgress: WatchProgress)
+    suspend operator fun invoke(watchProgress: WatchProgress, film: Film? = null): Long
 }

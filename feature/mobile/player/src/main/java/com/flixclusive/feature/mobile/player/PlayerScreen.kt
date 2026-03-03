@@ -1,15 +1,11 @@
 package com.flixclusive.feature.mobile.player
 
-import android.app.Activity
-import android.content.pm.ActivityInfo
-import android.os.Build
-import android.view.View
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,15 +13,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
-import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.ui.ComposePlayer
@@ -33,6 +24,7 @@ import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState.Companion.rememberPlayerSnackbarState
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.component.PlayerControls
+import com.flixclusive.feature.mobile.player.component.effect.ToggleSystemBarsEffect
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
@@ -49,6 +41,7 @@ internal fun PlayerScreen(
     args: PlayerScreenNavArgs,
     viewModel: PlayerScreenViewModel = hiltViewModel(),
 ) {
+    val context = LocalContext.current
     val playerPreferences by viewModel.playerPreferences.collectAsStateWithLifecycle()
     val subtitlesPreferences by viewModel.subtitlesPreferences.collectAsStateWithLifecycle()
 
@@ -66,9 +59,17 @@ internal fun PlayerScreen(
 
     LaunchedEffect(Unit) {
         viewModel.playerErrors.collect { error ->
-            snackbarState.showError(error)
+            snackbarState.showError(error.asString(context))
         }
     }
+
+    SideEffect {
+        if (!viewModel.player.isPlaying && viewModel.player.duration > 0) {
+            viewModel.updateWatchProgress()
+        }
+    }
+
+    ToggleSystemBarsEffect()
 
     PlayerScreenContent(
         player = viewModel.player,
@@ -80,16 +81,15 @@ internal fun PlayerScreen(
         currentProvider = currentProvider,
         providers = viewModel.providers,
         snackbarState = snackbarState,
-        onBack = navigator::goBack,
         onEpisodeChange = viewModel::onEpisodeChange,
-        onProviderChange = {
-            viewModel.onProviderChange(it.id)
+        onBack = {
+            viewModel.updateWatchProgress()
+            navigator.goBack()
         },
-        onSeasonChange = {
-            viewModel.onSeasonChange(it.number)
-        },
-        // TODO: Handle next episode/season/provider logic in the viewmodel instead of the UI layer
-        onNext = null,
+        onProviderChange = { viewModel.onProviderChange(it.id) },
+        onSeasonChange = { viewModel.onSeasonChange(it.number) },
+        onUpdateWatchProgress = viewModel::updateWatchProgress,
+        onNext = viewModel.nextEpisode?.let { { viewModel.onEpisodeChange(episode = it) } },
     )
 }
 
@@ -108,26 +108,14 @@ internal fun PlayerScreenContent(
     onProviderChange: (ProviderMetadata) -> Unit,
     onEpisodeChange: (Episode) -> Unit,
     onSeasonChange: (Season) -> Unit,
+    onUpdateWatchProgress: () -> Unit,
     onNext: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current.getActivity<Activity>()
     val isInPipMode = rememberIsInPipMode()
     var resizeMode by rememberSaveable { mutableStateOf(playerPreferences.resizeMode) }
 
     BackHandler(onBack = onBack)
-
-    DisposableEffect(LocalLifecycleOwner.current) {
-        context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        context.toggleSystemBars(isVisible = false)
-
-        onDispose {
-            // TODO: Watch out orientation changes when user selects a different episode/season/provider,
-            //  maybe we should only reset orientation when user leaves the player screen
-            context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            context.toggleSystemBars(isVisible = true)
-        }
-    }
 
     Box(
         modifier = modifier
@@ -155,38 +143,9 @@ internal fun PlayerScreenContent(
             onBack = onBack,
             currentProvider = currentProvider,
             providers = providers,
+            onUpdateWatchProgress = onUpdateWatchProgress,
             onProviderChange = onProviderChange,
             onResizeModeChange = { resizeMode = it },
         )
-    }
-}
-
-@Suppress("DEPRECATION")
-private fun Activity.toggleSystemBars(isVisible: Boolean) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-
-        if (isVisible) {
-            windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-        } else {
-            windowInsetsController.hide(WindowInsetsCompat.Type.ime())
-            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-        }
-        return
-    }
-
-    val state = if(!isVisible) {
-        (window.decorView.systemUiVisibility
-            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            or View.SYSTEM_UI_FLAG_FULLSCREEN)
-    } else (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
-
-    if (window.decorView.systemUiVisibility != state) {
-        window.decorView.systemUiVisibility = state
     }
 }
