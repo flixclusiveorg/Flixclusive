@@ -1,12 +1,7 @@
 package com.flixclusive.feature.mobile.player.component.bottom
 
 import androidx.annotation.OptIn
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,7 +13,6 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
@@ -26,7 +20,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
-import com.flixclusive.core.datastore.model.user.player.ResizeMode
 import com.flixclusive.core.presentation.common.extensions.noOpClickable
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
@@ -44,10 +37,8 @@ internal const val TIMER_WEIGHT = 0.08F
 internal fun BottomControls(
     playbackSpeedState: PlaybackSpeedState,
     scrubState: ScrubState,
-    currentResizeMode: ResizeMode,
     uiMode: UiMode,
     onToggleUiPanel: (UiMode) -> Unit,
-    onResizeModeChange: (ResizeMode) -> Unit,
     modifier: Modifier = Modifier,
     onNext: (() -> Unit)? = null,
     onShowEpisodesPanel: (() -> Unit)? = null,
@@ -55,36 +46,6 @@ internal fun BottomControls(
     Column(
         modifier = modifier.fillMaxWidth()
     ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally),
-        ) {
-            androidx.compose.animation.AnimatedVisibility(
-                visible = uiMode == UiMode.PLAYBACK_SPEED,
-                enter = fadeIn() + slideInVertically { it / 4 },
-                exit = fadeOut() + slideOutVertically { it / 6 },
-                modifier = Modifier.align(Alignment.Center),
-            ) {
-                PlaybackSpeedSheet(
-                    playbackSpeedState = playbackSpeedState,
-                    onDismiss = { onToggleUiPanel(UiMode.NONE) },
-                )
-            }
-
-            androidx.compose.animation.AnimatedVisibility(
-                visible = uiMode == UiMode.RESIZE,
-                enter = fadeIn() + slideInVertically { it / 4 },
-                exit = fadeOut() + slideOutVertically { it / 6 },
-                modifier = Modifier.align(Alignment.Center),
-            ) {
-                ResizeModeSheet(
-                    currentResizeMode = currentResizeMode,
-                    onResizeModeChange = onResizeModeChange,
-                    onDismiss = { onToggleUiPanel(UiMode.NONE) },
-                )
-            }
-        }
-
         Scrubber(
             state = scrubState,
             modifier = Modifier.padding(horizontal = 6.dp)

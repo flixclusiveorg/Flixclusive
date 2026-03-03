@@ -390,7 +390,7 @@ class AppPlayer(
     }
 
     companion object {
-        val playbackSpeedRange = 0.15f..5.0f
+        val playbackSpeedRange = 0.1f..5.0f
 
         /**
          * Calculates 15% of the [duration] and returns the remaining time.

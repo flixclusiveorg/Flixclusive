@@ -63,6 +63,8 @@ import com.flixclusive.core.presentation.player.ui.state.VolumeManager.Companion
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.R
 import com.flixclusive.feature.mobile.player.component.bottom.BottomControls
+import com.flixclusive.feature.mobile.player.component.bottom.PlaybackSpeedSheet
+import com.flixclusive.feature.mobile.player.component.bottom.ResizeModeSheet
 import com.flixclusive.feature.mobile.player.component.center.CenterControls
 import com.flixclusive.feature.mobile.player.component.effect.NextEpisodeCountdownEffect
 import com.flixclusive.feature.mobile.player.component.episodes.EpisodesScreen
@@ -110,6 +112,7 @@ internal fun PlayerControls(
     var isLocked by remember { mutableStateOf(false) }
     var uiMode by remember { mutableStateOf(UiMode.NONE) }
     var queueControlVisibility by remember { mutableStateOf(false) }
+    var queuePlay by remember { mutableStateOf(false) }
     var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
 
     val scrubState = rememberScrubState(player = player)
@@ -199,12 +202,22 @@ internal fun PlayerControls(
         if (controlsVisibilityState.isVisible && shouldHideControls) {
             queueControlVisibility = true
             controlsVisibilityState.hide()
+            if (player.isPlaying) {
+                queuePlay = true
+                player.playWhenReady = true
+                player.pause()
+            }
             return@LaunchedEffect
         }
 
         if (queueControlVisibility && !shouldHideControls) {
             queueControlVisibility = false
             controlsVisibilityState.show()
+
+            if (queuePlay && !player.isPlaying) {
+                queuePlay = false
+                player.play()
+            }
         }
     }
 
@@ -311,8 +324,6 @@ internal fun PlayerControls(
                             scrubState = scrubState,
                             uiMode = uiMode,
                             onNext = onNext,
-                            onResizeModeChange = onResizeModeChange,
-                            currentResizeMode = currentResizeMode,
                             onToggleUiPanel = { uiMode = it },
                             onShowEpisodesPanel = currentEpisode?.let {
                                 { uiMode = UiMode.EPISODES }
@@ -415,6 +426,39 @@ internal fun PlayerControls(
                             modifier = Modifier
                                 .fillMaxSize()
                         )
+                    }
+
+                    AnimatedPanel(visible = uiMode == UiMode.PLAYBACK_SPEED) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .offset {
+                                    IntOffset(x = 0, y = -bottomControlsHeightPx)
+                                }
+                        ) {
+                            PlaybackSpeedSheet(
+                                playbackSpeedState = playbackSpeedState,
+                                onDismiss = { uiMode = UiMode.NONE },
+                                modifier = Modifier.align(Alignment.BottomCenter)
+                            )
+                        }
+                    }
+
+                    AnimatedPanel(visible = uiMode == UiMode.RESIZE) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .offset {
+                                    IntOffset(x = 0, y = -bottomControlsHeightPx)
+                                }
+                        ) {
+                            ResizeModeSheet(
+                                currentResizeMode = currentResizeMode,
+                                onResizeModeChange = onResizeModeChange,
+                                onDismiss = { uiMode = UiMode.NONE },
+                                modifier = Modifier.align(Alignment.BottomCenter)
+                            )
+                        }
                     }
                 }
             }
