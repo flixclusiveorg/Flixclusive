@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.media3.common.Player
 import androidx.media3.common.listen
 import com.flixclusive.core.presentation.player.AppPlayer
@@ -58,6 +59,8 @@ class ControlsVisibilityState(
 
                 if (shouldShowIndefinitely()) {
                     controlTimeoutVisibility = Int.MAX_VALUE
+                } else if (controlTimeoutVisibility > PLAYER_CONTROL_VISIBILITY_TIMEOUT) {
+                    controlTimeoutVisibility = PLAYER_CONTROL_VISIBILITY_TIMEOUT
                 }
             }
         }
@@ -79,22 +82,27 @@ class ControlsVisibilityState(
         @Composable
         fun rememberControlsVisibilityState(
             player: AppPlayer,
-            isScrubbing: Boolean,
+            isScrubbing: () -> Boolean,
         ): ControlsVisibilityState {
             val state = remember(player) { ControlsVisibilityState(player) }
 
-            LaunchedEffect(player, isScrubbing) {
-                state.observe(isScrubbing = isScrubbing)
+            // Handle the countdown for hiding the controls
+            LaunchedEffect(state) {
+                snapshotFlow { state.controlTimeoutVisibility }
+                    .collect {
+                        if (it > 0) {
+                            state.isVisible = true
+                            delay(1000L)
+                            state.controlTimeoutVisibility--
+                        } else {
+                            state.isVisible = false
+                        }
+                    }
             }
 
-            // Handle the countdown for hiding the controls
-            LaunchedEffect(state.controlTimeoutVisibility) {
-                if (state.controlTimeoutVisibility > 0) {
-                    state.isVisible = true
-                    delay(1000L)
-                    state.controlTimeoutVisibility--
-                } else {
-                    state.isVisible = false
+            LaunchedEffect(player) {
+                snapshotFlow(isScrubbing).collect {
+                    state.observe(isScrubbing = it)
                 }
             }
 

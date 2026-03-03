@@ -5,11 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -63,29 +61,25 @@ internal fun PlayerScreen(
         }
     }
 
-    SideEffect {
-        if (!viewModel.player.isPlaying && viewModel.player.duration > 0) {
-            viewModel.updateWatchProgress()
-        }
-    }
-
-    ToggleSystemBarsEffect()
-
     PlayerScreenContent(
         player = viewModel.player,
         film = args.film,
         playerPreferences = playerPreferences,
         subtitlesPreferences = subtitlesPreferences,
         currentEpisode = currentEpisode,
-        currentSeason = currentSeason,
+        currentSeason = { currentSeason },
         currentProvider = currentProvider,
         providers = viewModel.providers,
         snackbarState = snackbarState,
         onEpisodeChange = viewModel::onEpisodeChange,
         onProviderChange = { viewModel.onProviderChange(it.id) },
         onSeasonChange = { viewModel.onSeasonChange(it.number) },
-        onUpdateWatchProgress = viewModel::updateWatchProgress,
         onNext = uiState.nextEpisode?.let { { viewModel.onEpisodeChange(episode = it) } },
+        onUpdateWatchProgress = {
+            if (!viewModel.player.isPlaying && viewModel.player.duration > 0) {
+                viewModel.updateWatchProgress()
+            }
+        },
         onBack = {
             viewModel.updateWatchProgress()
             navigator.goBack()
@@ -100,7 +94,7 @@ internal fun PlayerScreenContent(
     playerPreferences: PlayerPreferences,
     subtitlesPreferences: SubtitlesPreferences,
     currentEpisode: Episode?,
-    currentSeason: SeasonWithProgress?,
+    currentSeason: () -> SeasonWithProgress?,
     currentProvider: ProviderMetadata,
     providers: List<ProviderMetadata>,
     snackbarState: PlayerSnackbarState,
@@ -113,9 +107,11 @@ internal fun PlayerScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val isInPipMode = rememberIsInPipMode()
-    var resizeMode by rememberSaveable { mutableStateOf(playerPreferences.resizeMode) }
+    var resizeMode by remember { mutableStateOf(playerPreferences.resizeMode) }
 
     BackHandler(onBack = onBack)
+
+    ToggleSystemBarsEffect()
 
     Box(
         modifier = modifier
@@ -138,7 +134,7 @@ internal fun PlayerScreenContent(
             currentSeason = currentSeason,
             currentResizeMode = resizeMode,
             onEpisodeChange = currentEpisode?.let { onEpisodeChange },
-            onSeasonChange = currentSeason?.let { onSeasonChange },
+            onSeasonChange = currentEpisode?.let { onSeasonChange },
             onNext = onNext,
             onBack = onBack,
             currentProvider = currentProvider,

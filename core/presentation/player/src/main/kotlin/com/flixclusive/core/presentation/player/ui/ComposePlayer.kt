@@ -183,7 +183,7 @@ private fun ComposePlayerPreview() {
 
     val controlsVisibilityState = rememberControlsVisibilityState(
         player,
-        isScrubbing = false,
+        isScrubbing = { false },
     )
 
     MaterialTheme {
@@ -205,7 +205,9 @@ private fun ComposePlayerPreview() {
                 if (controlsVisibilityState.isVisible) {
                     Button(
                         onClick = controlsVisibilityState::toggle,
-                        modifier = Modifier.align(Alignment.TopCenter).padding(top = 48.dp),
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 48.dp),
                     ) {
                         Text("Show controls")
                     }

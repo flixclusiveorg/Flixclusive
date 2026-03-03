@@ -12,8 +12,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,17 +27,15 @@ import kotlin.math.max
 @Composable
 internal fun SeasonsRow(
     seasons: List<Season>,
-    currentSeason: Season?,
+    currentSeason: () -> Season?,
     onSeasonChange: (Season) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    val (selectedIndex, onIndexChange) = remember { mutableStateOf(currentSeason) }
-
     LaunchedEffect(Unit) {
-        currentSeason?.number?.let {
+        currentSeason()?.number?.let {
             safeCall { listState.animateScrollToItem(max(0, it - 1)) }
         }
     }
@@ -59,10 +55,9 @@ internal fun SeasonsRow(
         items(seasons) { season ->
             SeasonPill(
                 season = season,
-                selected = season == selectedIndex,
+                selected = { currentSeason() == season },
                 onClick = {
                     scope.launch {
-                        onIndexChange(season)
                         onSeasonChange(season)
                         safeCall {
                             listState.animateScrollToItem(season.number - 1)
@@ -93,10 +88,12 @@ private fun SeasonsRowPreview() {
                             episodeCount = 10,
                         )
                     },
-                    currentSeason = Season(
-                        number = 2,
-                        episodeCount = 10,
-                    ),
+                    currentSeason = {
+                        Season(
+                            number = 2,
+                            episodeCount = 10,
+                        )
+                    },
                     onSeasonChange = {}
                 )
             }

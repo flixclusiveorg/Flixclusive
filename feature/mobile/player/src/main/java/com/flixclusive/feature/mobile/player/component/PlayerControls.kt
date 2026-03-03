@@ -7,7 +7,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -18,12 +18,14 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,12 +40,14 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.player.ResizeMode
+import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.player.AppPlayer
@@ -95,10 +99,10 @@ internal fun PlayerControls(
     onProviderChange: (ProviderMetadata) -> Unit,
     onResizeModeChange: (ResizeMode) -> Unit,
     onBack: () -> Unit,
+    currentSeason: () -> SeasonWithProgress?,
     onUpdateWatchProgress: () -> Unit,
     modifier: Modifier = Modifier,
     currentEpisode: Episode? = null,
-    currentSeason: SeasonWithProgress? = null,
     onSeasonChange: ((Season) -> Unit)? = null,
     onEpisodeChange: ((Episode) -> Unit)? = null,
     onNext: (() -> Unit)? = null,
@@ -115,18 +119,22 @@ internal fun PlayerControls(
     val playbackSpeedState = rememberPlaybackSpeedState(player = player)
     val controlsVisibilityState = rememberControlsVisibilityState(
         player = player,
-        isScrubbing = scrubState.isScrubbing
+        isScrubbing = { scrubState.isScrubbing }
     )
 
     val volumeManager = rememberVolumeManager(player = player)
     val brightnessManager = rememberBrightnessManager()
     val gestureState = rememberPlayerGestureState(seekAmountMs = seekButtonState.seekForwardAmountMs)
 
-    val areCenterControlsVisible = controlsVisibilityState.isVisible
-        && !uiMode.isPlaybackSpeed
-        && !uiMode.isResize
-        && !gestureState.isDoubleTapping
-        && !gestureState.isSliding
+    val areCenterControlsVisible by remember {
+        derivedStateOf {
+            controlsVisibilityState.isVisible
+                && !uiMode.isPlaybackSpeed
+                && !uiMode.isResize
+                && !gestureState.isDoubleTapping
+                && !gestureState.isSliding
+        }
+    }
 
     val serversState = rememberServersState(player = player)
     val tracksState = rememberTracksState(
@@ -136,7 +144,9 @@ internal fun PlayerControls(
     )
 
     SideEffect {
-        onUpdateWatchProgress()
+        if (!scrubState.isScrubbing && !gestureState.isSliding && !gestureState.isDoubleTapping) {
+            onUpdateWatchProgress()
+        }
     }
 
     BackHandler(enabled = isLocked) {
@@ -147,7 +157,7 @@ internal fun PlayerControls(
         NextEpisodeCountdownEffect(
             scrubState = scrubState,
             snackbarState = snackbarState,
-            isPlaying = !playPauseState.showPlay,
+            isPlaying = { !playPauseState.showPlay },
         )
     }
 
@@ -223,6 +233,14 @@ internal fun PlayerControls(
                     .fillMaxSize()
             ) {
                 if (state) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .noIndicationClickable {
+                                controlsVisibilityState.toggle()
+                            }
+                    )
+
                     AnimatedVisibility(
                         visible = controlsVisibilityState.isVisible,
                         enter = fadeIn(),
@@ -343,13 +361,12 @@ internal fun PlayerControls(
                     AnimatedPanel(
                         visible = uiMode.isEpisodes
                             && film is TvShow
-                            && currentSeason != null
                             && currentEpisode != null
                             && onEpisodeChange != null
                             && onSeasonChange != null
                     ) {
                         EpisodesScreen(
-                            currentSeason = currentSeason!!,
+                            currentSeason = currentSeason,
                             seasons = (film as TvShow).seasons,
                             currentEpisode = currentEpisode!!,
                             onSeasonChange = onSeasonChange!!::invoke,
@@ -405,8 +422,8 @@ internal fun PlayerControls(
 
         PlayerSnackbarLayer(
             snackbarState = snackbarState,
-            areControlsVisible = controlsVisibilityState.isVisible,
-            bottomControlsHeightPx = bottomControlsHeightPx,
+            areControlsVisible = { controlsVisibilityState.isVisible },
+            bottomControlsHeightPx = { bottomControlsHeightPx },
         )
     }
 }
@@ -414,40 +431,45 @@ internal fun PlayerControls(
 @Composable
 private fun PlayerSnackbarLayer(
     snackbarState: PlayerSnackbarState,
-    areControlsVisible: Boolean,
-    bottomControlsHeightPx: Int,
+    areControlsVisible: () -> Boolean,
+    bottomControlsHeightPx: () -> Int,
 ) {
     val density = LocalDensity.current
-    val bottomControlsHeightDp = with(density) { bottomControlsHeightPx.toDp() }
-    val snackbarBottomPadding by animateDpAsState(
-        targetValue = if (areControlsVisible) {
-            bottomControlsHeightDp + 8.dp
+    val snackbarBottomOffset by animateIntAsState(
+        targetValue = if (areControlsVisible()) {
+            bottomControlsHeightPx()
         } else {
-            16.dp
+            with(density) { 8.dp.roundToPx() }
         },
-        label = "snackbar_bottom_padding",
+        label = "snackbar_bottom_offset",
     )
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .offset {
+                IntOffset(x = 0, y = -snackbarBottomOffset)
+            }
+    ) {
         PlayerErrorSnackbar(
             snackbarState = snackbarState,
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 16.dp, bottom = snackbarBottomPadding)
+                .padding(start = 16.dp)
         )
 
         PlayerMessageSnackbar(
             snackbarState = snackbarState,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = snackbarBottomPadding)
+                .padding(end = 16.dp)
         )
 
         PlayerCountdownSnackbar(
             snackbarState = snackbarState,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = snackbarBottomPadding)
+                .padding(end = 16.dp)
         )
     }
 }

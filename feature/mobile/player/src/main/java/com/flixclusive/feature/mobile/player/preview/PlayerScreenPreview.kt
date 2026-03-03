@@ -121,7 +121,7 @@ private fun PlayerScreenBasePreview() {
                 subtitlesPreferences = subtitlePrefs,
                 onBack = { player.release() },
                 film = tvShow,
-                currentSeason = currentSeason,
+                currentSeason = { currentSeason },
                 currentEpisode = currentEpisode,
                 onEpisodeChange = {},
                 onSeasonChange = {},

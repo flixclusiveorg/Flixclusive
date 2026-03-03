@@ -32,8 +32,12 @@ internal fun Scrubber(
     state: ScrubState,
     modifier: Modifier = Modifier
 ) {
-    val isInHours = remember(state.duration) {
-        state.duration.formatMinSec().count { it == ':' } == 2
+    val progress by remember { derivedStateOf { state.progress.toFloat() } }
+
+    val isInHours by remember {
+        derivedStateOf {
+            state.duration.formatMinSec().count { it == ':' } == 2
+        }
     }
 
     val position by remember {
@@ -50,7 +54,7 @@ internal fun Scrubber(
 
     val thumbColor by animateColorAsState(
         targetValue = when {
-            state.progress / state.duration.toFloat() >= 0.5F -> MaterialTheme.colorScheme.primary
+            progress / state.duration.toFloat() >= 0.5F -> MaterialTheme.colorScheme.primary
             else -> MaterialTheme.colorScheme.tertiary
         }
     )
@@ -113,7 +117,7 @@ internal fun Scrubber(
 
             // seek bar
             CustomSlider(
-                value = state.progress.toFloat(),
+                value = progress,
                 onValueChange = { state.onScrubMove(it.toLong()) },
                 valueRange = 0F..state.duration.toFloat(),
                 colors = sliderTimeProgressColors,

@@ -45,7 +45,7 @@ import com.flixclusive.core.strings.R as LocaleR
 internal fun EpisodesScreen(
     modifier: Modifier = Modifier,
     seasons: List<Season>,
-    currentSeason: SeasonWithProgress,
+    currentSeason: () -> SeasonWithProgress?,
     currentEpisode: Episode,
     onSeasonChange: (Season) -> Unit,
     onEpisodeClick: (Episode) -> Unit,
@@ -63,8 +63,8 @@ internal fun EpisodesScreen(
         // Block touches
         Box(
             modifier = Modifier
-            .fillMaxSize()
-            .noOpClickable()
+                .fillMaxSize()
+                .noOpClickable()
         )
 
         Column(
@@ -78,15 +78,17 @@ internal fun EpisodesScreen(
                     .padding(start = 10.dp, top = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = currentSeason.title,
-                    style = MaterialTheme.typography.headlineSmall
-                        .asAdaptiveTextStyle(size = 22.sp)
-                        .copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .weight(1f)
-                )
+                currentSeason()?.let {
+                    Text(
+                        text = it.title,
+                        style = MaterialTheme.typography.headlineSmall
+                            .asAdaptiveTextStyle(size = 22.sp)
+                            .copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .weight(1f)
+                    )
+                }
 
                 IconButton(
                     onClick = onDismiss,
@@ -102,7 +104,7 @@ internal fun EpisodesScreen(
 
             SeasonsRow(
                 seasons = seasons,
-                currentSeason = currentSeason.season,
+                currentSeason = { currentSeason()?.season },
                 onSeasonChange = {
                     onSeasonChange(it)
                 },
@@ -174,7 +176,7 @@ private fun EpisodesScreenPreview() {
                 )
 
                 EpisodesScreen(
-                    currentSeason = seasonData,
+                    currentSeason = { seasonData },
                     seasons = sampleShow.seasons,
                     currentEpisode = sampleEpisode.episode,
                     onSeasonChange = {},

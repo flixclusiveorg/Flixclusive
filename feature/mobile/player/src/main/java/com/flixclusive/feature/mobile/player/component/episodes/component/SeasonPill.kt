@@ -31,13 +31,13 @@ import com.flixclusive.model.film.common.tv.Season
 internal fun SeasonPill(
     modifier: Modifier = Modifier,
     season: Season,
-    selected: Boolean,
+    selected: () -> Boolean,
     onClick: () -> Unit,
 ) {
-    val contentColor by animateColorAsState(targetValue = if (selected) MaterialTheme.colorScheme.surface else LocalContentColor.current.copy(0.6f))
-    val containerColor by animateColorAsState(targetValue = if (selected) MaterialTheme.colorScheme.onSurface else Color.Transparent)
-    val scale = animateFloatAsState(targetValue = if (selected) 1.1F else 1F)
-    val alpha = animateFloatAsState(targetValue = if (selected) 1F else 0.8F)
+    val contentColor by animateColorAsState(targetValue = if (selected()) MaterialTheme.colorScheme.surface else LocalContentColor.current.copy(0.6f))
+    val containerColor by animateColorAsState(targetValue = if (selected()) MaterialTheme.colorScheme.onSurface else Color.Transparent)
+    val scale = animateFloatAsState(targetValue = if (selected()) 1.1F else 1F)
+    val alpha = animateFloatAsState(targetValue = if (selected()) 1F else 0.8F)
 
     Box(
         modifier = modifier
@@ -50,7 +50,7 @@ internal fun SeasonPill(
         contentAlignment = Alignment.Center
     ) {
         OutlinedButton(
-            enabled = !selected,
+            enabled = !selected(),
             colors = ButtonDefaults.outlinedButtonColors(
                 containerColor = containerColor,
                 disabledContainerColor = containerColor,
@@ -92,7 +92,7 @@ private fun SeasonPillPreview() {
                             DummyDataForPreview.getTvShow()
                                 .seasons.first()
                         },
-                        selected = index == 2,
+                        selected = { index == 2 },
                         onClick = {}
                     )
                 }

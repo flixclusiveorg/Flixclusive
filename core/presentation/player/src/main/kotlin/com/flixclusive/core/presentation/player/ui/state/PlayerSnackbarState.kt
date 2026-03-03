@@ -4,15 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.toMutableStateList
 
 @Stable
 class PlayerSnackbarState {
-    val errors: SnapshotStateList<SnackbarError> = emptyList<SnackbarError>().toMutableStateList()
+    val errors = mutableStateListOf<SnackbarError>()
 
     var message by mutableStateOf<String?>(null)
         private set

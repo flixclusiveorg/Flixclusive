@@ -21,16 +21,16 @@ import com.flixclusive.model.film.common.tv.Episode
 @Composable
 internal fun EpisodesRow(
     modifier: Modifier = Modifier,
-    seasonData: SeasonWithProgress,
+    seasonData: () -> SeasonWithProgress?,
     currentEpisodeSelected: Episode,
     onEpisodeClick: (Episode) -> Unit,
     onClose: () -> Unit,
 ) {
     val listState = rememberLazyListState()
 
-    LaunchedEffect(seasonData) {
+    LaunchedEffect(seasonData()) {
         safeCall {
-            if (seasonData.episodes.fastAny { it == currentEpisodeSelected }) {
+            if (seasonData()?.episodes?.fastAny { it == currentEpisodeSelected } == true) {
                 listState.animateScrollToItem(
                     index = currentEpisodeSelected.number - 1
                 )
@@ -54,7 +54,7 @@ internal fun EpisodesRow(
                 ),
             contentPadding = PaddingValues(horizontal = 20.dp),
         ) {
-            items(seasonData.episodes) { episode ->
+            items(seasonData()?.episodes ?: emptyList()) { episode ->
                 EpisodeCard(
                     data = episode,
                     currentEpisodeSelected = currentEpisodeSelected,
