@@ -82,6 +82,7 @@ private fun PlayerScreenBasePreview() {
     }
 
     LaunchedEffect(true) {
+        player.initialize()
         player.prepare(
             key = MediaItemKey(
                 filmId = tvShow.identifier,
