@@ -66,6 +66,16 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getSeasonProgressAsFlow(
+        tvShowId: String,
+        seasonNumber: Int,
+        ownerId: Int
+    ): Flow<List<EpisodeProgress>> = episodeProgressDao.getSeasonProgressAsFlow(
+        itemId = tvShowId,
+        season = seasonNumber,
+        ownerId = ownerId
+    )
+
     override fun getAsFlow(id: Long, type: FilmType): Flow<WatchProgressWithMetadata?> {
         return when (type) {
             FilmType.MOVIE -> movieProgressDao.getAsFlow(id)

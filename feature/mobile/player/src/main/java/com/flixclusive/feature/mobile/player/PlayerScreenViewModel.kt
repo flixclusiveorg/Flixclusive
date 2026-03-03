@@ -19,6 +19,7 @@ import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.datastore.model.user.UserPreferences
+import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.PlayerErrorReceiver
@@ -53,8 +54,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flattenConcat
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -190,16 +193,18 @@ internal class PlayerScreenViewModel @Inject constructor(
      * from being displayed while we fetch the season data.
      * */
     val seasonToDisplay = uiState
-        .map { it.selectedSeason }
+        .mapNotNull {
+            if (filmMetadata !is TvShow) return@mapNotNull null
+            it.selectedSeason
+        }
         .filterNotNull()
         .distinctUntilChanged()
-        .mapNotNull { selectedSeason ->
-            val metadata = filmMetadata
-            if (metadata !is TvShow) return@mapNotNull null
-
+        .flatMapLatest { selectedSeason ->
+            val metadata = filmMetadata as TvShow
             getSeasonWithWatchProgress(metadata, selectedSeason)
+                .dropWhile { it is Resource.Loading }
                 .map { it.data }
-        }.flattenConcat()
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

@@ -94,6 +94,15 @@ interface EpisodeProgressDao {
     )
     suspend fun getSeasonProgress(itemId: String, season: Int, ownerId: Int): List<EpisodeProgress>
 
+    @Query(
+        """
+        SELECT * FROM series_watch_history
+        WHERE filmId = :itemId AND ownerId = :ownerId AND seasonNumber = :season
+        ORDER BY episodeNumber ASC
+        """,
+    )
+    fun getSeasonProgressAsFlow(itemId: String, season: Int, ownerId: Int): Flow<List<EpisodeProgress>>
+
     @Transaction
     suspend fun insert(
         item: EpisodeProgress,

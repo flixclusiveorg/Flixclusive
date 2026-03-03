@@ -38,6 +38,12 @@ interface WatchProgressRepository {
         ownerId: Int,
     ): List<EpisodeProgress>
 
+    fun getSeasonProgressAsFlow(
+        tvShowId: String,
+        seasonNumber: Int,
+        ownerId: Int,
+    ): Flow<List<EpisodeProgress>>
+
     suspend fun getRandoms(
         ownerId: Int,
         count: Int,

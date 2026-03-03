@@ -12,7 +12,7 @@ import com.flixclusive.domain.provider.usecase.get.GetSeasonWithWatchProgressUse
 import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.film.TvShow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
 import javax.inject.Inject
 
 internal class GetSeasonWithWatchProgressUseCaseImpl
@@ -26,8 +26,8 @@ internal class GetSeasonWithWatchProgressUseCaseImpl
             tvShow: TvShow,
             number: Int,
         ): Flow<Resource<SeasonWithProgress>> =
-            flow {
-                emit(Resource.Loading)
+            channelFlow {
+                trySend(Resource.Loading)
 
                 // Try to get the season from the TvShow.seasons property first
                 var season = tvShow.seasons.find { it.number == number }
@@ -41,33 +41,33 @@ internal class GetSeasonWithWatchProgressUseCaseImpl
                     if (tmdbSeason is Resource.Success) {
                         season = tmdbSeason.data
                     } else if (tmdbSeason is Resource.Failure) {
-                        emit(Resource.Failure(tmdbSeason.error))
-                        return@flow
+                        trySend(Resource.Failure(tmdbSeason.error))
+                        return@channelFlow
                     }
                 }
 
                 if (season == null) {
-                    emit(Resource.Failure(UiText.from(R.string.failed_to_fetch_season_message, number)))
-                    return@flow
+                    trySend(Resource.Failure(UiText.from(R.string.failed_to_fetch_season_message, number)))
+                    return@channelFlow
                 }
 
                 val user = userSessionManager.currentUser.value!!
-                val progressList = watchProgressRepository.getSeasonProgress(
+                watchProgressRepository.getSeasonProgressAsFlow(
                     tvShowId = tvShow.identifier,
                     seasonNumber = number,
                     ownerId = user.id,
-                )
+                ).collect { list ->
+                    val episodes = season.episodes.map { episode ->
+                        val episodeIndex = list.binarySearchBy(episode.number) { it.episodeNumber }
 
-                val episodes = season.episodes.map { episode ->
-                    val episodeIndex = progressList.binarySearchBy(episode.number) { it.episodeNumber }
+                        EpisodeWithProgress(
+                            episode = episode,
+                            watchProgress = list.getOrNull(episodeIndex),
+                        )
+                    }
 
-                    EpisodeWithProgress(
-                        episode = episode,
-                        watchProgress = progressList.getOrNull(episodeIndex),
-                    )
+                    send(Resource.Success(SeasonWithProgress(season = season, episodes = episodes)))
                 }
-
-                return@flow emit(Resource.Success(SeasonWithProgress(season = season, episodes = episodes)))
             }
     }
 
