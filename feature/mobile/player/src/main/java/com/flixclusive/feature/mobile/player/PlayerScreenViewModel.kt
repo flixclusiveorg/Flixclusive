@@ -44,7 +44,6 @@ import com.ramcosta.composedestinations.generated.player.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -159,14 +158,23 @@ internal class PlayerScreenViewModel @Inject constructor(
     // Only using non-suspend function since we don't need to observe changes here
     val providers by lazy { providerRepository.getEnabledProviders() }
 
-    private val _uiState = MutableStateFlow(PlayerUiState(selectedProvider = initialProviderId))
+    private val _uiState = MutableStateFlow(
+        value = PlayerUiState(
+            selectedProvider = initialProviderId,
+            selectedEpisode = navArgs.episode,
+            selectedSeason = navArgs.episode?.season,
+        )
+    )
     val uiState = _uiState.asStateFlow()
 
-    private val _selectedEpisode = MutableStateFlow(navArgs.episode)
-    val selectedEpisode = _selectedEpisode.asStateFlow()
-
-    var nextEpisode: Episode? = null
-        private set
+    val selectedEpisode = _uiState
+        .map { it.selectedEpisode }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = navArgs.episode
+        )
 
     /**
      * The season currently being displayed IF [filmMetadata] is a [TvShow] and a season is selected.
@@ -217,7 +225,9 @@ internal class PlayerScreenViewModel @Inject constructor(
         initialValue = createDefaultWatchProgress(),
     )
 
-    private var loadLinksJob: Job? = null
+    private var changeProviderJob: Job? = null
+    private var changeEpisodeJob: Job? = null
+    private var queueNextEpisodeJob: Job? = null
     private var updateProgressJob: Job? = null
 
     init {
@@ -230,17 +240,15 @@ internal class PlayerScreenViewModel @Inject constructor(
         super.onCleared()
     }
 
-    /**
-     * Called when the user selects a different provider.
-     *
-     * @param providerId The ID of the selected provider.
-     * */
     fun onProviderChange(providerId: String) {
-        if (loadLinksJob?.isActive == true) return
+        if (changeProviderJob?.isActive == true) return
+
+        queueNextEpisodeJob?.cancel()
+        changeEpisodeJob?.cancel()
 
         updateWatchProgress()
 
-        loadLinksJob = viewModelScope.launch {
+        changeProviderJob = viewModelScope.launch {
             loadLinks(
                 providerId = providerId,
                 startPositionMs = withContext(appDispatchers.main) {
@@ -256,13 +264,13 @@ internal class PlayerScreenViewModel @Inject constructor(
      * Called when the player auto-queues the next episode to play.
      * */
     fun onQueueNextEpisode() {
-        if (loadLinksJob?.isActive == true) return
+        if (queueNextEpisodeJob?.isActive == true) return
 
-        val episode = nextEpisode ?: return
+        val episode = _uiState.value.nextEpisode ?: return
 
         updateWatchProgress()
 
-        loadLinksJob = viewModelScope.launch {
+        queueNextEpisodeJob = viewModelScope.launch {
             val startPositionMs = getSavedStartPositionMs(episode)
 
             loadLinks(
@@ -276,11 +284,14 @@ internal class PlayerScreenViewModel @Inject constructor(
     }
 
     fun onEpisodeChange(episode: Episode) {
-        if (loadLinksJob?.isActive == true) return
+        if (changeEpisodeJob?.isActive == true) return
+
+        queueNextEpisodeJob?.cancel()
+        changeProviderJob?.cancel()
 
         updateWatchProgress()
 
-        loadLinksJob = viewModelScope.launch {
+        changeEpisodeJob = viewModelScope.launch {
             val startPositionMs = getSavedStartPositionMs(episode)
 
             val success = loadLinks(
@@ -291,8 +302,12 @@ internal class PlayerScreenViewModel @Inject constructor(
             )
 
             if (success) {
-                _selectedEpisode.value = episode
-                nextEpisode = getNextEpisode(episode)
+                _uiState.update {
+                    it.copy(
+                        selectedEpisode = episode,
+                        nextEpisode = getNextEpisode(episode)
+                    )
+                }
             }
         }
     }
@@ -303,11 +318,6 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     fun onAddSubtitle(subtitle: MediaSubtitle) {
         player.addSubtitle(subtitle)
-    }
-
-    fun onCancelLoadLinks() {
-        loadLinksJob?.cancel()
-        _uiState.update { it.copy(loadLinksState = LoadLinksState.Idle) }
     }
 
     /**
@@ -482,8 +492,9 @@ internal class PlayerScreenViewModel @Inject constructor(
                     return@listenTo
 
                 val isFinished = !isPlaying && currentPosition >= duration
+                val nextEpisode = _uiState.value.nextEpisode
                 if (isFinished && nextEpisode != null) {
-                    onEpisodeChange(nextEpisode!!)
+                    onEpisodeChange(nextEpisode)
                     return@listenTo
                 }
 
@@ -560,26 +571,26 @@ internal class PlayerScreenViewModel @Inject constructor(
     private fun initialize() {
         viewModelScope.launch {
             if (navArgs.episode != null) {
-                // Observe changes to the selected episode and load links accordingly
-                selectedEpisode.collect { episode ->
-                    // Cancel any ongoing link loading for safety
-                    onCancelLoadLinks()
+                changeProviderJob?.cancel()
+                changeEpisodeJob?.cancel()
+                queueNextEpisodeJob?.cancel()
+                _uiState.update { it.copy(loadLinksState = LoadLinksState.Idle) }
 
-                    val startPositionMs = getSavedStartPositionMs(episode)
+                val startPositionMs = getSavedStartPositionMs(navArgs.episode)
 
-                    val success = loadLinks(
-                        providerId = _uiState.value.selectedProvider,
-                        startPositionMs = startPositionMs,
-                        episode = episode,
-                        playImmediately = true,
-                    )
+                val success = loadLinks(
+                    providerId = _uiState.value.selectedProvider,
+                    startPositionMs = startPositionMs,
+                    episode = navArgs.episode,
+                    playImmediately = true,
+                )
 
-                    // Pre-fetch next episode if available and if the current metadata is a TV show
-                    if (success && filmMetadata is TvShow) {
-                        nextEpisode = getNextEpisode(episode)
+                // Pre-fetch next episode if available and if the current metadata is a TV show
+                if (success && filmMetadata is TvShow) {
+                    val nextEpisode = getNextEpisode(navArgs.episode)
+                    _uiState.update {
+                        it.copy(nextEpisode = nextEpisode)
                     }
-
-                    cancel()
                 }
             } else {
                 val startPositionMs = getSavedStartPositionMs()
@@ -612,5 +623,7 @@ private class PlayerErrorConsumer(
 internal data class PlayerUiState(
     val selectedProvider: String,
     val selectedSeason: Int? = null,
+    val selectedEpisode: Episode? = null,
+    val nextEpisode: Episode? = null,
     val loadLinksState: LoadLinksState = LoadLinksState.Idle,
 )

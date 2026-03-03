@@ -82,14 +82,14 @@ internal fun PlayerScreen(
         providers = viewModel.providers,
         snackbarState = snackbarState,
         onEpisodeChange = viewModel::onEpisodeChange,
+        onProviderChange = { viewModel.onProviderChange(it.id) },
+        onSeasonChange = { viewModel.onSeasonChange(it.number) },
+        onUpdateWatchProgress = viewModel::updateWatchProgress,
+        onNext = uiState.nextEpisode?.let { { viewModel.onEpisodeChange(episode = it) } },
         onBack = {
             viewModel.updateWatchProgress()
             navigator.goBack()
         },
-        onProviderChange = { viewModel.onProviderChange(it.id) },
-        onSeasonChange = { viewModel.onSeasonChange(it.number) },
-        onUpdateWatchProgress = viewModel::updateWatchProgress,
-        onNext = viewModel.nextEpisode?.let { { viewModel.onEpisodeChange(episode = it) } },
     )
 }
 

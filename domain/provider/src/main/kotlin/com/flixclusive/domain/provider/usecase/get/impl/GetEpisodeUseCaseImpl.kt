@@ -18,7 +18,7 @@ internal class GetEpisodeUseCaseImpl
         ): Episode? {
             var seasonData = tvShow.seasons.find { it.number == season }
 
-            if (seasonData == null && tvShow.isFromTmdb && tvShow.tmdbId != null) {
+            if ((seasonData == null || seasonData.episodes.isEmpty()) && tvShow.isFromTmdb && tvShow.tmdbId != null) {
                 seasonData = tmdbMetadataRepository
                     .getSeason(
                         id = tvShow.tmdbId!!,
