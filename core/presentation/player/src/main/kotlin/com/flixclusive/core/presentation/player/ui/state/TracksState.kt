@@ -37,6 +37,9 @@ class TracksState(
     subtitlesPreferences: SubtitlesPreferences,
     playerPreferences: PlayerPreferences,
 ) {
+    // We use this to determine when the media item has changed, so we can clear and re-extract tracks.
+    private var lastInitializedMediaItem: String? = null
+
     val subtitles = mutableStateListOf<MediaSubtitle>()
     val audios = mutableStateListOf<MediaAudio>()
 
@@ -53,11 +56,14 @@ class TracksState(
 
     internal suspend fun observe() {
         player.listen { events ->
-            // We only want to extract tracks once when they are first available.
-            // Subsequent changes to track selection parameters don't require re-extraction.
-            // TODO: Check if changing tracks in the player causes EVENT_TRACKS_CHANGED to be fired again.
-            //       if yes, check if EVENT_TRACK_SELECTION_PARAMETERS_CHANGED is also fired.
-            if (events.contains(Player.EVENT_TRACKS_CHANGED)) {
+            if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) && currentMediaItem?.mediaId != lastInitializedMediaItem) {
+                lastInitializedMediaItem = null
+                audios.clear()
+                subtitles.clear()
+            }
+
+            if (events.contains(Player.EVENT_TRACKS_CHANGED) && lastInitializedMediaItem == null) {
+                lastInitializedMediaItem = player.currentMediaItem?.mediaId
                 extractAudios()
                 extractSubtitles()
                 selectDefaultTracks()
