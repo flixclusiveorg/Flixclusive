@@ -20,6 +20,7 @@ import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.model.track.MediaAudio
 import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
+import com.flixclusive.core.presentation.player.model.track.TrackSource
 import com.flixclusive.core.presentation.player.util.TracksUtil.getFormats
 import com.flixclusive.core.presentation.player.util.TracksUtil.getIndexOfPreferredLanguage
 import com.flixclusive.core.presentation.player.util.TracksUtil.getName
@@ -83,6 +84,17 @@ class TracksState(
         val availableSubs = currentMediaItem.subtitles
 
         subtitles.clear()
+
+        if (availableSubs.isNotEmpty()) {
+            subtitles.add(
+                MediaSubtitle(
+                    url = "flixclusive_off_subtitle",
+                    label = "Off",
+                    source = TrackSource.EMBEDDED
+                )
+            )
+        }
+
         subtitles.addAll(availableSubs)
     }
 
@@ -99,7 +111,10 @@ class TracksState(
             languageProvider = { it },
         )
 
-        player.selectSubtitle(subtitleIndex)
+        selectedSubtitle = subtitleIndex
+        player.selectSubtitle(subtitleIndex - if (hasOffSubtitle()) 1 else 0)
+
+        selectedAudio = audioIndex
         player.selectAudio(audioIndex)
     }
 
@@ -112,7 +127,8 @@ class TracksState(
         val subtitle = subtitles.getOrNull(index)
 
         preferredSubtitleLanguage = subtitle?.label.orEmpty()
-        player.selectSubtitle(index)
+        player.clearCues()
+        player.selectSubtitle(index - if (hasOffSubtitle()) 1 else 0)
     }
 
     fun onAudioSelect(index: Int) {
@@ -121,6 +137,10 @@ class TracksState(
 
         preferredAudioLanguage = audio.orEmpty()
         player.selectAudio(index)
+    }
+
+    private fun hasOffSubtitle(): Boolean {
+        return subtitles.getOrNull(0)?.label == "Off"
     }
 
     companion object {

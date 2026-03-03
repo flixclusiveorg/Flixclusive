@@ -198,7 +198,9 @@ internal fun PlayerControls(
             return@LaunchedEffect
         }
 
-        val shouldHideControls = gestureState.isDoubleTapping || gestureState.isSliding || !uiMode.isNone
+        val shouldHideControls = gestureState.isDoubleTapping
+            || gestureState.isSliding
+            || (!uiMode.isNone && !uiMode.isSubsSync && !uiMode.isSubs)
         if (controlsVisibilityState.isVisible && shouldHideControls) {
             queueControlVisibility = true
             controlsVisibilityState.hide()

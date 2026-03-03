@@ -67,22 +67,17 @@ internal fun SubtitleSyncScreen(
     }
 
     val initialIndex = remember {
-        cuesWithTiming.findCueIndex(
+        val exactIndex = cuesWithTiming.findCueIndex(
             position = scrubState.progress,
             offset = tempOffset,
             lastIndex = -1
         )
+        if (exactIndex >= 0) exactIndex
+        else cuesWithTiming.findNearestCueIndex(scrubState.progress, tempOffset)
     }
 
     val activeIndex = remember {
         mutableIntStateOf(initialIndex)
-    }
-
-    val scrollTargetIndex = remember {
-        mutableIntStateOf(
-            if (initialIndex >= 0) initialIndex
-            else cuesWithTiming.findNearestCueIndex(scrubState.progress, tempOffset)
-        )
     }
 
     BackHandler {
@@ -100,9 +95,9 @@ internal fun SubtitleSyncScreen(
                     lastIndex = activeIndex.intValue
                 )
 
-                activeIndex.intValue = newIndex
-                scrollTargetIndex.intValue = if (newIndex >= 0) newIndex
-                    else cuesWithTiming.findNearestCueIndex(playerPosition, tempOffset)
+                if (newIndex >= 0) {
+                    activeIndex.intValue = newIndex
+                }
             }
     }
 
@@ -163,7 +158,6 @@ internal fun SubtitleSyncScreen(
                 SubtitleCuesList(
                     cues = cuesWithTiming,
                     activeIndex = { activeIndex.intValue },
-                    scrollTargetIndex = { scrollTargetIndex.intValue },
                     onCueClick = { index ->
                         val cue = cuesWithTiming[index]
                         tempOffset = scrubState.progress - cue.startTimeMs
@@ -184,7 +178,13 @@ internal fun SubtitleSyncScreen(
                 OffsetControlPanel(
                     hasUnsavedChanges = hasUnsavedChanges,
                     currentOffset = tempOffset,
-                    onOffsetChange = { tempOffset = it },
+                    onOffsetChange = {
+                        tempOffset = it
+                        activeIndex.intValue = cuesWithTiming.findNearestCueIndex(
+                            position = scrubState.progress,
+                            offset = it,
+                        )
+                    },
                     onSave = {
                         onSave(tempOffset)
                         onDismiss()
@@ -200,17 +200,17 @@ internal fun SubtitleSyncScreen(
 private fun SubtitleCuesList(
     cues: List<CueWithTiming>,
     activeIndex: () -> Int,
-    scrollTargetIndex: () -> Int,
     onCueClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
-        snapshotFlow(scrollTargetIndex)
+        snapshotFlow(activeIndex)
             .distinctUntilChanged()
             .collectLatest { index ->
-                if (cues.isEmpty() || index < 0) return@collectLatest
+                if (cues.isEmpty()) return@collectLatest
+                if (index !in cues.indices) return@collectLatest
 
                 // If the user is scrolling, wait until they stop + debounce
                 if (listState.isScrollInProgress) {
@@ -218,6 +218,7 @@ private fun SubtitleCuesList(
                         .first { !it }
                     delay(300L)
                 }
+
 
                 listState.animateScrollToItem(index = index)
             }
@@ -241,7 +242,7 @@ private fun SubtitleCuesList(
         ) { index, cue ->
             SubtitleCueItem(
                 cue = cue,
-                isActive = { index == activeIndex() },
+                isActive = { index <= activeIndex() },
                 onClick = { onCueClick(index) }
             )
         }
@@ -335,5 +336,5 @@ private fun List<CueWithTiming>.findNearestCueIndex(
     }
 
     // high = last cue that ended before position (or -1 if before all cues)
-    return high.coerceAtLeast(0)
+    return high.coerceIn(0, lastIndex)
 }
