@@ -24,12 +24,12 @@ internal object MimeTypeParser {
         val uri = if (isLocalSubtitle) label else url
 
         return when {
-            uri.endsWith(".srt", true) || uri.contains(".srt", true) -> MimeTypes.APPLICATION_SUBRIP
-            uri.endsWith(".vtt", true) || uri.contains(".vtt", true) -> MimeTypes.TEXT_VTT
-            uri.endsWith(".ssa", true) || uri.contains(".ssa", true) -> MimeTypes.TEXT_SSA
-            (uri.endsWith(".ttml", true) || uri.contains(".ttml", true)) || (
-                uri.endsWith(".xml", true) || uri.contains(
-                    ".xml",
+            uri.endsWith("srt", true) || uri.contains("srt", true) -> MimeTypes.APPLICATION_SUBRIP
+            uri.endsWith("vtt", true) || uri.contains("vtt", true) -> MimeTypes.TEXT_VTT
+            uri.endsWith("ssa", true) || uri.contains("ssa", true) -> MimeTypes.TEXT_SSA
+            (uri.endsWith("ttml", true) || uri.contains("ttml", true)) || (
+                uri.endsWith("xml", true) || uri.contains(
+                    "xml",
                     true,
                 )
             ) -> MimeTypes.APPLICATION_TTML
