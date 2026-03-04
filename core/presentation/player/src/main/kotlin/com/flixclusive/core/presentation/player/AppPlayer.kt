@@ -275,8 +275,12 @@ class AppPlayer(
     fun addSubtitle(subtitle: MediaSubtitle) {
         val wasAdded = mediaSourceManager.addSubtitle(subtitle)
 
-        // If subtitle was added successfully, we need to re-prepare the player
         if (wasAdded) {
+            val tempMediaItemIndex = currentMediaItemIndex
+            val tempPosition = currentPosition
+            exoPlayer?.setMediaSources(currentCacheMediaItem?.mediaSources ?: return)
+
+            seekTo(tempMediaItemIndex, tempPosition)
             prepare()
         }
     }
