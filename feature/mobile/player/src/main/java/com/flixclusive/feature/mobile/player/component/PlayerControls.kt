@@ -138,6 +138,7 @@ internal fun PlayerControls(
                 && !uiMode.isResize
                 && !gestureState.isDoubleTapping
                 && !gestureState.isSliding
+                && !scrubState.isScrubbing
         }
     }
 
@@ -249,6 +250,17 @@ internal fun PlayerControls(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
+        ControlsBlackOverlay(
+            visible = controlsVisibilityState.isVisible && !isLocked,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        PlayerSnackbarLayer(
+            snackbarState = snackbarState,
+            areControlsVisible = { controlsVisibilityState.isVisible },
+            bottomControlsHeightPx = { bottomControlsHeightPx },
+        )
+
         AnimatedContent(
             targetState = isLocked,
             transitionSpec = {
@@ -283,11 +295,6 @@ internal fun PlayerControls(
                         )
                     }
                 } else {
-                    ControlsBlackOverlay(
-                        visible = controlsVisibilityState.isVisible,
-                        modifier = Modifier.fillMaxSize()
-                    )
-
                     PlayerGestureHandler(
                         gestureState = gestureState,
                         brightnessManager = brightnessManager,
@@ -482,12 +489,6 @@ internal fun PlayerControls(
                 }
             }
         }
-
-        PlayerSnackbarLayer(
-            snackbarState = snackbarState,
-            areControlsVisible = { controlsVisibilityState.isVisible },
-            bottomControlsHeightPx = { bottomControlsHeightPx },
-        )
     }
 }
 
