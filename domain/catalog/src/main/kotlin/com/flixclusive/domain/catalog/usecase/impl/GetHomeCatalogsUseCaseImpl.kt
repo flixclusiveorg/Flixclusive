@@ -46,7 +46,7 @@ internal class GetHomeCatalogsUseCaseImpl
                     apiChangesHandler.catalogs,
                     watchProgressRepository.getRandoms(
                         ownerId = user.id,
-                        count = Random.nextInt(1, 4),
+                        count = 10,
                     ),
                 ) { providerCatalogs, watchHistoryItems ->
                     val tmdbCatalogs = tmdbHomeCatalogRepository.getAllCatalogs()

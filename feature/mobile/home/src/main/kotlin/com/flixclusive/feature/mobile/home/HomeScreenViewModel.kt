@@ -116,7 +116,7 @@ internal class HomeScreenViewModel
                     )
                 }
             }.stateIn(
-                scope = appDispatchers.defaultScope,
+                scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
                 initialValue = emptyList(),
             )
@@ -232,14 +232,19 @@ internal class HomeScreenViewModel
         }
 
         fun paginate(catalog: Catalog) {
-            if (paginationJobs[catalog.url]?.isActive == true) {
+            if (paginationJobs[catalog.url]?.isActive == true
+                || _uiState.value.pagingStates[catalog.url] == null) {
                 return
             }
 
             paginationJobs[catalog.url] = viewModelScope.launch {
                 _uiState.update {
                     val pagingState = it.pagingStates[catalog.url]
-                        ?: return@update it
+                        ?: CatalogPagingState(
+                            hasNext = catalog.canPaginate,
+                            page = 1,
+                            state = PagingDataState.Loading,
+                        )
 
                     it.updatePagingState(
                         key = catalog.url,
