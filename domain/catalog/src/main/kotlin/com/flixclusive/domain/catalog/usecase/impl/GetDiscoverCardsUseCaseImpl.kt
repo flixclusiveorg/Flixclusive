@@ -49,11 +49,7 @@ internal class GetDiscoverCardsUseCaseImpl
         private suspend fun getTvNetworks(): List<TMDBDiscoverCatalog> {
             return tmdbDiscoverCatalogRepository
                 .getTvNetworks()
-                .sortedBy {
-                    it.name
-                }.map {
-                    it.copy(image = getThumbnail(it))
-                }
+                .sortedBy { it.name }
         }
 
         /**
@@ -62,11 +58,7 @@ internal class GetDiscoverCardsUseCaseImpl
         private suspend fun getMovieCompanies(): List<TMDBDiscoverCatalog> {
             return tmdbDiscoverCatalogRepository
                 .getMovieCompanies()
-                .sortedBy {
-                    it.name
-                }.map {
-                    it.copy(image = getThumbnail(it))
-                }
+                .sortedBy { it.name }
         }
 
         /**

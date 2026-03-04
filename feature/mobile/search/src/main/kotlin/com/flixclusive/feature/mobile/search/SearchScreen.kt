@@ -134,7 +134,7 @@ private fun SearchScreenContent(
                 DiscoverCard(
                     label = it.name,
                     image = it.image,
-                    imageSize = "w500_filter(negate,000,666)",
+                    imageSize = "w300_filter(negate,000,666)",
                     isCompanyCatalog = true,
                     onClick = { openSeeAllScreen(it) },
                     modifier = Modifier.width(SearchUiUtils.getCardWidth()),
@@ -150,7 +150,7 @@ private fun SearchScreenContent(
                 DiscoverCard(
                     label = it.name,
                     image = it.image,
-                    imageSize = "w500_filter(negate,000,666)",
+                    imageSize = "w300_filter(negate,000,666)",
                     isCompanyCatalog = true,
                     onClick = { openSeeAllScreen(it) },
                     modifier = Modifier.width(SearchUiUtils.getCardWidth()),
@@ -177,8 +177,10 @@ private fun SearchScreenContent(
                 )
             }
 
-            items(10) {
-                DiscoverCardPlaceholder()
+            if (cards is Resource.Loading) {
+                items(10) {
+                    DiscoverCardPlaceholder()
+                }
             }
         } else {
             item(span = { GridItemSpan(maxLineSpan) }) {
