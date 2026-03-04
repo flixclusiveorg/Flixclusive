@@ -25,7 +25,8 @@ internal fun AppPlayer.switchTrack(
                 .setTrackTypeDisabled(trackType, true)
                 .build()
         } else {
-            val tracks = currentTracks.groups.filter { it.type == trackType }
+            val tracks = currentTracks.groups
+                .filter { it.type == trackType && it.isSupported }
 
             if (tracks.isEmpty() || trackIndex !in tracks.indices) {
                 errorLog("Invalid track index ($trackIndex) for track type $trackTypeText")
