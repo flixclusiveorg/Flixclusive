@@ -34,9 +34,12 @@ dependencies {
     api(libs.media3.exoplayer)
     api(libs.media3.exoplayer.hls)
     api(libs.media3.exoplayer.dash)
-    api(libs.media3.inspector)
+    api(libs.media3.effect)
     api(libs.media3.session)
     api(libs.media3.ui)
+    api(libs.android.concurrency)
+    compileOnly(libs.checkerframework)
+    compileOnly(libs.google.errorProne.annotations)
     implementation(libs.media3.ui.compose)
 
     androidTestImplementation(projects.coreTesting)

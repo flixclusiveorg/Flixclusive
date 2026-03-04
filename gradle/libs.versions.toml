@@ -8,23 +8,26 @@ minSdk = "23"
 
 accompanist = "0.37.3"
 androidDesugarJdkLibs = "2.1.5"
-androidTools = "32.0.0"
+androidTools = "32.0.1"
 androidx-test-ext-junit = "1.3.0"
-androidxComposeBom = "2026.02.00"
+androidxComposeBom = "2026.02.01"
 androidxCore = "1.17.0"
 androidxCoreSplashscreen = "1.2.0"
 androidxDataStore = "1.2.0"
 androidxTestCore = "1.7.0"
 androidxTestRules = "1.7.0"
 androidxTestRunner = "1.7.0"
+checkerFramework = "3.54.0"
 composeActivity = "1.12.4"
-coil = "3.3.0"
-compose = "1.10.3"
+coil = "3.4.0"
+compose = "1.10.4"
 composeDestinations = "2.3.0"
+concurrency = "1.3.0"
 conscrypt = "2.5.3"
 constraintLayout = "1.1.1"
 coreStubs = "1.2.5"
 coroutines = "1.10.2"
+errorProne = "2.48.0"
 espresso-core = "3.7.0"
 gson = "2.13.2"
 hilt = "2.59.1"
@@ -37,7 +40,6 @@ ktlint = "14.0.1"
 ktlintCompose = "0.5.6"
 ksp = "2.3.4"
 lifecycleRuntime = "2.10.0"
-localbroadcastmanager = "1.1.0"
 markdown = "0.5.5"
 material = "1.13.0"
 media3 = "1.9.2"
@@ -57,10 +59,9 @@ universalChardet = "2.5.0"
 
 [libraries]
 # Android Core
-broadcastmanager = { group = "androidx.localbroadcastmanager", name = "localbroadcastmanager", version.ref = "localbroadcastmanager" }
+android-concurrency = { group = "androidx.concurrent", name = "concurrent-futures", version.ref = "concurrency" }
 
 # Accompanist
-accompanist-navigation-material = { module = "com.google.accompanist:accompanist-navigation-material", version.ref = "accompanist" }
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
 
 # Jsoup
@@ -69,6 +70,10 @@ jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 # Coil
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+
+# Annotations (for FrameExtractor)
+checkerframework = { group = "org.checkerframework", name = "checker-qual", version.ref = "checkerFramework" }
+google-errorProne-annotations = { group = "com.google.errorprone", name = "error_prone_annotations", version.ref = "errorProne" }
 
 # TV UI (Compose)
 compose-tv-foundation = { module = "androidx.tv:tv-foundation", version.ref = "tvCompose"}
@@ -144,7 +149,7 @@ media3-datasource-okhttp = { group = "androidx.media3", name = "media3-datasourc
 media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 media3-exoplayer-hls = { group = "androidx.media3", name = "media3-exoplayer-hls", version.ref = "media3" }
 media3-exoplayer-dash = { group = "androidx.media3", name = "media3-exoplayer-dash", version.ref = "media3" }
-media3-inspector = { group = "androidx.media3", name = "media3-inspector", version.ref = "media3" }
+media3-effect = { group = "androidx.media3", name = "media3-effect", version.ref = "media3" }
 media3-ffmpeg = { group = "com.github.anilbeesetti.nextlib", name = "nextlib-media3ext", version.ref = "media-ffmpeg" }
 media3-session = { group = "androidx.media3", name = "media3-session", version.ref = "media3" }
 media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }

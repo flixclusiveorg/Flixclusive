@@ -66,9 +66,9 @@ private const val PLAYER_TOLERANCE_AFTER_US = 300_000L
 @Stable
 class AppPlayer(
     private val context: Context,
-    private val dataSourceFactory: AppDataSourceFactory,
     private val playerPrefs: PlayerPreferences,
     private val subtitlePrefs: SubtitlesPreferences,
+    internal val dataSourceFactory: AppDataSourceFactory,
     errorReceiver: PlayerErrorReceiver,
 ) : CuesProvider, Player {
     override var offset by mutableLongStateOf(0L)
@@ -112,10 +112,7 @@ class AppPlayer(
                 .apply {
                     setDeviceVolumeControlEnabled(true)
                     setTrackSelector(trackSelector)
-                    setMediaSourceFactory(
-                        DefaultMediaSourceFactory(context)
-                            .setDataSourceFactory(dataSourceFactory.remote),
-                    )
+                    setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory.remote))
                     setRenderersFactory {
                         eventHandler,
                         videoRendererEventListener,
@@ -253,6 +250,8 @@ class AppPlayer(
         exoPlayer?.let {
             val currentPosition = it.currentPosition
             it.seekTo(index, currentPosition)
+            prepare()
+            playWhenReady = true
         }
     }
 

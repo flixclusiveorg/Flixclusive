@@ -118,7 +118,6 @@ internal fun PlayerControls(
     var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
 
     val scrubState = rememberScrubState(player = player)
-    val seekPreviewState = rememberSeekPreviewState(player = player)
 
     val playPauseState = rememberPlayPauseButtonState(player = player)
     val seekButtonState = rememberSeekButtonState(player = player)
@@ -150,6 +149,7 @@ internal fun PlayerControls(
         )
     }
 
+    val seekPreviewState = rememberSeekPreviewState(player = player, mediaItemKey = { mediaItemKey })
     val serversState = rememberServersState(
         player = player,
         mediaItemKey = { mediaItemKey },

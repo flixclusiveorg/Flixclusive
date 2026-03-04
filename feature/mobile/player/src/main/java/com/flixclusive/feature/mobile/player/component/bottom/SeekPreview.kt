@@ -45,7 +45,7 @@ private const val ASPECT_RATIO = 16f / 9f
 @Composable
 internal fun SeekPreview(
     isVisible: Boolean,
-    bitmap: Bitmap?,
+    bitmap: () -> Bitmap?,
     positionText: String,
     modifier: Modifier = Modifier,
 ) {
@@ -108,7 +108,7 @@ internal fun SeekPreview(
 
 @Composable
 private fun SeekPreviewContent(
-    bitmap: Bitmap?,
+    bitmap: () -> Bitmap?,
     positionText: String,
     modifier: Modifier = Modifier,
 ) {
@@ -124,9 +124,9 @@ private fun SeekPreviewContent(
                 .background(Color.Black),
             contentAlignment = Alignment.Center,
         ) {
-            if (bitmap != null) {
+            bitmap()?.also {
                 Image(
-                    bitmap = bitmap.asImageBitmap(),
+                    bitmap = it.asImageBitmap(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

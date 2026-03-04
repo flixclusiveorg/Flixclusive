@@ -120,7 +120,6 @@ internal fun CustomSlider(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
-    // @IntRange(from = 0)
     steps: Int = 0,
     colors: CustomSliderColors = CustomSliderDefaults.colors(),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
@@ -138,8 +137,9 @@ internal fun CustomSlider(
             customSliderPositions = sliderPositions,
         )
     },
+    onValueChangeStart: (() -> Unit)? = null,
     onValueChangeFinished: (() -> Unit)? = null,
-    seekTextComposable: @Composable (() -> Unit)? = null,
+    seekComposable: @Composable (() -> Unit)? = null,
 ) {
     require(steps >= 0) { "steps should be >= 0" }
 
@@ -154,7 +154,8 @@ internal fun CustomSlider(
         valueRange = valueRange,
         thumb = thumb,
         track = track,
-        seekTextComposable = seekTextComposable,
+        seekPreviewComposable = seekComposable,
+        onValueChangeStart = onValueChangeStart,
     )
 }
 
@@ -203,6 +204,7 @@ internal fun CustomSlider(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+    onValueChangeStart: (() -> Unit)? = null,
     onValueChangeFinished: (() -> Unit)? = null,
     colors: CustomSliderColors = CustomSliderDefaults.colors(),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
@@ -232,6 +234,7 @@ internal fun CustomSlider(
         enabled = enabled,
         valueRange = valueRange,
         steps = steps,
+        onValueChangeStart = onValueChangeStart,
         onValueChangeFinished = onValueChangeFinished,
         interactionSource = interactionSource,
         thumb = thumb,
@@ -246,12 +249,13 @@ private fun SliderImpl(
     steps: Int,
     value: Float,
     onValueChange: (Float) -> Unit,
+    onValueChangeStart: (() -> Unit)?,
     onValueChangeFinished: (() -> Unit)?,
     valueRange: ClosedFloatingPointRange<Float>,
     thumb: @Composable (CustomSliderPositions) -> Unit,
     track: @Composable (CustomSliderPositions) -> Unit,
     modifier: Modifier = Modifier,
-    seekTextComposable: (@Composable () -> Unit)? = null,
+    seekPreviewComposable: (@Composable () -> Unit)? = null,
 ) {
     val onValueChangeState = rememberUpdatedState<(Float) -> Unit> {
         if (it != value) {
@@ -308,12 +312,19 @@ private fun SliderImpl(
         }
     }
 
+    val gestureStartAction = rememberUpdatedState {
+        if (!draggableState.isDragging) {
+            onValueChangeStart?.invoke()
+        }
+    }
+
     val press = Modifier.sliderTapModifier(
         draggableState,
         interactionSource,
         totalWidth.intValue,
         isRtl,
         rawOffset,
+        gestureStartAction,
         gestureEndAction,
         pressOffset,
         enabled,
@@ -324,6 +335,7 @@ private fun SliderImpl(
         reverseDirection = isRtl,
         enabled = enabled,
         interactionSource = interactionSource,
+        onDragStarted = { _ -> gestureStartAction.value.invoke() },
         onDragStopped = { _ -> gestureEndAction.value.invoke() },
         startDragImmediately = draggableState.isDragging,
         state = draggableState,
@@ -331,7 +343,7 @@ private fun SliderImpl(
 
     Layout(
         {
-            Box(modifier = Modifier.layoutId(SliderComponents.SEEK_TEXT)) { seekTextComposable?.invoke() }
+            Box(modifier = Modifier.layoutId(SliderComponents.SEEK_PREVIEW)) { seekPreviewComposable?.invoke() }
             Box(modifier = Modifier.layoutId(SliderComponents.THUMB)) { thumb(customSliderPositions) }
             Box(modifier = Modifier.layoutId(SliderComponents.TRACK)) { track(customSliderPositions) }
         },
@@ -348,9 +360,9 @@ private fun SliderImpl(
             .then(press)
             .then(drag),
     ) { measurables, constraints ->
-        val seekTextPlaceable = measurables
+        val seekPreviewPlaceable = measurables
             .first {
-                it.layoutId == SliderComponents.SEEK_TEXT
+                it.layoutId == SliderComponents.SEEK_PREVIEW
             }.measure(
                 constraints.copy(
                     minHeight = 0,
@@ -381,20 +393,20 @@ private fun SliderImpl(
 
         val trackOffsetX = thumbPlaceable.width / 2
         val thumbOffsetX = ((trackPlaceable.width) * positionFraction).roundToInt()
-        val seekTextOffsetX =
-            thumbOffsetX + thumbPlaceable.width.times(0.5).roundToInt() - (seekTextPlaceable.width / 2)
+        val seekPreviewOffsetX =
+            thumbOffsetX + thumbPlaceable.width.times(0.5).roundToInt() - (seekPreviewPlaceable.width / 2)
 
         val trackOffsetY = (sliderHeight - trackPlaceable.height) / 2
         val thumbOffsetY = (sliderHeight - thumbPlaceable.height) / 2
-        val seekTextOffsetY = thumbOffsetY - seekTextPlaceable.height - 8.dp.toPx().roundToInt()
+        val seekPreviewOffsetY = thumbOffsetY - seekPreviewPlaceable.height - 8.dp.toPx().roundToInt()
 
         layout(
             sliderWidth,
             sliderHeight,
         ) {
-            seekTextPlaceable.placeRelative(
-                seekTextOffsetX,
-                seekTextOffsetY,
+            seekPreviewPlaceable.placeRelative(
+                seekPreviewOffsetX,
+                seekPreviewOffsetY,
             )
 
             trackPlaceable.placeRelative(
@@ -500,8 +512,8 @@ internal object CustomSliderDefaults {
      */
     @Composable
     fun Thumb(
-        interactionSource: MutableInteractionSource,
         modifier: Modifier = Modifier,
+        interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
         isValueChanging: Boolean = true,
         colors: CustomSliderColors = colors(),
         enabled: Boolean = true,
@@ -738,6 +750,7 @@ private fun Modifier.sliderTapModifier(
     maxPx: Int,
     isRtl: Boolean,
     rawOffset: State<Float>,
+    gestureStartAction: State<() -> Unit>,
     gestureEndAction: State<() -> Unit>,
     pressOffset: MutableState<Float>,
     enabled: Boolean,
@@ -758,6 +771,7 @@ private fun Modifier.sliderTapModifier(
                     },
                     onTap = {
                         scope.launch {
+                            gestureStartAction.value.invoke()
                             draggableState.drag(MutatePriority.UserInput) {
                                 // just trigger animation, press offset will be applied
                                 dragBy(0f)
@@ -902,7 +916,7 @@ private class SliderDraggableState(
 private enum class SliderComponents {
     THUMB,
     TRACK,
-    SEEK_TEXT,
+    SEEK_PREVIEW,
 }
 
 /**

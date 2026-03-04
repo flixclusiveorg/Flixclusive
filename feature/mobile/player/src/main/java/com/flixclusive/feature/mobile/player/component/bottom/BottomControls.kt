@@ -31,8 +31,6 @@ import com.flixclusive.feature.mobile.player.util.UiMode
 import com.flixclusive.core.presentation.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
 
-internal const val TIMER_WEIGHT = 0.08F
-
 @OptIn(UnstableApi::class)
 @Composable
 internal fun BottomControls(

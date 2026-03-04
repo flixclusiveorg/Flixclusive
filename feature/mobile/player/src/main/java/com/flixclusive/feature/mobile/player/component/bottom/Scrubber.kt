@@ -1,9 +1,6 @@
 package com.flixclusive.feature.mobile.player.component.bottom
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.interaction.DragInteraction
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -30,6 +27,8 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+
+private const val TIMER_WEIGHT = 0.083F
 
 @OptIn(FlowPreview::class)
 @Composable
@@ -64,30 +63,17 @@ internal fun Scrubber(
             else -> MaterialTheme.colorScheme.tertiary
         }
     )
-    val sliderInteractionSource = remember { MutableInteractionSource() }
     val sliderTimeProgressColors = CustomSliderDefaults.colors(
         thumbColor = thumbColor,
         activeTrackColor = MaterialTheme.colorScheme.primary,
         inactiveTrackColor = Color.White.copy(alpha = 0.3F)
     )
 
-    LaunchedEffect(sliderInteractionSource) {
-        sliderInteractionSource.interactions.collect { interaction ->
-            when (interaction) {
-                is PressInteraction.Press, is DragInteraction.Start -> state.onScrubStart()
-                else -> {
-                    state.onScrubEnd()
-                    seekPreviewState.onScrubEnd()
-                }
-            }
-        }
-    }
-
     LaunchedEffect(Unit) {
         snapshotFlow {
             (state.progress / FRAME_INTERVAL_MS) * FRAME_INTERVAL_MS
         }.distinctUntilChanged()
-            .debounce(600L)
+            .debounce(300L)
             .collectLatest { _ ->
                 if (state.isScrubbing) {
                     seekPreviewState.onScrubbing(state.progress, this)
@@ -139,22 +125,25 @@ internal fun Scrubber(
             // seek bar
             CustomSlider(
                 value = progress,
-                onValueChange = { state.onScrubMove(it.toLong()) },
                 valueRange = 0F..state.duration.toFloat(),
                 colors = sliderTimeProgressColors,
-                interactionSource = sliderInteractionSource,
+                onValueChangeStart = state::onScrubStart,
+                onValueChange = { state.onScrubMove(it.toLong()) },
+                onValueChangeFinished = {
+                    state.onScrubEnd()
+                    seekPreviewState.onScrubEnd()
+                },
                 thumb = {
                     CustomSliderDefaults.Thumb(
-                        interactionSource = sliderInteractionSource,
                         isValueChanging = state.isScrubbing,
                         colors = sliderTimeProgressColors
                     )
                 },
-                seekTextComposable = {
+                seekComposable = {
                     SeekPreview(
                         isVisible = state.isScrubbing,
-                        bitmap = seekPreviewState.currentFrame,
                         positionText = position,
+                        bitmap = { seekPreviewState.currentFrame },
                         modifier = Modifier.align(Alignment.TopCenter),
                     )
                 }

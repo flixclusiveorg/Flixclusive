@@ -76,6 +76,7 @@ class ServersState(
     }
 
     fun selectServer(index: Int) {
+        selectedServer = index
         player.selectServer(index)
     }
 
