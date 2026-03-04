@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
@@ -35,7 +36,6 @@ import com.flixclusive.provider.filter.BottomSheetComponent
 import com.flixclusive.provider.filter.FilterGroup
 import com.flixclusive.provider.filter.FilterList
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -103,9 +103,7 @@ internal class SearchExpandedScreenViewModel
                 initialValue = false,
             )
 
-        var searchResults by mutableStateOf(persistentSetOf<Film>())
-            private set
-
+        val searchResults = mutableStateSetOf<Film>()
         var filters by mutableStateOf(getDefaultTMDBFilters())
             private set
 
@@ -123,7 +121,7 @@ internal class SearchExpandedScreenViewModel
 
                 // Reset pagination
                 _uiState.update { it.resetPagination(lastQuerySearched = query) }
-                searchResults = searchResults.clear()
+                searchResults.clear()
 
                 if (query.isNotBlank()) {
                     val userId = userSessionManager.currentUser
@@ -155,7 +153,7 @@ internal class SearchExpandedScreenViewModel
         }
 
         fun paginateItems() {
-            if (searchingJob?.isActive == true || paginatingJob?.isActive == true) return
+            if (paginatingJob?.isActive == true) return
 
             paginatingJob = viewModelScope.launch {
                 if (isDonePaginating()) return@launch
@@ -181,10 +179,10 @@ internal class SearchExpandedScreenViewModel
                         val canPaginate = data.results.size == 20 || data.page < data.totalPages
 
                         if (data.page == 1) {
-                            searchResults = searchResults.clear()
+                            searchResults.clear()
                         }
 
-                        searchResults = searchResults.addAll(data.results)
+                        searchResults.addAll(data.results)
 
                         _uiState.update {
                             it.copy(

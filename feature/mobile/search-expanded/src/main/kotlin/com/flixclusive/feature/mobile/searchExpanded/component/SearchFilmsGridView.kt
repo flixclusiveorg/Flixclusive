@@ -19,12 +19,11 @@ import com.flixclusive.core.presentation.mobile.components.film.FilmCard
 import com.flixclusive.core.presentation.mobile.components.film.FilmCardPlaceholder
 import com.flixclusive.core.presentation.mobile.util.MobileUiUtil.getAdaptiveFilmCardWidth
 import com.flixclusive.model.film.Film
-import kotlinx.collections.immutable.ImmutableSet
 
 @Composable
 internal fun SearchFilmsGridView(
-    searchResults: ImmutableSet<Film>,
-    pagingState: PagingDataState,
+    searchResults: () -> Set<Film>,
+    pagingState: () -> PagingDataState,
     error: UiText?,
     scaffoldPadding: PaddingValues,
     listState: LazyGridState,
@@ -41,10 +40,10 @@ internal fun SearchFilmsGridView(
         modifier = modifier,
     ) {
         items(
-            searchResults.size,
-            key = { searchResults.elementAt(it).identifier },
+            searchResults().size,
+            key = { searchResults().elementAt(it).identifier },
         ) {
-            val film = searchResults.elementAt(it)
+            val film = searchResults().elementAt(it)
 
             FilmCard(
                 film = film,
@@ -57,7 +56,7 @@ internal fun SearchFilmsGridView(
             )
         }
 
-        if (pagingState.isLoading) {
+        if (pagingState().isLoading) {
             items(20) {
                 FilmCardPlaceholder(
                     isShowingTitle = showFilmTitles,

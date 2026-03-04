@@ -21,7 +21,7 @@ import com.flixclusive.core.strings.R as LocaleR
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SearchSearchHistoryView(
-    searchHistory: List<SearchHistory>,
+    searchHistory: () -> List<SearchHistory>,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
     deleteSearchHistoryItem: (SearchHistory) -> Unit,
@@ -40,7 +40,7 @@ internal fun SearchSearchHistoryView(
         }
 
         items(
-            items = searchHistory,
+            items = searchHistory(),
             key = { it.id },
         ) { item ->
             SearchHistoryBlock(

@@ -46,7 +46,6 @@ import com.flixclusive.provider.filter.FilterList
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.ExternalModuleGraph
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -68,10 +67,10 @@ internal fun SearchExpandedScreen(
         uiState = uiState,
         searchQuery = { searchQuery },
         showFilmTitles = showFilmTitles,
-        searchHistory = searchHistory,
-        searchResults = viewModel.searchResults,
+        searchHistory = { searchHistory },
+        searchResults = { viewModel.searchResults },
         providerMetadataList = providerMetadataList,
-        filters = viewModel.filters,
+        filters = { viewModel.filters },
         onGoBack = navigator::goBack,
         onQueryChange = viewModel::onQueryChange,
         onSearch = viewModel::onSearch,
@@ -88,12 +87,12 @@ internal fun SearchExpandedScreen(
 @Composable
 private fun SearchExpandedScreenContent(
     uiState: SearchUiState,
-    searchQuery: () -> String,
     showFilmTitles: Boolean,
-    searchHistory: List<SearchHistory>,
-    searchResults: ImmutableSet<Film>,
+    searchQuery: () -> String,
+    searchHistory: () -> List<SearchHistory>,
+    searchResults: () -> Set<Film>,
     providerMetadataList: ImmutableList<ProviderMetadata>,
-    filters: FilterList,
+    filters: () -> FilterList,
     onGoBack: () -> Unit,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
@@ -123,7 +122,6 @@ private fun SearchExpandedScreenContent(
 
     val providerMetadata = remember(uiState.selectedProviderId) {
         val providerMetadata = providerMetadataList.find { uiState.selectedProviderId == it.id }
-
         if (providerMetadata == null) {
             return@remember TMDBProviderUtils.tmdbProviderMetadata
         }
@@ -133,7 +131,7 @@ private fun SearchExpandedScreenContent(
 
     val sortedFilters by remember {
         derivedStateOf {
-            FilterList(filters.sortedByDescending { it.isBeingUsed() })
+            FilterList(filters().sortedByDescending { it.isBeingUsed() })
         }
     }
 
@@ -208,7 +206,7 @@ private fun SearchExpandedScreenContent(
                         listState = listState,
                         previewFilm = previewFilm,
                         searchResults = searchResults,
-                        pagingState = uiState.pagingState,
+                        pagingState = { uiState.pagingState },
                         error = uiState.error,
                         scaffoldPadding = innerPadding,
                         paginateItems = paginateItems,
@@ -272,10 +270,10 @@ private fun SearchExpandedScreenBasePreview() {
                 ),
                 searchQuery = { "Film 1" },
                 showFilmTitles = true,
-                searchHistory = searchHistory,
-                searchResults = films,
+                searchHistory = { searchHistory },
+                searchResults = { films },
                 providerMetadataList = providers,
-                filters = filters,
+                filters = { filters },
                 onGoBack = {},
                 onQueryChange = {},
                 onSearch = {},
