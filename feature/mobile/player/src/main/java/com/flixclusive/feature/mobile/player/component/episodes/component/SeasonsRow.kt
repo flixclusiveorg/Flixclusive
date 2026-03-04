@@ -55,7 +55,7 @@ internal fun SeasonsRow(
         items(seasons) { season ->
             SeasonPill(
                 season = season,
-                selected = { currentSeason() == season },
+                selected = { currentSeason()?.number == season.number },
                 onClick = {
                     scope.launch {
                         onSeasonChange(season)
