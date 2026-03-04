@@ -34,6 +34,7 @@ import androidx.media3.exoplayer.text.TextRenderer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.SubtitleView
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.player.extensions.isLiveError
@@ -52,6 +53,8 @@ import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getLoad
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getRenderers
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 private const val PLAYER_TOLERANCE_BEFORE_US = 300_000L
 private const val PLAYER_TOLERANCE_AFTER_US = 300_000L
@@ -69,12 +72,14 @@ class AppPlayer(
     private val playerPrefs: PlayerPreferences,
     private val subtitlePrefs: SubtitlesPreferences,
     internal val dataSourceFactory: AppDataSourceFactory,
-    errorReceiver: PlayerErrorReceiver,
 ) : CuesProvider, Player {
     override var offset by mutableLongStateOf(0L)
         private set
 
     val currentCuesWithTiming = mutableStateListOf<CueWithTiming>()
+
+    internal val _errors = MutableSharedFlow<UiText>(extraBufferCapacity = 5)
+    val errors = _errors.asSharedFlow()
 
     var subtitleView: SubtitleView? = null
 
@@ -83,7 +88,7 @@ class AppPlayer(
     /** Only internally visible so ComposePlayer component can access it */
     internal var exoPlayer: ExoPlayer? = null
     private var mediaSession: MediaSession? = null
-    private val listener = InternalPlayerListener(errorReceiver)
+    private val listener = InternalPlayerListener()
 
     /** Backing property for playWhenReady to keep the value when the player is null. */
     private var _playWhenReady: Boolean = true
@@ -272,7 +277,7 @@ class AppPlayer(
 
         // If subtitle was added successfully, we need to re-prepare the player
         if (wasAdded) {
-            exoPlayer?.prepare()
+            prepare()
         }
     }
 
@@ -340,9 +345,7 @@ class AppPlayer(
         currentCuesWithTiming.clear()
     }
 
-    private inner class InternalPlayerListener(
-        private val errorReceiver: PlayerErrorReceiver,
-    ) : Player.Listener {
+    private inner class InternalPlayerListener() : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_ENDED) {
                 changeSubtitleDelay(0)
@@ -354,7 +357,7 @@ class AppPlayer(
             errorLog(error.stackTraceToString())
 
             if (isPrepareNeeded(error)) {
-                errorReceiver.onPlayerError(error)
+                _errors.tryEmit(UiText.from(R.string.network_failure_message))
                 seekToDefaultPosition()
                 prepare()
                 playWhenReady = _playWhenReady

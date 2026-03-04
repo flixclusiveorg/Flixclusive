@@ -5,11 +5,9 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.listenTo
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -22,8 +20,6 @@ import com.flixclusive.core.datastore.model.user.UserPreferences
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.PlayerErrorReceiver
-import com.flixclusive.core.presentation.player.extensions.getDisplayMessage
 import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.core.presentation.player.model.track.MediaServer
 import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
@@ -45,11 +41,8 @@ import com.ramcosta.composedestinations.generated.player.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -86,12 +79,6 @@ internal class PlayerScreenViewModel @Inject constructor(
 ) : ViewModel() {
     private val navArgs = savedStateHandle.navArgs<PlayerScreenNavArgs>()
 
-
-    private val _playerErrors = MutableSharedFlow<UiText>(extraBufferCapacity = 5)
-    val playerErrors: SharedFlow<UiText> = _playerErrors.asSharedFlow()
-
-    private val errorConsumer by lazy { PlayerErrorConsumer(_playerErrors) }
-
     val playerPreferences = dataStoreManager.getUserPrefs(
         key = UserPreferences.PLAYER_PREFS_KEY,
         type = PlayerPreferences::class,
@@ -126,7 +113,6 @@ internal class PlayerScreenViewModel @Inject constructor(
             dataSourceFactory = playerDataSourceFactory,
             playerPrefs = playerPreferences.value,
             subtitlePrefs = subtitlesPreferences.value,
-            errorReceiver = errorConsumer,
         ).also {
             it.initialize()
             it.observePlaybackProgress()
@@ -615,14 +601,6 @@ internal class PlayerScreenViewModel @Inject constructor(
 // TODO: Make this threshold configurable in the future, maybe even allow users to set it themselves.
 //  For now, 80% seems like a reasonable default that allows enough time for links to load without cutting off too early.
 private const val QUEUE_THRESHOLD = 0.8
-
-private class PlayerErrorConsumer(
-    private val errorFlow: MutableSharedFlow<UiText>,
-) : PlayerErrorReceiver {
-    override fun onPlayerError(error: PlaybackException) {
-        errorFlow.tryEmit(error.getDisplayMessage())
-    }
-}
 
 @Immutable
 internal data class PlayerUiState(

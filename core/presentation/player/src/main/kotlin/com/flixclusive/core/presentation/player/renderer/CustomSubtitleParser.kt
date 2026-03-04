@@ -1,6 +1,5 @@
 package com.flixclusive.core.presentation.player.renderer
 
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.ui.util.fastMap
 import androidx.media3.common.Format
@@ -21,6 +20,7 @@ import androidx.media3.extractor.text.webvtt.WebvttParser
 import com.flixclusive.core.presentation.player.CuesProvider
 import com.flixclusive.core.presentation.player.model.CueWithTiming.Companion.toCue
 import com.flixclusive.core.util.log.errorLog
+import com.flixclusive.core.util.log.infoLog
 import org.mozilla.universalchardet.UniversalDetector
 
 /**
@@ -52,19 +52,19 @@ internal class CustomSubtitleParser(
 
                 val encoding = detector.detectedCharset // "windows-1256"
 
-                Log.i(TAG, "Detected encoding with charset $encoding")
+                infoLog("Detected encoding with charset $encoding")
                 encoding ?: UTF_8
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to detect encoding throwing error")
-                errorLog(e)
+                errorLog("Failed to detect encoding throwing error")
+                e.printStackTrace()
                 UTF_8
             }
 
         return try {
             String(this, charset(encoding))
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to parse using encoding $encoding")
-            errorLog(e)
+            errorLog("Failed to parse using encoding $encoding")
+            e.printStackTrace()
             decodeToString()
         }
     }
@@ -160,13 +160,13 @@ internal class CustomSubtitleParser(
 
         try {
             val inputString = data.toReadableSubtitle()
-            Log.i(TAG, "Current subtitle to preview: ${inputString.take(30)}")
+            infoLog("Current subtitle to preview: ${inputString.take(30)}")
 
             if (inputString.isNotBlank()) {
                 var str = inputString.trimStr()
                 realDecoder = realDecoder
                     ?: getSubtitleParser(inputString)
-                        .also { Log.i(TAG, "Parser selected: $it") }
+                        .also { infoLog("Parser selected: $it") }
 
                 if (realDecoder !is SsaParser) {
                     // TODO: Apply styles there's a need to do so in the future.
@@ -211,7 +211,6 @@ internal class CustomSubtitleParser(
 
     internal companion object {
         private const val UTF_8 = "UTF-8"
-        private const val TAG = "CustomDecoder"
 
         /**
          * A list of regex patterns to identify and remove common bloat/ad text found in subtitles from subtitle sources.

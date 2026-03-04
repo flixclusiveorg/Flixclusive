@@ -47,10 +47,6 @@ internal class CustomSubtitleDecoderFactory(
      * */
     private var latestDecoder: WeakReference<CustomSubtitleParser>? = null
 
-//    fun getSubtitleCues(): List<SubtitleCue>? {
-//        return latestDecoder?.get()?.currentSubtitleCues
-//    }
-
     /**
      * Decoders created here persists across reset()
      * Do not save state in the decoder which you want to reset (e.g subtitle offset)

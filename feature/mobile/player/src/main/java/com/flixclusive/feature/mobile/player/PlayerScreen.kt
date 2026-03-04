@@ -56,7 +56,7 @@ internal fun PlayerScreen(
     val snackbarState = rememberPlayerSnackbarState()
 
     LaunchedEffect(Unit) {
-        viewModel.playerErrors.collect { error ->
+        viewModel.player.errors.collect { error ->
             snackbarState.showError(error.asString(context))
         }
     }

@@ -28,7 +28,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.SubtitleView
 import androidx.media3.ui.compose.PlayerSurface
@@ -40,7 +39,6 @@ import com.flixclusive.core.datastore.model.user.player.ResizeMode
 import com.flixclusive.core.presentation.player.AppDataSourceFactoryImpl
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.PlayerCache
-import com.flixclusive.core.presentation.player.PlayerErrorReceiver
 import com.flixclusive.core.presentation.player.extensions.toContentScale
 import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState.Companion.rememberControlsVisibilityState
 import com.google.common.collect.ImmutableList
@@ -137,9 +135,6 @@ private fun ComposePlayerPreview() {
         AppPlayer(
             context = context,
             subtitlePrefs = SubtitlesPreferences(),
-            errorReceiver = object : PlayerErrorReceiver {
-                override fun onPlayerError(error: PlaybackException) = Unit
-            },
             playerPrefs = PlayerPreferences(resizeMode = ResizeMode.Fit),
             dataSourceFactory = AppDataSourceFactoryImpl(
                 context = context,

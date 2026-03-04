@@ -1,12 +1,14 @@
 package com.flixclusive.core.presentation.player.extensions
 
 import androidx.media3.common.C
-import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
+import com.flixclusive.core.common.locale.UiText
+import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.R
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 
-internal fun Player.switchTrack(
+internal fun AppPlayer.switchTrack(
     trackType: @C.TrackType Int,
     trackIndex: Int,
 ) {
@@ -26,7 +28,8 @@ internal fun Player.switchTrack(
             val tracks = currentTracks.groups.filter { it.type == trackType }
 
             if (tracks.isEmpty() || trackIndex !in tracks.indices) {
-                errorLog("Operation failed: Invalid track index: $trackIndex")
+                errorLog("Invalid track index ($trackIndex) for track type $trackTypeText")
+                _errors.tryEmit(UiText.from(R.string.invalid_track_index_for_track_type, trackIndex, trackTypeText))
                 return
             }
 

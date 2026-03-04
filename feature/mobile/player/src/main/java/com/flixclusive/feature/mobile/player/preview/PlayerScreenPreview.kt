@@ -13,13 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.media3.common.PlaybackException
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.PlayerErrorReceiver
 import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
@@ -73,11 +71,6 @@ private fun PlayerScreenBasePreview() {
             playerPrefs = playerPrefs,
             dataSourceFactory = PreviewDataSourceFactory(context),
             subtitlePrefs = subtitlePrefs,
-            errorReceiver = object : PlayerErrorReceiver {
-                override fun onPlayerError(error: PlaybackException) {
-                    snackbarState.showError(error.localizedMessage ?: "Unknown error")
-                }
-            },
         )
     }
 
