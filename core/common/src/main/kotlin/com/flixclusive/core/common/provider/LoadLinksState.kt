@@ -27,6 +27,8 @@ sealed class LoadLinksState(
     constructor(message: String) : this(UiText.from(message))
     constructor() : this(UiText.from(""))
 
+    val hasProviderId get() = this is Extracting || this is Success
+
     companion object {
         @StringRes
         private val defaultUnavailableMessageId = R.string.source_data_dialog_state_unavailable_default

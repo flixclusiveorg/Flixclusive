@@ -267,13 +267,15 @@ internal class MobileAppViewModel @Inject constructor(
 
     fun updateLoadLinksState(state: LoadLinksState) {
         val playerData = _uiState.value.playerData
-        if (state is LoadLinksState.Extracting && playerData != null) {
+        if (state.hasProviderId && playerData != null) {
             val cache = state.toCacheKey(
                 filmId = playerData.film.identifier,
                 episode = playerData.episode,
             )
 
-            cachedLinksRepository.setCurrentCache(cache)
+            if (cache != null) {
+                cachedLinksRepository.setCurrentCache(cache)
+            }
         }
 
         _uiState.update { it.copy(loadLinksState = state) }

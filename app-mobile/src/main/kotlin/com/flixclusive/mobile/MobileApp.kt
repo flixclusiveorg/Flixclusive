@@ -152,11 +152,11 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 
     LaunchedEffect(true) {
         combine(
-            flow = snapshotFlow { currentSelectedScreen },
-            flow2 = viewModel.uiState.map {
+            snapshotFlow { currentSelectedScreen },
+            viewModel.uiState.map {
                 it.loadLinksState to it.playerData
             }.distinctUntilChanged(),
-            flow3 = viewModel.currentLinksCache,
+            viewModel.currentLinksCache,
         ) { screen, (loadLinksState, playerData), linksCache ->
             if (
                 screen != PlayerScreenDestination &&

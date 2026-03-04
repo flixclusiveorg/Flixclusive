@@ -30,21 +30,16 @@ value class CacheKey private constructor(
             episode: Episode? = null,
         ) = CacheKey("$providerId::$filmId-${episode?.season}:${episode?.number}")
 
-        fun LoadLinksState.Extracting.toCacheKey(
+        fun LoadLinksState.toCacheKey(
             filmId: String,
             episode: Episode? = null,
-        ): CacheKey {
-            return create(
-                filmId = filmId,
-                providerId = providerId,
-                episode = episode,
-            )
-        }
+        ): CacheKey? {
+            val providerId = when (this) {
+                is LoadLinksState.Extracting -> providerId
+                is LoadLinksState.Success -> providerId
+                else -> return null
+            }
 
-        fun LoadLinksState.Success.toCacheKey(
-            filmId: String,
-            episode: Episode? = null,
-        ): CacheKey {
             return create(
                 filmId = filmId,
                 providerId = providerId,
