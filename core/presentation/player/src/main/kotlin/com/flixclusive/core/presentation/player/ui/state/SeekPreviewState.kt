@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
+import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
@@ -55,6 +56,27 @@ class SeekPreviewState(
     private var extractionJob: Job? = null
     private var lastRequestedPositionMs by mutableLongStateOf(-1L)
 
+    /**
+     * The frame interval in milliseconds for which the preview frames are extracted.
+     *
+     * - If duration >= 4 hours, use 10 seconds
+     * - If duration >= 2 hours, use 5 seconds
+     * - If duration >= 1 hour, use 3 seconds
+     * - If duration >= 30 minutes, use 2 seconds
+     * - Otherwise, use 1 second
+     * */
+    val frameIntervalMs: Long
+        get() {
+            return when {
+                player.duration == C.TIME_UNSET -> 1000L
+                player.duration >= 4 * 60 * 60 * 1000L -> 10000L
+                player.duration >= 2 * 60 * 60 * 1000L -> 5000L
+                player.duration >= 1 * 60 * 60 * 1000L -> 3000L
+                player.duration >= 30 * 60 * 1000L -> 2000L
+                else -> 1000L
+            }
+        }
+
     var currentFrame by mutableStateOf<Bitmap?>(null)
         private set
 
@@ -62,12 +84,14 @@ class SeekPreviewState(
         player.listen { events ->
             if (!events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)) return@listen
 
-            this@SeekPreviewState.release()
+            onScrubEnd()
+            frameExtractor?.close()
+            frameExtractor = null
         }
     }
 
     fun onScrubbing(positionMs: Long, scope: CoroutineScope) {
-        val snappedPosition = (positionMs / FRAME_INTERVAL_MS) * FRAME_INTERVAL_MS
+        val snappedPosition = getSnappedPosition(positionMs, frameIntervalMs)
         if (snappedPosition == lastRequestedPositionMs) return
         lastRequestedPositionMs = snappedPosition
 
@@ -115,7 +139,10 @@ class SeekPreviewState(
     companion object {
         private val io = Dispatchers.IO
         private val main = Dispatchers.Main
-        const val FRAME_INTERVAL_MS = 500L
+
+        fun getSnappedPosition(positionMs: Long, frameIntervalMs: Long): Long {
+            return (positionMs / frameIntervalMs) * frameIntervalMs
+        }
 
         @Composable
         fun rememberSeekPreviewState(

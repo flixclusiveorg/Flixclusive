@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.player.extensions.formatMinSec
 import com.flixclusive.core.presentation.player.ui.state.ScrubState
 import com.flixclusive.core.presentation.player.ui.state.SeekPreviewState
-import com.flixclusive.core.presentation.player.ui.state.SeekPreviewState.Companion.FRAME_INTERVAL_MS
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSlider
 import com.flixclusive.feature.mobile.player.component.bottom.slider.CustomSliderDefaults
 import kotlinx.coroutines.FlowPreview
@@ -71,7 +70,10 @@ internal fun Scrubber(
 
     LaunchedEffect(Unit) {
         snapshotFlow {
-            (state.progress / FRAME_INTERVAL_MS) * FRAME_INTERVAL_MS
+            SeekPreviewState.getSnappedPosition(
+                positionMs = state.progress,
+                frameIntervalMs = seekPreviewState.frameIntervalMs
+            )
         }.distinctUntilChanged()
             .debounce(800L)
             .collectLatest { _ ->
