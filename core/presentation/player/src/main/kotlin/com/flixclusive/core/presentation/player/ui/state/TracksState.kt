@@ -126,6 +126,7 @@ class TracksState(
 
     fun onAddSubtitle(subtitle: MediaSubtitle) {
         player.addSubtitle(subtitle = subtitle)
+        extractSubtitles()
     }
 
     fun onSubtitleSelect(index: Int) {
