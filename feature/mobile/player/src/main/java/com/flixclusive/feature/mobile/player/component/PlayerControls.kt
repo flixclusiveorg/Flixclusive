@@ -51,6 +51,7 @@ import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState.Companion.rememberControlsVisibilityState
 import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState.Companion.rememberPlayPauseButtonState
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Companion.rememberPlaybackSpeedState
@@ -73,9 +74,9 @@ import com.flixclusive.feature.mobile.player.component.gestures.BrightnessManage
 import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureHandler
 import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureState.Companion.rememberPlayerGestureState
 import com.flixclusive.feature.mobile.player.component.servers.ServersScreen
-import com.flixclusive.feature.mobile.player.component.snackbar.PlayerCountdownSnackbar
+
 import com.flixclusive.feature.mobile.player.component.snackbar.PlayerErrorSnackbar
-import com.flixclusive.feature.mobile.player.component.snackbar.PlayerMessageSnackbar
+import com.flixclusive.feature.mobile.player.component.snackbar.PlayerSnackbar
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleAndAudioScreen
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleSyncScreen
 import com.flixclusive.feature.mobile.player.component.top.PlayerTopBar
@@ -141,7 +142,19 @@ internal fun PlayerControls(
         }
     }
 
-    val serversState = rememberServersState(player = player)
+    val mediaItemKey = remember(currentProvider.id, currentEpisode) {
+        MediaItemKey(
+            filmId = film.identifier,
+            providerId = currentProvider.id,
+            episodeId = currentEpisode?.id,
+        )
+    }
+
+    val serversState = rememberServersState(
+        player = player,
+        mediaItemKey = { mediaItemKey },
+        snackbarState = snackbarState
+    )
     val tracksState = rememberTracksState(
         player = player,
         subtitlesPreferences = subtitlesPrefs,
@@ -508,14 +521,7 @@ private fun PlayerSnackbarLayer(
                 .padding(start = 16.dp)
         )
 
-        PlayerMessageSnackbar(
-            snackbarState = snackbarState,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp)
-        )
-
-        PlayerCountdownSnackbar(
+        PlayerSnackbar(
             snackbarState = snackbarState,
             modifier = Modifier
                 .align(Alignment.BottomEnd)

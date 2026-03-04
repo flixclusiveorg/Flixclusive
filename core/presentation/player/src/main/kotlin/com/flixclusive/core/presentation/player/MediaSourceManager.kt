@@ -57,6 +57,10 @@ class MediaSourceManager(
     }
 
     fun getCurrentMediaItem(): CacheMediaItem? {
+        if (!::currentKey.isInitialized) {
+            return null
+        }
+
         return mediaSources[currentKey]
     }
 

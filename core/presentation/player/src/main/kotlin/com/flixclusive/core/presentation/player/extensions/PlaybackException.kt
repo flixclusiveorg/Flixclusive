@@ -22,7 +22,7 @@ fun PlaybackException.isNetworkException() =
 fun PlaybackException.isLiveError() = errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW
 
 @OptIn(UnstableApi::class)
-fun PlaybackException.getFormatMessage(): UiText {
+fun PlaybackException.getDisplayMessage(): UiText {
     var message: UiText = UiText.from(localizedMessage ?: "Unknown error")
 
     if (isLiveError()) {
@@ -46,5 +46,5 @@ fun PlaybackException.getFormatMessage(): UiText {
         }
     }
 
-    return UiText.from("ERR [$errorCode]: $message")
+    return message
 }

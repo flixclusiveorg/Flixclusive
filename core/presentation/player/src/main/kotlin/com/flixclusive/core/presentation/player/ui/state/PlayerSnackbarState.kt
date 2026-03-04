@@ -12,13 +12,7 @@ import androidx.compose.runtime.setValue
 @Stable
 class PlayerSnackbarState {
     val errors = mutableStateListOf<SnackbarError>()
-
-    var message by mutableStateOf<String?>(null)
-        private set
-    var messageKey by mutableLongStateOf(0L)
-        private set
-    var messageDurationMs by mutableLongStateOf(0L)
-        private set
+    val messages = mutableStateListOf<SnackbarMessage>()
 
     var countdown by mutableStateOf<SnackbarCountdown?>(null)
         private set
@@ -37,14 +31,14 @@ class PlayerSnackbarState {
     }
 
     fun showMessage(text: String, durationMs: Long = DEFAULT_MESSAGE_DURATION_MS) {
-        message = text
-        messageDurationMs = durationMs
-        messageKey = System.nanoTime()
+        if (messages.size >= MAX_MESSAGES) {
+            messages.removeAt(0)
+        }
+        messages.add(SnackbarMessage(text = text, durationMs = durationMs, key = System.nanoTime()))
     }
 
-    fun dismissMessage() {
-        message = null
-        messageKey = 0L
+    fun dismissMessage(key: Long) {
+        messages.removeAll { it.key == key }
     }
 
     fun showCountdown(countdown: SnackbarCountdown) {
@@ -59,6 +53,7 @@ class PlayerSnackbarState {
 
     companion object {
         const val MAX_ERRORS = 3
+        const val MAX_MESSAGES = 3
         const val DEFAULT_MESSAGE_DURATION_MS = 4000L
         const val ERROR_AUTO_DISMISS_MS = 5000L
 
@@ -72,6 +67,13 @@ class PlayerSnackbarState {
 @Stable
 data class SnackbarError(
     val text: String,
+    val key: Long,
+)
+
+@Stable
+data class SnackbarMessage(
+    val text: String,
+    val durationMs: Long,
     val key: Long,
 )
 

@@ -23,7 +23,7 @@ import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.player.AppDataSourceFactory
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.PlayerErrorReceiver
-import com.flixclusive.core.presentation.player.extensions.getFormatMessage
+import com.flixclusive.core.presentation.player.extensions.getDisplayMessage
 import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.core.presentation.player.model.track.MediaServer
 import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
@@ -620,7 +620,7 @@ private class PlayerErrorConsumer(
     private val errorFlow: MutableSharedFlow<UiText>,
 ) : PlayerErrorReceiver {
     override fun onPlayerError(error: PlaybackException) {
-        errorFlow.tryEmit(error.getFormatMessage())
+        errorFlow.tryEmit(error.getDisplayMessage())
     }
 }
 

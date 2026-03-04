@@ -1,5 +1,6 @@
 package com.flixclusive.core.presentation.player.ui.state
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -8,61 +9,57 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.Player
 import androidx.media3.common.listen
 import com.flixclusive.core.presentation.player.AppPlayer
+import com.flixclusive.core.presentation.player.AppPlayer.Companion.isPrepareNeeded
+import com.flixclusive.core.presentation.player.R
+import com.flixclusive.core.presentation.player.extensions.getDisplayMessage
 import com.flixclusive.core.presentation.player.model.CacheMediaItem
+import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.core.presentation.player.model.track.MediaServer
-import com.flixclusive.core.util.log.errorLog
 
 @Stable
 class ServersState(
+    private val context: Context,
     private val player: AppPlayer,
+    private val snackbarState: PlayerSnackbarState
 ) {
     val servers = mutableStateSetOf<MediaServer>()
 
     var selectedServer by mutableIntStateOf(0)
         private set
 
-    private val currentItem: CacheMediaItem?
-        get() {
-            return if (player.isCommandAvailable(Player.COMMAND_SET_PLAYLIST_METADATA)) {
-                player.currentCacheMediaItem
-            } else null
-        }
+    private val currentItem: CacheMediaItem? get() = player.currentCacheMediaItem
 
     private suspend fun observe() {
+        currentItem?.let {
+            servers.clear()
+            servers.addAll(it.servers)
+            selectedServer = it.currentServerIndex
+        } ?: return
+
         player.listen { events ->
-            if (
-                events.containsAny(
-                    Player.EVENT_MEDIA_ITEM_TRANSITION,
-                    Player.EVENT_PLAYBACK_STATE_CHANGED,
-                    Player.EVENT_PLAYBACK_PARAMETERS_CHANGED,
-                    Player.EVENT_PLAY_WHEN_READY_CHANGED,
-                    Player.EVENT_SEEK_BACK_INCREMENT_CHANGED,
-                    Player.EVENT_SEEK_FORWARD_INCREMENT_CHANGED,
-                )
-            ) {
-                currentItem?.servers?.let {
-                    servers.clear()
-                    servers.addAll(it)
-                }
-                selectedServer = currentItem?.currentServerIndex ?: return@listen
+            if (!events.contains(Player.EVENT_PLAYER_ERROR)) return@listen
+
+            val error = player.playerError ?: return@listen
+            if (isPrepareNeeded(error)) return@listen // Will be handled by [AppPlayer] itself
+
+            val message = error.getDisplayMessage().asString(context)
+            snackbarState.showError("ERR [${error.errorCode}]: $message")
+            player.markServerAsFailed(currentMediaItemIndex)
+
+            val nextIndex = getNextAvailableServerIndex()
+            if (nextIndex == null) {
+                snackbarState.showMessage(context.getString(R.string.all_servers_failed))
+                return@listen
             }
 
-            if (events.contains(Player.EVENT_PLAYER_ERROR)) {
-                player.markServerAsFailed(currentMediaItemIndex)
-
-                val nextIndex = getNextAvailableServerIndex()
-                if (nextIndex == null) {
-                    errorLog("All servers have failed or no alternative servers available.")
-                    return@listen
-                }
-
-                selectedServer = nextIndex
-                seekTo(nextIndex, currentPosition)
-                prepare()
-            }
+            snackbarState.showMessage(context.getString(R.string.switched_to_server, nextIndex))
+            selectedServer = nextIndex
+            seekTo(nextIndex, currentPosition)
+            prepare()
         }
     }
 
@@ -87,10 +84,21 @@ class ServersState(
          * Remembers and initializes a [TracksState] for managing audio and subtitle tracks in a media player.
          * */
         @Composable
-        fun rememberServersState(player: AppPlayer): ServersState {
-            val state = remember(player) { ServersState(player) }
+        fun rememberServersState(
+            player: AppPlayer,
+            snackbarState: PlayerSnackbarState,
+            mediaItemKey: () -> MediaItemKey,
+        ): ServersState {
+            val context = LocalContext.current
+            val state = remember(player, snackbarState) {
+                ServersState(
+                    context = context,
+                    player = player,
+                    snackbarState = snackbarState
+                )
+            }
 
-            LaunchedEffect(player) { state.observe() }
+            LaunchedEffect(player, mediaItemKey()) { state.observe() }
 
             return state
         }

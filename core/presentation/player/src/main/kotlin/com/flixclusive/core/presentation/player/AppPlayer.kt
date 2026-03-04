@@ -92,9 +92,7 @@ class AppPlayer(
         MediaSourceManager(dataSourceFactory)
     }
     val currentCacheMediaItem: CacheMediaItem?
-        get() {
-            return mediaSourceManager.getCurrentMediaItem()
-        }
+        get() = mediaSourceManager.getCurrentMediaItem()
 
     fun initialize() {
         if (exoPlayer != null && mediaSession != null) return
@@ -356,8 +354,7 @@ class AppPlayer(
         override fun onPlayerError(error: PlaybackException) {
             errorLog(error.stackTraceToString())
 
-            val isDurationNotUnset = exoPlayer?.duration != null && exoPlayer?.duration != C.TIME_UNSET
-            if (error.isNetworkException() && isDurationNotUnset || error.isLiveError()) {
+            if (isPrepareNeeded(error)) {
                 errorReceiver.onPlayerError(error)
                 seekToDefaultPosition()
                 prepare()
@@ -373,6 +370,11 @@ class AppPlayer(
 
     companion object {
         val playbackSpeedRange = 0.1f..5.0f
+
+        internal fun Player.isPrepareNeeded(error: PlaybackException): Boolean {
+            // Check for network-related errors or live stream errors that may require repreparing the player
+            return (error.isNetworkException() && duration != C.TIME_UNSET) || error.isLiveError()
+        }
     }
 
     // MARK: Don't scroll down anymore pls
