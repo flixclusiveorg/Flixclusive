@@ -1,6 +1,8 @@
 package com.flixclusive.feature.mobile.player.component.gestures
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.indication
@@ -26,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
@@ -60,6 +63,8 @@ internal class PlayerGestureState(
     var isSliding by mutableStateOf(false)
         private set
     var isDoubleTapping by mutableStateOf(false)
+        private set
+    var isSpeedBoosting by mutableStateOf(false)
         private set
 
     private var lastTapTimeMs by mutableLongStateOf(0L)
@@ -109,6 +114,14 @@ internal class PlayerGestureState(
         isBrightnessSliderVisible = false
         isVolumeSliderVisible = false
         isSliding = false
+    }
+
+    fun startSpeedBoost() {
+        isSpeedBoosting = true
+    }
+
+    fun stopSpeedBoost() {
+        isSpeedBoosting = false
     }
 
     companion object {
@@ -162,6 +175,34 @@ internal fun PlayerGestureHandler(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val longPressTimeout = viewConfiguration.longPressTimeoutMillis
+                    val touchSlop = viewConfiguration.touchSlop
+                    val down = awaitFirstDown(requireUnconsumed = false)
+
+                    val longPressTriggered = withTimeoutOrNull(longPressTimeout) {
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            if (event.changes.all { !it.pressed }) break
+                            val moved = event.changes.any {
+                                (it.position - down.position).getDistance() > touchSlop
+                            }
+                            if (moved) break
+                        }
+                    } == null
+
+                    if (longPressTriggered) {
+                        gestureState.startSpeedBoost()
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            event.changes.forEach { it.consume() }
+                            if (event.changes.all { !it.pressed }) break
+                        }
+                        gestureState.stopSpeedBoost()
+                    }
+                }
+            }
             .noIndicationClickable { onSingleTap() }
             .onSizeChanged { size ->
                 screenHeight = size.height

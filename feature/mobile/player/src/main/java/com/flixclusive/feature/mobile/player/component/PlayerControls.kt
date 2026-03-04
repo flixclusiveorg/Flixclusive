@@ -16,6 +16,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -27,15 +28,24 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -73,6 +83,7 @@ import com.flixclusive.feature.mobile.player.component.episodes.EpisodesScreen
 import com.flixclusive.feature.mobile.player.component.gestures.BrightnessManager.Companion.rememberBrightnessManager
 import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureHandler
 import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureState.Companion.rememberPlayerGestureState
+import com.flixclusive.feature.mobile.player.component.gestures.SpeedBoostIndicator
 import com.flixclusive.feature.mobile.player.component.servers.ServersScreen
 
 import com.flixclusive.feature.mobile.player.component.snackbar.PlayerErrorSnackbar
@@ -86,6 +97,9 @@ import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.model.provider.ProviderMetadata
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.flixclusive.core.drawables.R as UiCommonR
 
 @OptIn(UnstableApi::class)
@@ -116,6 +130,11 @@ internal fun PlayerControls(
     var queueControlVisibility by remember { mutableStateOf(false) }
     var queuePlay by remember { mutableStateOf(false) }
     var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
+    var savedSpeed by remember { mutableFloatStateOf(0f) }
+    var volumeSliderHideJob by remember { mutableStateOf<Job?>(null) }
+
+    val scope = rememberCoroutineScope()
+    val focusRequester = remember { FocusRequester() }
 
     val scrubState = rememberScrubState(player = player)
 
@@ -138,6 +157,7 @@ internal fun PlayerControls(
                 && !uiMode.isResize
                 && !gestureState.isDoubleTapping
                 && !gestureState.isSliding
+                && !gestureState.isSpeedBoosting
                 && !scrubState.isScrubbing
         }
     }
@@ -202,6 +222,7 @@ internal fun PlayerControls(
         controlsVisibilityState.isVisible,
         gestureState.isDoubleTapping,
         gestureState.isSliding,
+        gestureState.isSpeedBoosting,
         scrubState.isScrubbing
     ) {
         if (isInPipMode) {
@@ -216,7 +237,7 @@ internal fun PlayerControls(
         }
 
         val isUiModeNotNone = !uiMode.isNone && !uiMode.isSubsSync && !uiMode.isSubs
-        val shouldHideControls = gestureState.isDoubleTapping || gestureState.isSliding || isUiModeNotNone
+        val shouldHideControls = gestureState.isDoubleTapping || gestureState.isSliding || gestureState.isSpeedBoosting || isUiModeNotNone
         if (controlsVisibilityState.isVisible && shouldHideControls) {
             queueControlVisibility = true
             controlsVisibilityState.hide()
@@ -242,14 +263,49 @@ internal fun PlayerControls(
 
     LaunchedEffect(controlsVisibilityState.isVisible) {
         var subtitleBottomPaddingFraction = 0.05f
-        if (controlsVisibilityState.isVisible) {
+        if (controlsVisibilityState.isVisible && !isLocked) {
             subtitleBottomPaddingFraction = 0.20f
         }
 
         player.subtitleView?.setBottomPaddingFraction(subtitleBottomPaddingFraction)
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    LaunchedEffect(gestureState.isSpeedBoosting) {
+        if (gestureState.isSpeedBoosting) {
+            savedSpeed = playbackSpeedState.playbackSpeed
+            playbackSpeedState.updatePlaybackSpeed(2f)
+        } else if (savedSpeed > 0f) {
+            playbackSpeedState.updatePlaybackSpeed(savedSpeed)
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .focusRequester(focusRequester)
+            .focusable()
+            .onPreviewKeyEvent { keyEvent ->
+                if (keyEvent.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                val handled = when (keyEvent.key) {
+                    Key.VolumeUp -> { volumeManager.increaseVolume(); true }
+                    Key.VolumeDown -> { volumeManager.decreaseVolume(); true }
+                    else -> false
+                }
+                if (handled) {
+                    gestureState.showVolumeSlider()
+                    volumeSliderHideJob?.cancel()
+                    volumeSliderHideJob = scope.launch {
+                        delay(1000L)
+                        gestureState.hideSliders()
+                    }
+                }
+                handled
+            }
+    ) {
         ControlsBlackOverlay(
             visible = controlsVisibilityState.isVisible && !isLocked,
             modifier = Modifier.fillMaxSize()
@@ -302,14 +358,14 @@ internal fun PlayerControls(
                         areControlsVisible = controlsVisibilityState.isVisible,
                         onSeekForward = { player.seekForward() },
                         onSeekBackward = { player.seekBack() },
+                        modifier = Modifier.fillMaxSize(),
                         onSingleTap = {
                             if (uiMode.isPlaybackSpeed || uiMode.isResize) {
                                 uiMode = UiMode.NONE
                             } else {
                                 controlsVisibilityState.toggle()
                             }
-                        },
-                        modifier = Modifier.fillMaxSize()
+                        }
                     )
 
                     VerticalSlideAnimation(
@@ -382,6 +438,17 @@ internal fun PlayerControls(
                                 )
                             }
                         }
+                    }
+
+                    VerticalSlideAnimation(
+                        slideDown = false,
+                        visible = gestureState.isSpeedBoosting,
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    ) {
+                        SpeedBoostIndicator(
+                            modifier = Modifier
+                                .padding(top = 24.dp)
+                        )
                     }
 
                     AnimatedPanel(visible = uiMode.isSubs) {

@@ -66,9 +66,8 @@ class ScrubState private constructor(
 
     private suspend fun observe(scope: CoroutineScope) {
         player.listen { events ->
-            if (events.contains(Player.EVENT_IS_PLAYING_CHANGED)) {
+            if (events.containsAny(Player.EVENT_IS_PLAYING_CHANGED, Player.EVENT_POSITION_DISCONTINUITY)) {
                 observeJob?.cancel()
-
                 observeJob = scope.launch {
                     do {
                         progressState = player.currentPosition

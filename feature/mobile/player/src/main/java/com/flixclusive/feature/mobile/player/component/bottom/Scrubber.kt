@@ -73,7 +73,7 @@ internal fun Scrubber(
         snapshotFlow {
             (state.progress / FRAME_INTERVAL_MS) * FRAME_INTERVAL_MS
         }.distinctUntilChanged()
-            .debounce(300L)
+            .debounce(800L)
             .collectLatest { _ ->
                 if (state.isScrubbing) {
                     seekPreviewState.onScrubbing(state.progress, this)
