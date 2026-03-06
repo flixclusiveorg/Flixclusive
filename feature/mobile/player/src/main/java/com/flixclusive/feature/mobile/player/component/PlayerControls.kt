@@ -176,7 +176,10 @@ internal fun PlayerControls(
     )
 
     SideEffect {
-        if (!scrubState.isScrubbing && !gestureState.isSliding && !gestureState.isDoubleTapping) {
+        if (!scrubState.isScrubbing
+            && !gestureState.isSliding
+            && !gestureState.isDoubleTapping
+            && !gestureState.isSpeedBoosting) {
             onUpdateWatchProgress()
         }
     }
