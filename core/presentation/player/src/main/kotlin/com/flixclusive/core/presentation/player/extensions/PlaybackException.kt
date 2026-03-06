@@ -23,7 +23,7 @@ fun PlaybackException.isLiveError() = errorCode == PlaybackException.ERROR_CODE_
 
 @OptIn(UnstableApi::class)
 fun PlaybackException.getDisplayMessage(): UiText {
-    var message: UiText = UiText.from(localizedMessage ?: "Unknown error")
+    var message: UiText = UiText.from(cause?.localizedMessage ?: localizedMessage ?: "Unknown error")
 
     if (isLiveError()) {
         message = UiText.from(R.string.live_stream_error_message)

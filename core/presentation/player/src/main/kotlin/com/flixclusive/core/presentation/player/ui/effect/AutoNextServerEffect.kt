@@ -45,6 +45,7 @@ fun AutoNextServerEffect(
                 failedStreamIndices = failedServers
             )
             if (nextIndex == null) {
+                pause()
                 snackbarState.showMessage(resources.getString(R.string.all_servers_failed))
                 return@listen
             }
