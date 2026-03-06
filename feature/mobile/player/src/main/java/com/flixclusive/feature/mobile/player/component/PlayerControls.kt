@@ -238,13 +238,12 @@ internal fun PlayerControls(
             return@LaunchedEffect
         }
 
-        val isUiModeNotNone = !uiMode.isNone && !uiMode.isSubsSync && !uiMode.isSubs
-        val shouldHideControls = gestureState.isDoubleTapping || gestureState.isSliding || gestureState.isSpeedBoosting || isUiModeNotNone
+        val shouldHideControls = gestureState.isDoubleTapping || gestureState.isSliding || gestureState.isSpeedBoosting || !uiMode.isNone
         if (controlsVisibilityState.isVisible && shouldHideControls) {
             queueControlVisibility = true
             controlsVisibilityState.hide()
 
-            if (player.isPlaying && isUiModeNotNone) {
+            if (player.isPlaying && !uiMode.isSubsSync && !uiMode.isSubs) {
                 queuePlay = true
                 player.playWhenReady = true
                 player.pause()
