@@ -20,7 +20,6 @@ import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.player.AppPlayer
 import com.flixclusive.core.presentation.player.inspector.FrameExtractor
-import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.core.util.log.errorLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -147,7 +146,7 @@ class SeekPreviewState(
         @Composable
         fun rememberSeekPreviewState(
             player: AppPlayer,
-            mediaItemKey: () -> MediaItemKey
+            key: () -> String
         ): SeekPreviewState {
             val context = LocalContext.current
             val state = remember(player) { SeekPreviewState(context, player) }
@@ -155,9 +154,9 @@ class SeekPreviewState(
             LaunchedEffect(player) { state.observe() }
 
             LaunchedEffect(player) {
-                var previousKey: MediaItemKey? = null
+                var previousKey: String? = null
 
-                snapshotFlow(mediaItemKey)
+                snapshotFlow(key)
                     .distinctUntilChanged()
                     .collect {
                         if (it != previousKey) {

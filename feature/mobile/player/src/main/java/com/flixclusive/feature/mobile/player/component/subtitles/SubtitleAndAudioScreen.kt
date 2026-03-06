@@ -29,7 +29,7 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import com.flixclusive.core.presentation.common.extensions.noOpClickable
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
+import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
 import com.flixclusive.core.presentation.player.ui.state.TracksState
 import com.flixclusive.feature.mobile.player.component.common.ListContentHolder
@@ -43,6 +43,7 @@ import com.flixclusive.core.strings.R as LocaleR
 internal fun SubtitleAndAudioScreen(
     isSyncEnabled: Boolean,
     tracksState: TracksState,
+    pausePlayer: () -> Unit,
     onSyncSubtitles: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
@@ -74,7 +75,7 @@ internal fun SubtitleAndAudioScreen(
             val name = fileName ?: "[LOCAL] Subtitle"
             val filePath = uri.toString()
 
-            val localSub = MediaSubtitle(
+            val localSub = PlayerSubtitle(
                 url = filePath,
                 label = name,
                 source = TrackSource.LOCAL
@@ -146,7 +147,7 @@ internal fun SubtitleAndAudioScreen(
                     selectedIndex = tracksState.selectedSubtitle,
                     onItemClick = tracksState::onSubtitleSelect,
                     onItemLongClick = {
-                        val item = tracksState.subtitles[it]
+                        val item = tracksState.subtitles.elementAt(it)
                         val data = """
                             Subtitle label: ${item.label}
                             Subtitle source: ${item.source}
@@ -170,6 +171,7 @@ internal fun SubtitleAndAudioScreen(
 
                         IconButton(
                             onClick = {
+                                pausePlayer()
                                 subtitleFileSelector.launch(
                                     arrayOf(
                                         "text/plain",

@@ -13,7 +13,7 @@ import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
+import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.testing.film.FilmTestDefaults
@@ -169,7 +169,7 @@ class PlayerScreenViewModelTest {
         every { player.duration } returns 100000L
         every { player.addSubtitle(any()) } just Runs
         every { player.switchMediaSource(any()) } returns false
-        every { player.prepare(any(), any(), any(), any(), any()) } just Runs
+        every { player.prepare(any(), any(), any(), any()) } just Runs
 
         coEvery { setWatchProgress(any()) } just Runs
     }
@@ -333,9 +333,9 @@ class PlayerScreenViewModelTest {
 
             viewModel.uiState.test {
                 val state = awaitItem()
-                expectThat(state.selectedProvider).isEqualTo(testProviderId)
+                expectThat(state.currentProvider).isEqualTo(testProviderId)
                 expectThat(state.loadLinksState).isEqualTo(LoadLinksState.Idle)
-                expectThat(state.selectedSeason).isNull()
+                expectThat(state.currentSeason).isNull()
             }
         }
 
@@ -398,12 +398,12 @@ class PlayerScreenViewModelTest {
 
             viewModel.uiState.test {
                 val initialState = awaitItem()
-                expectThat(initialState.selectedSeason).isNull()
+                expectThat(initialState.currentSeason).isNull()
 
                 viewModel.onSeasonChange(2)
 
                 val updatedState = awaitItem()
-                expectThat(updatedState.selectedSeason).isEqualTo(2)
+                expectThat(updatedState.currentSeason).isEqualTo(2)
             }
         }
 
@@ -412,7 +412,7 @@ class PlayerScreenViewModelTest {
         runTest(testDispatcher) {
             createViewModelForMovie()
 
-            val subtitle = MediaSubtitle(
+            val subtitle = PlayerSubtitle(
                 label = "French",
                 url = "https://example.com/french.srt",
                 source = TrackSource.REMOTE,
@@ -462,7 +462,7 @@ class PlayerScreenViewModelTest {
 
             advanceUntilIdle()
 
-            verify { player.prepare(any(), any(), any(), any(), any()) }
+            verify { player.prepare(any(), any(), any(), any()) }
         }
 
     @Test
@@ -586,7 +586,7 @@ class PlayerScreenViewModelTest {
 
             viewModel.uiState.test {
                 val state = awaitItem()
-                expectThat(state.selectedProvider).isEqualTo(testProviderId)
+                expectThat(state.currentProvider).isEqualTo(testProviderId)
                 expectThat(state.loadLinksState).isEqualTo(LoadLinksState.Idle)
             }
         }

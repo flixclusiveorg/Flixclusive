@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.flixclusive.core.presentation.common.extensions.fadingEdge
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import com.flixclusive.core.presentation.player.model.track.MediaTrack
+import com.flixclusive.core.presentation.player.model.track.PlayerTrack
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.provider.ProviderMetadata
 
@@ -69,7 +69,7 @@ internal fun <Type> ListContentHolder(
                 val name = when (val item = items.elementAt(i)) {
                     is String -> item
                     is ProviderMetadata -> item.name
-                    is MediaTrack -> item.label
+                    is PlayerTrack -> item.label
                     else -> throw ClassFormatError("Invalid content type provided.")
                 }
 

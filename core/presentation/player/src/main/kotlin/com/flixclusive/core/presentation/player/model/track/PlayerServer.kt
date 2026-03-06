@@ -9,14 +9,14 @@ import com.flixclusive.core.datastore.model.user.player.PlayerQuality.entries
  * This is exposed to the UI layer for server selection.
  */
 @Immutable
-data class MediaServer(
+data class PlayerServer(
     override val label: String,
     val url: String,
     val headers: Map<String, String>?,
     val source: TrackSource,
-) : MediaTrack {
+) : PlayerTrack {
     companion object {
-        fun List<MediaServer>.getIndexOfPreferredQuality(preference: PlayerQuality): Int {
+        fun List<PlayerServer>.getIndexOfPreferredQuality(preference: PlayerQuality): Int {
             val preferredQualityIndex = indexOfFirst {
                 preference.regex.containsMatchIn(it)
             }
@@ -34,7 +34,7 @@ data class MediaServer(
             } ?: 0
         }
 
-        private fun Regex.containsMatchIn(link: MediaServer): Boolean {
+        private fun Regex.containsMatchIn(link: PlayerServer): Boolean {
             return containsMatchIn(link.label) || containsMatchIn(link.url)
         }
     }

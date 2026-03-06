@@ -12,19 +12,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.media3.common.C
+import androidx.media3.common.Format
 import androidx.media3.common.Player
 import androidx.media3.common.listen
 import androidx.media3.common.util.UnstableApi
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.model.track.MediaAudio
-import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
+import com.flixclusive.core.presentation.player.R
+import com.flixclusive.core.presentation.player.model.track.PlayerAudio
+import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
 import com.flixclusive.core.presentation.player.util.TracksUtil.getFormats
 import com.flixclusive.core.presentation.player.util.TracksUtil.getIndexOfPreferredLanguage
 import com.flixclusive.core.presentation.player.util.TracksUtil.getName
 import com.flixclusive.core.util.log.infoLog
+import com.flixclusive.core.util.log.warnLog
 
 /**
  * Holds information about available audio and subtitle tracks,
@@ -40,8 +44,9 @@ class TracksState(
     // We use this to determine when the media item has changed, so we can clear and re-extract tracks.
     private var lastInitializedMediaItem: String? = null
 
-    val subtitles = mutableStateListOf<MediaSubtitle>()
-    val audios = mutableStateListOf<MediaAudio>()
+    val subtitles = mutableStateListOf<PlayerSubtitle>()
+    private val addedSubtitles = mutableSetOf<PlayerSubtitle>()
+    val audios = mutableStateListOf<PlayerAudio>()
 
     var preferredAudioLanguage by mutableStateOf(playerPreferences.audioLanguage)
         private set
@@ -72,36 +77,44 @@ class TracksState(
     }
 
     private fun extractAudios() {
-        val trackGroups = player.currentTracks.groups.fastFilter {
-            it.type == C.TRACK_TYPE_AUDIO && it.isSupported
-        }
+        val type = C.TRACK_TYPE_AUDIO
+        val formats = getTrackFormats(type)
+        if (formats.isEmpty()) return
 
         audios.clear()
-        trackGroups.getFormats().fastForEachIndexed { i, format ->
-            val name = format.getName(C.TRACK_TYPE_AUDIO, i)
+        formats.fastForEachIndexed { i, format ->
+            val name = format.getName(type, i)
+            infoLog("Found audio track ${i + 1}: ${format.getName(type, i)}")
+
             audios.add(name)
         }
-
-        infoLog("Extracted ${audios.size} audios!")
     }
 
     private fun extractSubtitles() {
-        val currentMediaItem = player.currentCacheMediaItem ?: return
-        val availableSubs = currentMediaItem.subtitles
+        val type = C.TRACK_TYPE_TEXT
+        val trackGroups = getTrackFormats(type)
+        if (trackGroups.isEmpty()) return
 
         subtitles.clear()
+        addOffSubtitle()
+        subtitles.addAll(addedSubtitles)
 
-        if (availableSubs.isNotEmpty()) {
+        infoLog("Extracted ${audios.size} subtitles!")
+        trackGroups.fastForEachIndexed { i, format ->
+            val source = if (format.id?.contains("http", ignoreCase = true) == true) {
+                TrackSource.REMOTE
+            } else {
+                TrackSource.EMBEDDED
+            }
+
             subtitles.add(
-                MediaSubtitle(
-                    url = "flixclusive_off_subtitle",
-                    label = "Off",
-                    source = TrackSource.EMBEDDED
+                PlayerSubtitle(
+                    url = format.id ?: "",
+                    label = format.getName(type, i),
+                    source = source
                 )
             )
         }
-
-        subtitles.addAll(availableSubs)
     }
 
     private fun selectDefaultTracks() {
@@ -117,16 +130,31 @@ class TracksState(
             languageProvider = { it },
         )
 
-        selectedSubtitle = subtitleIndex
-        player.selectSubtitle(subtitleIndex - if (hasOffSubtitle()) 1 else 0)
-
-        selectedAudio = audioIndex
-        player.selectAudio(audioIndex)
+        onSubtitleSelect(subtitleIndex)
+        onAudioSelect(audioIndex)
     }
 
-    fun onAddSubtitle(subtitle: MediaSubtitle) {
-        player.addSubtitle(subtitle = subtitle)
-        extractSubtitles()
+    fun resetTracks() {
+        audios.clear()
+        subtitles.clear()
+        addedSubtitles.clear()
+        lastInitializedMediaItem = null
+    }
+
+    fun onAddSubtitle(subtitle: PlayerSubtitle) {
+        val success = player.addSubtitle(subtitle)
+        if (!success) {
+            warnLog("Failed to add subtitle: ${subtitle.label}")
+            player._errors.tryEmit(UiText.from(R.string.failed_to_add_subtitle))
+            return
+        }
+
+        addedSubtitles.add(subtitle)
+        if (!subtitles.contains(subtitle)) {
+            subtitles.add(subtitle)
+        }
+
+        onSubtitleSelect(subtitles.size - 1)
     }
 
     fun onSubtitleSelect(index: Int) {
@@ -148,6 +176,23 @@ class TracksState(
 
     private fun hasOffSubtitle(): Boolean {
         return subtitles.getOrNull(0)?.label == "Off"
+    }
+
+    private fun addOffSubtitle() {
+        subtitles.add(
+            0,
+            PlayerSubtitle(
+                url = "",
+                label = "Off",
+                source = TrackSource.EMBEDDED
+            )
+        )
+    }
+
+    private fun getTrackFormats(type: Int): List<Format> {
+        return player.currentTracks.groups.fastFilter {
+            it.type == type && it.isSupported
+        }.getFormats()
     }
 
     companion object {

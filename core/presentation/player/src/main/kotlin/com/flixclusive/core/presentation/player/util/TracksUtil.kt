@@ -77,7 +77,7 @@ internal object TracksUtil {
      * @return The index of the item that matches the preferred language, or 0 if no match is found.
      * */
     fun <T> getIndexOfPreferredLanguage(
-        list: List<T>,
+        list: Collection<T>,
         preferredLanguage: String,
         languageProvider: (T) -> String,
     ): Int {

@@ -3,4 +3,5 @@
     <string name="null_cache_links_message">Cannot switch to provider due to missing cached links</string>
     <string name="unlock">Unlock</string>
     <string name="lock">Lock</string>
+    <string name="no_servers_error">Player found no streamable sources, returning to previous screen…</string>
 </resources>

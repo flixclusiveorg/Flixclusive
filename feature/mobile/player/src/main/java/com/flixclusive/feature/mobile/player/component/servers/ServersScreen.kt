@@ -25,7 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.extensions.noOpClickable
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
-import com.flixclusive.core.presentation.player.ui.state.ServersState
+import com.flixclusive.core.presentation.player.model.track.PlayerServer
 import com.flixclusive.feature.mobile.player.component.common.ListContentHolder
 import com.flixclusive.model.provider.ProviderMetadata
 import com.flixclusive.core.drawables.R as UiCommonR
@@ -34,7 +34,9 @@ import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
 internal fun ServersScreen(
-    serversState: ServersState,
+    servers: () -> List<PlayerServer>,
+    currentServer: () -> Int,
+    onServerChange: (Int) -> Unit,
     providers: List<ProviderMetadata>,
     currentProvider: ProviderMetadata,
     onProviderChange: (ProviderMetadata) -> Unit,
@@ -111,11 +113,11 @@ internal fun ServersScreen(
                     icon = painterResource(id = PlayerR.drawable.round_cloud_queue_24),
                     contentDescription = stringResource(id = LocaleR.string.servers),
                     label = stringResource(id = LocaleR.string.servers),
-                    items = serversState.servers,
-                    selectedIndex = serversState.selectedServer,
-                    onItemClick = serversState::selectServer,
+                    items = servers(),
+                    selectedIndex = currentServer(),
+                    onItemClick = onServerChange,
                     onItemLongClick = {
-                        val item = serversState.servers.elementAt(it)
+                        val item = servers()[it]
                         val data = """
                             Server label: ${item.label}
                             Server source: ${item.source}

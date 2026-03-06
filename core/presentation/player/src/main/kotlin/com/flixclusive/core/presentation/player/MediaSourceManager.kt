@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.flixclusive.core.presentation.player
 
 import androidx.annotation.OptIn
@@ -11,11 +13,8 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.MergingMediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.source.SingleSampleMediaSource
-import com.flixclusive.core.presentation.player.model.CacheMediaItem
-import com.flixclusive.core.presentation.player.model.CacheMediaItem.Companion.markStreamAsFailed
-import com.flixclusive.core.presentation.player.model.MediaItemKey
-import com.flixclusive.core.presentation.player.model.track.MediaServer
-import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
+import com.flixclusive.core.presentation.player.model.track.PlayerServer
+import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.model.track.TrackSource
 import com.flixclusive.core.presentation.player.util.MimeTypeParser
 import com.flixclusive.core.presentation.player.util.MimeTypeParser.toMimeType
@@ -24,110 +23,16 @@ import com.flixclusive.core.presentation.player.util.MimeTypeParser.toMimeType
 class MediaSourceManager(
     private val dataSourceFactory: AppDataSourceFactory,
 ) {
-    private val mediaSources = mutableMapOf<MediaItemKey, CacheMediaItem>()
-    private lateinit var currentKey: MediaItemKey
+    var currentMediaSource: MediaSource? = null
 
-    fun createMediaSources(
-        servers: List<MediaServer>,
-        subtitles: List<MediaSubtitle>,
-    ): List<MediaSource> {
+    fun createMediaSource(
+        server: PlayerServer,
+        subtitles: List<PlayerSubtitle>,
+    ): MediaSource {
         val subtitleSources = subtitles.mapNotNull { createSubtitleMediaSource(it) }
-        return servers.map { server ->
-            val video = createStreamMediaSource(url = server.url)
-            MergingMediaSource(video, *subtitleSources.toTypedArray())
-        }
-    }
 
-    fun setCacheMediaItem(
-        key: MediaItemKey,
-        cacheMediaItem: CacheMediaItem,
-    ) {
-        mediaSources[key] = cacheMediaItem
-    }
-
-    fun setCurrentKey(key: MediaItemKey) {
-        when (key) {
-            in mediaSources -> currentKey = key
-            else -> throw IllegalArgumentException("Key $key not found in loaded media sources.")
-        }
-    }
-
-    fun getCacheMediaItem(key: MediaItemKey): CacheMediaItem? {
-        return mediaSources[key]
-    }
-
-    fun getCurrentMediaItem(): CacheMediaItem? {
-        if (!::currentKey.isInitialized) {
-            return null
-        }
-
-        return mediaSources[currentKey]
-    }
-
-    /**
-     * Adds a local subtitle to all media sources for the current film/episode.
-     * Rebuilds the full playlist of media sources per server to include the new subtitle.
-     */
-    fun addSubtitle(subtitle: MediaSubtitle): Boolean {
-        val newSources = mediaSources.mapNotNull { (key, sourceData) ->
-            // Only modify items matching the current film/episode to avoid cross-contamination
-            if (key.filmId != currentKey.filmId && key.episodeId != currentKey.episodeId) {
-                return@mapNotNull null
-            }
-
-            if (sourceData.hasSubtitle(subtitle)) {
-                return@mapNotNull null
-            }
-
-            val newSubtitle = MediaSubtitle(
-                url = subtitle.url,
-                label = subtitle.label,
-                source = TrackSource.LOCAL,
-            )
-
-            val updatedSubtitles = sourceData.subtitles + newSubtitle
-            val updatedMediaSources = createMediaSources(
-                servers = sourceData.servers,
-                subtitles = updatedSubtitles,
-            )
-
-            key to sourceData.copy(
-                subtitles = updatedSubtitles,
-                mediaSources = updatedMediaSources,
-            )
-        }
-
-        if (newSources.isEmpty()) {
-            return false
-        }
-
-        newSources.forEach { (key, updatedData) ->
-            setCacheMediaItem(key, updatedData)
-        }
-
-        return true
-    }
-
-    fun markStreamAsFailed(streamIndex: Int) {
-        val sourceData = mediaSources[currentKey] ?: return
-
-        val updatedData = sourceData.markStreamAsFailed(streamIndex)
-        setCacheMediaItem(currentKey, updatedData)
-    }
-
-    fun switchStreamIndex(index: Int) {
-        val sourceData = mediaSources[currentKey] ?: return
-
-        val updatedData = sourceData.copy(currentServerIndex = index)
-        setCacheMediaItem(currentKey, updatedData)
-    }
-
-    fun getSubtitles(): List<MediaSubtitle> {
-        return mediaSources[currentKey]?.subtitles ?: emptyList()
-    }
-
-    fun getStreams(): List<MediaServer> {
-        return mediaSources[currentKey]?.servers ?: emptyList()
+        val video = createStreamMediaSource(url = server.url)
+        return MergingMediaSource(video, *subtitleSources.toTypedArray())
     }
 
     private fun createStreamMediaSource(url: String): MediaSource {
@@ -154,8 +59,7 @@ class MediaSourceManager(
             .build()
     }
 
-    @Suppress("DEPRECATION")
-    private fun createSubtitleMediaSource(subtitle: MediaSubtitle): MediaSource? {
+    fun createSubtitleMediaSource(subtitle: PlayerSubtitle): MediaSource? {
         if (subtitle.source == TrackSource.EMBEDDED) {
             return null
         }

@@ -1,7 +1,7 @@
 package com.flixclusive.core.presentation.player.util
 
 import androidx.media3.common.MimeTypes
-import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
+import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 
 internal object MimeTypeParser {
     /**
@@ -19,7 +19,7 @@ internal object MimeTypeParser {
             url.endsWith(".m3u")
     }
 
-    fun MediaSubtitle.toMimeType(): String? {
+    fun PlayerSubtitle.toMimeType(): String? {
         val isLocalSubtitle = url.contains("content://")
         val uri = if (isLocalSubtitle) label else url
 

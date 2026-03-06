@@ -6,6 +6,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -18,7 +19,6 @@ import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
 import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.model.MediaItemKey
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
@@ -37,6 +37,7 @@ private fun PlayerScreenBasePreview() {
         }
     }
     var currentProvider by remember { mutableStateOf(providers.first()) }
+    var currentServer by remember { mutableIntStateOf(0) }
 
     val tvShow = remember {
         DummyDataForPreview.getTvShow(
@@ -77,12 +78,7 @@ private fun PlayerScreenBasePreview() {
     LaunchedEffect(true) {
         player.initialize()
         player.prepare(
-            key = MediaItemKey(
-                filmId = tvShow.identifier,
-                episodeId = currentEpisode.id,
-                providerId = currentProvider.id,
-            ),
-            servers = PreviewPlayerData.getTestMediaServers(),
+            server = PreviewPlayerData.getTestMediaServers()[currentServer],
             subtitles = PreviewPlayerData.getTestMediaSubtitles(),
             startPositionMs = 0L,
             playImmediately = true,
@@ -105,6 +101,17 @@ private fun PlayerScreenBasePreview() {
         snackbarState.showMessage("Switched to Server 2")
     }
 
+    fun onServerChange(index: Int) {
+        currentServer = index
+        snackbarState.showMessage("Switched to Server ${currentServer + 1}")
+        player.prepare(
+            server = PreviewPlayerData.getTestMediaServers()[currentServer],
+            subtitles = PreviewPlayerData.getTestMediaSubtitles(),
+            startPositionMs = player.currentPosition,
+            playImmediately = true,
+        )
+    }
+
     FlixclusiveTheme {
         Surface(
             color = MaterialTheme.colorScheme.background
@@ -113,6 +120,9 @@ private fun PlayerScreenBasePreview() {
                 player = player,
                 playerPreferences = playerPrefs,
                 subtitlesPreferences = subtitlePrefs,
+                servers = { PreviewPlayerData.getTestMediaServers() },
+                currentServer = { currentServer },
+                onServerChange = { onServerChange(it) },
                 onBack = { player.release() },
                 film = tvShow,
                 currentSeason = { currentSeason },

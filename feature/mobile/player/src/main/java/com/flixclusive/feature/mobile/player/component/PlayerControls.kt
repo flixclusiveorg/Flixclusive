@@ -61,7 +61,8 @@ import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
 import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.components.material3.PlainTooltipBox
 import com.flixclusive.core.presentation.player.AppPlayer
-import com.flixclusive.core.presentation.player.model.MediaItemKey
+import com.flixclusive.core.presentation.player.model.track.PlayerServer
+import com.flixclusive.core.presentation.player.ui.effect.AutoNextServerEffect
 import com.flixclusive.core.presentation.player.ui.state.ControlsVisibilityState.Companion.rememberControlsVisibilityState
 import com.flixclusive.core.presentation.player.ui.state.PlayPauseButtonState.Companion.rememberPlayPauseButtonState
 import com.flixclusive.core.presentation.player.ui.state.PlaybackSpeedState.Companion.rememberPlaybackSpeedState
@@ -69,7 +70,6 @@ import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.core.presentation.player.ui.state.ScrubState.Companion.rememberScrubState
 import com.flixclusive.core.presentation.player.ui.state.SeekButtonState.Companion.rememberSeekButtonState
 import com.flixclusive.core.presentation.player.ui.state.SeekPreviewState.Companion.rememberSeekPreviewState
-import com.flixclusive.core.presentation.player.ui.state.ServersState.Companion.rememberServersState
 import com.flixclusive.core.presentation.player.ui.state.TracksState.Companion.rememberTracksState
 import com.flixclusive.core.presentation.player.ui.state.VolumeManager.Companion.rememberVolumeManager
 import com.flixclusive.domain.provider.model.SeasonWithProgress
@@ -85,7 +85,6 @@ import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureHan
 import com.flixclusive.feature.mobile.player.component.gestures.PlayerGestureState.Companion.rememberPlayerGestureState
 import com.flixclusive.feature.mobile.player.component.gestures.SpeedBoostIndicator
 import com.flixclusive.feature.mobile.player.component.servers.ServersScreen
-
 import com.flixclusive.feature.mobile.player.component.snackbar.PlayerErrorSnackbar
 import com.flixclusive.feature.mobile.player.component.snackbar.PlayerSnackbar
 import com.flixclusive.feature.mobile.player.component.subtitles.SubtitleAndAudioScreen
@@ -114,6 +113,9 @@ internal fun PlayerControls(
     currentResizeMode: ResizeMode,
     currentProvider: ProviderMetadata,
     providers: List<ProviderMetadata>,
+    servers: () -> List<PlayerServer>,
+    currentServer: () -> Int,
+    onServerChange: (Int) -> Unit,
     onProviderChange: (ProviderMetadata) -> Unit,
     onResizeModeChange: (ResizeMode) -> Unit,
     onBack: () -> Unit,
@@ -132,6 +134,7 @@ internal fun PlayerControls(
     var bottomControlsHeightPx by remember { mutableIntStateOf(0) }
     var savedSpeed by remember { mutableFloatStateOf(0f) }
     var volumeSliderHideJob by remember { mutableStateOf<Job?>(null) }
+    val key = remember(currentEpisode, currentProvider) { currentEpisode?.id + currentProvider.id }
 
     val scope = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
@@ -162,19 +165,9 @@ internal fun PlayerControls(
         }
     }
 
-    val mediaItemKey = remember(currentProvider.id, currentEpisode) {
-        MediaItemKey(
-            filmId = film.identifier,
-            providerId = currentProvider.id,
-            episodeId = currentEpisode?.id,
-        )
-    }
-
-    val seekPreviewState = rememberSeekPreviewState(player = player, mediaItemKey = { mediaItemKey })
-    val serversState = rememberServersState(
+    val seekPreviewState = rememberSeekPreviewState(
         player = player,
-        mediaItemKey = { mediaItemKey },
-        snackbarState = snackbarState
+        key = { key }
     )
     val tracksState = rememberTracksState(
         player = player,
@@ -191,6 +184,15 @@ internal fun PlayerControls(
     BackHandler(enabled = isLocked) {
         controlsVisibilityState.show()
     }
+
+    AutoNextServerEffect(
+        key = { key + currentServer },
+        player = player,
+        availableServers = servers,
+        currentServer = currentServer,
+        onServerChange = onServerChange,
+        snackbarState = snackbarState
+    )
 
     if (onNext != null) {
         NextEpisodeCountdownEffect(
@@ -281,6 +283,10 @@ internal fun PlayerControls(
         } else if (savedSpeed > 0f) {
             playbackSpeedState.updatePlaybackSpeed(savedSpeed)
         }
+    }
+
+    LaunchedEffect(currentEpisode) {
+        tracksState.resetTracks()
     }
 
     Box(
@@ -457,6 +463,12 @@ internal fun PlayerControls(
                             tracksState = tracksState,
                             onDismiss = { uiMode = UiMode.NONE },
                             onSyncSubtitles = { uiMode = UiMode.SUBS_SYNC },
+                            pausePlayer = {
+                                if (player.isPlaying) {
+                                    player.playWhenReady = false
+                                    player.pause()
+                                }
+                            },
                             modifier = Modifier
                                 .fillMaxSize()
                         )
@@ -485,13 +497,14 @@ internal fun PlayerControls(
                         visible = uiMode.isServers
                     ) {
                         ServersScreen(
-                            serversState = serversState,
-                            onDismiss = { uiMode = UiMode.NONE },
+                            servers = servers,
+                            currentServer = currentServer,
+                            onServerChange = onServerChange,
                             currentProvider = currentProvider,
                             providers = providers,
                             onProviderChange = onProviderChange,
-                            modifier = Modifier
-                                .fillMaxSize()
+                            onDismiss = { uiMode = UiMode.NONE },
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
 

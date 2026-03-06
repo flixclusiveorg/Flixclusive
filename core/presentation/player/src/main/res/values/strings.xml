@@ -14,6 +14,7 @@
     <string name="live_stream_error_message">Something went wrong playing this live stream media. Please try again later.</string>
     <string name="network_error_message">Something went wrong playing this media. Please check your network connection and try again.</string>
     <string name="all_servers_failed">All servers have failed or no alternative servers available.</string>
-    <string name="network_failure_message">A network error occurred. Retrying...</string>
+    <string name="network_failure_message">A network error occurred. Retrying…</string>
     <string name="invalid_track_index_for_track_type">Invalid track index (%1$d) for track type %2$s</string>
+    <string name="failed_to_add_subtitle">Failed to add subtitle</string>
 </resources>

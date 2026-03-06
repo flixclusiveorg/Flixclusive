@@ -30,6 +30,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MergingMediaSource
 import androidx.media3.exoplayer.text.TextRenderer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
@@ -41,12 +42,9 @@ import com.flixclusive.core.presentation.player.extensions.isLiveError
 import com.flixclusive.core.presentation.player.extensions.isNetworkException
 import com.flixclusive.core.presentation.player.extensions.setStyle
 import com.flixclusive.core.presentation.player.extensions.switchTrack
-import com.flixclusive.core.presentation.player.model.CacheMediaItem
 import com.flixclusive.core.presentation.player.model.CueWithTiming
-import com.flixclusive.core.presentation.player.model.MediaItemKey
-import com.flixclusive.core.presentation.player.model.track.MediaServer
-import com.flixclusive.core.presentation.player.model.track.MediaServer.Companion.getIndexOfPreferredQuality
-import com.flixclusive.core.presentation.player.model.track.MediaSubtitle
+import com.flixclusive.core.presentation.player.model.track.PlayerServer
+import com.flixclusive.core.presentation.player.model.track.PlayerSubtitle
 import com.flixclusive.core.presentation.player.ui.PiPEvent
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.disableSSLVerification
 import com.flixclusive.core.presentation.player.util.PlayerBuilderHelper.getLoadControl
@@ -96,8 +94,6 @@ class AppPlayer(
     private val mediaSourceManager: MediaSourceManager by lazy {
         MediaSourceManager(dataSourceFactory)
     }
-    val currentCacheMediaItem: CacheMediaItem?
-        get() = mediaSourceManager.getCurrentMediaItem()
 
     fun initialize() {
         if (exoPlayer != null && mediaSession != null) return
@@ -174,48 +170,50 @@ class AppPlayer(
     }
 
     fun prepare(
-        key: MediaItemKey,
-        servers: List<MediaServer>,
-        subtitles: List<MediaSubtitle>,
+        server: PlayerServer,
+        subtitles: List<PlayerSubtitle>,
         startPositionMs: Long,
         playImmediately: Boolean,
     ) {
         if (exoPlayer == null) return
 
-        var cacheMediaItem = mediaSourceManager.getCacheMediaItem(key)
-        if (cacheMediaItem == null) {
-            val streamIndex = servers.getIndexOfPreferredQuality(playerPrefs.quality)
-
-            val mediaSources = mediaSourceManager.createMediaSources(
-                servers = servers,
-                subtitles = subtitles,
-            )
-
-            cacheMediaItem = CacheMediaItem(
-                mediaSources = mediaSources,
-                servers = servers,
-                subtitles = subtitles,
-                currentServerIndex = streamIndex,
-            )
-
-            mediaSourceManager.setCacheMediaItem(key = key, cacheMediaItem = cacheMediaItem)
-        }
+        val mediaSource = mediaSourceManager.createMediaSource(
+            server = server,
+            subtitles = subtitles,
+        )
 
         if (playImmediately) {
             infoLog("Preparing the player...")
-            mediaSourceManager.setCurrentKey(key)
-
-            val selectedStreamIndex = cacheMediaItem.currentServerIndex
-            val selectedStream = cacheMediaItem.servers[selectedStreamIndex]
-            selectedStream.headers?.let {
+            server.headers?.let {
                 dataSourceFactory.setRequestProperties(it)
             }
 
-            exoPlayer?.setMediaSources(cacheMediaItem.mediaSources)
-            seekTo(selectedStreamIndex, startPositionMs)
+            mediaSourceManager.currentMediaSource = mediaSource
+
+            exoPlayer?.setMediaSource(mediaSource)
+            seekTo(startPositionMs)
             prepare()
             playWhenReady = _playWhenReady
         }
+    }
+
+    fun addSubtitle(subtitle: PlayerSubtitle): Boolean {
+        if (exoPlayer == null) return false
+
+        val currentMediaSource = mediaSourceManager.currentMediaSource
+            ?: return false
+
+        val subtitleMediaSource = mediaSourceManager.createSubtitleMediaSource(subtitle)
+            ?: return false
+
+        val newMediaSource = MergingMediaSource(currentMediaSource, subtitleMediaSource)
+        mediaSourceManager.currentMediaSource = newMediaSource
+
+        exoPlayer?.setMediaSource(newMediaSource, false)
+        prepare()
+        playWhenReady = _playWhenReady
+
+        return true
     }
 
     fun releaseMediaSession() {
@@ -231,58 +229,12 @@ class AppPlayer(
         textRenderer = null
     }
 
-    fun switchMediaSource(key: MediaItemKey, startPositionMs: Long = C.TIME_UNSET): Boolean {
-        if (exoPlayer == null) return false
-
-        val cacheMediaItem = mediaSourceManager.getCacheMediaItem(key) ?: return false
-        mediaSourceManager.setCurrentKey(key)
-
-        exoPlayer!!.setMediaSources(cacheMediaItem.mediaSources)
-        exoPlayer!!.prepare()
-        exoPlayer!!.seekTo(startPositionMs)
-        playWhenReady = _playWhenReady
-
-        return true
-    }
-
-    fun hasMediaSource(key: MediaItemKey): Boolean {
-        return mediaSourceManager.getCacheMediaItem(key) != null
-    }
-
-    fun selectServer(index: Int) {
-        mediaSourceManager.switchStreamIndex(index)
-
-        exoPlayer?.let {
-            val currentPosition = it.currentPosition
-            it.seekTo(index, currentPosition)
-            prepare()
-            playWhenReady = true
-        }
-    }
-
-    fun markServerAsFailed(index: Int) {
-        mediaSourceManager.markStreamAsFailed(index)
-    }
-
     fun selectSubtitle(index: Int) {
         switchTrack(C.TRACK_TYPE_TEXT, index)
     }
 
     fun selectAudio(index: Int) {
         switchTrack(C.TRACK_TYPE_AUDIO, index)
-    }
-
-    fun addSubtitle(subtitle: MediaSubtitle) {
-        val wasAdded = mediaSourceManager.addSubtitle(subtitle)
-
-        if (wasAdded) {
-            val tempMediaItemIndex = currentMediaItemIndex
-            val tempPosition = currentPosition
-            exoPlayer?.setMediaSources(currentCacheMediaItem?.mediaSources ?: return)
-
-            seekTo(tempMediaItemIndex, tempPosition)
-            prepare()
-        }
     }
 
     fun changeSubtitleDelay(offset: Long) {
@@ -377,7 +329,7 @@ class AppPlayer(
     companion object {
         val playbackSpeedRange = 0.1f..5.0f
 
-        internal fun Player.isPrepareNeeded(error: PlaybackException): Boolean {
+        fun Player.isPrepareNeeded(error: PlaybackException): Boolean {
             // Check for network-related errors or live stream errors that may require repreparing the player
             return (error.isNetworkException() && duration != C.TIME_UNSET) || error.isLiveError()
         }
