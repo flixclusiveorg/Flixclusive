@@ -63,7 +63,6 @@ class DownloadService : Service() {
         internal const val EXTRA_FILE_NAME = "file_name"
 
         internal const val NOTIFICATION_CHANNEL_ID = "download_channel"
-        internal const val NOTIFICATION_ID = 1001
 
         fun startDownload(
             context: Context,
@@ -163,7 +162,8 @@ class DownloadService : Service() {
         // If the download is already active, ignore the request
         if (activeDownloads[downloadId]?.isActive == true) return
 
-        startForeground(NOTIFICATION_ID, createNotification(fileName))
+        val notificationId = downloadId.hashCode()
+        startForeground(notificationId, createNotification(fileName))
 
         val job = serviceScope.launch {
             try {
@@ -171,7 +171,7 @@ class DownloadService : Service() {
 
                 downloadRepository.executeDownload(downloadId, url, file)
                 downloadRepository.getDownloadState(downloadId).takeWhile { state ->
-                    updateNotification(fileName, state.progress, state.status)
+                    updateNotification(notificationId, fileName, state.progress, state.status)
 
                     if (state.status.isFinished) {
                         activeDownloads.remove(downloadId)
@@ -186,6 +186,7 @@ class DownloadService : Service() {
                     !state.status.isFinished
                 }.collect()
             } catch (e: Exception) {
+                e.printStackTrace()
                 activeDownloads.remove(downloadId)
                 if (activeDownloads.isEmpty()) {
                     stopForeground()
@@ -229,7 +230,7 @@ class DownloadService : Service() {
             description = "Shows download progress"
         }
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
     }
 
@@ -245,11 +246,12 @@ class DownloadService : Service() {
     }
 
     private fun updateNotification(
+        notificationId: Int,
         fileName: String,
         progress: Int,
         status: DownloadStatus,
     ) {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         val notification = when (status) {
             DownloadStatus.DOWNLOADING -> {
@@ -288,7 +290,7 @@ class DownloadService : Service() {
             else -> return
         }
 
-        notificationManager.notify(NOTIFICATION_ID, notification)
+        notificationManager.notify(notificationId, notification)
     }
 
     override fun onBind(intent: Intent?): IBinder {
