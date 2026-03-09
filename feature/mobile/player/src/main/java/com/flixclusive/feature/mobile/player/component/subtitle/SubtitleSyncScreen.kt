@@ -1,6 +1,12 @@
 package com.flixclusive.feature.mobile.player.component.subtitle
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.snapping.SnapPosition
@@ -16,9 +22,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +34,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -43,10 +52,8 @@ import com.flixclusive.core.presentation.mobile.components.AdaptiveIcon
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.core.presentation.player.model.CueWithTiming
 import com.flixclusive.core.presentation.player.ui.state.ScrubState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.presentation.player.R as PlayerR
 import com.flixclusive.core.strings.R as LocaleR
@@ -203,48 +210,89 @@ private fun SubtitleCuesList(
     onCueClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val listState = rememberLazyListState()
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = activeIndex())
+    var hasScrolled by remember { mutableStateOf(false) }
+    val isAutoScrolling = remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(listState, hasScrolled) {
+        if (hasScrolled) return@LaunchedEffect
+
+        snapshotFlow { listState.isScrollInProgress }
+            .collect { scrolling ->
+                if (scrolling && !isAutoScrolling.value) {
+                    hasScrolled = true
+                }
+            }
+    }
+
+    LaunchedEffect(hasScrolled) {
+        if (hasScrolled) return@LaunchedEffect
+
         snapshotFlow(activeIndex)
             .distinctUntilChanged()
             .collectLatest { index ->
                 if (cues.isEmpty()) return@collectLatest
                 if (index !in cues.indices) return@collectLatest
 
-                // If the user is scrolling, wait until they stop + debounce
-                if (listState.isScrollInProgress) {
-                    snapshotFlow { listState.isScrollInProgress }
-                        .first { !it }
-                    delay(300L)
+                isAutoScrolling.value = true
+                try {
+                    listState.animateScrollToItem(index = index)
+                } finally {
+                    isAutoScrolling.value = false
                 }
-
-
-                listState.animateScrollToItem(index = index)
             }
     }
 
-    LazyColumn(
-        state = listState,
-        flingBehavior = rememberSnapFlingBehavior(lazyListState = listState, snapPosition = SnapPosition.Start),
-        modifier = modifier
-            .fadingEdge(
-                scrollableState = listState,
-                orientation = Orientation.Vertical,
-                startEdge = 50.dp,
-                endEdge = 50.dp
-            )
-            .padding(15.dp),
-    ) {
-        itemsIndexed(
-            items = cues,
-            key = { index, cue -> "${index}_${cue.cue.firstOrNull()}" }
-        ) { index, cue ->
-            SubtitleCueItem(
-                cue = cue,
-                isActive = { index <= activeIndex() },
-                onClick = { onCueClick(index) }
-            )
+    Box(modifier = modifier) {
+        LazyColumn(
+            state = listState,
+            flingBehavior = rememberSnapFlingBehavior(lazyListState = listState, snapPosition = SnapPosition.Start),
+            modifier = Modifier
+                .fillMaxSize()
+                .fadingEdge(
+                    scrollableState = listState,
+                    orientation = Orientation.Vertical,
+                    startEdge = 50.dp,
+                    endEdge = 50.dp
+                )
+                .padding(15.dp),
+        ) {
+            itemsIndexed(
+                items = cues,
+                key = { index, cue -> "${index}_${cue.cue.firstOrNull()}" }
+            ) { index, cue ->
+                SubtitleCueItem(
+                    cue = cue,
+                    isActive = { index <= activeIndex() },
+                    onClick = { onCueClick(index) }
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = hasScrolled,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
+        ) {
+            OutlinedButton(
+                onClick = { hasScrolled = false },
+                shape = MaterialTheme.shapes.small,
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Color.White.copy(alpha = 0.6f)
+                ),
+            ) {
+                Text(
+                    text = stringResource(id = PlayerR.string.sync_to_video_time),
+                    style = MaterialTheme.typography.bodyMedium
+                        .asAdaptiveTextStyle()
+                        .copy(fontWeight = FontWeight.Medium),
+                )
+            }
         }
     }
 }
