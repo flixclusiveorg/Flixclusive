@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.player.component.episodes
+package com.flixclusive.feature.mobile.player.component.episode
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -34,8 +34,8 @@ import com.flixclusive.core.presentation.mobile.theme.FlixclusiveTheme
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
 import com.flixclusive.domain.provider.model.EpisodeWithProgress
 import com.flixclusive.domain.provider.model.SeasonWithProgress
-import com.flixclusive.feature.mobile.player.component.episodes.component.EpisodesRow
-import com.flixclusive.feature.mobile.player.component.episodes.component.SeasonsRow
+import com.flixclusive.feature.mobile.player.component.episode.component.EpisodesRow
+import com.flixclusive.feature.mobile.player.component.episode.component.SeasonsRow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
 import com.flixclusive.core.drawables.R as UiCommonR

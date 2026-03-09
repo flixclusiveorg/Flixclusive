@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.player.component.servers
+package com.flixclusive.feature.mobile.player.component.server
 
 import android.content.ClipData
 import androidx.activity.compose.BackHandler

@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.player.component.subtitles
+package com.flixclusive.feature.mobile.player.component.subtitle
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background

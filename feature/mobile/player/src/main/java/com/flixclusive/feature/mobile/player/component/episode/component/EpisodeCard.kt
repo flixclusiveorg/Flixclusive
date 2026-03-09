@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.player.component.episodes.component
+package com.flixclusive.feature.mobile.player.component.episode.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

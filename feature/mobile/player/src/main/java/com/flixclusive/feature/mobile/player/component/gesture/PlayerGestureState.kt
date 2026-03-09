@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.player.component.gestures
+package com.flixclusive.feature.mobile.player.component.gesture
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable

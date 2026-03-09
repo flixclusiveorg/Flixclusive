@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.player.component.gestures
+package com.flixclusive.feature.mobile.player.component.gesture
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
