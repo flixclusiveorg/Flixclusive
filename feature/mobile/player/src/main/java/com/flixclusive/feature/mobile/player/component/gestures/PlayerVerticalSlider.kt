@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.player.component.gestures
 
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -29,6 +28,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,7 +42,7 @@ import com.flixclusive.feature.mobile.player.R
 internal fun PlayerVerticalSlider(
     modifier: Modifier = Modifier,
     isVisible: Boolean,
-    @DrawableRes iconId: Int,
+    iconPainter: @Composable () -> Painter,
     value: Float,
     onValueChange: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float>,
@@ -67,7 +67,7 @@ internal fun PlayerVerticalSlider(
                 .padding(horizontal = 30.dp),
         ) {
             Icon(
-                painter = painterResource(id = iconId),
+                painter = iconPainter(),
                 contentDescription = null,
                 tint = Color.White
             )
@@ -120,7 +120,7 @@ internal fun PlayerVerticalSlider(
 )
 @Composable
 private fun VerticalSliderPreview() {
-    val sliderIconId = R.drawable.round_wb_sunny_24
+    val sliderIconId = R.drawable.brightness_full
     val (value, onValueChange) = remember {
         mutableFloatStateOf(0.3F)
     }
@@ -128,18 +128,22 @@ private fun VerticalSliderPreview() {
     FlixclusiveTheme {
         Surface {
             Box(
-                modifier = Modifier.fillMaxSize().border(1.dp, Color.Red),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(1.dp, Color.Red),
             ) {
                 PlayerVerticalSlider(
                     modifier = Modifier
-                        .background(Brush.horizontalGradient(
-                            0F to MaterialTheme.colorScheme.onSurface.copy(0.6F),
-                            0.9F to Color.Transparent,
-                        ))
+                        .background(
+                            Brush.horizontalGradient(
+                                0F to MaterialTheme.colorScheme.onSurface.copy(0.6F),
+                                0.9F to Color.Transparent,
+                            )
+                        )
                         .padding(end = 150.dp)
                         .align(Alignment.CenterStart),
                     isVisible = true,
-                    iconId = sliderIconId,
+                    iconPainter = { painterResource(sliderIconId) },
                     value = value,
                     onValueChange = onValueChange,
                     valueRange = 0F..1F
@@ -147,14 +151,16 @@ private fun VerticalSliderPreview() {
 
                 PlayerVerticalSlider(
                     modifier = Modifier
-                        .background(Brush.horizontalGradient(
-                            0F to Color.Transparent,
-                            0.9F to MaterialTheme.colorScheme.onSurface.copy(0.6F),
-                        ))
+                        .background(
+                            Brush.horizontalGradient(
+                                0F to Color.Transparent,
+                                0.9F to MaterialTheme.colorScheme.onSurface.copy(0.6F),
+                            )
+                        )
                         .padding(start = 150.dp)
                         .align(Alignment.CenterEnd),
                     isVisible = true,
-                    iconId = sliderIconId,
+                    iconPainter = { painterResource(sliderIconId) },
                     value = value,
                     onValueChange = onValueChange,
                     valueRange = 0F..1F

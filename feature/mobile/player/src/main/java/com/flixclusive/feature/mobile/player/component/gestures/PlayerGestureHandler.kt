@@ -15,11 +15,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,6 +30,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.presentation.common.extensions.noIndicationClickable
 import com.flixclusive.core.presentation.player.ui.state.VolumeManager
@@ -43,94 +42,6 @@ import kotlinx.coroutines.launch
 private const val DRAG_MULTIPLIER = 2F
 private const val HIDE_DELAY = 1000L
 private const val SEEK_ANIMATION_DELAY = 600L
-private const val SEEK_ACCUMULATE_TIMEOUT = 1200L
-
-@Stable
-internal class PlayerGestureState(
-    val seekAmountMs: Long
-) {
-    var isDoubleTapSeekingForward by mutableStateOf(false)
-        private set
-    var isDoubleTapSeekingBackward by mutableStateOf(false)
-        private set
-    var seekSeconds by mutableIntStateOf(0)
-        private set
-
-    var isBrightnessSliderVisible by mutableStateOf(false)
-        private set
-    var isVolumeSliderVisible by mutableStateOf(false)
-        private set
-    var isSliding by mutableStateOf(false)
-        private set
-    var isDoubleTapping by mutableStateOf(false)
-        private set
-    var isSpeedBoosting by mutableStateOf(false)
-        private set
-
-    private var lastTapTimeMs by mutableLongStateOf(0L)
-
-    fun onDoubleTap(isForward: Boolean) {
-        val currentTime = System.currentTimeMillis()
-        val seekIncrement = (seekAmountMs / 1000).toInt()
-        val isSameSide = (isForward && isDoubleTapSeekingForward) || (!isForward && isDoubleTapSeekingBackward)
-
-        if (currentTime - lastTapTimeMs < SEEK_ACCUMULATE_TIMEOUT && isSameSide) {
-            seekSeconds += seekIncrement
-        } else {
-            seekSeconds = seekIncrement
-        }
-
-        lastTapTimeMs = currentTime
-        isDoubleTapping = true
-
-        if (isForward) {
-            isDoubleTapSeekingForward = true
-            isDoubleTapSeekingBackward = false
-        } else {
-            isDoubleTapSeekingBackward = true
-            isDoubleTapSeekingForward = false
-        }
-    }
-
-    fun hideSeekOverlay() {
-        isDoubleTapSeekingForward = false
-        isDoubleTapSeekingBackward = false
-        isDoubleTapping = false
-    }
-
-    fun showBrightnessSlider() {
-        isBrightnessSliderVisible = true
-        isVolumeSliderVisible = false
-        isSliding = true
-    }
-
-    fun showVolumeSlider() {
-        isVolumeSliderVisible = true
-        isBrightnessSliderVisible = false
-        isSliding = true
-    }
-
-    fun hideSliders() {
-        isBrightnessSliderVisible = false
-        isVolumeSliderVisible = false
-        isSliding = false
-    }
-
-    fun startSpeedBoost() {
-        isSpeedBoosting = true
-    }
-
-    fun stopSpeedBoost() {
-        isSpeedBoosting = false
-    }
-
-    companion object {
-        @Composable
-        fun rememberPlayerGestureState(seekAmountMs: Long): PlayerGestureState {
-            return remember(seekAmountMs) { PlayerGestureState(seekAmountMs) }
-        }
-    }
-}
 
 @Composable
 internal fun PlayerGestureHandler(
@@ -209,46 +120,6 @@ internal fun PlayerGestureHandler(
             }
     ) {
         GestureBox(
-            interactionSource = leftInteractionSource,
-            screenWidth = screenWidth,
-            onSingleTap = onSingleTap,
-            onDoubleTap = { offset ->
-                scope.launch {
-                    seekAnimationJob?.cancel()
-                    seekAnimationJob = launch {
-                        val press = PressInteraction.Press(offset)
-                        leftInteractionSource.emit(press)
-
-                        gestureState.onDoubleTap(isForward = false)
-                        onSeekBackward()
-
-                        leftInteractionSource.emit(PressInteraction.Release(press))
-                    }
-                }
-            },
-            onDragStart = {
-                dragStartVolume = volumeManager.currentVolume
-                gestureState.showVolumeSlider()
-            },
-            onDragEnd = {
-                sliderVisibilityJob?.cancel()
-                sliderVisibilityJob = scope.launch {
-                    delay(HIDE_DELAY)
-                    gestureState.hideSliders()
-                }
-            },
-            onVerticalDrag = { dragAmount ->
-                sliderVisibilityJob?.cancel()
-                val dragPercent = dragAmount * DRAG_MULTIPLIER / screenHeight
-                val volumeChange = dragPercent * volumeManager.maxVolume
-                val newVolume = dragStartVolume - volumeChange
-                volumeManager.setVolume(newVolume)
-                dragStartVolume = volumeManager.currentVolume
-            },
-            modifier = Modifier.align(Alignment.CenterStart)
-        )
-
-        GestureBox(
             interactionSource = rightInteractionSource,
             screenWidth = screenWidth,
             onSingleTap = onSingleTap,
@@ -279,10 +150,49 @@ internal fun PlayerGestureHandler(
             },
             onVerticalDrag = { dragAmount ->
                 sliderVisibilityJob?.cancel()
-                val dragPercent = dragAmount * DRAG_MULTIPLIER / screenHeight
+                val dragPercent = dragAmount * (DRAG_MULTIPLIER * brightnessManager.maxBrightness) / screenHeight
                 val newBrightness = dragStartBrightness - dragPercent
-                brightnessManager.setBrightness(newBrightness)
+                brightnessManager.setBrightness(maxOf(newBrightness, 0f))
                 dragStartBrightness = brightnessManager.currentBrightness
+            },
+            modifier = Modifier.align(Alignment.CenterStart)
+        )
+
+        GestureBox(
+            interactionSource = leftInteractionSource,
+            screenWidth = screenWidth,
+            onSingleTap = onSingleTap,
+            onDoubleTap = { offset ->
+                scope.launch {
+                    seekAnimationJob?.cancel()
+                    seekAnimationJob = launch {
+                        val press = PressInteraction.Press(offset)
+                        leftInteractionSource.emit(press)
+
+                        gestureState.onDoubleTap(isForward = false)
+                        onSeekBackward()
+
+                        leftInteractionSource.emit(PressInteraction.Release(press))
+                    }
+                }
+            },
+            onDragStart = {
+                dragStartVolume = volumeManager.currentVolume
+                gestureState.showVolumeSlider()
+            },
+            onDragEnd = {
+                sliderVisibilityJob?.cancel()
+                sliderVisibilityJob = scope.launch {
+                    delay(HIDE_DELAY)
+                    gestureState.hideSliders()
+                }
+            },
+            onVerticalDrag = { dragAmount ->
+                sliderVisibilityJob?.cancel()
+                val dragPercent = dragAmount * (DRAG_MULTIPLIER * volumeManager.maxVolume) / screenHeight
+                val newVolume = dragStartVolume - dragPercent
+                volumeManager.setVolume(maxOf(newVolume, 0f))
+                dragStartVolume = volumeManager.currentVolume
             },
             modifier = Modifier.align(Alignment.CenterEnd)
         )
@@ -316,10 +226,20 @@ internal fun PlayerGestureHandler(
                         1f to Color.Black.copy(0.6f),
                     )
                 ),
-            isVisible = gestureState.isVolumeSliderVisible,
-            iconId = R.drawable.volume_up_black_24dp,
-            value = volumeManager.currentVolumePercentage,
-            onValueChange = { volumeManager.setVolume(it * volumeManager.maxVolume) },
+            isVisible = gestureState.isBrightnessSliderVisible,
+            iconPainter = {
+                val currentBrightnessPercentage = brightnessManager.currentBrightnessPercentage
+                val icon = when {
+                    currentBrightnessPercentage > 0.8F -> R.drawable.brightness_full
+                    currentBrightnessPercentage < 0.5F && currentBrightnessPercentage > 0F -> R.drawable.brightness_half
+                    currentBrightnessPercentage <= 0F -> R.drawable.brightness_empty
+                    else -> R.drawable.brightness_full
+                }
+
+                painterResource(icon)
+            },
+            value = brightnessManager.currentBrightnessPercentage,
+            onValueChange = { brightnessManager.setBrightness(it) },
             valueRange = 0f..1f
         )
 
@@ -332,10 +252,20 @@ internal fun PlayerGestureHandler(
                         1f to Color.Transparent,
                     )
                 ),
-            isVisible = gestureState.isBrightnessSliderVisible,
-            iconId = R.drawable.round_wb_sunny_24,
-            value = brightnessManager.currentBrightnessPercentage,
-            onValueChange = { brightnessManager.setBrightness(it) },
+            isVisible = gestureState.isVolumeSliderVisible,
+            iconPainter = {
+                val currentVolumePercentage = volumeManager.currentVolumePercentage
+                val icon = when {
+                    currentVolumePercentage > 0.8F -> R.drawable.volume_up_black_24dp
+                    currentVolumePercentage < 0.5F && currentVolumePercentage > 0F -> R.drawable.volume_down_black_24dp
+                    currentVolumePercentage <= 0F -> R.drawable.volume_off_black_24dp
+                    else -> R.drawable.volume_up_black_24dp
+                }
+
+                painterResource(icon)
+            },
+            value = volumeManager.currentVolumePercentage,
+            onValueChange = { volumeManager.setVolume(it * volumeManager.maxVolume) },
             valueRange = 0f..1f
         )
     }
