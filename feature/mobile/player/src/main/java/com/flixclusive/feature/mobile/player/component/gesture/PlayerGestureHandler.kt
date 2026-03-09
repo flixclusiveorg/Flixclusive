@@ -1,4 +1,4 @@
-package com.flixclusive.feature.mobile.player.component.gestures
+package com.flixclusive.feature.mobile.player.component.gesture
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
