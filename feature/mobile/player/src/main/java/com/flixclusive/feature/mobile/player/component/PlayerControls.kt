@@ -241,12 +241,13 @@ internal fun PlayerControls(
             return@LaunchedEffect
         }
 
-        val shouldHideControls = gestureState.isDoubleTapping || gestureState.isSliding || gestureState.isSpeedBoosting || !uiMode.isNone
+        val shouldHideControls = gestureState.isGestureActive || !uiMode.isNone
         if (controlsVisibilityState.isVisible && shouldHideControls) {
             queueControlVisibility = true
             controlsVisibilityState.hide()
 
-            if (player.isPlaying && !uiMode.isSubsSync && !uiMode.isSubs) {
+            val shouldPause = !uiMode.isSubsSync && !uiMode.isSubs && !gestureState.isGestureActive
+            if (player.isPlaying && shouldPause) {
                 queuePlay = true
                 player.playWhenReady = true
                 player.pause()

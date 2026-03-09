@@ -18,6 +18,8 @@ import com.flixclusive.core.presentation.common.extensions.getActivity
 class BrightnessManager(
     private val activity: Activity
 ) {
+    val maxBrightness: Float get() = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
+
     var currentBrightness by mutableFloatStateOf(getInitialBrightness())
         private set
 
