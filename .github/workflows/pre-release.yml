@@ -1,0 +1,139 @@
+name: Pre-Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    uses: ./.github/workflows/unit-tests.yml
+
+  instrumented-tests:
+    name: Instrumented Tests
+    uses: ./.github/workflows/instrumented-tests.yml
+
+  build:
+    name: Build Preview APK
+    needs: [unit-tests, instrumented-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      tag_name: ${{ steps.version.outputs.tag_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine pre-release tag
+        id: version
+        run: |
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          TAG_NAME="p${COMMIT_COUNT}"
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Pre-release tag: $TAG_NAME"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Setup build tool version
+        run: |
+          BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+          echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+
+      - name: Assemble preview APK
+        run: ./gradlew :app-mobile:assemblePreview
+
+      - name: Sign preview APK
+        id: sign_preview
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app-mobile/build/outputs/apk/preview
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
+
+      - name: Prepare artifact
+        run: mv ${{ steps.sign_preview.outputs.signedReleaseFile }} flixclusive-preview.apk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-apk
+          path: flixclusive-preview.apk
+
+  release:
+    name: Publish to Preview Builds
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: preview-apk
+
+      - name: Generate access token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_KEY }}
+          owner: flixclusiveorg
+          repositories: |
+            preview-builds
+
+      - name: Get previous tag for changelog
+        run: |
+          previous_tag=$(git --no-pager tag --sort=-creatordate | head -1 || echo "")
+          echo "previousTag=$previous_tag" >> $GITHUB_ENV
+
+      - name: Generate changelogs
+        id: changelog
+        uses: requarks/changelog-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fromTag: ${{ github.sha }}
+          toTag: ${{ env.previousTag }}
+          writeToFile: true
+          filename: 'CHANGELOG.md'
+
+      - name: Publish to preview-builds repository
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          TAG_NAME="${{ needs.build.outputs.tag_name }}"
+
+          # Delete existing release with same tag if re-running
+          gh release delete "$TAG_NAME" \
+            --repo flixclusiveorg/preview-builds \
+            --yes || echo "No existing release with tag $TAG_NAME."
+
+          # Create release as latest (NOT marked as pre-release)
+          # This ensures /latest API returns this build
+          gh release create "$TAG_NAME" \
+            --repo flixclusiveorg/preview-builds \
+            --title "$TAG_NAME" \
+            --notes-file CHANGELOG.md \
+            --latest \
+            flixclusive-preview.apk

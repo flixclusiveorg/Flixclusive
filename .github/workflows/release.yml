@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag in semver format (e.g. 2.2.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate semver format
+        run: |
+          TAG="${{ inputs.tag }}"
+          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$TAG' is not valid semver. Expected format: X.Y.Z (e.g. 2.2.0)"
+            echo "::error::Must not be a branch name (e.g. master/main) or a commit hash."
+            exit 1
+          fi
+
+  unit-tests:
+    name: Unit Tests
+    needs: validate
+    uses: ./.github/workflows/unit-tests.yml
+
+  instrumented-tests:
+    name: Instrumented Tests
+    needs: validate
+    uses: ./.github/workflows/instrumented-tests.yml
+
+  build:
+    name: Build Release APK
+    needs: [unit-tests, instrumented-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Setup build tool version
+        run: |
+          BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+          echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+
+      - name: Assemble release APK
+        run: ./gradlew :app-mobile:assembleRelease
+
+      - name: Sign release APK
+        id: sign_release
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app-mobile/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
+
+      - name: Prepare release artifact
+        run: mv ${{ steps.sign_release.outputs.signedReleaseFile }} flixclusive-release.apk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: flixclusive-release.apk
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apk
+
+      - name: Create and push tag
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag -f ${{ inputs.tag }}
+          git push origin ${{ inputs.tag }} --force
+
+      - name: Get previous stable tag
+        run: |
+          previous_tag=$(git --no-pager tag --sort=-creatordate | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | grep -v "${{ inputs.tag }}" | head -1 || echo "")
+          echo "Found previous tag: $previous_tag"
+          echo "previousTag=$previous_tag" >> $GITHUB_ENV
+
+      - name: Generate changelogs
+        id: changelog
+        uses: requarks/changelog-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fromTag: ${{ inputs.tag }}
+          toTag: ${{ env.previousTag }}
+          excludeTypes: 'build,docs,other,style,test,chore'
+          writeToFile: true
+          filename: 'CHANGELOG.md'
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete ${{ inputs.tag }} --yes || echo "No existing release to delete."
+
+          gh release create ${{ inputs.tag }} \
+            --title "${{ inputs.tag }}" \
+            --notes-file CHANGELOG.md \
+            flixclusive-release.apk
