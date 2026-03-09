@@ -1,8 +1,9 @@
 package com.flixclusive.core.network.util.okhttp
 
-import com.flixclusive.core.network.BuildConfig
 import okhttp3.Interceptor
 import okhttp3.Response
+
+private const val TMDB_API_KEY = "1865f43a0549ca50d341dd9ab8b29f49"
 
 /**
  * Interceptor to add the TMDB API key to requests if it is not already present.
@@ -15,7 +16,7 @@ class TMDBApiKeyInterceptor : Interceptor {
             .newBuilder()
             .apply {
                 if (!request.url.queryParameterNames.contains("api_key")) {
-                    addQueryParameter("api_key", BuildConfig.TMDB_API_KEY)
+                    addQueryParameter("api_key", TMDB_API_KEY)
                 }
             }.build()
 
