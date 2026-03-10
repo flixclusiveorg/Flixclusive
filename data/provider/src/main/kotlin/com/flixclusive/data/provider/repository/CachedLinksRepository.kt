@@ -68,10 +68,15 @@ data class CachedLinks(
     val thumbnail: String? = null,
     val streams: List<Stream> = emptyList(),
     val subtitles: List<Subtitle> = emptyList(),
+    val failedStreamUrls: Set<String> = emptySet(),
 ) : Serializable {
     val hasStreamableLinks get() = streams.filterOutExpiredLinks().isNotEmpty()
 
     companion object {
+        fun CachedLinks.markStreamAsFailed(streamUrl: String): CachedLinks {
+            return copy(failedStreamUrls = failedStreamUrls + streamUrl)
+        }
+
         fun CachedLinks.appendStream(stream: Stream): CachedLinks {
             val streams = streams.toMutableSet()
 
@@ -197,6 +202,14 @@ interface CachedLinksRepository {
         key: CacheKey,
         defaultValue: CachedLinks? = null,
     ): Flow<CachedLinks?>
+
+    /**
+     * Marks a stream as failed in the cache associated with the given [CacheKey].
+     *
+     * @param key The [CacheKey] to associate with the failed stream.
+     * @param streamUrl The URL of the stream to mark as failed.
+     * */
+    fun markStreamAsFailed(key: CacheKey, streamUrl: String)
 
     /**
      * Clears all cached links including all streams and subtitles.

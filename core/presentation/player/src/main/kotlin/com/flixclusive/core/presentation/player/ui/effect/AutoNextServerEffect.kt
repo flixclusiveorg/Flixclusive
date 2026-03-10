@@ -20,6 +20,7 @@ fun AutoNextServerEffect(
     currentServer: () -> Int,
     availableServers: () -> List<PlayerServer>,
     onServerChange: (Int) -> Unit,
+    onServerFail: (Int) -> Unit,
     player: AppPlayer,
     snackbarState: PlayerSnackbarState
 ) {
@@ -39,6 +40,7 @@ fun AutoNextServerEffect(
             val message = error.getDisplayMessage().asString(context)
             snackbarState.showError("ERR [${error.errorCode}]: $message")
             failedServers += currentServer()
+            onServerFail(currentServer())
 
             val nextIndex = availableServers().getNextAvailableServerIndex(
                 currentServer = currentServer(),

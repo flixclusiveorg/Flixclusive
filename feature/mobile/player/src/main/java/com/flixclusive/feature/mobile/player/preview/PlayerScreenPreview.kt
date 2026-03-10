@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
 import com.flixclusive.core.presentation.common.util.DummyDataForPreview
@@ -58,6 +59,7 @@ private fun PlayerScreenBasePreview() {
     val currentEpisode = remember { currentSeason.episodes.first().episode }
     val context = LocalContext.current
     val snackbarState = remember { PlayerSnackbarState() }
+    val servers = remember { PreviewPlayerData.getTestMediaServers() }
 
     var playerPrefs by remember {
         mutableStateOf(PlayerPreferences())
@@ -120,7 +122,8 @@ private fun PlayerScreenBasePreview() {
                 player = player,
                 playerPreferences = playerPrefs,
                 subtitlesPreferences = subtitlePrefs,
-                servers = { PreviewPlayerData.getTestMediaServers() },
+                servers = { servers },
+                failedStreamUrls = { setOf(servers[1].url) },
                 currentServer = { currentServer },
                 onServerChange = { onServerChange(it) },
                 onBack = { player.release() },
@@ -135,7 +138,12 @@ private fun PlayerScreenBasePreview() {
                 onProviderChange = { currentProvider = it },
                 snackbarState = snackbarState,
                 onUpdateWatchProgress = {},
-                modifier = Modifier.background(Color.Black)
+                modifier = Modifier.background(Color.Black),
+                loadLinksState = { LoadLinksState.Idle },
+                canSkipLoading = { false },
+                onSkipProviderLoading = { },
+                onCancelLoading = { },
+                onServerFail = { },
             )
         }
     }

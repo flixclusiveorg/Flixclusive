@@ -18,4 +18,5 @@
     <string name="network_failure_message">A network error occurred. Retrying…</string>
     <string name="invalid_track_index_for_track_type">Invalid track index (%1$d) for track type %2$s</string>
     <string name="failed_to_add_subtitle">Failed to add subtitle</string>
+    <string name="failed_server_hint">Server that is unresponsive or has failed</string>
 </resources>
