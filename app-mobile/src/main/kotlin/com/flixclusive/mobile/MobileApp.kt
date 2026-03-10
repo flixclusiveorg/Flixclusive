@@ -366,14 +366,14 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
             }
         }
 
-        if (webViewDriver != null) {
-            WebViewDriverDialog(
-                webView = webViewDriver!!,
-                onDismiss = viewModel::hideWebViewDriver,
-            )
-        }
     }
 
+    if (webViewDriver != null) {
+        WebViewDriverDialog(
+            webView = webViewDriver!!,
+            onDismiss = viewModel::hideWebViewDriver,
+        )
+    }
 }
 
 private fun shouldHideBottomBar(route: Route): Boolean {

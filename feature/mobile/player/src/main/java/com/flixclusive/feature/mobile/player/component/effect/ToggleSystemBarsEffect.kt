@@ -31,7 +31,7 @@ internal fun ToggleSystemBarsEffect() {
 }
 
 @Suppress("DEPRECATION")
-private fun Activity.toggleSystemBars(isVisible: Boolean) {
+internal fun Activity.toggleSystemBars(isVisible: Boolean) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
         windowInsetsController.systemBarsBehavior =

@@ -1,6 +1,7 @@
 package com.flixclusive.core.common.provider
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Stable
 import com.flixclusive.core.common.R
 import com.flixclusive.core.common.exception.ExceptionWithUiText
 import com.flixclusive.core.common.locale.UiText
@@ -19,6 +20,7 @@ import com.flixclusive.model.provider.link.MediaLink
  * @see Success
  * @see MediaLink
  */
+@Stable
 sealed class LoadLinksState(
     val message: UiText,
 ) {
@@ -40,6 +42,7 @@ sealed class LoadLinksState(
     /**
      * The initial idle state.
      */
+    @Stable
     data object Idle : LoadLinksState() {
         override val ordinal = 0
     }
@@ -49,6 +52,7 @@ sealed class LoadLinksState(
      *
      * @param message An optional message to display while fetching.
      */
+    @Stable
     class Fetching(
         message: UiText? = null,
     ) : LoadLinksState(
@@ -75,6 +79,7 @@ sealed class LoadLinksState(
      * @param message An optional message to display while extracting.
      * @property providerId The ID of the provider that is being extracted from.
      */
+    @Stable
     class Extracting(
         val providerId: String,
         message: UiText? = null,
@@ -97,6 +102,7 @@ sealed class LoadLinksState(
      *
      * @param errorMessage An optional error message to display.
      */
+    @Stable
     class Error(
         errorMessage: UiText? = null,
     ) : LoadLinksState(
@@ -132,6 +138,7 @@ sealed class LoadLinksState(
      *
      * @param errorMessage An optional error message to display.
      */
+    @Stable
     class Unavailable(
         errorMessage: UiText? = null,
     ) : LoadLinksState(
@@ -157,6 +164,7 @@ sealed class LoadLinksState(
      *
      * @property providerId The ID of the provider that provided the links.
      */
+    @Stable
     data class Success(val providerId: String) : LoadLinksState(message = UiText.from(R.string.source_data_dialog_state_success)) {
         override val ordinal = 5
     }
@@ -164,6 +172,7 @@ sealed class LoadLinksState(
     /**
      * The state when the resource has been successfully fetched and extracted from trusted providers.
      */
+    @Stable
     data object SuccessWithTrustedProviders : LoadLinksState(
         message = UiText.from(R.string.source_data_dialog_state_success_with_trusted_providers),
     ) {

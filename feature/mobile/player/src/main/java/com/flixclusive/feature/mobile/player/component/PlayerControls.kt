@@ -114,8 +114,10 @@ internal fun PlayerControls(
     currentProvider: ProviderMetadata,
     providers: List<ProviderMetadata>,
     servers: () -> List<PlayerServer>,
+    failedStreamUrls: () -> Set<String>,
     currentServer: () -> Int,
     onServerChange: (Int) -> Unit,
+    onServerFail: (Int) -> Unit,
     onProviderChange: (ProviderMetadata) -> Unit,
     onResizeModeChange: (ResizeMode) -> Unit,
     onBack: () -> Unit,
@@ -194,6 +196,7 @@ internal fun PlayerControls(
         availableServers = servers,
         currentServer = currentServer,
         onServerChange = onServerChange,
+        onServerFail = onServerFail,
         snackbarState = snackbarState
     )
 
@@ -252,6 +255,7 @@ internal fun PlayerControls(
                 player.playWhenReady = true
                 player.pause()
             }
+
             return@LaunchedEffect
         }
 
@@ -501,6 +505,7 @@ internal fun PlayerControls(
                     ) {
                         ServersScreen(
                             servers = servers,
+                            failedStreamUrls = failedStreamUrls,
                             currentServer = currentServer,
                             onServerChange = onServerChange,
                             currentProvider = currentProvider,

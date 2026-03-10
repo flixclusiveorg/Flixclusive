@@ -5,6 +5,7 @@ import com.flixclusive.data.provider.repository.CacheKey
 import com.flixclusive.data.provider.repository.CachedLinks
 import com.flixclusive.data.provider.repository.CachedLinks.Companion.appendStream
 import com.flixclusive.data.provider.repository.CachedLinks.Companion.appendSubtitle
+import com.flixclusive.data.provider.repository.CachedLinks.Companion.markStreamAsFailed
 import com.flixclusive.data.provider.repository.CachedLinksRepository
 import com.flixclusive.data.provider.util.extensions.filterOutExpiredLinks
 import com.flixclusive.model.provider.link.Stream
@@ -131,6 +132,13 @@ internal class CachedLinksRepositoryImpl @Inject constructor(
 
     override fun clear() {
         map.clear()
+        _caches.value = map.toMap()
+    }
+
+    override fun markStreamAsFailed(key: CacheKey, streamUrl: String) {
+        val newCache = map[key]?.markStreamAsFailed(streamUrl) ?: return
+
+        map[key] = newCache
         _caches.value = map.toMap()
     }
 }
