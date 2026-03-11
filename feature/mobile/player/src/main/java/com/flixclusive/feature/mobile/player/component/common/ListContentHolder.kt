@@ -74,8 +74,8 @@ internal fun <Type> ListContentHolder(
                     when (val item = items.elementAt(it)) {
                         is String -> item
                         is ProviderMetadata -> item.id
-                        is PlayerServer -> item.url
-                        is PlayerSubtitle -> item.url
+                        is PlayerServer -> item.url + item.label
+                        is PlayerSubtitle -> item.url + item.label
                         else -> throw ClassFormatError("Invalid content type provided.")
                     }
                 }
