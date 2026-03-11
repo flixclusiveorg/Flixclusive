@@ -135,9 +135,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 
     val navController = rememberNavController()
     val destinationsNavigator = navController.rememberDestinationsNavigator()
-    val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(
-        initialValue = AppGraph.startRoute
-    )
+    val currentSelectedScreen by navController.currentDestinationFlow.collectAsStateWithLifecycle(initialValue = AppGraph.startRoute)
     val currentNavGraph by navController.currentScreenAsState(AppmobileNavGraphs.home)
 
     var useBottomBar by remember {
@@ -236,11 +234,12 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                 exit = slideOutVertically(tween(400)) { it },
             ) {
                 BottomBar(
-                    currentSelectedScreen = currentNavGraph,
+                    currentSelectedGraph = currentNavGraph,
                     onNavigate = {
                         if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
                             destinationsNavigator.bottomBarNavigate(
                                 screen = it,
+                                currentSelectedScreen = currentSelectedScreen,
                                 currentNavGraph = currentNavGraph,
                             )
                         }
