@@ -144,7 +144,7 @@ private fun ContinueWatchingCard(
             modifier = Modifier
                 .background(
                     color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                    shape = MaterialTheme.shapes.extraSmall,
+                    shape = MaterialTheme.shapes.small,
                 )
                 .combinedClickable(
                     onClick = onClick,
@@ -159,6 +159,7 @@ private fun ContinueWatchingCard(
                 title = film.title,
                 imageSize = "w300",
                 modifier = Modifier.width(getAdaptiveFilmCardWidth())
+                    .clip(MaterialTheme.shapes.small)
             )
 
             Box(
