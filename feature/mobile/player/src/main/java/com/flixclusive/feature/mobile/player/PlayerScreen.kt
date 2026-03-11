@@ -192,7 +192,7 @@ internal fun PlayerScreenContent(
         )
 
         val state = loadLinksState()
-        if (state.isLoading) {
+        if (state.isLoading || state.isError) {
             ProviderLoadingDialog(
                 state = state,
                 canSkipLoading = canSkipLoading(),

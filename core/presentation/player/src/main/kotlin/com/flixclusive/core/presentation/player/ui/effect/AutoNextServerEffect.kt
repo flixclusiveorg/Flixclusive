@@ -39,11 +39,12 @@ fun AutoNextServerEffect(
 
             val message = error.getDisplayMessage().asString(context)
             snackbarState.showError("ERR [${error.errorCode}]: $message")
-            failedServers += currentServer()
-            onServerFail(currentServer())
+            val currentIndex = currentServer()
+            failedServers += currentIndex
+            onServerFail(currentIndex)
 
             val nextIndex = availableServers().getNextAvailableServerIndex(
-                currentServer = currentServer(),
+                currentServer = currentIndex,
                 failedStreamIndices = failedServers
             )
             if (nextIndex == null) {
