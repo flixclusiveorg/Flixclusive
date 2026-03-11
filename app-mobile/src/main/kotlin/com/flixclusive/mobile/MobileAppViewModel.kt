@@ -139,9 +139,11 @@ internal class MobileAppViewModel @Inject constructor(
         film: Film,
         episode: Episode? = null,
     ) {
-        if (onFetchMediaLinksJob?.isActive == true) return
+        if (onFetchMediaLinksJob?.isActive == true && _uiState.value.playerData != null) return
 
+        onFetchMediaLinksJob?.cancel()
         onFetchMediaLinksJob = viewModelScope.launch {
+            _uiState.update { it.copy(playerData = PlayerData(film, episode)) }
             cachedLinksRepository.setCurrentCache(null)
             updateLoadLinksState(LoadLinksState.Fetching(LocaleR.string.film_data_fetching))
 
@@ -160,7 +162,7 @@ internal class MobileAppViewModel @Inject constructor(
                     var episodeToLoad = episode
 
                     if (episode == null) {
-                        getSeason(tvShow = metadata)
+                        getLastWatchedEpisode(tvShow = metadata)
                             .onSuccess { episodeToLoad = it }
                             .onFailure { e ->
                                 updateLoadLinksState(LoadLinksState.Error(e))
@@ -202,7 +204,7 @@ internal class MobileAppViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getSeason(tvShow: TvShow): Result<Episode> {
+    private suspend fun getLastWatchedEpisode(tvShow: TvShow): Result<Episode> {
         val episodeProgress = watchProgressRepository.get(
             id = tvShow.identifier,
             ownerId = userId,

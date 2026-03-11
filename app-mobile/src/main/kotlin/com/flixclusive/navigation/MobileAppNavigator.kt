@@ -185,8 +185,11 @@ internal class MobileAppNavigator(
         runOnResumed {
             navigator.navigate(HomeGraph) {
                 popUpTo(AppGraph) {
-                    inclusive = true
+                    saveState = true
                 }
+
+                launchSingleTop = true
+                restoreState = true
             }
         }
     }
@@ -237,11 +240,7 @@ internal class MobileAppNavigator(
 
     override fun onEpisodeChange(film: FilmMetadata, episode: Episode) {
         runOnResumed {
-            navigator.navigate(
-                PlayerScreenDestination(film = film, episode = episode),
-            ) {
-                launchSingleTop = true
-            }
+            navigator.navigate(PlayerScreenDestination(film = film, episode = episode))
         }
     }
 
