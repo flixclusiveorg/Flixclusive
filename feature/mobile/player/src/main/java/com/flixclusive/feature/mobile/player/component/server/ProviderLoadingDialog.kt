@@ -1,5 +1,6 @@
 package com.flixclusive.feature.mobile.player.component.server
 
+import androidx.activity.ComponentActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -19,9 +20,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,6 +32,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.presentation.common.components.GradientLinearProgressIndicator
+import com.flixclusive.core.presentation.common.extensions.getActivity
+import com.flixclusive.feature.mobile.player.component.effect.toggleSystemBars
 import com.flixclusive.core.strings.R as LocaleR
 
 @Composable
@@ -46,6 +51,13 @@ internal fun ProviderLoadingDialog(
             usePlatformDefaultWidth = false,
         ),
     ) {
+        val activity = LocalContext.current.getActivity<ComponentActivity>()
+        DisposableEffect(Unit) {
+            onDispose {
+                activity.toggleSystemBars(isVisible = false)
+            }
+        }
+
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

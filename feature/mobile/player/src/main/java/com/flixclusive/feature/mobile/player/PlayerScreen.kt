@@ -1,6 +1,5 @@
 package com.flixclusive.feature.mobile.player
 
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +17,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
-import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.common.extensions.showToast
 import com.flixclusive.core.presentation.mobile.util.PipModeUtil.rememberIsInPipMode
 import com.flixclusive.core.presentation.player.AppPlayer
@@ -28,8 +26,8 @@ import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState
 import com.flixclusive.core.presentation.player.ui.state.PlayerSnackbarState.Companion.rememberPlayerSnackbarState
 import com.flixclusive.domain.provider.model.SeasonWithProgress
 import com.flixclusive.feature.mobile.player.component.PlayerControls
+import com.flixclusive.feature.mobile.player.component.effect.ToggleOrientationEffect
 import com.flixclusive.feature.mobile.player.component.effect.ToggleSystemBarsEffect
-import com.flixclusive.feature.mobile.player.component.effect.toggleSystemBars
 import com.flixclusive.feature.mobile.player.component.server.ProviderLoadingDialog
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
@@ -149,6 +147,7 @@ internal fun PlayerScreenContent(
     BackHandler(onBack = onBack)
 
     ToggleSystemBarsEffect()
+    ToggleOrientationEffect()
 
     Box(
         modifier = modifier
@@ -188,19 +187,11 @@ internal fun PlayerScreenContent(
 
         val state = loadLinksState()
         if (state.isLoading) {
-            val context = LocalContext.current.getActivity<ComponentActivity>()
-
             ProviderLoadingDialog(
                 state = state,
                 canSkipLoading = canSkipLoading(),
-                onSkipLoading = {
-                    context.toggleSystemBars(isVisible = false)
-                    onSkipProviderLoading()
-                },
-                onDismiss = {
-                    context.toggleSystemBars(isVisible = false)
-                    onCancelLoading()
-                },
+                onSkipLoading = onSkipProviderLoading,
+                onDismiss = onCancelLoading,
             )
         }
     }

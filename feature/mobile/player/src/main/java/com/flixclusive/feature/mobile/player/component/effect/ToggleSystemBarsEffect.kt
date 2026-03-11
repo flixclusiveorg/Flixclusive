@@ -1,7 +1,6 @@
 package com.flixclusive.feature.mobile.player.component.effect
 
 import android.app.Activity
-import android.content.pm.ActivityInfo
 import android.os.Build
 import android.view.View
 import androidx.compose.runtime.Composable
@@ -18,13 +17,9 @@ internal fun ToggleSystemBarsEffect() {
     val context = LocalContext.current.getActivity<Activity>()
 
     DisposableEffect(LocalLifecycleOwner.current) {
-        context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         context.toggleSystemBars(isVisible = false)
 
         onDispose {
-            // TODO: Watch out orientation changes when user selects a different episode/season/provider,
-            //  maybe we should only reset orientation when user leaves the player screen
-            context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             context.toggleSystemBars(isVisible = true)
         }
     }
