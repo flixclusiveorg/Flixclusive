@@ -451,7 +451,7 @@ internal class PlayerScreenViewModel @Inject constructor(
     /**
      * Called when the player auto-queues the next episode to play.
      * */
-    fun onQueueNextEpisode() {
+    private fun onQueueNextEpisode() {
         if (queueNextEpisodeJob?.isActive == true) return
 
         val episode = _uiState.value.nextEpisode ?: return
@@ -656,7 +656,7 @@ internal class PlayerScreenViewModel @Inject constructor(
                 if (!events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED))
                     return@listenTo
 
-                val isFinished = !isPlaying && currentPosition >= duration
+                val isFinished = !isPlaying && currentPosition >= duration && duration > 0
                 val nextEpisode = _uiState.value.nextEpisode
                 if (isFinished && nextEpisode != null) {
                     onEpisodeChange(nextEpisode)
