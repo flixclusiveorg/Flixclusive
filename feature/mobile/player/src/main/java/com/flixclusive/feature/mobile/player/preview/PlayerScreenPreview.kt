@@ -83,7 +83,6 @@ private fun PlayerScreenBasePreview() {
             server = PreviewPlayerData.getTestMediaServers()[currentServer],
             subtitles = PreviewPlayerData.getTestMediaSubtitles(),
             startPositionMs = 0L,
-            playImmediately = true,
         )
     }
 
@@ -110,7 +109,6 @@ private fun PlayerScreenBasePreview() {
             server = PreviewPlayerData.getTestMediaServers()[currentServer],
             subtitles = PreviewPlayerData.getTestMediaSubtitles(),
             startPositionMs = player.currentPosition,
-            playImmediately = true,
         )
     }
 

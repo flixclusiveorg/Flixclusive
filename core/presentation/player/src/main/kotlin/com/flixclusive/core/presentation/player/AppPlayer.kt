@@ -173,7 +173,6 @@ class AppPlayer(
         server: PlayerServer,
         subtitles: List<PlayerSubtitle>,
         startPositionMs: Long,
-        playImmediately: Boolean,
     ) {
         if (exoPlayer == null) return
 
@@ -182,19 +181,17 @@ class AppPlayer(
             subtitles = subtitles,
         )
 
-        if (playImmediately) {
-            infoLog("Preparing the player...")
-            server.headers?.let {
-                dataSourceFactory.setRequestProperties(it)
-            }
-
-            mediaSourceManager.currentMediaSource = mediaSource
-
-            exoPlayer?.setMediaSource(mediaSource)
-            seekTo(startPositionMs)
-            prepare()
-            playWhenReady = _playWhenReady
+        infoLog("Preparing the player...")
+        server.headers?.let {
+            dataSourceFactory.setRequestProperties(it)
         }
+
+        mediaSourceManager.currentMediaSource = mediaSource
+
+        exoPlayer?.setMediaSource(mediaSource)
+        seekTo(startPositionMs)
+        prepare()
+        playWhenReady = _playWhenReady
     }
 
     fun addSubtitle(subtitle: PlayerSubtitle): Boolean {

@@ -169,7 +169,7 @@ class PlayerScreenViewModelTest {
         every { player.duration } returns 100000L
         every { player.addSubtitle(any()) } just Runs
         every { player.switchMediaSource(any()) } returns false
-        every { player.prepare(any(), any(), any(), any()) } just Runs
+        every { player.prepare(any(), any(), any()) } just Runs
 
         coEvery { setWatchProgress(any()) } just Runs
     }
@@ -462,7 +462,7 @@ class PlayerScreenViewModelTest {
 
             advanceUntilIdle()
 
-            verify { player.prepare(any(), any(), any(), any()) }
+            verify { player.prepare(any(), any(), any()) }
         }
 
     @Test
