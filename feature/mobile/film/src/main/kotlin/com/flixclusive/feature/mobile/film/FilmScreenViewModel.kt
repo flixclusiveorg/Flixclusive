@@ -356,7 +356,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
             }
 
             val watchProgress = episodeWithProgress.watchProgress
-            if (watchProgress == null) {
+            if (watchProgress == null || !watchProgress.isFinished) {
                 watchProgressRepository.insert(
                     film = film,
                     item = EpisodeProgress(
@@ -365,8 +365,7 @@ internal class FilmScreenViewModel @AssistedInject constructor(
                         seasonNumber = episodeWithProgress.episode.season,
                         episodeNumber = episodeWithProgress.episode.number,
                         status = WatchStatus.COMPLETED,
-                        progress = 1L, // Mark as fully watched (100%)
-                        duration = 1L,
+                        progress = 0L
                     ),
                 )
             } else {
