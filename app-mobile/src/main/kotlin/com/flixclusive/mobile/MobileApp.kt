@@ -3,17 +3,21 @@ package com.flixclusive.mobile
 import android.annotation.SuppressLint
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
@@ -64,6 +68,7 @@ import com.flixclusive.mobile.component.BottomBar
 import com.flixclusive.mobile.component.DisplayChangelogsObserver
 import com.flixclusive.mobile.component.FilmCoverPreview
 import com.flixclusive.mobile.component.FilmPreviewBottomSheet
+import com.flixclusive.mobile.component.PlayerSplashScreen
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmMetadata
 import com.flixclusive.model.film.common.tv.Episode
@@ -92,6 +97,7 @@ import com.ramcosta.composedestinations.spec.Route
 import com.ramcosta.composedestinations.utils.currentDestinationFlow
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -117,7 +123,6 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
 
     var hasBeenDisconnected by remember { mutableStateOf(false) }
     var fullScreenImageToShow: String? by remember { mutableStateOf(null) }
-    var wasOnPlayerScreen by remember { mutableStateOf(false) } // Track if we were on the player screen
 
     val scope = rememberCoroutineScope()
 
@@ -135,11 +140,31 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
     )
     val currentNavGraph by navController.currentScreenAsState(AppmobileNavGraphs.home)
 
-    fun onStartPlayer(playerData: PlayerData) {
+    var useBottomBar by remember {
+        mutableStateOf(shouldHideBottomBar(route = currentSelectedScreen))
+    }
+
+    var isNavigatingToPlayerScreen by remember { mutableStateOf(false) }
+
+    BackHandler(
+        enabled = uiState.loadLinksState.isSuccess
+    ) {
+        // No-op to disable back navigation while the app is transitioning to the player screen
+    }
+
+    suspend fun transitionToPlayer(playerData: PlayerData) {
+        useBottomBar = false
+        delay(500)
+        isNavigatingToPlayerScreen = true
+        delay(1200)
+        isNavigatingToPlayerScreen = false
+
         val (film, episode) = playerData
         if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             destinationsNavigator.navigate(PlayerScreenDestination(film = film as FilmMetadata, episode = episode))
         }
+
+        viewModel.updateLoadLinksState(LoadLinksState.Idle)
     }
 
     DisplayChangelogsObserver(
@@ -148,6 +173,10 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         currentSelectedScreen = currentSelectedScreen,
         onSaveLastSeenChangelogs = viewModel::onSaveLastSeenChangelogs,
     )
+
+    LaunchedEffect(currentSelectedScreen) {
+        useBottomBar = shouldHideBottomBar(route = currentSelectedScreen)
+    }
 
     LaunchedEffect(true) {
         combine(
@@ -159,27 +188,15 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         ) { screen, (loadLinksState, playerData), linksCache ->
             if (
                 screen != PlayerScreenDestination &&
-                loadLinksState is LoadLinksState.Success &&
+                loadLinksState.isSuccess &&
                 playerData != null &&
                 linksCache != null
             ) {
-                onStartPlayer(playerData)
-                viewModel.updateLoadLinksState(LoadLinksState.Idle)
+                transitionToPlayer(playerData)
+                return@combine
             }
         }.debounce(300)
             .collect()
-    }
-
-    // Detect when we leave the PlayerScreen to stop loading links if needed
-    LaunchedEffect(currentSelectedScreen) {
-        val isPlayerScreen = currentSelectedScreen == PlayerScreenDestination
-        val isGoingBackFromPlayerScreen = wasOnPlayerScreen && !isPlayerScreen
-
-        if (isGoingBackFromPlayerScreen) {
-            viewModel.onStopLoadingLinks(isForceClosing = true)
-        }
-
-        wasOnPlayerScreen = isPlayerScreen
     }
 
     LaunchedEffect(isConnectedAtNetwork) {
@@ -195,25 +212,18 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
             hasBeenDisconnected = false
             snackBarHostState.showSnackbar(
                 NetworkMonitorSnackbarVisuals(
-                    message = UiText.StringResource(LocaleR.string.online_message).asString(context),
+                    message = UiText.from(LocaleR.string.online_message).asString(context),
                     isDisconnected = false,
                 ),
             )
         }
     }
 
-    val useBottomBar =
-        remember(currentSelectedScreen) {
-            shouldHideBottomBar(route = currentSelectedScreen)
-        }
-
-    val windowInsets = when (currentSelectedScreen) {
-        SplashScreenDestination -> WindowInsets.systemBars
-        else -> WindowInsets(0.dp)
-    }
-
     Scaffold(
-        contentWindowInsets = windowInsets,
+        contentWindowInsets = when (currentSelectedScreen) {
+            SplashScreenDestination -> WindowInsets.systemBars
+            else -> WindowInsets(0.dp)
+        },
         snackbarHost = {
             if (!isInPipMode) {
                 NetworkMonitorSnackbarHost(hostState = snackBarHostState)
@@ -222,7 +232,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         bottomBar = {
             AnimatedVisibility(
                 visible = useBottomBar,
-                enter = slideInVertically(tween(450)) { it },
+                enter = slideInVertically(tween(450, delayMillis = 300)) { it },
                 exit = slideOutVertically(tween(400)) { it },
             ) {
                 BottomBar(
@@ -242,34 +252,45 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         CompositionLocalProvider(
             LocalGlobalScaffoldPadding provides padding,
         ) {
-            AppNavHost(
-                navController = navController,
-                exitAction = remember {
-                    object : ExitAction {
-                        override fun onExitApplication() {
-                            finish()
-                            exitProcess(0)
+            Box {
+                AppNavHost(
+                    navController = navController,
+                    exitAction = remember {
+                        object : ExitAction {
+                            override fun onExitApplication() {
+                                finish()
+                                exitProcess(0)
+                            }
                         }
-                    }
-                },
-                previewFilmAction = remember {
-                    object : ViewFilmPreviewAction {
-                        override fun previewFilm(film: Film) {
-                            viewModel.previewFilm(film)
+                    },
+                    previewFilmAction = remember {
+                        object : ViewFilmPreviewAction {
+                            override fun previewFilm(film: Film) {
+                                viewModel.previewFilm(film)
+                            }
                         }
-                    }
-                },
-                startPlayerAction = remember {
-                    object : StartPlayerAction {
-                        override fun play(
-                            film: Film,
-                            episode: Episode?,
-                        ) {
-                            viewModel.onFetchMediaLinks(film, episode)
+                    },
+                    startPlayerAction = remember {
+                        object : StartPlayerAction {
+                            override fun play(
+                                film: Film,
+                                episode: Episode?,
+                            ) {
+                                viewModel.onFetchMediaLinks(film, episode)
+                            }
                         }
-                    }
-                },
-            )
+                    },
+                )
+
+                AnimatedVisibility(
+                    visible = isNavigatingToPlayerScreen,
+                    enter = slideInHorizontally(tween(450)) { it },
+                    exit = slideOutHorizontally(tween(400)) { it },
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    PlayerSplashScreen()
+                }
+            }
         }
     }
 
@@ -323,32 +344,38 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
             )
         }
 
-        if (!uiState.loadLinksState.isIdle) {
+        if (!uiState.loadLinksState.isIdle && uiState.playerData != null) {
             val cachedLinks by viewModel.currentLinksCache.collectAsStateWithLifecycle()
 
             LaunchedEffect(true) {
                 window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
 
-            MediaLinksBottomSheet(
-                state = uiState.loadLinksState,
-                streams = cachedLinks?.streams ?: emptyList(),
-                subtitles = cachedLinks?.subtitles ?: emptyList(),
-                onLinkClick = { /*TODO: Add link chooser navigation for player screen*/ },
-                onSkipLoading = {
-                    if (uiState.playerData != null) {
-                        onStartPlayer(uiState.playerData!!)
-                        viewModel.updateLoadLinksState(LoadLinksState.Idle)
-                    }
-                },
-                onDismiss = {
-                    viewModel.onStopLoadingLinks(isForceClosing = true)
-                    viewModel.onRemovePreviewFilm() // In case, the bottom sheet is opened
-                },
-            )
+            if (!isNavigatingToPlayerScreen && useBottomBar) {
+                MediaLinksBottomSheet(
+                    state = uiState.loadLinksState,
+                    streams = cachedLinks?.streams ?: emptyList(),
+                    subtitles = cachedLinks?.subtitles ?: emptyList(),
+                    onLinkClick = { /*TODO: Add link chooser navigation for player screen*/ },
+                    onSkipLoading = {
+                        scope.launch {
+                            transitionToPlayer(uiState.playerData!!)
+                        }
+                    },
+                    onDismiss = {
+                        viewModel.onStopLoadingLinks(isForceClosing = true)
+                        viewModel.onRemovePreviewFilm() // In case, the bottom sheet is opened
+                    },
+                )
+            }
         } else {
             LaunchedEffect(true) {
                 window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+                // Reset the state to idle if the player data is null to
+                // prevent getting stuck in a non-idle state. This can happen
+                // if the user comes back from the player screen before the links finish loading.
+                viewModel.updateLoadLinksState(LoadLinksState.Idle)
             }
         }
 

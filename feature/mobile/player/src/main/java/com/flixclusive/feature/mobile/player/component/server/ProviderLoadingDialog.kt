@@ -36,8 +36,8 @@ import com.flixclusive.core.presentation.common.components.GradientLinearProgres
 import com.flixclusive.core.presentation.common.extensions.getActivity
 import com.flixclusive.core.presentation.mobile.components.GlassSurface
 import com.flixclusive.core.presentation.mobile.extensions.fillMaxAdaptiveWidth
+import com.flixclusive.core.presentation.mobile.extensions.toggleSystemBars
 import com.flixclusive.core.presentation.mobile.util.AdaptiveTextStyle.asAdaptiveTextStyle
-import com.flixclusive.feature.mobile.player.component.effect.toggleSystemBars
 import com.flixclusive.core.drawables.R as UiCommonR
 import com.flixclusive.core.strings.R as LocaleR
 
