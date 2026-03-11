@@ -60,16 +60,6 @@ internal fun ServersScreen(
         derivedStateOf { providers.indexOfFirst { it.id == currentProvider.id }.coerceAtLeast(0) }
     }
 
-    val serverList = servers()
-    val failedIndices by remember(serverList) {
-        derivedStateOf {
-            val failedUrls = failedStreamUrls()
-            serverList.mapIndexedNotNull { index, server ->
-                if (failedUrls.contains(server.url)) index else null
-            }.toSet()
-        }
-    }
-
     BackHandler {
         onDismiss()
     }
@@ -135,12 +125,12 @@ internal fun ServersScreen(
                     icon = painterResource(id = PlayerR.drawable.round_cloud_queue_24),
                     contentDescription = stringResource(id = LocaleR.string.servers),
                     label = stringResource(id = LocaleR.string.servers),
-                    items = serverList,
+                    items = servers(),
                     selectedIndex = currentServer(),
                     onItemClick = onServerChange,
-                    failedIndices = failedIndices,
+                    failedItems = failedStreamUrls,
                     onItemLongClick = {
-                        val item = serverList[it]
+                        val item = servers()[it]
                         val data = """
                             Server label: ${item.label}
                             Server source: ${item.source}
@@ -157,7 +147,7 @@ internal fun ServersScreen(
             }
 
             AnimatedVisibility(
-                visible = failedIndices.isNotEmpty(),
+                visible = failedStreamUrls().isNotEmpty(),
                 enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
                 exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut(),
                 modifier = Modifier.align(Alignment.Start)

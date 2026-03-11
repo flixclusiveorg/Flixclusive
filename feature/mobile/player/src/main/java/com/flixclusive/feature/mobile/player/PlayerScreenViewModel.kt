@@ -428,8 +428,9 @@ internal class PlayerScreenViewModel @Inject constructor(
         val cacheKey = CacheKey.create(
             filmId = filmMetadata.identifier,
             providerId = _uiState.value.currentProvider,
-            episode = selectedEpisode.value,
+            episode = _uiState.value.currentEpisode,
         )
+
         cachedLinksRepository.markStreamAsFailed(cacheKey, server.url)
     }
 

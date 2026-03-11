@@ -44,7 +44,7 @@ internal fun <Type> ListContentHolder(
     selectedIndex: Int,
     onItemClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    failedIndices: Set<Int> = emptySet(),
+    failedItems: () -> Set<String> = { emptySet() },
     onItemLongClick: (Int) -> Unit = {},
     actions: @Composable RowScope.() -> Unit = { }
 ) {
@@ -80,7 +80,8 @@ internal fun <Type> ListContentHolder(
                     }
                 }
             ) { i ->
-                val name = when (val item = items.elementAt(i)) {
+                val item = items.elementAt(i)
+                val name = when (item) {
                     is String -> item
                     is ProviderMetadata -> item.name
                     is PlayerTrack -> item.label
@@ -90,7 +91,11 @@ internal fun <Type> ListContentHolder(
                 ListItem(
                     name = name,
                     isSelected = i == selectedIndex,
-                    isFailed = remember { derivedStateOf { i in failedIndices } }.value,
+                    isFailed = if (item is PlayerServer) {
+                        remember { derivedStateOf { item.url in failedItems() } }.value
+                    } else {
+                        false
+                    },
                     onClick = { onItemClick(i) },
                     onLongClick = { onItemLongClick(i) },
                     modifier = Modifier.animateItem()

@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.common.provider.LoadLinksState
 import com.flixclusive.core.datastore.model.user.PlayerPreferences
 import com.flixclusive.core.datastore.model.user.SubtitlesPreferences
@@ -77,6 +78,9 @@ private fun PlayerScreenBasePreview() {
         )
     }
 
+    var loadLinksState by remember { mutableStateOf<LoadLinksState>(LoadLinksState.Idle) }
+    var canSkipLoading by remember { mutableStateOf(false) }
+
     LaunchedEffect(true) {
         player.initialize()
         player.prepare(
@@ -84,6 +88,26 @@ private fun PlayerScreenBasePreview() {
             subtitles = PreviewPlayerData.getTestMediaSubtitles(),
             startPositionMs = 0L,
         )
+    }
+
+    LaunchedEffect(Unit) {
+        // Simulate loading states cycle
+        delay(1500)
+        loadLinksState = LoadLinksState.Fetching()
+        delay(1500)
+        loadLinksState = LoadLinksState.Extracting(providerId = currentProvider.id)
+        delay(1500)
+        canSkipLoading = true
+        loadLinksState = LoadLinksState.Extracting(providerId = currentProvider.id, message = "Extracting from ${currentProvider.name}...")
+        delay(1500)
+        canSkipLoading = false
+        loadLinksState = LoadLinksState.Error(UiText.from("Connection timed out. The remote server did not respond within the expected timeframe."))
+        delay(3000)
+        loadLinksState = LoadLinksState.Unavailable()
+        delay(3000)
+        loadLinksState = LoadLinksState.Success(providerId = currentProvider.id)
+        delay(1500)
+        loadLinksState = LoadLinksState.Idle
     }
 
     LaunchedEffect(Unit) {
@@ -137,8 +161,8 @@ private fun PlayerScreenBasePreview() {
                 snackbarState = snackbarState,
                 onUpdateWatchProgress = {},
                 modifier = Modifier.background(Color.Black),
-                loadLinksState = { LoadLinksState.Idle },
-                canSkipLoading = { false },
+                loadLinksState = { loadLinksState },
+                canSkipLoading = { canSkipLoading },
                 onSkipProviderLoading = { },
                 onCancelLoading = { },
                 onServerFail = { },
