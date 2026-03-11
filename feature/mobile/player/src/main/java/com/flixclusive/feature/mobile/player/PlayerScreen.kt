@@ -59,9 +59,7 @@ internal fun PlayerScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val canSkipLoading by viewModel.canSkipLoading.collectAsStateWithLifecycle()
     val currentProvider = remember(uiState.currentProvider) {
-        viewModel.providers.find {
-            it.id == uiState.currentProvider
-        } ?: throw IllegalStateException("Selected provider not found in the list of providers")
+        viewModel.providers.find { it.id == uiState.currentProvider }
     }
 
     val snackbarState = rememberPlayerSnackbarState()
@@ -76,6 +74,14 @@ internal fun PlayerScreen(
         viewModel.player.errors.collect { error ->
             snackbarState.showError(error.asString(context))
         }
+    }
+
+    if (currentProvider == null) {
+        LaunchedEffect(Unit) {
+            context.showToast(resources.getString(R.string.no_servers_error))
+            navigator.goBack()
+        }
+        return
     }
 
     PlayerScreenContent(

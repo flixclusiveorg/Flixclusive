@@ -1,6 +1,7 @@
 package com.flixclusive.feature.mobile.player
 
 import android.content.Context
+import androidx.annotation.MainThread
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
@@ -27,6 +28,7 @@ import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.CacheKey
 import com.flixclusive.data.provider.repository.CacheKey.Companion.toCacheKey
+import com.flixclusive.data.provider.repository.CachedLinks
 import com.flixclusive.data.provider.repository.CachedLinksRepository
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.SetWatchProgressUseCase
@@ -154,8 +156,7 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(
         value = PlayerUiState(
-            currentProvider = cachedLinksRepository.currentCache.value?.providerId
-                ?: throw NullPointerException("Current cache must not be null when initializing the player"),
+            currentProvider = cachedLinksRepository.currentCache.value?.providerId ?: "",
             currentEpisode = navArgs.episode,
             currentSeason = navArgs.episode?.season,
         )
@@ -315,26 +316,17 @@ internal class PlayerScreenViewModel @Inject constructor(
         val cacheKey = CacheKey.create(
             filmId = filmMetadata.identifier,
             providerId = _uiState.value.currentProvider,
-            episode = selectedEpisode.value,
+            episode = _uiState.value.currentEpisode,
         )
 
         val cache = cachedLinksRepository.getCache(cacheKey) ?: return
-        val servers = cache.streams.cleanDuplicates {
-            (it as Stream).toPlayerServer()
-        }
-
-        if (serverIndex !in servers.indices) return
+        if (serverIndex !in cache.streams.indices) return
 
         _uiState.update { it.copy(currentServer = serverIndex) }
-
-        changeServerJob = viewModelScope.launch {
-            loadLinks(
-                providerId = _uiState.value.currentProvider,
-                startPositionMs = player.currentPosition,
-                episode = selectedEpisode.value,
-                playImmediately = true,
-            )
-        }
+        player.prepare(
+            cache = cache,
+            startPositionMs = player.currentPosition,
+        )
     }
 
     fun onProviderChange(providerId: String) {
@@ -352,25 +344,37 @@ internal class PlayerScreenViewModel @Inject constructor(
         }
 
         changeProviderJob = viewModelScope.launch {
-            val success = loadLinks(
+            val (key, cache) = loadLinks(
                 providerId = providerId,
-                startPositionMs = withContext(appDispatchers.main) { player.currentPosition },
-                episode = selectedEpisode.value,
-                playImmediately = true,
+                episode = _uiState.value.currentEpisode,
             )
 
-            if (!success) {
+            if (cache == null) {
                 _uiState.update {
                     it.copy(
                         currentProvider = currentProvider,
                         currentServer = currentServer
                     )
                 }
-            } else if (filmMetadata is TvShow) {
-                val nextEpisode = getNextEpisode(selectedEpisode.value)
-                _uiState.update {
-                    it.copy(nextEpisode = nextEpisode)
-                }
+                return@launch
+            }
+
+            // TODO: Uncomment this once we support provider changing even if [filmMetadata] didn't come from TMDb.
+            //  The current workaround now is we lock and filter available providers based on the [filmMetadata.providerId]
+            //  if the metadata didn't come from TMDb, but ideally we should be able to switch between providers
+            //  even for non-TMDb films as long as they have support the identifiers of the film (e.g. IMDb ID).
+
+            // if (filmMetadata is TvShow) {
+            //     val nextEpisode = getNextEpisode(currentEpisode)
+            //     _uiState.update { it.copy(nextEpisode = nextEpisode) }
+            // }
+
+            cachedLinksRepository.setCurrentCache(key)
+            withContext(appDispatchers.main) {
+                player.prepare(
+                    cache = cache,
+                    startPositionMs = player.currentPosition,
+                )
             }
         }
 
@@ -404,28 +408,17 @@ internal class PlayerScreenViewModel @Inject constructor(
             else -> return
         }
 
-        val servers = cache.streams.cleanDuplicates {
-            (it as Stream).toPlayerServer()
-        }
-        val subtitles = cache.subtitles.cleanDuplicates {
-            (it as Subtitle).toPlayerSubtitle()
-        }
-
-        val currentServer = servers.getIndexOfPreferredQuality(playerPreferences.value.quality)
         _uiState.update {
             it.copy(
                 currentProvider = providerId,
-                currentServer = currentServer,
                 loadLinksState = LoadLinksState.Idle,
             )
         }
 
         viewModelScope.launch(appDispatchers.main) {
             player.prepare(
-                server = servers[currentServer],
-                subtitles = subtitles,
+                cache = cache,
                 startPositionMs = player.currentPosition,
-                playImmediately = true,
             )
         }
     }
@@ -459,13 +452,9 @@ internal class PlayerScreenViewModel @Inject constructor(
         updateWatchProgress()
 
         queueNextEpisodeJob = viewModelScope.launch {
-            val startPositionMs = getSavedStartPositionMs(episode)
-
             loadLinks(
                 providerId = _uiState.value.currentProvider,
-                startPositionMs = startPositionMs,
                 episode = episode,
-                playImmediately = false,
                 quiet = true,
             )
         }
@@ -482,18 +471,24 @@ internal class PlayerScreenViewModel @Inject constructor(
         changeEpisodeJob = viewModelScope.launch {
             val startPositionMs = getSavedStartPositionMs(episode)
 
-            val success = loadLinks(
+            val (key, cache) = loadLinks(
                 providerId = _uiState.value.currentProvider,
-                startPositionMs = startPositionMs,
                 episode = episode,
-                playImmediately = true,
             )
 
-            if (success) {
+            if (cache != null) {
+                cachedLinksRepository.setCurrentCache(key)
                 _uiState.update {
                     it.copy(
                         currentEpisode = episode,
                         nextEpisode = getNextEpisode(episode)
+                    )
+                }
+
+                withContext(appDispatchers.main) {
+                    player.prepare(
+                        cache = cache,
+                        startPositionMs = startPositionMs,
                     )
                 }
             }
@@ -504,84 +499,76 @@ internal class PlayerScreenViewModel @Inject constructor(
         _uiState.update { it.copy(currentSeason = seasonNumber) }
     }
 
-    /**
-     * Loads the media links for the given [providerId] and prepares the player.
-     *
-     * @param providerId The ID of the provider to load links from.
-     * @param startPositionMs The position to start playback from, in milliseconds.
-     * @param episode The episode to load links for, if [filmMetadata] is a [TvShow].
-     * @param playImmediately Whether to start playback immediately after loading the links.
-     * @param quiet Whether to not show loading/error states in the player.
-     *
-     * @return True if the links were loaded and the player was prepared, false if the links were already loaded.
-     * */
     private suspend fun loadLinks(
         providerId: String,
-        startPositionMs: Long,
         episode: Episode?,
-        playImmediately: Boolean = false,
         quiet: Boolean = false,
-    ): Boolean {
+    ): Pair<CacheKey, CachedLinks?> {
         val cacheKey = CacheKey.create(
             filmId = filmMetadata.identifier,
             providerId = providerId,
             episode = episode,
         )
 
-        // Check if we have cached links for this key
-        var cache = cachedLinksRepository.getCache(cacheKey)
-
-        if (cache == null) {
-            var areLinksLoaded = false
-
-            val response = when (filmMetadata) {
-                is Movie -> {
-                    getMediaLinks(
-                        movie = filmMetadata,
-                        providerId = providerId,
-                    )
-                }
-
-                is TvShow -> {
-                    requireNotNull(episode) {
-                        "Selected episode must not be null when loading links for a TV show"
-                    }
-
-                    getMediaLinks(
-                        tvShow = filmMetadata,
-                        episode = episode,
-                        providerId = providerId,
-                    )
-                }
-
-                else -> throw IllegalStateException("Unsupported film type: $filmMetadata")
-            }
-
-            response
-                .catch { error ->
-                    if (quiet) return@catch
-
-                    _uiState.update { it.copy(loadLinksState = LoadLinksState.Error(error)) }
-                }.collect { state ->
-                    _uiState.update {
-                        if (state.isSuccess) {
-                            areLinksLoaded = true
-
-                            return@update it.copy(
-                                currentProvider = providerId,
-                                loadLinksState = if (quiet) it.loadLinksState else LoadLinksState.Idle,
-                            )
-                        }
-
-                        it.copy(loadLinksState = if (quiet) it.loadLinksState else state)
-                    }
-                }
-
-            if (!areLinksLoaded) return false
-
-            cache = cachedLinksRepository.getCache(cacheKey) ?: return false
+        val cache = cachedLinksRepository.getCache(cacheKey)
+        if (cache?.hasExtractedSuccessfully == true) {
+            return cacheKey to cache
         }
 
+        val response = when (filmMetadata) {
+            is Movie -> {
+                getMediaLinks(
+                    movie = filmMetadata,
+                    providerId = providerId,
+                )
+            }
+
+            is TvShow -> {
+                requireNotNull(episode) {
+                    "Selected episode must not be null when loading links for a TV show"
+                }
+
+                getMediaLinks(
+                    tvShow = filmMetadata,
+                    episode = episode,
+                    providerId = providerId,
+                )
+            }
+
+            else -> throw IllegalStateException("Unsupported film type: $filmMetadata")
+        }
+
+        response
+            .catch { error ->
+                if (quiet) return@catch
+
+                _uiState.update { it.copy(loadLinksState = LoadLinksState.Error(error)) }
+            }.collect { state ->
+                _uiState.update {
+                    val hasSkippedLoading = state.isError && it.loadLinksState.isIdle
+                    if (hasSkippedLoading && !quiet) {
+                        return@update it
+                    }
+
+                    if (state.isSuccess) {
+                        return@update it.copy(
+                            currentProvider = providerId,
+                            loadLinksState = if (quiet) it.loadLinksState else LoadLinksState.Idle,
+                        )
+                    }
+
+                    it.copy(loadLinksState = if (quiet) it.loadLinksState else state)
+                }
+            }
+
+        return cacheKey to cachedLinksRepository.getCache(cacheKey)
+    }
+
+    @MainThread
+    private fun AppPlayer.prepare(
+        cache: CachedLinks,
+        startPositionMs: Long,
+    ) {
         val servers = cache.streams.cleanDuplicates {
             (it as Stream).toPlayerServer()
         }
@@ -589,29 +576,18 @@ internal class PlayerScreenViewModel @Inject constructor(
             (it as Subtitle).toPlayerSubtitle()
         }
 
-        if (playImmediately) {
-            cachedLinksRepository.setCurrentCache(cacheKey)
-        }
-
         var currentServer = _uiState.value.currentServer
         if (currentServer !in servers.indices) {
             currentServer = servers.getIndexOfPreferredQuality(playerPreferences.value.quality)
 
-            if (playImmediately) {
-                _uiState.update { it.copy(currentServer = currentServer) }
-            }
+            _uiState.update { it.copy(currentServer = currentServer) }
         }
 
-        withContext(appDispatchers.main) {
-            player.prepare(
-                server = servers[currentServer],
-                subtitles = subtitles,
-                startPositionMs = startPositionMs,
-                playImmediately = playImmediately,
-            )
-        }
-
-        return true
+        player.prepare(
+            server = servers[currentServer],
+            subtitles = subtitles,
+            startPositionMs = startPositionMs,
+        )
     }
 
     /**
@@ -735,37 +711,27 @@ internal class PlayerScreenViewModel @Inject constructor(
 
     private fun initialize() {
         viewModelScope.launch {
-            if (navArgs.episode != null) {
-                changeProviderJob?.cancel()
-                changeEpisodeJob?.cancel()
-                queueNextEpisodeJob?.cancel()
-                _uiState.update { it.copy(loadLinksState = LoadLinksState.Idle) }
+            val cacheKey = CacheKey.create(
+                filmId = filmMetadata.identifier,
+                providerId = _uiState.value.currentProvider,
+                episode = _uiState.value.currentEpisode,
+            )
 
-                val startPositionMs = getSavedStartPositionMs(navArgs.episode)
+            val cache = cachedLinksRepository.getCache(cacheKey)
+            if (cache == null || cache.hasStreamableLinks == false) {
+                return@launch
+            }
 
-                val success = loadLinks(
-                    providerId = _uiState.value.currentProvider,
-                    startPositionMs = startPositionMs,
-                    episode = navArgs.episode,
-                    playImmediately = true,
-                )
+            cachedLinksRepository.setCurrentCache(cacheKey)
+            val nextEpisode = getNextEpisode(navArgs.episode)
+            _uiState.update {
+                it.copy(nextEpisode = nextEpisode)
+            }
 
-                // Pre-fetch next episode if available and if the current metadata is a TV show
-                if (success && filmMetadata is TvShow) {
-                    val nextEpisode = getNextEpisode(navArgs.episode)
-                    _uiState.update {
-                        it.copy(nextEpisode = nextEpisode)
-                    }
-                }
-            } else {
-                val startPositionMs = getSavedStartPositionMs()
-
-                // Load links for the movie once
-                loadLinks(
-                    providerId = _uiState.value.currentProvider,
-                    startPositionMs = startPositionMs,
-                    episode = null,
-                    playImmediately = true,
+            withContext(appDispatchers.main) {
+                player.prepare(
+                    cache = cache,
+                    startPositionMs = getSavedStartPositionMs(navArgs.episode),
                 )
             }
         }
@@ -778,7 +744,7 @@ private const val QUEUE_THRESHOLD = 0.8
 
 @Immutable
 internal data class PlayerUiState(
-    val currentProvider: String,
+    val currentProvider: String = "",
     val currentSeason: Int? = null,
     val currentEpisode: Episode? = null,
     val currentServer: Int = -1,

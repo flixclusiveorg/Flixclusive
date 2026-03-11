@@ -109,7 +109,7 @@ internal class GetMediaLinksUseCaseImpl
                 )
             )
 
-            val isCached = oldCache?.hasStreamableLinks == true
+            val isCached = oldCache?.isReady == true
             if (isCached && film.isFromTmdb && apis.isEmpty()) {
                 send(LoadLinksState.SuccessWithTrustedProviders)
                 return@channelFlow
@@ -152,10 +152,14 @@ internal class GetMediaLinksUseCaseImpl
                 )
 
                 // Check if the cache already exists for this provider
-                val existingCache = cachedLinksRepository.getCache(cacheKey)
-                if (existingCache?.hasStreamableLinks == true) {
-                    cachedLinksRepository.reuseCache(cacheKey, existingCache)
-                    send(LoadLinksState.Success(providerId = existingCache.providerId))
+                val cache = cachedLinksRepository.getCache(cacheKey)
+                    ?: CachedLinks(
+                        providerId = id,
+                        thumbnail = film.backdropImage ?: film.posterImage,
+                    )
+
+                if (cache.isReady) {
+                    send(LoadLinksState.Success(providerId = cache.providerId))
                     return true
                 }
 
@@ -168,7 +172,11 @@ internal class GetMediaLinksUseCaseImpl
                     return false
                 }
 
-                val watchIdTouse = if (watchId == null && film.isFromTmdb) {
+                val watchIdTouse = if (
+                    watchId == null
+                    && film.isFromTmdb
+                    && cache.watchId.isEmpty()
+                ) {
                     // Get the watch ID of the TMDB movie from the given provider API
                     val response = api.getWatchId(film = film)
                     if (response is Resource.Failure || response.data == null) {
@@ -179,16 +187,17 @@ internal class GetMediaLinksUseCaseImpl
 
                     response.data!!
                 } else {
-                    watchId!!
+                    watchId ?: cache.watchId.takeIf { it.isNotEmpty() }
+                }
+
+                if (watchIdTouse == null) {
+                    send(LoadLinksState.Error(UiText.from(R.string.no_watch_id_message)))
+                    return false
                 }
 
                 cachedLinksRepository.storeCache(
                     key = cacheKey,
-                    cachedLinks = CachedLinks(
-                        watchId = watchIdTouse,
-                        providerId = id,
-                        thumbnail = film.backdropImage ?: film.posterImage,
-                    ),
+                    cachedLinks = cache.copy(watchId = watchIdTouse),
                 )
 
                 sendExtractingLinksMessage(
@@ -213,6 +222,7 @@ internal class GetMediaLinksUseCaseImpl
                     is Resource.Success -> {
                         val cache = cachedLinksRepository.getCache(cacheKey)
                         if (cache != null && cache.hasStreamableLinks) {
+                            cachedLinksRepository.storeCache(cacheKey, cache.copy(hasExtractedSuccessfully = true))
                             send(LoadLinksState.Success(providerId = cache.providerId))
                             return true
                         } else {
@@ -298,21 +308,6 @@ internal class GetMediaLinksUseCaseImpl
                 is Resource.Failure -> throw ExceptionWithUiText(response.error)
                 Resource.Loading -> Unit
             }
-        }
-
-        /**
-         * Refreshes the cache for a given [CacheKey] with the provided [CachedLinks].
-         *
-         * This function removes the existing cache for the given key and stores the new cache.
-         *
-         * The reason for removing first is to ensure th
-         * */
-        private fun CachedLinksRepository.reuseCache(
-            cacheKey: CacheKey,
-            cache: CachedLinks,
-        ) {
-            removeCache(cacheKey)
-            storeCache(cacheKey, cache)
         }
 
         /**

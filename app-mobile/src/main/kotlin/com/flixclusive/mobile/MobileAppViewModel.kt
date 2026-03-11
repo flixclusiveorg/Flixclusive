@@ -142,6 +142,7 @@ internal class MobileAppViewModel @Inject constructor(
         if (onFetchMediaLinksJob?.isActive == true) return
 
         onFetchMediaLinksJob = viewModelScope.launch {
+            cachedLinksRepository.setCurrentCache(null)
             updateLoadLinksState(LoadLinksState.Fetching(LocaleR.string.film_data_fetching))
 
             val metadata = getFilmMetadata(film = film)

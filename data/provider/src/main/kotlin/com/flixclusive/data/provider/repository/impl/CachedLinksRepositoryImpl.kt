@@ -133,6 +133,7 @@ internal class CachedLinksRepositoryImpl @Inject constructor(
     override fun clear() {
         map.clear()
         _caches.value = map.toMap()
+        currentCacheKey.value = null
     }
 
     override fun markStreamAsFailed(key: CacheKey, streamUrl: String) {
