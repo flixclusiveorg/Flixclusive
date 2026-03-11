@@ -140,7 +140,6 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
         if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             destinationsNavigator.navigate(PlayerScreenDestination(film = film as FilmMetadata, episode = episode))
         }
-        viewModel.updateLoadLinksState(LoadLinksState.Idle)
     }
 
     DisplayChangelogsObserver(
@@ -165,6 +164,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                 linksCache != null
             ) {
                 onStartPlayer(playerData)
+                viewModel.updateLoadLinksState(LoadLinksState.Idle)
             }
         }.debounce(300)
             .collect()
@@ -338,6 +338,7 @@ internal fun MobileActivity.MobileApp(viewModel: MobileAppViewModel) {
                 onSkipLoading = {
                     if (uiState.playerData != null) {
                         onStartPlayer(uiState.playerData!!)
+                        viewModel.updateLoadLinksState(LoadLinksState.Idle)
                     }
                 },
                 onDismiss = {

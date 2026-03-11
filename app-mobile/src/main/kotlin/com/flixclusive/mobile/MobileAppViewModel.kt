@@ -279,7 +279,12 @@ internal class MobileAppViewModel @Inject constructor(
             }
         }
 
-        _uiState.update { it.copy(loadLinksState = state) }
+        _uiState.update {
+            it.copy(
+                loadLinksState = state,
+                playerData = if (state.isIdle) null else it.playerData
+            )
+        }
     }
 
     private fun isFailureButHasLinks(): Boolean {
