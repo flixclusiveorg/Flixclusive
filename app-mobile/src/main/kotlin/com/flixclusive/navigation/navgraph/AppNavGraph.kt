@@ -9,6 +9,7 @@ import com.flixclusive.feature.mobile.markdown.MarkdownScreen
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreen
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavArgs
 import com.flixclusive.feature.mobile.seeAll.SeeAllScreenNavigator
+import com.flixclusive.navigation.AppDefaultTransition
 import com.flixclusive.navigation.InternalDestination
 import com.ramcosta.composedestinations.annotation.ExternalDestination
 import com.ramcosta.composedestinations.annotation.ExternalModuleDestinations
@@ -22,7 +23,7 @@ import com.ramcosta.composedestinations.generated.useradd.destinations.AddUserSc
 import com.ramcosta.composedestinations.generated.useredit.UsereditModuleDestinations
 
 
-@NavHostGraph
+@NavHostGraph(defaultTransitions = AppDefaultTransition::class)
 internal annotation class AppNavGraph {
     @ExternalDestination<AddProviderScreenDestination>
     @ExternalDestination<AddUserScreenDestination>
