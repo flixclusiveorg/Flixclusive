@@ -3,6 +3,8 @@ package com.flixclusive.core.datastore.di
 import android.content.Context
 import androidx.datastore.core.DataStore
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.database.dao.provider.InstalledProviderDao
+import com.flixclusive.core.database.dao.provider.RepositoryDao
 import com.flixclusive.core.datastore.DataStoreManager
 import com.flixclusive.core.datastore.DataStoreManagerImpl
 import com.flixclusive.core.datastore.UserSessionDataStore
@@ -26,11 +28,15 @@ internal object DataStoreModule {
         userSessionDataStore: UserSessionDataStore,
         systemPreferences: DataStore<SystemPreferences>,
         appDispatchers: AppDispatchers,
+        providerDao: InstalledProviderDao,
+        repositoryDao: RepositoryDao,
     ): DataStoreManager = DataStoreManagerImpl(
         context = context,
         userSessionDataStore = userSessionDataStore,
         systemPreferences = systemPreferences,
-        appDispatchers = appDispatchers
+        appDispatchers = appDispatchers,
+        providerDao = providerDao,
+        repositoryDao = repositoryDao,
     )
 
     @Provides

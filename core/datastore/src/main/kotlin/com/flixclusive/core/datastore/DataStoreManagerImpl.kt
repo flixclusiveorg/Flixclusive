@@ -8,6 +8,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.flixclusive.core.common.dispatchers.AppDispatchers
+import com.flixclusive.core.database.dao.provider.InstalledProviderDao
+import com.flixclusive.core.database.dao.provider.RepositoryDao
+import com.flixclusive.core.datastore.migration.MigrationV220
 import com.flixclusive.core.datastore.migration.SystemPreferencesMigration
 import com.flixclusive.core.datastore.migration.UserPreferencesMigration
 import com.flixclusive.core.datastore.model.system.SystemPreferences
@@ -48,10 +51,12 @@ internal val Context.systemPreferences: DataStore<SystemPreferences> by dataStor
 
 @OptIn(InternalSerializationApi::class)
 internal class DataStoreManagerImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val userSessionDataStore: UserSessionDataStore,
     private val systemPreferences: DataStore<SystemPreferences>,
-    private val appDispatchers: AppDispatchers
+    private val appDispatchers: AppDispatchers,
+    private val providerDao: InstalledProviderDao,
+    private val repositoryDao: RepositoryDao,
 ) : DataStoreManager {
     val lock = Any()
 
@@ -78,6 +83,10 @@ internal class DataStoreManagerImpl @Inject constructor(
                 produceMigrations = { _ ->
                     listOf(
                         UserPreferencesMigration(context = context),
+                        MigrationV220(
+                            providerDao = providerDao,
+                            repositoryDao = repositoryDao,
+                        )
                     )
                 },
             )
