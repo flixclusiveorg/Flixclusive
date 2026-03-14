@@ -13,6 +13,7 @@ import com.flixclusive.core.datastore.model.user.player.PlayerQuality
 import com.flixclusive.core.util.network.okhttp.USER_AGENT
 import kotlinx.serialization.Serializable
 
+@Deprecated("Used for migration.")
 @Serializable
 internal data class OldAppSettings(
     val isUsingAutoUpdateAppFeature: Boolean = true,

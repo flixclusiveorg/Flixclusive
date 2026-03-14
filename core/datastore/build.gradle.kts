@@ -11,6 +11,7 @@ android {
 dependencies {
     api(libs.dataStore.preferences)
 
+    implementation(projects.coreDatabase)
     implementation(projects.coreCommon)
     implementation(libs.stubs.util)
     implementation(libs.stubs.model.provider)

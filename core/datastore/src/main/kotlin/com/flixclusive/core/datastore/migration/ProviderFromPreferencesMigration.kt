@@ -3,7 +3,7 @@ package com.flixclusive.core.datastore.migration
 import android.content.Context
 import com.flixclusive.core.datastore.PROVIDERS_FOLDER_NAME
 import com.flixclusive.core.datastore.PROVIDERS_SETTINGS_FOLDER_NAME
-import com.flixclusive.core.datastore.model.user.ProviderFromPreferences
+import com.flixclusive.core.datastore.migration.model.OldProviderFromPreferences
 import com.flixclusive.core.util.log.errorLog
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -13,9 +13,9 @@ private const val OLD_PROVIDERS_FOLDER_NAME = "flx_providers"
 
 internal object ProviderFromPreferencesMigration {
     fun migrateToNewPaths(
-        oldProviders: List<ProviderFromPreferences>,
+        oldProviders: List<OldProviderFromPreferences>,
         context: Context,
-    ): List<ProviderFromPreferences> {
+    ): List<OldProviderFromPreferences> {
         if (oldProviders.isEmpty()) return oldProviders
 
         context.migrateProviders()
@@ -23,7 +23,7 @@ internal object ProviderFromPreferencesMigration {
         return context.getNewPaths(oldProviders = oldProviders)
     }
 
-    private fun Context.getNewPaths(oldProviders: List<ProviderFromPreferences>): List<ProviderFromPreferences> {
+    private fun Context.getNewPaths(oldProviders: List<OldProviderFromPreferences>): List<OldProviderFromPreferences> {
         val newFolder = getNewMigrationFolder(NEW_PROVIDERS_FOLDER_NAME)
         return oldProviders.mapNotNull {
             val oldFile = File(it.filePath)
