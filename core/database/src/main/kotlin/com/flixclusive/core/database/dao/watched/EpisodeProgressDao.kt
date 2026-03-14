@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.flixclusive.core.database.entity.film.DBFilm
+import com.flixclusive.core.database.entity.library.LibraryListItem
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.EpisodeProgressWithMetadata
 import com.flixclusive.core.database.entity.watched.WatchStatus
@@ -31,7 +32,7 @@ interface EpisodeProgressDao {
             ORDER BY seasonNumber DESC, episodeNumber DESC
             LIMIT 1
         )
-        ORDER BY watchedAt DESC
+        ORDER BY createdAt DESC
         """,
     )
     fun getAllAsFlow(ownerId: Int): Flow<List<EpisodeProgressWithMetadata>>
@@ -50,8 +51,8 @@ interface EpisodeProgressDao {
     ): Flow<List<EpisodeProgressWithMetadata>>
 
     @Transaction
-    @Query("SELECT * FROM series_watch_history WHERE id = :itemId")
-    suspend fun get(itemId: Long): EpisodeProgressWithMetadata?
+    @Query("SELECT * FROM series_watch_history WHERE id = :id")
+    suspend fun get(id: Long): EpisodeProgressWithMetadata?
 
     /**
      * Gets only the furthest episode watched for the given series.
@@ -60,16 +61,16 @@ interface EpisodeProgressDao {
     @Query(
         """
         SELECT * FROM series_watch_history
-        WHERE filmId = :itemId AND ownerId = :ownerId
+        WHERE filmId = :filmId AND ownerId = :ownerId
         ORDER BY seasonNumber DESC, episodeNumber DESC
         LIMIT 1
         """,
     )
-    suspend fun get(itemId: String, ownerId: Int): EpisodeProgressWithMetadata?
+    suspend fun get(filmId: String, ownerId: Int): EpisodeProgressWithMetadata?
 
     @Transaction
-    @Query("SELECT * FROM series_watch_history WHERE id = :itemId")
-    fun getAsFlow(itemId: Long): Flow<EpisodeProgressWithMetadata?>
+    @Query("SELECT * FROM series_watch_history WHERE id = :id")
+    fun getAsFlow(id: Long): Flow<EpisodeProgressWithMetadata?>
 
     /**
      * Gets only the furthest episode watched for the given series.
@@ -88,28 +89,33 @@ interface EpisodeProgressDao {
     @Query(
         """
         SELECT * FROM series_watch_history
-        WHERE filmId = :itemId AND ownerId = :ownerId AND seasonNumber = :season
+        WHERE filmId = :filmId AND ownerId = :ownerId AND seasonNumber = :season
         ORDER BY episodeNumber ASC
         """,
     )
-    suspend fun getSeasonProgress(itemId: String, season: Int, ownerId: Int): List<EpisodeProgress>
+    suspend fun getSeasonProgress(filmId: String, season: Int, ownerId: Int): List<EpisodeProgress>
 
     @Query(
         """
         SELECT * FROM series_watch_history
-        WHERE filmId = :itemId AND ownerId = :ownerId AND seasonNumber = :season
+        WHERE filmId = :filmId AND ownerId = :ownerId AND seasonNumber = :season
         ORDER BY episodeNumber ASC
         """,
     )
-    fun getSeasonProgressAsFlow(itemId: String, season: Int, ownerId: Int): Flow<List<EpisodeProgress>>
+    fun getSeasonProgressAsFlow(filmId: String, season: Int, ownerId: Int): Flow<List<EpisodeProgress>>
 
     @Transaction
     suspend fun insert(
         item: EpisodeProgress,
+        listItem: LibraryListItem? = null,
         film: DBFilm? = null,
     ): Long {
         if (film != null) {
             insertFilm(film)
+        }
+
+        if (listItem != null) {
+            insertListItem(listItem)
         }
 
         return insertProgress(item)
@@ -121,19 +127,22 @@ interface EpisodeProgressDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFilm(film: DBFilm)
 
-    @Query("DELETE FROM series_watch_history WHERE id = :itemId")
-    suspend fun delete(itemId: Long)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertListItem(item: LibraryListItem)
+
+    @Query("DELETE FROM series_watch_history WHERE id = :id")
+    suspend fun delete(id: Long)
 
     @Query("DELETE FROM series_watch_history WHERE ownerId = :ownerId")
     suspend fun deleteAll(ownerId: Int)
 
     @Query(
         "UPDATE series_watch_history " +
-            "SET progress = :progress, status = :status, duration = :duration, watchedAt = :watchedAt " +
-            "WHERE filmId = :filmId AND seasonNumber = :season AND episodeNumber = :episode AND id = :itemId",
+            "SET progress = :progress, status = :status, duration = :duration, createdAt = :watchedAt " +
+            "WHERE filmId = :filmId AND seasonNumber = :season AND episodeNumber = :episode AND id = :id",
     )
     suspend fun update(
-        itemId: Long,
+        id: Long,
         filmId: String,
         season: Int,
         episode: Int,

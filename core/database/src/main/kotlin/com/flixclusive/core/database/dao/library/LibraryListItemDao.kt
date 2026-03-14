@@ -13,12 +13,16 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface LibraryListItemDao {
     @Transaction
-    @Query("SELECT * FROM library_list_item_with_metadata WHERE itemId = :itemId")
-    suspend fun get(itemId: Long): LibraryListItemWithMetadata?
+    @Query("SELECT * FROM library_list_item_with_metadata WHERE id = :id")
+    suspend fun get(id: Long): LibraryListItemWithMetadata?
 
     @Transaction
-    @Query("SELECT * FROM library_list_item_with_metadata WHERE itemId = :itemId")
-    fun getAsFlow(itemId: Long): Flow<LibraryListItemWithMetadata?>
+    @Query("SELECT * FROM library_list_item_with_metadata WHERE id = :id")
+    fun getAsFlow(id: Long): Flow<LibraryListItemWithMetadata?>
+
+    @Transaction
+    @Query("SELECT * FROM library_list_item_with_metadata WHERE listId = :listId ORDER BY createdAt DESC")
+    fun getByListId(listId: Int): Flow<List<LibraryListItemWithMetadata>>
 
     @Transaction
     suspend fun insert(
@@ -32,8 +36,11 @@ interface LibraryListItemDao {
         return insertItem(item)
     }
 
-    @Query("DELETE FROM library_list_items WHERE itemId = :itemId")
-    suspend fun delete(itemId: Long)
+    @Query("DELETE FROM library_list_items WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("DELETE FROM library_list_items WHERE listId = :listId AND filmId = :filmId")
+    suspend fun deleteByListIdAndFilmId(listId: Int, filmId: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFilm(film: DBFilm)

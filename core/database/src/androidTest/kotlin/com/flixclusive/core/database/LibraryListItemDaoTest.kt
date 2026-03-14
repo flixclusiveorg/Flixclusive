@@ -17,6 +17,11 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import strikt.api.expectThat
+import strikt.assertions.hasSize
+import strikt.assertions.isEqualTo
+import strikt.assertions.isNotNull
+import strikt.assertions.isNull
 import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
@@ -43,7 +48,7 @@ class LibraryListItemDaoTest {
     )
 
     private val defaultItem = LibraryListItem(
-        filmId = defaultFilm.identifier,
+        filmId = defaultFilm.id,
         listId = defaultList.id,
     )
 
@@ -70,24 +75,58 @@ class LibraryListItemDaoTest {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testInsertItem() =
         runTest {
             val itemId = dao.insert(defaultItem, defaultFilm)
             val queriedItem = dao.getAsFlow(itemId).first()
 
-            assert(queriedItem?.itemId == itemId)
-            assert(queriedItem?.metadata?.providerId == DEFAULT_FILM_SOURCE_NAME)
+            expectThat(queriedItem).isNotNull().and {
+                get { this.itemId }.isEqualTo(itemId)
+                get { metadata.providerId }.isEqualTo(DEFAULT_FILM_SOURCE_NAME)
+            }
         }
 
     @Test
-    @Throws(Exception::class)
-    fun testRemovingList() =
+    fun testRemoveItem() =
+        runTest {
+            val itemId = dao.insert(defaultItem, defaultFilm)
+            dao.delete(itemId)
+
+            val queriedItem = dao.getAsFlow(itemId).first()
+            expectThat(queriedItem).isNull()
+        }
+
+    @Test
+    fun testGetByListId() =
+        runTest {
+            val film2 = defaultFilm.copy(id = "SECOND_FILM_ID", title = "Second Film")
+            dao.insert(defaultItem, defaultFilm)
+            dao.insert(
+                LibraryListItem(filmId = film2.id, listId = defaultList.id),
+                film2,
+            )
+
+            val items = dao.getByListId(defaultList.id).first()
+            expectThat(items).hasSize(2)
+        }
+
+    @Test
+    fun testDeleteByListIdAndFilmId() =
         runTest {
             dao.insert(defaultItem, defaultFilm)
-            dao.delete(defaultItem.id)
+            dao.deleteByListIdAndFilmId(defaultList.id, defaultFilm.id)
 
-            val queriedItem = dao.getAsFlow(defaultItem.id).first()
-            assert(queriedItem == null)
+            val items = dao.getByListId(defaultList.id).first()
+            expectThat(items).hasSize(0)
+        }
+
+    @Test
+    fun testCascadeDeleteOnListRemoval() =
+        runTest {
+            val itemId = dao.insert(defaultItem, defaultFilm)
+            db.libraryListDao().deleteInternal(defaultList.id)
+
+            val queriedItem = dao.getAsFlow(itemId).first()
+            expectThat(queriedItem).isNull()
         }
 }

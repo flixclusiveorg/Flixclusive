@@ -1,6 +1,5 @@
 package com.flixclusive.core.database.entity.library
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -8,6 +7,11 @@ import androidx.room.PrimaryKey
 import com.flixclusive.core.database.entity.user.User
 import java.io.Serializable
 import java.util.Date
+
+enum class LibraryListType {
+    WATCHED,
+    CUSTOM,
+}
 
 @Entity(
     tableName = "library_lists",
@@ -24,12 +28,11 @@ import java.util.Date
     ]
 )
 data class LibraryList(
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo("listId")
-    val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val ownerId: Int,
     val name: String,
     val description: String? = null,
+    val listType: LibraryListType = LibraryListType.CUSTOM,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date(),
 ) : Serializable

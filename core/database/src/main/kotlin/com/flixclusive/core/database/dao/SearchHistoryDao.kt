@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SearchHistoryDao {
-    @Query("SELECT * FROM search_history WHERE ownerId = :ownerId ORDER BY searchedOn DESC")
+    @Query("SELECT * FROM search_history WHERE ownerId = :ownerId ORDER BY updatedAt DESC")
     fun getAll(ownerId: Int): Flow<List<SearchHistory>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -18,7 +18,6 @@ import strikt.assertions.hasSize
 import strikt.assertions.isEmpty
 import strikt.assertions.isEqualTo
 import java.io.IOException
-import java.util.Date
 
 @RunWith(AndroidJUnit4::class)
 class SearchHistoryDaoTest {
@@ -50,7 +49,6 @@ class SearchHistoryDaoTest {
                 id = 1,
                 query = "action movies",
                 ownerId = 1,
-                searchedOn = Date(),
             )
 
             db.userDao().insert(user)
@@ -70,19 +68,19 @@ class SearchHistoryDaoTest {
                 id = 1,
                 query = "action movies",
                 ownerId = 1,
-                searchedOn = Date(System.currentTimeMillis() - 86400000),
+                updatedAt = System.currentTimeMillis() - 86400000,
             )
             val searchHistory2 = SearchHistory(
                 id = 2,
                 query = "comedy series",
                 ownerId = 1,
-                searchedOn = Date(),
+                updatedAt = System.currentTimeMillis(),
             )
             val searchHistory3 = SearchHistory(
                 id = 3,
                 query = "horror films",
                 ownerId = 2,
-                searchedOn = Date(),
+                updatedAt = System.currentTimeMillis(),
             )
 
             db.userDao().insert(user)
@@ -111,7 +109,6 @@ class SearchHistoryDaoTest {
                 id = 1,
                 query = "action movies",
                 ownerId = 1,
-                searchedOn = Date(),
             )
 
             db.userDao().insert(user)
@@ -119,7 +116,7 @@ class SearchHistoryDaoTest {
 
             val updatedHistory = searchHistory.copy(
                 query = "updated search query",
-                searchedOn = Date(),
+                updatedAt = System.currentTimeMillis() + 1000,
             )
             searchHistoryDao.insert(updatedHistory)
 
@@ -136,7 +133,6 @@ class SearchHistoryDaoTest {
                 id = 1,
                 query = "action movies",
                 ownerId = 1,
-                searchedOn = Date(),
             )
 
             db.userDao().insert(user)
@@ -156,13 +152,11 @@ class SearchHistoryDaoTest {
                 id = 1,
                 query = "action movies",
                 ownerId = 1,
-                searchedOn = Date(),
             )
             val searchHistory2 = SearchHistory(
                 id = 2,
                 query = "comedy series",
                 ownerId = 1,
-                searchedOn = Date(),
             )
 
             db.userDao().insert(user)
@@ -186,7 +180,7 @@ class SearchHistoryDaoTest {
                     id = i,
                     query = "search query $i",
                     ownerId = 1,
-                    searchedOn = Date(System.currentTimeMillis() + i * 1000L),
+                    updatedAt = System.currentTimeMillis() + i * 1000L,
                 )
             }
 
@@ -208,13 +202,12 @@ class SearchHistoryDaoTest {
                 id = 1,
                 query = "duplicate query",
                 ownerId = 1,
-                searchedOn = Date(),
             )
             val searchHistory2 = SearchHistory(
                 id = 2,
                 query = "duplicate query",
                 ownerId = 1,
-                searchedOn = Date(System.currentTimeMillis() + 1000),
+                updatedAt = System.currentTimeMillis() + 1000,
             )
 
             db.userDao().insert(user)

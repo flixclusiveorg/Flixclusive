@@ -1,9 +1,10 @@
 package com.flixclusive.core.database.migration
 
+import android.annotation.SuppressLint
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.flixclusive.core.database.entity.film.DBFilm
-import com.flixclusive.core.database.entity.film.DBFilm.Companion.DB_FILM_VALID_RECOMMENDATIONS_COUNT
+import com.flixclusive.core.database.entity.film.DBFilmV213
+import com.flixclusive.core.database.entity.film.DBFilmV213.Companion.DB_FILM_VALID_RECOMMENDATIONS_COUNT
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.database.migration.Schema8to9.DBFilmMigrator.toDBFilm
 import com.flixclusive.core.util.log.errorLog
@@ -11,7 +12,6 @@ import com.flixclusive.core.util.network.json.fromJson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
@@ -448,7 +448,7 @@ internal object Schema8to9 : Migration(8, 9) {
 
     private fun insertDBFilm(
         database: SupportSQLiteDatabase,
-        dbFilm: DBFilm,
+        dbFilm: DBFilmV213,
     ) {
         val currentTime = System.currentTimeMillis()
 
@@ -530,7 +530,7 @@ internal object Schema8to9 : Migration(8, 9) {
     )
 
     private object DBFilmMigrator {
-        fun String.toDBFilm(): DBFilm {
+        fun String.toDBFilm(): DBFilmV213 {
             val json = JsonParser.parseString(this)
 
             runCatching {
@@ -541,9 +541,10 @@ internal object Schema8to9 : Migration(8, 9) {
                 json.migrateToSchema8()
             }
 
-            return fromJson<DBFilm>(json)
+            return fromJson<DBFilmV213>(json)
         }
 
+        @SuppressLint("CheckResult")
         private fun JsonElement.migrateToSchema8() {
             val json = asJsonObject
 
@@ -566,6 +567,7 @@ internal object Schema8to9 : Migration(8, 9) {
             }
         }
 
+        @SuppressLint("CheckResult")
         private fun JsonElement.migrateToSchema4() {
             val json = asJsonObject
 

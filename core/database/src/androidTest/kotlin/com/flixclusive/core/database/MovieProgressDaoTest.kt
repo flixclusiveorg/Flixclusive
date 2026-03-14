@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.flixclusive.core.database.dao.MovieProgressDao
+import com.flixclusive.core.database.dao.watched.MovieProgressDao
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -55,10 +55,7 @@ class MovieProgressDaoTest {
                 id = "movie123",
                 providerId = "provider1",
                 title = "Test Movie",
-                adult = false,
                 filmType = FilmType.MOVIE,
-                rating = 8.5,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -69,8 +66,7 @@ class MovieProgressDaoTest {
                 progress = 1800000L,
                 status = WatchStatus.WATCHING,
                 duration = 7200000L,
-                watchedAt = Date(),
-                watchCount = 1,
+                createdAt = Date(),
             )
 
             db.userDao().insert(user)
@@ -99,10 +95,7 @@ class MovieProgressDaoTest {
                 id = "movie1",
                 providerId = "provider1",
                 title = "Movie 1",
-                adult = false,
                 filmType = FilmType.MOVIE,
-                rating = 8.0,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -110,10 +103,7 @@ class MovieProgressDaoTest {
                 id = "movie2",
                 providerId = "provider1",
                 title = "Movie 2",
-                adult = false,
                 filmType = FilmType.MOVIE,
-                rating = 7.5,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -124,8 +114,7 @@ class MovieProgressDaoTest {
                 progress = 1800000L,
                 status = WatchStatus.WATCHING,
                 duration = 7200000L,
-                watchedAt = Date(System.currentTimeMillis() - 86400000),
-                watchCount = 1,
+                createdAt = Date(System.currentTimeMillis() - 86400000),
             )
             val progress2 = MovieProgress(
                 id = 2,
@@ -134,8 +123,7 @@ class MovieProgressDaoTest {
                 progress = 5400000L,
                 status = WatchStatus.COMPLETED,
                 duration = 9000000L,
-                watchedAt = Date(),
-                watchCount = 1,
+                createdAt = Date(),
             )
 
             db.userDao().insert(user)
@@ -166,10 +154,7 @@ class MovieProgressDaoTest {
                     id = "movie$i",
                     providerId = "provider1",
                     title = "Movie $i",
-                    adult = false,
                     filmType = FilmType.MOVIE,
-                    rating = 8.0,
-                    customProperties = emptyMap(),
                     createdAt = Date(),
                     updatedAt = Date(),
                 )
@@ -182,8 +167,7 @@ class MovieProgressDaoTest {
                     progress = 1800000L,
                     status = WatchStatus.WATCHING,
                     duration = 7200000L,
-                    watchedAt = Date(),
-                    watchCount = 1,
+                    createdAt = Date(),
                 )
             }
 
@@ -203,10 +187,7 @@ class MovieProgressDaoTest {
                 id = "movie123",
                 providerId = "provider1",
                 title = "Test Movie",
-                adult = false,
                 filmType = FilmType.MOVIE,
-                rating = 8.5,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -217,8 +198,7 @@ class MovieProgressDaoTest {
                 progress = 1800000L,
                 status = WatchStatus.WATCHING,
                 duration = 7200000L,
-                watchedAt = Date(),
-                watchCount = 1,
+                createdAt = Date(),
             )
 
             db.userDao().insert(user)
@@ -228,7 +208,6 @@ class MovieProgressDaoTest {
             val updatedProgress = movieProgress.copy(
                 progress = 3600000L,
                 status = WatchStatus.COMPLETED,
-                watchCount = 2,
             )
             movieProgressDao.insert(updatedProgress)
 
@@ -246,10 +225,7 @@ class MovieProgressDaoTest {
                 id = "movie123",
                 providerId = "provider1",
                 title = "Test Movie",
-                adult = false,
                 filmType = FilmType.MOVIE,
-                rating = 8.5,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -260,8 +236,7 @@ class MovieProgressDaoTest {
                 progress = 1800000L,
                 status = WatchStatus.WATCHING,
                 duration = 7200000L,
-                watchedAt = Date(),
-                watchCount = 1,
+                createdAt = Date(),
             )
 
             db.userDao().insert(user)
@@ -272,41 +247,5 @@ class MovieProgressDaoTest {
 
             val retrievedProgress = movieProgressDao.get(movieProgress.id)
             expectThat(retrievedProgress).isNull()
-        }
-
-    @Test
-    fun shouldHandleWatchCount() =
-        runTest {
-            val user = User(id = 1, name = "testuser", image = 1)
-            val film = DBFilm(
-                id = "movie123",
-                providerId = "provider1",
-                title = "Test Movie",
-                adult = false,
-                filmType = FilmType.MOVIE,
-                rating = 8.5,
-                customProperties = emptyMap(),
-                createdAt = Date(),
-                updatedAt = Date(),
-            )
-            val movieProgress = MovieProgress(
-                id = 1,
-                filmId = "movie123",
-                ownerId = 1,
-                progress = 7200000L,
-                status = WatchStatus.COMPLETED,
-                duration = 7200000L,
-                watchedAt = Date(),
-                watchCount = 3,
-            )
-
-            db.userDao().insert(user)
-            db.filmsDao().insert(film)
-            movieProgressDao.insert(movieProgress)
-
-            val retrievedProgress = movieProgressDao.get(movieProgress.id)
-            expectThat(retrievedProgress).isNotNull()
-            expectThat(retrievedProgress!!.watchData.watchCount).isEqualTo(3)
-            expectThat(retrievedProgress.watchData.status).isEqualTo(WatchStatus.COMPLETED)
         }
 }

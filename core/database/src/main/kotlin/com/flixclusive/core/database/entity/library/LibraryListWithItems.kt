@@ -6,7 +6,8 @@ import androidx.room.Relation
 data class LibraryListWithItems(
     @Embedded val list: LibraryList,
     @Relation(
-        parentColumn = "listId",
+        entity = LibraryListItem::class,
+        parentColumn = "id",
         entityColumn = "listId",
     )
     val items: List<LibraryListItemWithMetadata>,

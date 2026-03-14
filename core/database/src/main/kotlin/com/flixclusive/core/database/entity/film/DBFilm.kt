@@ -8,14 +8,41 @@ import java.io.Serializable
 import java.util.Date
 
 /**
- *
  * Represents a film entity in the database.
  *
- * This class extends the [Film] model and implements [Serializable] for easy serialization.
- * It is annotated with [Entity] to define it as a Room database entity.
+ * Stores only stable identity fields. Mutable metadata like ratings, overviews,
+ * and backdrops are intentionally excluded.
  * */
 @Entity(tableName = "films")
 data class DBFilm(
+    @PrimaryKey
+    val id: String,
+    val title: String,
+    val providerId: String,
+    val filmType: FilmType = FilmType.MOVIE,
+    val overview: String? = null,
+    val imdbId: String? = null,
+    val tmdbId: Int? = null,
+    val posterImage: String? = null,
+    val createdAt: Date = Date(),
+    val updatedAt: Date = Date(),
+) : Serializable {
+    companion object {
+        fun Film.toDBFilm(): DBFilm = DBFilm(
+            id = identifier,
+            overview = overview,
+            providerId = providerId,
+            imdbId = imdbId,
+            tmdbId = tmdbId,
+            filmType = filmType,
+            title = title,
+            posterImage = posterImage,
+        )
+    }
+}
+
+/** Deprecated */
+internal data class DBFilmV213(
     @PrimaryKey
     override val id: String,
     override val providerId: String = "",
@@ -41,33 +68,6 @@ data class DBFilm(
 ) : Film(),
     Serializable {
     companion object {
-        internal const val DB_FILM_VALID_RECOMMENDATIONS_COUNT = 3
-
-        /**
-         * Converts a [Film] to a [DBFilm].
-         * */
-        fun Film.toDBFilm(): DBFilm {
-            return DBFilm(
-                id = identifier,
-                imdbId = imdbId,
-                tmdbId = tmdbId,
-                adult = adult,
-                title = title,
-                posterImage = posterImage,
-                backdropImage = backdropImage,
-                logoImage = logoImage,
-                overview = overview,
-                filmType = filmType,
-                rating = rating,
-                language = language,
-                releaseDate = releaseDate,
-                year = year,
-                runtime = runtime,
-                homePage = homePage,
-                providerId = providerId,
-                customProperties = customProperties,
-                hasRecommendations = recommendations.size >= DB_FILM_VALID_RECOMMENDATIONS_COUNT,
-            )
-        }
+        const val DB_FILM_VALID_RECOMMENDATIONS_COUNT = 3
     }
 }
