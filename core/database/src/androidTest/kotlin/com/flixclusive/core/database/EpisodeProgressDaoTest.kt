@@ -55,12 +55,7 @@ class EpisodeProgressDaoTest {
                 id = "series123",
                 providerId = "provider1",
                 title = "Test Series",
-                adult = false,
                 filmType = FilmType.TV_SHOW,
-                rating = 9.0,
-                customProperties = emptyMap(),
-                createdAt = Date(),
-                updatedAt = Date(),
             )
             val episodeProgress = EpisodeProgress(
                 id = 1,
@@ -69,7 +64,7 @@ class EpisodeProgressDaoTest {
                 progress = 1800000L,
                 duration = 3600000L,
                 status = WatchStatus.WATCHING,
-                watchedAt = Date(),
+                createdAt = Date(),
                 seasonNumber = 1,
                 episodeNumber = 1,
             )
@@ -101,12 +96,7 @@ class EpisodeProgressDaoTest {
                 id = "series123",
                 providerId = "provider1",
                 title = "Test Series",
-                adult = false,
                 filmType = FilmType.TV_SHOW,
-                rating = 9.0,
-                customProperties = emptyMap(),
-                createdAt = Date(),
-                updatedAt = Date(),
             )
             val episode1Progress = EpisodeProgress(
                 id = 1,
@@ -115,7 +105,7 @@ class EpisodeProgressDaoTest {
                 progress = 1800000L,
                 duration = 3600000L,
                 status = WatchStatus.COMPLETED,
-                watchedAt = Date(System.currentTimeMillis() - 86400000),
+                createdAt = Date(System.currentTimeMillis() - 86400000),
                 seasonNumber = 1,
                 episodeNumber = 1,
             )
@@ -126,7 +116,7 @@ class EpisodeProgressDaoTest {
                 progress = 900000L,
                 duration = 3600000L,
                 status = WatchStatus.WATCHING,
-                watchedAt = Date(),
+                createdAt = Date(),
                 seasonNumber = 1,
                 episodeNumber = 2,
             )
@@ -156,10 +146,7 @@ class EpisodeProgressDaoTest {
                 id = "series1",
                 providerId = "provider1",
                 title = "Series 1",
-                adult = false,
                 filmType = FilmType.TV_SHOW,
-                rating = 8.5,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -167,10 +154,7 @@ class EpisodeProgressDaoTest {
                 id = "series2",
                 providerId = "provider1",
                 title = "Series 2",
-                adult = false,
                 filmType = FilmType.TV_SHOW,
-                rating = 9.0,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -181,7 +165,7 @@ class EpisodeProgressDaoTest {
                 progress = 1800000L,
                 duration = 3600000L,
                 status = WatchStatus.WATCHING,
-                watchedAt = Date(),
+                createdAt = Date(),
                 seasonNumber = 1,
                 episodeNumber = 1,
             )
@@ -192,7 +176,7 @@ class EpisodeProgressDaoTest {
                 progress = 900000L,
                 duration = 1800000L,
                 status = WatchStatus.COMPLETED,
-                watchedAt = Date(),
+                createdAt = Date(),
                 seasonNumber = 1,
                 episodeNumber = 1,
             )
@@ -216,10 +200,7 @@ class EpisodeProgressDaoTest {
                 id = "series123",
                 providerId = "provider1",
                 title = "Test Series",
-                adult = false,
                 filmType = FilmType.TV_SHOW,
-                rating = 9.0,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -230,7 +211,7 @@ class EpisodeProgressDaoTest {
                 progress = 1800000L,
                 duration = 3600000L,
                 status = WatchStatus.WATCHING,
-                watchedAt = Date(),
+                createdAt = Date(),
                 seasonNumber = 1,
                 episodeNumber = 1,
             )
@@ -259,10 +240,7 @@ class EpisodeProgressDaoTest {
                 id = "series123",
                 providerId = "provider1",
                 title = "Test Series",
-                adult = false,
                 filmType = FilmType.TV_SHOW,
-                rating = 9.0,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -273,7 +251,7 @@ class EpisodeProgressDaoTest {
                 progress = 1800000L,
                 duration = 3600000L,
                 status = WatchStatus.WATCHING,
-                watchedAt = Date(),
+                createdAt = Date(),
                 seasonNumber = 1,
                 episodeNumber = 1,
             )
@@ -296,10 +274,7 @@ class EpisodeProgressDaoTest {
                 id = "series123",
                 providerId = "provider1",
                 title = "Test Series",
-                adult = false,
                 filmType = FilmType.TV_SHOW,
-                rating = 9.0,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -315,7 +290,7 @@ class EpisodeProgressDaoTest {
                     progress = 1800000L * episodeNum,
                     duration = 3600000L,
                     status = if (episodeNum <= 3) WatchStatus.COMPLETED else WatchStatus.WATCHING,
-                    watchedAt = Date(System.currentTimeMillis() + episodeNum * 1000L),
+                    createdAt = Date(System.currentTimeMillis() + episodeNum * 1000L),
                     seasonNumber = 1,
                     episodeNumber = episodeNum,
                 )
@@ -336,10 +311,7 @@ class EpisodeProgressDaoTest {
                 id = "series123",
                 providerId = "provider1",
                 title = "Test Series",
-                adult = false,
                 filmType = FilmType.TV_SHOW,
-                rating = 9.0,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -354,7 +326,7 @@ class EpisodeProgressDaoTest {
                 progress = 3600000L,
                 duration = 3600000L,
                 status = WatchStatus.COMPLETED,
-                watchedAt = Date(System.currentTimeMillis() - 86400000),
+                createdAt = Date(System.currentTimeMillis() - 86400000),
                 seasonNumber = 1,
                 episodeNumber = 1,
             )
@@ -365,7 +337,7 @@ class EpisodeProgressDaoTest {
                 progress = 1800000L,
                 duration = 3600000L,
                 status = WatchStatus.WATCHING,
-                watchedAt = Date(),
+                createdAt = Date(),
                 seasonNumber = 2,
                 episodeNumber = 1,
             )
@@ -390,10 +362,7 @@ class EpisodeProgressDaoTest {
                 id = "series123",
                 providerId = "provider1",
                 title = "Test Series",
-                adult = false,
                 filmType = FilmType.TV_SHOW,
-                rating = 9.0,
-                customProperties = emptyMap(),
                 createdAt = Date(),
                 updatedAt = Date(),
             )
@@ -409,7 +378,7 @@ class EpisodeProgressDaoTest {
                     progress = 1800000L,
                     duration = 3600000L,
                     status = WatchStatus.WATCHING,
-                    watchedAt = Date(),
+                    createdAt = Date(),
                     seasonNumber = 1,
                     episodeNumber = i,
                 )

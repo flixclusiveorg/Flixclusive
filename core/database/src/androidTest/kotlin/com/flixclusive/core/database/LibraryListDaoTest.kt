@@ -9,6 +9,8 @@ import com.flixclusive.core.database.dao.LibraryListDao
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.library.LibraryList
 import com.flixclusive.core.database.entity.library.LibraryListItem
+import com.flixclusive.core.database.entity.library.LibraryListType
+import com.flixclusive.core.database.entity.library.SystemListDeletionException
 import com.flixclusive.core.database.entity.user.User
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -18,10 +20,13 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import strikt.api.expectThat
+import strikt.api.expectThrows
+import strikt.assertions.hasSize
 import strikt.assertions.isEmpty
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotEmpty
 import strikt.assertions.isNotNull
+import strikt.assertions.isNull
 import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
@@ -57,7 +62,6 @@ class LibraryListDaoTest {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testCreateList() =
         runTest {
             val listName = "Horror catalogue"
@@ -68,33 +72,47 @@ class LibraryListDaoTest {
             )
 
             dao.insert(list)
-            val queriedList = dao.get(list.id).first()
+            val queriedList = dao.getAsFlow(list.id).first()
 
-            assert(queriedList?.id == list.id)
-            assert(queriedList?.name == listName)
-            assert(queriedList?.ownerId == 1)
+            expectThat(queriedList).isNotNull().and {
+                get { id }.isEqualTo(list.id)
+                get { name }.isEqualTo(listName)
+                get { ownerId }.isEqualTo(1)
+                get { listType }.isEqualTo(LibraryListType.CUSTOM)
+            }
         }
 
     @Test
-    @Throws(Exception::class)
-    fun testRemovingList() =
+    fun testRemovingCustomList() =
         runTest {
-            val listName = "Horror catalogue"
             val list = LibraryList(
                 id = 1,
                 ownerId = defaultUser.id,
-                name = listName,
+                name = "Horror catalogue",
             )
 
             dao.insert(list)
-            dao.delete(list.id)
-            val queriedList = dao.get(list.id).first()
+            dao.deleteSafe(list.id)
+            val queriedList = dao.getAsFlow(list.id).first()
 
-            assert(queriedList == null)
+            expectThat(queriedList).isNull()
         }
 
     @Test
-    @Throws(Exception::class)
+    fun testDeleteSafeBlocksSystemListDeletion() =
+        runTest {
+            dao.seedWatchedList(defaultUser.id)
+            val watched = dao.getByType(defaultUser.id, LibraryListType.WATCHED).first()
+
+            expectThrows<SystemListDeletionException> {
+                dao.deleteSafe(watched.id)
+            }
+
+            // List should still exist
+            expectThat(dao.getAsFlow(watched.id).first()).isNotNull()
+        }
+
+    @Test
     fun testGettingLibraryListsByOwnerId() =
         runTest {
             val listName = "Catalog"
@@ -102,19 +120,17 @@ class LibraryListDaoTest {
             repeat(listsSize) {
                 dao.insert(
                     LibraryList(
-                        id = 0,
                         ownerId = defaultUser.id,
                         name = "$listName #$it",
                     ),
                 )
             }
 
-            val list = dao.getAll(1).first()
-            assert(list.size >= listsSize)
+            val list = dao.getAllAsFlow(defaultUser.id).first()
+            expectThat(list.size).isEqualTo(listsSize)
         }
 
     @Test
-    @Throws(Exception::class)
     fun testUpdateItemAndRead() =
         runTest {
             val initialName = "Catalogue #1"
@@ -126,19 +142,18 @@ class LibraryListDaoTest {
                 ),
             )
 
-            var list = dao.get(1).first()
-            assert(list?.name == initialName)
+            var list = dao.getAsFlow(1).first()
+            expectThat(list?.name).isEqualTo(initialName)
 
             val finalName = "Trending"
             dao.update(list!!.copy(name = finalName))
 
-            list = dao.get(1).first()
-            assert(list?.name == finalName)
+            list = dao.getAsFlow(1).first()
+            expectThat(list?.name).isEqualTo(finalName)
         }
 
     @Test
-    @Throws(Exception::class)
-    fun testGetListWithItems() =
+    fun testGetAsFlowListWithItems() =
         runTest {
             val list = LibraryList(
                 id = 1,
@@ -148,23 +163,20 @@ class LibraryListDaoTest {
 
             dao.insert(list)
 
-            val queriedListWithItems = dao.getListWithItems(list.id)
-
-            queriedListWithItems.test {
+            dao.getListWithItemsAsFlow(list.id).test {
                 val item = awaitItem()
 
                 expectThat(item).isNotNull().and {
-                    get { list.id }.isEqualTo(list.id)
-                    get { list.name }.isEqualTo(list.name)
-                    get { list.ownerId }.isEqualTo(list.ownerId)
+                    get { this.list.id }.isEqualTo(list.id)
+                    get { this.list.name }.isEqualTo(list.name)
+                    get { this.list.ownerId }.isEqualTo(list.ownerId)
                     get { items }.isEmpty()
                 }
             }
         }
 
     @Test
-    @Throws(Exception::class)
-    fun testGetUserWithListsAndItems() =
+    fun testGetAsFlowUserWithListsAndItems() =
         runTest {
             val list = LibraryList(
                 id = 1,
@@ -174,9 +186,7 @@ class LibraryListDaoTest {
 
             dao.insert(list)
 
-            val userWithListsAndItems = dao.getUserWithListsAndItems(defaultUser.id)
-
-            userWithListsAndItems.test {
+            dao.getUserWithListsAndItemsAsFlow(defaultUser.id).test {
                 val item = awaitItem()
 
                 expectThat(item) {
@@ -189,8 +199,7 @@ class LibraryListDaoTest {
         }
 
     @Test
-    @Throws(Exception::class)
-    fun testGetAllListsContainingFilm() =
+    fun testGetAsFlowAllListsContainingFilm() =
         runTest {
             val film = DBFilm(
                 id = "filmId",
@@ -201,7 +210,7 @@ class LibraryListDaoTest {
             repeat(2) {
                 val list = LibraryList(
                     ownerId = defaultUser.id,
-                    name = "List 1",
+                    name = "List $it",
                 )
 
                 val listId = dao.insert(list)
@@ -211,17 +220,64 @@ class LibraryListDaoTest {
                         filmId = film.id,
                         listId = listId.toInt(),
                     ),
-                    film = film
+                    film = film,
                 )
             }
 
-            dao.getListsContainingFilm(
-                filmId = film.identifier,
-                ownerId = defaultUser.id
+            dao.getListsContainingFilmAsFlow(
+                filmId = film.id,
+                ownerId = defaultUser.id,
             ).test {
                 expectThat(awaitItem()).isNotEmpty().and {
                     get { size }.isEqualTo(2)
                 }
             }
+        }
+
+    @Test
+    fun testSeedWatchedList() =
+        runTest {
+            dao.seedWatchedList(defaultUser.id)
+
+            val watchedList = dao.getByType(defaultUser.id, LibraryListType.WATCHED)
+            expectThat(watchedList).hasSize(1)
+
+            expectThat(watchedList.firstOrNull())
+                .isNotNull()
+                .and {
+                    get { ownerId }.isEqualTo(defaultUser.id)
+                    get { listType }.isEqualTo(LibraryListType.WATCHED)
+                }
+        }
+
+    @Test
+    fun testSeedWatchedListIsIdempotent() =
+        runTest {
+            dao.seedWatchedList(defaultUser.id)
+            dao.seedWatchedList(defaultUser.id)
+
+            val list = dao.getByType(defaultUser.id, LibraryListType.WATCHED)
+            expectThat(list).hasSize(1)
+        }
+
+    @Test
+    fun testGetAsFlowByType() =
+        runTest {
+            dao.seedWatchedList(defaultUser.id)
+            dao.insert(LibraryList(ownerId = defaultUser.id, name = "Custom 1"))
+            dao.insert(LibraryList(ownerId = defaultUser.id, name = "Custom 2"))
+
+            val customLists = dao.getByType(defaultUser.id, LibraryListType.CUSTOM)
+            expectThat(customLists).hasSize(2)
+
+            val watched = dao.getByType(defaultUser.id, LibraryListType.WATCHED)
+            expectThat(watched).hasSize(1)
+        }
+
+    @Test
+    fun testDeleteNonExistentListIsNoOp() =
+        runTest {
+            // Should not throw
+            dao.deleteSafe(999)
         }
 }

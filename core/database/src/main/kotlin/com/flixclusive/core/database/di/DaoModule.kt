@@ -1,14 +1,16 @@
 package com.flixclusive.core.database.di
 
 import com.flixclusive.core.database.AppDatabase
-import com.flixclusive.core.database.dao.DBFilmDao
 import com.flixclusive.core.database.dao.EpisodeProgressDao
 import com.flixclusive.core.database.dao.LibraryListDao
 import com.flixclusive.core.database.dao.LibraryListItemDao
-import com.flixclusive.core.database.dao.MovieProgressDao
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
-import com.flixclusive.core.database.dao.WatchlistDao
+import com.flixclusive.core.database.dao.films.DBFilmDao
+import com.flixclusive.core.database.dao.films.DBFilmExternalIdDao
+import com.flixclusive.core.database.dao.provider.InstalledProviderDao
+import com.flixclusive.core.database.dao.provider.RepositoryDao
+import com.flixclusive.core.database.dao.watched.MovieProgressDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,9 +21,6 @@ import dagger.hilt.components.SingletonComponent
 internal object DaoModule {
     @Provides
     fun providesUserDao(database: AppDatabase): UserDao = database.userDao()
-
-    @Provides
-    fun providesWatchlistDao(database: AppDatabase): WatchlistDao = database.watchlistDao()
 
     @Provides
     fun providesMovieProgressDao(database: AppDatabase): MovieProgressDao = database.movieProgressDao()
@@ -40,4 +39,13 @@ internal object DaoModule {
 
     @Provides
     fun providesLibraryListItemDao(database: AppDatabase): LibraryListItemDao = database.libraryListItemDao()
+
+    @Provides
+    fun providesRepositoryDao(database: AppDatabase): RepositoryDao = database.repositoryDao()
+
+    @Provides
+    fun providesInstalledProviderDao(database: AppDatabase): InstalledProviderDao = database.installedProviderDao()
+
+    @Provides
+    fun providesFilmsExternalIdDao(database: AppDatabase): DBFilmExternalIdDao = database.filmExternalIdsDao()
 }

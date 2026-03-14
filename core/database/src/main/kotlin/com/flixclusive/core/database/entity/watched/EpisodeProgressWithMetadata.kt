@@ -9,7 +9,6 @@ import com.flixclusive.core.database.entity.film.DBFilm
  *
  * @see WatchProgressWithMetadata
  * @see EpisodeProgress
- * @see DBFilm
  * */
 data class EpisodeProgressWithMetadata(
     @Embedded override val watchData: EpisodeProgress,

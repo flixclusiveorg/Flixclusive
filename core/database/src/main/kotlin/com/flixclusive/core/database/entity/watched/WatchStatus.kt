@@ -10,5 +10,4 @@ package com.flixclusive.core.database.entity.watched
 enum class WatchStatus {
     COMPLETED,
     WATCHING,
-    REWATCHING,
 }
