@@ -1,4 +1,4 @@
-package com.flixclusive.core.database.dao
+package com.flixclusive.core.database.dao.watched
 
 import androidx.room.Dao
 import androidx.room.Insert

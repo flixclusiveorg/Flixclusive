@@ -6,15 +6,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.flixclusive.core.database.converters.DateConverter
-import com.flixclusive.core.database.dao.EpisodeProgressDao
-import com.flixclusive.core.database.dao.LibraryListDao
-import com.flixclusive.core.database.dao.LibraryListItemDao
+import com.flixclusive.core.database.dao.watched.EpisodeProgressDao
+import com.flixclusive.core.database.dao.library.LibraryListDao
+import com.flixclusive.core.database.dao.library.LibraryListItemDao
 import com.flixclusive.core.database.dao.SearchHistoryDao
 import com.flixclusive.core.database.dao.UserDao
 import com.flixclusive.core.database.dao.films.DBFilmDao
-import com.flixclusive.core.database.dao.films.DBFilmExternalIdDao
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
-import com.flixclusive.core.database.dao.provider.RepositoryDao
+import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.database.dao.watched.MovieProgressDao
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.film.DBFilmExternalId
@@ -75,11 +74,9 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun movieProgressDao(): MovieProgressDao
 
-    abstract fun repositoryDao(): RepositoryDao
+    abstract fun repositoryDao(): InstalledRepositoryDao
 
     abstract fun installedProviderDao(): InstalledProviderDao
-
-    abstract fun filmExternalIdsDao(): DBFilmExternalIdDao
 
     companion object {
         @Volatile

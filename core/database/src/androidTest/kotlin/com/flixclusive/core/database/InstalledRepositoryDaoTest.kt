@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.flixclusive.core.database.dao.provider.RepositoryDao
+import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.database.entity.provider.InstalledRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -21,8 +21,8 @@ import strikt.assertions.isNull
 import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
-class RepositoryDaoTest {
-    private lateinit var dao: RepositoryDao
+class InstalledRepositoryDaoTest {
+    private lateinit var dao: InstalledRepositoryDao
     private lateinit var db: AppDatabase
 
     @Before

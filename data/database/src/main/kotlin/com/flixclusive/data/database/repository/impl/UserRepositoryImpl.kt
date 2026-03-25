@@ -8,41 +8,39 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-internal class UserRepositoryImpl
-    @Inject
-    constructor(
-        private val userDao: UserDao,
-        private val appDispatchers: AppDispatchers
-    ) : UserRepository {
-        override fun observeUsers(): Flow<List<User>> {
-            return userDao.getAllAsFlow()
-        }
+internal class UserRepositoryImpl @Inject constructor(
+    private val userDao: UserDao,
+    private val appDispatchers: AppDispatchers
+) : UserRepository {
+    override fun observeUsers(): Flow<List<User>> {
+        return userDao.getAllAsFlow()
+    }
 
-        override suspend fun getUser(id: Int): User? {
-            return withContext(appDispatchers.io) {
-                userDao.get(id)
-            }
-        }
-
-        override fun observeUser(id: Int): Flow<User?> {
-            return userDao.getAsFlow(id)
-        }
-
-        override suspend fun addUser(user: User): Long {
-            return withContext(appDispatchers.io) {
-                userDao.insert(user)
-            }
-        }
-
-        override suspend fun updateUser(user: User) {
-            return withContext(appDispatchers.io) {
-                userDao.update(user)
-            }
-        }
-
-        override suspend fun deleteUser(id: Int) {
-            return withContext(appDispatchers.io) {
-                userDao.delete(id)
-            }
+    override suspend fun getUser(id: Int): User? {
+        return withContext(appDispatchers.io) {
+            userDao.get(id)
         }
     }
+
+    override fun observeUser(id: Int): Flow<User?> {
+        return userDao.getAsFlow(id)
+    }
+
+    override suspend fun addUser(user: User): Long {
+        return withContext(appDispatchers.io) {
+            userDao.insert(user)
+        }
+    }
+
+    override suspend fun updateUser(user: User) {
+        return withContext(appDispatchers.io) {
+            userDao.update(user)
+        }
+    }
+
+    override suspend fun deleteUser(id: Int) {
+        return withContext(appDispatchers.io) {
+            userDao.delete(id)
+        }
+    }
+}

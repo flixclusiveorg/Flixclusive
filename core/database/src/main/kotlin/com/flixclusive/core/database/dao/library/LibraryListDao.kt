@@ -1,7 +1,8 @@
-package com.flixclusive.core.database.dao
+package com.flixclusive.core.database.dao.library
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
@@ -41,7 +42,7 @@ interface LibraryListDao {
     @Query("SELECT * FROM User WHERE userId = :userId")
     fun getUserWithListsAndItemsAsFlow(userId: Int): Flow<UserWithLibraryListsAndItems>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(list: LibraryList): Long
 
     @Update

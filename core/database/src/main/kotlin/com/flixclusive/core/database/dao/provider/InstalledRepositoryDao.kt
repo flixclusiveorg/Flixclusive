@@ -5,11 +5,12 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import com.flixclusive.core.database.entity.provider.InstalledRepository
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface RepositoryDao {
+interface InstalledRepositoryDao {
     @Query("SELECT * FROM repositories")
     fun getAllAsFlow(): Flow<List<InstalledRepository>>
 
@@ -19,10 +20,10 @@ interface RepositoryDao {
     @Query("SELECT * FROM repositories WHERE url = :url")
     fun getAsFlow(url: String): Flow<InstalledRepository?>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insert(repository: InstalledRepository)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insert(repositories: List<InstalledRepository>)
 
     @Update

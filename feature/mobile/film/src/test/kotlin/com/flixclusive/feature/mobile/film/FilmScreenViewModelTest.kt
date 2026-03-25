@@ -23,7 +23,6 @@ import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.core.testing.provider.ProviderTestDefaults
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.repository.WatchlistRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.domain.database.usecase.ToggleWatchProgressStatusUseCase

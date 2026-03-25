@@ -15,7 +15,6 @@ import com.flixclusive.core.database.entity.watched.WatchProgressWithMetadata
 import com.flixclusive.core.database.entity.watchlist.WatchlistWithMetadata
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.repository.WatchlistRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.feature.mobile.library.common.util.LibrarySortFilter
 import com.flixclusive.model.film.util.FilmType

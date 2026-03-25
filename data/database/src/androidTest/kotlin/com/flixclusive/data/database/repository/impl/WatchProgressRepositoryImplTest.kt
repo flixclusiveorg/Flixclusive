@@ -9,6 +9,7 @@ import com.flixclusive.core.database.AppDatabase
 import com.flixclusive.core.database.entity.watched.MovieProgressWithMetadata
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.model.film.util.FilmType
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -32,14 +33,16 @@ class WatchProgressRepositoryImplTest {
     private lateinit var appDispatchers: AppDispatchers
 
     private val testDispatcher = StandardTestDispatcher()
-    private val testDBFilm = DatabaseTestDefaults.getDBFilm()
+    private val testMovieDbFilm = FilmTestDefaults.getMovie()
+    private val testTvShowDbFilm = FilmTestDefaults.getTvShow()
+
     private val testUser = DatabaseTestDefaults.getUser()
     private val testMovieProgress = DatabaseTestDefaults.getMovieProgress(
-        filmId = testDBFilm.id,
+        filmId = testMovieDbFilm.identifier,
         ownerId = testUser.id,
     )
     private val testEpisodeProgress = DatabaseTestDefaults.getEpisodeProgress(
-        filmId = testDBFilm.id,
+        filmId = testMovieDbFilm.identifier,
         ownerId = testUser.id,
     )
 
@@ -68,14 +71,14 @@ class WatchProgressRepositoryImplTest {
     @Test
     fun shouldInsertWatchHistoryItem() =
         runTest(testDispatcher) {
-            val itemId = repository.insert(testMovieProgress, testDBFilm)
+            val itemId = repository.insert(testMovieProgress, testMovieDbFilm)
 
             repository.getAllAsFlow(testMovieProgress.ownerId).test {
                 val result = awaitItem()
                 expectThat(result).hasSize(1).and {
                     get { first() }.isA<MovieProgressWithMetadata>().and {
                         get { id }.isEqualTo(itemId)
-                        get { film.title }.isEqualTo(testDBFilm.title)
+                        get { film.title }.isEqualTo(testMovieDbFilm.title)
                         get { watchData.ownerId }.isEqualTo(testMovieProgress.ownerId)
                     }
                 }
@@ -85,7 +88,7 @@ class WatchProgressRepositoryImplTest {
     @Test
     fun shouldRetrieveWatchHistoryItemById() =
         runTest(testDispatcher) {
-            val itemId = repository.insert(testEpisodeProgress, testDBFilm)
+            val itemId = repository.insert(testEpisodeProgress, testMovieDbFilm)
             val retrievedItem = repository.get(
                 id = itemId,
                 type = FilmType.TV_SHOW,
@@ -93,15 +96,15 @@ class WatchProgressRepositoryImplTest {
 
             expectThat(retrievedItem).isNotNull().and {
                 get { id }.isEqualTo(itemId)
-                get { film.title }.isEqualTo(testDBFilm.title)
-                get { watchData.watchedAt }.isEqualTo(testMovieProgress.watchedAt)
+                get { film.title }.isEqualTo(testMovieDbFilm.title)
+                get { watchData.createdAt }.isEqualTo(testMovieProgress.createdAt)
             }
         }
 
     @Test
     fun shouldObserveWatchHistoryItemById() =
         runTest(testDispatcher) {
-            val itemId = repository.insert(testEpisodeProgress, testDBFilm)
+            val itemId = repository.insert(testEpisodeProgress, testMovieDbFilm)
 
             repository
                 .getAsFlow(
@@ -110,7 +113,7 @@ class WatchProgressRepositoryImplTest {
                 ).test {
                     expectThat(awaitItem()).isNotNull().and {
                         get { id }.isEqualTo(itemId)
-                        get { film.title }.isEqualTo(testDBFilm.title)
+                        get { film.title }.isEqualTo(testMovieDbFilm.title)
                     }
                 }
         }
@@ -118,17 +121,17 @@ class WatchProgressRepositoryImplTest {
     @Test
     fun shouldObserveWatchHistoryItemByFilmId() =
         runTest(testDispatcher) {
-            val itemId = repository.insert(testEpisodeProgress, testDBFilm)
+            val itemId = repository.insert(testEpisodeProgress, testMovieDbFilm)
 
             repository
                 .getAsFlow(
-                    id = testDBFilm.id,
+                    id = testMovieDbFilm.identifier,
                     ownerId = testEpisodeProgress.ownerId,
                     type = FilmType.TV_SHOW,
                 ).test {
                     expectThat(awaitItem()).isNotNull().and {
                         get { id }.isEqualTo(itemId)
-                        get { film.title }.isEqualTo(testDBFilm.title)
+                        get { film.title }.isEqualTo(testMovieDbFilm.title)
                     }
                 }
         }
@@ -141,9 +144,9 @@ class WatchProgressRepositoryImplTest {
             val item2 = testMovieProgress.copy(filmId = "item2")
             val item3 = testMovieProgress.copy(filmId = "item3", ownerId = 2)
 
-            repository.insert(item1, testDBFilm)
-            repository.insert(item2, testDBFilm.copy(id = "item2"))
-            repository.insert(item3, testDBFilm.copy(id = "item3"))
+            repository.insert(item1, testMovieDbFilm)
+            repository.insert(item2, testMovieDbFilm.copy(id = "item2"))
+            repository.insert(item3, testMovieDbFilm.copy(id = "item3"))
 
             repository.getAllAsFlow(testMovieProgress.ownerId).test {
                 val result = awaitItem()
@@ -158,9 +161,9 @@ class WatchProgressRepositoryImplTest {
             val item2 = testMovieProgress.copy(filmId = "item2")
             val item3 = testMovieProgress.copy(filmId = "item3")
 
-            repository.insert(item1, testDBFilm)
-            repository.insert(item2, testDBFilm.copy(id = "item2"))
-            repository.insert(item3, testDBFilm.copy(id = "item3"))
+            repository.insert(item1, testMovieDbFilm)
+            repository.insert(item2, testMovieDbFilm.copy(id = "item2"))
+            repository.insert(item3, testMovieDbFilm.copy(id = "item3"))
 
             repository.getRandoms(testMovieProgress.ownerId, 2).test {
                 expectThat(awaitItem()).hasSize(2)
@@ -170,13 +173,13 @@ class WatchProgressRepositoryImplTest {
     @Test
     fun shouldDeleteWatchHistoryItemById() =
         runTest(testDispatcher) {
-            val itemId = repository.insert(testMovieProgress, testDBFilm)
+            val itemId = repository.insert(testMovieProgress, testMovieDbFilm)
 
-            repository.delete(itemId, testDBFilm.filmType)
+            repository.delete(itemId, testMovieDbFilm.filmType)
 
             val retrievedItem = repository.get(
                 itemId,
-                testDBFilm.filmType,
+                testMovieDbFilm.filmType,
             )
             expectThat(retrievedItem).isNull()
         }
@@ -189,9 +192,9 @@ class WatchProgressRepositoryImplTest {
             val item2 = testMovieProgress.copy(id = 2)
             val item3 = testMovieProgress.copy(id = 3, ownerId = 2)
 
-            repository.insert(item1, testDBFilm)
-            repository.insert(item2, testDBFilm)
-            repository.insert(item3, testDBFilm)
+            repository.insert(item1, testMovieDbFilm)
+            repository.insert(item2, testMovieDbFilm)
+            repository.insert(item3, testMovieDbFilm)
 
             repository.removeAll(testMovieProgress.ownerId)
 
@@ -210,12 +213,12 @@ class WatchProgressRepositoryImplTest {
     @Test
     fun shouldGetSeasonProgress() =
         runTest(testDispatcher) {
-            val tvShowFilm = testDBFilm.copy(id = "tvshow123", filmType = FilmType.TV_SHOW)
+            val tvShowFilm = testTvShowDbFilm.copy(id = "tvshow123")
 
             val episodes = (1..5).map { episodeNum ->
                 DatabaseTestDefaults.getEpisodeProgress(
                     id = episodeNum.toLong(),
-                    filmId = tvShowFilm.id,
+                    filmId = tvShowFilm.identifier,
                     ownerId = testUser.id,
                     seasonNumber = 1,
                     episodeNumber = episodeNum,
@@ -227,7 +230,7 @@ class WatchProgressRepositoryImplTest {
             }
 
             val seasonProgress = repository.getSeasonProgress(
-                tvShowId = tvShowFilm.id,
+                tvShowId = tvShowFilm.identifier,
                 seasonNumber = 1,
                 ownerId = testUser.id,
             )
@@ -242,13 +245,13 @@ class WatchProgressRepositoryImplTest {
     @Test
     fun shouldGetSeasonProgressForSpecificSeason() =
         runTest(testDispatcher) {
-            val tvShowFilm = testDBFilm.copy(id = "tvshow456", filmType = FilmType.TV_SHOW)
+            val tvShowFilm = testTvShowDbFilm.copy(id = "tvshow456")
 
             // Add episodes for season 1
             val season1Episodes = (1..3).map { episodeNum ->
                 DatabaseTestDefaults.getEpisodeProgress(
                     id = episodeNum.toLong(),
-                    filmId = tvShowFilm.id,
+                    filmId = tvShowFilm.identifier,
                     ownerId = testUser.id,
                     seasonNumber = 1,
                     episodeNumber = episodeNum,
@@ -259,7 +262,7 @@ class WatchProgressRepositoryImplTest {
             val season2Episodes = (1..2).map { episodeNum ->
                 DatabaseTestDefaults.getEpisodeProgress(
                     id = (episodeNum + 10).toLong(),
-                    filmId = tvShowFilm.id,
+                    filmId = tvShowFilm.identifier,
                     ownerId = testUser.id,
                     seasonNumber = 2,
                     episodeNumber = episodeNum,
@@ -271,13 +274,13 @@ class WatchProgressRepositoryImplTest {
             }
 
             val season1Progress = repository.getSeasonProgress(
-                tvShowId = tvShowFilm.id,
+                tvShowId = tvShowFilm.identifier,
                 seasonNumber = 1,
                 ownerId = testUser.id,
             )
 
             val season2Progress = repository.getSeasonProgress(
-                tvShowId = tvShowFilm.id,
+                tvShowId = tvShowFilm.identifier,
                 seasonNumber = 2,
                 ownerId = testUser.id,
             )
@@ -294,10 +297,10 @@ class WatchProgressRepositoryImplTest {
     @Test
     fun shouldReturnEmptyListForNonExistentSeason() =
         runTest(testDispatcher) {
-            val tvShowFilm = testDBFilm.copy(id = "tvshow789", filmType = FilmType.TV_SHOW)
+            val tvShowFilm = testTvShowDbFilm.copy(id = "tvshow789")
 
             val seasonProgress = repository.getSeasonProgress(
-                tvShowId = tvShowFilm.id,
+                tvShowId = tvShowFilm.identifier,
                 seasonNumber = 99,
                 ownerId = testUser.id,
             )

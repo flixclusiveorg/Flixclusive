@@ -1,7 +1,6 @@
 package com.flixclusive.domain.database.usecase.impl
 
 import com.flixclusive.core.database.entity.watchlist.Watchlist
-import com.flixclusive.data.database.repository.WatchlistRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.domain.database.usecase.ToggleWatchlistStatusUseCase
 import com.flixclusive.model.film.Film

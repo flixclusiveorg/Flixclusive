@@ -70,7 +70,7 @@ class MovieProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(film)
+            db.filmsDao().upsertFilm(film)
             movieProgressDao.insert(movieProgress)
 
             val retrievedProgress = movieProgressDao.get(movieProgress.id)
@@ -127,8 +127,8 @@ class MovieProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(film1)
-            db.filmsDao().insert(film2)
+            db.filmsDao().upsertFilm(film1)
+            db.filmsDao().upsertFilm(film2)
             movieProgressDao.insert(progress1)
             movieProgressDao.insert(progress2)
 
@@ -172,7 +172,7 @@ class MovieProgressDaoTest {
             }
 
             db.userDao().insert(user)
-            films.forEach { db.filmsDao().insert(it) }
+            films.forEach { db.filmsDao().upsertFilm(it) }
             progressList.forEach { movieProgressDao.insert(it) }
 
             val randomProgress = movieProgressDao.getRandoms(1, 3).first()
@@ -202,7 +202,7 @@ class MovieProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(film)
+            db.filmsDao().upsertFilm(film)
             movieProgressDao.insert(movieProgress)
 
             val updatedProgress = movieProgress.copy(
@@ -240,7 +240,7 @@ class MovieProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(film)
+            db.filmsDao().upsertFilm(film)
             movieProgressDao.insert(movieProgress)
 
             movieProgressDao.delete(movieProgress.id)

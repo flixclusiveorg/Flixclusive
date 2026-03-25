@@ -1,4 +1,4 @@
-package com.flixclusive.core.database.dao
+package com.flixclusive.core.database.dao.library
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -45,6 +45,6 @@ interface LibraryListItemDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFilm(film: DBFilm)
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(list: LibraryListItem): Long
 }
