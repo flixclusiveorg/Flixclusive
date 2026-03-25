@@ -17,7 +17,6 @@ import com.flixclusive.core.presentation.player.PlayerCache
 import com.flixclusive.core.util.webview.WebViewDriverManager
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.repository.WatchlistRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.data.provider.repository.CacheKey.Companion.toCacheKey
 import com.flixclusive.data.provider.repository.CachedLinksRepository

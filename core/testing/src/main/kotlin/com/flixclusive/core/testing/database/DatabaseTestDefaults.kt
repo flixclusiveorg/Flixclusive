@@ -16,6 +16,7 @@ import com.flixclusive.core.database.entity.watched.MovieProgress
 import com.flixclusive.core.database.entity.watched.WatchStatus
 import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.model.film.Film
+import java.util.Date
 
 /**
  * Test defaults for database-related tests.
@@ -27,40 +28,44 @@ object DatabaseTestDefaults {
 
     fun getMovieProgress(
         id: Long = 0,
-        itemId: Long = 1,
+        filmId: String = getDBFilm().id,
+        ownerId: Int = TEST_USER_ID,
         progress: Long = 0,
+        status: WatchStatus = WatchStatus.WATCHING,
         duration: Long = 0,
-        watchStatus: String = WatchStatus.WATCHING.name,
-        createdAt: Long = System.currentTimeMillis(),
-        updatedAt: Long = System.currentTimeMillis(),
+        createdAt: Date = Date(),
+        updatedAt: Date = createdAt,
     ) = MovieProgress(
         id = id,
-        itemId = itemId,
+        filmId = filmId,
+        ownerId = ownerId,
         progress = progress,
+        status = status,
         duration = duration,
-        status = watchStatus,
         createdAt = createdAt,
         updatedAt = updatedAt,
     )
 
     fun getEpisodeProgress(
         id: Long = 0,
-        itemId: Long = 1,
+        filmId: String = getDBFilm(film = FilmTestDefaults.getTvShow()).id,
+        ownerId: Int = TEST_USER_ID,
         seasonNumber: Int = 1,
         episodeNumber: Int = 1,
         progress: Long = 0,
+        status: WatchStatus = WatchStatus.WATCHING,
         duration: Long = 0,
-        watchStatus: String = WatchStatus.WATCHING.name,
-        createdAt: Long = System.currentTimeMillis(),
-        updatedAt: Long = System.currentTimeMillis(),
+        createdAt: Date = Date(),
+        updatedAt: Date = createdAt,
     ) = EpisodeProgress(
         id = id,
-        itemId = itemId,
+        filmId = filmId,
+        ownerId = ownerId,
         seasonNumber = seasonNumber,
         episodeNumber = episodeNumber,
         progress = progress,
+        status = status,
         duration = duration,
-        status = watchStatus,
         createdAt = createdAt,
         updatedAt = updatedAt,
     )
@@ -83,8 +88,8 @@ object DatabaseTestDefaults {
         id: Int = 0,
         query: String = "Test Query",
         ownerId: Int = TEST_USER_ID,
-        createdAt: Long = System.currentTimeMillis(),
-        updatedAt: Long = System.currentTimeMillis(),
+        createdAt: Date = Date(),
+        updatedAt: Date = Date(),
     ) = SearchHistory(
         id = id,
         query = query,
@@ -98,9 +103,9 @@ object DatabaseTestDefaults {
         name: String = "Test List",
         description: String = "Test Description",
         ownerId: Int = TEST_USER_ID,
-        listType: String = LibraryListType.CUSTOM.name,
-        createdAt: Long = System.currentTimeMillis(),
-        updatedAt: Long = System.currentTimeMillis(),
+        listType: LibraryListType = LibraryListType.CUSTOM,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date(),
     ) = LibraryList(
         id = id,
         name = name,
@@ -142,7 +147,7 @@ object DatabaseTestDefaults {
         language: String = "en",
         adult: Boolean = false,
         versionName: String = "1.0.0",
-        versionCode: Int = 1,
+        versionCode: Long = 1,
         buildUrl: String = "https://example.com/build.flx",
         sortOrder: Double = 1.0,
     ) = InstalledProvider(

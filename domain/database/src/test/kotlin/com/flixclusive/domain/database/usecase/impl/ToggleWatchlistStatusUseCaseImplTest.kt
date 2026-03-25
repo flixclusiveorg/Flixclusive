@@ -5,7 +5,6 @@ import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.database.entity.watchlist.Watchlist
 import com.flixclusive.core.database.entity.watchlist.WatchlistWithMetadata
 import com.flixclusive.core.testing.film.FilmTestDefaults
-import com.flixclusive.data.database.repository.WatchlistRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.model.film.Film
 import io.mockk.coEvery

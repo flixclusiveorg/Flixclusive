@@ -7,6 +7,7 @@ import com.flixclusive.core.common.dispatchers.AppDispatchers
 import com.flixclusive.core.database.AppDatabase
 import com.flixclusive.core.testing.database.DatabaseTestDefaults
 import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
+import com.flixclusive.core.testing.film.FilmTestDefaults
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -32,9 +33,9 @@ class LibraryListRepositoryImplTest {
 
     private val testLibraryList = DatabaseTestDefaults.getLibraryList()
 
-    private val testFilm = DatabaseTestDefaults.getDBFilm()
+    private val testFilm = FilmTestDefaults.getMovie()
 
-    private val testLibraryItem = DatabaseTestDefaults.getLibraryListItem(filmId = testFilm.id)
+    private val testLibraryItem = DatabaseTestDefaults.getLibraryListItem(filmId = testFilm.identifier)
 
     @Before
     fun setUp() {

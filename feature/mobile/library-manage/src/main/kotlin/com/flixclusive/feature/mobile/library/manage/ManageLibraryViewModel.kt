@@ -14,7 +14,6 @@ import com.flixclusive.core.database.entity.library.LibraryListWithItems
 import com.flixclusive.core.strings.R
 import com.flixclusive.data.database.repository.LibraryListRepository
 import com.flixclusive.data.database.repository.WatchProgressRepository
-import com.flixclusive.data.database.repository.WatchlistRepository
 import com.flixclusive.data.database.session.UserSessionManager
 import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchProgressLibraryList
 import com.flixclusive.feature.mobile.library.common.util.LibraryMapper.toWatchlistLibraryList

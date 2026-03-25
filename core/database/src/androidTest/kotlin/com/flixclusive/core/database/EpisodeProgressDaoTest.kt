@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.flixclusive.core.database.dao.EpisodeProgressDao
+import com.flixclusive.core.database.dao.watched.EpisodeProgressDao
 import com.flixclusive.core.database.entity.film.DBFilm
 import com.flixclusive.core.database.entity.user.User
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
@@ -70,7 +70,7 @@ class EpisodeProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(tvSeries)
+            db.filmsDao().upsertFilm(tvSeries)
             episodeProgressDao.insert(episodeProgress)
 
             val retrievedProgress = episodeProgressDao.get(episodeProgress.id)
@@ -122,7 +122,7 @@ class EpisodeProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(tvSeries)
+            db.filmsDao().upsertFilm(tvSeries)
             episodeProgressDao.insert(episode1Progress)
             episodeProgressDao.insert(episode2Progress)
 
@@ -182,8 +182,8 @@ class EpisodeProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(series1)
-            db.filmsDao().insert(series2)
+            db.filmsDao().upsertFilm(series1)
+            db.filmsDao().upsertFilm(series2)
             episodeProgressDao.insert(series1Episode)
             episodeProgressDao.insert(series2Episode)
 
@@ -217,7 +217,7 @@ class EpisodeProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(tvSeries)
+            db.filmsDao().upsertFilm(tvSeries)
             episodeProgressDao.insert(episodeProgress)
 
             val updatedProgress = episodeProgress.copy(
@@ -257,7 +257,7 @@ class EpisodeProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(tvSeries)
+            db.filmsDao().upsertFilm(tvSeries)
             episodeProgressDao.insert(episodeProgress)
 
             episodeProgressDao.delete(episodeProgress.id)
@@ -280,7 +280,7 @@ class EpisodeProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(tvSeries)
+            db.filmsDao().upsertFilm(tvSeries)
 
             val episodes = (1..5).map { episodeNum ->
                 EpisodeProgress(
@@ -317,7 +317,7 @@ class EpisodeProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(tvSeries)
+            db.filmsDao().upsertFilm(tvSeries)
 
             val season1Episode = EpisodeProgress(
                 id = 1,
@@ -368,7 +368,7 @@ class EpisodeProgressDaoTest {
             )
 
             db.userDao().insert(user)
-            db.filmsDao().insert(tvSeries)
+            db.filmsDao().upsertFilm(tvSeries)
 
             val episodes = (1..10).map { i ->
                 EpisodeProgress(

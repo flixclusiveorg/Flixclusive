@@ -1,8 +1,8 @@
 package com.flixclusive.data.database.repository.impl
 
 import com.flixclusive.core.common.dispatchers.AppDispatchers
-import com.flixclusive.core.database.dao.EpisodeProgressDao
-import com.flixclusive.core.database.dao.MovieProgressDao
+import com.flixclusive.core.database.dao.watched.EpisodeProgressDao
+import com.flixclusive.core.database.dao.watched.MovieProgressDao
 import com.flixclusive.core.database.entity.film.DBFilm.Companion.toDBFilm
 import com.flixclusive.core.database.entity.watched.EpisodeProgress
 import com.flixclusive.core.database.entity.watched.MovieProgress
@@ -25,7 +25,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
     override fun getAllAsFlow(ownerId: Int): Flow<List<WatchProgressWithMetadata>> {
         return movieProgressDao.getAllAsFlow(ownerId)
             .combine(episodeProgressDao.getAllAsFlow(ownerId)) { movies, episodes ->
-                (movies + episodes).sortedByDescending { it.watchData.watchedAt }
+                (movies + episodes).sortedByDescending { it.watchData.createdAt }
             }
             .distinctUntilChanged()
     }
@@ -59,7 +59,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
     ): List<EpisodeProgress> {
         return withContext(appDispatchers.io) {
             episodeProgressDao.getSeasonProgress(
-                itemId = tvShowId,
+                filmId = tvShowId,
                 season = seasonNumber,
                 ownerId = ownerId
             )
@@ -71,7 +71,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
         seasonNumber: Int,
         ownerId: Int
     ): Flow<List<EpisodeProgress>> = episodeProgressDao.getSeasonProgressAsFlow(
-        itemId = tvShowId,
+        filmId = tvShowId,
         season = seasonNumber,
         ownerId = ownerId
     )
@@ -102,7 +102,7 @@ internal class WatchProgressRepositoryImpl @Inject constructor(
             ) { movies, episodes ->
                 (movies + episodes)
                     .shuffled()
-                    .sortedByDescending { it.watchData.watchedAt }
+                    .sortedByDescending { it.watchData.createdAt }
             }.distinctUntilChanged()
         }
     }
