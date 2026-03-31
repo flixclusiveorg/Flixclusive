@@ -9,7 +9,6 @@ import com.flixclusive.core.testing.dispatcher.DispatcherTestDefaults
 import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.data.database.repository.WatchProgressRepository
 import com.flixclusive.data.database.session.UserSessionManager
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.provider.util.collections.CollectionsOperation
 import com.flixclusive.data.tmdb.model.TMDBHomeCatalog
 import com.flixclusive.data.tmdb.model.TMDBHomeCatalogs

@@ -18,7 +18,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Before
@@ -54,7 +53,6 @@ class InitializeProvidersUseCaseImplTest {
 
         initializeProvidersUseCase = InitializeProvidersUseCaseImpl(
             context = context,
-            dataStoreManager = mockDataStoreManager,
             loadProviderUseCase = mockLoadProviderUseCase,
             appDispatchers = appDispatchers,
         )

@@ -5,7 +5,7 @@ import com.flixclusive.core.common.locale.UiText
 import com.flixclusive.core.network.util.Resource
 import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.data.provider.repository.ProviderApiRepository
+import com.flixclusive.data.provider.repository.ProviderRepository
 import com.flixclusive.data.tmdb.repository.TMDBFilmSearchItemsRepository
 import com.flixclusive.domain.catalog.R
 import com.flixclusive.domain.catalog.usecase.PaginateItemsUseCase
@@ -17,48 +17,44 @@ import com.flixclusive.provider.ProviderApi
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-internal class PaginateItemsUseCaseImpl
-    @Inject
-    constructor(
-        private val tmdbFilmSearchItemsRepository: TMDBFilmSearchItemsRepository,
-        private val providerApiRepository: ProviderApiRepository,
-        private val appDispatchers: AppDispatchers,
-    ) : PaginateItemsUseCase {
-        override suspend operator fun invoke(
-            catalog: Catalog,
-            page: Int,
-        ): Resource<SearchResponseData<FilmSearchItem>> {
-            return when (catalog) {
-                is ProviderCatalog -> {
-                    return try {
-                        val api = catalog.providerApi!!
-                        val items = withContext(appDispatchers.io) {
-                            api.getCatalogItems(
-                                page = page,
-                                catalog = catalog,
-                            )
-                        }
-
-                        Resource.Success(items)
-                    } catch (e: Exception) {
-                        errorLog(e)
-                        Resource.Failure(
-                            UiText.StringResource(
-                                R.string.failed_to_fetch_catalog_items_format_message,
-                                e.actualMessage,
-                            ),
+internal class PaginateItemsUseCaseImpl @Inject constructor(
+    private val tmdbFilmSearchItemsRepository: TMDBFilmSearchItemsRepository,
+    private val providerRepository: ProviderRepository,
+    private val appDispatchers: AppDispatchers,
+) : PaginateItemsUseCase {
+    override suspend operator fun invoke(
+        catalog: Catalog,
+        page: Int,
+    ): Resource<SearchResponseData<FilmSearchItem>> {
+        return when (catalog) {
+            is ProviderCatalog -> {
+                try {
+                    val api = providerRepository.getApi(catalog.providerId)!!
+                    val items = withContext(appDispatchers.io) {
+                        api.getCatalogItems(
+                            page = page,
+                            catalog = catalog,
                         )
                     }
-                }
-                else -> {
-                    tmdbFilmSearchItemsRepository.get(
-                        url = catalog.url,
-                        page = page,
+
+                    Resource.Success(items)
+                } catch (e: Exception) {
+                    errorLog(e)
+                    Resource.Failure(
+                        UiText.StringResource(
+                            R.string.failed_to_fetch_catalog_items_format_message,
+                            e.actualMessage,
+                        ),
                     )
                 }
             }
-        }
 
-        private val ProviderCatalog.providerApi: ProviderApi?
-            get() = providerApiRepository.getApi(providerId)
+            else -> {
+                tmdbFilmSearchItemsRepository.get(
+                    url = catalog.url,
+                    page = page,
+                )
+            }
+        }
     }
+}

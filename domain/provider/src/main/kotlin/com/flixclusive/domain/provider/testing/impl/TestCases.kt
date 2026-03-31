@@ -19,7 +19,6 @@ import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.ProviderWebViewApi
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic

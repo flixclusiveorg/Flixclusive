@@ -1,7 +1,9 @@
 package com.flixclusive.core.database.migration
 
+import android.content.Context
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.flixclusive.core.database.R
 
 /**
  * Major migration from schema version 9 to 10.
@@ -64,7 +66,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * ### `library_list_item_with_metadata` (VIEW)
  * - Recreated to reflect the updated `films` schema after column changes.
  */
-internal object Schema9to10 : Migration(startVersion = 9, endVersion = 10) {
+internal class Schema9to10(private val context: Context) : Migration(startVersion = 9, endVersion = 10) {
     override fun migrate(db: SupportSQLiteDatabase) {
         val now = System.currentTimeMillis()
 
@@ -364,11 +366,17 @@ internal object Schema9to10 : Migration(startVersion = 9, endVersion = 10) {
         }
         userCursor.close()
 
+        val watchlist = context.getString(R.string.seeded_watchlist)
+        val recentlyWatched = context.getString(R.string.seeded_recently_watched)
+
+        val watchlistDescription = context.getString(R.string.seeded_watchlist_description)
+        val recentlyWatchedDescription = context.getString(R.string.seeded_recently_watched_description)
+
         for (userId in userIds) {
             db.execSQL(
                 """
                 INSERT INTO `library_lists` (`ownerId`, `name`, `description`, `listType`, `createdAt`, `updatedAt`)
-                VALUES (?, 'Watchlist', NULL, 'CUSTOM', ?, ?)
+                VALUES (?, '$watchlist', '$watchlistDescription', 'CUSTOM', ?, ?)
                 """.trimIndent(),
                 arrayOf<Any>(userId, now, now)
             )
@@ -380,12 +388,12 @@ internal object Schema9to10 : Migration(startVersion = 9, endVersion = 10) {
             db.execSQL(
                 """
                 INSERT INTO `library_lists` (`ownerId`, `name`, `description`, `listType`, `createdAt`, `updatedAt`)
-                VALUES (?, 'Recently Watched', NULL, 'WATCHED', ?, ?)
+                VALUES (?, '$recentlyWatched', '$recentlyWatchedDescription', 'WATCHED', ?, ?)
                 """.trimIndent(),
                 arrayOf<Any>(userId, now, now)
             )
 
-            // Migrate watchlist items for this user into the new WATCHLIST library list
+            // Migrate watchlist items for this user into the new watchlist library list
             val watchlistCursor = db.query(
                 "SELECT filmId, addedAt FROM watchlist WHERE ownerId = ?",
                 arrayOf<Any>(userId.toString())
@@ -412,11 +420,13 @@ internal object Schema9to10 : Migration(startVersion = 9, endVersion = 10) {
             """
             CREATE TABLE IF NOT EXISTS `repositories` (
                 `url` TEXT NOT NULL PRIMARY KEY,
+                `userId` INTEGER NOT NULL,
                 `owner` TEXT NOT NULL,
                 `name` TEXT NOT NULL,
                 `rawLinkFormat` TEXT NOT NULL,
                 `createdAt` INTEGER NOT NULL,
-                `updatedAt` INTEGER NOT NULL
+                `updatedAt` INTEGER NOT NULL,
+                FOREIGN KEY(`userId`) REFERENCES `User`(`userId`) ON UPDATE NO ACTION ON DELETE CASCADE
             )
             """.trimIndent()
         )
@@ -427,29 +437,23 @@ internal object Schema9to10 : Migration(startVersion = 9, endVersion = 10) {
             """
             CREATE TABLE IF NOT EXISTS `installed_providers` (
                 `id` TEXT NOT NULL PRIMARY KEY,
+                `ownerId` INTEGER NOT NULL,
                 `repositoryUrl` TEXT NOT NULL,
-                `name` TEXT NOT NULL,
-                `status` TEXT NOT NULL,
-                `providerType` TEXT NOT NULL,
-                `language` TEXT NOT NULL,
-                `adult` INTEGER NOT NULL,
-                `versionName` TEXT NOT NULL,
-                `versionCode` INTEGER NOT NULL,
-                `buildUrl` TEXT NOT NULL,
-                `iconUrl` TEXT,
-                `isDisabled` INTEGER NOT NULL,
-                `isDebug` INTEGER NOT NULL,
+                `filePath` TEXT NOT NULL,
                 `sortOrder` REAL NOT NULL,
+                `isEnabled` INTEGER NOT NULL,
+                `isDebug` INTEGER NOT NULL,
                 `createdAt` INTEGER NOT NULL,
                 `updatedAt` INTEGER NOT NULL,
                 FOREIGN KEY(`repositoryUrl`) REFERENCES `repositories`(`url`) ON UPDATE CASCADE ON DELETE CASCADE
+                FOREIGN KEY(`ownerId`) REFERENCES `User`(`userId`) ON UPDATE NO ACTION ON DELETE CASCADE
             )
             """.trimIndent()
         )
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_repositoryUrl` ON `installed_providers` (`repositoryUrl`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_sortOrder` ON `installed_providers` (`sortOrder`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_status` ON `installed_providers` (`status`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_providerType` ON `installed_providers` (`providerType`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_ownerId` ON `installed_providers` (`ownerId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_installed_providers_isEnabled` ON `installed_providers` (`isEnabled`)")
     }
 
     private fun recreateView(db: SupportSQLiteDatabase) {

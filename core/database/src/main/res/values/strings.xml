@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="seeded_watchlist">Watchlist</string>
+    <string name="seeded_recently_watched">Recently Watched</string>
+    <string name="seeded_recently_watched_description">A list of movies and TV shows that you have recently watched.</string>
+    <string name="seeded_watchlist_description">A list of movies and TV shows that you have added to your watchlist.</string>
+</resources>

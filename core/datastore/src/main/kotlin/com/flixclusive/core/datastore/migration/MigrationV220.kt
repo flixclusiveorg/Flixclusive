@@ -3,7 +3,7 @@ package com.flixclusive.core.datastore.migration
 import androidx.datastore.core.DataMigration
 import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.database.dao.provider.InstalledProviderDao
-import com.flixclusive.core.database.dao.provider.RepositoryDao
+import com.flixclusive.core.database.dao.provider.InstalledRepositoryDao
 import com.flixclusive.core.database.entity.provider.InstalledProvider
 import com.flixclusive.core.database.entity.provider.InstalledRepository
 import com.flixclusive.core.datastore.migration.model.OldProviderFromPreferences
@@ -18,8 +18,9 @@ import java.io.File
 
 @Suppress("DEPRECATION")
 internal class MigrationV220(
+    private val userId: Int,
     private val providerDao: InstalledProviderDao,
-    private val repositoryDao: RepositoryDao,
+    private val repositoryDao: InstalledRepositoryDao,
 ) : DataMigration<Preferences> {
     override suspend fun cleanUp() {
         // No - op, since we are not deleting any old data or files in this migration
@@ -38,6 +39,7 @@ internal class MigrationV220(
                 shouldWarnBeforeInstall = oldProviderPrefs.shouldWarnBeforeInstall,
                 isAutoUpdateEnabled = oldProviderPrefs.isAutoUpdateEnabled,
                 shouldAddDebugPrefix = oldProviderPrefs.shouldAddDebugPrefix,
+                providers = oldProviderPrefs.providers
             )
         )
 
@@ -100,18 +102,11 @@ internal class MigrationV220(
         return InstalledProvider(
             id = preference.id,
             repositoryUrl = metadata.repositoryUrl,
-            isDisabled = preference.isDisabled,
+            isEnabled = !preference.isDisabled,
             sortOrder = index.toDouble(),
-            name = metadata.name,
-            status = metadata.status.name,
-            providerType = metadata.providerType.type,
-            language = metadata.language.languageCode,
-            adult = metadata.adult,
-            versionName = metadata.versionName,
-            versionCode = metadata.versionCode,
-            buildUrl = metadata.buildUrl,
-            iconUrl = metadata.iconUrl,
             isDebug = preference.isDebug,
+            filePath = preference.filePath,
+            ownerId = userId
         )
     }
 

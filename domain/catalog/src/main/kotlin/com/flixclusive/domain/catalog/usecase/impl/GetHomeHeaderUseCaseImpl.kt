@@ -20,91 +20,89 @@ private const val MAX_RETRIES = 20
 private typealias CatalogUrl = String
 private typealias FilmId = String
 
-internal class GetHomeHeaderUseCaseImpl
-    @Inject
-    constructor(
-        private val tmdbMetadataRepository: TMDBMetadataRepository,
-        private val tmdbFilmSearchItemsRepository: TMDBFilmSearchItemsRepository,
-        private val tmdbDiscoverCatalogRepository: TMDBDiscoverCatalogRepository,
-    ) : GetHomeHeaderUseCase {
-        override suspend fun invoke(): Resource<Film> {
-            val catalogs = tmdbDiscoverCatalogRepository.getMovies() + tmdbDiscoverCatalogRepository.getTv()
+internal class GetHomeHeaderUseCaseImpl @Inject constructor(
+    private val tmdbMetadataRepository: TMDBMetadataRepository,
+    private val tmdbFilmSearchItemsRepository: TMDBFilmSearchItemsRepository,
+    private val tmdbDiscoverCatalogRepository: TMDBDiscoverCatalogRepository,
+) : GetHomeHeaderUseCase {
+    override suspend fun invoke(): Resource<Film> {
+        val catalogs = tmdbDiscoverCatalogRepository.getMovies() + tmdbDiscoverCatalogRepository.getTv()
 
-            val traversedFilms = mutableSetOf<FilmId>()
-            val traversedCatalogs = mutableSetOf<CatalogUrl>()
+        val traversedFilms = mutableSetOf<FilmId>()
+        val traversedCatalogs = mutableSetOf<CatalogUrl>()
 
-            var lastError: Exception? = null
-            for (i in 0 until MAX_RETRIES) {
-                try {
-                    val randomIndex = Random.nextInt(catalogs.size)
-                    val catalog = catalogs[randomIndex]
+        var lastError: Exception? = null
+        for (i in 0 until MAX_RETRIES) {
+            try {
+                val randomIndex = Random.nextInt(catalogs.size)
+                val catalog = catalogs[randomIndex]
 
-                    if (catalog.url in traversedCatalogs) {
-                        continue
+                if (catalog.url in traversedCatalogs) {
+                    continue
+                }
+
+                traversedCatalogs.add(catalog.url)
+
+                val filmSearchItems = tmdbFilmSearchItemsRepository
+                    .get(
+                        url = catalog.url,
+                        page = 1,
+                    ).data
+                    ?.results ?: emptyList()
+
+                filmSearchItems.shuffled().forEach { headerItem ->
+                    if (headerItem.identifier in traversedFilms) {
+                        return@forEach
                     }
 
-                    traversedCatalogs.add(catalog.url)
+                    traversedFilms.add(headerItem.identifier)
 
-                    val filmSearchItems = tmdbFilmSearchItemsRepository
-                        .get(
-                            url = catalog.url,
-                            page = 1,
-                        ).data
-                        ?.results ?: emptyList()
-
-                    filmSearchItems.shuffled().forEach { headerItem ->
-                        if (headerItem.identifier in traversedFilms) {
-                            return@forEach
-                        }
-
-                        traversedFilms.add(headerItem.identifier)
-
-                        if (headerItem.isNotPopular) {
-                            return@forEach
-                        }
-
-                        val metadata = getMetadata(headerItem) ?: return@forEach
-
-                        val enhancedMetadata = when (metadata) {
-                            is Movie -> metadata.copy(genres = metadata.genres)
-                            is TvShow -> metadata.copy(genres = metadata.genres)
-                            else -> throw IllegalArgumentException(
-                                "Unsupported FilmMetadata type: ${metadata::class.java.simpleName}",
-                            )
-                        }
-
-                        return Resource.Success(enhancedMetadata)
+                    if (headerItem.isNotPopular) {
+                        return@forEach
                     }
-                } catch (e: Exception) {
-                    lastError = e
+
+                    val metadata = getMetadata(headerItem) ?: return@forEach
+
+                    val enhancedMetadata = when (metadata) {
+                        is Movie -> metadata.copy(genres = metadata.genres)
+                        is TvShow -> metadata.copy(genres = metadata.genres)
+                        else -> throw IllegalArgumentException(
+                            "Unsupported FilmMetadata type: ${metadata::class.java.simpleName}",
+                        )
+                    }
+
+                    return Resource.Success(enhancedMetadata)
                 }
-            }
-
-            return lastError?.let { Resource.Failure(it) }
-                ?: Resource.Failure(R.string.failure_looking_for_header_item)
-        }
-
-        private suspend fun getMetadata(film: Film): FilmMetadata? {
-            requireNotNull(film.tmdbId) {
-                "FilmSearchItem must have a valid TMDB ID to fetch metadata."
-            }
-
-            return when (film.filmType) {
-                FilmType.MOVIE -> {
-                    tmdbMetadataRepository.getMovie(film.tmdbId!!).data
-                }
-
-                FilmType.TV_SHOW -> {
-                    tmdbMetadataRepository.getTvShow(film.tmdbId!!).data
-                }
+            } catch (e: Exception) {
+                lastError = e
             }
         }
 
-        private val Film.isNotPopular: Boolean
-            get() =
-                safeCall {
-                    (this as? FilmSearchItem)?.run {
-                        isFromTmdb && voteCount < 250
-                    } == true
-                } == true
+        return lastError?.let { Resource.Failure(it) }
+            ?: Resource.Failure(R.string.failure_looking_for_header_item)
     }
+
+    private suspend fun getMetadata(film: Film): FilmMetadata? {
+        requireNotNull(film.tmdbId) {
+            "FilmSearchItem must have a valid TMDB ID to fetch metadata."
+        }
+
+        return when (film.filmType) {
+            FilmType.MOVIE -> {
+                tmdbMetadataRepository.getMovie(film.tmdbId!!).data
+            }
+
+            FilmType.TV_SHOW -> {
+                tmdbMetadataRepository.getTvShow(film.tmdbId!!).data
+            }
+        }
+    }
+
+    private val Film.isNotPopular: Boolean
+        get() =
+            safeCall {
+                (this as? FilmSearchItem)?.run {
+                    isFromTmdb && voteCount < 250
+                } == true
+            } == true
+}

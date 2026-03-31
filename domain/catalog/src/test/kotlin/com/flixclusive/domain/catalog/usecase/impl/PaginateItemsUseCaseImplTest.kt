@@ -6,7 +6,6 @@ import com.flixclusive.core.testing.extensions.isFailure
 import com.flixclusive.core.testing.extensions.isSuccess
 import com.flixclusive.core.testing.film.FilmTestDefaults
 import com.flixclusive.core.util.log.LogRule
-import com.flixclusive.data.provider.repository.ProviderApiRepository
 import com.flixclusive.data.tmdb.repository.TMDBFilmSearchItemsRepository
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.SearchResponseData

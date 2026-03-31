@@ -71,7 +71,7 @@ class ProviderRepositoryImplTest {
     }
 
     @Test
-    fun shouldAddProviderWithAllComponents() = runTest(testDispatcher) {
+    fun shouldLoadProviderWithAllComponents() = runTest(testDispatcher) {
         val transformSlot = slot<suspend (ProviderPreferences) -> ProviderPreferences>()
         coEvery {
             dataStoreManager.updateUserPrefs<ProviderPreferences>(
@@ -88,8 +88,8 @@ class ProviderRepositoryImplTest {
             preferenceItem = testPreferenceItem
         )
 
-        expectThat(repository.getProvider(testMetadata.id)).isEqualTo(testProvider)
-        expectThat(repository.getProviderMetadata(testMetadata.id)).isEqualTo(testMetadata)
+        expectThat(repository.getPlugin(testMetadata.id)).isEqualTo(testProvider)
+        expectThat(repository.getMetadata(testMetadata.id)).isEqualTo(testMetadata)
         expectThat(repository.getProviderFromPreferences(testMetadata.id)).isEqualTo(testPreferenceItem)
 
         coVerify {
@@ -102,7 +102,7 @@ class ProviderRepositoryImplTest {
     }
 
     @Test
-    fun shouldNotAddDuplicatePreferenceItem() = runTest(testDispatcher) {
+    fun shouldNotLoadDuplicatePreferenceItem() = runTest(testDispatcher) {
         val transformSlot = slot<suspend (ProviderPreferences) -> ProviderPreferences>()
         coEvery {
             dataStoreManager.updateUserPrefs<ProviderPreferences>(
@@ -127,13 +127,13 @@ class ProviderRepositoryImplTest {
 
     @Test
     fun shouldReturnNullForNonExistentProvider() = runTest(testDispatcher) {
-        expectThat(repository.getProvider("non-existent")).isNull()
-        expectThat(repository.getProviderMetadata("non-existent")).isNull()
+        expectThat(repository.getPlugin("non-existent")).isNull()
+        expectThat(repository.getMetadata("non-existent")).isNull()
         expectThat(repository.getProviderFromPreferences("non-existent")).isNull()
     }
 
     @Test
-    fun shouldGetEnabledProvidersOnly() = runTest(testDispatcher) {
+    fun shouldGetEnabledProvidersAsFlowOnly() = runTest(testDispatcher) {
         val enabledMetadata = testMetadata.copy(id = "enabled-provider")
         val enabledPreference = testPreferenceItem.copy(id = "enabled-provider", isDisabled = false)
 
@@ -147,7 +147,7 @@ class ProviderRepositoryImplTest {
         repository.add(testProvider, mockClassLoader, enabledMetadata, enabledPreference)
         repository.add(testProvider, mockClassLoader, disabledMetadata, disabledPreference)
 
-        val enabledProviders = repository.getEnabledProviders()
+        val enabledProviders = repository.getEnabledProvidersAsFlow()
         expectThat(enabledProviders).hasSize(1)
         expectThat(enabledProviders.first().id).isEqualTo("enabled-provider")
     }
@@ -170,7 +170,7 @@ class ProviderRepositoryImplTest {
     }
 
     @Test
-    fun shouldGetOrderedProviders() = runTest(testDispatcher) {
+    fun shouldGetInstalledProvidersAsFlow() = runTest(testDispatcher) {
         val firstMetadata = testMetadata.copy(id = "first-provider")
         val firstPreference = testPreferenceItem.copy(id = "first-provider")
 
@@ -184,7 +184,7 @@ class ProviderRepositoryImplTest {
         repository.add(testProvider, mockClassLoader, firstMetadata, firstPreference)
         repository.add(testProvider, mockClassLoader, secondMetadata, secondPreference)
 
-        val orderedProviders = repository.getOrderedProviders()
+        val orderedProviders = repository.getProvidersAsFlow()
         expectThat(orderedProviders).hasSize(2)
         expectThat(orderedProviders.first().id).isEqualTo("first-provider")
         expectThat(orderedProviders.last().id).isEqualTo("second-provider")
@@ -222,7 +222,7 @@ class ProviderRepositoryImplTest {
         repository.addToPreferences(firstPreference)
         repository.addToPreferences(secondPreference)
 
-        repository.moveProvider(fromIndex = 0, toIndex = 1)
+        repository.moveProvider(from = 0, to = 1)
 
         coVerify(atLeast = 1) {
             dataStoreManager.updateUserPrefs<ProviderPreferences>(
@@ -234,16 +234,16 @@ class ProviderRepositoryImplTest {
     }
 
     @Test
-    fun shouldRemoveProvider() = runTest(testDispatcher) {
+    fun shouldUnloadProvider() = runTest(testDispatcher) {
         coEvery {
             dataStoreManager.updateUserPrefs<ProviderPreferences>(any(), any(), any())
         } returns Unit
 
         repository.add(testProvider, mockClassLoader, testMetadata, testPreferenceItem)
-        repository.remove(testMetadata.id)
+        repository.unload(testMetadata.id)
 
-        expectThat(repository.getProvider(testMetadata.id)).isNull()
-        expectThat(repository.getProviderMetadata(testMetadata.id)).isNull()
+        expectThat(repository.getPlugin(testMetadata.id)).isNull()
+        expectThat(repository.getMetadata(testMetadata.id)).isNull()
         expectThat(repository.getProviderFromPreferences(testMetadata.id)).isNull()
     }
 
@@ -257,11 +257,11 @@ class ProviderRepositoryImplTest {
         repository.clearAll()
 
         expectThat(repository.getProviders()).hasSize(0)
-        expectThat(repository.getProvider(testMetadata.id)).isNull()
+        expectThat(repository.getPlugin(testMetadata.id)).isNull()
     }
 
     @Test
-    fun shouldRemoveFromPreferences() = runTest(testDispatcher) {
+    fun shouldUninstall() = runTest(testDispatcher) {
         val transformSlot = slot<suspend (ProviderPreferences) -> ProviderPreferences>()
         coEvery {
             dataStoreManager.updateUserPrefs<ProviderPreferences>(
@@ -272,7 +272,7 @@ class ProviderRepositoryImplTest {
         } returns Unit
 
         repository.addToPreferences(testPreferenceItem)
-        repository.removeFromPreferences(testMetadata.id)
+        repository.uninstall(testMetadata.id)
 
         coVerify(exactly = 2) {
             dataStoreManager.updateUserPrefs<ProviderPreferences>(
@@ -303,14 +303,14 @@ class ProviderRepositoryImplTest {
     @Test
     fun shouldHandleProviderWithoutPreferenceItemInEnabledProviders() = runTest(testDispatcher) {
         repository.add(testProvider, mockClassLoader, testMetadata, testPreferenceItem)
-        repository.removeFromPreferences(testMetadata.id)
+        repository.uninstall(testMetadata.id)
 
-        val enabledProviders = repository.getEnabledProviders()
+        val enabledProviders = repository.getEnabledProvidersAsFlow()
         expectThat(enabledProviders).hasSize(0)
     }
 
     @Test
-    fun shouldEmitRemoveOperationWhenProviderRemoved() = runTest(testDispatcher) {
+    fun shouldEmitUnloadOperationWhenProviderRemoved() = runTest(testDispatcher) {
         coEvery {
             dataStoreManager.updateUserPrefs<ProviderPreferences>(any(), any(), any())
         } returns Unit
@@ -318,7 +318,7 @@ class ProviderRepositoryImplTest {
         repository.addToPreferences(testPreferenceItem)
 
         repository.observe().test {
-            repository.removeFromPreferences(testPreferenceItem.id)
+            repository.uninstall(testPreferenceItem.id)
 
             val emission = awaitItem()
             expectThat(emission).isA<CollectionsOperation.List.Remove<ProviderFromPreferences>>()

@@ -72,7 +72,7 @@ class ProviderApiRepositoryImplTest {
     @Test
     fun shouldAddApiFromId() =
         runTest(testDispatcher) {
-            every { providerRepository.getProvider(testProviderId) } returns testProvider
+            every { providerRepository.getPlugin(testProviderId) } returns testProvider
 
             repository.addApiFromId(testProviderId)
 
@@ -83,7 +83,7 @@ class ProviderApiRepositoryImplTest {
     @Test
     fun shouldThrowExceptionWhenProviderNotFoundForAddApiFromId() =
         runTest(testDispatcher) {
-            every { providerRepository.getProvider(testProviderId) } returns null
+            every { providerRepository.getPlugin(testProviderId) } returns null
 
             try {
                 repository.addApiFromId(testProviderId)
